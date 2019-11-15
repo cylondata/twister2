@@ -75,7 +75,6 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
     WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
     WorkerRuntime.addScalerListener(this);
-    WorkerRuntime.addWorkerFailureListener(this);
 
     senderToDriver = WorkerRuntime.getSenderToDriver();
 

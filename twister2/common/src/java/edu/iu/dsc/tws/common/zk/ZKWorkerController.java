@@ -42,6 +42,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -150,16 +151,23 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private TreeMap<Integer, JobMasterAPI.JobEvent> pastEvents;
 
   // synchronization object for waiting all workers to join the job
-  protected Object waitObject = new Object();
+  private Object waitObject = new Object();
 
   // Inform worker failure events
-  protected IWorkerFailureListener failureListener;
+  private IWorkerFailureListener failureListener;
 
   // Inform when all workers joined the job
-  protected IAllJoinedListener allJoinedListener;
+  private IAllJoinedListener allJoinedListener;
 
   // Inform events related to job master
-  protected IJobMasterListener jobMasterListener;
+  private IJobMasterListener jobMasterListener;
+
+  // some events may arrive after initializing the workerController but before
+  // registering the listener,
+  // we keep the last AllWorkersJoined event to deliver when there is no allJoinedListener
+  private JobMasterAPI.AllWorkersJoined allJoinedEventCache;
+  // we keep many fail events in the buffer to deliver later on
+  private List<JobMasterAPI.JobEvent> failEventBuffer = new LinkedList<>();
 
   /**
    * Construct ZKWorkerController but not initialize yet
@@ -301,7 +309,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public WorkerInfo getWorkerInfoForID(int id) {
 
-    // TODO: get it from local cache if exists,
+    // get it from local cache if allJoined,
+    if (allJoined) {
+      return workers.stream()
+          .filter(wInfo -> wInfo.getWorkerID() == id)
+          .findFirst()
+          .orElse(null);
+    }
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
@@ -399,6 +413,25 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     this.failureListener = iWorkerFailureListener;
+
+    // if failEventBuffer is not null, deliver all messages in a new thread
+    if (!failEventBuffer.isEmpty()) {
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          for (JobMasterAPI.JobEvent jobEvent: failEventBuffer) {
+            if (jobEvent.hasRestarted()) {
+              failureListener.restarted(jobEvent.getRestarted().getWorkerInfo());
+              LOG.fine("FAILED event delivered from cache.");
+            } else if (jobEvent.hasFailed()) {
+              failureListener.failed(jobEvent.getFailed().getWorkerID());
+              LOG.fine("RESTARTED event delivered from cache.");
+            }
+          }
+        }
+      });
+    }
+
     return true;
   }
 
@@ -413,6 +446,18 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     allJoinedListener = iAllJoinedListener;
+
+    // if allJoinedEventToDeliver is not null, deliver that message in a new thread
+    if (allJoinedEventCache != null) {
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          allJoinedListener.allWorkersJoined(allJoinedEventCache.getWorkerInfoList());
+          LOG.fine("AllWorkersJoined event delivered from cache.");
+        }
+      });
+    }
+
     return true;
   }
 
@@ -532,6 +577,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       if (failureListener != null) {
         failureListener.failed(workerFailed.getWorkerID());
+      } else {
+        failEventBuffer.add(jobEvent);
       }
     }
 
@@ -550,6 +597,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       if (failureListener != null) {
         failureListener.restarted(workerRestarted.getWorkerInfo());
+      } else {
+        failEventBuffer.add(jobEvent);
       }
     }
 
@@ -573,9 +622,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   private void processAllJoinedEvent(JobMasterAPI.JobEvent jobEvent) {
 
-    JobMasterAPI.AllWorkersJoined allWorkersJoined = jobEvent.getAllJoined();
+    JobMasterAPI.AllWorkersJoined allJoinedEvent = jobEvent.getAllJoined();
     workers.clear();
-    workers.addAll(allWorkersJoined.getWorkerInfoList());
+    workers.addAll(allJoinedEvent.getWorkerInfoList());
     allJoined = true;
 
     synchronized (waitObject) {
@@ -583,7 +632,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     if (allJoinedListener != null) {
-      allJoinedListener.allWorkersJoined(cloneWorkers());
+      allJoinedListener.allWorkersJoined(allJoinedEvent.getWorkerInfoList());
+    } else {
+      allJoinedEventCache = allJoinedEvent;
     }
   }
 
