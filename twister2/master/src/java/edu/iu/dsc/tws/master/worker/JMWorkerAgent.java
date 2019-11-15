@@ -302,6 +302,7 @@ public final class JMWorkerAgent {
     Thread jmThread = new Thread(this::startLooping);
 
     jmThread.setName("JM Agent");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     boolean registered = registerWorker(initialState);
