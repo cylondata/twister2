@@ -172,13 +172,12 @@ public class TaskExecutor {
    * @param plan       the execution plan
    */
   public void execute(Config taskConfig, ComputeGraph graph, ExecutionPlan plan) {
-    this.distributeData(plan, dataObjectMap);
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
-    IExecutor ex = executor.getExecutor(newCfg, plan, graph.getOperationMode());
+    IExecutor ex = executor.getExecutor(newCfg, plan, graph.getOperationMode(),
+        new ExecutionHookImpl(config, dataObjectMap, plan));
     ex.execute();
     ex.closeExecution();
-    this.collectData(config, plan, dataObjectMap);
   }
 
   /**
@@ -190,11 +189,10 @@ public class TaskExecutor {
    * @param plan  the execution plan
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
-    this.distributeData(plan, dataObjectMap);
-    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode());
+    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
+        new ExecutionHookImpl(config, dataObjectMap, plan));
     ex.execute();
     ex.closeExecution();
-    this.collectData(config, plan, dataObjectMap);
   }
 
   /**
@@ -206,7 +204,8 @@ public class TaskExecutor {
    * @param plan  the execution plan
    */
   public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
-    return executor.getExecutor(config, plan, graph.getOperationMode());
+    return executor.getExecutor(config, plan, graph.getOperationMode(),
+        new ExecutionHookImpl(config, dataObjectMap, plan));
   }
 
   /**
@@ -226,7 +225,8 @@ public class TaskExecutor {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    return executor.getExecutor(config, plan, graph.getOperationMode());
+    return executor.getExecutor(config, plan, graph.getOperationMode(),
+        new ExecutionHookImpl(config, dataObjectMap, plan));
   }
 
   /**
@@ -236,9 +236,7 @@ public class TaskExecutor {
    * @param ex the executor
    */
   public void execute(IExecutor ex) {
-    this.distributeData(ex.getExecutionPlan(), dataObjectMap);
     ex.execute();
-    this.collectData(config, ex.getExecutionPlan(), dataObjectMap);
   }
 
   /**
@@ -403,7 +401,7 @@ public class TaskExecutor {
    * This method collects all the output from the provided {@link ExecutionPlan}.
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}
    */
-  private static void collectData(Config cfg, ExecutionPlan executionPlan,
+  public static void collectData(Config cfg, ExecutionPlan executionPlan,
                                   Map<String, DataObject> dataMap) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     Map<String, DataObject> dataObjectMapForPlan = new HashMap<>();
@@ -439,7 +437,7 @@ public class TaskExecutor {
    * This method distributes collected {@link DataPartition}s to the
    * intended {@link Receptor}s
    */
-  private static void distributeData(ExecutionPlan executionPlan, Map<String, DataObject> dataMap) {
+  public static void distributeData(ExecutionPlan executionPlan, Map<String, DataObject> dataMap) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     if (nodes != null) {
       nodes.forEach((id, node) -> {

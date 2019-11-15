@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionState;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.config.Config;
@@ -51,8 +52,9 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan) {
-    super(cfg, channel, plan);
+  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan,
+                              IExecutionHook hook) {
+    super(cfg, channel, plan, hook);
     this.workerId = workerId;
   }
 
@@ -136,6 +138,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
+    // execute the hook
+    executionHook.afterExecution();
   }
 
   @Override

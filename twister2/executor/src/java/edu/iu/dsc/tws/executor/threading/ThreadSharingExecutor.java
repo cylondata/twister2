@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -31,26 +32,50 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 public abstract class ThreadSharingExecutor implements IExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
+  /**
+   * Number of threads
+   */
   protected int numThreads;
 
+  /**
+   * Thread service
+   */
   protected ExecutorService threads;
 
+  /**
+   * Channel
+   */
   protected TWSChannel channel;
 
+  /**
+   * The configuration
+   */
   protected Config config;
 
+  /**
+   * Execution plan
+   */
   protected ExecutionPlan executionPlan;
 
-  public ThreadSharingExecutor(Config config, TWSChannel ch, ExecutionPlan plan) {
+  /**
+   * The execution hook
+   */
+  protected IExecutionHook executionHook;
+
+  public ThreadSharingExecutor(Config config, TWSChannel ch, ExecutionPlan plan,
+                               IExecutionHook hook) {
     this.config = config;
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
     this.threads = Executors.newFixedThreadPool(numThreads,
         new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     this.executionPlan = plan;
+    this.executionHook = hook;
   }
 
   public boolean execute() {
+    // run the execution hook
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config),
         executionPlan, channel);
@@ -63,6 +88,7 @@ public abstract class ThreadSharingExecutor implements IExecutor {
   }
 
   public IExecution iExecute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(
         ExecutorContext.jobName(config), executionPlan, channel);

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.threading;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
@@ -49,15 +50,15 @@ public class ExecutorFactory {
   }
 
   private IExecutor getExecutor(Config planConfig, OperationMode operationMode,
-                                ExecutionPlan plan) {
+                                ExecutionPlan plan, IExecutionHook hook) {
     IExecutor executor;
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {
       String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);
       if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
-        executor = new StreamingAllSharingExecutor(planConfig, workerId, channel, plan);
+        executor = new StreamingAllSharingExecutor(planConfig, workerId, channel, plan, hook);
       } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
-        executor = new StreamingSharingExecutor(planConfig, workerId, channel, plan);
+        executor = new StreamingSharingExecutor(planConfig, workerId, channel, plan, hook);
       } else {
         throw new Twister2RuntimeException("Un-known stream executor specified - "
             + streamExecutor);
@@ -65,9 +66,9 @@ public class ExecutorFactory {
     } else {
       String batchExecutor = ExecutorContext.getBatchExecutor(planConfig);
       if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor(planConfig, workerId, channel, plan);
+        executor = new BatchSharingExecutor(planConfig, workerId, channel, plan, hook);
       } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor2(planConfig, workerId, channel, plan);
+        executor = new BatchSharingExecutor2(planConfig, workerId, channel, plan, hook);
       } else {
         throw new Twister2RuntimeException("Un-known batch executor specified - " + batchExecutor);
       }
@@ -83,6 +84,27 @@ public class ExecutorFactory {
    * @return the executor
    */
   public IExecutor getExecutor(Config planConfig, ExecutionPlan executionPlan, OperationMode mode) {
-    return getExecutor(planConfig, mode, executionPlan);
+    return getExecutor(planConfig, mode, executionPlan,
+        new IExecutionHook() {
+          @Override
+          public void beforeExecution() {
+          }
+
+          @Override
+          public void afterExecution() {
+          }
+        });
+  }
+
+  /**
+   * Get the executor
+   * @param planConfig the plan specific configurations
+   * @param executionPlan the execut
+   * @param mode the operation mode
+   * @return the executor
+   */
+  public IExecutor getExecutor(Config planConfig, ExecutionPlan executionPlan, OperationMode mode,
+                               IExecutionHook hook) {
+    return getExecutor(planConfig, mode, executionPlan, hook);
   }
 }

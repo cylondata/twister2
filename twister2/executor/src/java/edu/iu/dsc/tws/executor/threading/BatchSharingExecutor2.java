@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionState;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -82,7 +83,13 @@ public class BatchSharingExecutor2 implements IExecutor {
    */
   protected ExecutionPlan plan;
 
-  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan) {
+  /**
+   * The execution hook
+   */
+  protected IExecutionHook executionHook;
+
+  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan,
+                               IExecutionHook hook) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -92,9 +99,11 @@ public class BatchSharingExecutor2 implements IExecutor {
           new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     }
     this.plan = plan;
+    this.executionHook = hook;
   }
 
   public boolean execute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -111,6 +120,7 @@ public class BatchSharingExecutor2 implements IExecutor {
   }
 
   public IExecution iExecute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -215,6 +225,8 @@ public class BatchSharingExecutor2 implements IExecutor {
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
+    // after execution
+    executionHook.afterExecution();
   }
 
   public IExecution runIExecution() {
