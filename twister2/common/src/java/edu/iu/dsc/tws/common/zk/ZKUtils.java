@@ -132,6 +132,13 @@ public final class ZKUtils {
   }
 
   /**
+   * construct barrier directory path for the job
+   */
+  public static String barrierDir(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/barrier";
+  }
+
+  /**
    * construct a worker path from the workers directory
    */
   public static String workerPath(String workersDir, int workerID) {

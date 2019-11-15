@@ -75,6 +75,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
     WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
     WorkerRuntime.addScalerListener(this);
+    WorkerRuntime.addWorkerFailureListener(this);
 
     senderToDriver = WorkerRuntime.getSenderToDriver();
 
@@ -102,7 +103,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    //waitAndComplete();
+//    waitAndComplete();
     testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);

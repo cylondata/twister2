@@ -51,14 +51,12 @@ import java.util.stream.Collectors;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.atomic.AtomicValue;
-import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
-import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
+import org.apache.curator.framework.recipes.cache.NodeCache;
+import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -110,10 +108,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   public static final Logger LOG = Logger.getLogger(ZKWorkerController.class.getName());
 
   // number of workers in this job
-  protected int numberOfWorkers;
+  private int numberOfWorkers;
 
   // name of this job
-  protected String jobName;
+  private String jobName;
 
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
@@ -122,21 +120,20 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private WorkerState initialState;
 
   // the client to connect to ZK server
-  protected CuratorFramework client;
+  private CuratorFramework client;
 
   // persistent ephemeral znode for this worker
   private PersistentNode workerEphemZNode;
 
   // children cache for events znode
-  protected PathChildrenCache eventsChildrenCache;
+  private PathChildrenCache eventsChildrenCache;
+
+  // joob znode cache for watching scaling events
+  private NodeCache jobZnodeCache;
 
   // config object
-  protected Config config;
-  protected String rootPath;
-
-  // variables related to the barrier
-  private DistributedAtomicInteger daiForBarrier;
-  private DistributedBarrier barrier;
+  private Config config;
+  private String rootPath;
 
   // all workers in the job, including completed and failed ones
   private List<WorkerInfo> workers;
@@ -151,7 +148,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private TreeMap<Integer, JobMasterAPI.JobEvent> pastEvents;
 
   // synchronization object for waiting all workers to join the job
-  private Object waitObject = new Object();
+  private Object waitObjectAllJoined = new Object();
+
+  // synchronization object for waiting all workers to join the job
+  private Object waitObjectBarrier = new Object();
+
+  // it is set, when all workers arrived on barrier event received
+  private boolean barrierProceeded = false;
 
   // Inform worker failure events
   private IWorkerFailureListener failureListener;
@@ -221,9 +224,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       numberOfPastEvents = ZKEventsManager.getNumberOfPastEvents(client, rootPath, jobName);
       pastEvents = new TreeMap<>(Collections.reverseOrder());
 
+      int wID = workerInfo.getWorkerID();
+
       if (isRestarted()) {
         // delete ephemeral worker znode from previous run if any
-        ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+        ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, wID);
+
+        // if barrier znode exist from previous run, delete it
+        // worker may have crashed during barrier operation
+        if (ZKBarrierManager.existWorkerZNode(client, rootPath, jobName, wID)) {
+          ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, wID);
+        }
       }
 
       // We cache children data for parent path.
@@ -233,12 +244,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       addEventsChildrenCacheListener(eventsChildrenCache);
       eventsChildrenCache.start();
 
-      String barrierPath = ZKUtils.constructBarrierPath(rootPath, jobName);
-      barrier = new DistributedBarrier(client, barrierPath);
-
-      String daiPathForBarrier = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
-      daiForBarrier = new DistributedAtomicInteger(client,
-          daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
+      // We cache job znode data
+      // So we will listen job scaling up/down
+      String persDir = ZKUtils.persDir(rootPath, jobName);
+      jobZnodeCache = new NodeCache(client, persDir);
+      addJobZnodeCacheListener();
+      jobZnodeCache.start();
 
       createWorkerZnode();
 
@@ -357,9 +368,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     long delay = 0;
     while (delay < timeLimit) {
-      synchronized (waitObject) {
+      synchronized (waitObjectAllJoined) {
         try {
-          waitObject.wait(timeLimit - delay);
+          waitObjectAllJoined.wait(timeLimit - delay);
 
           // proceeding with notification or timeout
           if (allJoined) {
@@ -525,6 +536,32 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     cache.getListenable().addListener(listener);
   }
 
+  private void addJobZnodeCacheListener() {
+    NodeCacheListener listener = new NodeCacheListener() {
+
+      @Override
+      public void nodeChanged() throws Exception {
+        byte[] jobZnodeBodyBytes = jobZnodeCache.getCurrentData().getData();
+        JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeBodyBytes);
+
+        // job scaled up
+        if (numberOfWorkers < job.getNumberOfWorkers()) {
+          allJoined = false;
+          LOG.info("Job scaled uuuuuuppppppppppp.");
+
+          // job scaled down
+        } else if (numberOfWorkers > job.getNumberOfWorkers()) {
+          // remove scaled down workers from worker list
+          workers.removeIf(wInfo -> wInfo.getWorkerID() >= job.getNumberOfWorkers());
+          LOG.info("Job scaled dowwwwnnnnnn.");
+        }
+        numberOfWorkers = job.getNumberOfWorkers();
+
+      }
+    };
+    jobZnodeCache.getListenable().addListener(listener);
+  }
+
   /**
    * when a new znode added to this job znode,
    * take necessary actions
@@ -602,6 +639,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       }
     }
 
+    if (jobEvent.hasAllArrived()) {
+      barrierProceeded = true;
+      synchronized (waitObjectBarrier) {
+        waitObjectBarrier.notify();
+      }
+    }
+
   }
 
   /**
@@ -627,52 +671,14 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     workers.addAll(allJoinedEvent.getWorkerInfoList());
     allJoined = true;
 
-    synchronized (waitObject) {
-      waitObject.notify();
+    synchronized (waitObjectAllJoined) {
+      waitObjectAllJoined.notify();
     }
 
     if (allJoinedListener != null) {
       allJoinedListener.allWorkersJoined(allJoinedEvent.getWorkerInfoList());
     } else {
       allJoinedEventCache = allJoinedEvent;
-    }
-  }
-
-  /**
-   * try to increment the daiForBarrier
-   * try 100 times if fails
-   */
-  private boolean incrementBarrierDAI(int tryCount, long timeLimitMilliSec) {
-
-    if (tryCount == 100) {
-      return false;
-    }
-
-    try {
-      AtomicValue<Integer> incremented = daiForBarrier.increment();
-      if (incremented.succeeded()) {
-        LOG.fine("DistributedAtomicInteger for Barrier increased to: " + incremented.postValue());
-
-        // if this is the last worker to enter, remove the barrier and let all workers be released
-        if (incremented.postValue() == numberOfWorkers) {
-          barrier.removeBarrier();
-          // clear the value to zero, so that new barrier can be used
-          daiForBarrier.forceSet(0);
-          return true;
-
-          // if this is not the last worker, set the barrier and wait
-        } else {
-          barrier.setBarrier();
-          return barrier.waitOnBarrier(timeLimitMilliSec, TimeUnit.MILLISECONDS);
-        }
-
-      } else {
-        return incrementBarrierDAI(tryCount + 1, timeLimitMilliSec);
-      }
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "Failed to increment the DistributedAtomicInteger for Barrier. "
-          + "Will try again ...", e);
-      return incrementBarrierDAI(tryCount + 1, timeLimitMilliSec);
     }
   }
 
@@ -708,18 +714,36 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public void waitOnBarrier() throws TimeoutException {
 
-    boolean allArrived = incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
-    if (!allArrived) {
+    barrierProceeded = false;
+    ZKBarrierManager.createWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
 
-      // clear the value to zero, so that new barrier can be used
-      try {
-        daiForBarrier.forceSet(0);
-      } catch (Exception e) {
-        LOG.severe("DistributedAtomicInteger value can not be set to zero.");
+    // wait until all workers joined or time limit is reached
+    long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
+    long startTime = System.currentTimeMillis();
+
+    long delay = 0;
+    while (delay < timeLimit) {
+      synchronized (waitObjectBarrier) {
+        try {
+          if (!barrierProceeded) {
+            waitObjectBarrier.wait(timeLimit - delay);
+            break;
+          }
+
+        } catch (InterruptedException e) {
+          delay = System.currentTimeMillis() - startTime;
+        }
       }
+    }
 
-      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
-          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
+    // delete barrier znode in any case
+    ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+
+    if (barrierProceeded) {
+      return;
+    } else {
+      throw new TimeoutException("Barrier timed out. Not all workers arrived on time limit: "
+          + timeLimit + "ms.");
     }
   }
 
@@ -730,6 +754,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   public void close() {
     CloseableUtils.closeQuietly(workerEphemZNode);
     CloseableUtils.closeQuietly(eventsChildrenCache);
+    CloseableUtils.closeQuietly(jobZnodeCache);
   }
 
 }

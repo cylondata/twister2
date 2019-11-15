@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
@@ -131,6 +132,7 @@ public final class JobMasterExample {
       ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
       ZKPersStateManager.createPersStateDir(client, rootPath, job);
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobName());
 
       // test job znode content reading
       JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobName());

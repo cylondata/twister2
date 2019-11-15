@@ -24,6 +24,7 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
@@ -199,6 +200,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
       ZKPersStateManager.createPersStateDir(client, rootPath, job);
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobName());
+
       jobSubmissionStatus.setJobZNodesCreated(true);
       return true;
 

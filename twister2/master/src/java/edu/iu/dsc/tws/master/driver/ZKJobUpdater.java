@@ -18,6 +18,7 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -70,6 +71,8 @@ public class ZKJobUpdater {
     try {
       ZKPersStateManager.removeScaledDownZNodes(
           client, rootPath, jobName, minWorkerID, maxWorkerID);
+      ZKBarrierManager.removeScaledDownZNodes(client, rootPath, jobName, minWorkerID, maxWorkerID);
+
       return true;
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);

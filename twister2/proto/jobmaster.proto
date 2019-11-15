@@ -65,10 +65,11 @@ message WorkerInfo {
 /////////////////////////////////////////////////////////////////
 
 message JobEvent {
-    oneof idRequired {
+    oneof onlyOneEvent {
         WorkerFailed failed = 1;
         WorkerRestarted restarted = 2;
         AllWorkersJoined allJoined = 3;
+        AllArrivedOnBarrier allArrived = 4;
     }
 }
 
@@ -86,6 +87,9 @@ message WorkerRestarted {
 
 message AllWorkersJoined {
     repeated WorkerInfo workerInfo = 1;
+}
+
+message AllArrivedOnBarrier {
 }
 
 /////////////////////////////////////////////////////////////////

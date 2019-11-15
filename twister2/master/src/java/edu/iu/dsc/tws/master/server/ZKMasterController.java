@@ -46,8 +46,9 @@ public class ZKMasterController {
   // config object
   protected Config config;
   protected String rootPath;
-  protected String workersPersDir;
-  protected String workersEphemDir;
+  protected String persDir;
+  protected String ephemDir;
+  protected String barrierDir;
 
   // Job Master IP address
   private String masterAddress;
@@ -61,6 +62,9 @@ public class ZKMasterController {
   // children cache for persistent job znode
   protected PathChildrenCache persChildrenCache;
 
+  // children cache for barrier directory
+  protected PathChildrenCache barrierChildrenCache;
+
   // persistent ephemeral znode for this worker
   private PersistentNode masterEphemZNode;
 
@@ -70,6 +74,8 @@ public class ZKMasterController {
   private List<Integer> scaledDownWorkers = new LinkedList<>();
 
   private WorkerMonitor workerMonitor;
+
+  private int workerCountAtBarrier = 0;
 
   public ZKMasterController(Config config,
                             String jobName,
@@ -83,8 +89,9 @@ public class ZKMasterController {
     this.workerMonitor = workerMonitor;
 
     rootPath = ZKContext.rootNode(config);
-    workersPersDir = ZKUtils.persDir(rootPath, jobName);
-    workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+    persDir = ZKUtils.persDir(rootPath, jobName);
+    ephemDir = ZKUtils.ephemDir(rootPath, jobName);
+    barrierDir = ZKUtils.barrierDir(rootPath, jobName);
   }
 
   public void jobScaledUp(int newNumberOfWorkers) {
@@ -128,18 +135,23 @@ public class ZKMasterController {
       }
 
       // We listen for join/remove events for ephemeral children
-      ephemChildrenCache = new PathChildrenCache(client, workersEphemDir, true);
+      ephemChildrenCache = new PathChildrenCache(client, ephemDir, true);
       addEphemChildrenCacheListener(ephemChildrenCache);
       ephemChildrenCache.start();
 
       // We listen for status updates for persistent path
-      persChildrenCache = new PathChildrenCache(client, workersPersDir, true);
+      persChildrenCache = new PathChildrenCache(client, persDir, true);
       addPersChildrenCacheListener(persChildrenCache);
       persChildrenCache.start();
 
+      // We listen for status updates for persistent path
+      barrierChildrenCache = new PathChildrenCache(client, barrierDir, true);
+      addBarrierChildrenCacheListener(barrierChildrenCache);
+      barrierChildrenCache.start();
+
       // TODO: we nay need to create ephemeral job master znode so that
-      // workers can know when jm fails
-      //      createJobMasterZnode(initialState);
+      //   workers can know when jm fails
+      //   createJobMasterZnode(initialState);
 
       LOG.info("Job Master: " + masterAddress + " initialized successfully.");
 
@@ -203,6 +215,28 @@ public class ZKMasterController {
             childZnodeUpdated(event);
             break;
 
+          case CHILD_REMOVED:
+            workerCountAtBarrier--;
+            break;
+
+          default:
+            // nothing to do
+        }
+      }
+    };
+    cache.getListenable().addListener(listener);
+  }
+
+  private void addBarrierChildrenCacheListener(PathChildrenCache cache) {
+    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
+
+      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
+
+        switch (event.getType()) {
+          case CHILD_ADDED:
+            barrierZnodeAdded(event);
+            break;
+
           default:
             // nothing to do
         }
@@ -222,7 +256,7 @@ public class ZKMasterController {
     String addedChildPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
     WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, workersPersDir, workerID);
+        ZKPersStateManager.getWorkerWithState(client, persDir, workerID);
 
     // if the status of joining worker is RESTARTED, it is coming from failure
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
@@ -280,7 +314,7 @@ public class ZKMasterController {
     String workerPath = event.getData().getPath();
     int removedWorkerID = ZKUtils.getWorkerIDFromEphemPath(workerPath);
     WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, workersPersDir, removedWorkerID);
+        ZKPersStateManager.getWorkerWithState(client, persDir, removedWorkerID);
 
     String workerBodyText = ZKEphemStateManager.decodeWorkerZnodeBody(event.getData().getData());
 
@@ -336,8 +370,8 @@ public class ZKMasterController {
   private void childZnodeUpdated(PathChildrenCacheEvent event) {
     String childPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
-    edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, workersPersDir, workerID);
+    WorkerWithState workerWithState =
+        ZKPersStateManager.getWorkerWithState(client, persDir, workerID);
 
     // TODO: make fine
     LOG.info(String.format("Worker[%s] status changed to: %s ",
@@ -349,12 +383,27 @@ public class ZKMasterController {
     }
   }
 
+  private void barrierZnodeAdded(PathChildrenCacheEvent event) {
+    workerCountAtBarrier++;
+
+    if (workerCountAtBarrier == numberOfWorkers) {
+      JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
+          .build();
+
+      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .setAllArrived(allArrived)
+          .build();
+      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+    }
+  }
+
   /**
    * close all local entities.
    */
   public void close() {
     CloseableUtils.closeQuietly(ephemChildrenCache);
     CloseableUtils.closeQuietly(persChildrenCache);
+    CloseableUtils.closeQuietly(barrierChildrenCache);
 
     if (masterEphemZNode != null) {
       CloseableUtils.closeQuietly(masterEphemZNode);
