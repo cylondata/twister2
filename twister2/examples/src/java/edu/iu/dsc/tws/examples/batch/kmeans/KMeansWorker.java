@@ -37,8 +37,6 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
-import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
-import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
@@ -115,7 +113,6 @@ public class KMeansWorker implements IWorker {
     long endTimeData = System.currentTimeMillis();
 
     //Perform the iterations from 0 to 'n' number of iterations
-    //ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
     IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
       //actual execution of the third task graph
@@ -137,65 +134,30 @@ public class KMeansWorker implements IWorker {
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
                                                int parallelismValue, int dimension,
                                                Config conf) {
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
-    KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink("points");
+    PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory, "points", dimension);
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
-    //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsComputeGraphBuilder.addSource("datapointsource", dataObjectSource,
-        parallelismValue);
-    ComputeConnection datapointComputeConnection = datapointsComputeGraphBuilder.addCompute(
-        "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = datapointsComputeGraphBuilder.addCompute(
-        "datapointsink", dataObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("datapointsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-    firstGraphComputeConnection.direct("datapointcompute")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
+    // Add source, compute, and sink tasks to the task graph builder for the first task graph
+    datapointsComputeGraphBuilder.addSource("datapointsource", ps, parallelismValue);
     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
-
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
-    //Build the first taskgraph
+
     return datapointsComputeGraphBuilder.build();
   }
-
 
   public static ComputeGraph buildCentroidsTG(String centroidDirectory, int csize,
                                               int parallelismValue, int dimension,
                                               Config conf) {
-    DataFileReplicatedReadSource dataFileReplicatedReadSource
-        = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
-    KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, csize, dimension);
-    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink("centroids");
+    PointDataSource cs = new PointDataSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory,
+        "centroids", dimension);
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
-    //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    centroidsComputeGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource,
+    centroidsComputeGraphBuilder.addSource("centroidsource", cs,
         parallelismValue);
-    ComputeConnection centroidComputeConnection = centroidsComputeGraphBuilder.addCompute(
-        "centroidcompute", centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = centroidsComputeGraphBuilder.addCompute(
-        "centroidsink", centroidObjectSink, parallelismValue);
 
-    //Creating the communication edges between the tasks for the second task graph
-    centroidComputeConnection.direct("centroidsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-    secondGraphComputeConnection.direct("centroidcompute")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
     centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
     centroidsComputeGraphBuilder.setTaskGraphName("centTG");
-
-    //Build the second taskgraph
     return centroidsComputeGraphBuilder.build();
   }
 
