@@ -11,23 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.env;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 
 public class CheckpointingTSetEnv extends BatchTSetEnvironment {
 
-  private CheckpointingWorkerEnv workerEnvironment;
+  private static final Logger LOG = Logger.getLogger(CheckpointingTSetEnv.class.getName());
+
+  private CheckpointingWorkerEnv checkpointingWorkerEnv;
+  private WorkerEnvironment workerEnvironment;
 
   public CheckpointingTSetEnv(WorkerEnvironment workerEnvironment) {
     super(workerEnvironment);
-    this.workerEnvironment = CheckpointingWorkerEnv.newBuilder(workerEnvironment).build();
+    this.checkpointingWorkerEnv = CheckpointingWorkerEnv.newBuilder(workerEnvironment).build();
+    this.workerEnvironment = workerEnvironment;
   }
 
   /**
    * Updates the variable in the snapshot
    */
   public <T> T updateVariable(String name, T value) {
-    this.workerEnvironment.getSnapshot().setValue(name, value);
+    this.checkpointingWorkerEnv.getSnapshot().setValue(name, value);
     return value;
   }
 
@@ -36,7 +43,7 @@ public class CheckpointingTSetEnv extends BatchTSetEnvironment {
    * variable is not defined in previous snapshot
    */
   public <T> T initVariable(String name, T defaultValue) {
-    Object value = this.workerEnvironment.getSnapshot().get(name);
+    Object value = this.checkpointingWorkerEnv.getSnapshot().get(name);
     if (value == null) {
       return this.updateVariable(name, defaultValue);
     }
@@ -44,6 +51,10 @@ public class CheckpointingTSetEnv extends BatchTSetEnvironment {
   }
 
   public void commit() {
-    this.workerEnvironment.commitSnapshot();
+    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
+      this.checkpointingWorkerEnv.commitSnapshot();
+    } else {
+      LOG.warning("Called commit while checkpointing is disabled.");
+    }
   }
 }
