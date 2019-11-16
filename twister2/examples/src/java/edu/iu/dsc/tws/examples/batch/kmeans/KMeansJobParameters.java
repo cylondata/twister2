@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
-public final class KMeansWorkerParameters {
+public final class KMeansJobParameters {
 
-  private static final Logger LOG = Logger.getLogger(KMeansWorkerParameters.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansJobParameters.class.getName());
 
   /**
    * Number of Workers
@@ -86,33 +86,31 @@ public final class KMeansWorkerParameters {
 
   private String jobType;
 
-  private KMeansWorkerParameters(int workers) {
+  private KMeansJobParameters(int workers) {
     this.workers = workers;
   }
 
   /**
    * This method is to build the job parameters which is based on the configuration value.
    */
-  public static KMeansWorkerParameters build(Config cfg) {
+  public static KMeansJobParameters build(Config cfg) {
 
     String datapointDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
     String centroidDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
     String outputDirectory = cfg.getStringValue(DataObjectConstants.OUTPUT_DIRECTORY);
     String fileSystem = cfg.getStringValue(DataObjectConstants.FILE_SYSTEM);
 
-    int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.WORKERS));
-    int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
-    int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
-    int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-    int parallelismVal = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.PARALLELISM_VALUE));
-    int iterations = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
-    int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.NUMBER_OF_FILES));
+    int workers = cfg.getIntegerValue(DataObjectConstants.WORKERS, 4);
+    int dsize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 12);
+    int csize = cfg.getIntegerValue(DataObjectConstants.CSIZE, 4);
+    int dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
+    int parallelismVal = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 4);
+    int iterations = cfg.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS, 10);
+    int numFiles = cfg.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES, 1);
     boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
 
     String jobtype = cfg.getStringValue(DataObjectConstants.JOB_TYPE);
-    KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
+    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
 
     jobParameters.workers = workers;
     jobParameters.dimension = dimension;

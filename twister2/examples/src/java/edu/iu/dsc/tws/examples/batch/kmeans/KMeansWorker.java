@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -69,8 +68,7 @@ public class KMeansWorker implements IWorker {
         persistentVolume, volatileVolume);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -82,7 +80,7 @@ public class KMeansWorker implements IWorker {
     String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
     String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
 
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
     long startTime = System.currentTimeMillis();
@@ -118,14 +116,9 @@ public class KMeansWorker implements IWorker {
       //actual execution of the third task graph
       ex.execute(i == iterations - 1);
     }
-
     cEnv.close();
 
-    DataPartition<?> centroidPartition = taskExecutor.getOutput("centroids")
-        .getLowestPartition();
-    double[][] centroid = (double[][]) centroidPartition.first();
     long endTime = System.currentTimeMillis();
-
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
@@ -142,7 +135,6 @@ public class KMeansWorker implements IWorker {
     datapointsComputeGraphBuilder.addSource("datapointsource", ps, parallelismValue);
     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
-
     return datapointsComputeGraphBuilder.build();
   }
 
@@ -155,7 +147,6 @@ public class KMeansWorker implements IWorker {
 
     centroidsComputeGraphBuilder.addSource("centroidsource", cs,
         parallelismValue);
-
     centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
     centroidsComputeGraphBuilder.setTaskGraphName("centTG");
     return centroidsComputeGraphBuilder.build();
@@ -185,10 +176,6 @@ public class KMeansWorker implements IWorker {
   public static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private double[][] centroid = null;
-    private double[][] datapoints = null;
-
-    private KMeansCalculator kMeansCalculator = null;
     private DataPartition<?> dataPartition = null;
     private DataPartition<?> centroidPartition = null;
 
@@ -197,20 +184,11 @@ public class KMeansWorker implements IWorker {
 
     @Override
     public void execute() {
-      int dim = Integer.parseInt(config.getStringValue("dim"));
-
-      datapoints = (double[][]) dataPartition.first();
-
-      centroid = (double[][]) centroidPartition.first();
-
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
+      int dim = config.getIntegerValue("dim", 2);
+      double[][] datapoints = (double[][]) dataPartition.first();
+      double[][] centroid = (double[][]) centroidPartition.first();
+      double[][] kMeansCenters = KMeansUtils.findNearestCenter(dim, datapoints, centroid);
       context.writeEnd("all-reduce", kMeansCenters);
-    }
-
-    @Override
-    public void add(String name, DataObject<?> data) {
-
     }
 
     @Override
@@ -231,8 +209,6 @@ public class KMeansWorker implements IWorker {
 
   public static class KMeansAllReduceTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
-
-    private double[][] centroids;
     private double[][] newCentroids;
 
     public KMeansAllReduceTask() {
@@ -240,7 +216,7 @@ public class KMeansWorker implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      centroids = (double[][]) message.getContent();
+      double[][] centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
         for (int j = 0; j < centroids[0].length - 1; j++) {

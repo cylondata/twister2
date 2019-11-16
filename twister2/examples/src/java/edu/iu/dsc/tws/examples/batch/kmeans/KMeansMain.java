@@ -30,9 +30,9 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class KMeansWorkerMain {
+public class KMeansMain {
 
-  private static final Logger LOG = Logger.getLogger(KMeansWorkerMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansMain.class.getName());
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
@@ -90,14 +90,14 @@ public class KMeansWorkerMain {
     jobConfig.put(DataObjectConstants.CINPUT_DIRECTORY, centroidDirectory);
     jobConfig.put(DataObjectConstants.OUTPUT_DIRECTORY, outputDirectory);
     jobConfig.put(DataObjectConstants.FILE_SYSTEM, fileSystem);
-    jobConfig.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
-    jobConfig.put(DataObjectConstants.CSIZE, Integer.toString(csize));
-    jobConfig.put(DataObjectConstants.WORKERS, Integer.toString(workers));
-    jobConfig.put(DataObjectConstants.NUMBER_OF_FILES, Integer.toString(numFiles));
-    jobConfig.put(DataObjectConstants.DIMENSIONS, Integer.toString(dimension));
-    jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    jobConfig.put(DataObjectConstants.DSIZE, dsize);
+    jobConfig.put(DataObjectConstants.CSIZE, csize);
+    jobConfig.put(DataObjectConstants.WORKERS, workers);
+    jobConfig.put(DataObjectConstants.NUMBER_OF_FILES, numFiles);
+    jobConfig.put(DataObjectConstants.DIMENSIONS, dimension);
+    jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, parallelismValue);
     jobConfig.put(DataObjectConstants.SHARED_FILE_SYSTEM, shared);
-    jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(iterations));
+    jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, iterations);
     jobConfig.put(DataObjectConstants.JOB_TYPE, jobType);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();

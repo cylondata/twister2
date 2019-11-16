@@ -50,7 +50,7 @@ public class KMeansTsetEnvJob implements BatchTSetIWorker, Serializable {
     int workerId = env.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(env.getConfig());
+    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(env.getConfig());
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();

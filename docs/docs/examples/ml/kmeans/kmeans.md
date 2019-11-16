@@ -44,7 +44,7 @@ It first sets the submitted variables in the JobConfig object and put the JobCon
 Twister2Job Builder, set the worker class (KMeansWorker.java in this example) and submit the job. 
 
 ```java
-edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerMain
+edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain
 ```
 
 ### KMeansWorker
@@ -364,14 +364,14 @@ This command generate and write the datapoints and centroids in the local filesy
 K-Means clustering process. 
    
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared false -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys local -dsize 1000 -csize 4 -iter 100 -type graph
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared false -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys local -dsize 1000 -csize 4 -iter 100 -type graph
 ```
       
 This command generate and write the datapoints and centroids in the HDFS and run the run the 
 K-Means clustering process. 
    
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared false -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -type graph
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared false -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -type graph
 ```
 
 ## Running K-Means Clustering using TSet
@@ -380,14 +380,14 @@ This command generate and write the datapoints and centroids in the local filesy
 K-Means clustering process. 
    
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared false -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys local -dsize 1000 -csize 4 -iter 100 -type tset
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared false -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys local -dsize 1000 -csize 4 -iter 100 -type tset
 ```
       
 This command generate and write the datapoints and centroids in the HDFS and run the run the 
 K-Means clustering process. 
    
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared false -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -type tset
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared false -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -type tset
 ```
 
 ### Sample Output 

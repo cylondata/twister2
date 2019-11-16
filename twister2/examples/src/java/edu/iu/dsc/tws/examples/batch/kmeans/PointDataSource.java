@@ -35,23 +35,11 @@ public class PointDataSource extends BaseSource implements Collector {
   private static final Logger LOG = Logger.getLogger(PointDataSource.class.getName());
 
   private static final long serialVersionUID = -1L;
-
-  /**
-   * DataSource to partition the datapoints
-   */
   private DataSource<?, ?> source;
-
-  /**
-   * Edge name to write the partitoned datapoints
-   */
   private String edgeName;
-
   private String dataDirectory;
-
   private String inputKey;
-
   private int dimension;
-
   private double[][] dataPointsLocal;
 
   PointDataSource() {
@@ -62,17 +50,6 @@ public class PointDataSource extends BaseSource implements Collector {
     this.dataDirectory = dataDirectory;
     this.inputKey = inputKey;
     this.dimension = dim;
-  }
-
-  public void setDataDirectory(String dataDirectory) {
-    this.dataDirectory = dataDirectory;
-  }
-
-  /**
-   * Setter property to set the edge name
-   */
-  public void setEdgeName(String edgeName) {
-    this.edgeName = edgeName;
   }
 
   /**

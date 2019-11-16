@@ -41,9 +41,9 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobParameters;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -94,8 +94,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     LOG.info("Task worker starting: " + workerId + " Current snapshot ver: "
         + snapshot.getVersion());
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -107,7 +106,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
     String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
 
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
     long startTime = System.currentTimeMillis();
@@ -146,24 +145,11 @@ public class KMeansCheckpointingWorker implements IWorker {
     ComputeGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
-    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-    IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph, plan);
-    int i = (int) snapshot.getOrDefault(I_KEY, 0);      // recover from checkpoint
-    for (; i < iterations; i++) {
-      //add the datapoints and centroids as input to the kmeanssource task.
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
+    IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
+    for (int i = 0; i < iterations; i++) {
       //actual execution of the third task graph
-      ex.execute();
-      //retrieve the new centroid value for the next iterations
-      centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-
-      // at each iteration, commit the checkpoint.
-      checkpointingEnv.commitSnapshot();
+      ex.execute(i == iterations - 1);
     }
-    ex.closeExecution();
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
