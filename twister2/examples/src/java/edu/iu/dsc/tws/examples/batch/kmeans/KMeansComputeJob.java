@@ -46,8 +46,8 @@ import edu.iu.dsc.tws.task.impl.TaskExecutor;
  * generation of datapoints and centroids, partition and read the partitioned data points,
  * read the centroids, and finally perform the distance calculation.
  */
-public class KMeansWorker implements IWorker {
-  private static final Logger LOG = Logger.getLogger(KMeansWorker.class.getName());
+public class KMeansComputeJob implements IWorker {
+  private static final Logger LOG = Logger.getLogger(KMeansComputeJob.class.getName());
 
   /**
    * First, the execute method invokes the generateDataPoints method to generate the datapoints file

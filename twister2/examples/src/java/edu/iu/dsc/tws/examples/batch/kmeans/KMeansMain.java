@@ -103,7 +103,7 @@ public class KMeansMain {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
     if (Context.TWISTER2_GRAPH_JOB.equals(jobType)) {
-      jobBuilder.setWorkerClass(KMeansWorker.class.getName());
+      jobBuilder.setWorkerClass(KMeansComputeJob.class.getName());
     } else if (Context.TWISTER2_TSET_JOB.equals(jobType)) {
       jobBuilder.setWorkerClass(KMeansTsetJob.class.getName());
     }

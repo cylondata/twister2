@@ -41,8 +41,8 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -110,7 +110,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    ComputeGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = KMeansComputeJob.buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -123,7 +123,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     DataObject<Object> centroidsDataObject;
     if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
-      ComputeGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
+      ComputeGraph centroidsTaskGraph = KMeansComputeJob.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
       //Get the execution plan for the second task graph
       ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
@@ -140,7 +140,7 @@ public class KMeansCheckpointingWorker implements IWorker {
 
 
     /* Third Graph to do the actual calculation **/
-    ComputeGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = KMeansComputeJob.buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
