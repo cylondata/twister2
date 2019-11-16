@@ -135,6 +135,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
   @Override
   public boolean closeExecution() {
+    executionHook.onClose(this);
     return false;
   }
 
@@ -210,6 +211,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
       if (!cleanUpCalled) {
         cleanUp(nodeMap);
+        executionHook.onClose(StreamingSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

@@ -93,6 +93,11 @@ public class ExecutorFactory {
           @Override
           public void afterExecution() {
           }
+
+          @Override
+          public void onClose(IExecutor ex) {
+
+          }
         });
   }
 

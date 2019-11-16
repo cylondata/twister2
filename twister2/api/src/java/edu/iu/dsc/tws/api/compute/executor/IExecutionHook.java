@@ -21,4 +21,9 @@ public interface IExecutionHook {
    * Every IExecitor should execute this method after it finishes an execution
    */
   void afterExecution();
+
+  /**
+   * Called when this execution is closed
+   */
+  void onClose(IExecutor ex);
 }

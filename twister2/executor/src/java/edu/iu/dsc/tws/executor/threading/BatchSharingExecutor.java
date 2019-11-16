@@ -179,7 +179,6 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     close(executionPlan, nodes);
-
     return true;
   }
 
@@ -231,7 +230,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
-
+    executionHook.onClose(this);
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
@@ -403,6 +402,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
       if (!cleanUpCalled) {
         BatchSharingExecutor.this.close(executionPlan, nodeMap);
+        executionHook.onClose(BatchSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

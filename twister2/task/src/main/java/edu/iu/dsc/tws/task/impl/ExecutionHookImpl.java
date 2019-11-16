@@ -16,6 +16,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 
@@ -35,10 +36,17 @@ public class ExecutionHookImpl implements IExecutionHook {
    */
   private Config config;
 
-  public ExecutionHookImpl(Config cfg, Map<String, DataObject> dataObjectMap, ExecutionPlan plan) {
+  /**
+   * The current executors list
+   */
+  private ExecutorList executors;
+
+  public ExecutionHookImpl(Config cfg, Map<String, DataObject> dataObjectMap, ExecutionPlan plan,
+                           ExecutorList exList) {
     this.dataObjectMap = dataObjectMap;
     this.plan = plan;
     this.config = cfg;
+    this.executors = exList;
   }
 
   @Override
@@ -49,5 +57,10 @@ public class ExecutionHookImpl implements IExecutionHook {
   @Override
   public void afterExecution() {
     TaskExecutor.collectData(config, plan, dataObjectMap);
+  }
+
+  @Override
+  public void onClose(IExecutor ex) {
+    executors.remove(ex);
   }
 }

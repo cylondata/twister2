@@ -150,6 +150,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     if (threads != null) {
       threads.shutdown();
     }
+    executionHook.onClose(this);
   }
 
   public boolean isNotStopped() {
@@ -492,6 +493,7 @@ public class BatchSharingExecutor2 implements IExecutor {
 
       if (!cleanUpCalled) {
         BatchSharingExecutor2.this.close(executionPlan, nodeMap);
+        executionHook.onClose(BatchSharingExecutor2.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

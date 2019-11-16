@@ -287,7 +287,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
-
+    executionHook.onClose(this);
     // clear the finished instances
     cleanUpCalled = true;
   }
@@ -478,6 +478,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
       if (!cleanUpCalled) {
         StreamingAllSharingExecutor.this.close(executionPlan, nodeMap);
+        executionHook.onClose(StreamingAllSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

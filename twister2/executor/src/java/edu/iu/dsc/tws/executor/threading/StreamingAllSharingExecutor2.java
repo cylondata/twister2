@@ -290,6 +290,7 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
       op.close();
     }
 
+    executionHook.onClose(this);
     // clear the finished instances
     cleanUpCalled = true;
   }
@@ -502,6 +503,7 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
 
       if (!cleanUpCalled) {
         StreamingAllSharingExecutor2.this.close(executionPlan, nodeMap);
+        executionHook.onClose(StreamingAllSharingExecutor2.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

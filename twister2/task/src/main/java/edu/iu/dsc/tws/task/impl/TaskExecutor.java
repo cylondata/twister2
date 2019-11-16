@@ -36,7 +36,10 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.Fault;
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -47,7 +50,7 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 /**
  * The task executor API, this class can be used to create an execution plan and execute
  */
-public class TaskExecutor {
+public class TaskExecutor implements FaultAcceptable {
   private static final Logger LOG = Logger.getLogger(TaskExecutor.class.getName());
 
   /**
@@ -86,9 +89,9 @@ public class TaskExecutor {
   private Map<String, DataObject> dataObjectMap = new HashMap<>();
 
   /**
-   * The current executions that are happening
+   * Keep the current executors
    */
-  private Map<String, IExecutor> currentExecutorMap = new HashMap<>();
+  private ExecutorList currentExecutors;
 
   /**
    * Creates a task executor.
@@ -175,7 +178,7 @@ public class TaskExecutor {
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
     IExecutor ex = executor.getExecutor(newCfg, plan, graph.getOperationMode(),
-        new ExecutionHookImpl(config, dataObjectMap, plan));
+        new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
     ex.execute();
     ex.closeExecution();
   }
@@ -190,7 +193,7 @@ public class TaskExecutor {
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
     IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
-        new ExecutionHookImpl(config, dataObjectMap, plan));
+        new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
     ex.execute();
     ex.closeExecution();
   }
@@ -205,7 +208,7 @@ public class TaskExecutor {
    */
   public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
     return executor.getExecutor(config, plan, graph.getOperationMode(),
-        new ExecutionHookImpl(config, dataObjectMap, plan));
+        new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
   }
 
   /**
@@ -226,13 +229,12 @@ public class TaskExecutor {
         workerID, workerInfoList, communicator, this.checkpointingClient);
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     return executor.getExecutor(config, plan, graph.getOperationMode(),
-        new ExecutionHookImpl(config, dataObjectMap, plan));
+        new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
   }
 
   /**
    * Run the execution. Before that it will distribute the data. After execution, it will collect
    * the data.
-   *
    * @param ex the executor
    */
   public void execute(IExecutor ex) {
@@ -345,25 +347,6 @@ public class TaskExecutor {
   @Deprecated
   public <T> DataObject<T> getOutput(ComputeGraph graph, ExecutionPlan plan, String taskName) {
     // todo: fix this! this functionality is broken
-//    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
-//    if (nodes == null || nodes.isEmpty()) {
-//      return new EmptyDataObject<>();
-//    }
-//
-//    Map.Entry<Integer, INodeInstance> next = nodes.entrySet().iterator().next();
-//    INode task = next.getValue().getNode();
-//
-//    if (task instanceof Collector) {
-//      Set<String> collectibleNames = ((Collector) task).getCollectibleNames();
-//      if (collectibleNames.isEmpty()) {
-//        return new EmptyDataObject<>();
-//      } else if (collectibleNames.size() == 1) {
-//        return this.getOutput(graph, plan, taskName, collectibleNames.iterator().next());
-//      } else {
-//        throw new Twister2RuntimeException("The task " + taskName + " outputs more than one"
-//            + " data object : " + collectibleNames);
-//      }
-//    }
     return EmptyDataObject.getInstance();
   }
 
@@ -489,4 +472,10 @@ public class TaskExecutor {
 
   public void close() {
   }
+
+  @Override
+  public void onFault(Fault fault) throws Twister2Exception {
+
+  }
+
 }
