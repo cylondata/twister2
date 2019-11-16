@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -50,17 +51,16 @@ public class KMeansTsetEnvJob implements BatchTSetIWorker, Serializable {
     int workerId = env.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(env.getConfig());
+    Config config = env.getConfig();
+    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
+    int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
+    int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
-
-    String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
-    String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
+    String dinputDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+    String cinputDirectory = config.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
 
     if (workerId == 0) {
       try {

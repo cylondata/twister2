@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -68,17 +69,16 @@ public class KMeansWorker implements IWorker {
         persistentVolume, volatileVolume);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
+    int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
+    int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
-
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
+    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = config.getStringValue(
+        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
     KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);

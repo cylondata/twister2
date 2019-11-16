@@ -46,17 +46,17 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     int workerId = tc.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(tc.getConfig());
+    Config config = tc.getConfig();
+    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
+    int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
+    int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
-
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
+    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = config.getStringValue(
+        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
     KMeansUtils.generateDataPoints(tc.getConfig(), dimension, numFiles,
         dsize, csize, dataDirectory, centroidDirectory);
