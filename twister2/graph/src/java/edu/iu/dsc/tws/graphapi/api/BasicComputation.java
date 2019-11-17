@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -104,25 +105,22 @@ public abstract class BasicComputation extends TaskWorker {
 
 //third task graph for computations
     ComputeGraph computationTaskgraph = computation();
-    ExecutionPlan plan = taskExecutor.plan(computationTaskgraph);
+    IExecutor ex = taskExecutor.createExecution(computationTaskgraph);
+
     int unlimitedItr = 0;
 
     long startime = System.currentTimeMillis();
     if (iterations != 0) {
       for (int i = 0; i < iterations; i++) {
-        taskExecutor.itrExecute(computationTaskgraph, plan, i == iterations - 1);
-
+        ex.execute(i == iterations - 1);
       }
-
     } else {
       while (globaliterationStatus) {
-
-        taskExecutor.itrExecute(computationTaskgraph, plan, false);
+        ex.execute(false);
         unlimitedItr++;
 
       }
-      taskExecutor.closeExecution(computationTaskgraph, plan);
-      taskExecutor.close();
+      ex.closeExecution();
     }
     taskExecutor.close();
     long endTime = System.currentTimeMillis();

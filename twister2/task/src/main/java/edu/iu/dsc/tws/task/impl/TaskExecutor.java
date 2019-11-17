@@ -233,22 +233,6 @@ public class TaskExecutor implements FaultAcceptable {
   }
 
   /**
-   * Run the execution. Before that it will distribute the data. After execution, it will collect
-   * the data.
-   * @param ex the executor
-   */
-  public void execute(IExecutor ex) {
-    ex.execute();
-  }
-
-  /**
-   * Wait for the execution to complete
-   */
-  public void closeExecution(IExecutor ex) {
-    ex.closeExecution();
-  }
-
-  /**
    * Add input to the the task instances
    *
    * @param graph    task graph
