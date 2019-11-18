@@ -61,10 +61,12 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterListener;
+import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
@@ -74,33 +76,36 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
- * we assume each worker is assigned a unique ID outside of this class
- * If a worker joins with an ID that already exists in the group,
- * we assume that the worker is coming from failure. It is the same worker.
- * It is very important that there is no worker ID collusion among different workers in the same job
+ * we assume each worker is assigned a unique ID outside of this class.
  * <p>
- * We create a persistent znode for the job.
- * Job znode is created with submitting client.
- * We create an ephemeral znode for each worker under the job znode.
+ * We create following directories for a job by the submitting client.
+ *   persistent state znode (directory)
+ *   ephemeral state znode (directory)
+ *   barrier znode (directory)
+ *   events znode (directory)
+ *
+ * We create a persistent znode for each worker under the job persistent state znode.
+ *   It has WorkerInfo object and the latest WorkerState
+ *   Job Master watches the children of this znode for worker state changes.
+ *   We also use this znodes for checking whether worker are coming from failure.
+ *
+ * We create an ephemeral znode for each worker under the job ephemeral state znode.
+ *   The children of this znode is used for watching for worker failures and joins.
+ *   Job Master watches the children of this znode.
+ *
+ * We create an barrier znode for each worker under the job barrier state znode,
+ *   when a barrier started. When all workers create a znode under this directory,
+ *   all arrives on the barrier.
+ *   Job master watches the children of this znode and
+ *   informs all workers when all creates their znodes.
+ *
  * <p>
- * Each worker znode keeps two pieces of data:
- * WorkerInfo object of the worker that created the ephemeral worker znode
- * status of this worker. Worker status changes during job execution and this field is updated.
- * <p>
- * When workers fail, and their znodes are deleted from ZooKeeper,
- * Their workerInfo objects will be also gone.
- * So, we keep a list of all joined workers in each worker locally.
- * When the worker comes back from a failure,
- * its WorkerInfo is updated in each local worker list.
- * <p>
- * When the job completes, job terminator deletes persistent job znode.
- * Sometimes, job terminator may not be invoked or it may fail before cleaning p job resources.
- * Therefore, when a job is submitted, it is important to check whether there is
- * any existing znode with the same name as the submitted job in ZooKeeper.
- * If so, job submission will fail and first job termination should be invoked.
- * <p>
- * we use a barrier to make all workers wait until the last worker arrives at the barrier point
- * we count the number of waiting workers by using a DistributedAtomicInteger
+ * When the job completes, job terminator deletes all job znodes.
+ * Sometimes, job terminator may not be invoked or it may fail before cleaning up job resources.
+ * Therefore, when a job is being submitted,
+ * we check whether the directories that will be used by the job exists,
+ * if so, job submission will fail.
+ * User need to first run job termination or should use another job name.
  */
 
 public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdater {
@@ -165,12 +170,16 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // Inform events related to job master
   private IJobMasterListener jobMasterListener;
 
+  // Inform scaling events
+  private IScalerListener scalerListener;
+
   // some events may arrive after initializing the workerController but before
   // registering the listener,
   // we keep the last AllWorkersJoined event to deliver when there is no allJoinedListener
   private JobMasterAPI.AllWorkersJoined allJoinedEventCache;
   // we keep many fail events in the buffer to deliver later on
   private List<JobMasterAPI.JobEvent> failEventBuffer = new LinkedList<>();
+  private List<Integer> scalingEventBuffer = new LinkedList<>();
 
   /**
    * Construct ZKWorkerController but not initialize yet
@@ -213,11 +222,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
       client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
 
-      // update numberOfWorkers from jobZnode
-      // with scaling up/down, it may have been changed
-      JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
-      numberOfWorkers = job.getNumberOfWorkers();
-
       // if this worker is started with scaling up, or
       // if it is coming from failure
       // we need to handle past events
@@ -249,7 +253,16 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       String persDir = ZKUtils.persDir(rootPath, jobName);
       jobZnodeCache = new NodeCache(client, persDir);
       addJobZnodeCacheListener();
-      jobZnodeCache.start();
+      // start the cache and wait for it to get current data from zk server
+      jobZnodeCache.start(true);
+
+      // update numberOfWorkers from jobZnode
+      // with scaling up/down, it may have been changed
+      JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeCache.getCurrentData().getData());
+      if (numberOfWorkers != job.getNumberOfWorkers()) {
+        numberOfWorkers = job.getNumberOfWorkers();
+        LOG.info("numberOfWorkers updated from persJobZnode as: " + numberOfWorkers);
+      }
 
       createWorkerZnode();
 
@@ -473,6 +486,39 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
+   * add a single IAllJoinedListener
+   * if additional IAllJoinedListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addScalerListener(IScalerListener iScalerListener) {
+    if (scalerListener != null) {
+      return false;
+    }
+
+    scalerListener = iScalerListener;
+
+    // if scalingEventBuffer is not null, deliver that message in a new thread
+    if (scalingEventBuffer != null) {
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          for (Integer change: scalingEventBuffer) {
+            if (change > 0) {
+              scalerListener.workersScaledUp(change);
+              LOG.info("workersScaledUp event delivered from cache.");
+            } else {
+              scalerListener.workersScaledDown(Math.abs(change));
+              LOG.info("workersScaledDown event delivered from cache.");
+            }
+          }
+        }
+      });
+    }
+
+    return true;
+  }
+
+  /**
    * TODO: not implemented yet
    * add a single IJobMasterListener
    * if additional IJobMasterListener tried to be added,
@@ -544,18 +590,30 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
         byte[] jobZnodeBodyBytes = jobZnodeCache.getCurrentData().getData();
         JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeBodyBytes);
 
+        int change = job.getNumberOfWorkers() - numberOfWorkers;
+        numberOfWorkers = job.getNumberOfWorkers();
+
         // job scaled up
-        if (numberOfWorkers < job.getNumberOfWorkers()) {
+        if (change > 0) {
           allJoined = false;
-          LOG.info("Job scaled uuuuuuppppppppppp.");
+          if (scalerListener != null) {
+            scalerListener.workersScaledUp(change);
+          } else {
+            scalingEventBuffer.add(change);
+          }
+          LOG.info("Job scaled up. new numberOfWorkers: " + numberOfWorkers);
 
           // job scaled down
-        } else if (numberOfWorkers > job.getNumberOfWorkers()) {
+        } else if (change < 0) {
           // remove scaled down workers from worker list
           workers.removeIf(wInfo -> wInfo.getWorkerID() >= job.getNumberOfWorkers());
-          LOG.info("Job scaled dowwwwnnnnnn.");
+          if (scalerListener != null) {
+            scalerListener.workersScaledDown(Math.abs(change));
+          } else {
+            scalingEventBuffer.add(change);
+          }
+          LOG.info("Job scaled down. new numberOfWorkers: " + numberOfWorkers);
         }
-        numberOfWorkers = job.getNumberOfWorkers();
 
       }
     };
@@ -644,6 +702,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       synchronized (waitObjectBarrier) {
         waitObjectBarrier.notify();
       }
+
+      LOG.info("AllArrivedOnBarrier event received. Current numberOfWorkers: " + numberOfWorkers);
     }
 
   }
@@ -683,39 +743,30 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
-   * we use a DistributedAtomicInteger to count the number of workers
-   * that have reached to the barrier point.
+   * All workers create a znode on the job barrier directory
+   * Job master watches for directory creations/removals
+   * when the number of znodes on that directory reaches the number of workers in thr job,
+   * Job master publishes AllArrivedOnBarrier event
+   * Workers proceed when they get this event or when they time out
    * <p>
-   * Last worker to call this method increases the DistributedAtomicInteger,
-   * removes the barrier and lets all previous waiting workers be released.
-   * <p>
-   * Other workers to call this method increase the DistributedAtomicInteger,
-   * enable the barrier by calling setBarrier method and wait.
-   * <p>
-   * It is enough to call setBarrier method by only the first worker,
-   * however, it does not harm calling by many workers.
-   * <p>
-   * If we let only the first worker to set the barrier with setBarrier method,
-   * then, the second worker may call this method after the dai is increased
-   * but before the setBarrier method is called. To prevent this,
-   * we may need to use a distributed InterProcessMutex.
-   * So, instead of using a distributed InterProcessMutex, we call this method many times.
-   * <p>
-   * We reset the value of DistributedAtomicInteger to zero after all workers reached the barrier
-   * This lets barrier to be used again even if the job is scaled up/down
-   * <p>
-   * This method may be called many times during a computation.
-   * <p>
-   * If the job is scaled during some workers are waiting on a barrier,
-   * The barrier does not work, since the numberOfWorkers changes
-   * <p>
+   * Worker remove their znodes after they proceed through the barrier
+   * so that they can wait on the barrier again
+   * Workers are responsible for creating and removing znodes on the barrier
+   * Job master removes barrier znode after the job completion or scale down.
+   *
    * if timeout is reached, throws TimeoutException.
    */
   @Override
   public void waitOnBarrier() throws TimeoutException {
 
     barrierProceeded = false;
-    ZKBarrierManager.createWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+
+    try {
+      ZKBarrierManager.createWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     // wait until all workers joined or time limit is reached
     long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
@@ -737,7 +788,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     // delete barrier znode in any case
-    ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+    try {
+      ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
 
     if (barrierProceeded) {
       return;

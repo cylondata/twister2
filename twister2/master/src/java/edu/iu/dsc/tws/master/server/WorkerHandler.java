@@ -193,6 +193,36 @@ public class WorkerHandler implements MessageHandler {
     }
   }
 
+  public void workersScaledDown(int instancesRemoved) {
+
+    int change = 0 - instancesRemoved;
+    // construct scaled message to send to workers
+    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
+        .setChange(change)
+        .setNumberOfWorkers(workerMonitor.getNumberOfWorkers())
+        .build();
+
+    // let all remaining workers know about the scaled message
+    for (int workerID : workerMonitor.getWorkerIDs()) {
+      rrServer.sendMessage(scaledMessage, workerID);
+    }
+  }
+
+  public void workersScaledUp(int instancesAdded) {
+    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
+        .setChange(instancesAdded)
+        .setNumberOfWorkers(workerMonitor.getNumberOfWorkers())
+        .build();
+
+    int numberOfWorkersBeforeScaling = workerMonitor.getNumberOfWorkers() - instancesAdded;
+    // let all previous workers know about the scaled message
+    // no need for informing newly added workers
+    for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
+      rrServer.sendMessage(scaledMessage, wID);
+    }
+
+  }
+
   private void sendListWorkersResponse(int workerID, RequestID requestID) {
 
     JobMasterAPI.ListWorkersResponse.Builder responseBuilder =

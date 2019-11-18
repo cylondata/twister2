@@ -107,7 +107,7 @@ public class  DriverExample implements IDriver {
   private void scalingExample(IScaler scaler, IDriverMessenger messenger) {
     LOG.info("Testing scaling up and down ............................. ");
 
-    long sleepDuration = 20 * 1000; //
+    long sleepDuration = 30 * 1000; //
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
       Thread.sleep(sleepDuration);
@@ -128,16 +128,16 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-//    int toRemove = 5;
-//    LOG.info("removing " + toRemove + " workers.");
-//    scaler.scaleDownWorkers(toRemove);
-//
-//    try {
-//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-//      Thread.sleep(sleepDuration);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+    int toRemove = 5;
+    LOG.info("removing " + toRemove + " workers.");
+    scaler.scaleDownWorkers(toRemove);
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     LOG.info("Adding " + toAdd + " new workers.");
     scaler.scaleUpWorkers(toAdd);

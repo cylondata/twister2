@@ -215,10 +215,6 @@ public class ZKMasterController {
             childZnodeUpdated(event);
             break;
 
-          case CHILD_REMOVED:
-            workerCountAtBarrier--;
-            break;
-
           default:
             // nothing to do
         }
@@ -235,6 +231,10 @@ public class ZKMasterController {
         switch (event.getType()) {
           case CHILD_ADDED:
             barrierZnodeAdded(event);
+            break;
+
+          case CHILD_REMOVED:
+            workerCountAtBarrier--;
             break;
 
           default:

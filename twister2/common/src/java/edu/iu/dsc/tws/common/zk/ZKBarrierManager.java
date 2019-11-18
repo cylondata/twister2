@@ -17,7 +17,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public final class ZKBarrierManager {
   public static final Logger LOG = Logger.getLogger(ZKBarrierManager.class.getName());
@@ -29,7 +28,7 @@ public final class ZKBarrierManager {
    * create parent directory for ephemeral worker znodes
    */
   public static void createBarrierDir(CuratorFramework client, String rootPath, String jobName)
-      throws Exception {
+      throws Twister2Exception {
 
     String barrierDirPath = ZKUtils.barrierDir(rootPath, jobName);
 
@@ -40,10 +39,11 @@ public final class ZKBarrierManager {
           .withMode(CreateMode.PERSISTENT)
           .forPath(barrierDirPath);
 
-      LOG.info("Job BarrierStateDir created: " + barrierDirPath);
+      LOG.info("Job BarrierDir created: " + barrierDirPath);
 
     } catch (Exception e) {
-      throw new Exception("BarrierStateDir can not be created for the path: " + barrierDirPath, e);
+      throw new Twister2Exception("BarrierDir can not be created for the path: "
+          + barrierDirPath, e);
     }
   }
 
@@ -53,7 +53,7 @@ public final class ZKBarrierManager {
   public static void createWorkerZNode(CuratorFramework client,
                                   String rootPath,
                                   String jobName,
-                                  int workerID) {
+                                  int workerID) throws Twister2Exception {
     String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
@@ -67,7 +67,7 @@ public final class ZKBarrierManager {
       LOG.info("Worker Barrier Znode created: " + workerPath);
 
     } catch (Exception e) {
-      throw new Twister2RuntimeException("Worker Barrier Znode can not be created for the path: "
+      throw new Twister2Exception("Worker Barrier Znode can not be created for the path: "
           + workerPath, e);
     }
   }
@@ -78,7 +78,7 @@ public final class ZKBarrierManager {
   public static void deleteWorkerZNode(CuratorFramework client,
                                        String rootPath,
                                        String jobName,
-                                       int workerID) {
+                                       int workerID) throws Twister2Exception {
     String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
@@ -90,7 +90,7 @@ public final class ZKBarrierManager {
       LOG.info("Worker Barrier Znode deleted: " + workerPath);
 
     } catch (Exception e) {
-      throw new Twister2RuntimeException("Worker Barrier Znode can not be deleted for the path: "
+      throw new Twister2Exception("Worker Barrier Znode can not be deleted for the path: "
           + workerPath, e);
     }
   }
@@ -101,14 +101,14 @@ public final class ZKBarrierManager {
   public static boolean existWorkerZNode(CuratorFramework client,
                                        String rootPath,
                                        String jobName,
-                                       int workerID) {
+                                       int workerID) throws Twister2Exception {
     String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
     try {
       return client.checkExists().forPath(workerPath) != null;
     } catch (Exception e) {
-      throw new Twister2RuntimeException("Can not check existence of Worker Barrier Znode: "
+      throw new Twister2Exception("Can not check existence of Worker Barrier Znode: "
           + workerPath, e);
     }
   }

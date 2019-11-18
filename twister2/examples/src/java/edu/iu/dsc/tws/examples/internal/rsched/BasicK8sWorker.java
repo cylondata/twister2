@@ -124,7 +124,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
       return null;
     }
 
-    LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
+    LOG.info("All workers joined. The list from getAllWorkers: " + getIDs(workerList));
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");

@@ -346,15 +346,6 @@ public class WorkerMonitor implements MessageHandler {
 
     // modify numberOfWorkers
     numberOfWorkers -= instancesRemoved;
-    if (jobMaster.getZkMasterController() != null) {
-      jobMaster.getZkMasterController().jobScaledDown(numberOfWorkers);
-    }
-
-    // construct scaled message to send to workers
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(0 - instancesRemoved)
-        .setNumberOfWorkers(numberOfWorkers)
-        .build();
 
     // construct killedWorkers list and remove those workers from workers list
     List<Integer> killedWorkers = new LinkedList<>();
@@ -370,15 +361,17 @@ public class WorkerMonitor implements MessageHandler {
 
     LOG.info(strToLog);
 
-    // let all remaining workers know about the scaled message
-    for (int workerID : workers.keySet()) {
-      rrServer.sendMessage(scaledMessage, workerID);
+    // let either controller to know
+    if (jobMaster.getZkMasterController() != null) {
+      jobMaster.getZkMasterController().jobScaledDown(numberOfWorkers);
+    } else if (jobMaster.getWorkerHandler() != null) {
+      jobMaster.getWorkerHandler().workersScaledDown(instancesRemoved);
     }
 
     // send Scale message to the dashboard
+    int change = 0 - instancesRemoved;
     if (dashClient != null) {
-      dashClient.scaledWorkers(
-          scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), killedWorkers);
+      dashClient.scaledWorkers(change, numberOfWorkers, killedWorkers);
     }
   }
 
@@ -387,21 +380,11 @@ public class WorkerMonitor implements MessageHandler {
     allJoined = false;
 
     // keep previous numberOfWorkers and update numberOfWorkers with new value
-    int numberOfWorkersBeforeScaling = numberOfWorkers;
     numberOfWorkers += instancesAdded;
     if (jobMaster.getZkMasterController() != null) {
       jobMaster.getZkMasterController().jobScaledUp(numberOfWorkers);
-    }
-
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(instancesAdded)
-        .setNumberOfWorkers(numberOfWorkers)
-        .build();
-
-    // let all previous workers know about the scaled message
-    // no need for informing newly added workers
-    for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
-      rrServer.sendMessage(scaledMessage, wID);
+    } else if (jobMaster.getWorkerHandler() != null) {
+      jobMaster.getWorkerHandler().workersScaledUp(instancesAdded);
     }
 
     // in the case of very unlikely but possible scenerio
@@ -410,19 +393,17 @@ public class WorkerMonitor implements MessageHandler {
     if (allWorkersJoined()) {
       allJoined = true;
 
-      if (jobMaster.getZkMasterController() == null) {
-        jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
-      } else {
+      if (jobMaster.getZkMasterController() != null) {
         jobMaster.getZkMasterController().publishAllJoined();
+      } else {
+        jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
       }
     }
 
     // send Scaled message to the dashboard
     if (dashClient != null) {
-      dashClient.scaledWorkers(
-          scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), new LinkedList<Integer>());
+      dashClient.scaledWorkers(instancesAdded, numberOfWorkers, new LinkedList<Integer>());
     }
-
   }
 
   public boolean broadcastMessage(Message message) {
