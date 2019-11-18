@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.common.zk;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -22,7 +21,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
@@ -56,7 +54,7 @@ public final class ZKPersStateManager {
    * This method should be called by the submitting client
    */
   public static void createPersStateDir(CuratorFramework client, String rootPath, JobAPI.Job job)
-      throws Exception {
+      throws Twister2Exception {
 
     String persStatePath = ZKUtils.persDir(rootPath, job.getJobName());
 
@@ -70,7 +68,7 @@ public final class ZKPersStateManager {
       LOG.info("Job PersStateDir created: " + persStatePath);
 
     } catch (Exception e) {
-      throw new Exception("PersStateDir can not be created for the path: "
+      throw new Twister2Exception("PersStateDir can not be created for the path: "
           + persStatePath, e);
     }
   }
@@ -79,34 +77,39 @@ public final class ZKPersStateManager {
    * Initialize worker persistent state at ZooKeeper server
    * If the worker is starting for the first time, returns false
    * If the worker is restarting, returns true
-   *
+   * <p>
    * A persistent znode is created/updated for this worker on ZooKeeper server
    * Each worker must call this method exactly once when they start
    */
   public static boolean initWorkerPersState(CuratorFramework client,
                                             String rootPath,
                                             String jobName,
-                                            WorkerInfo workerInfo) throws Exception {
+                                            WorkerInfo workerInfo) throws Twister2Exception {
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
 
-    // if the worker znode exists,
-    // update the body and return true
-    if (client.checkExists().forPath(workerPersPath) != null) {
-      LOG.warning("Worker PersStateDir exists: " + workerPersPath);
-      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.RESTARTED);
-      client.setData().forPath(workerPersPath, workerWithState.toByteArray());
-      return true;
+    try {
+      // if the worker znode exists,
+      // update the body and return true
+      if (client.checkExists().forPath(workerPersPath) != null) {
+        LOG.warning("Worker PersStateDir exists: " + workerPersPath);
+        WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.RESTARTED);
+        client.setData().forPath(workerPersPath, workerWithState.toByteArray());
+        return true;
+      }
+
+      // if the worker znode does not exist,
+      // create worker znode
+      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED);
+      client
+          .create()
+          .withMode(CreateMode.PERSISTENT)
+          .forPath(workerPersPath, workerWithState.toByteArray());
+    } catch (Exception e) {
+      throw new Twister2Exception("Can not initialize pers state znode for the worker.", e);
     }
 
-    // if the worker znode does not exist,
-    // create worker znode
-    WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED);
-    client
-        .create()
-        .withMode(CreateMode.PERSISTENT)
-        .forPath(workerPersPath, workerWithState.toByteArray());
     return false;
   }
 
@@ -114,36 +117,41 @@ public final class ZKPersStateManager {
    * Initialize job master persistent state at ZooKeeper server
    * If the job master is starting for the first time, return false
    * If the job master is restarting, return true
-   *
+   * <p>
    * A persistent znode is created/updated for the job master on ZooKeeper server
    * Job master must call this method exactly once when it starts
    */
   public static boolean initJobMasterPersState(CuratorFramework client,
                                                String rootPath,
                                                String jobName,
-                                               String jmAddress) throws Exception {
+                                               String jmAddress) throws Twister2Exception {
 
     String jmPersPath = ZKUtils.jmPersPath(rootPath, jobName);
 
-    // if the worker znode exists,
-    // update the body and return true
-    if (client.checkExists().forPath(jmPersPath) != null) {
-      LOG.warning("JobMaster PersStateDir exists: " + jmPersPath);
+    try {
+      // if the worker znode exists,
+      // update the body and return true
+      if (client.checkExists().forPath(jmPersPath) != null) {
+        LOG.warning("JobMaster PersStateDir exists: " + jmPersPath);
+        byte[] znodeBody =
+            ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_RESTARTED.getNumber());
+        client.setData().forPath(jmPersPath, znodeBody);
+        return true;
+      }
+
+      // if the worker znode does not exist,
+      // create worker znode
       byte[] znodeBody =
-          ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_RESTARTED.getNumber());
-      client.setData().forPath(jmPersPath, znodeBody);
-      return true;
+          ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_STARTED.getNumber());
+
+      client
+          .create()
+          .withMode(CreateMode.PERSISTENT)
+          .forPath(jmPersPath, znodeBody);
+    } catch (Exception e) {
+      throw new Twister2Exception("Can not initialize job master pers state znode.", e);
     }
 
-    // if the worker znode does not exist,
-    // create worker znode
-    byte[] znodeBody =
-        ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_STARTED.getNumber());
-
-    client
-        .create()
-        .withMode(CreateMode.PERSISTENT)
-        .forPath(jmPersPath, znodeBody);
     return false;
   }
 
@@ -180,7 +188,7 @@ public final class ZKPersStateManager {
                                            String rootPath,
                                            String jobName,
                                            WorkerInfo workerInfo,
-                                           WorkerState newStatus) {
+                                           WorkerState newStatus) throws Twister2Exception {
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
@@ -191,15 +199,14 @@ public final class ZKPersStateManager {
       LOG.info("Worker status changed to: " + newStatus);
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not update worker status in znode: " + workerInfo.getWorkerID(), e);
-      return false;
+      throw new Twister2Exception("Could not update worker status in znode: "
+          + workerInfo.getWorkerID(), e);
     }
   }
 
   public static WorkerWithState getWorkerWithState(CuratorFramework client,
                                                    String workersPersDir,
-                                                   int workerID) {
+                                                   int workerID) throws Twister2Exception {
 
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerID);
 
@@ -212,9 +219,8 @@ public final class ZKPersStateManager {
       return null;
 
     } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not get persistent worker znode data: " + workerPersPath, e);
-      throw new Twister2RuntimeException(e);
+      throw new Twister2Exception("Could not get persistent worker znode data: "
+          + workerPersPath, e);
     }
   }
 
@@ -223,7 +229,7 @@ public final class ZKPersStateManager {
    */
   public static LinkedList<WorkerWithState> getWorkers(CuratorFramework client,
                                                        String rootPath,
-                                                       String jobName) {
+                                                       String jobName) throws Twister2Exception {
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
 
@@ -239,9 +245,8 @@ public final class ZKPersStateManager {
 
       return workers;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not get persistent worker znode data: " + workersPersDir, e);
-      throw new Twister2RuntimeException(e);
+      throw new Twister2Exception("Could not get persistent worker znode data: "
+          + workersPersDir, e);
     }
   }
 
@@ -250,7 +255,8 @@ public final class ZKPersStateManager {
    * read the body of persistent directory body
    * decode and return
    */
-  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName) {
+  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName)
+      throws Twister2Exception {
 
     String persDir = ZKUtils.persDir(rootPath, jobName);
 
@@ -258,8 +264,7 @@ public final class ZKPersStateManager {
       byte[] jobBytes = client.getData().forPath(persDir);
       return decodeJobZnode(jobBytes);
     } catch (Exception e) {
-      LOG.severe("Could not read job znode body: " + e.getMessage());
-      throw new Twister2RuntimeException(e);
+      throw new Twister2Exception("Could not read job znode body: " + e.getMessage(), e);
     }
   }
 
@@ -276,7 +281,7 @@ public final class ZKPersStateManager {
    * This method should be called by the submitting client
    */
   public static void updateJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
-      throws Exception {
+      throws Twister2Exception {
 
     String persDir = ZKUtils.persDir(rootPath, job.getJobName());
     try {
@@ -287,8 +292,7 @@ public final class ZKPersStateManager {
       LOG.info("Job object in PersStateDir updated: " + persDir);
 
     } catch (Exception e) {
-      LOG.severe("Could not update the job znode: " + e.getMessage());
-      throw e;
+      throw new Twister2Exception("Could not update the job znode: " + e.getMessage(), e);
     }
   }
 }

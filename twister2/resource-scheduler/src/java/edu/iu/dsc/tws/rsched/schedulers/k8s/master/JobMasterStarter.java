@@ -13,12 +13,13 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -35,7 +36,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -99,13 +99,18 @@ public final class JobMasterStarter {
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
 
-    JobMasterAPI.JobMasterState initialState = determineInitialState(config, jobName, podIP);
+    JobMasterAPI.JobMasterState initialState = null;
+    initialState = determineInitialState(config, jobName, podIP);
 
     // start JobMaster
     JobMaster jobMaster =
         new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(false);
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
 
     // wait to be deleted by K8s master
     K8sWorkerUtils.waitIndefinitely();
@@ -137,7 +142,8 @@ public final class JobMasterStarter {
         return JobMasterAPI.JobMasterState.JM_STARTED;
 
       } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+        LOG.log(Level.SEVERE, "Can not determine Job Master initial state. Assuming JM_STARTED", e);
+        return JobMasterAPI.JobMasterState.JM_STARTED;
       }
     }
 

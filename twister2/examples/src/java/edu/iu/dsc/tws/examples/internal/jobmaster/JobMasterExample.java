@@ -34,6 +34,7 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -105,7 +106,12 @@ public final class JobMasterExample {
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
-    jobMaster.startJobMasterThreaded();
+    try {
+      jobMaster.startJobMasterThreaded();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
+      throw new RuntimeException(e);
+    }
 
     LOG.info("Threaded Job Master started:"
         + "\nnumberOfWorkers: " + job.getNumberOfWorkers()

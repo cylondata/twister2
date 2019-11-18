@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
@@ -269,7 +270,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         new JobMaster(config, hostAdress, this, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(true);
 //    jobMaster.startJobMasterThreaded();
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
 
     return true;
   }

@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -267,7 +267,9 @@ public final class K8sWorkerStarter {
         return JobMasterAPI.WorkerState.STARTED;
 
       } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+        LOG.log(Level.SEVERE,
+            "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
+        return JobMasterAPI.WorkerState.STARTED;
       }
     }
 

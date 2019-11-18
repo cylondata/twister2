@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
@@ -244,7 +244,7 @@ public class JobMaster {
   /**
    * initialize the Job Master
    */
-  private void init() {
+  private void init() throws Twister2Exception {
 
     looper = new Progress();
 
@@ -274,7 +274,11 @@ public class JobMaster {
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
 
     // if ZoKeeper server is used for this job, initialize that
-    initZKMasterController(workerMonitor);
+    try {
+      initZKMasterController(workerMonitor);
+    } catch (Twister2Exception e) {
+      throw e;
+    }
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -352,9 +356,13 @@ public class JobMaster {
   /**
    * start the Job Master in a Thread
    */
-  public Thread startJobMasterThreaded() {
+  public Thread startJobMasterThreaded() throws Twister2Exception {
     // first call the init method
-    init();
+    try {
+      init();
+    } catch (Twister2Exception e) {
+      throw e;
+    }
 
     // start Driver thread if the driver exists
     startDriverThread();
@@ -374,9 +382,13 @@ public class JobMaster {
   /**
    * start the Job Master in a blocking call
    */
-  public void startJobMasterBlocking() {
+  public void startJobMasterBlocking() throws Twister2Exception {
     // first call the init method
-    init();
+    try {
+      init();
+    } catch (Twister2Exception e) {
+      throw e;
+    }
 
     // start Driver thread if the driver exists
     startDriverThread();
@@ -452,15 +464,15 @@ public class JobMaster {
   /**
    * initialize ZKMasterController if ZooKeeper used
    */
-  private void initZKMasterController(WorkerMonitor wMonitor) {
+  private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController = new ZKMasterController(config, job.getJobName(),
           job.getNumberOfWorkers(), ZKContext.serverAddresses(config), workerMonitor);
 
       try {
         zkMasterController.initialize(initialState);
-      } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+      } catch (Twister2Exception e) {
+        throw e;
       }
     }
 

@@ -311,13 +311,25 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public boolean updateWorkerStatus(WorkerState newStatus) {
 
-    return ZKPersStateManager.updateWorkerStatus(client, rootPath, jobName, workerInfo, newStatus);
+    try {
+      return ZKPersStateManager.updateWorkerStatus(
+          client, rootPath, jobName, workerInfo, newStatus);
+
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
   }
 
   @Override
   public WorkerState getWorkerStatusForID(int id) {
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
-    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
+    WorkerWithState workerWS = null;
+    try {
+      workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     if (workerWS != null) {
       return workerWS.getState();
     }
@@ -342,7 +354,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
-    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
+    WorkerWithState workerWS = null;
+    try {
+      workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     if (workerWS != null) {
       return workerWS.getInfo();
     }
@@ -358,8 +375,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public List<WorkerInfo> getJoinedWorkers() {
 
-    List<WorkerWithState> workersWithState =
-        ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    List<WorkerWithState> workersWithState = null;
+    try {
+      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
 
     return workersWithState
         .stream()
@@ -539,8 +561,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    */
   public List<WorkerInfo> getCurrentWorkers() {
 
-    List<WorkerWithState> workersWithState =
-        ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    List<WorkerWithState> workersWithState = null;
+    try {
+      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
 
     return workersWithState
         .stream()

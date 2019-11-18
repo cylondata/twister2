@@ -32,7 +32,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.zookeeper.CreateMode;
 
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 
 public final class ZKEphemStateManager {
   public static final Logger LOG = Logger.getLogger(ZKEphemStateManager.class.getName());
@@ -46,7 +46,7 @@ public final class ZKEphemStateManager {
    * create parent directory for ephemeral worker znodes
    */
   public static void createEphemDir(CuratorFramework client, String rootPath, String jobName)
-      throws Exception {
+      throws Twister2Exception {
 
     String ephemDirPath = ZKUtils.ephemDir(rootPath, jobName);
 
@@ -60,7 +60,8 @@ public final class ZKEphemStateManager {
       LOG.info("Job EphemStateDir created: " + ephemDirPath);
 
     } catch (Exception e) {
-      throw new Exception("EphemStateDir can not be created for the path: " + ephemDirPath, e);
+      throw new Twister2Exception("EphemStateDir can not be created for the path: "
+          + ephemDirPath, e);
     }
   }
 
@@ -86,7 +87,7 @@ public final class ZKEphemStateManager {
   public static void removeEphemZNode(CuratorFramework client,
                                       String rootPath,
                                       String jobName,
-                                      int workerID) {
+                                      int workerID) throws Twister2Exception {
     String ephemDirPath = ZKUtils.ephemDir(rootPath, jobName);
 
     try {
@@ -102,7 +103,7 @@ public final class ZKEphemStateManager {
       }
 
     } catch (Exception e) {
-      throw new Twister2RuntimeException(e);
+      throw new Twister2Exception("Can not remove ephemeral worker znode.", e);
     }
   }
 

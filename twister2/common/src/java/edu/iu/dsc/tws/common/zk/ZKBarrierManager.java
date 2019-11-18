@@ -51,9 +51,9 @@ public final class ZKBarrierManager {
    * create a worker znode at the barrier directory
    */
   public static void createWorkerZNode(CuratorFramework client,
-                                  String rootPath,
-                                  String jobName,
-                                  int workerID) throws Twister2Exception {
+                                       String rootPath,
+                                       String jobName,
+                                       int workerID) throws Twister2Exception {
     String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
@@ -99,9 +99,9 @@ public final class ZKBarrierManager {
    * create a worker znode at the barrier directory
    */
   public static boolean existWorkerZNode(CuratorFramework client,
-                                       String rootPath,
-                                       String jobName,
-                                       int workerID) throws Twister2Exception {
+                                         String rootPath,
+                                         String jobName,
+                                         int workerID) throws Twister2Exception {
     String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
@@ -140,5 +140,22 @@ public final class ZKBarrierManager {
       }
     }
   }
+
+  public static int getNumberOfWorkersAtBarrier(CuratorFramework client,
+                                                String rootPath,
+                                                String jobName) throws Twister2Exception {
+
+    String barrierDir = ZKUtils.barrierDir(rootPath, jobName);
+
+    try {
+      int numberOfWorkersAt = client.getChildren().forPath(barrierDir).size();
+      LOG.info("Number of workers at the barrier: " + numberOfWorkersAt);
+      return numberOfWorkersAt;
+    } catch (Exception e) {
+      throw new Twister2Exception("Could not get children of barrier directory: "
+          + barrierDir, e);
+    }
+  }
+
 
 }
