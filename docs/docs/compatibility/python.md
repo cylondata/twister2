@@ -19,6 +19,34 @@ The Python API provides the ability to define Twister2 TSet jobs in python.
 pip3 install twister2
 ```
 
+twister2 uses [jep](https://github.com/ninia/jep) to create python interpreters within the JVM. Inorder for this to work properly, jep's native libraries should be accessible by the java process. Update your LD_LIBRARY_PATH environment variable 
+to include ```jep.so``` inorder to make it accessible by java process at runtime. The location of jep can be found as follows.
+
+```bash
+pip show jep
+```
+
+This will give an output similar to below.
+
+```text
+Name: jep
+Version: 3.9.0
+Summary: Jep embeds CPython in Java
+Home-page: https://github.com/ninia/jep
+Author: Jep Developers
+Author-email: jep-project@googlegroups.com
+License: zlib/libpng
+Location: /home/username/.local/lib/python3.7/site-packages
+Requires: 
+Required-by: twister2
+```
+
+Now copy the Location and update the LD_LIBRARY_PATH as follows.
+
+```bash
+export LD_LIBRARY_PATH=/home/username/.local/lib/python3.7/site-packages/jep:$LD_LIBRARY_PATH
+```
+
 ## Writing your first application
 
 ### Twister2 Environment
