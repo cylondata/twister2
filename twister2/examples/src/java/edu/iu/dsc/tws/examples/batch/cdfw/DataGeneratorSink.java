@@ -25,7 +25,7 @@ public class DataGeneratorSink extends BaseCompute {
 
   @Override
   public boolean execute(IMessage content) {
-    LOG.info("Received Data Generation Input Message");
+    LOG.fine("Received Data Generation Input Message");
     return false;
   }
 }
