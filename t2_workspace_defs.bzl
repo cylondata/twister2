@@ -305,4 +305,4 @@ def load_modules():
 
     # For Python Support
     _maven_import(artifact = "net.sf.py4j:py4j:0.10.8.1", licenses = ["notice"], sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835")
-    _maven_import(artifact = "black.ninia:jep:3.8.2", licenses = ["notice"], sha256 = "dbd5cf18e130eca889bfec01edd6ed7fedaf2bbc1ba4ef405166625917c82003")
+    _maven_import(artifact = "black.ninia:jep:3.9.0", licenses = ["notice"], sha256 = "de8a69bc028d131f23a41bb964c0707a51dc8defcf7418bb891d7b4ab168b16d")

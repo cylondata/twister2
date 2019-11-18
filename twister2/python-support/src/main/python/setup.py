@@ -23,7 +23,7 @@ setuptools.setup(
     ],
     python_requires='>=3.7',
     install_requires=[
-        'jep',
+        'jep==3.9.0',
         'cloudpickle',
         'numpy',
         'py4j'
