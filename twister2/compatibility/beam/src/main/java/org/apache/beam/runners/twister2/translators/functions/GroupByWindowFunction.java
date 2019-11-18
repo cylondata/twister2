@@ -55,15 +55,14 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
   private static final Logger LOG = Logger.getLogger(GroupByWindowFunction.class.getName());
   private final WindowingStrategy<?, W> windowingStrategy;
   private final SystemReduceFn<K, V, Iterable<V>, Iterable<V>, W> reduceFn;
-  private final SerializablePipelineOptions options;
+  //options are kept
+  private final SerializablePipelineOptions options = null;
 
   public GroupByWindowFunction(
       WindowingStrategy<?, W> windowingStrategy,
-      SystemReduceFn<K, V, Iterable<V>, Iterable<V>, W> reduceFn,
-      SerializablePipelineOptions options) {
+      SystemReduceFn<K, V, Iterable<V>, Iterable<V>, W> reduceFn) {
     this.windowingStrategy = windowingStrategy;
     this.reduceFn = reduceFn;
-    this.options = options;
   }
 
   @Override
@@ -92,7 +91,7 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
               outputter,
               new UnsupportedSideInputReader("GroupAlsoByWindow"),
               reduceFn,
-              options.get());
+              null);
 
       // Process the grouped values.
       reduceFnRunner.processElements(values);
