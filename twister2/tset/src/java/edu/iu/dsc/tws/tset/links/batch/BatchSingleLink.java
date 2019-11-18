@@ -95,23 +95,22 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
 
   @Override
   public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
-    return cacheTSet;
+    return (CachedTSet<T>) super.cache();
   }
 
   @Override
   public PersistedTSet<T> lazyPersist() {
+    DiskPersistSingleSink<T> diskPersistSingleSink = new DiskPersistSingleSink<>(
+        this.getId()
+    );
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        new DiskPersistSingleSink<>(), getTargetParallelism());
+        diskPersistSingleSink, getTargetParallelism());
     addChildToGraph(persistedTSet);
     return persistedTSet;
   }
 
   @Override
   public PersistedTSet<T> persist() {
-    PersistedTSet<T> persistTSet = lazyPersist();
-    getTSetEnv().run(persistTSet);
-    return persistTSet;
+    return (PersistedTSet<T>) super.persist();
   }
 }

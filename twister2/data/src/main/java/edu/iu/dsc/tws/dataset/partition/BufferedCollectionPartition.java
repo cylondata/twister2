@@ -95,6 +95,13 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
         config, UUID.randomUUID().toString());
   }
 
+  public BufferedCollectionPartition(long maxFramesInMemory, Config config,
+                                     String reference) {
+    this(maxFramesInMemory, DEFAULT_DATA_TYPE, DEFAULT_MAX_BUFFERED_BYTES,
+        config, reference);
+    this.loadFromFS();
+  }
+
   /**
    * Creates an instance with default bugger size 10MB
    *

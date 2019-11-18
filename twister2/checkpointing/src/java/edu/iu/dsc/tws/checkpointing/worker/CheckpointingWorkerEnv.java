@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
@@ -79,6 +80,11 @@ public final class CheckpointingWorkerEnv {
   public static Builder newBuilder(Config config, int workerId,
                                    IWorkerController workerController) {
     return new Builder(config, workerId, workerController);
+  }
+
+  public static Builder newBuilder(WorkerEnvironment workerEnvironment) {
+    return new Builder(workerEnvironment.getConfig(), workerEnvironment.getWorkerId(),
+        workerEnvironment.getWorkerController());
   }
 
 
