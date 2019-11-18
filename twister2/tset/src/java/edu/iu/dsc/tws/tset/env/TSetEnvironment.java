@@ -137,6 +137,10 @@ public abstract class TSetEnvironment {
     return tBaseGraph;
   }
 
+  public void settBaseGraph(TBaseGraph tBaseGraph) {
+    this.tBaseGraph = tBaseGraph;
+  }
+
   TaskExecutor getTaskExecutor() {
     return taskExecutor;
   }

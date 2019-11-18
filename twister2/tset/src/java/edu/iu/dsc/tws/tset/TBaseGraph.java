@@ -33,14 +33,12 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.google.common.graph.ElementOrder;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
-
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.tset.env.BuildContext;
+import edu.iu.dsc.tws.tset.graph.DAGMutableGraph;
+import edu.iu.dsc.tws.tset.graph.MutableGraph;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class TBaseGraph {
@@ -53,11 +51,12 @@ public class TBaseGraph {
   private Set<BuildableTSet> sources;
 
   public TBaseGraph(OperationMode operationMode) {
-    this.graph = GraphBuilder.directed()
-        .allowsSelfLoops(false) // because this is a DAG
-        .expectedNodeCount(100000) // use config and change this value
-        .nodeOrder(ElementOrder.insertion())
-        .build();
+//    this.graph = GraphBuilder.directed()
+//        .allowsSelfLoops(false) // because this is a DAG
+//        .expectedNodeCount(100000) // use config and change this value
+//        .nodeOrder(ElementOrder.insertion())
+//        .build();
+    this.graph = new DAGMutableGraph<>();
 
     this.opMode = operationMode;
 

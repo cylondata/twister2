@@ -33,7 +33,8 @@ import org.apache.beam.sdk.options.PipelineOptionsValidator;
 public class Twister2LegacyRunner extends PipelineRunner<PipelineResult> {
 
   private static final Logger LOG = Logger.getLogger(Twister2LegacyRunner.class.getName());
-
+//  private static final String SIDEINPUTS = "sideInputs";
+//  private static final String LEAVES = "leaves";
   /**
    * Provided options.
    */
@@ -56,6 +57,21 @@ public class Twister2LegacyRunner extends PipelineRunner<PipelineResult> {
     LOG.info("Translating pipeline to Twister2 program.");
     env.translate(pipeline);
     env.execute();
+//
+//    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+//
+//    JobConfig jobConfig = new JobConfig();
+//    jobConfig.put(SIDEINPUTS, env.getSideInputs());
+//    jobConfig.put(LEAVES, env.getLeaves());
+//
+//    int workers = 1;
+//    System.out.println("Start");
+//    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+//    jobBuilder.setJobName("beam-test-job");
+//    jobBuilder.setWorkerClass(WordCount.class.getName());
+//    jobBuilder.addComputeResource(2, 512, 1.0, workers);
+//    jobBuilder.setConfig(jobConfig);
+
     //Currently returning an empty result object since this is not supported yet
     return new Twister2PiplineResult();
   }
