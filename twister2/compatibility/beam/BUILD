@@ -20,6 +20,7 @@ common_deps_files = [
        "@org_apache_beam_beam_runners_core_java//jar",
        "@org_apache_beam_beam_sdks_java_core//jar",
        "@org_apache_beam_beam_model_pipeline//jar",
+       "@commons_cli_commons_cli//jar",
        "@org_apache_beam_beam_runners_java_fn_execution//jar",
        "@com_fasterxml_jackson_core_jackson_annotations//jar",
        "@joda_time_joda_time//jar",

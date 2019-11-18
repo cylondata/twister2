@@ -37,6 +37,11 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
     super(maxFramesInMemory, config);
   }
 
+  public DiskBackedCollectionPartition(long maxFramesInMemory, Config config,
+                                       String reference) {
+    super(maxFramesInMemory, config, reference);
+  }
+
   public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
                                        Config config) {
     super(maxFramesInMemory, dataType, config);
