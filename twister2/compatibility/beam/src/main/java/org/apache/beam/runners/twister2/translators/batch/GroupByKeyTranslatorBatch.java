@@ -39,6 +39,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+
 /**
  * GroupByKey translator.
  */
@@ -72,8 +73,7 @@ public class GroupByKeyTranslatorBatch<K, V> implements BatchTransformTranslator
             .<WindowedValue<KV<K, Iterable<V>>>>flatmap(
                 new GroupByWindowFunction(
                     windowingStrategy,
-                    SystemReduceFn.buffering(coder.getValueCoder()),
-                    context.getSerializableOptions()));
+                    SystemReduceFn.buffering(coder.getValueCoder())));
     PCollection output = context.getOutput(transform);
     context.setOutputDataSet(output, outputTset);
   }

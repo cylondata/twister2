@@ -25,7 +25,6 @@ import org.apache.beam.runners.twister2.translators.Twister2BatchPipelineTransla
 import org.apache.beam.runners.twister2.translators.Twister2PipelineTranslator;
 import org.apache.beam.runners.twister2.translators.Twister2StreamPipelineTranslator;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.values.PCollectionView;
 
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
@@ -79,7 +78,7 @@ public class Twister2PiplineExecutionEnvironment {
     twister2TranslationContext.execute();
   }
 
-  public Map<PCollectionView<?>, BatchTSet<?>> getSideInputs() {
+  public Map<String, BatchTSet<?>> getSideInputs() {
     return twister2TranslationContext.getSideInputDataSets();
   }
 
