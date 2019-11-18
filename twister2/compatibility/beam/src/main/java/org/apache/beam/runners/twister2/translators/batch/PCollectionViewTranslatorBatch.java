@@ -58,6 +58,6 @@ public class PCollectionViewTranslatorBatch<ET, VT>
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    context.setSideInputDataSet(input, inputDataSet);
+    context.setSideInputDataSet(input.getTagInternal().getId(), inputDataSet);
   }
 }
