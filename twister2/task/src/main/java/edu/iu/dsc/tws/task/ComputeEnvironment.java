@@ -50,14 +50,17 @@ public final class ComputeEnvironment {
 
   private ComputeEnvironment(Config config, int workerId, IWorkerController wController,
                              IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    this.workerEnvironment = WorkerEnvironment.init(config, workerId,
-        wController, pVolume, vVolume);
-    this.taskExecutor = new TaskExecutor(workerEnvironment);
+    this(WorkerEnvironment.init(config, workerId, wController, pVolume, vVolume));
   }
 
   private ComputeEnvironment(WorkerEnvironment workerEnv) {
     this.workerEnvironment = workerEnv;
     this.taskExecutor = new TaskExecutor(workerEnv);
+
+    // if checkpointing enabled lets register for receiving faults
+//    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnv.getConfig())) {
+//      this.workerEnvironment.registerFaultAcceptor(taskExecutor);
+//    }
   }
 
   /**

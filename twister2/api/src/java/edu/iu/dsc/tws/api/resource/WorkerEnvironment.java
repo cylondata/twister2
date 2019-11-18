@@ -99,6 +99,22 @@ public final class WorkerEnvironment {
     this.communicator = new Communicator(config, channel);
   }
 
+//  /**
+//   * Register a fault acceptor
+//   * @param acceptable the fault acceptr
+//   */
+//  public void registerFaultAcceptor(FaultAcceptable acceptable) {
+//    IWorkerFailureListener listener = WorkerRuntime.getFailureListener();
+//    if (listener != null) {
+//      listener.registerFaultAcceptor(acceptable);
+//    } else {
+//      String msg = "Cannot register a fault acceptor, when fault listners are not " +
+//          "configured. Make sure to enable fault tolerence";
+//      LOG.severe(msg);
+//      throw new RuntimeException(msg);
+//    }
+//  }
+
   public Config getConfig() {
     return config;
   }

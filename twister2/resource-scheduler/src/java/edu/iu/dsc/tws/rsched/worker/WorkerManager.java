@@ -26,19 +26,20 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * Keep information about a managed environment where workers can get restarted.
  */
-public class ManagedWorkerEnvironment implements IWorkerFailureListener, IAllJoinedListener {
-  private static final Logger LOG = Logger.getLogger(ManagedWorkerEnvironment.class.getName());
+public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener {
+  private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
 
   /**
    * Keep track of the components that have the ability to deal with faults
    */
-  private List<FaultAcceptable> faultComponets = new ArrayList<>();
+  private List<FaultAcceptable> faultComponents = new ArrayList<>();
 
   /**
    * The IWorker we are working with
@@ -70,21 +71,86 @@ public class ManagedWorkerEnvironment implements IWorkerFailureListener, IAllJoi
    */
   private IVolatileVolume volatileVolume;
 
-  public ManagedWorkerEnvironment(Config config,
-                                  int workerID,
-                                  IWorkerController workerController,
-                                  IPersistentVolume persistentVolume,
-                                  IVolatileVolume volatileVolume,
-                                  IWorker worker) {
+  /**
+   * The worker status
+   */
+  private enum WorkerStatus {
+    RUNNING,
+    FAILED,
+    RESTARTED,
+  }
+
+  /**
+   * Keep track of the status
+   */
+  private WorkerStatus workerStatus;
+
+  /**
+   * The current retries
+   */
+  private int retries = 0;
+
+  /**
+   * Maximum retries
+   */
+  private final int maxRetries;
+
+  /**
+   * The start time of this worker
+   */
+  private long startTime = 0;
+
+  private long failedTime = 0;
+
+  public WorkerManager(Config config,
+                       int workerID,
+                       IWorkerController workerController,
+                       IPersistentVolume persistentVolume,
+                       IVolatileVolume volatileVolume,
+                       IWorker worker) {
     this.config = config;
     this.workerId = workerID;
     this.workerController = workerController;
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
     this.managedWorker = worker;
+    // we default to three retries
+    this.maxRetries = SchedulerContext.failureRetries(config, 3);
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
+    this.workerStatus = WorkerStatus.RUNNING;
+  }
+
+  /**
+   * Start the worker manager
+   */
+  public void start() {
+    while (retries < maxRetries) {
+      if (workerStatus == WorkerStatus.FAILED) {
+        long elapsedTime = System.currentTimeMillis() - failedTime;
+        if (elapsedTime > 600000) {
+          LOG.info("Waited 10 mins to recover the workers from failre, giving up");
+          break;
+        }
+      }
+
+      if (workerStatus == WorkerStatus.RUNNING) {
+        managedWorker.execute(config, workerId, workerController, persistentVolume, volatileVolume);
+        retries++;
+        // we are still in a good state, so we can stop
+        if (workerStatus == WorkerStatus.RUNNING) {
+          LOG.info("Worker finished successfully");
+          break;
+        }
+      }
+
+      // we break here
+      if (retries >= maxRetries) {
+        LOG.info(String.format("Retried %d times and failed, we are exiting", retries));
+        break;
+      }
+    }
   }
 
   /**
@@ -93,7 +159,7 @@ public class ManagedWorkerEnvironment implements IWorkerFailureListener, IAllJoi
    * @param fa the fault accepted component
    */
   public void registerFaultComponent(FaultAcceptable fa) {
-    faultComponets.add(fa);
+    faultComponents.add(fa);
   }
 
   @Override
@@ -103,8 +169,12 @@ public class ManagedWorkerEnvironment implements IWorkerFailureListener, IAllJoi
 
   @Override
   public void failed(int workerID) {
+    // set the status to fail and notify
+    workerStatus = WorkerStatus.FAILED;
+    // lets record the failure time
+    failedTime = System.currentTimeMillis();
     // lets tell everyone that there is a fault
-    for (FaultAcceptable fa : faultComponets) {
+    for (FaultAcceptable fa : faultComponents) {
       try {
         fa.onFault(new Fault(workerID));
       } catch (Twister2Exception e) {
@@ -116,12 +186,16 @@ public class ManagedWorkerEnvironment implements IWorkerFailureListener, IAllJoi
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
     // wait until the previous execution is finished
+    workerStatus = WorkerStatus.RUNNING;
+  }
 
+  @Override
+  public void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+    faultComponents.add(faultAcceptable);
+  }
 
-    // wait until the cluster is stable
-
-
-    // now lets call the execute method again
-    managedWorker.execute(config, workerId, workerController, persistentVolume, volatileVolume);
+  @Override
+  public void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
+    faultComponents.remove(faultAcceptable);
   }
 }

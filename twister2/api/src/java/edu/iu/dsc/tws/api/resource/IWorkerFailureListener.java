@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -29,4 +30,18 @@ public interface IWorkerFailureListener {
    * @param workerInfo
    */
   void restarted(JobMasterAPI.WorkerInfo workerInfo);
+
+  /**
+   * Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
+   */
+  default void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
+
+  /**
+   * Un-Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
+   */
+  default void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
 }
