@@ -19,6 +19,7 @@ t2_java_lib(
         "//twister2/proto/utils:proto-utils-java",
         "@com_google_protobuf_protobuf_java//jar",
         "@javax_ws_rs_javax_ws_rs_api//jar",
+        "@maven//:org_apache_curator_curator_client",
         "@maven//:org_apache_curator_curator_framework",
         "@maven//:org_apache_curator_curator_recipes",
     ],
