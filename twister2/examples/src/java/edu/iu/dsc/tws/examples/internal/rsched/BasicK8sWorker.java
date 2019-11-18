@@ -44,13 +44,14 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class BasicK8sWorker
-    implements IWorker, IAllJoinedListener, IScalerListener, IReceiverFromDriver {
+public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListener,
+    IReceiverFromDriver, IWorkerFailureListener {
 
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
@@ -74,6 +75,8 @@ public class BasicK8sWorker
     WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
     WorkerRuntime.addScalerListener(this);
+    WorkerRuntime.addWorkerFailureListener(this);
+
     senderToDriver = WorkerRuntime.getSenderToDriver();
 
     wID = workerID;
@@ -100,8 +103,8 @@ public class BasicK8sWorker
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    waitAndComplete();
-//    testScalingMessaging(workerController);
+//    waitAndComplete();
+    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -121,12 +124,7 @@ public class BasicK8sWorker
       return null;
     }
 
-    List<Integer> ids = workerList.stream()
-        .map(wi -> wi.getWorkerID())
-        .sorted()
-        .collect(Collectors.toList());
-
-    LOG.info("All workers joined. Worker IDs: " + ids);
+    LOG.info("All workers joined. The list from getAllWorkers: " + getIDs(workerList));
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
@@ -142,6 +140,13 @@ public class BasicK8sWorker
 
     LOG.info("Proceeded through the barrier ........................ ");
     return workerList;
+  }
+
+  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
+    return workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .sorted()
+        .collect(Collectors.toList());
   }
 
   private void waitAndComplete() {
@@ -172,7 +177,7 @@ public class BasicK8sWorker
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("allWorkersJoined event received. Number of workers: " + workerList.size());
+    LOG.info("allWorkersJoined event received. IDs: " + getIDs(workerList));
 
     synchronized (waitObject) {
       waitObject.notify();
@@ -381,5 +386,15 @@ public class BasicK8sWorker
 
     }
 
+  }
+
+  @Override
+  public void failed(int workerID) {
+    LOG.warning("Worker FAILED. Failed workerID: " + workerID);
+  }
+
+  @Override
+  public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
+    LOG.warning("Worker RESTARTED: " + workerInfo);
   }
 }

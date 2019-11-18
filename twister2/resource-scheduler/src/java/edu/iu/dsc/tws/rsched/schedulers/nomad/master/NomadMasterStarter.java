@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
@@ -91,6 +92,9 @@ public final class NomadMasterStarter {
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
+      } catch (Twister2Exception e) {
+        LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
         throw new RuntimeException(e);
       }
     }
