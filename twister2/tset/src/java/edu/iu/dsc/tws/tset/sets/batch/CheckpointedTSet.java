@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 /**
@@ -24,26 +23,5 @@ public class CheckpointedTSet<T> extends PersistedTSet<T> {
   public CheckpointedTSet(BatchTSetEnvironment tSetEnv, int parallelism, SourceTSet<T> source) {
     super(tSetEnv, "checkpointed", null, parallelism);
     super.storedSource = source;
-  }
-
-  @Override
-  public CheckpointedTSet<T> persist() {
-    return this;
-  }
-
-  @Override
-  public CheckpointedTSet<T> lazyPersist() {
-    return this;
-  }
-
-  @Override
-  public CheckpointedTSet<T> setName(String name) {
-    rename(name);
-    return this;
-  }
-
-  @Override
-  public CheckpointedTSet<T> addInput(String key, Storable<?> input) {
-    return (CheckpointedTSet<T>) super.addInput(key, input);
   }
 }

@@ -94,9 +94,7 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
-    return cacheTSet;
+    return (CachedTSet<T>) super.cache();
   }
 
   @Override
@@ -109,8 +107,6 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public PersistedTSet<T> persist() {
-    PersistedTSet<T> persistedTSet = lazyPersist();
-    getTSetEnv().run(persistedTSet);
-    return persistedTSet;
+    return (PersistedTSet<T>) super.persist();
   }
 }
