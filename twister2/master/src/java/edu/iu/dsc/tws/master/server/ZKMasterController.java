@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
-import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
@@ -80,10 +79,6 @@ public class ZKMasterController {
 
   private WorkerMonitor workerMonitor;
 
-  // upto date count of workers at the barrier,
-  // when workerCountAtBarrier equals to numberOfWorkers, all workers arrived on the barrier
-  private int workerCountAtBarrier = 0;
-
   public ZKMasterController(Config config,
                             String jobName,
                             int numberOfWorkers,
@@ -123,11 +118,6 @@ public class ZKMasterController {
       if (initialState == JobMasterState.JM_RESTARTED) {
         JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
         numberOfWorkers = job.getNumberOfWorkers();
-
-        // get the latest worker count at the barrier
-        // TODO: we need to ignore all previous barrier events
-        workerCountAtBarrier =
-            ZKBarrierManager.getNumberOfWorkersAtBarrier(client, rootPath, jobName);
       }
 
       // We listen for join/remove events for ephemeral children
@@ -263,10 +253,6 @@ public class ZKMasterController {
         switch (event.getType()) {
           case CHILD_ADDED:
             barrierZnodeAdded(event);
-            break;
-
-          case CHILD_REMOVED:
-            workerCountAtBarrier--;
             break;
 
           default:
@@ -455,9 +441,8 @@ public class ZKMasterController {
    * @param event
    */
   private void barrierZnodeAdded(PathChildrenCacheEvent event) {
-    workerCountAtBarrier++;
 
-    if (workerCountAtBarrier == numberOfWorkers) {
+    if (barrierChildrenCache.getCurrentData().size() == numberOfWorkers) {
       JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
           .build();
 
