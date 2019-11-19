@@ -18,21 +18,6 @@ option java_outer_classname = "JobMasterAPI";
 // that is positive I think.
 //*****************************************************
 
-// Ping message is sent by workers to the job master periodically
-// it is to show that that the workers are running
-message Ping {
-    enum MessageType {
-        WORKER_TO_MASTER = 0;
-        MASTER_TO_WORKER = 1;
-    }
-    oneof idRequired {
-        int32 workerID = 1;
-    }
-    oneof typeRequired {
-        MessageType messageType = 2;
-    }
-}
-
 // job master can be any one of these states
 // job master does not go from STARTING to RUNNING, it just goes to STARTED
 // since enum types must be unique in a proto, I added JM as a prefix to this enum.
@@ -72,6 +57,58 @@ message WorkerInfo {
     NodeInfo nodeInfo = 4;
     tws.proto.job.ComputeResource computeResource = 5;
     map<string, int32> additionalPort = 6;
+}
+
+/////////////////////////////////////////////////////////////////
+// Message types published to ZooKeeper event queue for workers to consume
+// Job Master informs workers regarding the events in the job
+/////////////////////////////////////////////////////////////////
+
+message JobEvent {
+    oneof onlyOneEvent {
+        WorkerFailed failed = 1;
+        WorkerRestarted restarted = 2;
+        AllWorkersJoined allJoined = 3;
+        AllArrivedOnBarrier allArrived = 4;
+    }
+}
+
+message WorkerFailed {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+}
+
+message WorkerRestarted {
+    oneof workerInfoRequired {
+        WorkerInfo workerInfo = 1;
+    }
+}
+
+message AllWorkersJoined {
+    repeated WorkerInfo workerInfo = 1;
+}
+
+message AllArrivedOnBarrier {
+}
+
+/////////////////////////////////////////////////////////////////
+// Message types exchanged between Job Master and Workers
+/////////////////////////////////////////////////////////////////
+
+// Ping message is sent by workers to the job master periodically
+// it is to show that that the workers are running
+message Ping {
+    enum MessageType {
+        WORKER_TO_MASTER = 0;
+        MASTER_TO_WORKER = 1;
+    }
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof typeRequired {
+        MessageType messageType = 2;
+    }
 }
 
 // this message is sent when the worker is about to start

@@ -19,6 +19,12 @@ package org.apache.beam.runners.twister2.examples;
 
 import java.util.HashMap;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
@@ -29,15 +35,35 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
  * doc.
  */
 public final class TestRunner {
+  public static final String WORKERS = "workers";
+  public static final String INPUT = "input";
+  public static final String OUTPUT = "output";
 
   private TestRunner() {
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParseException {
+
+    Options options = new Options();
+    options.addOption(WORKERS, true, "Workers");
+    options.addOption(INPUT, true, "Input File");
+    options.addOption(OUTPUT, true, "Output File");
+
+    @SuppressWarnings("deprecation")
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
+    int workers = Integer.parseInt(cmd.getOptionValue(WORKERS));
+    String input = cmd.getOptionValue(INPUT);
+    String output = cmd.getOptionValue(OUTPUT);
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     JobConfig jobConfig = new JobConfig();
-    int workers = 1;
-    System.out.println("Start");
+    jobConfig.put(WORKERS, Integer.toString(workers));
+    jobConfig.put(INPUT, input);
+    jobConfig.put(OUTPUT, output);
+
+
+    System.out.println("Start Beam Word Count example");
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("beam-test-job");
     jobBuilder.setWorkerClass(WordCount.class.getName());

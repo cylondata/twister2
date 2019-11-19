@@ -39,6 +39,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -395,6 +396,9 @@ public final class MPIWorker {
       LOG.log(Level.INFO, "Master done... ");
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      throw new RuntimeException(e);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
     }
   }

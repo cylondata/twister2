@@ -28,6 +28,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
@@ -266,7 +267,11 @@ public final class NomadJobMasterStarter {
     jobMaster = new JobMaster(
         config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
     jobMaster.addShutdownHook(true);
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     //jmThread = jobMaster.startJobMasterThreaded();
 
     waitIndefinitely();
