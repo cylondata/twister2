@@ -12,34 +12,23 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.OperationNames;
-import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
+import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public class KeyedDirectTLink<K, V> extends BatchKeyedLink<K, V> {
-  public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "kdirect", sourceParallelism);
-  }
-
-  public KeyedTSet<K, V> mapToTuple() {
-    return super.mapToTuple((MapFunc<Tuple<K, V>, Tuple<K, V>>) input -> input);
-  }
-
-
-  @Override
-  public KeyedDirectTLink<K, V> setName(String name) {
-    rename(name);
-    return this;
+/**
+ * Base class for keyed tlinks. This class is used to handle cache and persist methods for all the
+ * keyed TLinks, because they are using the same methods
+ * @param <K>
+ * @param <V>
+ */
+public abstract class BatchKeyedLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+  BatchKeyedLink(BatchTSetEnvironment env, String n, int sourceP) {
+    super(env, n, sourceP);
   }
 
   @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
-  }
-
-/*  @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
         getTargetParallelism());
@@ -61,5 +50,7 @@ public class KeyedDirectTLink<K, V> extends BatchKeyedLink<K, V> {
   @Override
   public Storable<Tuple<K, V>> persist() {
     throw new UnsupportedOperationException("persist on keyed links is not implemented!");
-  }*/
+    // todo override the @edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl to add persistence for
+    //  keyed tsets here!
+  }
 }

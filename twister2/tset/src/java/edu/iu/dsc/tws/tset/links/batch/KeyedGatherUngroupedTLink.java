@@ -19,11 +19,13 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
+import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public class KeyedGatherUngroupedTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+public class KeyedGatherUngroupedTLink<K, V> extends BatchKeyedLink<K, V> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherUngroupedTLink.class.getName());
 
   private PartitionFunc<K> partitionFunction;
@@ -77,13 +79,27 @@ public class KeyedGatherUngroupedTLink<K, V> extends BatchIteratorLink<Tuple<K, 
     return this;
   }
 
-  @Override
-  public CachedTSet<Tuple<K, V>> lazyCache() {
-    return (CachedTSet<Tuple<K, V>>) super.lazyCache();
+/*  @Override
+  public KeyedCachedTSet<K, V> lazyCache() {
+    KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
+        getTargetParallelism());
+    addChildToGraph(cacheTSet);
+
+    return cacheTSet;
   }
 
   @Override
-  public CachedTSet<Tuple<K, V>> cache() {
-    return (CachedTSet<Tuple<K, V>>) super.cache();
+  public KeyedCachedTSet<K, V> cache() {
+    return (KeyedCachedTSet<K, V>) super.cache();
   }
+
+  @Override
+  public Storable<Tuple<K, V>> lazyPersist() {
+    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
+  }
+
+  @Override
+  public Storable<Tuple<K, V>> persist() {
+    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
+  }*/
 }

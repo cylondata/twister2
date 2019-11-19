@@ -25,15 +25,12 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
-import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public class KeyedReduceTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+public class KeyedReduceTLink<K, V> extends BatchKeyedLink<K, V> {
   private ReduceFunc<V> reduceFn;
 
   public KeyedReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism) {
@@ -54,7 +51,7 @@ public class KeyedReduceTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
     return this;
   }
 
-  @Override
+/*  @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(),
         new CacheIterSink<>(), getTargetParallelism());
@@ -65,8 +62,16 @@ public class KeyedReduceTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
 
   @Override
   public KeyedCachedTSet<K, V> cache() {
-    KeyedCachedTSet<K, V> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
-    return cacheTSet;
+    return (KeyedCachedTSet<K, V>) super.cache();
   }
+
+  @Override
+  public Storable<Tuple<K, V>> lazyPersist() {
+    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
+  }
+
+  @Override
+  public Storable<Tuple<K, V>> persist() {
+    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
+  }*/
 }
