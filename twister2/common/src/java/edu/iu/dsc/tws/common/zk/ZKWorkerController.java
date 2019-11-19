@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.zk;
+package edu.iu.dsc.tws.common.zk;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,18 +46,10 @@ import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.common.zk.WorkerWithState;
-import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
-import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
-import edu.iu.dsc.tws.common.zk.ZKEventsManager;
-import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
-import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class.
@@ -815,9 +807,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public void registerFaultAcceptor(FaultAcceptable acceptable) {
-    IWorkerFailureListener listener = WorkerRuntime.getFailureListener();
-    if (listener != null) {
-      listener.registerFaultAcceptor(acceptable);
+    if (failureListener != null) {
+      failureListener.registerFaultAcceptor(acceptable);
     } else {
       String msg = "Cannot register a fault acceptor, when fault listners are not "
           + "configured. Make sure to enable fault tolerence";
