@@ -109,8 +109,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
         final SourceTSet<T0> persistedSource = getTSetEnv().createSource(
             new DiskPartitionBackedSource<>(this.getId()), this.getTargetParallelism());
 
-        return new CheckpointedTSet<>(getTSetEnv(), "name",
-            this.getTargetParallelism(), persistedSource);
+        return new CheckpointedTSet<>(getTSetEnv(), this.getTargetParallelism(), persistedSource);
       } else {
         Storable<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
