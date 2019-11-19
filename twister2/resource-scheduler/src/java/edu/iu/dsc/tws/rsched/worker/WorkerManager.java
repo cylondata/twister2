@@ -133,6 +133,11 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
           LOG.info("Waited 10 mins to recover the workers from failre, giving up");
           break;
         }
+        // lets sleep a little for avoid spinning
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException ignore) {
+        }
       }
 
       if (workerStatus == WorkerStatus.RUNNING) {

@@ -20,14 +20,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.faulttolerance.Fault;
-import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 
 /**
  * Communicator that keeps the information about.
  */
-public class Communicator implements FaultAcceptable {
+public class Communicator {
   private static final Logger LOG = Logger.getLogger(Communicator.class.getName());
 
   /**
@@ -143,10 +140,5 @@ public class Communicator implements FaultAcceptable {
     return new Communicator(
         Config.newBuilder().putAll(config).putAll(newConfig).build(), channel,
         edgeGenerator, idGenerator, persistentDirectories);
-  }
-
-  @Override
-  public void onFault(Fault fault) throws Twister2Exception {
-
   }
 }

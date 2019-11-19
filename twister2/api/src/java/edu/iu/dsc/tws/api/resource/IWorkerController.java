@@ -16,6 +16,7 @@ import java.util.List;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -63,6 +64,13 @@ public interface IWorkerController {
    * if some workers still could not arrive at the barrier, throw an exception
    */
   void waitOnBarrier() throws TimeoutException;
+
+  /**
+   * Register a fault acceptor, a fault handling controller should implement this method.
+   * @param acceptable an inteface to callback on a fault
+   */
+  default void registerFaultAcceptor(FaultAcceptable acceptable) {
+  }
 
   /**
    * Get object with a given name

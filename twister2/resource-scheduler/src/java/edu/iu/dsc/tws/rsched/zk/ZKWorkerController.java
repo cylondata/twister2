@@ -9,32 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-package edu.iu.dsc.tws.common.zk;
+package edu.iu.dsc.tws.rsched.zk;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,6 +37,7 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
@@ -70,10 +46,18 @@ import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
+import edu.iu.dsc.tws.common.zk.WorkerWithState;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class.
@@ -829,6 +813,18 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
   }
 
+  @Override
+  public void registerFaultAcceptor(FaultAcceptable acceptable) {
+    IWorkerFailureListener listener = WorkerRuntime.getFailureListener();
+    if (listener != null) {
+      listener.registerFaultAcceptor(acceptable);
+    } else {
+      String msg = "Cannot register a fault acceptor, when fault listners are not "
+          + "configured. Make sure to enable fault tolerence";
+      LOG.severe(msg);
+      throw new RuntimeException(msg);
+    }
+  }
 
   /**
    * close all local entities.
