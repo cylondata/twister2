@@ -69,7 +69,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
   /**
    * not stopped
    */
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   /*
    * clean up is called, so we cannot cleanup again
@@ -146,6 +146,10 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
   }
 
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
   /**
    * Execution Method for Batch Tasks
    */
@@ -161,7 +165,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     StreamWorker[] workers = scheduleExecution(nodes);
     StreamWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped) {
+    while (isNotStopped()) {
       channel.progress();
       // the main thread call the run method of the 0th worker
       worker.runExecution();
@@ -239,7 +243,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     CommunicationWorker[] workers = scheduleWaitFor(nodes);
     CommunicationWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped) {
+    while (isNotStopped()) {
       channel.progress();
       worker.runChannelComplete();
     }
@@ -313,7 +317,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         runChannelComplete();
       }
       doneSignal.countDown();
@@ -367,7 +371,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         runExecution();
       }
       doneSignal.countDown();
@@ -435,7 +439,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped) {
+      while (isNotStopped()) {
         channel.progress();
         mainWorker.runExecution();
       }
@@ -451,7 +455,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped) {
+        if (isNotStopped()) {
           channel.progress();
           mainWorker.runExecution();
           return true;
@@ -472,7 +476,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
 
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 

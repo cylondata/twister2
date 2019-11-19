@@ -20,6 +20,11 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.executor.threading.ft.AllSharingBatchExecutor;
+import edu.iu.dsc.tws.executor.threading.ft.AllSharingStremingExecutor;
+import edu.iu.dsc.tws.executor.threading.ft.DedicatedComStreamingExecutor;
+import edu.iu.dsc.tws.executor.threading.ft.DedidatedBatchExecutor;
 
 public class ExecutorFactory {
   /**
@@ -52,25 +57,52 @@ public class ExecutorFactory {
   private IExecutor getExecutor(Config planConfig, OperationMode operationMode,
                                 ExecutionPlan plan, IExecutionHook hook) {
     IExecutor executor;
-    // lets start the execution
-    if (operationMode == OperationMode.STREAMING) {
-      String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);
-      if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
-        executor = new StreamingAllSharingExecutor(planConfig, workerId, channel, plan, hook);
-      } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
-        executor = new StreamingSharingExecutor(planConfig, workerId, channel, plan, hook);
+    // if checkpointing enabled lets register for receiving faults
+    if (CheckpointingConfigurations.isCheckpointingEnabled(planConfig)) {
+      // lets start the execution
+      if (operationMode == OperationMode.STREAMING) {
+        String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);
+        if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
+          executor = new StreamingAllSharingExecutor(planConfig, workerId, channel, plan, hook);
+        } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
+          executor = new StreamingSharingExecutor(planConfig, workerId, channel, plan, hook);
+        } else {
+          throw new Twister2RuntimeException("Un-known stream executor specified - "
+              + streamExecutor);
+        }
       } else {
-        throw new Twister2RuntimeException("Un-known stream executor specified - "
-            + streamExecutor);
+        String batchExecutor = ExecutorContext.getBatchExecutor(planConfig);
+        if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
+          executor = new BatchSharingExecutor(planConfig, workerId, channel, plan, hook);
+        } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
+          executor = new BatchSharingExecutor2(planConfig, workerId, channel, plan, hook);
+        } else {
+          throw new Twister2RuntimeException("Un-known batch executor specified - "
+              + batchExecutor);
+        }
       }
     } else {
-      String batchExecutor = ExecutorContext.getBatchExecutor(planConfig);
-      if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor(planConfig, workerId, channel, plan, hook);
-      } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor2(planConfig, workerId, channel, plan, hook);
+      // lets start the execution
+      if (operationMode == OperationMode.STREAMING) {
+        String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);
+        if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
+          executor = new AllSharingStremingExecutor(planConfig, workerId, channel, plan, hook);
+        } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
+          executor = new DedicatedComStreamingExecutor(planConfig, workerId, channel, plan, hook);
+        } else {
+          throw new Twister2RuntimeException("Un-known stream executor specified - "
+              + streamExecutor);
+        }
       } else {
-        throw new Twister2RuntimeException("Un-known batch executor specified - " + batchExecutor);
+        String batchExecutor = ExecutorContext.getBatchExecutor(planConfig);
+        if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
+          executor = new DedidatedBatchExecutor(planConfig, workerId, channel, plan, hook);
+        } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
+          executor = new AllSharingBatchExecutor(planConfig, workerId, channel, plan, hook);
+        } else {
+          throw new Twister2RuntimeException("Un-known batch executor specified - "
+              + batchExecutor);
+        }
       }
     }
     return executor;

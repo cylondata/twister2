@@ -17,25 +17,23 @@ import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
-import edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2;
+import edu.iu.dsc.tws.executor.threading.StreamingAllSharingExecutor;
 
-public class AllSharingBatchExecutor extends BatchSharingExecutor2 {
-  private boolean isFault = false;
-
+public class AllSharingStremingExecutor extends StreamingAllSharingExecutor {
   private boolean isError = false;
 
-  public AllSharingBatchExecutor(Config cfg, int workerId, TWSChannel channel,
-                                 ExecutionPlan plan, IExecutionHook hook) {
-    super(cfg, workerId, channel, plan, hook);
+  public AllSharingStremingExecutor(Config cfg, int workerId, TWSChannel channel,
+                                    ExecutionPlan executionPlan, IExecutionHook hook) {
+    super(cfg, workerId, channel, executionPlan, hook);
   }
 
   @Override
   public boolean isNotStopped() {
-    return notStopped && !isFault;
+    return notStopped && !isError;
   }
 
   @Override
   public void onFault(Fault fault) throws Twister2Exception {
-    isFault = true;
+    isError = true;
   }
 }
