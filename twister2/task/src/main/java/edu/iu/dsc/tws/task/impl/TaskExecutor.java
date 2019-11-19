@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
-import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
@@ -108,6 +107,7 @@ public class TaskExecutor implements FaultAcceptable {
     this.communicator = net;
     this.checkpointingClient = checkpointingClient;
     this.executor = new ExecutorFactory(config, workerID, communicator.getChannel());
+    this.currentExecutors = new ExecutorList();
   }
 
   public TaskExecutor(WorkerEnvironment workerEnv) {
@@ -117,6 +117,7 @@ public class TaskExecutor implements FaultAcceptable {
     this.communicator = workerEnv.getCommunicator();
     this.checkpointingClient = workerEnv.getWorkerController().getCheckpointingClient();
     this.executor = new ExecutorFactory(config, workerID, communicator.getChannel());
+    this.currentExecutors = new ExecutorList();
   }
 
   /**
@@ -138,7 +139,12 @@ public class TaskExecutor implements FaultAcceptable {
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
 
-
+  /**
+   * Create execution plans for each graph.
+   *
+   * @param graph list of graphs
+   * @return graph name -> execution plan map
+   */
   public Map<String, ExecutionPlan> plan(ComputeGraph... graph) {
 
     WorkerPlan workerPlan = createWorkerPlan();
@@ -158,6 +164,12 @@ public class TaskExecutor implements FaultAcceptable {
     return executionPlanMap;
   }
 
+  /**
+   * Create a execution plan
+   * @param graph the graph
+   * @param taskSchedulePlan task schedule
+   * @return the execution plan
+   */
   public ExecutionPlan executionPlan(ComputeGraph graph, TaskSchedulePlan taskSchedulePlan) {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
@@ -192,10 +204,7 @@ public class TaskExecutor implements FaultAcceptable {
    * @param plan  the execution plan
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
-    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
-        new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
-    ex.execute();
-    ex.closeExecution();
+    execute(config, graph, plan);
   }
 
   /**
@@ -207,8 +216,10 @@ public class TaskExecutor implements FaultAcceptable {
    * @param plan  the execution plan
    */
   public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
-    return executor.getExecutor(config, plan, graph.getOperationMode(),
+    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
         new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
+    currentExecutors.add(ex);
+    return ex;
   }
 
   /**
@@ -219,17 +230,11 @@ public class TaskExecutor implements FaultAcceptable {
    * @param graph the dataflow graph
    */
   public IExecutor createExecution(ComputeGraph graph) {
-    TaskScheduler taskScheduler = new TaskScheduler();
-    taskScheduler.initialize(config);
-
-    WorkerPlan workerPlan = createWorkerPlan();
-    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
-
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
-        workerID, workerInfoList, communicator, this.checkpointingClient);
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    return executor.getExecutor(config, plan, graph.getOperationMode(),
+    ExecutionPlan plan = plan(graph);
+    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
         new ExecutionHookImpl(config, dataObjectMap, plan, currentExecutors));
+    currentExecutors.add(ex);
+    return ex;
   }
 
   /**
@@ -458,8 +463,8 @@ public class TaskExecutor implements FaultAcceptable {
   }
 
   @Override
-  public void onFault(Fault fault) throws Twister2Exception {
-
+  public void onFault(Fault fault) {
+    currentExecutors.onFault(fault);
   }
 
 }
