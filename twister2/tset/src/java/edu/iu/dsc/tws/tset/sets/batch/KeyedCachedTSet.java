@@ -40,6 +40,16 @@ public class KeyedCachedTSet<K, V> extends KeyedStoredTSet<K, V> {
   }
 
   @Override
+  public KeyedPersistedTSet<K, V> persist() {
+    throw new UnsupportedOperationException("persist on CachedTSet is undefined!");
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> lazyPersist() {
+    throw new UnsupportedOperationException("persist on CachedTSet is undefined!");
+  }
+
+  @Override
   public KeyedCachedTSet<K, V> addInput(String key, Storable<?> input) {
     return (KeyedCachedTSet<K, V>) super.addInput(key, input);
   }

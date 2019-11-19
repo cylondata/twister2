@@ -11,49 +11,43 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class PersistedTSet<T> extends StoredTSet<T> {
-
-  public PersistedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
-    super(tSetEnv, "persisted", sinkFunc, parallelism);
+public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
+  public KeyedPersistedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Iterator<Tuple<K, V>>> sinkFunc,
+                            int parallelism) {
+    super(tSetEnv, "kpersisted", sinkFunc, parallelism);
   }
 
   // constructor used for checkpointing
-  public PersistedTSet(BatchTSetEnvironment tSetEnv, int parallelism, SourceTSet<T> source) {
-    super(tSetEnv, "checkpointed", parallelism, source);
+  public KeyedPersistedTSet(BatchTSetEnvironment tSetEnv, int parallelism,
+                            KeyedSourceTSet<K, V> source) {
+    super(tSetEnv, "kcheckpointed", parallelism, source);
   }
 
   @Override
-  public PersistedTSet<T> persist() {
-    return this;
-  }
-
-  @Override
-  public PersistedTSet<T> lazyPersist() {
-    return this;
-  }
-
-  @Override
-  public CachedTSet<T> cache() {
-    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
-  }
-
-  @Override
-  public CachedTSet<T> lazyCache() {
-    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
-  }
-
-  @Override
-  public PersistedTSet<T> setName(String n) {
+  public KeyedPersistedTSet<K, V> setName(String n) {
     rename(n);
     return this;
   }
 
   @Override
-  public PersistedTSet<T> addInput(String key, Storable<?> input) {
-    return (PersistedTSet<T>) super.addInput(key, input);
+  public KeyedCachedTSet<K, V> cache() {
+    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> lazyCache() {
+    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> addInput(String key, Storable<?> input) {
+    return (KeyedPersistedTSet<K, V>) super.addInput(key, input);
   }
 }

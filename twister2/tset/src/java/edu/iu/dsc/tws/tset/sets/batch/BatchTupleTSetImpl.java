@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -159,6 +160,16 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     return keyedDirect().lazyCache();
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> persist() {
+    return keyedDirect().persist();
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> lazyPersist() {
+    return keyedDirect().lazyPersist();
   }
 
   @Override

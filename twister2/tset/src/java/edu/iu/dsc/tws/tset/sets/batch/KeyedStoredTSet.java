@@ -38,19 +38,25 @@ import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 
-public class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V> implements
+public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V> implements
     Storable<Tuple<K, V>> {
   // keyed comms always return an iterator of tuples
   private SinkFunc<Iterator<Tuple<K, V>>> storingSinkFunc;
   private String storedSourcePrefix;
 
-  protected KeyedSourceTSet<K, V> storedSource;
+  private KeyedSourceTSet<K, V> storedSource;
 
   KeyedStoredTSet(BatchTSetEnvironment tSetEnv, String name,
                   SinkFunc<Iterator<Tuple<K, V>>> sinkFunc, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.storingSinkFunc = sinkFunc;
     this.storedSourcePrefix = "kstored(" + getId() + ")";
+  }
+
+  KeyedStoredTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism,
+                  KeyedSourceTSet<K, V> storedSource) {
+    super(tSetEnv, name, parallelism);
+    this.storedSource = storedSource;
   }
 
   // implement buildable TSet methods
