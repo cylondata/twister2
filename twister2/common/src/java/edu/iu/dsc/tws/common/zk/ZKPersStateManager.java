@@ -205,9 +205,10 @@ public final class ZKPersStateManager {
   }
 
   public static WorkerWithState getWorkerWithState(CuratorFramework client,
-                                                   String workersPersDir,
+                                                   String rootPath,
+                                                   String jobName,
                                                    int workerID) throws Twister2Exception {
-
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerID);
 
     try {
