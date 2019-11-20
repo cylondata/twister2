@@ -33,15 +33,12 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
@@ -589,19 +586,6 @@ public class ZKWorkerController implements IWorkerController {
     if (!allArrived) {
       throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
           + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
-    }
-  }
-
-  @Override
-  public void registerFaultAcceptor(FaultAcceptable acceptable) {
-    IWorkerFailureListener listener = WorkerRuntime.getFailureListener();
-    if (listener != null) {
-      listener.registerFaultAcceptor(acceptable);
-    } else {
-      String msg = "Cannot register a fault acceptor, when fault listners are not "
-          + "configured. Make sure to enable fault tolerence";
-      LOG.severe(msg);
-      throw new RuntimeException(msg);
     }
   }
 

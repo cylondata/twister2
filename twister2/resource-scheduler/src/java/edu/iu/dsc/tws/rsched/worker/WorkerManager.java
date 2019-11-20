@@ -21,11 +21,11 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 /**
  * Keep information about a managed environment where workers can get restarted.
  */
-public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener {
+public class WorkerManager implements IManagedFailureListener, IAllJoinedListener {
   private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
 
   /**

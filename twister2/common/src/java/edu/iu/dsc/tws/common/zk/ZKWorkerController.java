@@ -37,7 +37,6 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
@@ -806,15 +805,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   @Override
-  public void registerFaultAcceptor(FaultAcceptable acceptable) {
-    if (failureListener != null) {
-      failureListener.registerFaultAcceptor(acceptable);
-    } else {
-      String msg = "Cannot register a fault acceptor, when fault listners are not "
-          + "configured. Make sure to enable fault tolerence";
-      LOG.severe(msg);
-      throw new RuntimeException(msg);
-    }
+  public IWorkerFailureListener getFailureListener() {
+    return failureListener;
   }
 
   /**

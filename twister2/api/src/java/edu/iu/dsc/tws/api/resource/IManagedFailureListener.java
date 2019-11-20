@@ -11,22 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 
-/**
- * An interface to receive worker failures in Twister2 jobs
- */
-public interface IWorkerFailureListener {
+public interface IManagedFailureListener extends IWorkerFailureListener {
+  /**
+   * Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
+   */
+  default void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
 
   /**
-   * let the listener know that a worker failed
-   * @param workerID
+   * Un-Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
    */
-  void failed(int workerID);
-
-  /**
-   * let the listener know that previously failed worker rejoined the job
-   * @param workerInfo
-   */
-  void restarted(JobMasterAPI.WorkerInfo workerInfo);
+  default void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
 }
