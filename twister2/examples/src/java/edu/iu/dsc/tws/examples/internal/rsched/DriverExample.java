@@ -107,7 +107,7 @@ public class  DriverExample implements IDriver {
   private void scalingExample(IScaler scaler, IDriverMessenger messenger) {
     LOG.info("Testing scaling up and down ............................. ");
 
-    long sleepDuration = 20 * 1000; //
+    long sleepDuration = 30 * 1000; //
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
       Thread.sleep(sleepDuration);
@@ -146,7 +146,7 @@ public class  DriverExample implements IDriver {
 
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
+      Thread.sleep(sleepDuration * 100);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

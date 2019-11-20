@@ -22,11 +22,14 @@ import java.util.logging.Logger;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -195,8 +198,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     String rootPath = ZKContext.rootNode(config);
 
     try {
-      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      ZKInitialStateManager.createJobZNode(client, rootPath, job.getJobName());
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
+      ZKPersStateManager.createPersStateDir(client, rootPath, job);
+      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobName());
+
       jobSubmissionStatus.setJobZNodesCreated(true);
       return true;
 
@@ -264,7 +270,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         new JobMaster(config, hostAdress, this, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(true);
 //    jobMaster.startJobMasterThreaded();
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
 
     return true;
   }
@@ -379,7 +390,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework zkClient = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
-      boolean jobZNodesExist = ZKJobZnodeUtil.isThereJobZNodes(zkClient, rootPath, jobName);
+      boolean jobZNodesExist = ZKUtils.isThereJobZNodes(zkClient, rootPath, jobName);
 
       if (jobZNodesExist) {
         LOG.severe("Some znodes already exist in ZooKeeper that will be used for this job. "
@@ -598,7 +609,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String rootPath = ZKContext.rootNode(config);
-    return ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
+    return ZKUtils.deleteJobZNodes(client, rootPath, jobName);
   }
 
   /**

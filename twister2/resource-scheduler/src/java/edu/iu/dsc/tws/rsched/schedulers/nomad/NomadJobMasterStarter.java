@@ -28,16 +28,18 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
@@ -265,7 +267,11 @@ public final class NomadJobMasterStarter {
     jobMaster = new JobMaster(
         config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
     jobMaster.addShutdownHook(true);
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     //jmThread = jobMaster.startJobMasterThreaded();
 
     waitIndefinitely();

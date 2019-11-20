@@ -26,6 +26,7 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
@@ -236,6 +237,9 @@ public class MPILauncher implements ILauncher {
         ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
+      } catch (Twister2Exception e) {
+        LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
         throw new RuntimeException(e);
       }
     }
