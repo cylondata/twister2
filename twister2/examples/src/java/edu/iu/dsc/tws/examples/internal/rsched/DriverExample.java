@@ -115,7 +115,7 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-    int toAdd = 2;
+    int toAdd = 10;
     LOG.info("Adding " + toAdd + " new workers.");
     scaler.scaleUpWorkers(toAdd);
 

@@ -414,13 +414,13 @@ public class TaskExecutor {
           for (String receivableName : receivableNames) {
             DataObject dataObject = this.dataObjectMap.get(receivableName);
             if (dataObject == null) {
-              throw new Twister2RuntimeException("Couldn't find input data for\t" + receivableName
-                  + " of task " + node.getId());
+              throw new Twister2RuntimeException("Couldn't find input data" + receivableName
+                  + " for task " + node.getId());
             }
             DataPartition partition = dataObject.getPartition(node.getIndex());
             if (partition == null) {
-              throw new Twister2RuntimeException("Couldn't find input data for\t" + receivableName
-                  + " of task index " + node.getIndex() + " of task" + node.getId());
+              throw new Twister2RuntimeException("Couldn't find input data" + receivableName
+                  + " for task index " + node.getIndex() + " of task" + node.getId());
             }
             ((Receptor) task).add(receivableName, dataObject);
             ((Receptor) task).add(receivableName, partition);
