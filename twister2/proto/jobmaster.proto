@@ -70,6 +70,7 @@ message JobEvent {
         WorkerRestarted restarted = 2;
         AllWorkersJoined allJoined = 3;
         AllArrivedOnBarrier allArrived = 4;
+        JobMasterRestarted jmRestarted = 5;
     }
 }
 
@@ -94,6 +95,11 @@ message AllWorkersJoined {
 
 message AllArrivedOnBarrier {
     int32 numberOfWorkers = 1;
+}
+
+message JobMasterRestarted {
+    int32 numberOfWorkers = 1;
+    string jmAddress = 2;
 }
 
 /////////////////////////////////////////////////////////////////

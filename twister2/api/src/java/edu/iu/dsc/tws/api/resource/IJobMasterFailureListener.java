@@ -11,22 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
-public interface IJobMasterListener {
-
-  /**
-   * informs when the job master joins the job
-   * @param jobMasterAddress
-   */
-  void jobMasterJoined(String jobMasterAddress);
+public interface IJobMasterFailureListener {
 
   /**
    * informs when the job master fails.
    */
-  void jobMasterFailed();
+  void failed();
 
   /**
    * informs when the job master rejoins after failure
    * @param jobMasterAddress
    */
-  void jobMasterRejoined(String jobMasterAddress);
+  void restarted(String jobMasterAddress);
 }

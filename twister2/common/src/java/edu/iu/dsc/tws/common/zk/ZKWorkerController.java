@@ -65,7 +65,7 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
-import edu.iu.dsc.tws.api.resource.IJobMasterListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
@@ -181,15 +181,18 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private IAllJoinedListener allJoinedListener;
 
   // Inform events related to the job master
-  private IJobMasterListener jobMasterListener;
+  private IJobMasterFailureListener jmFailureListener;
 
   // Inform scaling events
   private IScalerListener scalerListener;
 
   // some events may arrive after initializing the workerController but before
   // registering the listener,
-  // we keep the last AllWorkersJoined event to deliver when there is no allJoinedListener
+  // we keep the last AllWorkersJoined and JobMasterRestarted events
+  // to deliver when there is no proper listener
   private JobMasterAPI.AllWorkersJoined allJoinedEventCache;
+  private JobMasterAPI.JobMasterRestarted jmRestartedCache;
+
   // we keep many fail events in the buffer to deliver later on
   private List<JobMasterAPI.JobEvent> failEventBuffer = new LinkedList<>();
   private List<Integer> scalingEventBuffer = new LinkedList<>();
@@ -551,17 +554,27 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
-   * TODO: not implemented yet
-   * add a single IJobMasterListener
-   * if additional IJobMasterListener tried to be added,
+   * TODO: jm restarted implemented, but jm failed not implemented yet
+   * add a single IJobMasterFailureListener
+   * if additional IJobMasterFailureListener tried to be added,
    * do not add and return false
    */
-  public boolean addJobMasterListener(IJobMasterListener iJobMasterListener) {
-    if (jobMasterListener != null) {
+  public boolean addJMFailureListener(IJobMasterFailureListener iJobMasterFailureListener) {
+    if (jmFailureListener != null) {
       return false;
     }
 
-    jobMasterListener = iJobMasterListener;
+    jmFailureListener = iJobMasterFailureListener;
+    // if allJoinedEventToDeliver is not null, deliver that message in a new thread
+    if (jmRestartedCache != null) {
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          jmFailureListener.restarted(jmRestartedCache.getJmAddress());
+          LOG.fine("JobMasterRestarted event delivered from cache.");
+        }
+      });
+    }
     return true;
   }
 
@@ -748,6 +761,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       }
 
       LOG.info("AllArrivedOnBarrier event received. Current numberOfWorkers: " + numberOfWorkers);
+    }
+
+    if (jobEvent.hasJmRestarted()) {
+      JobMasterAPI.JobMasterRestarted jmRestarted = jobEvent.getJmRestarted();
+      LOG.info("JobMasterRestarted event received. JM Address: " + jmRestarted.getJmAddress());
+
+      if (jmFailureListener != null) {
+        jmFailureListener.restarted(jmRestarted.getJmAddress());
+      } else {
+        jmRestartedCache = jmRestarted;
+      }
     }
   }
 
