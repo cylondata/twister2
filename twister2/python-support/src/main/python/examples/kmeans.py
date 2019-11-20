@@ -38,7 +38,7 @@ def apply_kmeans(points, ctx: TSetContext):
     return kmeans.cluster_centers_
 
 
-mapped = data.direct().map(apply_kmeans)
+mapped = data.map(apply_kmeans)
 
 
 def reduce_centroids(c1, c2):
@@ -56,4 +56,4 @@ for i in range(10):
     mapped.add_input("centroids", centers)
     centers = reduced.cache()
 
-centers.direct().for_each(lambda x: print(x))
+centers.for_each(lambda x: print(x))

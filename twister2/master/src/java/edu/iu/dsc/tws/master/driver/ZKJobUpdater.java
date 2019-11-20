@@ -18,9 +18,9 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -46,9 +46,9 @@ public class ZKJobUpdater {
     }
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), job.getJobName());
+    String rootPath = ZKContext.rootNode(config);
     try {
-      ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
+      ZKPersStateManager.updateJobZNode(client, rootPath, job);
     } catch (Exception e) {
       throw new Twister2Exception("Could not update job znode", e);
     }
@@ -69,8 +69,10 @@ public class ZKJobUpdater {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String rootPath = ZKContext.rootNode(config);
     try {
-      ZKInitialStateManager.removeScaledDownZNodes(
+      ZKPersStateManager.removeScaledDownZNodes(
           client, rootPath, jobName, minWorkerID, maxWorkerID);
+      ZKBarrierManager.removeScaledDownZNodes(client, rootPath, jobName, minWorkerID, maxWorkerID);
+
       return true;
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);

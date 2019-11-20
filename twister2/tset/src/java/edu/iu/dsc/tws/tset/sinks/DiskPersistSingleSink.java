@@ -19,10 +19,24 @@ import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   private DiskBackedCollectionPartition<T> partition;
 
+  private String referencePrefix;
+
+  /**
+   * Creates an instance of {@link DiskPersistSingleSink} with a referencePrefix
+   *
+   * @param referencePrefix referencePrefix will be used to uniquely identify the set of
+   * disk partitions created with this function
+   */
+  public DiskPersistSingleSink(String referencePrefix) {
+    this.referencePrefix = referencePrefix;
+  }
+
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig());
+    String reference = referencePrefix + ctx.getIndex();
+    partition = new DiskBackedCollectionPartition<>(0,
+        ctx.getConfig(), reference);
   }
 
   @Override

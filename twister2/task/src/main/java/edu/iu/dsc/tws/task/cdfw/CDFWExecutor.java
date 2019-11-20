@@ -60,7 +60,7 @@ public final class CDFWExecutor {
    * Then, it invokes the build CDFW Job object to build the cdfw job object for the scheduled graphs.
    */
   public void execute(DataFlowGraph graph) {
-    LOG.info("Starting task graph Requirements:" + graph.getGraphName());
+    LOG.fine("Starting task graph Requirements:" + graph.getGraphName());
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);

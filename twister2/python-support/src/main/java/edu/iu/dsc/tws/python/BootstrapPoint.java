@@ -10,7 +10,7 @@ import edu.iu.dsc.tws.python.config.ComputeResource;
 
 public class BootstrapPoint {
 
-  private Map<String, Object> configs = new HashMap();
+  private Map<String, Object> configs = new HashMap<>();
   private List<ComputeResource> computeResources = new ArrayList<>();
   private String jobName = "python-job-" + UUID.randomUUID().toString();
   private BootstrapListener bootstrapListener;

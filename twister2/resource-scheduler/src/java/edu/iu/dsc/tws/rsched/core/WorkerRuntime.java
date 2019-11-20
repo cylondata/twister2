@@ -197,8 +197,8 @@ public final class WorkerRuntime {
    */
   public static boolean addScalerListener(IScalerListener scalerListener) {
 
-    if (job.getDriverClassName().isEmpty()) {
-      return false;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      return zkWorkerController.addScalerListener(scalerListener);
     }
 
     if (jmWorkerAgent != null) {

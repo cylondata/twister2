@@ -107,8 +107,7 @@ public final class KMeansConnectedDataflowExample {
         .put(CDFConstants.ARGS_ITERATIONS, Integer.toString(iterations))
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-    Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder()
+    Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("kmeans-connected-dataflow")
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(KMeansDriver.class.getName())

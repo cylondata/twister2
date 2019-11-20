@@ -36,7 +36,6 @@ import org.apache.beam.sdk.runners.AppliedPTransform;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
@@ -57,7 +56,7 @@ public abstract class Twister2TranslationContext {
   private final Twister2PipelineOptions options;
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
   private final Set<TSet> leaves = new LinkedHashSet<>();
-  private final Map<PCollectionView<?>, BatchTSet<?>> sideInputDataSets;
+  private final Map<String, BatchTSet<?>> sideInputDataSets;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
   private final SerializablePipelineOptions serializableOptions;
@@ -127,9 +126,9 @@ public abstract class Twister2TranslationContext {
 
   public void execute() {
     Map<String, CachedTSet> sideInputTSets = new HashMap<>();
-    for (Map.Entry<PCollectionView<?>, BatchTSet<?>> sides : sideInputDataSets.entrySet()) {
+    for (Map.Entry<String, BatchTSet<?>> sides : sideInputDataSets.entrySet()) {
       CachedTSet tempCache = (CachedTSet) sides.getValue().cache();
-      sideInputTSets.put(sides.getKey().getTagInternal().getId(), tempCache);
+      sideInputTSets.put(sides.getKey(), tempCache);
     }
     for (TSet leaf : leaves) {
       SinkTSet sinkTSet = (SinkTSet) leaf.direct().sink(new Twister2SinkFunction());
@@ -169,9 +168,17 @@ public abstract class Twister2TranslationContext {
   public abstract void eval(SinkTSet<?> tSet);
 
   public <VT, ET> void setSideInputDataSet(
-      PCollectionView<VT> value, BatchTSet<WindowedValue<ET>> set) {
+      String value, BatchTSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
     }
+  }
+
+  public Set<TSet> getLeaves() {
+    return leaves;
+  }
+
+  public Map<String, BatchTSet<?>> getSideInputDataSets() {
+    return sideInputDataSets;
   }
 }

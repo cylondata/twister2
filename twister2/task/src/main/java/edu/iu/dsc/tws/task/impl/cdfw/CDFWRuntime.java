@@ -115,14 +115,14 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     LOG.info(workerList.size() + " workers joined. ");
 
     // syncs with all workers
-    LOG.info("Waiting on a barrier ........................ ");
+    LOG.fine("Waiting on a barrier ........................ ");
     try {
       workerController.waitOnBarrier();
     } catch (TimeoutException e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return null;
     }
-    LOG.info("Proceeded through the barrier ........................ ");
+    LOG.fine("Proceeded through the barrier ........................ ");
     return workerList;
   }
 
@@ -218,14 +218,14 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
 
   @Override
   public void workersScaledDown(int instancesRemoved) {
-    LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
+    LOG.log(Level.FINE, workerId + "Workers scaled down msg received. Instances removed: "
         + instancesRemoved);
     scaleDownRequest.set(true);
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.log(Level.INFO, workerId + "All workers joined msg received");
+    LOG.log(Level.FINE, workerId + "All workers joined msg received");
   }
 
   private boolean reinitialize() {
