@@ -16,8 +16,9 @@ class IntSource(SourceFunc):
         return self.i < 10
 
     def next(self):
+        res = self.i
         self.i = self.i + 1
-        return self.i
+        return res
 
 
 source = env.create_source(IntSource(), 4)

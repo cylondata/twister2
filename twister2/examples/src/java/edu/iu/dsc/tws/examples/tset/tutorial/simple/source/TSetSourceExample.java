@@ -24,6 +24,7 @@
 
 package edu.iu.dsc.tws.examples.tset.tutorial.simple.source;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -35,7 +36,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class TSetSourceExample implements BatchTSetIWorker {
+public class TSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetSourceExample.class.getName());
 
@@ -78,7 +79,7 @@ public class TSetSourceExample implements BatchTSetIWorker {
     }, 4);
 
     intSource.direct().forEach(i -> {
-      LOG.info("i : " + i);
+      System.out.println("i : " + i);
     });
   }
 }
