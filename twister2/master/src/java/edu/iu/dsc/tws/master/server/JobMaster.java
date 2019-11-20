@@ -462,7 +462,14 @@ public class JobMaster {
     // if all workers already joined, publish that event to the driver
     // this usually happens when jm restarted
     // TODO: make sure driver thread started before publishing this event
+    //       as a temporary solution, wait 50 ms before starting new thread
     if (workerMonitor.isAllJoined()) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
+
       Executors.newSingleThreadExecutor().execute(new Runnable() {
         @Override
         public void run() {
