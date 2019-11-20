@@ -387,7 +387,7 @@ public class WorkerMonitor implements MessageHandler {
       jobMaster.getWorkerHandler().workersScaledUp(instancesAdded);
     }
 
-    // in the case of very unlikely but possible scenerio
+    // in the case of very unlikely but possible scenario
     // all scaled up workers may be already joined
     // in that case, publish the event
     if (allWorkersJoined()) {
@@ -398,11 +398,46 @@ public class WorkerMonitor implements MessageHandler {
       } else {
         jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
       }
+
+      if (driver != null) {
+        driver.allWorkersJoined(getWorkerInfoList());
+      }
     }
 
     // send Scaled message to the dashboard
     if (dashClient != null) {
       dashClient.scaledWorkers(instancesAdded, numberOfWorkers, new LinkedList<Integer>());
+    }
+  }
+
+  /**
+   * when the job master restarts, it adds already joined workers with this method.
+   * returns true if allJoined becomes true
+   */
+  public boolean addJoinedWorkers(List<WorkerWithState> joinedWorkers) {
+    for (WorkerWithState wws: joinedWorkers) {
+      workers.put(wws.getWorkerID(), wws);
+    }
+
+    if (workers.size() == numberOfWorkers && allWorkersJoined()) {
+      allJoined = true;
+      jobState = JobState.STARTED;
+
+      LOG.info("All workers have already joined, before the job master restarted.");
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * inform the driver on restarts if all workers already joined
+   */
+  public void informDriverForAllJoined() {
+    if (allJoined) {
+      if (driver != null) {
+        driver.allWorkersJoined(getWorkerInfoList());
+      }
     }
   }
 

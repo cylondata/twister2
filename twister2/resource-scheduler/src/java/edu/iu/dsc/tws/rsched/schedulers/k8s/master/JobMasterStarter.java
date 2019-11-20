@@ -42,6 +42,8 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 public final class JobMasterStarter {
   private static final Logger LOG = Logger.getLogger(JobMasterStarter.class.getName());
 
+  public static JobAPI.Job job;
+
   private JobMasterStarter() { }
 
   public static void main(String[] args) {
@@ -62,7 +64,7 @@ public final class JobMasterStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -93,14 +95,12 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    JobTerminator jobTerminator = new JobTerminator(config);
+    JobMasterAPI.JobMasterState initialState = initialStateAndUpdate(config, jobName, podIP);
 
+    JobTerminator jobTerminator = new JobTerminator(config);
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-
-    JobMasterAPI.JobMasterState initialState = null;
-    initialState = determineInitialState(config, jobName, podIP);
 
     // start JobMaster
     JobMaster jobMaster =
@@ -119,11 +119,15 @@ public final class JobMasterStarter {
   /**
    * Job Master is either starting for the first time, or it is coming from failure
    * We return either JobMasterState.JM_STARTED or JobMasterState.JM_RESTARTED
+   *
+   * We also update the job object if it is restarting
+   * We initialize event counter
+   *
    * TODO: If ZooKeeper is not used,
    *   currently we just return JM_STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.JobMasterState determineInitialState(Config config,
+  public static JobMasterAPI.JobMasterState initialStateAndUpdate(Config config,
                                                                   String jobName,
                                                                   String jmAddress) {
 
@@ -136,6 +140,7 @@ public final class JobMasterStarter {
       try {
         if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobName, jmAddress)) {
           ZKEventsManager.initEventCounter(client, rootPath, jobName);
+          job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

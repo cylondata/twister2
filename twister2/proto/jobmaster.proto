@@ -86,10 +86,14 @@ message WorkerRestarted {
 }
 
 message AllWorkersJoined {
-    repeated WorkerInfo workerInfo = 1;
+    oneof required {
+        int32 numberOfWorkers = 1;
+    }
+    repeated WorkerInfo workerInfo = 2;
 }
 
 message AllArrivedOnBarrier {
+    int32 numberOfWorkers = 1;
 }
 
 /////////////////////////////////////////////////////////////////

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -457,6 +458,18 @@ public class JobMaster {
     };
     driverThread.setName("driver");
     driverThread.start();
+
+    // if all workers already joined, publish that event to the driver
+    // this usually happens when jm restarted
+    // TODO: make sure driver thread started before publishing this event
+    if (workerMonitor.isAllJoined()) {
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          workerMonitor.informDriverForAllJoined();
+        }
+      });
+    }
 
     return driverThread;
   }

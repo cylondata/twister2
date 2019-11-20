@@ -153,7 +153,7 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    JobMasterAPI.WorkerState initialState = determineInitialState(config, jobName, workerInfo);
+    JobMasterAPI.WorkerState initialState = initialStateAndUpdate(config, jobName, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -245,11 +245,12 @@ public final class K8sWorkerStarter {
   /**
    * worker is either starting for the first time, or it is coming from failure
    * We return either WorkerState.STARTED or WorkerState.RESTARTED
+   *
    * TODO: If ZooKeeper is not used,
    *   currently we just return STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.WorkerState determineInitialState(Config cnfg,
+  public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
                                                                String jbName,
                                                                JobMasterAPI.WorkerInfo wInfo) {
 

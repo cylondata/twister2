@@ -148,6 +148,9 @@ public final class ZKPersStateManager {
           .create()
           .withMode(CreateMode.PERSISTENT)
           .forPath(jmPersPath, znodeBody);
+
+      LOG.info("JobMaster persistent state znode created: " + jmPersPath);
+
     } catch (Exception e) {
       throw new Twister2Exception("Can not initialize job master pers state znode.", e);
     }
@@ -205,24 +208,24 @@ public final class ZKPersStateManager {
   }
 
   public static WorkerWithState getWorkerWithState(CuratorFramework client,
+                                                   String workerFullPath) throws Twister2Exception {
+
+    try {
+      byte[] workerNodeBody = client.getData().forPath(workerFullPath);
+      return WorkerWithState.decode(workerNodeBody);
+    } catch (Exception e) {
+      throw new Twister2Exception("Could not get persistent worker znode data: "
+          + workerFullPath, e);
+    }
+  }
+
+  public static WorkerWithState getWorkerWithState(CuratorFramework client,
                                                    String rootPath,
                                                    String jobName,
                                                    int workerID) throws Twister2Exception {
     String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerID);
-
-    try {
-      if (client.checkExists().forPath(workerPersPath) != null) {
-        byte[] workerNodeBody = client.getData().forPath(workerPersPath);
-        return WorkerWithState.decode(workerNodeBody);
-      }
-
-      return null;
-
-    } catch (Exception e) {
-      throw new Twister2Exception("Could not get persistent worker znode data: "
-          + workerPersPath, e);
-    }
+    return getWorkerWithState(client, workerPersPath);
   }
 
   /**

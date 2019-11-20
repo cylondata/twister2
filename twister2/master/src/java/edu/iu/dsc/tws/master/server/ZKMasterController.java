@@ -13,11 +13,13 @@ package edu.iu.dsc.tws.master.server;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
@@ -35,7 +37,8 @@ import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
+
+//TODO: publish jm restarted to dashboard
 
 public class ZKMasterController {
   public static final Logger LOG = Logger.getLogger(ZKMasterController.class.getName());
@@ -116,19 +119,22 @@ public class ZKMasterController {
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
       if (initialState == JobMasterState.JM_RESTARTED) {
-        JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
-        numberOfWorkers = job.getNumberOfWorkers();
+
+        initRestarting();
+
+      } else {
+
+        // We listen for join/remove events for ephemeral children
+        ephemChildrenCache = new PathChildrenCache(client, ephemDir, true);
+        addEphemChildrenCacheListener(ephemChildrenCache);
+        ephemChildrenCache.start();
+
+        // We listen for status updates for persistent path
+        persChildrenCache = new PathChildrenCache(client, persDir, true);
+        addPersChildrenCacheListener(persChildrenCache);
+        persChildrenCache.start();
       }
 
-      // We listen for join/remove events for ephemeral children
-      ephemChildrenCache = new PathChildrenCache(client, ephemDir, true);
-      addEphemChildrenCacheListener(ephemChildrenCache);
-      ephemChildrenCache.start();
-
-      // We listen for status updates for persistent path
-      persChildrenCache = new PathChildrenCache(client, persDir, true);
-      addPersChildrenCacheListener(persChildrenCache);
-      persChildrenCache.start();
 
       // We listen for status updates for persistent path
       barrierChildrenCache = new PathChildrenCache(client, barrierDir, true);
@@ -144,8 +150,71 @@ public class ZKMasterController {
     } catch (Twister2Exception e) {
       throw e;
     } catch (Exception e) {
-      throw new Twister2Exception("Exception when initializing ZKMasterContoller.", e);
+      throw new Twister2Exception("Exception when initializing ZKMasterController.", e);
     }
+  }
+
+  private void initRestarting() throws Exception {
+    LOG.info("Job Master restarting .... ");
+
+    // build the cache
+    // we will not get events for the past worker joins/fails
+    ephemChildrenCache = new PathChildrenCache(client, ephemDir, true);
+    addEphemChildrenCacheListener(ephemChildrenCache);
+    ephemChildrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+
+    List<ChildData> joinedWorkerZnodes = ephemChildrenCache.getCurrentData();
+    LOG.info("Initially existing workers: " + joinedWorkerZnodes.size());
+
+    // We listen for status updates for persistent path
+    persChildrenCache = new PathChildrenCache(client, persDir, true);
+    addPersChildrenCacheListener(persChildrenCache);
+    persChildrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+
+    // get all joined workers and provide them to workerMonitor
+    List<WorkerWithState> joinedWorkers = new LinkedList<>();
+    for (ChildData child: joinedWorkerZnodes) {
+      String fullPath = child.getPath();
+      int workerID = ZKUtils.getWorkerIDFromEphemPath(fullPath);
+
+      WorkerWithState workerWithState = getWorkerWithState(workerID);
+      if (workerWithState != null) {
+        joinedWorkers.add(workerWithState);
+      } else {
+        LOG.severe("worker[" + fullPath + "] added, but its data can not be retrieved.");
+      }
+    }
+
+    // if all workers joined and allJoined event has not been published, publish it
+    boolean allJoined = workerMonitor.addJoinedWorkers(joinedWorkers);
+    if (allJoined && !allJoinedPublished()) {
+      LOG.info("Publishing AllJoined event when restarting, since it is not previously published.");
+      publishAllJoined();
+    }
+  }
+
+  /**
+   * check whether allJoined event published previously for current number of workers
+   * @return
+   */
+  private boolean allJoinedPublished() throws Exception {
+
+    TreeMap<Integer, JobMasterAPI.JobEvent> events =
+        ZKEventsManager.getAllEvents(client, rootPath, jobName);
+
+    for (JobMasterAPI.JobEvent event: events.values()) {
+      // allJoined event with highest index, must have the same number of workers
+      // if so, allJoined event already published, otherwise not published yet
+      if (event.hasAllJoined()) {
+
+        if (event.getAllJoined().getNumberOfWorkers() == numberOfWorkers) {
+          return true;
+        }
+        return false;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -273,11 +342,9 @@ public class ZKMasterController {
 
     String addedChildPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
-    WorkerWithState workerWithState = null;
-    try {
-      workerWithState = ZKPersStateManager.getWorkerWithState(client, persDir, workerID);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+    WorkerWithState workerWithState = getWorkerWithState(workerID);
+    if (workerWithState == null) {
+      LOG.severe("worker[" + workerID + "] added, but its data can not be retrieved.");
       return;
     }
 
@@ -320,6 +387,26 @@ public class ZKMasterController {
   }
 
   /**
+   * get WorkerWithState from the local cache if exists,
+   * otherwise, get it from the server
+   * @return
+   */
+  private WorkerWithState getWorkerWithState(int workerID) {
+    String workerPersPath = ZKUtils.workerPath(persDir, workerID);
+    ChildData znodeBody = persChildrenCache.getCurrentData(workerPersPath);
+    if (znodeBody != null) {
+      return WorkerWithState.decode(znodeBody.getData());
+    }
+
+    try {
+      return ZKPersStateManager.getWorkerWithState(client, workerPersPath);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  /**
    * generate and publish all joined event
    */
   public void publishAllJoined() {
@@ -327,6 +414,7 @@ public class ZKMasterController {
 
     JobMasterAPI.AllWorkersJoined allWorkersJoined = JobMasterAPI.AllWorkersJoined.newBuilder()
         .addAllWorkerInfo(workers)
+        .setNumberOfWorkers(workers.size())
         .build();
     JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
         .setAllJoined(allWorkersJoined)
@@ -354,11 +442,9 @@ public class ZKMasterController {
     // it does not send complete message as workers when it finishes.
     String workerPath = event.getData().getPath();
     int removedWorkerID = ZKUtils.getWorkerIDFromEphemPath(workerPath);
-    WorkerWithState workerWithState = null;
-    try {
-      workerWithState = ZKPersStateManager.getWorkerWithState(client, persDir, removedWorkerID);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+    WorkerWithState workerWithState = getWorkerWithState(removedWorkerID);
+    if (workerWithState == null) {
+      LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
       return;
     }
 
@@ -444,6 +530,7 @@ public class ZKMasterController {
 
     if (barrierChildrenCache.getCurrentData().size() == numberOfWorkers) {
       JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
+          .setNumberOfWorkers(numberOfWorkers)
           .build();
 
       JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
