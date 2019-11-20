@@ -1,3 +1,5 @@
+from inspect import signature
+
 import twister2.tset.TSet as ts
 from twister2.utils import function_wrapper
 
@@ -27,8 +29,13 @@ class TLink:
 
     def compute(self, compute_func):
         compute_wrapper = function_wrapper(compute_func)
-        compute_func_java_ref = self.__env.functions.compute.build(compute_wrapper)
-        return ts.TSet(self.__java_ref.compute(compute_func_java_ref), self.__env)
+        if len(signature(compute_func).parameters) is 2:
+            compute_collector_func_java_ref = self.__env.functions \
+                .compute_with_collector.build(compute_wrapper)
+            return ts.TSet(self.__java_ref.compute(compute_collector_func_java_ref), self.__env)
+        else:
+            compute_func_java_ref = self.__env.functions.compute.build(compute_wrapper)
+            return ts.TSet(self.__java_ref.compute(compute_func_java_ref), self.__env)
 
     def for_each(self, foreach_func):
         foreach_wrapper = function_wrapper(foreach_func)
