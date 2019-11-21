@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Context;
@@ -362,7 +363,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private void runTrainingGraph() {
     iterativeSVMTrainingTaskGraph = buildSvmSgdIterativeTrainingTG();
     iterativeSVMTrainingExecutionPlan = taskExecutor.plan(iterativeSVMTrainingTaskGraph);
-
+    IExecutor ex = taskExecutor.createExecution(iterativeSVMTrainingTaskGraph,
+        iterativeSVMTrainingExecutionPlan);
     for (int i = 0; i < this.binaryBatchModel.getIterations(); i++) {
       LOG.info(String.format("Iteration  %d ", i));
       taskExecutor.addInput(
@@ -373,13 +375,13 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           Constants.SimpleGraphConfig.ITERATIVE_DATASTREAMER_SOURCE,
           Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputDoubleWeightvectorObject);
 
-      taskExecutor.itrExecute(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
+      ex.execute();
 
       inputDoubleWeightvectorObject = taskExecutor.getOutput(iterativeSVMTrainingTaskGraph,
           iterativeSVMTrainingExecutionPlan,
           Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE);
     }
-    taskExecutor.closeExecution(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
+    ex.closeExecution();
   }
 
   private ComputeGraph buildSvmSgdIterativeTrainingTG() {

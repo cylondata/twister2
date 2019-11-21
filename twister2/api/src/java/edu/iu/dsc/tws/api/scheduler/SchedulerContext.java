@@ -85,6 +85,8 @@ public class SchedulerContext extends Context {
 
   public static final String COPY_SYSTEM_PACKAGE = "twister2.resource.systempackage.copy";
 
+  public static final String FAILURE_RETRIES = "twister2.resource.faulttlerence.retries";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -191,6 +193,10 @@ public class SchedulerContext extends Context {
   public static int numberOfAdditionalPorts(Config cfg) {
     List<String> portNameList = additionalPorts(cfg);
     return portNameList == null ? 0 : portNameList.size();
+  }
+
+  public static int failureRetries(Config cfg, int def) {
+    return cfg.getIntegerValue(FAILURE_RETRIES, def);
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {

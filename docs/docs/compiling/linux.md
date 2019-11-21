@@ -11,7 +11,7 @@ Twister2 build needs several software installed on your system.
 1. Operating System
    * Twister2 is tested and known to work on,
      * Red Hat Enterprise Linux Server release 7
-     * Ubuntu 14.05, Ubuntu 16.10 and Ubuntu 18.10
+     * Ubuntu 16.10 and Ubuntu 18.10
 2. Java
    * Download Oracle JDK 8 from [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
    * Extract the archive to a folder named `jdk1.8.0`
@@ -66,12 +66,12 @@ Extract this to a directory called maven configure the environmental variables
   export MAVEN_HOME PATH
 ```
 
-5. Install bazel 0.28.1
+5. Install bazel 1.1.0
 
    ```bash
-   wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-linux-x86_64.sh
-   chmod +x bazel-0.28.1-installer-linux-x86_64.sh
-   ./bazel-0.28.1-installer-linux-x86_64.sh --user
+   wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-linux-x86_64.sh
+   chmod +x bazel-1.1.0-installer-linux-x86_64.sh
+   ./bazel-1.1.0-installer-linux-x86_64.sh --user
    ```
 
    Make sure to add the bazel bin to PATH. You can add this line to ```~\.bashrc``` file.

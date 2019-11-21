@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
@@ -29,7 +28,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.executor.threading.ExecutorFactory;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
@@ -59,9 +58,8 @@ public final class TaskUtils {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
         workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID,
-        network, OperationMode.BATCH);
-    executor.execute(plan);
+    ExecutorFactory executor = new ExecutorFactory(config, workerID, network);
+    executor.getExecutor(config, plan, graph.getOperationMode()).execute();
   }
 
   public static void execute(Config config, int workerID, ComputeGraph graph,
@@ -84,8 +82,8 @@ public final class TaskUtils {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
         workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, network);
-    executor.execute(plan);
+    ExecutorFactory executor = new ExecutorFactory(config, workerID, network);
+    executor.getExecutor(config, plan, graph.getOperationMode()).execute();
   }
 
   public static WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {

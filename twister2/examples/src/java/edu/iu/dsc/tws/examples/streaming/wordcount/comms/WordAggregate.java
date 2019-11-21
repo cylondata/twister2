@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 
 public class WordAggregate implements SingularReceiver {
@@ -28,17 +27,14 @@ public class WordAggregate implements SingularReceiver {
 
   private Map<String, Integer> wordCounts = new HashMap<>();
 
-  private int executor;
-
   @Override
   public void init(Config cfg, Set<Integer> targets) {
   }
 
   @Override
   public boolean receive(int target, Object message) {
-    if (message instanceof Tuple) {
-      Tuple content = (Tuple) message;
-      String word = (String) content.getKey();
+    if (message instanceof String) {
+      String word = (String) message;
       int count = 1;
       if (wordCounts.containsKey(word)) {
         count = wordCounts.get(word);
@@ -59,7 +55,7 @@ public class WordAggregate implements SingularReceiver {
     totalCount++;
     wordCounts.put(value, count);
     if (totalCount % 100 == 0) {
-      LOG.info(String.format("%d Received words: %d map: %s", executor, totalCount, wordCounts));
+      LOG.info(String.format("Received words: %d map: %s", totalCount, wordCounts));
     }
   }
 }

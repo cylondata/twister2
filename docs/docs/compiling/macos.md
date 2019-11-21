@@ -41,12 +41,12 @@ which java
   brew install maven
 ```
 
-5. Install bazel 0.28.1
+5. Install bazel 1.1.0
 
    ```bash
-      wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-darwin-x86_64.sh
-      chmod +x bazel-0.28.1-installer-darwin-x86_64.sh
-      ./bazel-0.28.1-installer-darwin-x86_64.sh --user
+      wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-darwin-x86_64.sh
+      chmod +x bazel-1.1.0-installer-darwin-x86_64.sh
+      ./bazel-1.1.0-installer-darwin-x86_64.sh --user
    ```
 
    Make sure to add the bazel bin to PATH. You can add the following line to ```~/.bash_profile``` file.
@@ -66,7 +66,7 @@ which java
  It will give the following output
  
  ```bash
- Build label: 0.28.1
+ Build label: 1.1.0
  Build target: bazel-out/k8-opt/bin/src/main/java/com/google/devtools/build/lib/bazel/BazelServer_deploy.jar
  Build time: Fri Jul 19 15:19:51 2019 (1563549591)
  Build timestamp: 1563549591
