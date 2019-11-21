@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -267,11 +266,8 @@ public final class KMeansConnectedDataflowExample {
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
       int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
 
-      //generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
-
       DataFlowGraph job = generateData(config, dataDirectory, centroidDirectory, dimension,
           dsize, csize, instances, parallelism, jobConfig);
-
       cdfwEnv.executeDataFlowGraph(job);
 
       DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension,
@@ -311,11 +307,6 @@ public final class KMeansConnectedDataflowExample {
   public static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private double[][] centroid = null;
-    private double[][] datapoints = null;
-
-    private KMeansCalculator kMeansCalculator = null;
-
     private DataPartition<?> dataPartition = null;
     private DataPartition<?> centroidPartition = null;
 
@@ -330,10 +321,9 @@ public final class KMeansConnectedDataflowExample {
 
     @Override
     public void execute() {
-      datapoints = (double[][]) dataPartition.first();
-      centroid = (double[][]) centroidPartition.first();
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dimension);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
+      double[][] datapoints = (double[][]) dataPartition.first();
+      double[][] centroid = (double[][]) centroidPartition.first();
+      double[][] kMeansCenters = KMeansUtils.findNearestCenter(dimension, datapoints, centroid);
       context.writeEnd("all-reduce", kMeansCenters);
     }
 

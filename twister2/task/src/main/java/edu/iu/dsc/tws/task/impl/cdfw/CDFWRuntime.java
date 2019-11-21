@@ -59,15 +59,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
   private KryoSerializer serializer;
 
   /**
-   * The outputs from previous graphs
-   * [graph, [output name, data set]]
-   */
-  private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
-
-
-  private Map<String, DataObject<Object>> iterativeOutPuts = new HashMap<>();
-
-  /**
    * Task executor
    */
   private TaskExecutor taskExecutor;
