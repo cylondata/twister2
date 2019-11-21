@@ -115,6 +115,8 @@ public class PersistExample2 implements CheckpointingBatchTSetIWorker, Serializa
         }
     ).addInput("in", persist).direct().forEach(i -> LOG.info(i));
 
+    persist.direct().forEach(i -> LOG.info(i.toString()));
+
   }
 
   public static void main(String[] args) {

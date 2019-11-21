@@ -112,7 +112,12 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 //            this.getTargetParallelism(), persistedSource);
         CheckpointedTSet<T0> checkTSet = new CheckpointedTSet<>(getTSetEnv(),
             new DiskPartitionBackedSource<>(this.getId()), this.getTargetParallelism());
+
+        // adding checkpointed tset to the graph, so that the IDs would not change
         addChildToGraph(checkTSet);
+        // run only the checkpointed tset so that it would populate the inputs in the executor
+        getTSetEnv().runOne(checkTSet);
+
         return checkTSet;
       } else {
         Storable<T0> storable = this.doPersist();

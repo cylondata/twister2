@@ -11,18 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
+import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
 
 /**
  * This is a shadow {@link PersistedTSet} to add the checkpointing capability. It does not have
  * the sink that would store the data, because the purpose of this tset is to expose the data
  * that was stored by a {@link PersistedTSet}.
  *
- * todo check how this works with inputs! we may have to pass a dummy sink that exposes the data
- *  partition that has the data
+ * When this tset is executed, it would wrap {@link DiskPartitionBackedSource} from
+ * {@link DiskPartitionBackedSourceWrapper} and return a {@link CheckpointedSourceOp} as the
+ * {@link INode} for the underlying task.
+ *
  * @param <T> tset type
  */
 public class CheckpointedTSet<T> extends PersistedTSet<T> {
@@ -46,5 +49,12 @@ public class CheckpointedTSet<T> extends PersistedTSet<T> {
       storedSource = getTSetEnv().createSource(sourceFunc, getParallelism());
     }
     return storedSource;
+  }
+
+  @Override
+  public INode getINode() {
+    DiskPartitionBackedSourceWrapper<T> wrapper =
+        new DiskPartitionBackedSourceWrapper<>(sourceFunc);
+    return new CheckpointedSourceOp<>(wrapper, this, getInputs());
   }
 }
