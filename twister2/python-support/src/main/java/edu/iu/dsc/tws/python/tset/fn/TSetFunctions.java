@@ -39,6 +39,10 @@ public final class TSetFunctions {
     return ComputeFunctions.getInstance();
   }
 
+  public ComputeWithCollectorFunctions computeCollector() {
+    return ComputeWithCollectorFunctions.getInstance();
+  }
+
   public SinkFunctions sink() {
     return SinkFunctions.getInstance();
   }

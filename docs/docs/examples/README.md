@@ -14,4 +14,5 @@ There are many examples developed to demonstrate the capabilities of Twister2.
 * [Tera Sort](terasort/terasort.md)
 * [Stream Windowing](windowing/windowing.md)
 * [Benchmark Suite](benchmark/benchmark.md)
+* [TSet](tset/hello_world.md)
 
