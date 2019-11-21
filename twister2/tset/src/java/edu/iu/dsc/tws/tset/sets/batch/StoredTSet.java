@@ -52,7 +52,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   protected SourceTSet<T> storedSource;
 
   /*
-  Sink function type is unknown as we need to preserve the output data object type to T. In doing
+  Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
