@@ -367,6 +367,7 @@ public class TaskContextImpl implements TaskContext {
    * @return true if all the edges are finished
    */
   public boolean allEdgedFinished() {
+    checkAllEdgesFinished();
     return allEdgedFinished;
   }
 }
