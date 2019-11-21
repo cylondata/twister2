@@ -28,7 +28,7 @@ public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
    * Creates an instance of {@link DiskPersistIterSink} with a referencePrefix
    *
    * @param referencePrefix referencePrefix will be used to uniquely identify the set of
-   * disk partitions created with this function
+   *                        disk partitions created with this function
    */
   public DiskPersistIterSink(String referencePrefix) {
     this.referencePrefix = referencePrefix;
@@ -39,6 +39,7 @@ public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
     super.prepare(ctx);
 
     String reference = referencePrefix + ctx.getIndex();
+//    String reference = ctx.getId() + ctx.getIndex();
     // buffered partition with 0 frames in memory. Then everything will be written to the memory
     this.partition = new DiskBackedCollectionPartition<>(0,
         ctx.getConfig(), reference);

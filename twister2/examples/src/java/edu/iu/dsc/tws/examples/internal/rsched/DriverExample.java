@@ -115,35 +115,35 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-    int toAdd = 10;
+    int toAdd = 5;
     LOG.info("Adding " + toAdd + " new workers.");
     scaler.scaleUpWorkers(toAdd);
 
     waitAllWorkersToJoin();
 
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    int toRemove = 5;
-    LOG.info("removing " + toRemove + " workers.");
-    scaler.scaleDownWorkers(toRemove);
-
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("Adding " + toAdd + " new workers.");
-    scaler.scaleUpWorkers(toAdd);
-
-    waitAllWorkersToJoin();
-
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+//
+//    int toRemove = 5;
+//    LOG.info("removing " + toRemove + " workers.");
+//    scaler.scaleDownWorkers(toRemove);
+//
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+//
+//    LOG.info("Adding " + toAdd + " new workers.");
+//    scaler.scaleUpWorkers(toAdd);
+//
+//    waitAllWorkersToJoin();
+//
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
       Thread.sleep(sleepDuration * 100);

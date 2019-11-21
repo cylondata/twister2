@@ -89,7 +89,7 @@ public class KeyedAddInputsExample extends BatchTsetExample {
     LOG.info("Test lazy cache!");
 
     ComputeTSet<Object, Iterator<String>> forEach = comp.direct()
-        .lazyForEach(i -> LOG.info("comp: " + i));
+        .lazyForEach(i -> LOG.info("comp-lazy: " + i));
 
     for (int i = 0; i < 4; i++) {
       LOG.info("iter: " + i);

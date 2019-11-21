@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
-import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
@@ -106,11 +105,20 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
       if (persisted) {
         // create a source with the capability to read from disk
-        final SourceTSet<T0> persistedSource = getTSetEnv().createSource(
+//        final SourceTSet<T0> persistedSource = getTSetEnv().createSource(
+//            new DiskPartitionBackedSource<>(this.getId()), this.getTargetParallelism());
+//
+//        return new CheckpointedTSet<>(getTSetEnv(), "name",
+//            this.getTargetParallelism(), persistedSource);
+        CheckpointedTSet<T0> checkTSet = new CheckpointedTSet<>(getTSetEnv(),
             new DiskPartitionBackedSource<>(this.getId()), this.getTargetParallelism());
 
-        return new CheckpointedTSet<>(getTSetEnv(), "name",
-            this.getTargetParallelism(), persistedSource);
+        // adding checkpointed tset to the graph, so that the IDs would not change
+        addChildToGraph(checkTSet);
+        // run only the checkpointed tset so that it would populate the inputs in the executor
+        getTSetEnv().runOne(checkTSet);
+
+        return checkTSet;
       } else {
         Storable<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);

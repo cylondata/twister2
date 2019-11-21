@@ -35,6 +35,10 @@ public final class Twister2Submitter {
   private Twister2Submitter() {
   }
 
+  public static void submitJob(Twister2Job twister2Job) {
+    submitJob(twister2Job, ResourceAllocator.loadConfig(twister2Job.getConfig()));
+  }
+
   /**
    * Submit a Twister2 job
    *

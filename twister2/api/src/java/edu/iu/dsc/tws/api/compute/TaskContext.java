@@ -150,6 +150,11 @@ public interface TaskContext {
   void end(String edge);
 
   /**
+   * Ends all the edges
+   */
+  void endAll();
+
+  /**
    * Return true, if this task is done
    *
    * @param edge edge name

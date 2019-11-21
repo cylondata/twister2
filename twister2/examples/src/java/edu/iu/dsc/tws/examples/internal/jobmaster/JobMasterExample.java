@@ -72,8 +72,12 @@ public final class JobMasterExample {
    */
   public static void main(String[] args) {
 
-    // we assume that the twister2Home is the current directory
+    if (args.length != 1) {
+      LOG.info("usage: java JobMasterExample start/restart");
+      return;
+    }
 
+    // we assume that the twister2Home is the current directory
 //    String configDir = "../twister2/config/src/yaml/";
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
@@ -84,7 +88,30 @@ public final class JobMasterExample {
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
-    createJobZnode(config, job);
+    String host = "localhost";
+
+    JobMasterAPI.JobMasterState initialState;
+
+
+    if ("start".equalsIgnoreCase(args[0])) {
+
+      createJobZnodes(config, job);
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+
+    } else if ("restart".equalsIgnoreCase(args[0])) {
+
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+      job = JobMasterStarter.job;
+
+      if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
+        LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
+        return;
+      }
+
+    } else {
+      LOG.info("usage: java JobMasterExample start/restart");
+      return;
+    }
 
     String ip = null;
     try {
@@ -95,14 +122,11 @@ public final class JobMasterExample {
     }
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
-    String host = "localhost";
     KubernetesController controller = new KubernetesController();
 //    controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
     IJobTerminator jobTerminator = new ZKJobTerminator(config);
 //    IJobTerminator jobTerminator = new JobTerminator(config);
-    JobMasterAPI.JobMasterState initialState = JobMasterStarter.determineInitialState(
-        config, job.getJobName(), ZKContext.serverAddresses(config));
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
@@ -125,7 +149,7 @@ public final class JobMasterExample {
         + "java JobMasterExample");
   }
 
-  public static void createJobZnode(Config conf, JobAPI.Job job) {
+  public static void createJobZnodes(Config conf, JobAPI.Job job) {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
     String rootPath = ZKContext.rootNode(conf);

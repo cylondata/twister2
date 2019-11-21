@@ -130,6 +130,16 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   /**
+   * Runs a single TSet (NO subgraph execution!)
+   *
+   * @param tSet tset to run
+   */
+  public void runOne(BaseTSet tSet) {
+    BuildContext buildContext = getTSetGraph().buildOne(tSet);
+    executeBuildContext(buildContext);
+  }
+
+  /**
    * Runs a subgraph of TSets from the specified TSet
    *
    * @param leafTset TSet to be run

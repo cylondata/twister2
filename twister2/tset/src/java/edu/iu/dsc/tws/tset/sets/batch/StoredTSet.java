@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
@@ -55,15 +55,15 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
-  public StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
-                    int parallelism) {
+  StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
+             int parallelism) {
     super(tSetEnv, name, parallelism);
     this.storingSinkFunc = sinkFunc;
     this.storedSourcePrefix = "stored(" + getId() + ")";
   }
 
   @Override
-  public ICompute getINode() {
+  public INode getINode() {
     return new SinkOp<>(storingSinkFunc, this, getInputs());
   }
 
