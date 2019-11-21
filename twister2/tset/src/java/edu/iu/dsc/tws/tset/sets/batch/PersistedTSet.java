@@ -21,11 +21,6 @@ public class PersistedTSet<T> extends StoredTSet<T> {
     super(tSetEnv, "persisted", sinkFunc, parallelism);
   }
 
-  protected PersistedTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
-                          int parallelism) {
-    super(tSetEnv, name, sinkFunc, parallelism);
-  }
-
   @Override
   public PersistedTSet<T> persist() {
     return this;
