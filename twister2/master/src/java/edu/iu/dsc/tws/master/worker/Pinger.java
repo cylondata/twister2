@@ -60,6 +60,7 @@ public class Pinger implements MessageHandler {
                 + "since the last successful ping.",
             workerID, timeSinceLast, timeSinceLast / interval));
       }
+      lastPingTime = System.currentTimeMillis();
       return;
     }
     lastPingTime = System.currentTimeMillis();

@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -121,6 +124,34 @@ public final class ZKEventsManager {
     return JobMasterAPI.JobEvent.newBuilder()
         .mergeFrom(eventData)
         .build();
+  }
+
+  /**
+   * return all registered events
+   */
+  public static TreeMap<Integer, JobMasterAPI.JobEvent> getAllEvents(CuratorFramework client,
+                                                                     String rootPath,
+                                                                     String jobName)
+      throws Twister2Exception {
+
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+
+    try {
+      TreeMap<Integer, JobMasterAPI.JobEvent> events = new TreeMap<>(Collections.reverseOrder());
+      List<String> children = client.getChildren().forPath(eventsDir);
+      for (String childName : children) {
+        String childPath = eventsDir + "/" + childName;
+        int eventIndex = Integer.parseInt(childName);
+        byte[] eventNodeBody = client.getData().forPath(childPath);
+        JobMasterAPI.JobEvent event = decodeJobEvent(eventNodeBody);
+        events.put(eventIndex, event);
+      }
+
+      return events;
+    } catch (Exception e) {
+      throw new Twister2Exception("Could not get event znode data: "
+          + eventsDir, e);
+    }
   }
 
 }
