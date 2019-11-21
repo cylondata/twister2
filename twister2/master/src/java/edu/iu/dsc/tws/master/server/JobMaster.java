@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,7 +90,7 @@ public class JobMaster {
   /**
    * the ip address of this job master
    */
-  private String masterAddress;
+  private String jmAddress;
 
   /**
    * port number of this job master
@@ -186,14 +187,14 @@ public class JobMaster {
    * JobMaster constructor
    *
    * @param config configuration
-   * @param masterAddress master host
+   * @param jmAddress master host
    * @param port the port number
    * @param jobTerminator terminator
    * @param job the job in proto format
    * @param nodeInfo node info of master
    */
   public JobMaster(Config config,
-                   String masterAddress,
+                   String jmAddress,
                    int port,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
@@ -201,7 +202,7 @@ public class JobMaster {
                    IScalerPerCluster clusterScaler,
                    JobMasterAPI.JobMasterState initialState) {
     this.config = config;
-    this.masterAddress = masterAddress;
+    this.jmAddress = jmAddress;
     this.jobTerminator = jobTerminator;
     this.job = job;
     this.nodeInfo = nodeInfo;
@@ -223,20 +224,20 @@ public class JobMaster {
    * file
    *
    * @param config configuration
-   * @param masterAddress master host
+   * @param jmAddress master host
    * @param jobTerminator terminator
    * @param job the job in proto format
    * @param nodeInfo node info of master
    */
   public JobMaster(Config config,
-                   String masterAddress,
+                   String jmAddress,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
                    JobMasterAPI.NodeInfo nodeInfo,
                    IScalerPerCluster clusterScaler,
                    JobMasterAPI.JobMasterState initialState) {
 
-    this(config, masterAddress, JobMasterContext.jobMasterPort(config),
+    this(config, jmAddress, JobMasterContext.jobMasterPort(config),
         jobTerminator, job, nodeInfo, clusterScaler, initialState);
   }
 
@@ -259,7 +260,7 @@ public class JobMaster {
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
     rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+        new RRServer(config, jmAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     // init Driver if it exists
     // this ha to be done before WorkerMonitor initialization
@@ -400,7 +401,7 @@ public class JobMaster {
    * Job Master loops until all workers in the job completes
    */
   private void startLooping() {
-    LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
+    LOG.info("JobMaster [" + jmAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
     while (!jobCompleted) {
@@ -458,6 +459,25 @@ public class JobMaster {
     driverThread.setName("driver");
     driverThread.start();
 
+    // if all workers already joined, publish that event to the driver
+    // this usually happens when jm restarted
+    // TODO: make sure driver thread started before publishing this event
+    //       as a temporary solution, wait 50 ms before starting new thread
+    if (workerMonitor.isAllJoined()) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
+
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          workerMonitor.informDriverForAllJoined();
+        }
+      });
+    }
+
     return driverThread;
   }
 
@@ -467,7 +487,7 @@ public class JobMaster {
   private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController = new ZKMasterController(config, job.getJobName(),
-          job.getNumberOfWorkers(), ZKContext.serverAddresses(config), workerMonitor);
+          job.getNumberOfWorkers(), jmAddress, workerMonitor);
 
       try {
         zkMasterController.initialize(initialState);

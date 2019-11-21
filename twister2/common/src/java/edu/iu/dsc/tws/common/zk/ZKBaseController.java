@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
-import edu.iu.dsc.tws.api.resource.IJobMasterListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
@@ -84,7 +84,7 @@ public class ZKBaseController {
   protected IAllJoinedListener allJoinedListener;
 
   // Inform events related to job master
-  protected IJobMasterListener jobMasterListener;
+  protected IJobMasterFailureListener jobMasterListener;
 
   // job master related data
   protected String jmAddress;
@@ -258,7 +258,7 @@ public class ZKBaseController {
    * if additional IJobMasterListener tried to be added,
    * do not add and return false
    */
-  public boolean addJobMasterListener(IJobMasterListener iJobMasterListener) {
+  public boolean addJobMasterListener(IJobMasterFailureListener iJobMasterListener) {
     if (jobMasterListener != null) {
       return false;
     }
@@ -469,9 +469,9 @@ public class ZKBaseController {
       LOG.info("Job Master joined the job: " + jmAddress + ", " + jmState);
 
       // inform job master listener
-      if (jobMasterListener != null) {
-        jobMasterListener.jobMasterJoined(jmAddress);
-      }
+//      if (jobMasterListener != null) {
+//        jobMasterListener.jobMasterJoined(jmAddress);
+//      }
 
       return;
     }
@@ -484,7 +484,7 @@ public class ZKBaseController {
 
       // inform job master listener
       if (jobMasterListener != null) {
-        jobMasterListener.jobMasterRejoined(jmAddress);
+        jobMasterListener.restarted(jmAddress);
       }
       return;
     }
@@ -544,7 +544,7 @@ public class ZKBaseController {
 
       // inform the job master listener
       if (jobMasterListener != null) {
-        jobMasterListener.jobMasterFailed();
+        jobMasterListener.failed();
       }
 
       return;
