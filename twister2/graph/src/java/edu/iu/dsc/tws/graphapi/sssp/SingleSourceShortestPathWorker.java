@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -104,15 +105,14 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     /* Third Graph to do the actual calculation **/
     ComputeGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
 
-    ExecutionPlan plan = taskExecutor.plan(sssptaskgraph);
-
+    IExecutor ex = taskExecutor.createExecution(sssptaskgraph);
     int itr = 0;
     while (globaliterationStatus)  {
-      taskExecutor.itrExecute(sssptaskgraph, plan, false);
+      ex.execute(false);
       itr++;
 
     }
-    taskExecutor.closeExecution(sssptaskgraph, plan);
+    ex.close();
     taskExecutor.close();
 
 

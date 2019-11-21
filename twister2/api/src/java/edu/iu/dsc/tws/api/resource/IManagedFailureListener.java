@@ -9,17 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.compute.executor;
+package edu.iu.dsc.tws.api.resource;
 
-/**
- * Sync interface, this method is called when barriers come and tasks sync
- */
-public interface ISync {
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
+
+public interface IManagedFailureListener extends IWorkerFailureListener {
   /**
-   * Callback for sync
-   * @param edge edge name
-   * @param value value, can be null
-   * @return if we handled the sync, return true
+   * Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
    */
-  boolean sync(String edge, byte[] value);
+  default void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
+
+  /**
+   * Un-Register a fault acceptor
+   * @param faultAcceptable a component capable of accepting a fault
+   */
+  default void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
+  }
 }

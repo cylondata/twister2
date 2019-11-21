@@ -11,50 +11,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.logging.Logger;
+import java.io.IOException;
+
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 
 /**
- * This class is responsible for calculating the distance values between the datapoints and the
- * centroid values. The calculated new centroid values are stored in the centerSums array object.
+ * This class has the utility methods to generate the datapoints and centroids. Also, it has the
+ * methods to parse the data partitions and data objects and store into the double arrays.
  */
-public class KMeansCalculator {
-
-  private static final Logger LOG = Logger.getLogger(KMeansCalculator.class.getName());
-
-  /**
-   * Represents the data points to perform the calculation
-   */
-  private final double[][] points;
-
-  /**
-   * Represents the centroids to perform the calculation
-   */
-  private final double[][] centroids;
-
-  /**
-   * Represents the center sum values after the calculation
-   */
-  private final double[][] centerSums;
-
-  /**
-   * Represents the dimension of the data
-   */
-  private final int dimension;
-
-  public KMeansCalculator(double[][] points, double[][] centres, int dim) {
-    this.points = points;
-    this.centroids = centres;
-    this.dimension = dim;
-    this.centerSums = new double[this.centroids.length][this.centroids[0].length + 1];
+public final class KMeansUtils {
+  private KMeansUtils() {
   }
 
   /**
-   * This method invokes the findnearestcenter method to find the datapoints closer to the centroid
-   * values. The calculated value is assigned to the center sums object and return the same.
+   * This method is to generate the datapoints and centroids based on the user submitted values.
    */
-  public double[][] calculate() {
-    findNearestCenter(dimension, points, centroids);
-    return centerSums;
+  public static void generateDataPoints(Config config, int dim, int numFiles, int datasize,
+                                        int centroidsize, String dinputDirectory,
+                                        String cinputDirectory) {
+    try {
+      KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+          numFiles, datasize, 100, dim, config);
+      KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+          numFiles, centroidsize, 100, dim, config);
+    } catch (IOException ioe) {
+      throw new RuntimeException("Failed to create input data:", ioe);
+    }
   }
 
   /**
@@ -63,7 +46,8 @@ public class KMeansCalculator {
    * The calculated centroid values and the number of data points closer to the particular centroid
    * values assigned to the centerSums array object.
    */
-  private void findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
+  public static double[][] findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
+    double[][] centerSums = new double[centers.length][centers[0].length + 1];
     for (int i = 0; i < datapoints.length; i++) {
       int minimumCentroid = 0;
       double minValue = 0;
@@ -86,6 +70,7 @@ public class KMeansCalculator {
       }
       centerSums[minimumCentroid][dim] += 1;
     }
+    return centerSums;
   }
 
   /**
@@ -93,7 +78,7 @@ public class KMeansCalculator {
    * represents the data point value, value 2 represents the centroid value, and the length
    * represents the dimension of the data point and centroid values.
    */
-  private double calculateEuclideanDistance(double[] value1, double[] value2, int length) {
+  private static double calculateEuclideanDistance(double[] value1, double[] value2, int length) {
     double sum = 0.0;
     for (int i = 0; i < length; i++) {
       double v = (value1[i] - value2[i]) * (value1[i] - value2[i]);

@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -68,7 +69,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
   /**
    * not stopped
    */
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   /*
    * clean up is called, so we cannot cleanup again
@@ -80,7 +81,18 @@ public class StreamingAllSharingExecutor implements IExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public StreamingAllSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
+  /**
+   * Execution plan
+   */
+  private ExecutionPlan plan;
+
+  /**
+   * The execution hook
+   */
+  protected IExecutionHook executionHook;
+
+  public StreamingAllSharingExecutor(Config cfg, int workerId, TWSChannel channel,
+                                     ExecutionPlan executionPlan, IExecutionHook hook) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -89,9 +101,12 @@ public class StreamingAllSharingExecutor implements IExecutor {
       this.threads = Executors.newFixedThreadPool(numThreads - 1,
           new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     }
+    this.plan = executionPlan;
+    this.executionHook = hook;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -99,10 +114,21 @@ public class StreamingAllSharingExecutor implements IExecutor {
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runExecution(plan);
+    return runExecution();
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  @Override
+  public boolean execute(boolean close) {
+    return execute();
+  }
+
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return plan;
+  }
+
+  public IExecution iExecute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -110,7 +136,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
   }
 
   @Override
@@ -120,11 +146,15 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
   }
 
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
   /**
    * Execution Method for Batch Tasks
    */
-  public boolean runExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public boolean runExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -135,13 +165,13 @@ public class StreamingAllSharingExecutor implements IExecutor {
     StreamWorker[] workers = scheduleExecution(nodes);
     StreamWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped) {
+    while (isNotStopped()) {
       channel.progress();
       // the main thread call the run method of the 0th worker
       worker.runExecution();
     }
 
-    cleanUp(executionPlan, nodes);
+    cleanUp(nodes);
     return true;
   }
 
@@ -173,7 +203,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     return workers;
   }
 
-  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
       doneSignal.await();
@@ -183,10 +213,12 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     // clear the finished instances
     cleanUpCalled = true;
+    // run the execution hook
+    executionHook.afterExecution();
   }
 
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -195,11 +227,11 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
 
     StreamWorker[] workers = scheduleExecution(nodes);
-    return new StreamExecution(executionPlan, nodes, workers[0]);
+    return new StreamExecution(plan, nodes, workers[0]);
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
+  public boolean closeExecution() {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
@@ -211,7 +243,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     CommunicationWorker[] workers = scheduleWaitFor(nodes);
     CommunicationWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped) {
+    while (isNotStopped()) {
       channel.progress();
       worker.runChannelComplete();
     }
@@ -259,7 +291,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
-
+    executionHook.onClose(this);
     // clear the finished instances
     cleanUpCalled = true;
   }
@@ -285,7 +317,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         runChannelComplete();
       }
       doneSignal.countDown();
@@ -339,7 +371,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         runExecution();
       }
       doneSignal.countDown();
@@ -407,15 +439,15 @@ public class StreamingAllSharingExecutor implements IExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped) {
+      while (isNotStopped()) {
         channel.progress();
         mainWorker.runExecution();
       }
 
-      cleanUp(executionPlan, nodeMap);
+      cleanUp(nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 
@@ -423,13 +455,13 @@ public class StreamingAllSharingExecutor implements IExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped) {
+        if (isNotStopped()) {
           channel.progress();
           mainWorker.runExecution();
           return true;
         }
         // clean up
-        cleanUp(executionPlan, nodeMap);
+        cleanUp(nodeMap);
         cleanUpCalled = false;
         // if we finish, lets schedule
         CommunicationWorker[] workers = scheduleWaitFor(nodeMap);
@@ -444,12 +476,13 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
 
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
       if (!cleanUpCalled) {
         StreamingAllSharingExecutor.this.close(executionPlan, nodeMap);
+        executionHook.onClose(StreamingAllSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

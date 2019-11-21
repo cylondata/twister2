@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.executor.threading.ExecutorFactory;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -153,8 +153,8 @@ public class HDFSTaskExample implements IWorker {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
         workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, network);
-    executor.execute(plan);
+    ExecutorFactory executor = new ExecutorFactory(config, workerID, network);
+    executor.getExecutor(config, plan, OperationMode.BATCH).execute();
   }
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
