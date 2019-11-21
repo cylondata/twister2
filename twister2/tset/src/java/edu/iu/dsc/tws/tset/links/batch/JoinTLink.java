@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 
 public class JoinTLink<K, VL, VR> extends BatchIteratorLink<JoinedTuple<K, VL, VR>> {
 
@@ -123,15 +122,5 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLink<JoinedTuple<K, VL, V
   @Override
   public CachedTSet<JoinedTuple<K, VL, VR>> cache() {
     return (CachedTSet<JoinedTuple<K, VL, VR>>) super.cache();
-  }
-
-  @Override
-  public PersistedTSet<JoinedTuple<K, VL, VR>> persist() {
-    return (PersistedTSet<JoinedTuple<K, VL, VR>>) super.persist();
-  }
-
-  @Override
-  public PersistedTSet<JoinedTuple<K, VL, VR>> lazyPersist() {
-    return (PersistedTSet<JoinedTuple<K, VL, VR>>) super.lazyPersist();
   }
 }

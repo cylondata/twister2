@@ -95,7 +95,6 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
   /*
    * Similar to cache, but stores data in disk rather than in memory.
-   * (This is for non-keyed operations! For keyed operations this will be overridden)
    */
   @Override
   public Storable<T0> persist() {

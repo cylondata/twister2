@@ -97,14 +97,4 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
 
     return persistedTSet;
   }
-
-  @Override
-  public Storable<T> cache() {
-    return super.cache();
-  }
-
-  @Override
-  public Storable<T> persist() {
-    return super.persist();
-  }
 }
