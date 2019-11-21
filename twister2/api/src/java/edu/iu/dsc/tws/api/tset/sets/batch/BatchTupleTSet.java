@@ -132,8 +132,4 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
   Storable<Tuple<K, V>> cache();
 
   Storable<Tuple<K, V>> lazyCache();
-
-  Storable<Tuple<K, V>> persist();
-
-  Storable<Tuple<K, V>> lazyPersist();
 }

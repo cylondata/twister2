@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedPersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
 /**
@@ -43,12 +43,12 @@ public abstract class BatchKeyedLink<K, V> extends BatchIteratorLink<Tuple<K, V>
   }
 
   @Override
-  public KeyedPersistedTSet<K, V> lazyPersist() {
+  public Storable<Tuple<K, V>> lazyPersist() {
     throw new UnsupportedOperationException("persist on keyed links is not implemented!");
   }
 
   @Override
-  public KeyedPersistedTSet<K, V> persist() {
+  public Storable<Tuple<K, V>> persist() {
     throw new UnsupportedOperationException("persist on keyed links is not implemented!");
     // todo override the @edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl to add persistence for
     //  keyed tsets here!

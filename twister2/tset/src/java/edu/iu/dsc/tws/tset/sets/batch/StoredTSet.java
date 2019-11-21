@@ -49,7 +49,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   private SinkFunc<?> storingSinkFunc;
   private String storedSourcePrefix;
 
-  private SourceTSet<T> storedSource;
+  protected SourceTSet<T> storedSource;
 
   /*
   Sink function type is unknown as we need to preserve the output data object type to T. In doing
@@ -61,12 +61,6 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
     super(tSetEnv, name, parallelism);
     this.storingSinkFunc = sinkFunc;
     this.storedSourcePrefix = "stored(" + getId() + ")";
-  }
-
-  StoredTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism,
-             SourceTSet<T> storedSource) {
-    super(tSetEnv, name, parallelism);
-    this.storedSource = storedSource;
   }
 
   @Override

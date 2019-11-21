@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
@@ -110,7 +110,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
         final SourceTSet<T0> persistedSource = getTSetEnv().createSource(
             new DiskPartitionBackedSource<>(this.getId()), this.getTargetParallelism());
 
-        return new PersistedTSet<>(getTSetEnv(), this.getTargetParallelism(), persistedSource);
+        return new CheckpointedTSet<>(getTSetEnv(), this.getTargetParallelism(), persistedSource);
       } else {
         Storable<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);

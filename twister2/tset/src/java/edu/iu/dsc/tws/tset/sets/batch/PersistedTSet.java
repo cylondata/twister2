@@ -21,9 +21,9 @@ public class PersistedTSet<T> extends StoredTSet<T> {
     super(tSetEnv, "persisted", sinkFunc, parallelism);
   }
 
-  // constructor used for checkpointing
-  public PersistedTSet(BatchTSetEnvironment tSetEnv, int parallelism, SourceTSet<T> source) {
-    super(tSetEnv, "checkpointed", parallelism, source);
+  protected PersistedTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
+                          int parallelism) {
+    super(tSetEnv, name, sinkFunc, parallelism);
   }
 
   @Override
