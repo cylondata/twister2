@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionState;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -67,7 +68,7 @@ public class BatchSharingExecutor2 implements IExecutor {
   private int workerId;
 
   // not stopped
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   // clean up is called
   private boolean cleanUpCalled = false;
@@ -77,7 +78,18 @@ public class BatchSharingExecutor2 implements IExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel) {
+  /**
+   * The current plan we are executing
+   */
+  protected ExecutionPlan plan;
+
+  /**
+   * The execution hook
+   */
+  protected IExecutionHook executionHook;
+
+  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan,
+                               IExecutionHook hook) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -86,9 +98,12 @@ public class BatchSharingExecutor2 implements IExecutor {
       this.threads = Executors.newFixedThreadPool(numThreads - 1,
           new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     }
+    this.plan = plan;
+    this.executionHook = hook;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -104,7 +119,8 @@ public class BatchSharingExecutor2 implements IExecutor {
     return runExecution(plan);
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  public IExecution iExecute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -117,7 +133,16 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
+  }
+
+  @Override
+  public boolean execute(boolean close) {
+    boolean e = execute();
+    if (close) {
+      closeExecution();
+    }
+    return e;
   }
 
   @Override
@@ -125,6 +150,16 @@ public class BatchSharingExecutor2 implements IExecutor {
     if (threads != null) {
       threads.shutdown();
     }
+    executionHook.onClose(this);
+  }
+
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return plan;
   }
 
   /**
@@ -142,7 +177,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     BatchWorker[] workers = scheduleExecution(nodes);
     BatchWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size()) {
+    while (isNotStopped() && finishedInstances.get() != nodes.size()) {
       channel.progress();
       // the main thread call the run method of the 0th worker
       worker.runExecution();
@@ -191,10 +226,12 @@ public class BatchSharingExecutor2 implements IExecutor {
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
+    // after execution
+    executionHook.afterExecution();
   }
 
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -203,11 +240,11 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     BatchWorker[] workers = scheduleExecution(nodes);
-    return new BatchExecution(executionPlan, nodes, workers[0]);
+    return new BatchExecution(plan, nodes, workers[0]);
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
+  public boolean closeExecution() {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
@@ -219,7 +256,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     CommunicationWorker[] workers = scheduleWaitFor(nodes);
     CommunicationWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size()) {
+    while (isNotStopped() && finishedInstances.get() != nodes.size()) {
       channel.progress();
       worker.runChannelComplete();
     }
@@ -294,7 +331,7 @@ public class BatchSharingExecutor2 implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         if (!runChannelComplete()) {
           break;
         }
@@ -350,7 +387,7 @@ public class BatchSharingExecutor2 implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped && finishedInstances.get() != tasks.size()) {
+      while (isNotStopped() && finishedInstances.get() != tasks.size()) {
         runExecution();
       }
       doneSignal.countDown();
@@ -405,7 +442,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.get() != nodeMap.size()) {
+      while (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         mainWorker.runExecution();
       }
@@ -415,7 +452,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       cleanUp(executionPlan, nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 
@@ -440,7 +477,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.get() != nodeMap.size()) {
+      if (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         worker.runChannelComplete();
         return true;
@@ -450,12 +487,13 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
       if (!cleanUpCalled) {
         BatchSharingExecutor2.this.close(executionPlan, nodeMap);
+        executionHook.onClose(BatchSharingExecutor2.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

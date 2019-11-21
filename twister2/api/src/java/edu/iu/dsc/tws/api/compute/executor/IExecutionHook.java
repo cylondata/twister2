@@ -11,15 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.compute.executor;
 
-/**
- * Sync interface, this method is called when barriers come and tasks sync
- */
-public interface ISync {
+public interface IExecutionHook {
   /**
-   * Callback for sync
-   * @param edge edge name
-   * @param value value, can be null
-   * @return if we handled the sync, return true
+   * Every IExecutor should execute this method before it begins an execution
    */
-  boolean sync(String edge, byte[] value);
+  void beforeExecution();
+
+  /**
+   * Every IExecitor should execute this method after it finishes an execution
+   */
+  void afterExecution();
+
+  /**
+   * Called when this execution is closed
+   */
+  void onClose(IExecutor ex);
 }

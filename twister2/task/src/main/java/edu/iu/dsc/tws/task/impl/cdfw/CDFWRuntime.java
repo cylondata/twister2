@@ -170,7 +170,7 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
       }
 
       if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
-        taskExecutor.itrExecute(taskGraph, executionPlan);
+        taskExecutor.execute(taskGraph, executionPlan);
       } else {
         taskExecutor.execute(taskGraph, executionPlan);
       }

@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.WorkerManager;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -238,8 +239,9 @@ public final class K8sWorkerStarter {
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
-
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    WorkerManager workerManager = new WorkerManager(config, workerID,
+        workerController, pv, volatileVolume, worker);
+    workerManager.start();
   }
 
   /**

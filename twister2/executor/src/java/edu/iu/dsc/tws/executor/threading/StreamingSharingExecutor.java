@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.config.Config;
@@ -31,18 +32,19 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
   private int workerId;
 
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   private boolean cleanUpCalled = false;
 
   private CountDownLatch doneSignal;
 
-  public StreamingSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
-    super(cfg, channel);
+  public StreamingSharingExecutor(Config cfg, int workerId,
+                                  TWSChannel channel, ExecutionPlan plan, IExecutionHook hook) {
+    super(cfg, channel, plan, hook);
     this.workerId = workerId;
   }
 
-  public boolean runExecution(ExecutionPlan executionPlan) {
+  public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -59,16 +61,21 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
       LOG.log(Level.SEVERE, "Error in scheduling execution", ex);
     } finally {
       notStopped = false;
-      cleanUp(executionPlan, nodes);
+      cleanUp(nodes);
     }
     return true;
+  }
+
+  @Override
+  public boolean execute(boolean close) {
+    return execute();
   }
 
   /**
    * Progress the communications
    */
   private void progressStreamComm() {
-    while (notStopped) {
+    while (isNotStopped()) {
       this.channel.progress();
     }
   }
@@ -89,7 +96,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
+  public IExecution runIExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -103,7 +110,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     return new StreamExecution(executionPlan, nodes);
   }
 
-  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
       doneSignal.await();
@@ -121,12 +128,14 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
-
+    // execution hook
+    executionHook.afterExecution();
     cleanUpCalled = true;
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
+  public boolean closeExecution() {
+    executionHook.onClose(this);
     return false;
   }
 
@@ -139,7 +148,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
@@ -159,6 +168,10 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
   private class StreamExecution implements IExecution {
     private Map<Integer, INodeInstance> nodeMap;
 
@@ -172,18 +185,18 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped) {
+      while (isNotStopped()) {
         channel.progress();
       }
 
-      cleanUp(executionPlan, nodeMap);
+      cleanUp(nodeMap);
       return true;
     }
 
     @Override
     public boolean progress() {
       // we progress until all the channel finish
-      if (notStopped) {
+      if (isNotStopped()) {
         channel.progress();
         return true;
       }
@@ -192,12 +205,13 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
       if (!cleanUpCalled) {
-        cleanUp(executionPlan, nodeMap);
+        cleanUp(nodeMap);
+        executionHook.onClose(StreamingSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

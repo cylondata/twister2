@@ -9,17 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.compute.executor;
+package edu.iu.dsc.tws.api.faulttolerance;
+
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 
 /**
- * Sync interface, this method is called when barriers come and tasks sync
+ * This is an interface to mark the components that accepts a fault. When a fault occurs, the
+ * environments will propagate it to the associated components.
  */
-public interface ISync {
+public interface FaultAcceptable {
   /**
-   * Callback for sync
-   * @param edge edge name
-   * @param value value, can be null
-   * @return if we handled the sync, return true
+   * A fault has occurred
+   *
+   * @param fault the fault
+   * @throws Twister2Exception if an exception occurs while processing the fault
    */
-  boolean sync(String edge, byte[] value);
+  void onFault(Fault fault) throws Twister2Exception;
 }

@@ -50,6 +50,8 @@ public final class WorkerRuntime {
   private static IWorkerStatusUpdater workerStatusUpdater;
   private static ISenderToDriver senderToDriver;
 
+  private static IWorkerFailureListener failureListener;
+
   private WorkerRuntime() {
   }
 
@@ -148,11 +150,20 @@ public final class WorkerRuntime {
    * A listener can be only added when ZKWorkerController is used.
    */
   public static boolean addWorkerFailureListener(IWorkerFailureListener workerFailureListener) {
+    failureListener = workerFailureListener;
     if (zkWorkerController != null) {
       return zkWorkerController.addFailureListener(workerFailureListener);
     }
 
     return false;
+  }
+
+  /**
+   * Get the failure listener
+   * @return the failure listener
+   */
+  public static IWorkerFailureListener getFailureListener() {
+    return failureListener;
   }
 
   /**

@@ -95,7 +95,8 @@ public abstract class BenchTaskWorker implements IWorker {
     buildTaskGraph();
     computeGraph = computeGraphBuilder.build();
     executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
-    IExecution execution = cEnv.getTaskExecutor().iExecute(computeGraph, executionPlan);
+    IExecution execution = cEnv.getTaskExecutor().createExecution(computeGraph,
+        executionPlan).iExecute();
 
     if (jobParameters.isStream()) {
       while (execution.progress()
