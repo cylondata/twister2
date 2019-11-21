@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Python API · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;The Python API provides the ability to define Twister2 TSet jobs in python.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Python API · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="&lt;p&gt;The Python API provides the ability to define Twister2 TSet jobs in python.&lt;/p&gt;
+"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Python API</h1></header><article><div><span><p>The Python API provides the ability to define Twister2 TSet jobs in python.</p>
+<h2><a class="anchor" aria-hidden="true" id="getting-started"></a><a href="#getting-started" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Started</h2>
+<h3><a class="anchor" aria-hidden="true" id="following-components-are-required-in-your-system"></a><a href="#following-components-are-required-in-your-system" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Following components are required in your system.</h3>
+<ol>
+<li>Python 3.7</li>
+<li>JVM 8+</li>
+</ol>
+<h3><a class="anchor" aria-hidden="true" id="setting-up-twister2-python-support"></a><a href="#setting-up-twister2-python-support" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Setting up twister2 python support</h3>
+<pre><code class="hljs css language-bash">pip3 install twister2
+</code></pre>
+<p>twister2 uses <a href="https://github.com/ninia/jep">jep</a> to create python interpreters within the JVM. Inorder for this to work properly, jep's native libraries should be accessible by the java process. Update your LD_LIBRARY_PATH environment variable
+to include <code>jep.so</code> inorder to make it accessible by java process at runtime. The location of jep can be found as follows.</p>
+<pre><code class="hljs css language-bash">pip show jep
+</code></pre>
+<p>This will give an output similar to below.</p>
+<pre><code class="hljs css language-text">Name: jep
+Version: 3.9.0
+Summary: Jep embeds CPython in Java
+Home-page: https://github.com/ninia/jep
+Author: Jep Developers
+Author-email: jep-project@googlegroups.com
+License: zlib/libpng
+Location: /home/username/.local/lib/python3.7/site-packages
+Requires: 
+Required-by: twister2
+</code></pre>
+<p>Now copy the Location and update the LD_LIBRARY_PATH as follows.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=/home/username/.<span class="hljs-built_in">local</span>/lib/python3.7/site-packages/jep:<span class="hljs-variable">$LD_LIBRARY_PATH</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="writing-your-first-application"></a><a href="#writing-your-first-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Writing your first application</h2>
+<h3><a class="anchor" aria-hidden="true" id="twister2-environment"></a><a href="#twister2-environment" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Twister2 Environment</h3>
+<pre><code class="hljs css language-python">env = Twister2Environment(name=<span class="hljs-string">"MyPython"</span>, config={<span class="hljs-string">"sample_config"</span>: <span class="hljs-number">123</span>}, resources=[{<span class="hljs-string">"cpu"</span>: <span class="hljs-number">1</span>, <span class="hljs-string">"ram"</span>: <span class="hljs-number">1024</span>, <span class="hljs-string">"instances"</span>: <span class="hljs-number">2</span>}])
+</code></pre>
+<p>Twister2Environment can be considered as the entry point to connect to the java runtime. Twister2Environment optionally allows you to configure your job and resources.</p>
+<h3><a class="anchor" aria-hidden="true" id="tset-source"></a><a href="#tset-source" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>TSet Source</h3>
+<p>TSet is all about data transformations. Hence every TSet workflow starts with a source.</p>
+<p>TSet source in python should follow below skeleton.</p>
+<pre><code class="hljs css language-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SourceFunc</span><span class="hljs-params">(ABC)</span>:</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">pass</span>
+
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">has_next</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">next</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+</code></pre>
+<p>Shown below is a simple integer source created based on above skeleton.</p>
+<pre><code class="hljs css language-python"><span class="hljs-keyword">from</span> twister2.tset.fn.SourceFunc <span class="hljs-keyword">import</span> SourceFunc
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IntegerSource</span><span class="hljs-params">(SourceFunc)</span>:</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, limit)</span>:</span>
+        super(IntegerSource, self).__init__()
+        self.x = <span class="hljs-number">0</span>
+        self.limit = limit
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">has_next</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> self.x &lt; self.limit
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">next</span><span class="hljs-params">(self)</span>:</span>
+        self.x += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">return</span> self.x
+</code></pre>
+<p>Once defined, you may add this source to TSet environment as follows.</p>
+<pre><code class="hljs css language-python">source = env.create_source(IntegerSource(<span class="hljs-number">10</span>), <span class="hljs-number">4</span>)
+</code></pre>
+<p>The second parameter of <code>create_source</code> is the parallelism. In this case(4), twister2 will run 4 integer sources parallelly across the cluster.</p>
+<p>Starting from a source, you may transform your data as required by utilizing twister2 TSet operations.</p>
+<h3><a class="anchor" aria-hidden="true" id="example-kmeans"></a><a href="#example-kmeans" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Example - KMeans</h3>
+<p>This example utilizes existing tools for python such as <code>numpy</code> and <code>scikit-learn</code> for data representation and computation and use twister2 for communication.</p>
+<pre><code class="hljs css language-python"><span class="hljs-comment"># Twister2 Python API supports Numpy</span>
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+
+<span class="hljs-keyword">from</span> twister2.TSetContext <span class="hljs-keyword">import</span> TSetContext
+<span class="hljs-keyword">from</span> twister2.Twister2Environment <span class="hljs-keyword">import</span> Twister2Environment
+<span class="hljs-keyword">from</span> twister2.tset.fn.SourceFunc <span class="hljs-keyword">import</span> SourceFunc
+
+env = Twister2Environment(resources=[{<span class="hljs-string">"cpu"</span>: <span class="hljs-number">4</span>, <span class="hljs-string">"ram"</span>: <span class="hljs-number">4096</span>, <span class="hljs-string">"instances"</span>: <span class="hljs-number">1</span>}])
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PointSource</span><span class="hljs-params">(SourceFunc)</span>:</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, size, count)</span>:</span>
+        self.i = <span class="hljs-number">0</span>
+        self.read = <span class="hljs-literal">True</span>
+        self.size = size
+        self.count = count
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">has_next</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> self.read
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">next</span><span class="hljs-params">(self)</span>:</span>
+        self.i = self.i + <span class="hljs-number">1</span>
+        arr = np.random.rand(self.count, self.size)
+        self.read = <span class="hljs-literal">False</span>
+        <span class="hljs-keyword">return</span> arr
+
+
+data = env.create_source(PointSource(<span class="hljs-number">100</span>, <span class="hljs-number">10000</span>), <span class="hljs-number">10</span>).cache()
+centers = env.create_source(PointSource(<span class="hljs-number">100</span>, <span class="hljs-number">200</span>), <span class="hljs-number">10</span>).cache()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">apply_kmeans</span><span class="hljs-params">(points, ctx: TSetContext)</span>:</span>
+    <span class="hljs-comment"># If you need to use a 3rd party library, you should import them within the function body.</span>
+    <span class="hljs-keyword">from</span> sklearn.cluster <span class="hljs-keyword">import</span> KMeans
+    c = ctx.get_input(<span class="hljs-string">"centroids"</span>)
+    centers = c.get_partition(ctx.get_index()).consumer().__next__()
+    kmeans = KMeans(init=centers, n_clusters=<span class="hljs-number">200</span>, n_init=<span class="hljs-number">1</span>).fit(points)
+    <span class="hljs-keyword">return</span> kmeans.cluster_centers_
+
+<span class="hljs-comment"># Most of the TSet operations accept a function. You can even pass a lambda instead!</span>
+mapped = data.direct().map(apply_kmeans)
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reduce_centroids</span><span class="hljs-params">(c1, c2)</span>:</span>
+    <span class="hljs-keyword">return</span> c1 + c2
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">average</span><span class="hljs-params">(points, ctx)</span>:</span>
+    <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+    <span class="hljs-keyword">return</span> np.divide(points, <span class="hljs-number">10</span>)
+
+
+reduced = mapped.all_reduce(reduce_centroids).map(average)
+
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">10</span>):
+    mapped.add_input(<span class="hljs-string">"centroids"</span>, centers)
+    centers = reduced.cache()
+
+centers.direct().for_each(<span class="hljs-keyword">lambda</span> x: print(x))
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="submitting-python-jobs-to-twister2"></a><a href="#submitting-python-jobs-to-twister2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Submitting Python Jobs to Twister2</h2>
+<p>Twister2 accepts two types of python jobs.</p>
+<ol>
+<li>Single python file (If you have just one file defining the whole job)</li>
+</ol>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone python /absolute/path/to/your_script.py your_script.py  arg1 arg2
+</code></pre>
+<ol start="2">
+<li>Zip file (If you have multiple python files, you can submit them as a zip file)</li>
+</ol>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone python_zip /absolute/path/to/your_zip.zip entry_point.py  arg1 arg2
+</code></pre>
+<p><code>entry_point.py</code> is where you would initialize Twister2Environment</p>
+<p><code>arg1</code> and <code>arg2</code> in above two commands will be passed as system args to the python script.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#getting-started">Getting Started</a><ul class="toc-headings"><li><a href="#following-components-are-required-in-your-system">Following components are required in your system.</a></li><li><a href="#setting-up-twister2-python-support">Setting up twister2 python support</a></li></ul></li><li><a href="#writing-your-first-application">Writing your first application</a><ul class="toc-headings"><li><a href="#twister2-environment">Twister2 Environment</a></li><li><a href="#tset-source">TSet Source</a></li><li><a href="#example-kmeans">Example - KMeans</a></li></ul></li><li><a href="#submitting-python-jobs-to-twister2">Submitting Python Jobs to Twister2</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

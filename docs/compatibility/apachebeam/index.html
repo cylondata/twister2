@@ -6,29 +6,162 @@ executed using one of the many distributed processing back-ends supported by Apa
 Frameworks such as Apache Spark and Apache Flink are supported, these are called runners.</p>
 <p>Twister2 has a Apache Beam runner that is currently being shipped with the Twister2 release, which we plan to
 include directly into Apache Beam, This runner allows users to run Apache beam piplines with Twister2</p>
-<p>Below is an example code that runs a Beam pipline using Twister2 Runner</p>
-<pre><code class="hljs css language-java">    Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
-    options.setTSetEnvironment(env);
-    options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
-    String resultPath = <span class="hljs-string">"/home/pulasthi/work/twister2/beamtest/testdir"</span>;
-    Pipeline p = Pipeline.create(options);
-    PCollection&lt;String&gt; result =
-        p.apply(GenerateSequence.from(<span class="hljs-number">0</span>).to(<span class="hljs-number">10</span>))
-            .apply(
-                ParDo.of(
-                    <span class="hljs-keyword">new</span> DoFn&lt;Long, String&gt;() {
-                      <span class="hljs-meta">@ProcessElement</span>
-                      <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">processElement</span><span class="hljs-params">(ProcessContext c)</span> <span class="hljs-keyword">throws</span> Exception </span>{
-                        c.output(c.element().toString());
-                      }
-                    }));
-
-    <span class="hljs-keyword">try</span> {
-      result.apply(TextIO.write().to(<span class="hljs-keyword">new</span> URI(resultPath).getPath() + <span class="hljs-string">"/part"</span>));
-    } <span class="hljs-keyword">catch</span> (URISyntaxException e) {
-      LOG.info(e.getMessage());
+<p>Below is an example word count code that runs a Beam pipeline using Twister2 Runner. The actual Beam
+code of the example is found in the &quot;runWordCount&quot; method which builds and runs the Apache Beam
+Pipeline. This will be run using Twister2 as the distributed processing backend.</p>
+<p>In order to run this example you can use the following command. That is after you have got the Twister2
+distribution setup.</p>
+<pre><code class="hljs css language-text">./bin/twister2 submit standalone jar $pathtoJar org.apache.beam.runners.twister2.examples.TestRunner
+ -input <path-to-text-input-file> -output <path-to-text-output-file> -workers 1 1>&2 | tee out.txt
+</code></pre>
+<pre><code class="hljs css language-java">    <span class="hljs-keyword">package</span> org.apache.beam.runners.twister2.examples;
+    
+    <span class="hljs-keyword">import</span> java.io.Serializable;
+    
+    <span class="hljs-keyword">import</span> org.apache.beam.runners.twister2.Twister2LegacyRunner;
+    <span class="hljs-keyword">import</span> org.apache.beam.runners.twister2.Twister2PipelineOptions;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.Pipeline;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.io.TextIO;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Counter;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Distribution;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Metrics;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Default;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Description;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.PipelineOptions;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.PipelineOptionsFactory;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Validation;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.Count;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.DoFn;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.MapElements;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.PTransform;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.ParDo;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.SimpleFunction;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.values.KV;
+    <span class="hljs-keyword">import</span> org.apache.beam.sdk.values.PCollection;
+    
+    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.config.Config;
+    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+    
+    <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">WordCount</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Serializable</span>, <span class="hljs-title">BatchTSetIWorker</span> </span>{
+    
+      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String TOKENIZER_PATTERN = <span class="hljs-string">"[^\\p{L}]+"</span>;
+    
+      <span class="hljs-meta">@Override</span>
+      <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(BatchTSetEnvironment env)</span> </span>{
+    
+        Config config = env.getConfig();
+        String input = config.getStringValue(<span class="hljs-string">"input"</span>);
+        String output = config.getStringValue(<span class="hljs-string">"output"</span>);
+        System.out.println(<span class="hljs-string">"Rank "</span> + env.getWorkerID());
+        Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
+        options.setTSetEnvironment(env);
+        options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
+        runWordCount(options, input, output);
+      }
+    
+      <span class="hljs-comment">/**
+       * Concept #2: You can make your pipeline assembly code less verbose by defining your DoFns
+       * statically out-of-line. This DoFn tokenizes lines of text into individual words; we pass it to
+       * a ParDo in the pipeline.
+       */</span>
+      <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ExtractWordsFn</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DoFn</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">String</span>&gt; </span>{
+        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Counter emptyLines = Metrics.counter(ExtractWordsFn.class, <span class="hljs-string">"emptyLines"</span>);
+        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Distribution lineLenDist =
+            Metrics.distribution(ExtractWordsFn.class, <span class="hljs-string">"lineLenDistro"</span>);
+    
+        <span class="hljs-meta">@ProcessElement</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">processElement</span><span class="hljs-params">(@Element String element, OutputReceiver&lt;String&gt; receiver)</span> </span>{
+          lineLenDist.update(element.length());
+          <span class="hljs-keyword">if</span> (element.trim().isEmpty()) {
+            emptyLines.inc();
+          }
+    
+          <span class="hljs-comment">// Split the line into words.</span>
+          String[] words = element.split(TOKENIZER_PATTERN, -<span class="hljs-number">1</span>);
+    
+          <span class="hljs-comment">// Output each word encountered into the output PCollection.</span>
+          <span class="hljs-keyword">for</span> (String word : words) {
+            <span class="hljs-keyword">if</span> (!word.isEmpty()) {
+              receiver.output(word);
+            }
+          }
+        }
+      }
+    
+      <span class="hljs-comment">/** A SimpleFunction that converts a Word and Count into a printable string. */</span>
+      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FormatAsTextFn</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">SimpleFunction</span>&lt;<span class="hljs-title">KV</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">Long</span>&gt;, <span class="hljs-title">String</span>&gt; </span>{
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">apply</span><span class="hljs-params">(KV&lt;String, Long&gt; input)</span> </span>{
+          <span class="hljs-keyword">return</span> input.getKey() + <span class="hljs-string">": "</span> + input.getValue();
+        }
+      }
+    
+      <span class="hljs-comment">/**
+       * A PTransform that converts a PCollection containing lines of text into a PCollection of
+       * formatted word counts.
+       *
+       * &lt;p&gt;Concept #3: This is a custom composite transform that bundles two transforms (ParDo and
+       * Count) as a reusable PTransform subclass. Using composite transforms allows for easy reuse,
+       * modular testing, and an improved monitoring experience.
+       */</span>
+      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CountWords</span>
+          <span class="hljs-keyword">extends</span> <span class="hljs-title">PTransform</span>&lt;<span class="hljs-title">PCollection</span>&lt;<span class="hljs-title">String</span>&gt;, <span class="hljs-title">PCollection</span>&lt;<span class="hljs-title">KV</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">Long</span>&gt;&gt;&gt; </span>{
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-keyword">public</span> PCollection&lt;KV&lt;String, Long&gt;&gt; expand(PCollection&lt;String&gt; lines) {
+    
+          <span class="hljs-comment">// Convert lines of text into individual words.</span>
+          PCollection&lt;String&gt; words = lines.apply(ParDo.of(<span class="hljs-keyword">new</span> ExtractWordsFn()));
+    
+          <span class="hljs-comment">// Count the number of times each word occurs.</span>
+          PCollection&lt;KV&lt;String, Long&gt;&gt; wordCounts = words.apply(Count.perElement());
+    
+          <span class="hljs-keyword">return</span> wordCounts;
+        }
+      }
+    
+      <span class="hljs-comment">/**
+       * Options supported by {<span class="hljs-doctag">@link</span> WordCount}.
+       *
+       * &lt;p&gt;Concept #4: Defining your own configuration options. Here, you can add your own arguments to
+       * be processed by the command-line parser, and specify default values for them. You can then
+       * access the options values in your pipeline code.
+       *
+       * &lt;p&gt;Inherits standard configuration options.
+       */</span>
+      <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">WordCountOptions</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">PipelineOptions</span> </span>{
+    
+        <span class="hljs-comment">/**
+         * By default, this example reads from a public dataset containing the text of King Lear. Set
+         * this option to choose a different input file or glob.
+         */</span>
+        <span class="hljs-meta">@Description</span>(<span class="hljs-string">"Path of the file to read from"</span>)
+        <span class="hljs-meta">@Default</span>.String(<span class="hljs-string">"gs://apache-beam-samples/shakespeare/kinglear.txt"</span>)
+        <span class="hljs-function">String <span class="hljs-title">getInputFile</span><span class="hljs-params">()</span></span>;
+    
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">setInputFile</span><span class="hljs-params">(String value)</span></span>;
+    
+        <span class="hljs-comment">/** Set this required option to specify where to write the output. */</span>
+        <span class="hljs-meta">@Description</span>(<span class="hljs-string">"Path of the file to write to"</span>)
+        <span class="hljs-meta">@Validation</span>.<span class="hljs-function">Required
+        String <span class="hljs-title">getOutput</span><span class="hljs-params">()</span></span>;
+    
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">setOutput</span><span class="hljs-params">(String value)</span></span>;
+      }
+    
+      <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">runWordCount</span><span class="hljs-params">(Twister2PipelineOptions options, String input, String output)</span> </span>{
+        Pipeline p = Pipeline.create(options);
+    
+        <span class="hljs-comment">// Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the</span>
+        <span class="hljs-comment">// static FormatAsTextFn() to the ParDo transform.</span>
+        p.apply(<span class="hljs-string">"ReadLines"</span>, TextIO.read().from(input))
+            .apply(<span class="hljs-keyword">new</span> CountWords())
+            .apply(MapElements.via(<span class="hljs-keyword">new</span> FormatAsTextFn()))
+            .apply(<span class="hljs-string">"WriteCounts"</span>, TextIO.write().to(output));
+    
+        p.run().waitUntilFinish();
+      }
     }
-    p.run();
 </code></pre>
 <p>Apache beam provides a rich set of SDK's with many adapters which allow you to integrate with
 various systems, you can learn more about Apache Beam by referring the Apache Beam <a href="https://beam.apache.org/documentation/">documentation</a>.</p>
