@@ -38,9 +38,10 @@ public class DiskPartitionBackedSource<T> extends BaseSourceFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
+//    String reference = this.referencePrefix + ctx.getIndex();
+    String reference = ctx.getId() + ctx.getIndex();
     DiskBackedCollectionPartition<T> diskPartition = new DiskBackedCollectionPartition<>(
-        0, ctx.getConfig(), this.referencePrefix + ctx.getIndex()
-    );
+        0, ctx.getConfig(), reference);
     this.consumer = diskPartition.getConsumer();
   }
 }

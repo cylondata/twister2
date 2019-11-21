@@ -38,7 +38,8 @@ public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
 
-    String reference = referencePrefix + ctx.getIndex();
+//    String reference = referencePrefix + ctx.getIndex();
+    String reference = ctx.getId() + ctx.getIndex();
     // buffered partition with 0 frames in memory. Then everything will be written to the memory
     this.partition = new DiskBackedCollectionPartition<>(0,
         ctx.getConfig(), reference);
