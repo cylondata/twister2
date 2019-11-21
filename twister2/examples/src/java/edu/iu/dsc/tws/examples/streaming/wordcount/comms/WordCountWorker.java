@@ -28,13 +28,13 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.stream.SKeyedPartition;
+import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private SKeyedPartition keyedPartition;
+  private SPartition keyedPartition;
 
   private Communicator channel;
 
@@ -63,9 +63,8 @@ public class WordCountWorker implements IWorker {
     setupNetwork(workerController);
 
     // create the communication
-    keyedPartition = new SKeyedPartition(channel, logicalPlan, sources, destinations,
-        MessageTypes.OBJECT, MessageTypes.INTEGER,
-        new WordAggregate(), new HashingSelector());
+    keyedPartition = new SPartition(channel, logicalPlan, sources, destinations,
+        MessageTypes.OBJECT, new WordAggregate(), new HashingSelector());
 
     scheduleTasks();
     progress();

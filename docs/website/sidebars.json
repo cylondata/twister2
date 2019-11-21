@@ -14,6 +14,7 @@
     "App Development": [
       "concepts/api_overview",
       "guides/developing_twister2",
+      "concepts/streaming_jobs",
       "concepts/worker_api",
       "concepts/tset_api",
       "concepts/task_api",

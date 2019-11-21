@@ -11,7 +11,7 @@ Twister2 build needs several software installed on your system.
 1. Operating System
    * Twister2 is tested and known to work on,
      * Red Hat Enterprise Linux Server release 7
-     * Ubuntu 14.05, Ubuntu 16.10 and Ubuntu 18.10
+     * Ubuntu 16.10 and Ubuntu 18.10
 2. Java
    * Download Oracle JDK 8 from [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
    * Extract the archive to a folder named `jdk1.8.0`
