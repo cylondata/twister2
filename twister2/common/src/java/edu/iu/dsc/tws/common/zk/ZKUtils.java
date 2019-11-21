@@ -25,6 +25,7 @@
 package edu.iu.dsc.tws.common.zk;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +53,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
  */
 public final class ZKUtils {
   public static final Logger LOG = Logger.getLogger(ZKUtils.class.getName());
+
+  private static final long MAX_WAIT_TIME_FOR_ZNODE_DELETE = 5000;
 
   // a singleton client
   private static CuratorFramework client;
@@ -101,70 +104,93 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a job path from the given job name
+   * construct main job directory path for the job
    */
-  public static String constructJobPath(String rootPath, String jobName) {
-    return rootPath + "/jobs/" + jobName;
+  public static String jobDir(String rootPath, String jobName) {
+    return rootPath + "/" + jobName;
   }
 
   /**
-   * construct a job initial state path from the given job name
+   * construct ephemeral directory path for the job
    */
-  public static String constructJobInitialStatePath(String rootPath, String jobName) {
-    return rootPath + "/initial-state/" + jobName;
+  public static String ephemDir(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/workers-ephem-state";
+  }
+
+  /**
+   * construct persistent directory path for the job
+   */
+  public static String persDir(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/workers-pers-state";
+  }
+
+  /**
+   * construct events directory path for the job
+   */
+  public static String eventsDir(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/events";
+  }
+
+  /**
+   * construct barrier directory path for the job
+   */
+  public static String barrierDir(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/barrier";
+  }
+
+  /**
+   * construct a worker path from the workers directory
+   */
+  public static String workerPath(String workersDir, int workerID) {
+    return workersDir + "/" + workerID;
+  }
+
+  /**
+   * construct the job master path for a persistent znode that will store the job master state
+   */
+  public static String jmPersPath(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/jm-pers-state";
+  }
+
+  /**
+   * construct the job master path for an ephemeral znode that will watch JM liveness
+   */
+  public static String jmEphemPath(String rootPath, String jobName) {
+    return jobDir(rootPath, jobName) + "/jm-ephem-state";
   }
 
   /**
    * construct a distributed atomic integer path for barrier
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return rootPath + "/dai-for-barrier/" + jobName;
+    return jobDir(rootPath, jobName) + "/dai-for-barrier";
   }
 
   /**
    * construct a distributed barrier path
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
-    return rootPath + "/barrier/" + jobName;
-  }
-
-  /**
-   * construct a worker path from the given job path and worker network info
-   */
-  public static String constructWorkerPath(String jobPath, int workerID) {
-    return jobPath + "/" + workerID;
-  }
-
-  /**
-   * construct a worker path from the given job initial state path and worker ID
-   */
-  public static String constructWorkerInitialStatePath(String jobCheckPath, int workerID) {
-    return constructInitialStatePath(jobCheckPath, workerID + "");
-  }
-
-  /**
-   * construct a worker path from the given job initial state path and entityID
-   * entityID can be "jm" for job master and workerID for workers
-   */
-  public static String constructInitialStatePath(String jobCheckPath, String entityID) {
-    return jobCheckPath + "/" + entityID;
+    return jobDir(rootPath, jobName) + "/barrier";
   }
 
   /**
    * WorkerID is at the end of workerPath
-   * The string "w-" proceeds the workerID
+   * The char "-" proceeds the workerID
    * @return
    */
-  public static int getWorkerIDFromPath(String workerPath) {
+  public static int getWorkerIDFromEphemPath(String workerPath) {
     String workerIDStr = workerPath.substring(workerPath.lastIndexOf("-") + 1);
     return Integer.parseInt(workerIDStr);
   }
 
   /**
-   * construct job master path for the given job path
+   * WorkerID is at the end of workerPath
+   * The char "/" proceeds the workerID
+   * @return
    */
-  public static String constructJobMasterPath(String jobPath) {
-    return jobPath + "/jm";
+  public static int getWorkerIDFromPersPath(String workerPath) {
+    String workerIDStr = workerPath.substring(workerPath.lastIndexOf("/") + 1);
+    return Integer.parseInt(workerIDStr);
   }
 
   /**
@@ -271,4 +297,100 @@ public final class ZKUtils {
         byteArray[startIndex + 3]);
   }
 
+  /**
+   * check whether there is an active job
+   */
+  public static boolean isThereJobZNodes(CuratorFramework clnt, String rootPath, String jobName) {
+
+    try {
+      // check whether the job znode exists, if not, return false, nothing to do
+      String jobDir = jobDir(rootPath, jobName);
+      if (clnt.checkExists().forPath(jobDir) != null) {
+        LOG.info("main jobZnode exists: " + jobDir);
+        return true;
+      }
+
+      return false;
+
+    } catch (Exception e) {
+      ZKEphemStateManager.LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
+  }
+
+  /**
+   * delete all znodes related to the given jobName
+   */
+  public static boolean terminateJob(String zkServers, String rootPath, String jobName) {
+    try {
+      CuratorFramework clnt = connectToServer(zkServers);
+      boolean deleteResult = deleteJobZNodes(clnt, rootPath, jobName);
+      clnt.close();
+      return deleteResult;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Could not delete job znodes", e);
+      return false;
+    }
+  }
+
+  /**
+   * delete job related znode from previous sessions
+   */
+  public static boolean deleteJobZNodes(CuratorFramework clnt, String rootPath, String jobName) {
+
+    boolean allDeleted = true;
+
+    // delete workers ephemeral znode directory
+    String jobPath = ephemDir(rootPath, jobName);
+    try {
+      if (clnt.checkExists().forPath(jobPath) != null) {
+
+        // wait for workers to be deleted
+        long delay = 0;
+        long start = System.currentTimeMillis();
+        List<String> list = clnt.getChildren().forPath(jobPath);
+        int children = list.size();
+
+        while (children != 0 && delay < MAX_WAIT_TIME_FOR_ZNODE_DELETE) {
+          try {
+            Thread.sleep(200);
+          } catch (InterruptedException e) { }
+
+          delay = System.currentTimeMillis() - start;
+          list = clnt.getChildren().forPath(jobPath);
+          children = list.size();
+        }
+
+        if (list.size() != 0) {
+          LOG.info("Waited " + delay + " ms before deleting job znode. Children: " + list);
+        }
+
+        clnt.delete().deletingChildrenIfNeeded().forPath(jobPath);
+        LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
+      } else {
+        LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.FINE, "", e);
+      LOG.info("Following exception is thrown when deleting the job znode: " + jobPath
+          + "; " + e.getMessage());
+      allDeleted = false;
+    }
+
+    try {
+      // delete job directory
+      String jobDir = jobDir(rootPath, jobName);
+      if (clnt.checkExists().forPath(jobDir) != null) {
+        clnt.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
+        LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);
+      } else {
+        LOG.info("JobDirectory does not exist at ZooKeeper: " + jobDir);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "", e);
+      allDeleted = false;
+    }
+
+    return allDeleted;
+  }
 }

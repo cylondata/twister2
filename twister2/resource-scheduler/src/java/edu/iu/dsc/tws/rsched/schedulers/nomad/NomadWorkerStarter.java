@@ -37,13 +37,15 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
 public final class NomadWorkerStarter {
   private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
