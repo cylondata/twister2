@@ -20,7 +20,7 @@
       "concepts/op_api",
       "concepts/windowing/windowing_api",
       "compatibility/storm",
-      "compatibility/beam",
+      "compatibility/apachebeam",
       "compatibility/python"
     ],
     "Deployment": [
