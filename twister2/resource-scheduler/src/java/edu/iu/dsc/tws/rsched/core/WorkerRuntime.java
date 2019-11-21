@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
-import edu.iu.dsc.tws.api.resource.IJobMasterListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.ISenderToDriver;
@@ -49,6 +49,8 @@ public final class WorkerRuntime {
   private static IWorkerController workerController;
   private static IWorkerStatusUpdater workerStatusUpdater;
   private static ISenderToDriver senderToDriver;
+
+  private static IWorkerFailureListener failureListener;
 
   private WorkerRuntime() {
   }
@@ -148,11 +150,20 @@ public final class WorkerRuntime {
    * A listener can be only added when ZKWorkerController is used.
    */
   public static boolean addWorkerFailureListener(IWorkerFailureListener workerFailureListener) {
+    failureListener = workerFailureListener;
     if (zkWorkerController != null) {
       return zkWorkerController.addFailureListener(workerFailureListener);
     }
 
     return false;
+  }
+
+  /**
+   * Get the failure listener
+   * @return the failure listener
+   */
+  public static IWorkerFailureListener getFailureListener() {
+    return failureListener;
   }
 
   /**
@@ -209,13 +220,13 @@ public final class WorkerRuntime {
   }
 
   /**
-   * add a IJobMasterListener
+   * add a IJobMasterFailureListener
    * Currently failure notification is only implemented with ZKWorkerController
    * A listener can be only added when ZKWorkerController is used.
    */
-  public static boolean addJobMasterListener(IJobMasterListener jobMasterListener) {
+  public static boolean addJMFailureListener(IJobMasterFailureListener jobMasterListener) {
     if (zkWorkerController != null) {
-      return zkWorkerController.addJobMasterListener(jobMasterListener);
+      return zkWorkerController.addJMFailureListener(jobMasterListener);
     }
 
     return false;

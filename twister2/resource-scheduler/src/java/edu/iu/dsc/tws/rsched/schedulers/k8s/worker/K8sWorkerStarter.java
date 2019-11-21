@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.WorkerManager;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -153,7 +154,7 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    JobMasterAPI.WorkerState initialState = determineInitialState(config, jobName, workerInfo);
+    JobMasterAPI.WorkerState initialState = initialStateAndUpdate(config, jobName, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -238,18 +239,20 @@ public final class K8sWorkerStarter {
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
-
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    WorkerManager workerManager = new WorkerManager(config, workerID,
+        workerController, pv, volatileVolume, worker);
+    workerManager.start();
   }
 
   /**
    * worker is either starting for the first time, or it is coming from failure
    * We return either WorkerState.STARTED or WorkerState.RESTARTED
+   *
    * TODO: If ZooKeeper is not used,
    *   currently we just return STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.WorkerState determineInitialState(Config cnfg,
+  public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
                                                                String jbName,
                                                                JobMasterAPI.WorkerInfo wInfo) {
 

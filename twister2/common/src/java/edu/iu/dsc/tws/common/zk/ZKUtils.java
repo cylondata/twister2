@@ -84,7 +84,7 @@ public final class ZKUtils {
     try {
       int connectionTimeoutMs = sessionTimeoutMs;
       client = CuratorFrameworkFactory.newClient(zkServers,
-          sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 3));
+          sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 5));
       client.start();
 
       LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServers);

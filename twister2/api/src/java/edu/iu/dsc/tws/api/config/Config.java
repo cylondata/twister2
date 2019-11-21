@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+
 /**
  * Config is an Immutable Map of &lt;String, Object&gt; The get/set API that uses Key objects
  * should be favored over Strings. Usage of the String API should be refactored out.
@@ -234,6 +236,20 @@ public class Config {
       return TypeUtils.getLong(value);
     }
     return defaultValue;
+  }
+
+  public Integer getIntegerValue(String key) {
+    Object value = get(key);
+    if (value != null) {
+      if (value instanceof Integer) {
+        return (Integer) value;
+      } else if (value instanceof String) {
+        return Integer.valueOf((String) value);
+      } else {
+        throw new Twister2RuntimeException("Un-expected type: " + value.getClass().getName());
+      }
+    }
+    throw new Twister2RuntimeException("Value for key is null: " + key);
   }
 
   public Integer getIntegerValue(String key, int defaultValue) {

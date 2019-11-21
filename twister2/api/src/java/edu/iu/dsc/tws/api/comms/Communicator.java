@@ -49,6 +49,11 @@ public class Communicator {
 
   private List<String> persistentDirectories;
 
+  /**
+   * A fault is set
+   */
+  private boolean faultSet;
+
   public Communicator(Config cfg, TWSChannel ch) {
     this(cfg, ch, (List<String>) null);
   }

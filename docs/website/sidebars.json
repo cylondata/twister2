@@ -20,14 +20,15 @@
       "concepts/op_api",
       "concepts/windowing/windowing_api",
       "compatibility/storm",
-      "compatibility/beam",
+      "compatibility/apachebeam",
       "compatibility/python"
     ],
     "Deployment": [
       "deployment/job-submit",
       "deployment/standalone/standalone",
       "deployment/docker/docker",
-      "deployment/kubernetes/kubernetes",
+      "deployment/kubernetes/Kubernetes",
+      "deployment/minikube/Minikube",
       "deployment/mesos/mesos",
       "deployment/nomad/nomad",
       "deployment/slurm/slurm",

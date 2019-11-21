@@ -110,7 +110,7 @@ public final class JobMasterClientExample {
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     JobMasterAPI.WorkerState initialState =
-        K8sWorkerStarter.determineInitialState(config, job.getJobName(), workerInfo);
+        K8sWorkerStarter.initialStateAndUpdate(config, job.getJobName(), workerInfo);
 
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
@@ -148,8 +148,8 @@ public final class JobMasterClientExample {
       return;
     }
 
-    // wait up to 3sec
-    sleeeep(20 * 1000);
+    // wait
+    sleeeep(200 * 1000);
 
     try {
       workerController.waitOnBarrier();

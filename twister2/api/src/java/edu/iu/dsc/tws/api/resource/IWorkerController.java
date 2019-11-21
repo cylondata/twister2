@@ -65,6 +65,15 @@ public interface IWorkerController {
   void waitOnBarrier() throws TimeoutException;
 
   /**
+   * Get the failure listener
+   *
+   * @return the failure listener
+   */
+  default IWorkerFailureListener getFailureListener() {
+    return null;
+  }
+
+  /**
    * Get object with a given name
    *
    * @param name name
