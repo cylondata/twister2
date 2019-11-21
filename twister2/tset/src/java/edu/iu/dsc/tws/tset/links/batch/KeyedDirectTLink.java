@@ -16,9 +16,11 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public class KeyedDirectTLink<K, V> extends BatchKeyedLink<K, V> {
+public class KeyedDirectTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
   public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "kdirect", sourceParallelism);
   }
@@ -39,7 +41,7 @@ public class KeyedDirectTLink<K, V> extends BatchKeyedLink<K, V> {
     return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 
-/*  @Override
+  @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
         getTargetParallelism());
@@ -50,16 +52,8 @@ public class KeyedDirectTLink<K, V> extends BatchKeyedLink<K, V> {
 
   @Override
   public KeyedCachedTSet<K, V> cache() {
-    return (KeyedCachedTSet<K, V>) super.cache();
+    KeyedCachedTSet<K, V> cacheTSet = lazyCache();
+    getTSetEnv().run(cacheTSet);
+    return cacheTSet;
   }
-
-  @Override
-  public Storable<Tuple<K, V>> lazyPersist() {
-    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
-  }
-
-  @Override
-  public Storable<Tuple<K, V>> persist() {
-    throw new UnsupportedOperationException("persist on keyed links is not implemented!");
-  }*/
 }
