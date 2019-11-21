@@ -8,6 +8,15 @@
   "className": "edu.iu.dsc.tws.examples.comms.ExampleMain",
   "args": [
     {
+      "id": "instanceMemory",
+      "name": "Memory",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 10240
+      }
+    },
+    {
       "id": "itr",
       "name": "Iterations",
       "optional": false,

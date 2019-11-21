@@ -121,7 +121,6 @@ public final class KMeansConnectedDataflowExample {
                                             String centroidDirectory, int dimension, int dsize,
                                             int csize, int workers, int parallel,
                                             DataFlowJobConfig jobConfig) {
-
     DataGeneratorSource dataGeneratorSource = new DataGeneratorSource(Context.TWISTER2_DIRECT_EDGE,
         dsize, csize, dimension, dataDirectory, centroidDirectory);
     DataGeneratorSink dataGeneratorSink = new DataGeneratorSink();

@@ -20,7 +20,7 @@ public final class ControllerContext {
   }
 
   // max wait time to get worker list from the server in milliseconds
-  public static final long MAX_WAIT_TIME_DEFAULT = 1000000;
+  public static final long MAX_WAIT_TIME_DEFAULT = 100000;
   public static final String MAX_WAIT_TIME_FOR_ALL_TO_JOIN =
       "twister2.worker.controller.max.wait.time.for.all.workers.to.join";
 

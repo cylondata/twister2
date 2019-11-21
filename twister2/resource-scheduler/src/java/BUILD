@@ -12,7 +12,6 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
@@ -54,5 +53,6 @@ t2_java_lib(
         "@org_apache_mesos_mesos//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java"
     ],
 )
