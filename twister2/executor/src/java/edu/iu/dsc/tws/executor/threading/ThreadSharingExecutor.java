@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -28,58 +29,88 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 /**
  * Abstract class for thread sharing executors
  */
-public abstract class ThreadSharingExecutor implements  IExecutor {
+public abstract class ThreadSharingExecutor implements IExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
+  /**
+   * Number of threads
+   */
   protected int numThreads;
 
+  /**
+   * Thread service
+   */
   protected ExecutorService threads;
 
+  /**
+   * Channel
+   */
   protected TWSChannel channel;
 
+  /**
+   * The configuration
+   */
   protected Config config;
 
-  public ThreadSharingExecutor(Config config, TWSChannel ch) {
+  /**
+   * Execution plan
+   */
+  protected ExecutionPlan executionPlan;
+
+  /**
+   * The execution hook
+   */
+  protected IExecutionHook executionHook;
+
+  public ThreadSharingExecutor(Config config, TWSChannel ch, ExecutionPlan plan,
+                               IExecutionHook hook) {
     this.config = config;
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
     this.threads = Executors.newFixedThreadPool(numThreads,
         new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
+    this.executionPlan = plan;
+    this.executionHook = hook;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
+    // run the execution hook
+    executionHook.beforeExecution();
     // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config),
+        executionPlan, channel);
     // updated config
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runExecution(plan);
+    return runExecution();
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  public IExecution iExecute() {
+    executionHook.beforeExecution();
     // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
+    ExecutionRuntime runtime = new ExecutionRuntime(
+        ExecutorContext.jobName(config), executionPlan, channel);
     // updated config
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
   }
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract boolean runExecution(ExecutionPlan plan);
+  public abstract boolean runExecution();
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract IExecution runIExecution(ExecutionPlan plan);
+  public abstract IExecution runIExecution();
 
   @Override
   public void close() {
@@ -91,5 +122,10 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
         break;
       }
     }
+  }
+
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return executionPlan;
   }
 }

@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -70,16 +71,17 @@ public class IterativeJob implements IWorker {
 
     ComputeGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
+    IExecutor ex = taskExecutor.createExecution(graph, plan);
     for (int i = 0; i < 10; i++) {
       LOG.info("Starting iteration: " + i);
       taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
 
       // this is a blocking call
-      taskExecutor.itrExecute(graph, plan);
+      ex.execute();
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<Object>[] values = dataSet.getPartitions();
     }
-    taskExecutor.closeExecution(graph, plan);
+    ex.closeExecution();
   }
 
   private static class IterativeSourceTask extends BaseSource implements Receptor {
