@@ -186,7 +186,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     LOG.fine(() -> "edges: " + buildCtx.getComputeGraph().getDirectedEdgesSet());
     LOG.fine(() -> "vertices: " + buildCtx.getComputeGraph().getTaskVertexSet());
 
-    getTaskExecutor().itrExecute(buildCtx.getComputeGraph(), buildCtx.getExecutionPlan());
+    // we execute using the associated executor
+    buildCtx.getExecutor().execute();
   }
 
   /**
@@ -210,6 +211,6 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public void finishEval(BaseTSet evalTset) {
     BuildContext ctx = buildCtxCache.remove(TSetUtils.generateBuildId(evalTset));
-    getTaskExecutor().closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
+    ctx.getExecutor().closeExecution();
   }
 }

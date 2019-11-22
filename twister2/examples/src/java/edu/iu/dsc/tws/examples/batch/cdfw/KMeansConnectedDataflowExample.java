@@ -41,10 +41,8 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
@@ -291,10 +289,6 @@ public final class KMeansConnectedDataflowExample {
   public static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private double[][] centroid = null;
-    private double[][] datapoints = null;
-
-    private KMeansCalculator kMeansCalculator = null;
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
 
@@ -310,13 +304,13 @@ public final class KMeansConnectedDataflowExample {
     @Override
     public void execute() {
       DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
-      datapoints = (double[][]) dataPartition.getConsumer().next();
+      double[][] datapoints = (double[][]) dataPartition.getConsumer().next();
 
       DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
-      centroid = (double[][]) centroidPartition.getConsumer().next();
+      double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
 
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dimension);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
+      double[][] kMeansCenters = KMeansUtils.findNearestCenter(dimension,
+          datapoints, centroid);
       context.writeEnd("all-reduce", kMeansCenters);
     }
 

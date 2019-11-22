@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Context;
@@ -364,7 +365,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
 
     ExecutionPlan plan = taskExecutor.plan(graph);
-
+    IExecutor ex = taskExecutor.createExecution(graph, plan);
     // iteration is being decoupled from the computation task
     for (int i = 0; i < this.binaryBatchModel.getIterations(); i++) {
 
@@ -377,10 +378,10 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
       inputWeightVector = taskExecutor.getOutput(graph, plan,
           Constants.SimpleGraphConfig.SVM_REDUCE);
 
-      taskExecutor.itrExecute(graph, plan);
+      ex.execute();
 
     }
-    taskExecutor.closeExecution(graph, plan);
+    ex.closeExecution();
 
     LOG.info("Task Graph Executed !!! ");
     if (workerId == 0) {
