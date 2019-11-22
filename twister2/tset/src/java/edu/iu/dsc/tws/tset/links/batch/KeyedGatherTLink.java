@@ -42,14 +42,4 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
   public KeyedGatherTLink<K, V> setName(String n) {
     return (KeyedGatherTLink<K, V>) super.setName(n);
   }
-
-  @Override
-  public CachedTSet<Tuple<K, Iterator<V>>> lazyCache() {
-    return super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<Tuple<K, Iterator<V>>> cache() {
-    return super.cache();
-  }
 }

@@ -16,9 +16,8 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class ReplicateTLink<T> extends BatchIteratorLink<T> {
+public class ReplicateTLink<T> extends BatchIteratorLinkWrapper<T> {
 
   public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
     super(tSetEnv, "replicate", 1, reps);
@@ -35,13 +34,13 @@ public class ReplicateTLink<T> extends BatchIteratorLink<T> {
     return this;
   }
 
-  @Override
-  public CachedTSet<T> lazyCache() {
-    return (CachedTSet<T>) super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<T> cache() {
-    return (CachedTSet<T>) super.cache();
-  }
+//  @Override
+//  public CachedTSet<T> lazyCache() {
+//    return (CachedTSet<T>) super.lazyCache();
+//  }
+//
+//  @Override
+//  public CachedTSet<T> cache() {
+//    return (CachedTSet<T>) super.cache();
+//  }
 }
