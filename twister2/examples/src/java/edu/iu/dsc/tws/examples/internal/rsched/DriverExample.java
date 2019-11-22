@@ -146,7 +146,7 @@ public class  DriverExample implements IDriver {
 
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration * 10);
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

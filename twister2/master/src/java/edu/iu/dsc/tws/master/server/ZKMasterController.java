@@ -490,9 +490,17 @@ public class ZKMasterController {
     }
 
     // get worker info and the state from persistent storage
-    WorkerWithState workerWithState = getWorkerWithState(removedWorkerID);
-    if (workerWithState == null) {
-      LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
+    WorkerWithState workerWithState;
+    try {
+      workerWithState =
+          ZKPersStateManager.getWorkerWithState(client, rootPath, jobName, removedWorkerID);
+      if (workerWithState == null) {
+        LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
+        return;
+      }
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "worker[" + removedWorkerID
+          + "] removed, but its data can not be retrieved.", e);
       return;
     }
 
