@@ -1,22 +1,20 @@
 ---
 id: connecteddataflow 
 title: ConnectedDataflow
-sidebar_label: ConnectedDataflow
+sidebar_label: connecteddataflow
 ---
 
+## Connected Dataflow Graph
 The Connected DataFlow graph is to compose multiple independent/dependent dataflow task graphs into 
 a single entity. A dataflow task graph consists of multiple subtasks which are arranged based on the 
 parent-child relationship between the tasks. In general, a dataflow task graph consists of multiple 
 task vertices and edges to connect those vertices. The vertices represent the characteristics of 
 computations and edges represent the communication between those computations. 
 
-## K-Means Clustering Implementation Details using Connected Dataflow
+#### Connected Dataflow Based K-Means Clustering Implementation
 
-The implementation details of k-means clustering using Connected Dataflow in Twister2 is pictorially 
-represented in Fig.1.
-
-![K-Means Connected Dataflow Based Implementation](assets/kmeans.png)
-
+The implementation details of k-means clustering using Connected Dataflow in Twister2 is discussed
+below.
 
 ### CDFConstants
 
@@ -35,7 +33,7 @@ centroids directory.
   public static final String ARGS_CINPUT = "cinput";
 ```
 
-### KMeansDriver
+### K-Means Connected Dataflow Driver
 
 The KMeansDriver is the driver program for the k-means connected dataflow example which extends the 
 BaseDriver class. The execute() method in the driver program call the respective dataflow task graphs
@@ -109,19 +107,19 @@ Then, add this graph as a sub graph for the connected dataflow graph and set the
 and the graph type. 
 
 ```java
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorsink", dataObjectTaskGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorTG", dataObjectTaskGraph)
         .setWorkers(workers).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
 ```
 
-#### Datapoints partition and read the partitioned datapoints
+### Reading and partitioning the Datapoints
 
 The main functionality of this task graph is to partition the data points, convert the 
 partitioned datapoints into two-dimensional array, and write the two-dimensional array into their 
 respective task index values. 
 
 ```java
-    /* First Graph to partition and read the partitioned data points **/
+    /*Graph to partition and read the partitioned data points **/
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
@@ -159,19 +157,18 @@ Then, add this graph as a sub graph for the connected dataflow graph and set the
 the graph type. 
 
 ```java
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("dsink", firstGraph)
-        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
-        .setGraphType("non-iterative");
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsTG", firstGraph)
+            .setWorkers(instances).addDataFlowJobConfig(jobConfig)
+            .setGraphType("non-iterative");
 ```
 
 #### DataObjectSource
-
 This class partition the datapoints which is based on the task parallelism value. It may use 
 either the "LocalTextInputPartitioner" or "LocalFixedInputPartitioner" to partition the datapoints. 
 Finally, write the partitioned datapoints into their respective edges. The LocalTextInputPartitioner
- partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the 
- datapoints based on the length of the file. For example, if the task parallelism is 4, if there are 
- 16 data points and each task will get 4 datapoints to process. 
+partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the 
+datapoints based on the length of the file. For example, if the task parallelism is 4, if there are 
+16 data points and each task will get 4 datapoints to process. 
 
 ```java
  @Override
@@ -232,7 +229,7 @@ partition values.
   }
 ```
 
-#### Centroids partition and read the partitioned centroids
+### Reading and partitioning the Centroids 
 
 Similar to the datapoints, the second task graph performs three processes namely partitioning, 
 converting the partitioned centroids into array, and writing into respective task index values 
@@ -251,7 +248,9 @@ but, with one major difference of read the complete file as one partition.
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);;
 ```
 
-Similar to the previous task graph, it add the source, compute, and sink tasks to the task graph builder for the second task graph. Then, create the communication edges between the tasks for the second task graph.
+Similar to the previous task graph, it add the source, compute, and sink tasks to the task graph 
+builder for the second task graph. Then, create the communication edges between the tasks for the 
+second task graph.
 
 ```java
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
@@ -270,18 +269,17 @@ Similar to the previous task graph, it add the source, compute, and sink tasks t
             .viaEdge(Context.TWISTER2_DIRECT_EDGE)
             .withDataType(MessageTypes.OBJECT);
         centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
-        centroidsComputeGraphBuilder.setTaskGraphName("centTG");
+        centroidsComputeGraphBuilder.setTaskGraphName("centroidTG");
+     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
 ```
 
-Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances and
-the graph type. 
+Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances 
+and the graph type. 
 
 ```java
- //Build the second taskgraph
-    ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("csink", secondGraph)
-        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
-        .setGraphType("non-iterative");
+   DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidTG", secondGraph)
+            .setWorkers(instances).addDataFlowJobConfig(jobConfig)
+            .setGraphType("non-iterative");
 ```
 
 #### DataFileReplicatedReadSource
@@ -299,14 +297,13 @@ This class uses the "LocalCompleteTextInputPartitioner" to read the whole file f
   }
 ```
 
-#### KMeans Clustering 
+### K-Means Clustering 
 
 This task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and 
 CentroidAggregator. Similar to the first and second task graph, first we have to add the source, 
 sink, and communication edges to the third task graph. 
 
 ```java
-    /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask(dimension);
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
@@ -335,4 +332,44 @@ DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .setGraphType("iterative")
         .setIterations(iterations);
+```
+
+## To Run Connected Dataflow Based K-Means Clustering
+
+This command generate and write the datapoints and centroids in the local filesystem and run the 
+K-Means clustering process. 
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.cdfw.KMeansConnectedDataflowExample -workers 2 -parallelism 4 -dim 2 -dsize 10000 -csize 4 -dinput /tmp/dinput -cinput /tmp/cinput -iter 10
+```
+
+## Sample Output
+
+```text
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: datageneratorTG  
+[2019-11-22 14:44:24 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 2 workers joined.   
+[2019-11-22 14:44:24 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 2 workers joined.   
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: datapointsTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: centroidTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.examples.batch.cdfw.KMeansConnectedDataflowExample: Total K-Means Execution Time: 384	Data Load time : 189	Compute Time : 195  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 0Received CDFW job completed message. Leaving execution loop  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 0 Execution Completed  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 1Received CDFW job completed message. Leaving execution loop  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 1 Execution Completed  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:1 COMPLETED.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:0 COMPLETED.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers COMPLETED. Terminating the job.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.core.ResourceAllocator: CLEANED TEMPORARY DIRECTORY......:/tmp/twister2-kmeans-connected-dataflow-4803835711749628541  
 ```

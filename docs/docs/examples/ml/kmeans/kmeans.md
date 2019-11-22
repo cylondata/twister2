@@ -17,14 +17,12 @@ time of K-Means Clustering process.
 
 ## K-Means Clustering Implementation Details
 
-The implementation details of k-means clustering in Twister2 is pictorially represented in Fig.1.
-
-![K-Means Implementation](assets/kmeans.png)
+The implementation details of k-means clustering in Twister2 is discussed below.
 
 ### DataObjectConstants
 
 The constants which are used by the k-means algorithm to specify the number of workers, parallelism, 
-dimension, size of datapoints,size of centroids, file system, number of iterations, datapoints, and 
+dimension, size of datapoints, size of centroids, file system, number of iterations, datapoints, and 
 centroids directory. 
 
 ```java
@@ -63,7 +61,7 @@ datapoints and the centroids in their respective filesystem and their directorie
 method of KMeansComputeJob invokes "datapointsTaskgraph", "centroidsTaskGraph", and "kmeansTaskGraph". 
 We will briefly discuss the functionalities of each task graph defined in the KMeansComputeJob. 
 
-#### Datapoints partition and read the partitioned datapoints
+### Reading and partitioning the Datapoints
 The main functionality of the first task graph is to partition the data points, convert the 
 partitioned datapoints into two-dimensional array, and write the two-dimensional array into their 
 respective task index values. 
@@ -126,7 +124,7 @@ partition values.
   }
 ```
 
-#### Centroids partition and read the partitioned centroids
+### Reading and partitioning the Centroids  
 
 Similar to the datapoints, the second task graph perform three processes namely partitioning, 
 converting the partitioned centroids into array, and writing into respective task index values 
@@ -160,7 +158,7 @@ task graph.
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan); 
 ```
 
-#### KMeans Clustering 
+### KMeans Clustering 
 
 The third task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and 
 CentroidAggregator. 
