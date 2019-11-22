@@ -16,7 +16,6 @@ package edu.iu.dsc.tws.tset.links.batch;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -25,12 +24,8 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
-import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
-import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {

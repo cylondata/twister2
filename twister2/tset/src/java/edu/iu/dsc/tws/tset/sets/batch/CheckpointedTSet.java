@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
  * This is a shadow {@link PersistedTSet} to add the checkpointing capability. It does not have
  * the sink that would store the data, because the purpose of this tset is to expose the data
  * that was stored by a {@link PersistedTSet}.
- *
+ * <p>
  * When this tset is executed, it would wrap {@link DiskPartitionBackedSource} from
  * {@link DiskPartitionBackedSourceWrapper} and return a {@link CheckpointedSourceOp} as the
  * {@link INode} for the underlying task.
