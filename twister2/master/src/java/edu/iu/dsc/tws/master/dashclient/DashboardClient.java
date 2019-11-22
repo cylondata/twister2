@@ -20,10 +20,8 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -62,8 +60,6 @@ public class DashboardClient {
     poolingConnManager = new PoolingHttpClientConnectionManager();
     poolingConnManager.setMaxTotal(numberOfConnections);
     poolingConnManager.setDefaultMaxPerRoute(numberOfConnections);
-    HttpHost httpHost = new HttpHost(dashHost);
-    poolingConnManager.setMaxPerRoute(new HttpRoute(httpHost), numberOfConnections);
 
     httpClient = HttpClients.custom().setConnectionManager(poolingConnManager).build();
 
