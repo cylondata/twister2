@@ -204,11 +204,6 @@ new centroid value is calculated and the calculated value is distributed across 
 At the end of every iteration, the centroid value is updated and the iteration continues with the 
 new centroid value.
 
-```java
-    //retrieve the new centroid value for the next iterations
-    centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-```
-
 ### KMeansSourceTask 
 First, the execute method in KMeansSource retrieve the partitioned data points into their respective 
 task index values and the complete centroid values into their respective task index values. The retrieved 
@@ -265,7 +260,7 @@ It sums the corresponding centroid values and return the same.
 ret.setCenters(newCentroids); 
 ```
 
-## Running K-Means Clustering using Task Graph
+## To Run K-Means Clustering using Task Graph
    
 This command generate and write the datapoints and centroids in the local filesystem and run the 
 K-Means clustering process. 
@@ -281,7 +276,7 @@ K-Means clustering process.
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared false -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -type graph
 ```
 
-## Running K-Means Clustering using TSet
+## To Run K-Means Clustering using TSet
    
 This command generate and write the datapoints and centroids in the local filesystem and run the 
 K-Means clustering process. 
