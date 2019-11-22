@@ -81,8 +81,9 @@ public class WorkerHandler implements MessageHandler {
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
 
     if (zkUsed) {
-      LOG.fine("Ignoring RegisterWorker message. Since ZooKeeper is used:" + message);
-      sendRegisterWorkerResponse(id, message.getWorkerInfo().getWorkerID(), true, null);
+      int wID = message.getWorkerInfo().getWorkerID();
+      LOG.fine("Since ZooKeeper is used, ignoring RegisterWorker message for worker: " + wID);
+      sendRegisterWorkerResponse(id, wID, true, null);
       return;
     }
 

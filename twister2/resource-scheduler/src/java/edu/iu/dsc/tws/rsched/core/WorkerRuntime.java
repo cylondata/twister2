@@ -70,20 +70,6 @@ public final class WorkerRuntime {
 
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
 
-    // if there is a driver in the job, we need to start JMWorkerAgent
-    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
-    if (!job.getDriverClassName().isEmpty()) {
-      // construct JMWorkerAgent
-      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
-
-      // start JMWorkerAgent
-      jmWorkerAgent.startThreaded();
-
-      // initialize JMSenderToDriver
-      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
-    }
-
     // if the job is fault tolerant or uses ZK for group management
     // get IWorkerController and IWorkerStatusUpdater through ZKWorkerController
     if (ZKContext.isZooKeeperServerUsed(config)) {
@@ -102,19 +88,30 @@ public final class WorkerRuntime {
       // if ZK is not used for group management, use JobMaster
     } else {
 
-      // if jobMasterAgent has not already been initialized, start it
-      if (jmWorkerAgent == null) {
+      // construct JMWorkerAgent
+      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
 
-        // construct JMWorkerAgent
-        jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
-
-        // start JMWorkerAgent
-        jmWorkerAgent.startThreaded();
-      }
+      // start JMWorkerAgent
+      jmWorkerAgent.startThreaded();
 
       workerController = jmWorkerAgent.getJMWorkerController();
       workerStatusUpdater = new JMWorkerStatusUpdater(jmWorkerAgent);
+      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+    }
+
+    // if there is a driver in the job, we need to start JMWorkerAgent
+    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
+    if (ZKContext.isZooKeeperServerUsed(config) && !job.getDriverClassName().isEmpty()) {
+      // construct JMWorkerAgent
+      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
+
+      // start JMWorkerAgent
+      jmWorkerAgent.startThreaded();
+
+      // initialize JMSenderToDriver
+      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
     }
 
     initialized = true;

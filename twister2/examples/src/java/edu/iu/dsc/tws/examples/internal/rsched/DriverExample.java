@@ -121,32 +121,32 @@ public class  DriverExample implements IDriver {
 
     waitAllWorkersToJoin();
 
-//    try {
-//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-//      Thread.sleep(sleepDuration);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-//
-//    int toRemove = 5;
-//    LOG.info("removing " + toRemove + " workers.");
-//    scaler.scaleDownWorkers(toRemove);
-//
-//    try {
-//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-//      Thread.sleep(sleepDuration);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-//
-//    LOG.info("Adding " + toAdd + " new workers.");
-//    scaler.scaleUpWorkers(toAdd);
-//
-//    waitAllWorkersToJoin();
-//
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration * 100);
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    int toRemove = 3;
+    LOG.info("removing " + toRemove + " workers.");
+    scaler.scaleDownWorkers(toRemove);
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Adding " + toAdd + " new workers.");
+    scaler.scaleUpWorkers(toAdd);
+
+    waitAllWorkersToJoin();
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration * 10);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

@@ -11,14 +11,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 
 import edu.iu.dsc.tws.master.dashclient.messages.JobStateChange;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterJob;
@@ -31,7 +42,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This client is used to send messages to Dashboard by JobMaster
- *
  */
 
 public class DashboardClient {
@@ -39,33 +49,99 @@ public class DashboardClient {
 
   private String dashHost;
   private String jobID;
+  private PoolingHttpClientConnectionManager poolingConnManager;
+  private LinkedBlockingQueue<CloseableHttpClient> httpClientQueue;
 
-  public DashboardClient(String dashHost, String jobID) {
+  private int numberOfConnections = 3;
+  private ObjectMapper mapper;
+
+  public DashboardClient(String dashHost, String jobID, int numberOfConnections) {
     this.dashHost = dashHost;
     this.jobID = jobID;
+    this.numberOfConnections = numberOfConnections;
+    this.httpClientQueue = new LinkedBlockingQueue<>();
+
+    poolingConnManager = new PoolingHttpClientConnectionManager();
+    poolingConnManager.setMaxTotal(numberOfConnections);
+    poolingConnManager.setDefaultMaxPerRoute(numberOfConnections);
+    HttpHost httpHost = new HttpHost(dashHost);
+    poolingConnManager.setMaxPerRoute(new HttpRoute(httpHost), numberOfConnections);
+
+    for (int i = 0; i < numberOfConnections; i++) {
+      httpClientQueue.add(HttpClients.custom().setConnectionManager(poolingConnManager).build());
+    }
+
+    mapper = new ObjectMapper();
+  }
+
+  /**
+   * return next CloseableHttpClient
+   * wait until the next one becomes available
+   */
+  private CloseableHttpClient getHttpClient() {
+    CloseableHttpClient httpClient = null;
+    while ((httpClient = httpClientQueue.poll()) == null) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
+    }
+    return httpClient;
+  }
+
+  private void putHttpClient(CloseableHttpClient httpClient) {
+    try {
+      httpClientQueue.put(httpClient);
+    } catch (InterruptedException e) {
+      LOG.warning(e.getMessage());
+    }
+  }
+
+  private HttpPost constructHttpPost(String endPoint, String jsonStr) {
+    HttpPost httpPost = new HttpPost(endPoint);
+    httpPost.setHeader("Accept", "application/json");
+    httpPost.setHeader("Content-type", "application/json");
+    StringEntity entity = null;
+    try {
+      entity = new StringEntity(jsonStr);
+    } catch (UnsupportedEncodingException e) {
+      LOG.log(Level.SEVERE, "Could not create StringEntity from json string.", e);
+      return null;
+    }
+    httpPost.setEntity(entity);
+    return httpPost;
   }
 
   /**
    * send registerJob message to Dashboard
    * when a job master starts, it sends this message to Dashboard
-   * @param job
-   * @param jobMasterNodeInfo
-   * @return
    */
   public boolean registerJob(JobAPI.Job job, JobMasterAPI.NodeInfo jobMasterNodeInfo) {
 
     RegisterJob registerJob = new RegisterJob(jobID, job, jobMasterNodeInfo);
     LOG.fine("Registering job to dashboard: " + job + "jobMasterNodeInfo: " + jobMasterNodeInfo);
-    String path = "jobs/";
+    String endPoint = dashHost + "/jobs/";
+
+    String jsonStr;
+    try {
+      jsonStr = mapper.writeValueAsString(registerJob);
+    } catch (JsonProcessingException e) {
+      LOG.log(Level.SEVERE, "Could not convert java entity object to Json string.", e);
+      return false;
+    }
+
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
 
     try {
-      Response response = ClientBuilder.newClient()
-          .target(dashHost)
-          .path(path)
-          .request(MediaType.APPLICATION_JSON)
-          .post(Entity.json(registerJob));
-
-      if (response.getStatus() == 200) {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("Registered JobMaster with Dashboard. jobID: " + jobID);
         return true;
       } else {
@@ -73,39 +149,50 @@ public class DashboardClient {
             + ". Response: " + response.toString());
         return false;
       }
-    } catch (javax.ws.rs.ProcessingException pe) {
-      if (pe.getCause() instanceof java.net.ConnectException) {
-        LOG.log(Level.SEVERE, "Could not connect to Dashboard at: " + dashHost, pe);
-        return false;
-      }
 
-      LOG.log(Level.SEVERE, "Could not register the job with Dashboard at: " + dashHost, pe);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
       return false;
     }
   }
 
   /**
    * send JobStateChange message to Dashboard
-   * @param state
-   * @return
    */
   public boolean jobStateChange(JobState state) {
     JobStateChange jobStateChange = new JobStateChange(state.name());
 
-    String path = "jobs/" + jobID + "/state/";
+    String endPoint = dashHost + "/jobs/" + jobID + "/state/";
 
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(jobStateChange));
+    String jsonStr;
+    try {
+      jsonStr = mapper.writeValueAsString(jobStateChange);
+    } catch (JsonProcessingException e) {
+      LOG.log(Level.SEVERE, "Could not convert java entity object to Json string.", e);
+      return false;
+    }
 
-    if (response.getStatus() == 200) {
-      LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
-      return true;
-    } else {
-      LOG.severe("Job " + state.name() + " message could not be sent to Dashboard. Response: "
-          + response.toString());
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
+
+    try {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
+        return true;
+      } else {
+        LOG.severe("Job " + state.name() + " message could not be sent to Dashboard. Response: "
+            + response.toString());
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
       return false;
     }
   }
@@ -116,108 +203,173 @@ public class DashboardClient {
    * instances may be smaller or higher than the original value
    * if it is smaller, it means some instances of that resource removed
    * if it is higher, it means some instances of that resource added
-   * @return
    */
   public boolean scaledWorkers(int change, int numberOfWorkers, List<Integer> killedWorkers) {
 
     ScaledWorkers scaledWorkers = new ScaledWorkers(change, numberOfWorkers, killedWorkers);
+    String endPoint = dashHost + "/jobs/" + jobID + "/scale/";
 
-    String path = "jobs/" + jobID + "/scale/";
+    String jsonStr;
+    try {
+      jsonStr = mapper.writeValueAsString(scaledWorkers);
+    } catch (JsonProcessingException e) {
+      LOG.log(Level.SEVERE, "Could not convert java entity object to Json string.", e);
+      return false;
+    }
 
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(scaledWorkers));
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
 
-    if (response.getStatus() == 200) {
-      LOG.info("ScaledWorkers message sent to Dashboard successfully."
-          + " change: " + change
-          + " numberOfWorkers: " + numberOfWorkers);
-      return true;
-    } else {
-      LOG.severe("ScaledWorkers message could not be sent to Dashboard. Response: "
-          + response.toString());
+    try {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        LOG.info("ScaledWorkers message sent to Dashboard successfully."
+            + " change: " + change
+            + " numberOfWorkers: " + numberOfWorkers);
+        return true;
+      } else {
+        LOG.severe("ScaledWorkers message could not be sent to Dashboard. Response: "
+            + response.toString());
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
       return false;
     }
   }
 
   /**
    * send RegisterWorker message to Dashboard
-   * initialState must be either STARTING or RESTARTING
+   * initialState must be either STARTED or RESTARTED
    */
   public boolean registerWorker(JobMasterAPI.WorkerInfo workerInfo,
                                 JobMasterAPI.WorkerState initialState) {
 
     RegisterWorker registerWorker = new RegisterWorker(jobID, workerInfo, initialState);
-    String path = "workers/";
+    String endPoint = dashHost + "/workers/";
 
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(registerWorker));
+    String jsonStr;
+    try {
+      jsonStr = mapper.writeValueAsString(registerWorker);
+    } catch (JsonProcessingException e) {
+      LOG.log(Level.SEVERE, "Could not convert java entity object to Json string.", e);
+      return false;
+    }
 
-    if (response.getStatus() == 200) {
-      LOG.info("Registered Worker with Dashboard successfully "
-          + "for workerID: " + workerInfo.getWorkerID());
-      return true;
-    } else {
-      LOG.severe("Sending RegisterWorker message to Dashboard is unsuccessful "
-          + "for workerID: " + workerInfo.getWorkerID() + ". Response: " + response.toString());
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
+
+    try {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        LOG.info("Registered Worker with Dashboard successfully "
+            + "for workerID: " + workerInfo.getWorkerID());
+        return true;
+      } else {
+        LOG.severe("Sending RegisterWorker message to Dashboard is unsuccessful "
+            + "for workerID: " + workerInfo.getWorkerID() + ". Response: " + response.toString());
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
       return false;
     }
   }
 
   /**
    * send HeartBeat message to Dashboard for the given worker
-   * @param workerID
-   * @return
    */
   public boolean workerHeartbeat(int workerID) {
-    String path = "workers/" + jobID + "/" + workerID + "/beat/";
+    String endPoint = dashHost + "/workers/" + jobID + "/" + workerID + "/beat/";
 
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(""));
+    String jsonStr = "";
 
-    if (response.getStatus() == 200) {
-      LOG.fine("Sent HeartBeat message to Dashboard successfully for workerID: " + workerID);
-      return true;
-    } else {
-      LOG.severe("Sending HeartBeat message to Dashboard is unsuccessful. "
-          + "for workerID: " + workerID + " Response: " + response.toString());
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
+
+    try {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        LOG.fine("Sent HeartBeat message to Dashboard successfully for workerID: " + workerID);
+        return true;
+      } else {
+        LOG.severe("Sending HeartBeat message to Dashboard is unsuccessful. "
+            + "for workerID: " + workerID + " Response: " + response.toString());
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
       return false;
     }
   }
 
   /**
    * send WorkerStateChange message to Dashboard
-   * @param workerID
-   * @param state
-   * @return
    */
   public boolean workerStateChange(int workerID, JobMasterAPI.WorkerState state) {
     WorkerStateChange workerStateChange = new WorkerStateChange(state.name());
+    String endPoint = dashHost + "/workers/" + jobID + "/" + workerID + "/state/";
 
-    String path = "workers/" + jobID + "/" + workerID + "/state/";
-
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(workerStateChange));
-
-    if (response.getStatus() == 200) {
-      LOG.info("Sent Worker " + state.name() + " message to Dashboard successfully "
-          + "for workerID: " + workerID);
-      return true;
-    } else {
-      LOG.severe("Sending Worker " + state.name() + " message to Dashboard is unsuccessful "
-          + "for workerID: " + workerID + " Response: " + response.toString());
+    String jsonStr;
+    try {
+      jsonStr = mapper.writeValueAsString(workerStateChange);
+    } catch (JsonProcessingException e) {
+      LOG.log(Level.SEVERE, "Could not convert java entity object to Json string.", e);
       return false;
+    }
+
+    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
+    if (httpPost == null) {
+      return false;
+    }
+
+    try {
+      CloseableHttpClient httpClient = getHttpClient();
+      HttpResponse response = httpClient.execute(httpPost);
+      EntityUtils.consume(response.getEntity());
+      putHttpClient(httpClient);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        LOG.info("Sent Worker " + state.name() + " message to Dashboard successfully "
+            + "for workerID: " + workerID);
+        return true;
+      } else {
+        LOG.severe("Sending Worker " + state.name() + " message to Dashboard is unsuccessful "
+            + "for workerID: " + workerID + " Response: " + response.toString());
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
+      return false;
+    }
+  }
+
+  public void close() {
+    poolingConnManager.close();
+    while (httpClientQueue.isEmpty()) {
+      try {
+        httpClientQueue.poll().close();
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, e.getMessage(), e);
+      }
     }
   }
 
