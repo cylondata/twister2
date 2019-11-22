@@ -1,6 +1,6 @@
-# Multi Stage Example
+# Multistage Example
 
-Multi stage example refers we have one or more intermediate tasks in between the source and sink 
+Multistage example refers to one or more intermediate tasks between the source and sink 
 task. 
 
 ## Batch Tasks
@@ -118,9 +118,8 @@ private static class GeneratorTask extends BaseStreamSource {
 
 ```
 
-In the multi stage example we have a source task, sink task and we name the intermediate task 
-as the compute task which extends the BaseStreamCompute or BaseBatchCompute for streaming applications. There can 
-be multiple compute tasks depending on the description of the task. In this one we
+In the multistage example we have a source task, two compute tasks which extends the BaseCompute
+class. There can be multiple compute tasks depending on the description of the task. In this one we
 generate a stream of data in the source task and in the intermediate task the partition
 is done and in the final task we do a reduction operation. 
 
@@ -135,7 +134,7 @@ public void execute() {
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source", "partition-edge", DataType.OBJECT);
-    ComputeConnection rc = builder.addSink("sink", rt, 1);
+    ComputeConnection rc = builder.addCompute("sink", rt, 1);
     rc.reduce("compute", "compute-edge", new IFunction() {
       @Override
       public Object onMessage(Object object1, Object object2) {
@@ -156,20 +155,24 @@ Run the following command to run this example.
 
 ## Batch Example
 
+[MultiStage TaskGraph Batch Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/MultiStageGraph.java)
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.MultiStageGraph
 ```
 
 ## Streaming Example
 
+[MultiStage TaskGraph Streaming Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.streaming.MultiStageGraph
 ```
 
-## Multi Compute Nodes Task Graph Example
+## Multiple Compute Jobs Task Graph Example
 
-The multi compute nodes task graph which consists of a source and sends output to multiple compute 
-dataflow nodes. Also, the sink task receives the input from multiple compute dataflow nodes.
+The multiple compute job task graph consists of a source node and sends output to multiple compute 
+dataflow nodes. Also, the final compute task receives the input from multiple compute dataflow nodes.
 
 The structure of the graph is given below:
 
@@ -187,7 +190,7 @@ The structure of the graph is given below:
 
   ![MultiComputeNodes Task Graph](assets/multicompute_taskgraph.png)
  
-### MultiCompute Task Graph Example
+### Multiple Compute Jobs Task Graph Example
 
 This example is described in four stages namely 
 1. defining the task graph
@@ -204,11 +207,11 @@ This example is described in four stages namely
 
 ```java 
     builder.addSource("source", sourceTask, parallel);
-    ComputeConnection firstComputeConnection = builder.addCompute(
-        "firstcompute", firstComputeTask, parallel);
-    ComputeConnection secondComputeConnection = builder.addCompute(
-        "secondcompute", secondComputeTask, parallel);
-    ComputeConnection reduceConnection = builder.addSink("sink", reduceTask, parallel);
+       ComputeConnection firstComputeConnection = builder.addCompute(
+           "firstcompute", firstComputeTask, parallel);
+       ComputeConnection secondComputeConnection = builder.addCompute(
+           "secondcompute", secondComputeTask, parallel);
+       ComputeConnection reduceConnection = builder.addCompute("compute", reduceTask, parallel);
 ```
 
 The source task creates the direct communication edge beween the first compute and second compute 
@@ -233,10 +236,10 @@ the execute method to execute the generated task graph.
     taskExecutor.execute(graph, plan);
 ```
 
-## To Run MultiCompute Task Graph Example
+## To Run Multiple Compute Jobs Task Graph Example
+
+[Multiple Compute Jobs  Task Graph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/internal/taskgraph/MultiComputeTaskGraphExample.java)
 
 ```text
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTaskGraphExample -dsize 100 -parallelism 2 -workers 2 -dim 2 -csize 4 -dinput /tmp/dinput -cinput /tmp/dinput -filesys local -nFiles 1
 ```
-
-[MultiComputeNodes TaskGraph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
