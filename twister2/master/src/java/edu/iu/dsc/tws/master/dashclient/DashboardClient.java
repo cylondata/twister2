@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.master.dashclient;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,7 +49,7 @@ public class DashboardClient {
   private String dashHost;
   private String jobID;
   private PoolingHttpClientConnectionManager poolingConnManager;
-  private LinkedBlockingQueue<CloseableHttpClient> httpClientQueue;
+  private CloseableHttpClient httpClient;
 
   private int numberOfConnections = 3;
   private ObjectMapper mapper;
@@ -59,7 +58,6 @@ public class DashboardClient {
     this.dashHost = dashHost;
     this.jobID = jobID;
     this.numberOfConnections = numberOfConnections;
-    this.httpClientQueue = new LinkedBlockingQueue<>();
 
     poolingConnManager = new PoolingHttpClientConnectionManager();
     poolingConnManager.setMaxTotal(numberOfConnections);
@@ -67,35 +65,9 @@ public class DashboardClient {
     HttpHost httpHost = new HttpHost(dashHost);
     poolingConnManager.setMaxPerRoute(new HttpRoute(httpHost), numberOfConnections);
 
-    for (int i = 0; i < numberOfConnections; i++) {
-      httpClientQueue.add(HttpClients.custom().setConnectionManager(poolingConnManager).build());
-    }
+    httpClient = HttpClients.custom().setConnectionManager(poolingConnManager).build();
 
     mapper = new ObjectMapper();
-  }
-
-  /**
-   * return next CloseableHttpClient
-   * wait until the next one becomes available
-   */
-  private CloseableHttpClient getHttpClient() {
-    CloseableHttpClient httpClient = null;
-    while ((httpClient = httpClientQueue.poll()) == null) {
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-        LOG.warning("Thread sleep interrupted.");
-      }
-    }
-    return httpClient;
-  }
-
-  private void putHttpClient(CloseableHttpClient httpClient) {
-    try {
-      httpClientQueue.put(httpClient);
-    } catch (InterruptedException e) {
-      LOG.warning(e.getMessage());
-    }
   }
 
   private HttpPost constructHttpPost(String endPoint, String jsonStr) {
@@ -137,10 +109,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("Registered JobMaster with Dashboard. jobID: " + jobID);
         return true;
@@ -178,10 +148,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
         return true;
@@ -223,10 +191,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("ScaledWorkers message sent to Dashboard successfully."
             + " change: " + change
@@ -268,10 +234,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("Registered Worker with Dashboard successfully "
             + "for workerID: " + workerInfo.getWorkerID());
@@ -302,10 +266,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.fine("Sent HeartBeat message to Dashboard successfully for workerID: " + workerID);
         return true;
@@ -342,10 +304,8 @@ public class DashboardClient {
     }
 
     try {
-      CloseableHttpClient httpClient = getHttpClient();
       HttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consume(response.getEntity());
-      putHttpClient(httpClient);
       if (response.getStatusLine().getStatusCode() == 200) {
         LOG.info("Sent Worker " + state.name() + " message to Dashboard successfully "
             + "for workerID: " + workerID);
@@ -363,14 +323,12 @@ public class DashboardClient {
   }
 
   public void close() {
-    poolingConnManager.close();
-    while (httpClientQueue.isEmpty()) {
-      try {
-        httpClientQueue.poll().close();
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
-      }
+    try {
+      httpClient.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
     }
+    poolingConnManager.close();
   }
 
 }
