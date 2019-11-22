@@ -51,8 +51,6 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
-//import edu.iu.dsc.tws.api.JobConfig;
-
 public final class KMeansConnectedDataflowExample {
   private static final Logger LOG
       = Logger.getLogger(KMeansConnectedDataflowExample.class.getName());

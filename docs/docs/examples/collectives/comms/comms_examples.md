@@ -65,7 +65,7 @@ After building the project, you can run the batch mode examples as follows.
 The main component of the example is in the execute method of each example class. 
 Initially, a task plan is created 
 
-```bash
+```java 
  protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
         jobParameters.getTaskStages(), workerList);
@@ -117,7 +117,7 @@ configuration is provided.
 Then we need to provide the collective communication type that is going to be used.
 Along with the final data receiver setting and the data types used in the messaging. 
 
-```bash
+```java 
  reduce = new BReduce(communicator, taskPlan, sources, target,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalSingularReceiver(),
         MessageType.INTEGER);
@@ -161,7 +161,7 @@ and sink parallelism must be equal.
 
 The communication defining section is as follows,
 
-```bash
+```java
  reduce = new BAllReduce(communicator, taskPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalSingularReceiver(),
         MessageType.INTEGER);
@@ -185,7 +185,7 @@ gathered to a single point.
 
 The communication defining section is as follows,
 
-```bash
+```java
   gather = new BGather(communicator, taskPlan, sources, target,
          MessageType.INTEGER, new FinalReduceReceiver(), false);
 ```
@@ -208,7 +208,7 @@ gathered to all the points. So each point will have the data owned by the other 
 
 The communication defining section is as follows,
 
-```bash
+```java
   gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
           MessageType.INTEGER);
 ```
@@ -229,7 +229,7 @@ In Partition communication, what happens is the data can be distributed to multi
 
 The communication defining section is as follows,
 
-```bash
+```java
   partition = new BPartition(communicator, taskPlan, sources, targets,
           MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
 ```
@@ -253,7 +253,7 @@ based on a given criteria, the keyed-reduce communication can be used to perform
 
 The communication defining section is as follows,
 
-```bash
+```java
    keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
           new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
           new FinalBulkReceiver(), MessageType.INTEGER, MessageType.INTEGER,
@@ -279,7 +279,7 @@ based on a given criteria, the keyed-gather communication can be used to perform
 
 The communication defining section is as follows,
 
-```bash
+```java
        keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
            MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
            new SimpleKeyBasedSelector());
@@ -304,7 +304,7 @@ based on a given criteria, the keyed-partition communication can be used to perf
 
 The communication defining section is as follows,
 
-```bash
+```java
    partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageType.INTEGER,
         MessageType.INTEGER, new PartitionReceiver(), new SimpleKeyBasedSelector());
 ```
@@ -334,7 +334,6 @@ as 8 and sink parallelism as one.
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
-
 ```
 
 You can use the same running commands used for batch examples, but use the -stream tag.
