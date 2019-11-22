@@ -236,7 +236,7 @@ the execute method to execute the generated task graph.
 ## To Run MultiCompute Task Graph Example
 
 ```text
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTaskGraphExample -dsize 100 -parallelism 2 -workers 2 
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTaskGraphExample -dsize 100 -parallelism 2 -workers 2 -dim 2 -csize 4 -dinput /tmp/dinput -cinput /tmp/dinput -filesys local -nFiles 1
 ```
 
 [MultiComputeNodes TaskGraph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)

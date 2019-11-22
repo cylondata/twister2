@@ -4,11 +4,16 @@ title: K-Means
 sidebar_label: K-Means
 ---
 
-The need to process large am​​ounts of continuously arriving information has led to the exploration and application of big data analytics techniques. Likewise, the painstaking process of clustering numerous datasets containing large numbers of records with high dimensions calls for innovative methods. 
-Traditional sequential clustering algorithms are unable to handle it. They are not scalable in relation 
-to larger sizes of data sets, and they are most often computationally expensive in memory space and time complexities. Yet, the parallelization of data clustering algorithms is paramount when dealing 
-with big data. K-Means clustering is an iterative algorithm hence, it requires a large number of iterative steps to find an optimal solution, and this procedure increases the processing time of clustering. Twister2 provides a dataflow task graph approach to distribute the tasks in a parallel manner 
-and aggregate the results which reduce the processing time of K-Means Clustering process.
+The need to process large am​​ounts of continuously arriving information has led to the exploration and 
+application of big data analytics techniques. Likewise, the painstaking process of clustering numerous 
+datasets containing large numbers of records with high dimensions calls for innovative methods. Traditional 
+sequential clustering algorithms are unable to handle it. They are not scalable in relation to larger sizes
+of data sets, and they are most often computationally expensive in memory space and time complexities. Yet, 
+the parallelization of data clustering algorithms is paramount when dealing with big data. K-Means clustering 
+is an iterative algorithm hence, it requires a large number of iterative steps to find an optimal solution, 
+and this procedure increases the processing time of clustering. Twister2 provides a dataflow task graph 
+approach to distribute the tasks in a parallel manner and aggregate the results which reduce the processing 
+time of K-Means Clustering process.
 
 ## K-Means Clustering Implementation Details
 
@@ -18,8 +23,9 @@ The implementation details of k-means clustering in Twister2 is pictorially repr
 
 ### DataObjectConstants
 
-The constants which are used by the k-means algorithm to specify the number of workers, parallelism, dimension, size of datapoints,
-size of centroids, file system, number of iterations, datapoints and centroids directory. 
+The constants which are used by the k-means algorithm to specify the number of workers, parallelism, 
+dimension, size of datapoints,size of centroids, file system, number of iterations, datapoints, and 
+centroids directory. 
 
 ```java
   public static final String WORKERS = "workers";
@@ -36,27 +42,26 @@ size of centroids, file system, number of iterations, datapoints and centroids d
   public static final String ITERATIONS = "iter";
 ```
 
-### KMeansWorkerMain
+### KMeansMain
 
-The entry point for the K-Means clustering algorithm is implemented in KMeansWorkerMain class. It 
+The entry point for the K-Means clustering algorithm is implemented in KMeansMain class. It 
 parses the command line parameters submitted by the user for running the K-Means clustering algorithm. 
-It first sets the submitted variables in the JobConfig object and put the JobConfig object into the 
-Twister2Job Builder, set the worker class (KMeansWorker.java in this example) and submit the job. 
+It first set the submitted variables in the JobConfig object and put the JobConfig object into the 
+Twister2Job Builder, set the worker class (KMeansComputeJob.java in this example) and submit the job. 
 
 ```java
 edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain
 ```
 
-### KMeansWorker
+### KMeansComputeJob
 
 It is the main class for the K-Means clustering which consists of four main tasks namely generation 
 of datapoints and centroids, partition and read the partitioned data points, partition and read the 
 centroids, and perform the distance calculation between the datapoints and the centroids. It extends
-the TaskWorker class which has the execute() method, the execute() method first invokes the 
-KMeansWorkerUtils class to generate the datapoints and the centroids in their respective filesystem 
-and their directories. Then, the execute() method of KMeansWorker invokes "datapointsTaskgraph", 
-"centroidsTaskGraph", and "kmeansTaskGraph". We will briefly discuss the functionalities of each 
-task graph defined in the KMeansWorker.
+the IWorker class which has the execute() method that invokes the KMeansUtils class to generate the 
+datapoints and the centroids in their respective filesystem and their directories. Then, the execute() 
+method of KMeansComputeJob invokes "datapointsTaskgraph", "centroidsTaskGraph", and "kmeansTaskGraph". 
+We will briefly discuss the functionalities of each task graph defined in the KMeansComputeJob. 
 
 #### Datapoints partition and read the partitioned datapoints
 The main functionality of the first task graph is to partition the data points, convert the 
@@ -65,32 +70,22 @@ respective task index values.
 
 ```java
     /* First Graph to partition and read the partitioned data points **/
-   DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-           dataDirectory);
-   KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
-           Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-   KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
+   PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
+           dataDirectory, "points", dimension);
 ```
 
-First, add the source, compute, and sink tasks to the task graph builder for the first task graph. 
-Then, create the communication edges between the tasks for the first task graph.
+First, add point data source to the task graph builder for the first task graph. Then, set the 
+operation mode and the task graph name.
  
 ```java
-    computeGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = computeGraphBuilder.addCompute("datapointcompute",
-        dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink("datapointsink",
-        dataObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the first task graph
-    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    computeGraphBuilder.setMode(OperationMode.BATCH);
+     datapointsComputeGraphBuilder.addSource("datapointsource", ps, parallelismValue);
+     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
+     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
 ```
 
-Finally, invoke the computeGraphBuilder to build the first task graph, get the task schedule plan and execution plan for the first task graph, and call the execute() method to execute the datapoints task graph. Once the execution is finished, the output values are retrieved in the "datapointsObject".
+Finally, invoke the computeGraphBuilder to build the first task graph, get the task schedule plan and 
+execution plan for the first task graph, and call the execute() method to execute the datapoints task 
+graph.
 
 ```java
     //Build the first taskgraph
@@ -98,19 +93,19 @@ Finally, invoke the computeGraphBuilder to build the first task graph, get the t
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan); 
 ```
-#### DataObjectSource
 
-This class partition the datapoints which is based on the task parallelism value. It may use 
-either the "LocalTextInputPartitioner" or "LocalFixedInputPartitioner" to partition the datapoints. 
+#### PointDataSource 
+
+This class partition the datapoints which is based on the task parallelism value. It may either use
+the "LocalTextInputPartitioner" or "LocalFixedInputPartitioner" to partition the datapoints. 
 Finally, write the partitioned datapoints into their respective edges. The LocalTextInputPartitioner
- partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the 
- datapoints based on the length of the file. For example, if the task parallelism is 4, if there are 16 data points each task will get 4 datapoints to process. 
-
+partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the 
+datapoints based on the length of the file. For example, if the task parallelism is 4, if there are 
+16 datapoints each task will get 4 datapoints to process. The partitioned datapoints are converted
+into two-dimensional array.  
+ 
 ```java
  @Override
   public void prepare(Config cfg, TaskContext context) {
@@ -121,46 +116,7 @@ Finally, write the partitioned datapoints into their respective edges. The Local
   }
 ```
 
-#### KMeansDataObjectCompute
-
-This class receives the partitioned datapoints as "IMessage" and convert those datapoints into 
-two-dimensional for the k-means clustering process. The converted datapoints are send to the 
-KMeansDataObjectDirectSink through "direct" edge.
-
-```java
- while (((Iterator) message.getContent()).hasNext()) {
-        String val = String.valueOf(((Iterator) message.getContent()).next());
-        String[] data = val.split(",");
-        for (int i = 0; i < getDimension(); i++) {
-          datapoint[value][i] = Double.parseDouble(data[i].trim());
-        }
-        value++;
-        context.write(getEdgeName(), datapoint);
-      }
-```
-
-#### KMeansDataObjectDirectSink
-
-This class receives the message object from the DataObjectCompute and write into their respective 
-task index values. First, it store the iterator values into the array list then it convert the array
-list values into double array values.
-
-```java
- @Override
-   public boolean execute(IMessage message) {
-     List<double[][]> values = new ArrayList<>();
-     while (((Iterator) message.getContent()).hasNext()) {
-       values.add((double[][]) ((Iterator) message.getContent()).next());
-     }
-     dataPointsLocal = new double[values.size()][];
-     for (double[][] value : values) {
-       dataPointsLocal = value;
-     }
-     return true;
-   }
-``` 
-
-Finally, write the appropriate data points into their respective task index values with the entity 
+Finally, write the appropriate datapoints into their respective task index values with the entity 
 partition values.
 
 ```java
@@ -172,41 +128,28 @@ partition values.
 
 #### Centroids partition and read the partitioned centroids
 
-Similar to the datapoints, the second task graph performs three processes namely partitioning, 
+Similar to the datapoints, the second task graph perform three processes namely partitioning, 
 converting the partitioned centroids into array, and writing into respective task index values 
 but, with one major difference of read the complete file as one partition. 
 
- 1. DataFileReplicatedReadSource
- 2. KMeansDataObjectCompute, and
- 3. KMeansDataObjectDirectSink 
- 
 ```java
-     DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
-           Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
-     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
-           Context.TWISTER2_DIRECT_EDGE, csize, dimension);
-     KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
+      PointDataSource cs = new PointDataSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory,
+            "centroids", dimension);
+      ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 ```
 
-Similar to the first task graph, it add the source, compute, and sink tasks to the task graph builder for the second task graph. Then, create the communication edges between the tasks for the second task graph.
+Similar to the first task graph, it add point data source to the task graph builder for the 
+second graph and then it set the operation mode and the task graph name.
 
 ```java
-    //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    computeGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);
-    ComputeConnection centroidComputeConnection = computeGraphBuilder.addCompute("centroidcompute",
-        centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = computeGraphBuilder.addSink(
-        "centroidsink", centroidObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the second task graph
-    centroidComputeConnection.direct("centroidsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    computeGraphBuilder.setMode(OperationMode.BATCH);
+   centroidsComputeGraphBuilder.addSource("centroidsource", cs, parallelismValue);
+   centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
+   centroidsComputeGraphBuilder.setTaskGraphName("centTG");
 ```
 
-Finally, invoke the build() method to build the second task graph, get the task schedule plan and execution plan for the second task graph, and call the execute() method to execute the centroids task graph. Once the execution is finished, the output values are retrieved in the "centroidsDataObject".
+Finally, invoke the build() method to build the second task graph, get the task schedule plan and 
+execution plan for the second task graph, and call the execute() method to execute the centroids 
+task graph. 
 
 ```java
     //Build the second taskgraph
@@ -214,76 +157,54 @@ Finally, invoke the build() method to build the second task graph, get the task 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     //Actual execution for the second taskgraph
-    taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
-        centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
-```
-
-#### DataFileReplicatedReadSource
-
-This class uses the "LocalCompleteTextInputParitioner" to read the whole file from the centroids 
- directory and write into their task respective task index values using the "direct" task edge. 
- For example, if the size of centroid value is 16, each task index receive 16 centroid values completely. 
- 
-```java
- public void prepare(Config cfg, TaskContext context) {
-    super.prepare(cfg, context);
-    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), config));
-  }
+    taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan); 
 ```
 
 #### KMeans Clustering 
 
 The third task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and 
-CentroidAggregator. Similar to the first and second task graph, first we have to add the source, 
-sink, and communication edges to the third task graph. 
+CentroidAggregator. 
 
 ```java
     /* Third Graph to do the actual calculation **/
-    KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
-    KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
-
-    //Add source, and sink tasks to the task graph builder for the third task graph
-    computeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
-    ComputeConnection kMeanscomputeConnection = computeGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, parallelismValue);
-
-    //Creating the communication edges between the tasks for the third task graph
-    kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
-        new CentroidAggregator(), DataType.OBJECT);
-    computeGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph kmeansTaskGraph = computeGraphBuilder.build();
+       KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
+       KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
+       ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+   
+       //Add source, and sink tasks to the task graph builder for the third task graph
+       kmeansComputeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
+       ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addCompute(
+           "kmeanssink", kMeansAllReduceTask, parallelismValue);
+   
+       //Creating the communication edges between the tasks for the third task graph
+       kMeanscomputeConnection.allreduce("kmeanssource")
+           .viaEdge("all-reduce")
+           .withReductionFunction(new CentroidAggregator())
+           .withDataType(MessageTypes.OBJECT);
+       kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
+       kmeansComputeGraphBuilder.setTaskGraphName("kmeansTG");
 ```
 
 #### Assigning datapoints and initial centroids
 
-The datapoint and centroid values are sent to the KMeansTaskGraph as "points" object and "centroids" 
-object as an input for further processing. Finally, it invokes the execute() method of the task 
-executor to do the clustering process.
+The datapoints and centroids are sent to the KMeansTaskGraph as "points" object and "centroids" 
+object as an input for further processing through receivable name set. Finally, it invokes the 
+execute() method of the task executor to do the clustering process.
 
 ```java
     //Perform the iterations from 0 to 'n' number of iterations
+   IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
-      ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-      //add the datapoints and centroids as input the kmeanssource task.
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
-      //actual execution of the third task graph
-      taskExecutor.execute(kmeansTaskGraph, plan);
-      //retrieve the new centroid value for the next iterations
-      centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
+         //actual execution of the third task graph
+         ex.execute(i == iterations - 1);
     }
 ```
 
 #### New Centroid Updation
 This process repeats for ‘n’ number of iterations as specified by the user. For every iteration, the 
 new centroid value is calculated and the calculated value is distributed across all the task instances. 
-At the end of every iteration, the centroid value is updated and the iteration continues with the new centroid value.
+At the end of every iteration, the centroid value is updated and the iteration continues with the 
+new centroid value.
 
 ```java
     //retrieve the new centroid value for the next iterations
@@ -291,35 +212,23 @@ At the end of every iteration, the centroid value is updated and the iteration c
 ```
 
 ### KMeansSourceTask 
-
-First, the execute method in KMeansJobSource retrieve the partitioned data points into their respective task index values and the complete centroid values into their respective task index values. 
+First, the execute method in KMeansSource retrieve the partitioned data points into their respective 
+task index values and the complete centroid values into their respective task index values. The retrieved 
+data points and centroids are sent to the KMeansUtils to find the nearest centers using the Euclidean 
+distance. 
  
 ```java
-    @Override
-    public void execute() {
-      int dim = Integer.parseInt(config.getStringValue("dim"));
-
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
-      datapoints = (double[][]) dataPartition.getConsumer().next();
-
-      DataPartition<?> centroidPartition = centroidsObject.getPartitions(context.taskIndex());
-      centroid = (double[][]) centroidPartition.getConsumer().next();
-```
-The retrieved data points and centroids are sent to the KMeansCalculator to perform the actual distance calculation using the Euclidean distance. 
-
-```java
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
-```
-      
-Finally, each task instance write their calculated centroids value as given below:
-```java
+   @Override
+   public void execute() {
+      int dim = config.getIntegerValue("dim", 2);
+      double[][] datapoints = (double[][]) dataPartition.first();
+      double[][] centroid = (double[][]) centroidPartition.first();
+      double[][] kMeansCenters = KMeansUtils.findNearestCenter(dim, datapoints, centroid);
       context.writeEnd("all-reduce", kMeansCenters);
-    }
-``` 
- 
+   }
+```
+     
 ### KMeansAllReduceTask
-
 The KMeansAllReduceTask write the calculated centroid values of their partitioned datapoints into their respective task index values.
 
 ```java
@@ -393,17 +302,24 @@ K-Means clustering process.
 ### Sample Output 
 
 ```bash
-9-08-22 16:03:16 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers joined the job.  
-[2019-08-22 16:03:16 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Sending WorkersJoined messages ...  
-
-[2019-08-22 16:03:21 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Final Centroids After	100	iterations	
-[[0.2586896371541501, 0.26352894494071144], [0.7226999170143885, 0.7523701053237408], [0.7481226890456432, 0.2448022186721992], [0.21755114043859655, 0.7589559817543858]]  
-
-[2019-08-22 16:03:21 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
-
-[2019-08-22 16:03:21 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Final Centroids After	100	iterations	
-[[0.2586896371541501, 0.26352894494071144], [0.7226999170143885, 0.7523701053237408], [0.7481226890456432, 0.2448022186721992], [0.21755114043859655, 0.7589559817543858]]  
-
-[2019-08-22 16:03:21 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
-[2019-08-22 16:03:21 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 2 workers have completed. JobMaster is stopping.  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher: Starting the job master: 127.0.1.1:44675  
+[2019-11-22 10:41:15 -0500] [WARNING] [-] [main] edu.iu.dsc.tws.master.server.JobMaster: Dashboard host address is null. Not connecting to Dashboard  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [main] edu.iu.dsc.tws.common.net.tcp.Server: Starting server on kannan-Precision-5820-Tower-X-Series:44675  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: JobMaster [127.0.1.1] started and waiting worker messages on port: 44675  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIController: Working directory: /home/kannan/.twister2/jobs  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIController: Launching job in standalone scheduler with no of containers = 2  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPICommand: Job class path: /home/kannan/.twister2/jobs/KMeans-job/libexamples-java.jar  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneCommand: Java version : 8  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker: 1 joined the job.  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker: 0 joined the job.  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerHandler: All workers joined the job. Worker IDs: [0, 1]  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerHandler: Sending WorkersJoined messages ...  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Total K-Means Execution Time: 352	Data Load time : 109	Compute Time : 243  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:0 COMPLETED.  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Total K-Means Execution Time: 354	Data Load time : 130	Compute Time : 224  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:1 COMPLETED.  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers COMPLETED. Terminating the job.  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.core.ResourceAllocator: CLEANED TEMPORARY DIRECTORY......:/tmp/twister2-KMeans-job-7364072149483599729  
 ```
