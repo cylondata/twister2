@@ -46,8 +46,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
    */
   protected boolean stateCleared = false;
 
-  protected boolean calledReceive = false;
-
   /**
    * A boolean to keep track weather we synced, we can figure this out using the
    * state in targetStates, but it can be in-efficient, so we keep a boolean

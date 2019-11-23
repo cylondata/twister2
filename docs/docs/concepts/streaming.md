@@ -132,6 +132,7 @@ int [compute API](task-api.md).
 
 | Operations | Description | 
 | :---     | :---          |
+| Direct    | A one to one mapping from a task to to another |
 | Reduce     | Reduce values from N tasks to a single task | 
 | AllReduce  | Reduce values from N tasks and distributes to M tasks | 
 | Gather     | Gathers values from N tasks to a single task | 

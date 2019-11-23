@@ -62,6 +62,16 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
    */
   private KeyComparatorWrapper comparator;
 
+  /**
+   * Right has synced
+   */
+  private boolean rightSynced;
+
+  /**
+   * Left has synced
+   */
+  private boolean leftSynced;
+
   public JoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
                                  Comparator<Object> com,
                                  CommunicationContext.JoinType joinType) {
@@ -72,6 +82,8 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
     this.leftValues = new HashMap<>();
     this.rightValues = new HashMap<>();
     this.comparator = new KeyComparatorWrapper(com);
+    this.rightSynced = false;
+    this.leftSynced = false;
   }
 
   @Override
@@ -155,10 +167,13 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      if (rightValues.containsKey(target) && leftValues.containsKey(target)) {
-        return bulkReceiver.sync(target, message);
+      if (tag == 0) {
+        leftSynced = true;
       }
-      return false;
+      if (tag == 1) {
+        rightSynced = true;
+      }
+      return leftSynced && rightSynced && bulkReceiver.sync(target, message);
     }
   }
 
