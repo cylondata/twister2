@@ -33,14 +33,4 @@ public class ReplicateTLink<T> extends BatchIteratorLinkWrapper<T> {
     rename(n);
     return this;
   }
-
-//  @Override
-//  public CachedTSet<T> lazyCache() {
-//    return (CachedTSet<T>) super.lazyCache();
-//  }
-//
-//  @Override
-//  public CachedTSet<T> cache() {
-//    return (CachedTSet<T>) super.cache();
-//  }
 }

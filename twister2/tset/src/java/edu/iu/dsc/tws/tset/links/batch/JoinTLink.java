@@ -112,14 +112,4 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
 
     graphBuilder.connect(s.getId(), t.getId(), e);
   }
-
-//  @Override
-//  public CachedTSet<JoinedTuple<K, VL, VR>> lazyCache() {
-//    return (CachedTSet<JoinedTuple<K, VL, VR>>) super.lazyCache();
-//  }
-//
-//  @Override
-//  public CachedTSet<JoinedTuple<K, VL, VR>> cache() {
-//    return (CachedTSet<JoinedTuple<K, VL, VR>>) super.cache();
-//  }
 }

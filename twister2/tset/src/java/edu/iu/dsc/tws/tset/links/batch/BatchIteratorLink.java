@@ -69,27 +69,4 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
 
     getTSetEnv().run(set);
   }
-
-  /*
-   * Returns the superclass @Storable<T> because, this class is used by both keyed and non-keyed
-   * TSets. Hence, it produces both CachedTSet<T> as well as KeyedCachedTSet<K, V>
-   */
-//  @Override
-//  public Storable<T> lazyCache() {
-//    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
-//        getTargetParallelism());
-//    addChildToGraph(cacheTSet);
-//
-//    return cacheTSet;
-//  }
-//
-//  @Override
-//  public Storable<T> lazyPersist() {
-//    PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-//        new DiskPersistIterSink<>(this.getId()),
-//        getTargetParallelism());
-//    addChildToGraph(persistedTSet);
-//
-//    return persistedTSet;
-//  }
 }

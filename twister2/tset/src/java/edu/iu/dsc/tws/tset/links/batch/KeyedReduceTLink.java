@@ -50,20 +50,4 @@ public class KeyedReduceTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
     rename(n);
     return this;
   }
-
-//  @Override
-//  public KeyedCachedTSet<K, V> lazyCache() {
-//    KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(),
-//        new CacheIterSink<>(), getTargetParallelism());
-//    addChildToGraph(cacheTSet);
-//
-//    return cacheTSet;
-//  }
-//
-//  @Override
-//  public KeyedCachedTSet<K, V> cache() {
-//    KeyedCachedTSet<K, V> cacheTSet = lazyCache();
-//    getTSetEnv().run(cacheTSet);
-//    return cacheTSet;
-//  }
 }

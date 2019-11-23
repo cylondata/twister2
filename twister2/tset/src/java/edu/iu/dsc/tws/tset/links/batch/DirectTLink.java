@@ -37,24 +37,4 @@ public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
   public Edge getEdge() {
     return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
-
-//  @Override
-//  public CachedTSet<T> lazyCache() {
-//    return (CachedTSet<T>) super.lazyCache();
-//  }
-//
-//  @Override
-//  public CachedTSet<T> cache() {
-//    return (CachedTSet<T>) super.cache();
-//  }
-//
-//  @Override
-//  public PersistedTSet<T> persist() {
-//    return (PersistedTSet<T>) super.persist();
-//  }
-//
-//  @Override
-//  public PersistedTSet<T> lazyPersist() {
-//    return (PersistedTSet<T>) super.lazyPersist();
-//  }
 }
