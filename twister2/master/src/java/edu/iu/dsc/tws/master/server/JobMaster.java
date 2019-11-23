@@ -215,7 +215,8 @@ public class JobMaster {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
       this.dashClient = null;
     } else {
-      this.dashClient = new DashboardClient(dashboardHost, job.getJobId());
+      this.dashClient = new DashboardClient(
+          dashboardHost, job.getJobId(), JobMasterContext.jmToDashboardConnections(config));
     }
   }
 
@@ -274,13 +275,6 @@ public class JobMaster {
     pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
 
-    // if ZoKeeper server is used for this job, initialize that
-    try {
-      initZKMasterController(workerMonitor);
-    } catch (Twister2Exception e) {
-      throw e;
-    }
-
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
     JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
@@ -335,6 +329,13 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
+    // if ZoKeeper server is used for this job, initialize that
+    try {
+      initZKMasterController(workerMonitor);
+    } catch (Twister2Exception e) {
+      throw e;
+    }
+
     //initialize checkpoint manager
     if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
@@ -351,7 +352,6 @@ public class JobMaster {
 
     rrServer.start();
     looper.loop();
-
   }
 
   /**
@@ -392,6 +392,7 @@ public class JobMaster {
     }
 
     // start Driver thread if the driver exists
+
     startDriverThread();
 
     startLooping();
@@ -417,6 +418,10 @@ public class JobMaster {
 
     if (jobTerminator != null) {
       jobTerminator.terminateJob(job.getJobName());
+    }
+
+    if (dashClient != null) {
+      dashClient.close();
     }
   }
 

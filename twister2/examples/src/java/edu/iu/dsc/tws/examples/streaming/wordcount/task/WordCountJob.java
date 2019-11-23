@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.task.typed.streaming.SPartitionCompute;
 
 /**
  * A simple wordcount program where fixed number of words are generated and the global counts
- * of words are calculated
+ * of words are calculated. Example is done using the compute API.
  */
 public class WordCountJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
