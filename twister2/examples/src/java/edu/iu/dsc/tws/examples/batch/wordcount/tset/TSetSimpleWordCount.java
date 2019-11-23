@@ -52,8 +52,6 @@ public class TSetSimpleWordCount implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     int sourcePar = 4;
-//    int sinkPar = 1;
-
     Config config = env.getConfig();
 
     SourceTSet<String> source = env.createSource(
