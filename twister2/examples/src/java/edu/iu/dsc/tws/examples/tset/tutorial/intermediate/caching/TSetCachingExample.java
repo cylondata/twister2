@@ -78,6 +78,8 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
     });
 
     CachedTSet<Object> cached = twoComputes.cache();
+    // when cache is called, twister2 will run everything upto this point and cache the result
+    // into the memory. Cached TSets can be added as inputs for other TSets and operations.
 
     SourceTSet<Integer> sourceZ = env.createSource(new SourceFunc<Integer>() {
 

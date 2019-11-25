@@ -73,7 +73,7 @@ public class TSetSourceExample implements BatchTSetIWorker, Serializable {
     }, 4);
 
     intSource.direct().forEach(i -> {
-      System.out.println("i : " + i);
+      LOG.info("i : " + i);
     });
   }
 }

@@ -51,11 +51,6 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
       private int count = 0;
 
       @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      @Override
       public boolean hasNext() {
         return count < 10;
       }
@@ -66,13 +61,13 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
       }
     }, 4);
 
-    intSource.direct().compute((itr, c) -> {
+    intSource.direct().compute((itr, collector) -> {
       itr.forEachRemaining(i -> {
-        c.collect(i * 5);
+        collector.collect(i * 5);
       });
-    }).direct().compute((itr, c) -> {
+    }).direct().compute((itr, collector) -> {
       itr.forEachRemaining(i -> {
-        c.collect((int) i + 2);
+        collector.collect((int) i + 2);
       });
     }).reduce((i1, i2) -> {
       return (int) i1 + (int) i2;

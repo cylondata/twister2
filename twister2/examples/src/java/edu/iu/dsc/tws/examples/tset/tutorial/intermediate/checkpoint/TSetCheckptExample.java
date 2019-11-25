@@ -78,11 +78,6 @@ public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
       private int count = 0;
 
       @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      @Override
       public boolean hasNext() {
         return count < 1000000;
       }
@@ -108,6 +103,15 @@ public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
     t1 = System.currentTimeMillis();
     PersistedTSet<Object> persist = twoComputes.persist();
     LOG.info("TIme for cache : " + (System.currentTimeMillis() - t1));
+    // When persist() is called, twister2 performs all the computations/communication
+    // upto this point and persists the result into the disk.
+    // This makes previous data garbage collectible and frees some memory.
+    // If persist() is called in a checkpointing enabled job, this will create
+    // a snapshot at this point and will start straightaway from this point if the
+    // job is restarted.
+
+    // Similar to CachedTSets, PersistedTSets can be added as inputs for other TSets and
+    // operations
 
 
     persist.reduce((i1, i2) -> {
