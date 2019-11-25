@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class GatherExample extends BatchTsetExample {
@@ -46,41 +47,42 @@ public class GatherExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
+    GatherTLink<Integer> gather = src.gather();
+
     LOG.info("test foreach");
-    src.gather()
-        .forEach(i -> LOG.info("foreach: " + i));
+    gather.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    src.gather()
-        .map(i -> i.toString() + "$$")
+    gather.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    src.gather()
-        .compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
-            input -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next().getValue();
-              }
-              return "sum=" + sum;
-            })
+    gather.compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+      int sum = 0;
+      while (input.hasNext()) {
+        sum += input.next().getValue();
+      }
+      return "sum=" + sum;
+    })
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
-    src.gather()
-        .compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
-            (input, output) -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next().getValue();
-              }
-              output.collect("sum=" + sum);
-            })
+    gather.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+        (input, output) -> {
+          int sum = 0;
+          while (input.hasNext()) {
+            sum += input.next().getValue();
+          }
+          output.collect("sum=" + sum);
+        })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    gather.mapToTuple(i -> new Tuple<>(i % 2, i))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
   }
 
 

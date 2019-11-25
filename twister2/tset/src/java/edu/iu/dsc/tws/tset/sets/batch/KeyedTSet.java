@@ -15,13 +15,12 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
+import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
+import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
 
 /**
  * Attaches a key to the oncoming data.
@@ -46,13 +45,12 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   @Override
   public ICompute getINode() {
 
-    if (mapToTupleFunc instanceof MapCompute) {
-      return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+    if (mapToTupleFunc instanceof ComputeFunc) {
+      return new ComputeToTupleOp<>((ComputeFunc<Tuple<K, V>, ?>) mapToTupleFunc, this,
           getInputs());
-    } else if (mapToTupleFunc instanceof MapIterCompute
-        || mapToTupleFunc instanceof GatherMapCompute) {
-      return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
-          getInputs());
+    } else if (mapToTupleFunc instanceof ComputeCollectorFunc) {
+      return new ComputeCollectorToTupleOp<>((ComputeCollectorFunc<Tuple<K, V>, ?>) mapToTupleFunc,
+          this, getInputs());
     }
 
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);

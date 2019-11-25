@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
@@ -62,7 +61,7 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   }
 
   @Override
-  public <K, V> BatchTupleTSet mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
         getTargetParallelism());
 

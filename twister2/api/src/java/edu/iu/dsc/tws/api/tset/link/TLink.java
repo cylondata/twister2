@@ -76,7 +76,7 @@ public interface TLink<T1, T0> extends TBase {
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
-  <K, V> TupleTSet mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
 
   /**
    * Applies a functoin elementwise
