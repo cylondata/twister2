@@ -31,10 +31,7 @@ import java.util.logging.Logger;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
-import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
@@ -43,9 +40,6 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -160,20 +154,6 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a distributed atomic integer path for barrier
-   */
-  public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/dai-for-barrier";
-  }
-
-  /**
-   * construct a distributed barrier path
-   */
-  public static String constructBarrierPath(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/barrier";
-  }
-
-  /**
    * WorkerID is at the end of workerPath
    * The char "-" proceeds the workerID
    * @return
@@ -217,63 +197,6 @@ public final class ZKUtils {
   }
 
   /**
-   * decode the given binary encoded WorkerInfo object
-   * encoding assumed to be done by encodeWorkerZnode method
-   * first 4 bytes is the length. remaining bytes are encoded WorkerInfo bytes
-   */
-  public static Pair<WorkerInfo, WorkerState> decodeWorkerZnode(byte[] encodedBytes) {
-
-    if (encodedBytes == null) {
-      return null;
-    }
-
-    // first 4 bytes is the length
-    int state = intFromBytes(encodedBytes, 0);
-    WorkerState workerState = WorkerState.forNumber(state);
-
-    try {
-      WorkerInfo workerInfo = WorkerInfo.newBuilder()
-          .mergeFrom(encodedBytes, 4, encodedBytes.length - 4)
-          .build();
-      return new ImmutablePair<>(workerInfo, workerState);
-    } catch (InvalidProtocolBufferException e) {
-      LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
-      return null;
-    }
-  }
-
-  /**
-   * decode the given binary encoded job master znode
-   * encoding assumed to be done by encodeJobMasterZnode method
-   * first 4 bytes is the length. remaining bytes are encoded masterAddress
-   */
-  public static Pair<String, JobMasterState> decodeJobMasterZnode(byte[] encodedBytes) {
-
-    if (encodedBytes == null) {
-      return null;
-    }
-
-    // first 4 bytes is the length
-    int state = intFromBytes(encodedBytes, 0);
-    JobMasterState jmState = JobMasterState.forNumber(state);
-    String masterAddress =
-        new String(encodedBytes, 4, encodedBytes.length - 4, StandardCharsets.UTF_8);
-    return new ImmutablePair<>(masterAddress, jmState);
-  }
-
-  /**
-   * encode the given WorkerInfo object as a byte array.
-   * First put the worker state as a 4 byte array to the beginning
-   * resulting byte array has the state bytes and workerInfo object after that
-   */
-  public static byte[] encodeWorkerZnode(WorkerInfo workerInfo, int state) {
-    byte[] stateBytes = Ints.toByteArray(state);
-    byte[] workerInfoBytes = workerInfo.toByteArray();
-
-    return Bytes.concat(stateBytes, workerInfoBytes);
-  }
-
-  /**
    * encode the given WorkerInfo object as a byte array.
    * First put the worker state as a 4 byte array to the beginning
    * resulting byte array has the state bytes and workerInfo object after that
@@ -283,18 +206,6 @@ public final class ZKUtils {
     byte[] addressBytes = masterAddress.getBytes(StandardCharsets.UTF_8);
 
     return Bytes.concat(stateBytes, addressBytes);
-  }
-
-  /**
-   * construct an int from four bytes starting at the given index
-   */
-  public static int intFromBytes(byte[] byteArray, int startIndex) {
-    // provide 4 bytes of length int
-    return Ints.fromBytes(
-        byteArray[startIndex],
-        byteArray[startIndex + 1],
-        byteArray[startIndex + 2],
-        byteArray[startIndex + 3]);
   }
 
   /**
