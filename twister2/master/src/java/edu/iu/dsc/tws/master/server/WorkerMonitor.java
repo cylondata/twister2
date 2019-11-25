@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.master.server;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,7 +83,7 @@ public class WorkerMonitor implements MessageHandler {
    */
   private int numberOfWorkers;
 
-  private TreeMap<Integer, WorkerWithState> workers;
+  private ConcurrentSkipListMap<Integer, WorkerWithState> workers;
 
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
@@ -100,7 +100,7 @@ public class WorkerMonitor implements MessageHandler {
     this.faultTolerant = faultTolerant;
     this.jobState = JobState.STARTING;
 
-    workers = new TreeMap<>();
+    workers = new ConcurrentSkipListMap<>();
   }
 
   public int getNumberOfWorkers() {
