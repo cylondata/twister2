@@ -7,7 +7,7 @@ sidebar_label: Publications
 1. Vibhatha Abeykoon, Supun Kamburugamuve, Kannan Govindrarajan,  Pulasthi Wickramasinghe, 
 Chathura Widanage, Niranda Perera, Ahmet Uyar, Gurhan Gunduz, Selahattin Akkas, Gregor Von Laszewski, 
 and Geoffrey Fox, “Streaming Machine Learning Algorithms with Big Data Systems”, Stream-ML 
-workshop at IEEE Big Data Conference, Los Angeles CA December 10, 2019.
+workshop at IEEE Big Data Conference, Los Angeles CA, December 10, 2019.
 
 2. Pulasthi Wickramasinghe, Supun Kamburugamuve, Kannan Govindarajan, Vibhatha Abeykoon, Chathura 
 Widanage, Niranda Perera, Ahmet Uyar, Gurhan Gunduz, Selahattin Akkas, Geoffrey Fox, "Twister2:TSet 

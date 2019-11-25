@@ -86,21 +86,17 @@ public void execute() {
     computeConnection.partition("source", "partition", DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = graphBuilder.build();
+    ComputeGraph graph = graphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    IExecutor ex = taskExecutor.createExecution(graph, plan);
     for (int i = 0; i < 10; i++) {
-      ExecutionPlan plan = taskExecutor.plan(graph);
-      taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
-
-      // this is a blocking call
-      taskExecutor.execute(graph, plan);
-      DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      Set<Object> values = dataSet.getData();
-      LOG.log(Level.INFO, "Values: " + values);
+         LOG.info("Starting iteration: " + i);
+         // this is a blocking call
+         ex.execute();
     }
+    ex.closeExecution();
   }
-
 ```
-
 
 ### To Run Iterative Task Graph Example
 

@@ -66,6 +66,7 @@
   * [Benchmarking](examples/benchmark/benchmark.md)
   * [Windowing](examples/windowing/windowing.md)
   * [MDS](examples/mds/mds.md)
+  * [Connected Dataflow](examples/connecteddataflow/connected_dataflow.md)
 * [Compatibility API's](compatibility/compatibility.md)  
   * [Apache Storm](compatibility/storm.md)
 * [Releases](release/README.md)  
