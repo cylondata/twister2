@@ -38,7 +38,7 @@ public final class DataFlowGraph {
   private int workers;
 
   // the job configurations
-  private DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+  private DataFlowJobConfig dataFlowJobConfig = new DataFlowJobConfig();
 
   // input names to this
   private List<CDFWJobAPI.Input> inputs = new ArrayList<>();
@@ -107,13 +107,13 @@ public final class DataFlowGraph {
     return diskGigaBytes;
   }
 
-  public DataFlowGraph addDataFlowJobConfig(DafaFlowJobConfig jobConfig) {
-    this.dafaFlowJobConfig.putAll(jobConfig);
+  public DataFlowGraph addDataFlowJobConfig(DataFlowJobConfig jobConfig) {
+    this.dataFlowJobConfig.putAll(jobConfig);
     return this;
   }
 
-  public DafaFlowJobConfig getDafaFlowJobConfig() {
-    return dafaFlowJobConfig;
+  public DataFlowJobConfig getDataFlowJobConfig() {
+    return dataFlowJobConfig;
   }
 
   public int getWorkers() {
@@ -188,7 +188,7 @@ public final class DataFlowGraph {
       throw new RuntimeException("A name should be specified");
     }
 
-    dafaFlowJobConfig.forEach((key, value) -> {
+    dataFlowJobConfig.forEach((key, value) -> {
       byte[] objectByte = kryoSerializer.serialize(value);
       configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
     });
@@ -201,8 +201,6 @@ public final class DataFlowGraph {
         .setGraphSerialized(ByteString.copyFrom(graphBytes))
         .setInstances(workers)
         .setCdfwScheduleplan(cdfwSchedulePlans)
-        .addAllOutputs(outputs)
-        .addAllInputs(inputs)
         .setGraphType(graphType)
         .setIterations(iterations)
         .setIterationNumber(iterationNumber)

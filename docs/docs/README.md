@@ -14,8 +14,6 @@ parallel communication operator module recognizing the need for both data operat
 synchronous parallel (BSP) operators, task system for abstracting out computations and data 
 representation for data manipulation. 
 
-Twister2 is in Alpha stage and we believe with the July release it will move onto the Beta stage. 
-
 ## Run your first application
 
 First step in running a Twister2 application is to get a source tar and build it. Once you build the

@@ -120,11 +120,12 @@ public class MultiEdgeOpAdapter {
 
     @Override
     public void writeEnd() {
-      int i = 0;
-      while (i < outEdges.size()) {
-        taskContext.end(outEdges.get(i));
-        i++;
-      }
+//      int i = 0;
+//      while (i < outEdges.size()) {
+//        taskContext.end(outEdges.get(i));
+//        i++;
+//      }
+      taskContext.endAll();
     }
 
     @Override

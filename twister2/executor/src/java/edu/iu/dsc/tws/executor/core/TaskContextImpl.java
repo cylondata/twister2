@@ -91,7 +91,7 @@ public class TaskContextImpl implements TaskContext {
   /**
    * Return weather all edges have finished
    */
-  private boolean allEdgedFinished;
+  private boolean completed;
 
   /**
    * Operation mode. Batch/ streaming
@@ -109,7 +109,7 @@ public class TaskContextImpl implements TaskContext {
     this.workerId = wId;
     this.configs = configs;
     this.taskSchedulePlan = taskSchedulePlan;
-    this.allEdgedFinished = false;
+    this.completed = false;
     this.operationMode = opMode;
   }
 
@@ -165,7 +165,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public void reset() {
     this.isDone = new HashMap<>();
-    this.allEdgedFinished = false;
+    this.completed = false;
   }
 
   /**
@@ -338,7 +338,7 @@ public class TaskContextImpl implements TaskContext {
         break;
       }
     }
-    allEdgedFinished = finished;
+    completed = finished;
   }
 
   /**
@@ -352,6 +352,17 @@ public class TaskContextImpl implements TaskContext {
   }
 
   /**
+   * Ends all edges
+   */
+  @Override
+  public void endAll() {
+    for (String e : outEdgeNames) {
+      isDone.put(e, true);
+    }
+    completed = true;
+  }
+
+  /**
    * Return true, if this task is done
    *
    * @param edge edge name
@@ -362,11 +373,11 @@ public class TaskContextImpl implements TaskContext {
   }
 
   /**
-   * Weather all the edges are finished
+   * Weather all the edges are finished (whether the task is completed)
    *
    * @return true if all the edges are finished
    */
-  public boolean allEdgedFinished() {
-    return allEdgedFinished;
+  public boolean isCompleted() {
+    return completed;
   }
 }

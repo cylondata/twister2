@@ -481,9 +481,26 @@ public class ZKMasterController {
     // it does not send complete message as workers when it finishes.
     String workerPath = event.getData().getPath();
     int removedWorkerID = ZKUtils.getWorkerIDFromEphemPath(workerPath);
-    WorkerWithState workerWithState = getWorkerWithState(removedWorkerID);
-    if (workerWithState == null) {
-      LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
+
+    // this is a scaled down worker, nothing to do
+    if (scaledDownWorkers.contains(removedWorkerID)) {
+      scaledDownWorkers.remove(Integer.valueOf(removedWorkerID));
+      LOG.info("Removed scaled down worker: " + removedWorkerID);
+      return;
+    }
+
+    // get worker info and the state from persistent storage
+    WorkerWithState workerWithState;
+    try {
+      workerWithState =
+          ZKPersStateManager.getWorkerWithState(client, rootPath, jobName, removedWorkerID);
+      if (workerWithState == null) {
+        LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
+        return;
+      }
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "worker[" + removedWorkerID
+          + "] removed, but its data can not be retrieved.", e);
       return;
     }
 
@@ -495,14 +512,7 @@ public class ZKMasterController {
     // it means that is a scaled down worker.
     // otherwise, the worker failed. We inform the failureListener.
 
-    // this is the scaled down worker
-    if (scaledDownWorkers.contains(removedWorkerID)) {
-
-      scaledDownWorkers.remove(Integer.valueOf(removedWorkerID));
-      LOG.info("Removed scaled down worker: " + removedWorkerID);
-      return;
-
-    } else if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
+    if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
 
       // removed event received for completed worker, nothing to do
       return;

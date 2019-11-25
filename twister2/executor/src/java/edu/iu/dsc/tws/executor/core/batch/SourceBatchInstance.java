@@ -196,7 +196,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
         batchTask.execute();
 
         // if all the edges are done
-        if (taskContext.allEdgedFinished()) {
+        if (taskContext.isCompleted()) {
           state.addState(InstanceState.EXECUTION_DONE);
           break;
         }

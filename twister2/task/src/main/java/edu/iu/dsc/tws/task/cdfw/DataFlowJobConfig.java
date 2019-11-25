@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.task.cdfw;
 
 import java.util.HashMap;
 
-public class DafaFlowJobConfig extends HashMap<String, Object> {
+public class DataFlowJobConfig extends HashMap<String, Object> {
   private static final long serialVersionUID = 271141341213046590L;
 }

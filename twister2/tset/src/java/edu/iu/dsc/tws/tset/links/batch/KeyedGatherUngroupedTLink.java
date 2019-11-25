@@ -16,14 +16,12 @@ import java.util.Comparator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class KeyedGatherUngroupedTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherUngroupedTLink.class.getName());
 
   private PartitionFunc<K> partitionFunction;
@@ -77,13 +75,13 @@ public class KeyedGatherUngroupedTLink<K, V> extends BatchIteratorLink<Tuple<K, 
     return this;
   }
 
-  @Override
-  public CachedTSet<Tuple<K, V>> lazyCache() {
-    return (CachedTSet<Tuple<K, V>>) super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<Tuple<K, V>> cache() {
-    return (CachedTSet<Tuple<K, V>>) super.cache();
-  }
+//  @Override
+//  public CachedTSet<Tuple<K, V>> lazyCache() {
+//    return (CachedTSet<Tuple<K, V>>) super.lazyCache();
+//  }
+//
+//  @Override
+//  public CachedTSet<Tuple<K, V>> cache() {
+//    return (CachedTSet<Tuple<K, V>>) super.cache();
+//  }
 }

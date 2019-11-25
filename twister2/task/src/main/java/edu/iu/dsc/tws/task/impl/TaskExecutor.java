@@ -213,6 +213,19 @@ public class TaskExecutor implements FaultAcceptable {
    * the execution is done.
    *
    * @param graph the dataflow graph
+   */
+  public void execute(ComputeGraph graph) {
+    ExecutionPlan plan = plan(graph);
+    execute(config, graph, plan);
+  }
+
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
    * @param plan  the execution plan
    */
   public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
