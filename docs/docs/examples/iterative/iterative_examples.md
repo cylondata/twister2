@@ -8,11 +8,11 @@ The iterative task graph computation is mainly useful to perform the iterative c
 in the big data world. It generally captures the complex relationship between the entities. In this 
 example, we discuss about how to write an iterative example using Twister2 Executor API. Here we 
 have a SourceTask which is just doing the generation of data and it is named as IterativeSourceTask 
-and the SinkTask which receives the messages is named as the ParitionTask. 
+and the SinkTask which receives the message is named as PartitionTask. 
 
 
 ```java
-private static class IterativeSourceTask extends BaseBatchSource implements Receptor {
+private static class IterativeSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     private DataSet<Object> input;
@@ -39,7 +39,7 @@ private static class IterativeSourceTask extends BaseBatchSource implements Rece
     }
   }
 
-  private static class PartitionTask extends BaseBatchSink implements Collector<Object> {
+  private static class PartitionTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();
@@ -82,7 +82,7 @@ public void execute() {
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    ComputeConnection computeConnection = graphBuilder.addCompute("sink", r, 4);
     computeConnection.partition("source", "partition", DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 

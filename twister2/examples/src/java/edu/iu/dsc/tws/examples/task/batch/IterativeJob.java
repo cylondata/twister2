@@ -74,12 +74,8 @@ public class IterativeJob implements IWorker {
     IExecutor ex = taskExecutor.createExecution(graph, plan);
     for (int i = 0; i < 10; i++) {
       LOG.info("Starting iteration: " + i);
-      taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
-
       // this is a blocking call
       ex.execute();
-      DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      DataPartition<Object>[] values = dataSet.getPartitions();
     }
     ex.closeExecution();
   }
