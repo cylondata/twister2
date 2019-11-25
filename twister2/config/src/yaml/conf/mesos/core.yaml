@@ -33,10 +33,6 @@ twister2.logging.maximum.files: 5
 # when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster
 twister2.job.master.runs.in.client: false
 
-# ping message intervals from workers to the job master in milliseconds
-# default value is 10seconds = 10000
-twister2.worker.ping.interval: 10000
-
 # twister2 job master port number
 # default value is 11111
 twister2.job.master.port: 11011

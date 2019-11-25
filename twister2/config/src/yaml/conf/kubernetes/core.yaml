@@ -49,10 +49,6 @@ twister2.logging.maximum.files: 5
 # getLocalHost must return a reachable IP address to the job master
 twister2.job.master.runs.in.client: false
 
-# ping message intervals from workers to the job master in milliseconds
-# default value is 10seconds = 10000
-twister2.worker.ping.interval: 10000
-
 # twister2 job master port number
 # default value is 11011
 twister2.job.master.port: 11011
