@@ -23,7 +23,15 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 
+/**
+ * Streaming extension of {@link TLink}. Also overrides the return types to match streaming
+ * operations.
+ *
+ * @param <T1> comms data type
+ * @param <T0> base data type
+ */
 public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
+
   @Override
   StreamingTLink<T1, T0> setName(String name);
 

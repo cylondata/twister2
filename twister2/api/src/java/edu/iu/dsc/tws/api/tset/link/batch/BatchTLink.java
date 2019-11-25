@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.StoringData;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -21,11 +22,18 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
-import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
-public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
+/**
+ * Batch extension of {@link TLink} with the capability of {@link StoringData}. Also overrides
+ * the return types to match batch operations.
+ *
+ * @param <T1> comms data type
+ * @param <T0> base data type
+ */
+public interface BatchTLink<T1, T0> extends TLink<T1, T0>, StoringData<T0> {
+
   @Override
   BatchTLink<T1, T0> setName(String name);
 
@@ -44,33 +52,11 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   @Override
   <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
 
-  BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
-
   @Override
   TBase sink(SinkFunc<T1> sinkFunction);
 
-  /**
-   * Runs the dataflow graph and caches data in memory
-   *
-   * @return output TSet
-   */
-  default StorableTBase<T0> cache() {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
-
-  default StorableTBase<T0> lazyCache() {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
-
-  default StorableTBase<T0> persist() {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
-
-  default StorableTBase<T0> lazyPersist() {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
-
-
   @Override
   void forEach(ApplyFunc<T0> applyFunction);
+
+  BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
 }
