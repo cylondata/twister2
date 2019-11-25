@@ -9,28 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.util.logging.Logger;
 
-package edu.iu.dsc.tws.tset.links.batch;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 
-import edu.iu.dsc.tws.api.compute.OperationNames;
-import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+public class DataGeneratorSink extends BaseCompute {
 
-public class ReplicateTLink<T> extends BatchIteratorLinkWrapper<T> {
+  private static final Logger LOG = Logger.getLogger(DataGeneratorSink.class.getName());
 
-  public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
-    super(tSetEnv, "replicate", 1, reps);
+  public DataGeneratorSink() {
   }
 
   @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.BROADCAST, getMessageType());
-  }
-
-  @Override
-  public ReplicateTLink<T> setName(String n) {
-    rename(n);
-    return this;
+  public boolean execute(IMessage content) {
+    LOG.fine("Received Data Generation Input Message");
+    return false;
   }
 }

@@ -70,6 +70,13 @@ public class KMeansDataObjectCompute extends BaseCompute {
   public KMeansDataObjectCompute() {
   }
 
+  /**
+   * The constructor to receive the edge name, data size, parallelism, dimension as an argument.
+   * @param edgename
+   * @param dsize
+   * @param parallel
+   * @param dim
+   */
   public KMeansDataObjectCompute(String edgename, int dsize, int parallel, int dim) {
     this.edgeName = edgename;
     this.parallel = parallel;

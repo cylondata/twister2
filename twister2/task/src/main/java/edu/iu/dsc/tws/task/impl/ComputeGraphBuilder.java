@@ -211,7 +211,8 @@ public final class ComputeGraphBuilder {
   }
 
   private void addFTGatherSink(String sourceName) {
-    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)
+        || this.mode.equals(OperationMode.BATCH)) {
       return;
     }
     String ftTaskName = "ft-" + sourceName;

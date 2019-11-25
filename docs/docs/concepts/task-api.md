@@ -141,6 +141,12 @@ Gathers values from N tasks to a single task.
 
 No specific properties.
 
+#### AllGather 
+
+Gathers values from N tasks and distributed them to M tasks.
+
+No specific properties.
+
 ### Keyed Gather 
 
 This operation gathers values based on keys.
@@ -160,6 +166,12 @@ This operation gathers values based on keys.
 
 N to N operation where N tasks sends values to N tasks. Each source has a corresponding target tasks. Mostly 
 targeted for in-memory operations.
+
+No specific properties
+
+#### Broadcast 
+
+1 to N operation. Broadcast a value from 1 task to N tasks.
 
 No specific properties
 

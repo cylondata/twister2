@@ -57,6 +57,11 @@ public class JobMasterContext extends Context {
   public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
   public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
 
+  // the number of http connections from job master to Twister2 Dashboard
+  public static final int JM_TO_DASHBOARD_CONNECTIONS_DEFAULT = 3;
+  public static final String JM_TO_DASHBOARD_CONNECTIONS
+      = "twister2.job.master.to.dashboard.connections";
+
   public static boolean jobMasterRunsInClient(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_RUNS_IN_CLIENT, JOB_MASTER_RUNS_IN_CLIENT_DEFAULT);
   }
@@ -104,6 +109,10 @@ public class JobMasterContext extends Context {
 
   public static String dashboardHost(Config cfg) {
     return cfg.getStringValue(DASHBOARD_HOST);
+  }
+
+  public static int jmToDashboardConnections(Config cfg) {
+    return cfg.getIntegerValue(JM_TO_DASHBOARD_CONNECTIONS, JM_TO_DASHBOARD_CONNECTIONS_DEFAULT);
   }
 
   public static boolean isJobMasterUsed(Config cfg) {

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +38,6 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -114,7 +112,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
         "firstcompute", firstComputeTask, parallel);
     ComputeConnection secondComputeConnection = builder.addCompute(
         "secondcompute", secondComputeTask, parallel);
-    ComputeConnection reduceConnection = builder.addCompute("sink", reduceTask, parallel);
+    ComputeConnection reduceConnection = builder.addCompute("compute", reduceTask, parallel);
 
     firstComputeConnection.direct("source")
         .viaEdge("fdirect")
@@ -144,15 +142,9 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
     ComputeGraph graph = builder.build();
-    LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints()
-        + "\tNode Constraints:%%%" + graph.getNodeConstraints().entrySet());
+    LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints());
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
-
-    DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-    DataPartition<double[]> values = dataSet.getPartitions()[0];
-    double[] newValue = values.getConsumer().next();
-    LOG.info("Final Aggregated Values Are:" + Arrays.toString(newValue));
   }
 
   /**
