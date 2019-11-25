@@ -300,8 +300,8 @@ This class uses the "LocalCompleteTextInputPartitioner" to read the whole file f
 ### K-Means Clustering 
 
 This task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and 
-CentroidAggregator. Similar to the first and second task graph, first we have to add the source, 
-sink, and communication edges to the third task graph. 
+CentroidAggregator. Similar to the previous task graphs, first we have to add the source, 
+sink, and communication edges to this  graph. 
 
 ```java
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask(dimension);
@@ -337,7 +337,7 @@ DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
 ## To Run Connected Dataflow Based K-Means Clustering
 
 This command generate and write the datapoints and centroids in the local filesystem and run the 
-K-Means clustering process. 
+K-Means clustering process using connected dataflow model.
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.cdfw.KMeansConnectedDataflowExample -workers 2 -parallelism 4 -dim 2 -dsize 10000 -csize 4 -dinput /tmp/dinput -cinput /tmp/cinput -iter 10
