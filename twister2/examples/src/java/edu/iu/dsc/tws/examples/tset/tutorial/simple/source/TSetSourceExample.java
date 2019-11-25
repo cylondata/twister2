@@ -63,11 +63,6 @@ public class TSetSourceExample implements BatchTSetIWorker, Serializable {
       private int count = 0;
 
       @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      @Override
       public boolean hasNext() {
         return count < 10;
       }
