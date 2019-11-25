@@ -1,0 +1,302 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>ConnectedDataflow · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="## Connected Dataflow Graph"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="ConnectedDataflow · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="## Connected Dataflow Graph"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class=""><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contributors</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">ConnectedDataflow</h1></header><article><div><span><h2><a class="anchor" aria-hidden="true" id="connected-dataflow-graph"></a><a href="#connected-dataflow-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Connected Dataflow Graph</h2>
+<p>The Connected DataFlow graph is to compose multiple independent/dependent dataflow task graphs into
+a single entity. A dataflow task graph consists of multiple subtasks which are arranged based on the
+parent-child relationship between the tasks. In general, a dataflow task graph consists of multiple
+task vertices and edges to connect those vertices. The vertices represent the characteristics of
+computations and edges represent the communication between those computations.</p>
+<h4><a class="anchor" aria-hidden="true" id="connected-dataflow-based-k-means-clustering-implementation"></a><a href="#connected-dataflow-based-k-means-clustering-implementation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Connected Dataflow Based K-Means Clustering Implementation</h4>
+<p>The implementation details of k-means clustering using Connected Dataflow in Twister2 is discussed
+below.</p>
+<h3><a class="anchor" aria-hidden="true" id="cdfconstants"></a><a href="#cdfconstants" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>CDFConstants</h3>
+<p>The constants which are used by the k-means algorithm to specify the number of workers, parallelism,
+dimension, size of datapoints, size of centroids, file system, number of iterations, datapoints, and
+centroids directory.</p>
+<pre><code class="hljs css language-java">  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_WORKERS = <span class="hljs-string">"workers"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_PARALLELISM_VALUE = <span class="hljs-string">"parallelism"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_DIMENSIONS = <span class="hljs-string">"dim"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_ITERATIONS = <span class="hljs-string">"iter"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_DSIZE = <span class="hljs-string">"dsize"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_CSIZE = <span class="hljs-string">"csize"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_DINPUT = <span class="hljs-string">"dinput"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_CINPUT = <span class="hljs-string">"cinput"</span>;
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="k-means-connected-dataflow-driver"></a><a href="#k-means-connected-dataflow-driver" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>K-Means Connected Dataflow Driver</h3>
+<p>The KMeansDriver is the driver program for the k-means connected dataflow example which extends the
+BaseDriver class. The execute() method in the driver program call the respective dataflow task graphs
+to generate the datapoints and centroids, process the datapoints and centroids, and invoke the task
+graph to perform the clustering process. The driver calls the clustering task graph (in this example
+fourth task graph) for 'n' number of iterations.</p>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">KMeansDriver</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseDriver</span> </span>{
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(CDFWEnv cdfwEnv)</span> </span>{
+      Config config = cdfwEnv.getConfig();
+      DataFlowJobConfig jobConfig = <span class="hljs-keyword">new</span> DataFlowJobConfig();
+
+      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
+      <span class="hljs-keyword">int</span> parallelism =
+          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
+      <span class="hljs-keyword">int</span> instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
+      <span class="hljs-keyword">int</span> iterations =
+          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
+      <span class="hljs-keyword">int</span> dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
+      <span class="hljs-keyword">int</span> dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
+      <span class="hljs-keyword">int</span> csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
+
+      DataFlowGraph job = generateData(config, dataDirectory, centroidDirectory, dimension,
+          dsize, csize, instances, parallelism, jobConfig);
+      cdfwEnv.executeDataFlowGraph(job);
+
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension,
+          dsize, instances, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, centroidDirectory, dimension,
+          csize, instances, jobConfig);
+
+      <span class="hljs-keyword">long</span> startTime = System.currentTimeMillis();
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
+      <span class="hljs-keyword">long</span> endTimeData = System.currentTimeMillis();
+
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; iterations; i++) {
+        DataFlowGraph job3 = generateThirdJob(config, parallelism, instances, iterations,
+            dimension, jobConfig);
+        job3.setIterationNumber(i);
+        cdfwEnv.executeDataFlowGraph(job3);
+      }
+      <span class="hljs-keyword">long</span> endTime = System.currentTimeMillis();
+      LOG.info(<span class="hljs-string">"Total K-Means Execution Time: "</span> + (endTime - startTime)
+          + <span class="hljs-string">"\tData Load time : "</span> + (endTimeData - startTime)
+          + <span class="hljs-string">"\tCompute Time : "</span> + (endTime - endTimeData)); 
+      cdfwEnv.close();
+    }
+  }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="datapoints-generation"></a><a href="#datapoints-generation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Datapoints Generation</h3>
+<p>This  task graph is responsible for generating the datapoints and centroids for the k-means
+clustering process. The user can specify either the local filesystem or the HDFS directory to
+generate the input files required for the k-means clustering.</p>
+<pre><code class="hljs css language-java">  DataGeneratorSource dataGeneratorSource = <span class="hljs-keyword">new</span> DataGeneratorSource(Context.TWISTER2_DIRECT_EDGE,
+        dsize, csize, dimension, dataDirectory, centroidDirectory);
+    DataGeneratorSink dataGeneratorSink = <span class="hljs-keyword">new</span> DataGeneratorSink();
+    ComputeGraphBuilder dataGenerationGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    dataGenerationGraphBuilder.setTaskGraphName(<span class="hljs-string">"DataGenerator"</span>);
+    dataGenerationGraphBuilder.addSource(<span class="hljs-string">"datageneratorsource"</span>, dataGeneratorSource, parallel);
+</code></pre>
+<p>Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances
+and the graph type.</p>
+<pre><code class="hljs css language-java">    DataFlowGraph job = DataFlowGraph.newSubGraphJob(<span class="hljs-string">"datageneratorTG"</span>, dataObjectTaskGraph)
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .setGraphType(<span class="hljs-string">"non-iterative"</span>);
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="reading-and-partitioning-the-datapoints"></a><a href="#reading-and-partitioning-the-datapoints" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reading and partitioning the Datapoints</h3>
+<p>The main functionality of this task graph is to partition the data points, convert the
+partitioned datapoints into two-dimensional array, and write the two-dimensional array into their
+respective task index values.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">/*Graph to partition and read the partitioned data points **/</span>
+    DataObjectSource dataObjectSource = <span class="hljs-keyword">new</span> DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory);
+    KMeansDataObjectCompute dataObjectCompute = <span class="hljs-keyword">new</span> KMeansDataObjectCompute(
+        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
+    KMeansDataObjectDirectSink dataObjectSink = <span class="hljs-keyword">new</span> KMeansDataObjectDirectSink(<span class="hljs-string">"points"</span>);
+    ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+</code></pre>
+<p>First, add the source, compute, and sink tasks to the task graph builder for the task graph.
+Then, create the communication edges between the tasks for the first task graph.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">//Add source, compute, and sink tasks to the task graph builder for the first task graph</span>
+    datapointsComputeGraphBuilder.addSource(<span class="hljs-string">"datapointsource"</span>, dataObjectSource,
+        parallelismValue);
+    ComputeConnection datapointComputeConnection = datapointsComputeGraphBuilder.addCompute(
+        <span class="hljs-string">"datapointcompute"</span>, dataObjectCompute, parallelismValue);
+    ComputeConnection firstGraphComputeConnection = datapointsComputeGraphBuilder.addCompute(
+        <span class="hljs-string">"datapointsink"</span>, dataObjectSink, parallelismValue);
+
+    <span class="hljs-comment">//Creating the communication edges between the tasks for the second task graph</span>
+    datapointComputeConnection.direct(<span class="hljs-string">"datapointsource"</span>)
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    firstGraphComputeConnection.direct(<span class="hljs-string">"datapointcompute"</span>)
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
+
+    datapointsComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"datapointsTG"</span>);
+    ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
+</code></pre>
+<p>Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances and
+the graph type.</p>
+<pre><code class="hljs css language-java">    DataFlowGraph job = DataFlowGraph.newSubGraphJob(<span class="hljs-string">"datapointsTG"</span>, firstGraph)
+            .setWorkers(instances).addDataFlowJobConfig(jobConfig)
+            .setGraphType(<span class="hljs-string">"non-iterative"</span>);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="dataobjectsource"></a><a href="#dataobjectsource" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DataObjectSource</h4>
+<p>This class partition the datapoints which is based on the task parallelism value. It may use
+either the &quot;LocalTextInputPartitioner&quot; or &quot;LocalFixedInputPartitioner&quot; to partition the datapoints.
+Finally, write the partitioned datapoints into their respective edges. The LocalTextInputPartitioner
+partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the
+datapoints based on the length of the file. For example, if the task parallelism is 4, if there are
+16 data points and each task will get 4 datapoints to process.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">(Config cfg, TaskContext context)</span> </span>{
+    <span class="hljs-keyword">super</span>.prepare(cfg, context);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    <span class="hljs-keyword">this</span>.source = runtime.createInput(cfg, context, <span class="hljs-keyword">new</span> LocalTextInputPartitioner(
+        <span class="hljs-keyword">new</span> Path(getDataDirectory()), context.getParallelism(), config));
+  }
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="kmeansdataobjectcompute"></a><a href="#kmeansdataobjectcompute" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansDataObjectCompute</h4>
+<p>This class receives the partitioned datapoints as &quot;IMessage&quot; and convert those datapoints into
+two-dimensional for the k-means clustering process. The converted datapoints are send to the
+KMeansDataObjectDirectSink through &quot;direct&quot; edge.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-keyword">while</span> (((Iterator) message.getContent()).hasNext()) {
+        String val = String.valueOf(((Iterator) message.getContent()).next());
+        String[] data = val.split(<span class="hljs-string">","</span>);
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; getDimension(); i++) {
+          datapoint[value][i] = Double.parseDouble(data[i].trim());
+        }
+        value++;
+        context.write(getEdgeName(), datapoint);
+      }
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="kmeansdataobjectdirectsink"></a><a href="#kmeansdataobjectdirectsink" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansDataObjectDirectSink</h4>
+<p>This class receives the message object from the DataObjectCompute and write into their respective
+task index values. First, it store the iterator values into the array list then it convert the array
+list values into double array values.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">execute</span><span class="hljs-params">(IMessage message)</span> </span>{
+     List&lt;<span class="hljs-keyword">double</span>[][]&gt; values = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;();
+     <span class="hljs-keyword">while</span> (((Iterator) message.getContent()).hasNext()) {
+       values.add((<span class="hljs-keyword">double</span>[][]) ((Iterator) message.getContent()).next());
+     }
+     dataPointsLocal = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[values.size()][];
+     <span class="hljs-keyword">for</span> (<span class="hljs-keyword">double</span>[][] value : values) {
+       dataPointsLocal = value;
+     }
+     <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+   }
+</code></pre>
+<p>Finally, write the appropriate data points into their respective task index values with the entity
+partition values.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-keyword">public</span> DataPartition&lt;<span class="hljs-keyword">double</span>[][]&gt; get() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> EntityPartition&lt;&gt;(context.taskIndex(), dataPointsLocal);
+  }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="reading-and-partitioning-the-centroids"></a><a href="#reading-and-partitioning-the-centroids" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reading and partitioning the Centroids</h3>
+<p>Similar to the datapoints, the second task graph performs three processes namely partitioning,
+converting the partitioned centroids into array, and writing into respective task index values
+but, with one major difference of read the complete file as one partition.</p>
+<ol>
+<li>DataFileReplicatedReadSource</li>
+<li>KMeansDataObjectCompute</li>
+<li>KMeansDataObjectDirectSink</li>
+</ol>
+<pre><code class="hljs css language-java">   DataFileReplicatedReadSource dataFileReplicatedReadSource
+        = <span class="hljs-keyword">new</span> DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
+    KMeansDataObjectCompute centroidObjectCompute = <span class="hljs-keyword">new</span> KMeansDataObjectCompute(
+        Context.TWISTER2_DIRECT_EDGE, csize, dimension);
+    KMeansDataObjectDirectSink centroidObjectSink = <span class="hljs-keyword">new</span> KMeansDataObjectDirectSink(<span class="hljs-string">"centroids"</span>);
+    ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);;
+</code></pre>
+<p>Similar to the previous task graph, it add the source, compute, and sink tasks to the task graph
+builder for the second task graph. Then, create the communication edges between the tasks for the
+second task graph.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">//Add source, compute, and sink tasks to the task graph builder for the second task graph</span>
+    centroidsComputeGraphBuilder.addSource(<span class="hljs-string">"centroidsource"</span>, dataFileReplicatedReadSource,
+        parallelismValue);
+    ComputeConnection centroidComputeConnection = centroidsComputeGraphBuilder.addCompute(
+        <span class="hljs-string">"centroidcompute"</span>, centroidObjectCompute, parallelismValue);
+    ComputeConnection secondGraphComputeConnection = centroidsComputeGraphBuilder.addCompute(
+        <span class="hljs-string">"centroidsink"</span>, centroidObjectSink, parallelismValue);
+
+    <span class="hljs-comment">//Creating the communication edges between the tasks for the second task graph</span>
+    centroidComputeConnection.direct(<span class="hljs-string">"centroidsource"</span>)
+            .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+            .withDataType(MessageTypes.OBJECT);
+        secondGraphComputeConnection.direct(<span class="hljs-string">"centroidcompute"</span>)
+            .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+            .withDataType(MessageTypes.OBJECT);
+        centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
+        centroidsComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"centroidTG"</span>);
+     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
+</code></pre>
+<p>Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances
+and the graph type.</p>
+<pre><code class="hljs css language-java">   DataFlowGraph job = DataFlowGraph.newSubGraphJob(<span class="hljs-string">"centroidTG"</span>, secondGraph)
+            .setWorkers(instances).addDataFlowJobConfig(jobConfig)
+            .setGraphType(<span class="hljs-string">"non-iterative"</span>);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="datafilereplicatedreadsource"></a><a href="#datafilereplicatedreadsource" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DataFileReplicatedReadSource</h4>
+<p>This class uses the &quot;LocalCompleteTextInputPartitioner&quot; to read the whole file from the centroids
+directory and write into their task respective task index values using the &quot;direct&quot; task edge.
+For example, if the size of centroid value is 16, each task index receive 16 centroid values completely.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">(Config cfg, TaskContext context)</span> </span>{
+    <span class="hljs-keyword">super</span>.prepare(cfg, context);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    <span class="hljs-keyword">this</span>.source = runtime.createInput(cfg, context, <span class="hljs-keyword">new</span> LocalCompleteTextInputPartitioner(
+          <span class="hljs-keyword">new</span> Path(getDataDirectory()), context.getParallelism(), config));
+  }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="k-means-clustering"></a><a href="#k-means-clustering" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>K-Means Clustering</h3>
+<p>This task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and
+CentroidAggregator. Similar to the previous task graphs, first we have to add the source,
+sink, and communication edges to this  graph.</p>
+<pre><code class="hljs css language-java">    KMeansSourceTask kMeansSourceTask = <span class="hljs-keyword">new</span> KMeansSourceTask(dimension);
+    KMeansAllReduceTask kMeansAllReduceTask = <span class="hljs-keyword">new</span> KMeansAllReduceTask();
+    ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+
+    <span class="hljs-comment">//Add source, and sink tasks to the task graph builder for the third task graph</span>
+    kmeansComputeGraphBuilder.addSource(<span class="hljs-string">"kmeanssource"</span>, kMeansSourceTask, parallelismValue);
+    ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addCompute(
+        <span class="hljs-string">"kmeanssink"</span>, kMeansAllReduceTask, parallelismValue);
+
+    <span class="hljs-comment">//Creating the communication edges between the tasks for the third task graph</span>
+    kMeanscomputeConnection.allreduce(<span class="hljs-string">"kmeanssource"</span>)
+        .viaEdge(<span class="hljs-string">"all-reduce"</span>)
+        .withReductionFunction(<span class="hljs-keyword">new</span> CentroidAggregator())
+        .withDataType(MessageTypes.OBJECT);
+    kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
+    kmeansComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"kmeansTG"</span>);
+    ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
+</code></pre>
+<p>Then, add this graph as a sub graph for the connected dataflow graph and set the worker instances and
+the graph type.</p>
+<pre><code class="hljs css language-java">DataFlowGraph job = DataFlowGraph.newSubGraphJob(<span class="hljs-string">"kmeansTG"</span>, thirdGraph)
+        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
+        .setGraphType(<span class="hljs-string">"iterative"</span>)
+        .setIterations(iterations);
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="to-run-connected-dataflow-based-k-means-clustering"></a><a href="#to-run-connected-dataflow-based-k-means-clustering" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To Run Connected Dataflow Based K-Means Clustering</h2>
+<p>This command generate and write the datapoints and centroids in the local filesystem and run the
+K-Means clustering process using connected dataflow model.</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.cdfw.KMeansConnectedDataflowExample -workers 2 -parallelism 4 -dim 2 -dsize 10000 -csize 4 -dinput /tmp/dinput -cinput /tmp/cinput -iter 10
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="sample-output"></a><a href="#sample-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h2>
+<pre><code class="hljs css language-text">[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: datageneratorTG  
+[2019-11-22 14:44:24 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 2 workers joined.   
+[2019-11-22 14:44:24 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 2 workers joined.   
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: datapointsTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: centroidTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.task.cdfw.CDFWExecutor: Sending graph to workers for execution: kmeansTG  
+[2019-11-22 14:44:24 -0500] [INFO] [-] [driver] edu.iu.dsc.tws.examples.batch.cdfw.KMeansConnectedDataflowExample: Total K-Means Execution Time: 384    Data Load time : 189    Compute Time : 195  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 0Received CDFW job completed message. Leaving execution loop  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 0 Execution Completed  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 1Received CDFW job completed message. Leaving execution loop  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.task.impl.cdfw.CDFWRuntime: 1 Execution Completed  
+[2019-11-22 14:44:25 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:1 COMPLETED.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:0 COMPLETED.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers COMPLETED. Terminating the job.  
+[2019-11-22 14:44:25 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.core.ResourceAllocator: CLEANED TEMPORARY DIRECTORY......:/tmp/twister2-kmeans-connected-dataflow-4803835711749628541  
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#connected-dataflow-graph">Connected Dataflow Graph</a><ul class="toc-headings"><li><a href="#cdfconstants">CDFConstants</a></li><li><a href="#k-means-connected-dataflow-driver">K-Means Connected Dataflow Driver</a></li><li><a href="#datapoints-generation">Datapoints Generation</a></li><li><a href="#reading-and-partitioning-the-datapoints">Reading and partitioning the Datapoints</a></li><li><a href="#reading-and-partitioning-the-centroids">Reading and partitioning the Centroids</a></li><li><a href="#k-means-clustering">K-Means Clustering</a></li></ul></li><li><a href="#to-run-connected-dataflow-based-k-means-clustering">To Run Connected Dataflow Based K-Means Clustering</a></li><li><a href="#sample-output">Sample Output</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Task · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;Task examples demonstrate the task API which has the capability of deploying tasks by abstracting&lt;/p&gt;
-"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Task · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="&lt;p&gt;Task examples demonstrate the task API which has the capability of deploying tasks by abstracting&lt;/p&gt;
-"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Task</h1></header><article><div><span><p>Task examples demonstrate the task API which has the capability of deploying tasks by abstracting
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Task · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Task examples demonstrate the task API which has the capability of deploying tasks by abstracting "/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Task · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="Task examples demonstrate the task API which has the capability of deploying tasks by abstracting "/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class=""><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contributors</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Task</h1></header><article><div><span><p>Task examples demonstrate the task API which has the capability of deploying tasks by abstracting
 the communication logic to the API users. Basically, the task layer does the job of creating the
 task graph based on the user description and builds the underlying communication. The task API
 also supports a thread model which user can select based on preference. Task examples are in two
@@ -19,9 +17,9 @@ communication usage with Twister2.</p>
 <li>KeyedPartition</li>
 </ol>
 <p>After building the project, you can run the batch mode examples as follows. First you need to extract
-the twister2-0.2.1.tar.gz located within the bazel-bin/scripts/package, if you have already installed
+the twister2-VERSION.tar.gz located within the bazel-bin/scripts/package, if you have already installed
 Open MPI separately and not using the project built Open MPI version.</p>
-<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr &lt;iterations&gt; -workers &lt;workers&gt; -size &lt;data_size&gt; -op <span class="hljs-string">"&lt;operation&gt;"</span> -stages &lt;source_parallelsim&gt;,&lt;sink_parallelism&gt; -&lt;flag&gt; -verify
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr &lt;iterations&gt; -workers &lt;workers&gt; -size &lt;data_size&gt; -op <span class="hljs-string">"&lt;operation&gt;"</span> -stages &lt;source_parallelsim&gt;,&lt;compute_parallelism&gt; -&lt;flag&gt; -verify
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="running-option-definitions"></a><a href="#running-option-definitions" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running Option Definitions</h3>
 <ol>
@@ -50,15 +48,15 @@ process and source has more data generating points.</li>
 <li>flag : for a batch job this flag must be empty, if it is an streaming job, -stream would state the flag.</li>
 <li>verify : -verify flag does the verification of the collective operation. This is an optional parameter.</li>
 </ol>
-<p>First, you need to create a source and a sink task for the most simple data flow application in Twister2.</p>
+<p>First, you need to create a source and a sink task for the most simple dataflow application in Twister2.</p>
 <p>For the batch or stream tasks, the source task and sink task has to be defined. In the example
 package we have abstracted the source task in the task abstraction. The source task means
 the task which generates the data or act as the entry point for the data flow to the programmer.
 In the examples we generate an array of user given size in the source task.</p>
 <pre><code class="hljs css language-java">BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-ISink r = <span class="hljs-keyword">new</span> ReduceSinkTask();
+ICompute r = <span class="hljs-keyword">new</span> ReduceSinkTask();
 </code></pre>
-<p>The BaseSource and ISink are the base level source and sink tasks for batch and streaming mode
+<p>The BaseSource and ICompute are the base level source and sink tasks for batch and streaming mode
 applications.</p>
 <p>For the source tasks we specify the edge name or the connection name between source and the sink tasks.
 If there are multiple edges in a single application, the edge names must be unique.</p>
@@ -68,7 +66,7 @@ the task graph with source and sink names with unique identities.</p>
 <p>The following <a href="/docs/concepts/task-system/task-graph/task-graph">task graph</a>  building refers
 to a reduction based example, which will be elaborated in the following sections.</p>
 <pre><code class="hljs css language-java">computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
 computeConnection.reduce(SOURCE, edge, operation, DataType.INTEGER);
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="abstractsingledatacompute-and-abstractiterabledatacompute"></a><a href="#abstractsingledatacompute-and-abstractiterabledatacompute" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>AbstractSingleDataCompute and AbstractIterableDataCompute</h3>
@@ -106,10 +104,10 @@ SourceTask as the source task for all the batch examples.</p>
 
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> ReduceSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> ReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -117,7 +115,7 @@ SourceTask as the source task for all the batch examples.</p>
 <p>The sink task is abstracted from <code>ReduceCompute&lt;int[]&gt;</code> and the <code>ReduceCompute&lt;T&gt;</code> is abstracted from
 <code>AbstractSingleDataCompute&lt;T&gt;</code>.</p>
 <pre><code class="hljs css language-java">@SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute&lt;int[]&gt; implements ISink {
+  protected static class ReduceSinkTask extends ReduceCompute&lt;int[]&gt; {
     private static final long serialVersionUID = -254264903510284798L;
 
     private boolean timingCondition;
@@ -159,10 +157,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
 
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> AllReduceSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> AllReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -188,10 +186,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     String edge = <span class="hljs-string">"edge"</span>;
     
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> GatherSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> GatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -216,10 +214,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     ISource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> AllGatherSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> AllGatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -243,10 +241,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> BroadcastSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> BroadcastSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -271,10 +269,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> PartitionSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> PartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -301,10 +299,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge, <span class="hljs-keyword">true</span>);
-    ISink r = <span class="hljs-keyword">new</span> KeyedReduceSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> KeyedReduceSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -330,10 +328,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge, <span class="hljs-keyword">true</span>);
-    ISink r = <span class="hljs-keyword">new</span> KeyedGatherSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> KeyedGatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -359,10 +357,10 @@ can see the SourceTask as the source task for all the batch examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge, <span class="hljs-keyword">true</span>);
-    ISink r = <span class="hljs-keyword">new</span> BKeyedPartitionSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> BKeyedPartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -405,10 +403,10 @@ class, you can see the SourceTask as the source task for all the streaming examp
 
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> ReduceSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> ReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
     <span class="hljs-keyword">return</span> computeGraphBuilder;
@@ -417,7 +415,7 @@ class, you can see the SourceTask as the source task for all the streaming examp
 <p>The sink task is abstracted from <code>ReduceCompute&lt;int[]&gt;</code> and the <code>ReduceCompute&lt;T&gt;</code> is abstracted from
 <code>AbstractSingleDataCompute&lt;T&gt;</code>.</p>
 <pre><code class="hljs css language-java">  @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute&lt;int[]&gt; implements ISink {
+  protected static class ReduceSinkTask extends ReduceCompute&lt;int[]&gt; {
       private static final long serialVersionUID = -254264903510284798L;
       private ResultsVerifier&lt;int[], int[]&gt; resultsVerifier;
       private boolean verified = true;
@@ -470,10 +468,10 @@ can see the SourceTask as the source task for all the streaming examples.</p>
 
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> AllReduceSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> AllReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
     <span class="hljs-keyword">return</span> computeGraphBuilder;
@@ -500,10 +498,10 @@ can see the SourceTask as the source task for all the streaming examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> GatherSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> GatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -528,10 +526,10 @@ can see the SourceTask as the source task for all the streaming examples.</p>
       
       String edge = <span class="hljs-string">"edge"</span>;
       BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-      ISink r = <span class="hljs-keyword">new</span> AllGatherSinkTask();
+      ICompute r = <span class="hljs-keyword">new</span> AllGatherSinkTask();
       
       computeGraphBuilder.addSource(SOURCE, g, psource);
-      computeConnection = computeGraphBuilder.addSink(SINK, r, psink);
+      computeConnection = computeGraphBuilder.addCompute(SINK, r, psink);
       computeConnection.allgather(SOURCE, edge, dataType);
       <span class="hljs-keyword">return</span> computeGraphBuilder;
     }
@@ -555,10 +553,10 @@ can see the SourceTask as the source task for all the streaming examples.</p>
 
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> BroadCastSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> BroadCastSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -583,10 +581,10 @@ can see the SourceTask as the source task for all the streaming examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> PartitionSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> PartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -613,9 +611,9 @@ can see the SourceTask as the source task for all the streaming examples.</p>
     
     String edge = <span class="hljs-string">"edge"</span>;
     BaseSource g = <span class="hljs-keyword">new</span> SourceTask(edge, <span class="hljs-keyword">true</span>);
-    ISink r = <span class="hljs-keyword">new</span> SKeyedPartitionSinkTask();
+    ICompute r = <span class="hljs-keyword">new</span> SKeyedPartitionSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     <span class="hljs-keyword">return</span> computeGraphBuilder;
   }
@@ -628,63 +626,4 @@ is abstracted from <code>AbstractSingleDataCompute&lt;Tuple&lt;K, T&gt;&gt;</cod
 and sink parallelism of 8.</p>
 <pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op <span class="hljs-string">"keyed-partition"</span> -stages 8,8 -verify -stream
 </code></pre>
-<h3><a class="anchor" aria-hidden="true" id="streaming-keyedreduce-example"></a><a href="#streaming-keyedreduce-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Streaming KeyedReduce Example</h3>
-<p>The source task is abstracted from the user in the examples, but in the BenchTaskWorker class, you
-can see the SourceStreamTask as the source task for all the streaming examples.</p>
-<pre><code class="hljs css language-java"><span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> TaskGraphBuilder <span class="hljs-title">buildTaskGraph</span><span class="hljs-params">()</span> </span>{
-    List&lt;Integer&gt; taskStages = jobParameters.getTaskStages();
-    <span class="hljs-keyword">int</span> sourceParallelism = taskStages.get(<span class="hljs-number">0</span>);
-    <span class="hljs-keyword">int</span> sinkParallelism = taskStages.get(<span class="hljs-number">1</span>);
-    Op operation = Op.SUM;
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
-    
-    String edge = <span class="hljs-string">"edge"</span>;
-    BaseSource g = <span class="hljs-keyword">new</span> KeyedSourceStreamTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> KeyedReduceSinkTask();
-    
-    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
-    <span class="hljs-keyword">return</span> computeGraphBuilder;
-  }
-</code></pre>
-<p>The sink task is  abstracted from <code>SKeyedReduceCompute&lt;Object, int[]&gt;</code> and the <code>SKeyedReduceCompute&lt;K, T&gt;</code>
-is abstracted from <code>AbstractSingleDataCompute&lt;Tuple&lt;K, T&gt;&gt;</code>.</p>
-<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedReduceExample.java">Task based Streaming Keyed-Reduce Source Code</a></p>
-<h3><a class="anchor" aria-hidden="true" id="to-run-streaming-keyedreduce-example"></a><a href="#to-run-streaming-keyedreduce-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To Run Streaming KeyedReduce Example</h3>
-<p>Running a keyed reduce operation on a size of 8 array with 4 workers iterating once with source parallelism of 8
-and sink parallelism of 1.</p>
-<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op <span class="hljs-string">"keyed-reduce"</span> -stages 8,1 -verify -stream
-</code></pre>
-<h3><a class="anchor" aria-hidden="true" id="streaming-keyedgather-example"></a><a href="#streaming-keyedgather-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Streaming KeyedGather Example</h3>
-<p>The source task is abstracted from the user in the examples, but in the BenchTaskWorker class, you
-can see the SourceStreamTask as the source task for all the streaming examples.</p>
-<pre><code class="hljs css language-java"><span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> TaskGraphBuilder <span class="hljs-title">buildTaskGraph</span><span class="hljs-params">()</span> </span>{
-    List&lt;Integer&gt; taskStages = jobParameters.getTaskStages();
-    <span class="hljs-keyword">int</span> sourceParallelism = taskStages.get(<span class="hljs-number">0</span>);
-    <span class="hljs-keyword">int</span> sinkParallelism = taskStages.get(<span class="hljs-number">1</span>);
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
-    
-    String edge = <span class="hljs-string">"edge"</span>;
-    BaseSource g = <span class="hljs-keyword">new</span> KeyedSourceStreamTask(edge);
-    ISink r = <span class="hljs-keyword">new</span> KeyedGatherSinkTask();
-    
-    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
-    <span class="hljs-keyword">return</span> computeGraphBuilder;
-  }
-</code></pre>
-<p>The sink task is abstracted from <code>KeyedGatherCompute&lt;Object, int[]&gt;</code> and the <code>KeyedGatherCompute&lt;K, T&gt;</code>
-is abstracted from <code>AbstractIterableDataCompute&lt;Tuple&lt;K, T&gt;&gt;</code>.</p>
-<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedGatherExample.java">Task based Streaming Keyed-Gather Source Code</a></p>
-<h3><a class="anchor" aria-hidden="true" id="to-run-streaming-keyedgather-example"></a><a href="#to-run-streaming-keyedgather-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To Run Streaming KeyedGather Example</h3>
-<p>Running a keyed gather operation on a size of 8 array with 4 workers iterating once with source parallelism of 8
-and sink parallelism of 1.</p>
-<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op <span class="hljs-string">"keyed-gather"</span> -stages 8,1 -verify -stream
-</code></pre>
-</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#twister2-collective-communications">Twister2 Collective Communications</a><ul class="toc-headings"><li><a href="#running-option-definitions">Running Option Definitions</a></li><li><a href="#abstractsingledatacompute-and-abstractiterabledatacompute">AbstractSingleDataCompute and AbstractIterableDataCompute</a></li><li><a href="#batch-task-graph-examples">Batch Task Graph Examples</a></li><li><a href="#batch-reduce-example">Batch Reduce Example</a></li><li><a href="#to-run-batch-reduce-example">To Run Batch Reduce Example</a></li><li><a href="#batch-allreduce-example">Batch AllReduce Example</a></li><li><a href="#to-run-batch-allreduce-example">To Run Batch AllReduce Example</a></li><li><a href="#batch-gather-example">Batch Gather Example</a></li><li><a href="#to-run-batch-gather-example">To Run Batch Gather Example</a></li><li><a href="#batch-allgather-example">Batch AllGather Example</a></li><li><a href="#to-run-batch-allgather-example">To Run Batch AllGather Example</a></li><li><a href="#batch-broadcast-example">Batch Broadcast Example</a></li><li><a href="#to-run-batch-broadcast-example">To Run Batch Broadcast Example</a></li><li><a href="#batch-partition-example">Batch Partition Example</a></li><li><a href="#to-run-batch-partition-example">To Run Batch Partition Example</a></li><li><a href="#batch-keyedreduce-example">Batch KeyedReduce Example</a></li><li><a href="#to-run-batch-keyedreduce-example">To Run Batch KeyedReduce Example</a></li><li><a href="#batch-keyedgather-example">Batch KeyedGather Example</a></li><li><a href="#to-run-batch-keyedgather-example">To Run Batch KeyedGather Example</a></li><li><a href="#batch-keyedpartition-example">Batch KeyedPartition Example</a></li><li><a href="#to-run-batch-keyedpartition-example">To Run Batch KeyedPartition Example</a></li><li><a href="#streaming-task-graph-examples">Streaming Task Graph Examples</a></li><li><a href="#streaming-reduce-example">Streaming Reduce Example</a></li><li><a href="#to-run-streaming-reduce-example">To Run Streaming Reduce Example</a></li><li><a href="#streaming-allreduce-example">Streaming AllReduce Example</a></li><li><a href="#to-run-streaming-allreduce-example">To Run Streaming AllReduce Example</a></li><li><a href="#streaming-gather-example">Streaming Gather Example</a></li><li><a href="#to-run-streaming-gather-example">To Run Streaming Gather Example</a></li><li><a href="#streaming-allgather-example">Streaming AllGather Example</a></li><li><a href="#to-run-streaming-allgather-example">To Run Streaming AllGather Example</a></li><li><a href="#streaming-broadcast-example">Streaming Broadcast Example</a></li><li><a href="#to-run-streaming-broadcast-example">To Run Streaming Broadcast Example</a></li><li><a href="#streaming-partition-example">Streaming Partition Example</a></li><li><a href="#to-run-streaming-partition-example">To Run Streaming Partition Example</a></li><li><a href="#streaming-keyedpartition-example">Streaming KeyedPartition Example</a></li><li><a href="#to-run-streaming-keyedpartition-example">To Run Streaming KeyedPartition Example</a></li><li><a href="#streaming-keyedreduce-example">Streaming KeyedReduce Example</a></li><li><a href="#to-run-streaming-keyedreduce-example">To Run Streaming KeyedReduce Example</a></li><li><a href="#streaming-keyedgather-example">Streaming KeyedGather Example</a></li><li><a href="#to-run-streaming-keyedgather-example">To Run Streaming KeyedGather Example</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#twister2-collective-communications">Twister2 Collective Communications</a><ul class="toc-headings"><li><a href="#running-option-definitions">Running Option Definitions</a></li><li><a href="#abstractsingledatacompute-and-abstractiterabledatacompute">AbstractSingleDataCompute and AbstractIterableDataCompute</a></li><li><a href="#batch-task-graph-examples">Batch Task Graph Examples</a></li><li><a href="#batch-reduce-example">Batch Reduce Example</a></li><li><a href="#to-run-batch-reduce-example">To Run Batch Reduce Example</a></li><li><a href="#batch-allreduce-example">Batch AllReduce Example</a></li><li><a href="#to-run-batch-allreduce-example">To Run Batch AllReduce Example</a></li><li><a href="#batch-gather-example">Batch Gather Example</a></li><li><a href="#to-run-batch-gather-example">To Run Batch Gather Example</a></li><li><a href="#batch-allgather-example">Batch AllGather Example</a></li><li><a href="#to-run-batch-allgather-example">To Run Batch AllGather Example</a></li><li><a href="#batch-broadcast-example">Batch Broadcast Example</a></li><li><a href="#to-run-batch-broadcast-example">To Run Batch Broadcast Example</a></li><li><a href="#batch-partition-example">Batch Partition Example</a></li><li><a href="#to-run-batch-partition-example">To Run Batch Partition Example</a></li><li><a href="#batch-keyedreduce-example">Batch KeyedReduce Example</a></li><li><a href="#to-run-batch-keyedreduce-example">To Run Batch KeyedReduce Example</a></li><li><a href="#batch-keyedgather-example">Batch KeyedGather Example</a></li><li><a href="#to-run-batch-keyedgather-example">To Run Batch KeyedGather Example</a></li><li><a href="#batch-keyedpartition-example">Batch KeyedPartition Example</a></li><li><a href="#to-run-batch-keyedpartition-example">To Run Batch KeyedPartition Example</a></li><li><a href="#streaming-task-graph-examples">Streaming Task Graph Examples</a></li><li><a href="#streaming-reduce-example">Streaming Reduce Example</a></li><li><a href="#to-run-streaming-reduce-example">To Run Streaming Reduce Example</a></li><li><a href="#streaming-allreduce-example">Streaming AllReduce Example</a></li><li><a href="#to-run-streaming-allreduce-example">To Run Streaming AllReduce Example</a></li><li><a href="#streaming-gather-example">Streaming Gather Example</a></li><li><a href="#to-run-streaming-gather-example">To Run Streaming Gather Example</a></li><li><a href="#streaming-allgather-example">Streaming AllGather Example</a></li><li><a href="#to-run-streaming-allgather-example">To Run Streaming AllGather Example</a></li><li><a href="#streaming-broadcast-example">Streaming Broadcast Example</a></li><li><a href="#to-run-streaming-broadcast-example">To Run Streaming Broadcast Example</a></li><li><a href="#streaming-partition-example">Streaming Partition Example</a></li><li><a href="#to-run-streaming-partition-example">To Run Streaming Partition Example</a></li><li><a href="#streaming-keyedpartition-example">Streaming KeyedPartition Example</a></li><li><a href="#to-run-streaming-keyedpartition-example">To Run Streaming KeyedPartition Example</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
