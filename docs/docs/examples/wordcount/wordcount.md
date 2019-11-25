@@ -14,7 +14,7 @@ The example code can be found in
 twister2/examples/src/java/edu/iu/dsc/tws/examples/basic/streaming/wordcount/task
 ```
 
-When we install Twister2, it will compile the examples. Lets go to the installtion directory and run the example.
+When we install Twister2, it will compile the examples. Lets go to the installation directory and run the example.
 
 ```text
 cd bazel-bin/scripts/package/twister2-dist/

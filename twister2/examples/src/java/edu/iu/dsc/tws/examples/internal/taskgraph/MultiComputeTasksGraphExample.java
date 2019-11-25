@@ -63,9 +63,9 @@ import edu.iu.dsc.tws.task.impl.TaskWorker;
  * ReduceTask (Two Incoming Edges)
  */
 
-public class MultiComputeTaskGraphExample extends TaskWorker {
+public class MultiComputeTasksGraphExample extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(MultiComputeTaskGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(MultiComputeTasksGraphExample.class.getName());
 
   private int parallelismValue = 0;
 
@@ -326,8 +326,8 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     //build the job
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("MultiComputeTaskGraph");
-    jobBuilder.setWorkerClass(MultiComputeTaskGraphExample.class.getName());
+    jobBuilder.setJobName("MultiComputeTasksGraph");
+    jobBuilder.setWorkerClass(MultiComputeTasksGraphExample.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 

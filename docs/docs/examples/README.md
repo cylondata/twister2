@@ -15,4 +15,5 @@ There are many examples developed to demonstrate the capabilities of Twister2.
 * [Stream Windowing](windowing/windowing.md)
 * [Benchmark Suite](benchmark/benchmark.md)
 * [TSet](tset/hello_world.md)
+* [Connected Dataflow](connecteddataflow/connected_dataflow.md)
 

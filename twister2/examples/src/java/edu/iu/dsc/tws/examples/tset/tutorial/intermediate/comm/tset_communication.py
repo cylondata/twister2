@@ -1,3 +1,4 @@
+from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
@@ -21,18 +22,18 @@ class IntSource(SourceFunc):
         return res
 
 
-source = env.create_source(IntSource(), 4)
+source_x = env.create_source(IntSource(), 4)
 
 
-def mul_by_five(itr, collector):
+def mul_by_five(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i * 5)
 
 
-def add_two(itr, collector):
+def add_two(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i + 2)
 
 
-source.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
+source_x.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
     .for_each(lambda i: print("SUM = %d" % i))
