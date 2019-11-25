@@ -10,17 +10,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.sets;
 
 import java.io.Serializable;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.tset.TBase;
+
 /**
- * All Tsets that are cachable need to implement this interface
- * This interface defines the methods that other classes can use to
- * access the cached data
+ * All {@link edu.iu.dsc.tws.api.tset.sets.TSet}s that store data would need to implement this
+ * interface. This defines the methods that other classes can use to access the stored data. Once
+ * the data is stored, it would be exposed to as another "SourceTSet".
  */
-public interface Storable<T> extends TBase, Serializable {
+public interface StorableTBase<T> extends TBase, Serializable {
 
   /**
    * retrieve data saved in the TSet as a {@link List}

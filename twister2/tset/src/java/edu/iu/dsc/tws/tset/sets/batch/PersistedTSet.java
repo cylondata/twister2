@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class PersistedTSet<T> extends StoredTSet<T> {
@@ -48,7 +48,7 @@ public class PersistedTSet<T> extends StoredTSet<T> {
   }
 
   @Override
-  public PersistedTSet<T> addInput(String key, Storable<?> input) {
+  public PersistedTSet<T> addInput(String key, StorableTBase<?> input) {
     return (PersistedTSet<T>) super.addInput(key, input);
   }
 }

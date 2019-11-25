@@ -12,5 +12,10 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Extended {@link SinkFunc} with access to {@link edu.iu.dsc.tws.api.tset.TSetContext}
+ *
+ * @param <T> data type
+ */
 public abstract class BaseSinkFunc<T> extends BaseTFunction<T, T> implements SinkFunc<T> {
 }

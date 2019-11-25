@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.compute.modifiers.Closable;
  * @param <T> type of values produced by source
  */
 public interface SourceFunc<T> extends TFunction<T, T>, Closable {
+
   /**
    * Weather we have more data
    *
@@ -34,6 +35,9 @@ public interface SourceFunc<T> extends TFunction<T, T>, Closable {
    */
   T next();
 
+  /**
+   * Closes the source
+   */
   @Override
   default void close() {
 

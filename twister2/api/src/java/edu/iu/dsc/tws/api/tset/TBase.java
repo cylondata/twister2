@@ -11,24 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+
 /**
  * All classes that are part of the TSet API need to implement this interface if they are
- * included in the execution graph
+ * included in the execution graph. Main extended interfaces are
+ * {@link edu.iu.dsc.tws.api.tset.sets.TSet}, {@link edu.iu.dsc.tws.api.tset.link.TLink},
+ * {@link edu.iu.dsc.tws.api.tset.sets.TupleTSet} and {@link StorableTBase}.
  */
 public interface TBase {
 
   /**
-   * ID of the data set
+   * Gets the ID for the {@link TBase}
    */
   String getId();
 
   /**
-   * Name of the data set
+   * Gets the name for the {@link TBase}
    */
   String getName();
 
   /**
-   * Name of the tset
+   * Sets the name for the {@link TBase}
    */
   TBase setName(String name);
 }

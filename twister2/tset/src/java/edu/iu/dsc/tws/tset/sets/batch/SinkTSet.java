@@ -14,9 +14,9 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -60,7 +60,7 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
   }
 
   @Override
-  public SinkTSet<T> addInput(String key, Storable<?> input) {
+  public SinkTSet<T> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }

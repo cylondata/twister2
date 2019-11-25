@@ -36,7 +36,7 @@ public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    gettSetContext().update(cfg, ctx);
+    gettSetContext().updateRuntimeInfo(cfg, ctx);
     this.getFunction().prepare(gettSetContext());
 
     this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);

@@ -16,8 +16,8 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
