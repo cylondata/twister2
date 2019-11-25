@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -19,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 /**
  * Link represents the connections between data Links.
@@ -73,6 +75,8 @@ public interface TLink<T1, T0> extends TBase {
    * @return output TSet
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+
+  <K, V> TupleTSet mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
 
   /**
    * Applies a functoin elementwise

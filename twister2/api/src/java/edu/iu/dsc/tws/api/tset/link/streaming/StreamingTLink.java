@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 
 public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
   @Override
@@ -36,6 +38,9 @@ public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
 
   @Override
   <O> StreamingTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+
+  @Override
+  <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);

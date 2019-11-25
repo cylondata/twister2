@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.link.batch;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
@@ -22,6 +23,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
 public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   @Override
@@ -38,6 +40,9 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
   @Override
   <O> BatchTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+
+  @Override
+  <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
 
   BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
 

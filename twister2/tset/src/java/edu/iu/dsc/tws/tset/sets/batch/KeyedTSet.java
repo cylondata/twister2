@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
@@ -48,7 +49,8 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
     if (mapToTupleFunc instanceof MapCompute) {
       return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
           getInputs());
-    } else if (mapToTupleFunc instanceof MapIterCompute) {
+    } else if (mapToTupleFunc instanceof MapIterCompute
+        || mapToTupleFunc instanceof GatherMapCompute) {
       return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
           getInputs());
     }

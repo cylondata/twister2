@@ -13,20 +13,21 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 /**
- * Collector for map function
+ * Record collector that will be passed on to a {@link ComputeCollectorFunc}
  *
  * @param <T> input type
  */
 public interface RecordCollector<T> {
+
   /**
-   * Collect the record
+   * Collects the record
    *
    * @param record this will be sent
    */
   void collect(T record);
 
   /**
-   * Close the collector
+   * Closes the collector
    */
   void close();
 }
