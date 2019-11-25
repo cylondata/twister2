@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -22,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
@@ -54,19 +54,19 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
    *
    * @return output TSet
    */
-  default Storable<T0> cache() {
+  default StorableTBase<T0> cache() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 
-  default Storable<T0> lazyCache() {
+  default StorableTBase<T0> lazyCache() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 
-  default Storable<T0> persist() {
+  default StorableTBase<T0> persist() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 
-  default Storable<T0> lazyPersist() {
+  default StorableTBase<T0> lazyPersist() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 

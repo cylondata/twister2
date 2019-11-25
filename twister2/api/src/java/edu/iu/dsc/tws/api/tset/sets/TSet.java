@@ -49,12 +49,13 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
  * Sink) in a more user friendly API. A {@link TSet} would be followed by a {@link TLink} that
  * would expose the communication level operations performed on the computation.
  *
- * Note the extensions to this implementation
+ * Note the extensions of this interface
  * {@link edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet} and
  * {@link edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet}. These would intimately separate
  * out the operations based on the {@link edu.iu.dsc.tws.api.compute.graph.OperationMode} of the
  * data flow graph.
  *
+ *  This interface only specifies the common operations for Batch and Streaming operations.
  * @param <T> type of the data set
  */
 public interface TSet<T> extends TBase {

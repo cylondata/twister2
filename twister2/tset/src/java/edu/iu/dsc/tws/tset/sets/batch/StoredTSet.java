@@ -23,11 +23,11 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
  *
  * @param <T> base type of the tset
  */
-public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable<T> {
+public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements StorableTBase<T> {
   private SinkFunc<?> storingSinkFunc;
   private String storedSourcePrefix;
   protected SourceTSet<T> storedSource;
@@ -113,7 +113,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   }
 
   @Override
-  public StoredTSet<T> addInput(String key, Storable<?> input) {
+  public StoredTSet<T> addInput(String key, StorableTBase<?> input) {
     return (StoredTSet<T>) super.addInput(key, input);
   }
 

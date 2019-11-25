@@ -23,9 +23,9 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
@@ -107,7 +107,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   // get data from a tset and update the another
-  private <T, ST extends BaseTSet<T> & Storable<T>> void updateTSet(ST tSet, ST updateTSet) {
+  private <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(ST tSet, ST updateTSet) {
     // get the data from the evaluation
     DataObject<T> data = getData(tSet.getId());
 
@@ -156,7 +156,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param runTSet    TSet to be run
    * @param updateTSet TSet to be updated
    */
-  public <T, ST extends BaseTSet<T> & Storable<T>> void runAndUpdate(ST runTSet, ST updateTSet) {
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void runAndUpdate(ST runTSet,
+                                                                          ST updateTSet) {
     // first run the TSet then update
     run(runTSet);
     updateTSet(runTSet, updateTSet);
@@ -198,7 +199,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param updateTSet TSet to be updated
    * @param <T>        type
    */
-  public <T, ST extends BaseTSet<T> & Storable<T>> void evalAndUpdate(ST evalTSet, ST updateTSet) {
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void evalAndUpdate(ST evalTSet,
+                                                                           ST updateTSet) {
     // first eval the TSet then update
     eval(evalTSet);
     updateTSet(evalTSet, updateTSet);

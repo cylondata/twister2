@@ -16,6 +16,12 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
+/**
+ * Streaming extension of {@link TupleTSet} interface.
+ *
+ * @param <K>
+ * @param <V>
+ */
 public interface StreamingTupleTSet<K, V> extends TupleTSet<K, V> {
 
   /**

@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+
 /**
  * All classes that are part of the TSet API need to implement this interface if they are
  * included in the execution graph. Main extended interfaces are
  * {@link edu.iu.dsc.tws.api.tset.sets.TSet}, {@link edu.iu.dsc.tws.api.tset.link.TLink},
- * {@link edu.iu.dsc.tws.api.tset.sets.TupleTSet} and {@link Storable}.
+ * {@link edu.iu.dsc.tws.api.tset.sets.TupleTSet} and {@link StorableTBase}.
  */
 public interface TBase {
 

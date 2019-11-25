@@ -222,19 +222,19 @@ public class TSetContext implements Serializable {
   /**
    * Sets the ID of the corresponding TSet
    *
-   * @param tSetId tset ID
+   * @param id tset ID
    */
-  public void setId(String tSetId) {
-    this.tSetId = tSetId;
+  public void setId(String id) {
+    this.tSetId = id;
   }
 
   /**
    * Sets the tset name
    *
-   * @param tSetName tset name
+   * @param name tset name
    */
-  public void setName(String tSetName) {
-    this.tSetName = tSetName;
+  public void setName(String name) {
+    this.tSetName = name;
   }
 
   /**
