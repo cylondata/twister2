@@ -14,38 +14,44 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class KeyedCachedTSet<K, V> extends KeyedStoredTSet<K, V> {
+public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
 
-  public KeyedCachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Iterator<Tuple<K, V>>> sinkFunc,
-                         int parallelism) {
-    super(tSetEnv, "kcached", sinkFunc, parallelism);
+  public KeyedPersistedTSet(BatchTSetEnvironment tSetEnv,
+                            SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism) {
+    super(tSetEnv, "kpersisted", storingSinkFn, parallelism);
   }
 
   @Override
-  public KeyedCachedTSet<K, V> setName(String n) {
-    return (KeyedCachedTSet<K, V>) super.setName(n);
+  public KeyedPersistedTSet<K, V> setName(String n) {
+    return (KeyedPersistedTSet<K, V>) super.setName(n);
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> addInput(String key, Storable<?> input) {
+    return (KeyedPersistedTSet<K, V>) super.addInput(key, input);
   }
 
   @Override
   public KeyedCachedTSet<K, V> cache() {
-    return this;
+    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
   }
 
   @Override
   public KeyedCachedTSet<K, V> lazyCache() {
-    return this;
+    throw new UnsupportedOperationException("Cache on PersistedTSet is undefined!");
   }
 
   @Override
   public KeyedPersistedTSet<K, V> persist() {
-    throw new UnsupportedOperationException("persist on CachedTSet is undefined!");
+    return this;
   }
 
   @Override
   public KeyedPersistedTSet<K, V> lazyPersist() {
-    throw new UnsupportedOperationException("lazyPersist on CachedTSet is undefined!");
+    return this;
   }
 }

@@ -43,6 +43,7 @@ public abstract class StoreIterSink<T, T1> extends
 
   /**
    * Extracts value from an input
+   *
    * @param <O> output type
    * @param <I> input type
    */

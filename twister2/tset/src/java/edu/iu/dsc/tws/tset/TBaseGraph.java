@@ -108,11 +108,13 @@ public class TBaseGraph {
   }
 
   public Set<TBase> getSuccessors(TBase tSet) {
-    return this.graph.successors(tSet);
+    Set<TBase> res = this.graph.successors(tSet);
+    return res != null ? res : Collections.emptySet();
   }
 
   public Set<TBase> getPredecessors(TBase tSet) {
-    return this.graph.predecessors(tSet);
+    Set<TBase> res = this.graph.predecessors(tSet);
+    return res != null ? res : Collections.emptySet();
   }
 
   private boolean removeNode(TBase tSet) {
@@ -130,6 +132,21 @@ public class TBaseGraph {
     LOG.info(() -> "Build order for " + buildId + " : " + buildSeq.toString());
 
     return new BuildContext(buildId, roots, buildSeq, opMode);
+  }
+
+  /**
+   * Builds only one TSet (NOT the subgraph)
+   *
+   * @param tSet TSet to build
+   * @return build context
+   */
+  public BuildContext buildOne(BuildableTSet tSet) {
+    String buildId = TSetUtils.generateBuildId(tSet);
+
+    LOG.info(() -> "Build order for " + buildId + " : " + tSet.toString());
+
+    return new BuildContext(buildId, Collections.singleton(tSet), Collections.singleton(tSet),
+        opMode);
   }
 
   /**

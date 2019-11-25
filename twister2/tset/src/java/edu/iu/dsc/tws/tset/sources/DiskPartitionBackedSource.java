@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sources;
 
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
@@ -20,6 +21,8 @@ public class DiskPartitionBackedSource<T> extends BaseSourceFunc<T> {
 
   private DataPartitionConsumer<T> consumer;
   private String referencePrefix;
+
+  private DiskBackedCollectionPartition<T> diskPartition;
 
   public DiskPartitionBackedSource(String referencePrefix) {
     this.referencePrefix = referencePrefix;
@@ -38,9 +41,19 @@ public class DiskPartitionBackedSource<T> extends BaseSourceFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    DiskBackedCollectionPartition<T> diskPartition = new DiskBackedCollectionPartition<>(
-        0, ctx.getConfig(), this.referencePrefix + ctx.getIndex()
-    );
+    String reference = this.referencePrefix + ctx.getIndex();
+//    String reference = ctx.getId() + ctx.getIndex();
+    this.diskPartition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
+        reference);
     this.consumer = diskPartition.getConsumer();
+  }
+
+  /**
+   * Exposes the data partition
+   *
+   * @return partition
+   */
+  public DataPartition<?> get() {
+    return diskPartition;
   }
 }

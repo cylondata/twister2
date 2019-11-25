@@ -15,10 +15,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
 public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterator<V>> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherTLink.class.getName());
@@ -41,15 +39,5 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
   @Override
   public KeyedGatherTLink<K, V> setName(String n) {
     return (KeyedGatherTLink<K, V>) super.setName(n);
-  }
-
-  @Override
-  public CachedTSet<Tuple<K, Iterator<V>>> lazyCache() {
-    return super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<Tuple<K, Iterator<V>>> cache() {
-    return super.cache();
   }
 }

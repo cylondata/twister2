@@ -25,7 +25,7 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
    * Creates an instance of {@link DiskPersistSingleSink} with a referencePrefix
    *
    * @param referencePrefix referencePrefix will be used to uniquely identify the set of
-   * disk partitions created with this function
+   *                        disk partitions created with this function
    */
   public DiskPersistSingleSink(String referencePrefix) {
     this.referencePrefix = referencePrefix;

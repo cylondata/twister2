@@ -24,24 +24,29 @@ import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
+// todo check the correctness of INNER joins!
 public class JoinExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(JoinExample.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     int para = 2;
+    int workerID = env.getWorkerID();
     SourceTSet<Integer> src0 = dummySource(env, COUNT, para).setName("src0");
+
     KeyedTSet<Integer, Integer> left = src0.mapToTuple(i -> new Tuple<>(i % 2, i)).setName("left");
+    left.keyedDirect().forEach(i -> LOG.info(workerID + "L " + i.toString()));
 
     SourceTSet<Integer> src1 = dummySource(env, COUNT, para).setName("src1");
     KeyedTSet<Integer, Integer> right = src1.mapToTuple(i -> new Tuple<>(i % 2, i)).setName(
         "right");
+    right.keyedDirect().forEach(i -> LOG.info(workerID + "R " + i.toString()));
 
     JoinTLink<Integer, Integer, Integer> join =
         left.join(right, CommunicationContext.JoinType.INNER, Integer::compareTo)
             .setName("join");
 
-    join.forEach(t -> LOG.info("out" + t.toString()));
+    join.forEach(t -> LOG.info(workerID + "out: " + t.toString()));
   }
 
   public static void main(String[] args) {
