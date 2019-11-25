@@ -41,7 +41,10 @@ const siteConfig = {
 
     // For no header links in the top nav bar -> headerLinks: [],
     headerLinks: [
-        {doc: 'introduction', label: 'Docs'},
+        {doc: 'introduction', label: 'Getting Started'},
+        {doc: 'compiling/compile_overview', label: 'Docs'},
+        {doc: 'examples/tset/hello_world', label: 'Tutorial'},
+        {doc: 'developers/debugging', label: 'Contributors'},
         {page: 'configs', label: 'Configurations'},
         {page: 'docs/download', label: 'Download'},
         {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub", external: true},
