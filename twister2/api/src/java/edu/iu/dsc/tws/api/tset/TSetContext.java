@@ -19,6 +19,16 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 
+/**
+ * This is the runtime context for a {@link edu.iu.dsc.tws.api.tset.sets.TSet}. This
+ * holds the information related to indices, inputs etc. This will be passed on to
+ * {@link edu.iu.dsc.tws.api.tset.fn.TFunction} in the runtime, so that corresponding TSet
+ * information is available for the functions.
+ * <p>
+ * This is made {@link Serializable} because, it will be created with instances of
+ * {@link edu.iu.dsc.tws.tset.ops.BaseOp} and it would need to be serialized and deserialized to
+ * create TaskInstances.
+ */
 public class TSetContext implements Serializable {
   /**
    * tSet index, which goes from 0 up to the number of parallel tSets
@@ -62,6 +72,13 @@ public class TSetContext implements Serializable {
   private Config config;
 
   /**
+   * Creates and empty TSet Context
+   */
+  public TSetContext() {
+    this.inputMap = new HashMap<>();
+  }
+
+  /**
    * TSet context
    *
    * @param cfg         configuration
@@ -81,10 +98,6 @@ public class TSetContext implements Serializable {
     this.parallelism = parallelism;
     this.configs = configs;
     this.workerId = wId;
-    this.inputMap = new HashMap<>();
-  }
-
-  public TSetContext() {
     this.inputMap = new HashMap<>();
   }
 
@@ -114,7 +127,7 @@ public class TSetContext implements Serializable {
   }
 
   /**
-   * Get the parallism of the tSet
+   * Get the parallelism of the tSet
    *
    * @return number of parallel instances
    */
@@ -169,24 +182,6 @@ public class TSetContext implements Serializable {
   }
 
   /**
-   * Set a new input map
-   *
-   * @param inputMap the map to be set for this context
-   */
-  public void setInputMap(Map<String, DataPartition<?>> inputMap) {
-    this.inputMap = inputMap;
-  }
-
-  /**
-   * Adds the given map into {@link TSetContext#inputMap}
-   *
-   * @param map the map to be added
-   */
-  public void addInputMap(Map<String, DataPartition<?>> map) {
-    this.inputMap.putAll(map);
-  }
-
-  /**
    * Retrives the input object that corresponds to the given key
    *
    * @param key key of the input object
@@ -206,37 +201,72 @@ public class TSetContext implements Serializable {
     inputMap.put(key, data);
   }
 
-  public void settSetIndex(int tSetIndex) {
-    this.tSetIndex = tSetIndex;
+  /**
+   * Set a new input map
+   *
+   * @param inputMap the map to be set for this context
+   */
+  public void setInputMap(Map<String, DataPartition<?>> inputMap) {
+    this.inputMap = inputMap;
   }
 
-  public void settSetId(String tSetId) {
+  /**
+   * Adds the given map into {@link TSetContext#inputMap}
+   *
+   * @param map the map to be added
+   */
+  public void addInputMap(Map<String, DataPartition<?>> map) {
+    this.inputMap.putAll(map);
+  }
+
+  /**
+   * Sets the ID of the corresponding TSet
+   *
+   * @param tSetId tset ID
+   */
+  public void setId(String tSetId) {
     this.tSetId = tSetId;
   }
 
-  public String gettSetName() {
-    return tSetName;
-  }
-
-  public void settSetName(String tSetName) {
+  /**
+   * Sets the tset name
+   *
+   * @param tSetName tset name
+   */
+  public void setName(String tSetName) {
     this.tSetName = tSetName;
   }
 
+  /**
+   * Sets the TSet parallelism
+   *
+   * @param parallelism parallelism
+   */
   public void setParallelism(int parallelism) {
     this.parallelism = parallelism;
   }
 
-  public void setWorkerId(int workerId) {
-    this.workerId = workerId;
-  }
-
-  public void setConfig(Config config) {
-    this.config = config;
-  }
-
-  public void update(Config conf, TaskContext taskCtx) {
+  /**
+   * Updates the runtime information for the TSet instances
+   *
+   * @param conf    configuration
+   * @param taskCtx task context
+   */
+  public void updateRuntimeInfo(Config conf, TaskContext taskCtx) {
     setConfig(conf);
     settSetIndex(taskCtx.taskIndex());
     setWorkerId(taskCtx.getWorkerId());
+  }
+
+  private void setWorkerId(int workerId) {
+    this.workerId = workerId;
+  }
+
+  private void setConfig(Config config) {
+    this.config = config;
+  }
+
+  private void settSetIndex(int tSetIndex) {
+    this.tSetIndex = tSetIndex;
   }
 }

@@ -46,8 +46,8 @@ public abstract class BaseOp implements Receptor, Serializable {
     this.rcvTSets = receivableTSets;
 
     if (originTSet != null) {
-      this.tSetContext.settSetId(originTSet.getId());
-      this.tSetContext.settSetName(originTSet.getName());
+      this.tSetContext.setId(originTSet.getId());
+      this.tSetContext.setName(originTSet.getName());
       this.tSetContext.setParallelism(originTSet.getParallelism());
     }
   }
