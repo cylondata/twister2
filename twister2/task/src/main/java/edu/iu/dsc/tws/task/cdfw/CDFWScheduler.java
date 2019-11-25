@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.task.cdfw;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,14 +30,14 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class CDFWScheduler implements ICDFWScheduler {
   private static final Logger LOG = Logger.getLogger(CDFWScheduler.class.getName());
 
-  private LinkedList<JobMasterAPI.WorkerInfo> workerInfoList;
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
   private Set<Integer> workerList = new LinkedHashSet<>();
 
   //To store the scheduled dataflow task graph and their corresponding worker list
   private Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
 
   protected CDFWScheduler(List<JobMasterAPI.WorkerInfo> workerInfoList) {
-    this.workerInfoList = (LinkedList<JobMasterAPI.WorkerInfo>) workerInfoList;
+    this.workerInfoList = workerInfoList;
   }
 
   @Override
@@ -61,7 +60,6 @@ public class CDFWScheduler implements ICDFWScheduler {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
-      LOG.info("Requirements:" + workerInfoList.size() + "\tSchedule Details:" + scheduledGraphMap);
     }
     return scheduledGraphMap;
   }

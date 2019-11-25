@@ -13,17 +13,19 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -34,12 +36,13 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class JobMasterStarter {
   private static final Logger LOG = Logger.getLogger(JobMasterStarter.class.getName());
+
+  public static JobAPI.Job job;
 
   private JobMasterStarter() { }
 
@@ -61,7 +64,7 @@ public final class JobMasterStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -92,19 +95,22 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    JobTerminator jobTerminator = new JobTerminator(config);
+    JobMasterAPI.JobMasterState initialState = initialStateAndUpdate(config, jobName, podIP);
 
+    JobTerminator jobTerminator = new JobTerminator(config);
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-
-    JobMasterAPI.JobMasterState initialState = determineInitialState(config, jobName);
 
     // start JobMaster
     JobMaster jobMaster =
         new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(false);
-    jobMaster.startJobMasterBlocking();
+    try {
+      jobMaster.startJobMasterBlocking();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
 
     // wait to be deleted by K8s master
     K8sWorkerUtils.waitIndefinitely();
@@ -113,11 +119,17 @@ public final class JobMasterStarter {
   /**
    * Job Master is either starting for the first time, or it is coming from failure
    * We return either JobMasterState.JM_STARTED or JobMasterState.JM_RESTARTED
+   *
+   * We also update the job object if it is restarting
+   * We initialize event counter
+   *
    * TODO: If ZooKeeper is not used,
    *   currently we just return JM_STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.JobMasterState determineInitialState(Config config, String jobName) {
+  public static JobMasterAPI.JobMasterState initialStateAndUpdate(Config config,
+                                                                  String jobName,
+                                                                  String jmAddress) {
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
       String zkServerAddresses = ZKContext.serverAddresses(config);
@@ -126,14 +138,17 @@ public final class JobMasterStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKInitialStateManager.isJobMasterRestarting(client, rootPath, jobName)) {
+        if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobName, jmAddress)) {
+          ZKEventsManager.initEventCounter(client, rootPath, jobName);
+          job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 
         return JobMasterAPI.JobMasterState.JM_STARTED;
 
       } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+        LOG.log(Level.SEVERE, "Can not determine Job Master initial state. Assuming JM_STARTED", e);
+        return JobMasterAPI.JobMasterState.JM_STARTED;
       }
     }
 

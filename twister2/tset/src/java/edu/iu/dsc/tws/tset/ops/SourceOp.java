@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class SourceOp<T> extends BaseOp implements ISource, Closable {
-  private MultiEdgeOpAdapter multiEdgeOpAdapter;
-  private SourceFunc<T> source;
+  protected MultiEdgeOpAdapter multiEdgeOpAdapter;
+  protected SourceFunc<T> source;
 
   public SourceOp() {
 

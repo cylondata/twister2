@@ -55,15 +55,10 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     int sourcePar = 4;
-//    int sinkPar = 1;
-
     Configuration configuration = new Configuration();
 
     configuration.set(TextInputFormat.INPUT_DIR, "file:///tmp/wc");
 
-//    SourceTSet<String> lines =
-//        env.createHadoopSource(configuration, TextInputFormat.class, 1,
-//            (MapFunc<String, Tuple<LongWritable, Text>>) input -> input.getValue().toString());
     SourceTSet<String> lines = env
         .createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")), 1);
 
@@ -92,8 +87,6 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     private DataSource<String, FileInputSplit<String>> dataSource;
     private InputSplit<String> dataSplit;
 
-//    private Map<String, Integer> trusted1 = new TreeMap<>();
-
     WordCountFileSource(String inputFile) {
       this.inputFile = inputFile;
     }
@@ -118,11 +111,7 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
           dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
           if (dataSplit != null) {
             return true;
-//          } else {
-//            for (Map.Entry<String, Integer> e : trusted1.entrySet()) {
-//              LOG.info(e.getKey() + " " + e.getValue());
-//            }
-          } //if datasplit is not null => hasnext true
+          }
         }
       } catch (IOException e) {
         e.printStackTrace();
@@ -133,16 +122,7 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     @Override
     public String next() {
       try {
-        String line = dataSplit.nextRecord(null);
-
-//        StringTokenizer itr = new StringTokenizer(line);
-//        while (itr.hasMoreTokens()) {
-//          String word = itr.nextToken();
-//          trusted1.putIfAbsent(word, 0);
-//          int count = trusted1.get(word);
-//          trusted1.put(word, ++count);
-//        }
-        return line;
+        return dataSplit.nextRecord(null);
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -150,7 +130,6 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
       return null;
     }
   }
-
 
   static class WordCountFileLogger extends
       BaseSinkFunc<Iterator<Tuple<Integer, Tuple<String, Integer>>>> {
@@ -200,11 +179,6 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
 
     String input = "/tmp/wc/wordcount.in";
     String output = "/tmp/wc/wordcount.out";
-
-/*    Files.copy(Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader()
-            .getResource("pride_and_predjudice.txt")).toURI()),
-        Paths.get(input),
-        StandardCopyOption.REPLACE_EXISTING);*/
     long start = System.nanoTime();
 
     // build JobConfig
@@ -269,7 +243,5 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
         }
       }
     }
-
-
   }
 }

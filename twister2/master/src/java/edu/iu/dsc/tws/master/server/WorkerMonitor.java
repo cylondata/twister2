@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.master.server;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -37,10 +37,9 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
-import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -60,8 +59,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * It handles Job Master to Dashboard communications
  * It handles Job Master to Driver interactions
  */
-public class WorkerMonitor
-    implements MessageHandler, IWorkerStatusListener, IWorkerFailureListener {
+public class WorkerMonitor implements MessageHandler {
 
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
@@ -75,6 +73,9 @@ public class WorkerMonitor
   // upto date status of the job
   private JobState jobState;
 
+  // a flag to show whether all expected workers has already joined
+  private boolean allJoined = false;
+
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -82,7 +83,7 @@ public class WorkerMonitor
    */
   private int numberOfWorkers;
 
-  private TreeMap<Integer, WorkerWithState> workers;
+  private ConcurrentSkipListMap<Integer, WorkerWithState> workers;
 
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
@@ -99,7 +100,7 @@ public class WorkerMonitor
     this.faultTolerant = faultTolerant;
     this.jobState = JobState.STARTING;
 
-    workers = new TreeMap<>();
+    workers = new ConcurrentSkipListMap<>();
   }
 
   public int getNumberOfWorkers() {
@@ -120,9 +121,17 @@ public class WorkerMonitor
     return workers.values();
   }
 
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
+    WorkerWithState workerWithState = workers.get(id);
+    if (workerWithState == null) {
+      return null;
+    } else {
+      return workerWithState.getInfo();
+    }
+  }
+
   /**
    * get the list of workerIDs sorted
-   * @return
    */
   public List<Integer> getWorkerIDs() {
     return workers
@@ -134,14 +143,25 @@ public class WorkerMonitor
   }
 
   /**
+   * get the list of workerIDs sorted
+   */
+  public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
+    return workers
+        .values()
+        .stream()
+        .map(wws -> wws.getInfo())
+        .collect(Collectors.toList());
+  }
+
+  /**
    * return true if there is a worker with the given workerID
    */
   public boolean existWorker(int workerID) {
     return workers.containsKey(workerID);
   }
 
-  public JobState getJobState() {
-    return jobState;
+  public boolean isAllJoined() {
+    return allJoined;
   }
 
   @Override
@@ -159,73 +179,123 @@ public class WorkerMonitor
 
   /**
    * new worker joins for the first time
+   * returns null if the join is successful,
+   * otherwise, it returns an explanation for the failure
    */
-  public void started(JobMasterAPI.WorkerInfo workerInfo) {
+  public String started(WorkerWithState workerWithState) {
 
-    // if it is a regular join event
+    // if the workerID of joined worker is higher than numberOfWorkers in the job,
+    // log a warning message.
+    // in a possible but unlikely case: when workers scaled up,
+    // new workers might join before the scaler informs WorkerMonitor
+    // in that case, numberOfWorkers would be smaller than workerID
+    if (workerWithState.getWorkerID() >= numberOfWorkers) {
+      String warnMessage = String.format(
+          "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
+              + "If this is not because of scaling up, it seems problematic. Joined worker: %s",
+          workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
+      LOG.warning(warnMessage);
+    }
+
+    if (existWorker(workerWithState.getWorkerID())) {
+      String failMessage = "There is an already registered worker with workerID: "
+          + workerWithState.getWorkerID();
+      LOG.severe(failMessage);
+      return failMessage;
+    }
+
+      // if it is a regular join event
     // add the worker to worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.STARTED);
-    workers.put(worker.getWorkerID(), worker);
-    LOG.info("Worker: " + workerInfo.getWorkerID() + " joined the job.");
+    workers.put(workerWithState.getWorkerID(), workerWithState);
+    LOG.info("Worker: " + workerWithState.getWorkerID() + " joined the job.");
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTED);
+      dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
-    if (jobState == JobState.STARTING && allWorkersJoined()) {
-      jobState = JobState.STARTED;
-      if (dashClient != null) {
-        dashClient.jobStateChange(JobState.STARTED);
-      }
-    }
+    handleAllJoined();
+    return null;
   }
 
   /**
    * if the worker is coming from failure
    */
-  public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
+  public String restarted(WorkerWithState workerWithState) {
+
+    // if the workerID of joined worker is higher than numberOfWorkers in the job,
+    // log a warning message.
+    // in a possible but unlikely case: when workers scaled up,
+    // new workers might join before the scaler informs WorkerMonitor
+    // in that case, numberOfWorkers would be smaller than workerID
+    if (workerWithState.getWorkerID() >= numberOfWorkers) {
+      String warnMessage = String.format(
+          "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
+              + "If this is not because of scaling up, it seems problematic. Joined worker: %s",
+          workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
+      LOG.warning(warnMessage);
+    }
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
+      dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
     // if this is not a fault tolerant job, we terminate the job with failure
     // because, this worker has failed previously failed and it is coming from failure
     if (!faultTolerant) {
       jobState = JobState.FAILED;
-      LOG.info("A worker is coming from failure in a NON-FAULT TOLERANT job. Terminating the job.");
+      String failMessage =
+          String.format("worker[%s] is coming from failure in NON-FAULT TOLERANT job. "
+              + "Terminating the job.", workerWithState.getWorkerID());
+      LOG.info(failMessage);
       jobMaster.completeJob(JobState.FAILED);
-      return;
+      return failMessage;
     }
 
-    WorkerWithState existingWorker = workers.get(workerInfo.getWorkerID());
-    if (existingWorker == null) {
-      LOG.warning(String.format("The worker[%s] that has not joined the job yet tries to rejoin. ",
-          workerInfo.getWorkerID()));
+    if (!existWorker(workerWithState.getWorkerID())) {
+      LOG.warning(String.format("The worker[%s] that has not joined the job yet, tries to rejoin. "
+              + "Ignoring this event.",
+          workerWithState.getWorkerID()));
     }
 
     // update workerInfo and its status in the worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
-    workers.put(worker.getWorkerID(), worker);
-    LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
+    workers.put(workerWithState.getWorkerID(), workerWithState);
+    LOG.info("WorkerID: " + workerWithState.getWorkerID() + " rejoined from failure.");
 
-    if (jobState == JobState.STARTING && allWorkersJoined()) {
-      jobState = JobState.STARTED;
-      if (dashClient != null) {
-        dashClient.jobStateChange(JobState.STARTED);
-      }
-    }
+    handleAllJoined();
 
     // TODO inform checkpoint master
+    return null;
+  }
+
+  private void handleAllJoined() {
+
+    if (!allJoined && allWorkersJoined()) {
+      allJoined = true;
+
+      // inform Driver if exist
+      if (driver != null) {
+        driver.allWorkersJoined(getWorkerInfoList());
+      }
+
+      // if the job is becoming all joined for the first time, inform dashboard
+      if (jobState == JobState.STARTING) {
+        jobState = JobState.STARTED;
+
+        if (dashClient != null) {
+          dashClient.jobStateChange(JobState.STARTED);
+        }
+      }
+
+    }
   }
 
   /**
    * called when a worker COMPLETED the job
    */
   public void completed(int workerID) {
-    workers.get(workerID).updateState(JobMasterAPI.WorkerState.COMPLETED);
+    workers.get(workerID).setState(JobMasterAPI.WorkerState.COMPLETED);
     LOG.info("Worker:" + workerID + " COMPLETED.");
 
     // send worker state change message to dashboard
@@ -255,7 +325,7 @@ public class WorkerMonitor
       return;
     }
 
-    failedWorker.updateState(JobMasterAPI.WorkerState.FAILED);
+    failedWorker.setState(JobMasterAPI.WorkerState.FAILED);
     LOG.info("Worker: " + workerID + " FAILED.");
 
     // send worker state change message to dashboard
@@ -277,12 +347,6 @@ public class WorkerMonitor
     // modify numberOfWorkers
     numberOfWorkers -= instancesRemoved;
 
-    // construct scaled message to send to workers
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(0 - instancesRemoved)
-        .setNumberOfWorkers(numberOfWorkers)
-        .build();
-
     // construct killedWorkers list and remove those workers from workers list
     List<Integer> killedWorkers = new LinkedList<>();
 
@@ -297,47 +361,84 @@ public class WorkerMonitor
 
     LOG.info(strToLog);
 
-    // let all remaining workers know about the scaled message
-    for (int workerID : workers.keySet()) {
-      rrServer.sendMessage(scaledMessage, workerID);
+    // let either controller to know
+    if (jobMaster.getZkMasterController() != null) {
+      jobMaster.getZkMasterController().jobScaledDown(numberOfWorkers);
+    } else if (jobMaster.getWorkerHandler() != null) {
+      jobMaster.getWorkerHandler().workersScaledDown(instancesRemoved);
     }
 
     // send Scale message to the dashboard
+    int change = 0 - instancesRemoved;
     if (dashClient != null) {
-      dashClient.scaledWorkers(
-          scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), killedWorkers);
+      dashClient.scaledWorkers(change, numberOfWorkers, killedWorkers);
     }
   }
 
   public void workersScaledUp(int instancesAdded) {
 
+    allJoined = false;
+
     // keep previous numberOfWorkers and update numberOfWorkers with new value
-    int numberOfWorkersBeforeScaling = numberOfWorkers;
     numberOfWorkers += instancesAdded;
-
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(instancesAdded)
-        .setNumberOfWorkers(numberOfWorkers)
-        .build();
-
-    // let all previous workers know about the scaled message
-    // no need for informing newly added workers
-    for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
-      rrServer.sendMessage(scaledMessage, wID);
+    if (jobMaster.getZkMasterController() != null) {
+      jobMaster.getZkMasterController().jobScaledUp(numberOfWorkers);
+    } else if (jobMaster.getWorkerHandler() != null) {
+      jobMaster.getWorkerHandler().workersScaledUp(instancesAdded);
     }
 
-    // if all newly scaled up workers are already joined
-    // send WorkersJoined messages
+    // in the case of very unlikely but possible scenario
+    // all scaled up workers may be already joined
+    // in that case, publish the event
     if (allWorkersJoined()) {
-      sendWorkersJoinedMessage();
+      allJoined = true;
+
+      if (jobMaster.getZkMasterController() != null) {
+        jobMaster.getZkMasterController().publishAllJoined();
+      } else {
+        jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
+      }
+
+      if (driver != null) {
+        driver.allWorkersJoined(getWorkerInfoList());
+      }
     }
 
     // send Scaled message to the dashboard
     if (dashClient != null) {
-      dashClient.scaledWorkers(
-          scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), new LinkedList<Integer>());
+      dashClient.scaledWorkers(instancesAdded, numberOfWorkers, new LinkedList<Integer>());
+    }
+  }
+
+  /**
+   * when the job master restarts, it adds already joined workers with this method.
+   * returns true if allJoined becomes true
+   */
+  public boolean addJoinedWorkers(List<WorkerWithState> joinedWorkers) {
+    for (WorkerWithState wws: joinedWorkers) {
+      workers.put(wws.getWorkerID(), wws);
     }
 
+    if (workers.size() == numberOfWorkers && allWorkersJoined()) {
+      allJoined = true;
+      jobState = JobState.STARTED;
+
+      LOG.info("All workers have already joined, before the job master restarted.");
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * inform the driver on restarts if all workers already joined
+   */
+  public void informDriverForAllJoined() {
+    if (allJoined) {
+      if (driver != null) {
+        driver.allWorkersJoined(getWorkerInfoList());
+      }
+    }
   }
 
   public boolean broadcastMessage(Message message) {
@@ -458,7 +559,7 @@ public class WorkerMonitor
   /**
    * if all workers are in one of these states: STARTED, RESTARTED or COMPLETED.
    * return true
-   *
+   * <p>
    * This is used to send allWorkersJoined message
    * We omit started but failed workers
    * We include started but completed workers
@@ -533,55 +634,6 @@ public class WorkerMonitor
     }
 
     return true;
-  }
-
-  /**
-   * send WorkersJoined message to all workers and the driver
-   */
-  public void sendWorkersJoinedMessage() {
-
-    LOG.info("Sending WorkersJoined messages ...");
-
-    JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
-
-    // inform Driver if exist
-    if (driver != null) {
-      driver.allWorkersJoined(constructWorkerList());
-    }
-
-    // send the message to all workers
-    for (Integer workerID : workers.keySet()) {
-      rrServer.sendMessage(joinedMessage, workerID);
-    }
-  }
-
-  /**
-   * construct WorkersJoined message
-   */
-  private JobMasterAPI.WorkersJoined constructWorkersJoinedMessage() {
-
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
-        .setNumberOfWorkers(numberOfWorkers);
-
-    for (WorkerWithState worker : workers.values()) {
-      joinedBuilder.addWorker(worker.getWorkerInfo());
-    }
-
-    return joinedBuilder.build();
-  }
-
-  /**
-   * construct WorkerList to send to Driver
-   */
-  private List<JobMasterAPI.WorkerInfo> constructWorkerList() {
-
-    List<JobMasterAPI.WorkerInfo> workerList = new LinkedList<>();
-
-    for (WorkerWithState worker : workers.values()) {
-      workerList.add(worker.getWorkerInfo());
-    }
-
-    return workerList;
   }
 
 }

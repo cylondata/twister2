@@ -302,12 +302,13 @@ public final class JMWorkerAgent {
     Thread jmThread = new Thread(this::startLooping);
 
     jmThread.setName("JM Agent");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     boolean registered = registerWorker(initialState);
     if (!registered) {
       this.close();
-      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
+      throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
 
     return jmThread;
@@ -324,7 +325,7 @@ public final class JMWorkerAgent {
 
     boolean registered = registerWorker(initialState);
     if (!registered) {
-      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
+      throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
   }
 

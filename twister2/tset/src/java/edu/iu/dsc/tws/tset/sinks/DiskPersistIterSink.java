@@ -22,12 +22,27 @@ import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
   private DiskBackedCollectionPartition<T> partition;
 
+  private String referencePrefix;
+
+  /**
+   * Creates an instance of {@link DiskPersistIterSink} with a referencePrefix
+   *
+   * @param referencePrefix referencePrefix will be used to uniquely identify the set of
+   *                        disk partitions created with this function
+   */
+  public DiskPersistIterSink(String referencePrefix) {
+    this.referencePrefix = referencePrefix;
+  }
+
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
 
+    String reference = referencePrefix + ctx.getIndex();
+//    String reference = ctx.getId() + ctx.getIndex();
     // buffered partition with 0 frames in memory. Then everything will be written to the memory
-    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig());
+    this.partition = new DiskBackedCollectionPartition<>(0,
+        ctx.getConfig(), reference);
   }
 
   @Override

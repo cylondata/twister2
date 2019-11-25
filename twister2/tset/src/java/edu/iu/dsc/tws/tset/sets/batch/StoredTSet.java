@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
@@ -48,7 +48,7 @@ import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable<T> {
   private SinkFunc<?> storingSinkFunc;
   private String storedSourcePrefix;
-  private SourceTSet<T> storedSource;
+  protected SourceTSet<T> storedSource;
 
   /*
   Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
@@ -63,7 +63,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   }
 
   @Override
-  public ICompute getINode() {
+  public INode getINode() {
     return new SinkOp<>(storingSinkFunc, this, getInputs());
   }
 

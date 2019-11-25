@@ -35,6 +35,10 @@ public final class Twister2Submitter {
   private Twister2Submitter() {
   }
 
+  public static void submitJob(Twister2Job twister2Job) {
+    submitJob(twister2Job, ResourceAllocator.loadConfig(twister2Job.getConfig()));
+  }
+
   /**
    * Submit a Twister2 job
    *
@@ -68,6 +72,21 @@ public final class Twister2Submitter {
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);
     String jobId = job.getJobId();
+
+    //print ascii
+    LOG.info("\n\n _____           _     _           ____  \n"
+        + "/__   \\__      _(_)___| |_ ___ _ _|___ \\ \n"
+        + "  / /\\/\\ \\ /\\ / / / __| __/ _ \\ '__|__) |\n"
+        + " / /    \\ V  V /| \\__ \\ ||  __/ |  / __/ \n"
+        + " \\/      \\_/\\_/ |_|___/\\__\\___|_| |_____| v0.3.0\n"
+        + "                                         \n"
+        + "Job Name\t:\t" + job.getJobName() + "\n"
+        + "Job ID\t\t:\t" + jobId + "\n"
+        + "Cluster Type\t:\t" + Context.clusterType(config) + "\n"
+        + "Runtime\t\t:\t" + System.getProperty("java.vm.name")
+        + " " + System.getProperty("java.vm.version") + "\n"
+        + "\n"
+    );
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
     if (CheckpointingConfigurations.isCheckpointingEnabled(updatedConfig)) {

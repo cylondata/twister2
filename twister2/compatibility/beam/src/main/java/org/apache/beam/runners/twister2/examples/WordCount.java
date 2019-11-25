@@ -34,6 +34,7 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -43,11 +44,15 @@ public class WordCount implements Serializable, BatchTSetIWorker {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+
+    Config config = env.getConfig();
+    String input = config.getStringValue("input");
+    String output = config.getStringValue("output");
     System.out.println("Rank " + env.getWorkerID());
     Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
     options.setTSetEnvironment(env);
     options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
-    runWordCount(options);
+    runWordCount(options, input, output);
   }
 
   /**
@@ -139,15 +144,15 @@ public class WordCount implements Serializable, BatchTSetIWorker {
     void setOutput(String value);
   }
 
-  static void runWordCount(Twister2PipelineOptions options) {
+  static void runWordCount(Twister2PipelineOptions options, String input, String output) {
     Pipeline p = Pipeline.create(options);
 
     // Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the
     // static FormatAsTextFn() to the ParDo transform.
-    p.apply("ReadLines", TextIO.read().from("/home/pulasthi/work/twister2beam/kinglear.txt"))
+    p.apply("ReadLines", TextIO.read().from(input))
         .apply(new CountWords())
         .apply(MapElements.via(new FormatAsTextFn()))
-        .apply("WriteCounts", TextIO.write().to("/home/pulasthi/work/twister2beam/output.txt"));
+        .apply("WriteCounts", TextIO.write().to(output));
 
     p.run().waitUntilFinish();
   }

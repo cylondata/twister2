@@ -8,12 +8,21 @@
   "className": "edu.iu.dsc.tws.examples.comms.ExampleMain",
   "args": [
     {
+      "id": "instanceMemory",
+      "name": "Memory",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 10240
+      }
+    },
+    {
       "id": "itr",
       "name": "Iterations",
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 50000
+        "value": 20000
       }
     },
     {
@@ -44,13 +53,13 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 10000
+        "value": 2000
       }
     },
     {
       "id": "stream",
       "name": "Stream",
-      "optional": false,
+      "optional": true,
       "values": {
         "type": "none"
       }

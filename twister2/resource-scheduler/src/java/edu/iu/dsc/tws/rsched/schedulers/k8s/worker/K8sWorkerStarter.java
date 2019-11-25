@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.WorkerManager;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -153,7 +154,7 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    JobMasterAPI.WorkerState initialState = determineInitialState();
+    JobMasterAPI.WorkerState initialState = initialStateAndUpdate(config, jobName, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -238,34 +239,40 @@ public final class K8sWorkerStarter {
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
-
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    WorkerManager workerManager = new WorkerManager(config, workerID,
+        workerController, pv, volatileVolume, worker);
+    workerManager.start();
   }
 
   /**
    * worker is either starting for the first time, or it is coming from failure
    * We return either WorkerState.STARTED or WorkerState.RESTARTED
+   *
    * TODO: If ZooKeeper is not used,
-   *   currently we just return STARTING. We do not determine real initial status.
+   *   currently we just return STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.WorkerState determineInitialState() {
+  public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
+                                                               String jbName,
+                                                               JobMasterAPI.WorkerInfo wInfo) {
 
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      String zkServerAddresses = ZKContext.serverAddresses(config);
-      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
+    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
+      String zkServerAddresses = ZKContext.serverAddresses(cnfg);
+      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
       CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
-      String rootPath = ZKContext.rootNode(config);
+      String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKInitialStateManager.isWorkerRestarting(client, rootPath, jobName, workerID)) {
+        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbName, wInfo)) {
           return JobMasterAPI.WorkerState.RESTARTED;
         }
 
         return JobMasterAPI.WorkerState.STARTED;
 
       } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+        LOG.log(Level.SEVERE,
+            "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
+        return JobMasterAPI.WorkerState.STARTED;
       }
     }
 

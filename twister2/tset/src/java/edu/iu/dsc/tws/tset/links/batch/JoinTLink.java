@@ -28,9 +28,8 @@ import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class JoinTLink<K, VL, VR> extends BatchIteratorLink<JoinedTuple<K, VL, VR>> {
+public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K, VL, VR>> {
 
   private CommunicationContext.JoinType joinType;
   private TaskPartitioner<K> partitioner;
@@ -112,15 +111,5 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLink<JoinedTuple<K, VL, V
     e.addProperty(CommunicationContext.USE_DISK, false);
 
     graphBuilder.connect(s.getId(), t.getId(), e);
-  }
-
-  @Override
-  public CachedTSet<JoinedTuple<K, VL, VR>> lazyCache() {
-    return (CachedTSet<JoinedTuple<K, VL, VR>>) super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<JoinedTuple<K, VL, VR>> cache() {
-    return (CachedTSet<JoinedTuple<K, VL, VR>>) super.cache();
   }
 }

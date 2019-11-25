@@ -15,32 +15,24 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.modifiers.Closable;
-import edu.iu.dsc.tws.api.compute.nodes.ISource;
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class KeyedSourceOp<K, V> extends BaseOp implements ISource, Closable {
-  private MultiEdgeOpAdapter multiEdgeOpAdapter;
-  private SourceFunc<Tuple<K, V>> source;
-
+/**
+ * Identical to {@link SourceOp}. Only difference is that it would write to edges by calling
+ * multiEdgeOpAdapter keyedWriteToEdges method
+ *
+ * @param <K>
+ * @param <V>
+ */
+public class KeyedSourceOp<K, V> extends SourceOp<Tuple<K, V>> {
   public KeyedSourceOp() {
 
   }
 
   public KeyedSourceOp(SourceFunc<Tuple<K, V>> src, BaseTSet originTSet,
                        Map<String, String> receivables) {
-    super(originTSet, receivables);
-    this.source = src;
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    gettSetContext().update(cfg, ctx);
-    this.source.prepare(gettSetContext());
-    this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
+    super(src, originTSet, receivables);
   }
 
   @Override
@@ -51,10 +43,5 @@ public class KeyedSourceOp<K, V> extends BaseOp implements ISource, Closable {
     } else {
       multiEdgeOpAdapter.writeEndToEdges();
     }
-  }
-
-  @Override
-  public void close() {
-    source.close();
   }
 }

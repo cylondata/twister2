@@ -31,10 +31,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -133,41 +133,23 @@ public abstract class TSetEnvironment {
     return workerEnv.getWorkerId();
   }
 
-  TBaseGraph getTSetGraph() {
-    return tBaseGraph;
-  }
-
-  public void settBaseGraph(TBaseGraph tBaseGraph) {
-
-    this.tBaseGraph = tBaseGraph;
-  }
-
-  TaskExecutor getTaskExecutor() {
-    return taskExecutor;
-  }
-
   /**
-   * execute data flow graph
+   * Checks if checkpointing is enabled
    *
-   * @param buildContext data flow graph
+   * @return bool
    */
-  protected void executeBuildContext(BuildContext buildContext) {
-    // build the context which will create compute graph and execution plan
-    buildContext.build(taskExecutor);
-
-    LOG.fine(buildContext.getComputeGraph()::toString);
-    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
-    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
-
-    taskExecutor.execute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
+  public boolean isCheckpointingEnabled() {
+    return CheckpointingConfigurations.isCheckpointingEnabled(this.getConfig())
+        && this instanceof CheckpointingTSetEnv;
   }
 
   /**
-   * Adds inputs to tasks
+   * Adds a {@link edu.iu.dsc.tws.api.tset.sets.TSet} to another
+   * {@link edu.iu.dsc.tws.api.tset.sets.TSet} as an input that will be identified by the inputKey
    *
-   * @param tSetID      task name
-   * @param inputTSetID identifier/ inputTSetID for the inputKey
-   * @param inputKey    a cacheable object which returns a {@link DataObject}
+   * @param tSetID      TSet ID
+   * @param inputTSetID input TSet ID
+   * @param inputKey    key given to the input TSet
    */
   public void addInput(String tSetID, String inputTSetID, String inputKey) {
     if (tSetInputMap.containsKey(tSetID)) {
@@ -179,25 +161,14 @@ public abstract class TSetEnvironment {
     }
   }
 
+  /**
+   * Returns the map of inputs of a particular {@link edu.iu.dsc.tws.api.tset.sets.TSet}
+   *
+   * @param tSetID TSet ID
+   * @return map of inputs that maps inputTSetDD --> inputKey
+   */
   public Map<String, String> getInputs(String tSetID) {
     return tSetInputMap.getOrDefault(tSetID, new HashMap<>());
-  }
-
-  // TSetEnvironment singleton initialization
-  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
-    if (thisTSetEnv == null) {
-      synchronized (TSetEnvironment.class) {
-        if (thisTSetEnv == null) {
-          if (opMode == OperationMode.BATCH) {
-            thisTSetEnv = new BatchTSetEnvironment(wEnv);
-          } else { // streaming
-            thisTSetEnv = new StreamingTSetEnvironment(wEnv);
-          }
-        }
-      }
-    }
-
-    return thisTSetEnv;
   }
 
   /**
@@ -218,5 +189,57 @@ public abstract class TSetEnvironment {
    */
   public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
     return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);
+  }
+
+  /**
+   * Sets {@link TBaseGraph} based on the {@link OperationMode}
+   *
+   * @param tBaseGraph TBase graph
+   */
+  protected void settBaseGraph(TBaseGraph tBaseGraph) {
+    this.tBaseGraph = tBaseGraph;
+  }
+
+  /**
+   * Executes data flow graph wrapped by a {@link BuildContext}
+   *
+   * @param buildContext data flow graph wrapped by {@link BuildContext}
+   */
+  protected void executeBuildContext(BuildContext buildContext) {
+    // build the context which will create compute graph and execution plan
+    buildContext.build(taskExecutor);
+
+    LOG.fine(buildContext.getComputeGraph()::toString);
+    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
+
+    taskExecutor.execute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
+  }
+
+  // TSet graph for classes that extends TSetEnvironment
+  TBaseGraph getTSetGraph() {
+    return tBaseGraph;
+  }
+
+  // task executor for classes that extends TSetEnvironment
+  TaskExecutor getTaskExecutor() {
+    return taskExecutor;
+  }
+
+  // TSetEnvironment singleton initialization
+  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
+    if (thisTSetEnv == null) {
+      synchronized (TSetEnvironment.class) {
+        if (thisTSetEnv == null) {
+          if (opMode == OperationMode.BATCH) {
+            thisTSetEnv = new BatchTSetEnvironment(wEnv);
+          } else { // streaming
+            thisTSetEnv = new StreamingTSetEnvironment(wEnv);
+          }
+        }
+      }
+    }
+
+    return thisTSetEnv;
   }
 }

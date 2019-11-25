@@ -57,3 +57,20 @@ class TSet:
 
     def persist(self):
         return TSet(self.__java_ref.persist(), self.__env)
+
+    # TLink functions
+
+    def map(self, lam):
+        return self.direct().map(lam)
+
+    def flat_map(self, lam):
+        return self.direct().flat_map(lam)
+
+    def sink(self, sink_func):
+        return self.direct().sink(sink_func)
+
+    def compute(self, compute_func):
+        return self.direct().compute(compute_func)
+
+    def for_each(self, foreach_func):
+        return self.direct().for_each(foreach_func)

@@ -34,20 +34,22 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -70,8 +72,12 @@ public final class JobMasterExample {
    */
   public static void main(String[] args) {
 
-    // we assume that the twister2Home is the current directory
+    if (args.length != 1) {
+      LOG.info("usage: java JobMasterExample start/restart");
+      return;
+    }
 
+    // we assume that the twister2Home is the current directory
 //    String configDir = "../twister2/config/src/yaml/";
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
@@ -82,7 +88,30 @@ public final class JobMasterExample {
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
-    createJobZnode(config, job);
+    String host = "localhost";
+
+    JobMasterAPI.JobMasterState initialState;
+
+
+    if ("start".equalsIgnoreCase(args[0])) {
+
+      createJobZnodes(config, job);
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+
+    } else if ("restart".equalsIgnoreCase(args[0])) {
+
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+      job = JobMasterStarter.job;
+
+      if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
+        LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
+        return;
+      }
+
+    } else {
+      LOG.info("usage: java JobMasterExample start/restart");
+      return;
+    }
 
     String ip = null;
     try {
@@ -93,16 +122,20 @@ public final class JobMasterExample {
     }
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
-    String host = "localhost";
     KubernetesController controller = new KubernetesController();
-    controller.init(KubernetesContext.namespace(config));
+//    controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = new JobTerminator(config);
-    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    IJobTerminator jobTerminator = new ZKJobTerminator(config);
+//    IJobTerminator jobTerminator = new JobTerminator(config);
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
-    jobMaster.startJobMasterThreaded();
+    try {
+      jobMaster.startJobMasterThreaded();
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
+      throw new RuntimeException(e);
+    }
 
     LOG.info("Threaded Job Master started:"
         + "\nnumberOfWorkers: " + job.getNumberOfWorkers()
@@ -116,21 +149,23 @@ public final class JobMasterExample {
         + "java JobMasterExample");
   }
 
-  public static void createJobZnode(Config conf, JobAPI.Job job) {
+  public static void createJobZnodes(Config conf, JobAPI.Job job) {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
     String rootPath = ZKContext.rootNode(conf);
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
-      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
+    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobName());
     }
 
     try {
-      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      ZKInitialStateManager.createJobZNode(client, rootPath, job.getJobName());
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
+      ZKPersStateManager.createPersStateDir(client, rootPath, job);
+      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobName());
 
       // test job znode content reading
-      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
+      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobName());
       LOG.info("JobZNode content: " + readJob);
 
     } catch (Exception e) {

@@ -4,9 +4,9 @@ title: Overview
 sidebar_label: Overview
 ---
 
-Twister2 relies on the [Bazel build](https://bazel.build/) system. It is tested on Bazel [0.28.1](https://github.com/bazelbuild/bazel/releases/tag/0.28.1) version and it is recommended to use it for building.
+Twister2 relies on the [Bazel build](https://bazel.build/) system. It is tested on Bazel [1.1](https://github.com/bazelbuild/bazel/releases/tag/1.1.0) version and it is recommended to use it for building.
 
-Twister2 developers are mainly working on Ubuntu 16.04, Ubuntu 18.04, and MacOS. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
+Twister2 developers are mainly working on Ubuntu 16.04, Ubuntu 18.04, RHEL7 and MacOS. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
 
 Refer the specific guides for details on different platforms.
 

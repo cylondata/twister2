@@ -54,16 +54,18 @@ public class CDFWEnv {
     this.cdfwExecutor.executeCDFW(dataFlowGraph);
   }
 
-  public void increaseWorkers(int workers) {
+  public boolean increaseWorkers(int workers) {
     this.resourceScaler.scaleUpWorkers(workers);
+    waitAllWorkersToJoin();
+    return true;
   }
 
-  public void decreaseWorkers(int workers) {
+  public boolean decreaseWorkers(int workers) {
     this.resourceScaler.scaleDownWorkers(workers);
+    return true;
   }
 
   public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
-    // this method could be problematic, if the worker list changes in the middle of the execution
     return workerInfoList;
   }
 
@@ -72,15 +74,27 @@ public class CDFWEnv {
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    // this is the only method which could change the
-    // might have to put these messages into a queue to accommodate scaling up/ down workers
-
-    // when all workers joined, update the worker info list
     this.workerInfoList = workerList;
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
   }
 
   public void close() {
     this.cdfwExecutor.close();
   }
 
+  private Object waitObject = new Object();
+
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
+  }
 }
