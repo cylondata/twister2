@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
@@ -26,12 +27,12 @@ class IntSource(SourceFunc):
 source = env.create_source(IntSource(), 4)
 
 
-def mul_by_five(itr, collector):
+def mul_by_five(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i * 5)
 
 
-def add_two(itr, collector):
+def add_two(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i + 2)
 

@@ -1,3 +1,4 @@
+from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 from datetime import datetime
@@ -14,7 +15,7 @@ class IntSource(SourceFunc):
         self.i = 0
 
     def has_next(self):
-        return self.i < 1000000
+        return self.i < 10
 
     def next(self):
         res = self.i
@@ -22,28 +23,33 @@ class IntSource(SourceFunc):
         return res
 
 
-source = env.create_source(IntSource(), 4)
+source_x = env.create_source(IntSource(), 4)
 
 
-def mul_by_five(itr, collector):
+def mul_by_five(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i * 5)
 
 
-def add_two(itr, collector):
+def add_two(itr, collector, ctx: TSetContext):
     for i in itr:
         collector.collect(i + 2)
 
 
-t1 = datetime.now()
-two_computes = source.compute(mul_by_five).compute(add_two)
-t2 = datetime.now()
-print("Time taken for two_computes %d" % (t2 - t1).total_seconds())
+two_computes = source_x.compute(mul_by_five).compute(add_two)
 
-t1 = datetime.now()
 cached = two_computes.cache()
-t2 = datetime.now()
-print("Time taken for cache %d" % (t2 - t1).total_seconds())
 
-cached.reduce(lambda i1, i2: i1 + i2) \
-    .for_each(lambda i: print("SUM = %d" % i))
+source_z = env.create_source(IntSource(), 4)
+
+
+def combine_x_and_z(itr, collector, ctx: TSetContext):
+    x_values = ctx.get_input("x").consumer()
+    for x, z in zip(itr, x_values):
+        collector.collect(x + z)
+
+
+calc = source_z.compute(combine_x_and_z)
+calc.add_input("x", cached)
+
+calc.for_each(lambda i: print("(x * 5) + 2 + z = %d" % i))
