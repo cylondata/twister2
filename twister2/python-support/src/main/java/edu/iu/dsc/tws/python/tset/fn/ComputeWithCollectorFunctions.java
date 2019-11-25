@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
