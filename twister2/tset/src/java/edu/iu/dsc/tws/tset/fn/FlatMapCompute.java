@@ -25,10 +25,10 @@
 
 package edu.iu.dsc.tws.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 public class FlatMapCompute<O, I> implements ComputeCollectorFunc<O, I> {
   private FlatMapFunc<O, I> mapFn;
