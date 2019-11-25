@@ -195,14 +195,14 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
                                  intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            Heartbeat
-                        </td>
-                        <td>
-                            {this.state.worker.heartbeatTime}
-                        </td>
-                    </tr>
+                    {/*<tr>*/}
+                    {/*    <td>*/}
+                    {/*        Heartbeat*/}
+                    {/*    </td>*/}
+                    {/*    <td>*/}
+                    {/*        {this.state.worker.heartbeatTime}*/}
+                    {/*    </td>*/}
+                    {/*</tr>*/}
                     <tr>
                         <td>Compute Resource</td>
                         <td>
