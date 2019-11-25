@@ -163,7 +163,8 @@ public final class MPIWorker {
     } finally {
       try {
         // lets do a barrier here so everyone is synchronized at the end
-        MPI.COMM_WORLD.barrier();
+        // commenting out barrier to fix stale workers issue
+        // MPI.COMM_WORLD.barrier();
         MPI.Finalize();
       } catch (MPIException ignore) {
       }
