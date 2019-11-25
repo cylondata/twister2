@@ -16,9 +16,9 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * All Tsets that are cachable need to implement this interface
- * This interface defines the methods that other classes can use to
- * access the cached data
+ * All {@link edu.iu.dsc.tws.api.tset.sets.TSet}s that store data would need to implement this
+ * interface. This defines the methods that other classes can use to access the stored data. Once
+ * the data is stored, it would be exposed to as another "SourceTSet".
  */
 public interface Storable<T> extends TBase, Serializable {
 
