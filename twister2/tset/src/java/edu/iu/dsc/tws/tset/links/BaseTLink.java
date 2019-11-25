@@ -65,6 +65,9 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
     this.name = id;
   }
 
+  protected BaseTLink() {
+  }
+
   @Override
   public String getId() {
     return thisID;
@@ -96,6 +99,10 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   public TSetEnvironment getTSetEnv() {
     return tSetEnv;
+  }
+
+  public void setTSetEnv(TSetEnvironment newEnv) {
+    this.tSetEnv = newEnv;
   }
 
   public int getSourceParallelism() {

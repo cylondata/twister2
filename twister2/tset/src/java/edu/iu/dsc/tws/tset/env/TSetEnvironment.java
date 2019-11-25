@@ -46,9 +46,9 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
-  private WorkerEnvironment workerEnv;
-  private TBaseGraph tBaseGraph;
-  private TaskExecutor taskExecutor;
+  private transient WorkerEnvironment workerEnv;
+  private transient TBaseGraph tBaseGraph;
+  private transient TaskExecutor taskExecutor;
 
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
@@ -138,6 +138,7 @@ public abstract class TSetEnvironment {
   }
 
   public void settBaseGraph(TBaseGraph tBaseGraph) {
+
     this.tBaseGraph = tBaseGraph;
   }
 

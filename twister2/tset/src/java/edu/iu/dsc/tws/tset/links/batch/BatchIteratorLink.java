@@ -44,6 +44,9 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
     super(env, n, sourceP, targetP);
   }
 
+  protected BatchIteratorLink() {
+  }
+
   @Override
   public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
     return compute("map", new MapIterCompute<>(mapFn));

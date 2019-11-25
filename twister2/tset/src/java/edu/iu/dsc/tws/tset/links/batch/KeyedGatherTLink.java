@@ -23,6 +23,10 @@ import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterator<V>> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherTLink.class.getName());
 
+  private KeyedGatherTLink() {
+    //non arg constructor for kryo
+  }
+
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism, false, null);
   }

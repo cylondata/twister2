@@ -9,28 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.tset.sets.batch.functions;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
 /**
- * All classes that are part of the TSet API need to implement this interface if they are
- * included in the execution graph
+ * function that simply does a one to one forwarding of the input values.
+ * @param <T> type of input.
  */
-public interface TBase extends Serializable {
-
-  /**
-   * ID of the data set
-   */
-  String getId();
-
-  /**
-   * Name of the data set
-   */
-  String getName();
-
-  /**
-   * Name of the tset
-   */
-  TBase setName(String name);
+public class IdentityFunction<T> implements MapFunc<T, T> {
+  @Override
+  public T map(T input) {
+    return input;
+  }
 }

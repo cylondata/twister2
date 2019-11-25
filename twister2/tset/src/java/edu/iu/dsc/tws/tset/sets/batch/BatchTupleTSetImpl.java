@@ -41,6 +41,10 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
     super(tSetEnv, name, parallelism);
   }
 
+  protected BatchTupleTSetImpl() {
+    //non arg constructor for kryo
+  }
+
   // since keyed tset is the base impl for BatchTupleTSet, it needs to override the env getter
   @Override
   public BatchTSetEnvironment getTSetEnv() {

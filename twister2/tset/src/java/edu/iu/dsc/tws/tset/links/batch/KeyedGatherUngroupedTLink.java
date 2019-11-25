@@ -53,6 +53,11 @@ public class KeyedGatherUngroupedTLink<K, V> extends BatchIteratorLink<Tuple<K, 
     }
   }
 
+  public KeyedGatherUngroupedTLink() {
+    //non arg constructor for kryo
+    LOG.warning("This constructors should only be used by kryo");
+  }
+
   @Override
   public Edge getEdge() {
     Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());

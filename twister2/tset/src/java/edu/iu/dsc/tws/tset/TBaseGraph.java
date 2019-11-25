@@ -24,6 +24,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -41,7 +42,7 @@ import edu.iu.dsc.tws.tset.graph.DAGMutableGraph;
 import edu.iu.dsc.tws.tset.graph.MutableGraph;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
-public class TBaseGraph {
+public class TBaseGraph implements Serializable {
   private static final Logger LOG = Logger.getLogger(TBaseGraph.class.getName());
 
   private MutableGraph<TBase> graph;
@@ -49,6 +50,10 @@ public class TBaseGraph {
   private OperationMode opMode;
 
   private Set<BuildableTSet> sources;
+
+  public TBaseGraph() {
+    //no args constructor for kryo
+  }
 
   public TBaseGraph(OperationMode operationMode) {
 //    this.graph = GraphBuilder.directed()
@@ -115,6 +120,10 @@ public class TBaseGraph {
     return this.graph.predecessors(tSet);
   }
 
+  public TBase getNodeById(String id) {
+    return this.graph.getNodeById(id);
+  }
+
   private boolean removeNode(TBase tSet) {
     return this.graph.removeNode(tSet);
   }
@@ -123,6 +132,13 @@ public class TBaseGraph {
     return this.graph.nodes();
   }
 
+  public Set<BuildableTSet> getSources() {
+    return sources;
+  }
+
+  public void setSources(Set<BuildableTSet> sources) {
+    this.sources = sources;
+  }
   private BuildContext doBuild(Set<BuildableTSet> roots, AdjNodesExtractor nodesExtractor) {
     String buildId = TSetUtils.generateBuildId(roots);
 

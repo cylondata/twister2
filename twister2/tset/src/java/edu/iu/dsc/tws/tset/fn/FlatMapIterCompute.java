@@ -22,6 +22,10 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
   private FlatMapFunc<O, I> mapFn;
 
+  public FlatMapIterCompute() {
+    //no args constructor for kryo
+  }
+
   public FlatMapIterCompute(FlatMapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }

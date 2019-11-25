@@ -34,6 +34,10 @@ import edu.iu.dsc.tws.tset.ops.SourceOp;
 public class SourceTSet<T> extends BatchTSetImpl<T> {
   private SourceFunc<T> source;
 
+  public SourceTSet() {
+    //non arg constructor needed for kryo
+  }
+
   public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     this(tSetEnv, "source", src, parallelism);
   }

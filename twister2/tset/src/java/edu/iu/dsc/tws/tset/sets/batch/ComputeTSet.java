@@ -24,6 +24,11 @@ import edu.iu.dsc.tws.tset.ops.ComputeOp;
 public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
+  public ComputeTSet() {
+    //non arg constructor needed for kryo
+    super();
+  }
+
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFn,
                      int parallelism) {
     this(tSetEnv, "compute", computeFn, parallelism);
