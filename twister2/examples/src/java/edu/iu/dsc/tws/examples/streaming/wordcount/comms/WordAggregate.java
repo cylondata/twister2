@@ -12,14 +12,12 @@
 package edu.iu.dsc.tws.examples.streaming.wordcount.comms;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 
 public class WordAggregate implements SingularReceiver {
@@ -29,31 +27,22 @@ public class WordAggregate implements SingularReceiver {
 
   private Map<String, Integer> wordCounts = new HashMap<>();
 
-  private int executor;
-
   @Override
   public void init(Config cfg, Set<Integer> targets) {
   }
 
   @Override
   public boolean receive(int target, Object message) {
-    if (message instanceof Tuple) {
-      Tuple kc = (Tuple) message;
-      LOG.log(Level.INFO, String.format("%d Word %s count %s",
-          target, kc.getKey(), ((int[]) kc.getValue())[0]));
-    }
-    return true;
-  }
-
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    if (object instanceof List) {
-      for (Object o : (List) object) {
-        addValue(o.toString());
+    if (message instanceof String) {
+      String word = (String) message;
+      int count = 1;
+      if (wordCounts.containsKey(word)) {
+        count = wordCounts.get(word);
+        count++;
       }
-    } else {
-      addValue(object.toString());
+      wordCounts.put(word, count);
+      LOG.log(Level.INFO, String.format("Word %s count %s", word, count));
     }
-
     return true;
   }
 
@@ -66,7 +55,7 @@ public class WordAggregate implements SingularReceiver {
     totalCount++;
     wordCounts.put(value, count);
     if (totalCount % 100 == 0) {
-      LOG.info(String.format("%d Received words: %d map: %s", executor, totalCount, wordCounts));
+      LOG.info(String.format("Received words: %d map: %s", totalCount, wordCounts));
     }
   }
 }

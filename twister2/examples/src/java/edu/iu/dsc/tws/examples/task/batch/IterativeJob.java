@@ -23,11 +23,12 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -62,7 +63,7 @@ public class IterativeJob implements IWorker {
 
     ComputeGraphBuilder graphBuilder = ComputeGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    ComputeConnection computeConnection = graphBuilder.addCompute("sink", r, 4);
     computeConnection.partition("source")
         .viaEdge("partition")
         .withDataType(MessageTypes.OBJECT);
@@ -70,16 +71,17 @@ public class IterativeJob implements IWorker {
 
     ComputeGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
+    IExecutor ex = taskExecutor.createExecution(graph, plan);
     for (int i = 0; i < 10; i++) {
       LOG.info("Starting iteration: " + i);
       taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
 
       // this is a blocking call
-      taskExecutor.itrExecute(graph, plan);
+      ex.execute();
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<Object>[] values = dataSet.getPartitions();
     }
-    taskExecutor.closeExecution(graph, plan);
+    ex.closeExecution();
   }
 
   private static class IterativeSourceTask extends BaseSource implements Receptor {
@@ -114,7 +116,7 @@ public class IterativeJob implements IWorker {
     }
   }
 
-  private static class PartitionTask extends BaseSink implements Collector {
+  private static class PartitionTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();

@@ -9,6 +9,7 @@ class TSetFunctions:
         self.__partition_functions = PartitionFunctions(java_ref.partition(), env)
         self.__map_functions = GenericFunctions(java_ref.map(), env)
         self.__compute_functions = GenericFunctions(java_ref.compute(), env)
+        self.__compute_collector_functions = GenericFunctions(java_ref.computeCollector(), env)
         self.__sink_functions = GenericFunctions(java_ref.sink(), env)
         self.__reduce_functions = GenericFunctions(java_ref.reduce(), env)
         self.__apply_functions = GenericFunctions(java_ref.apply(), env)
@@ -29,6 +30,10 @@ class TSetFunctions:
     @property
     def compute(self) -> GenericFunctions:
         return self.__compute_functions
+
+    @property
+    def compute_with_collector(self) -> GenericFunctions:
+        return self.__compute_collector_functions
 
     @property
     def sink(self) -> GenericFunctions:

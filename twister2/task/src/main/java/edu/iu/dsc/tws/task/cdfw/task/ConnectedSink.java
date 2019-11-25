@@ -16,16 +16,18 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
-public class ConnectedSink extends BaseSink implements Collector {
+public class ConnectedSink extends BaseCompute implements Collector {
   /**
    * The name of the data set
    */
-  private String outName;
+  private String inputKey;
 
   /**
    * The partition to use
@@ -35,33 +37,16 @@ public class ConnectedSink extends BaseSink implements Collector {
   public ConnectedSink() {
   }
 
-  public ConnectedSink(String outName) {
-    this.outName = outName;
-  }
-
-  @Override
-  public DataPartition<Object> get() {
-    return partition;
-  }
-
-  @Override
-  public DataPartition<Object> get(String name) {
-    if (name.equals(outName)) {
-      return partition;
-    } else {
-      throw new RuntimeException("Un-expected name: " + name);
-    }
+  public ConnectedSink(String inputkey) {
+    this.inputKey = inputkey;
   }
 
   @Override
   public boolean execute(IMessage message) {
-    if (message.getContent() instanceof Iterator) {
-      Iterator<Object> itr = (Iterator<Object>) message.getContent();
-      while (itr.hasNext()) {
-        partition.add(itr.next());
+    if (message.getContent() instanceof  Iterator) {
+      while (((Iterator<Object>) message.getContent()).hasNext()) {
+        partition.add(((Iterator<Object>) message.getContent()).next());
       }
-    } else {
-      partition.add(message.getContent());
     }
     return true;
   }
@@ -69,6 +54,16 @@ public class ConnectedSink extends BaseSink implements Collector {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-    partition = new CollectionPartition<>(ctx.taskIndex());
+    partition = new CollectionPartition<>();
+  }
+
+  @Override
+  public DataPartition<Object> get() {
+    return new EntityPartition<>(partition);
+  }
+
+  @Override
+  public IONames getCollectibleNames() {
+    return IONames.declare(inputKey);
   }
 }

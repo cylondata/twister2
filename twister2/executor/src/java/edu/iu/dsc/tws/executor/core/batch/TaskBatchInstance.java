@@ -370,8 +370,4 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public BlockingQueue<IMessage> getInQueue() {
     return inQueue;
   }
-
-  public BlockingQueue<IMessage> getOutQueue() {
-    return outQueue;
-  }
 }

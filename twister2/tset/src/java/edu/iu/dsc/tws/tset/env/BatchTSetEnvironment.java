@@ -130,6 +130,16 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   /**
+   * Runs a single TSet (NO subgraph execution!)
+   *
+   * @param tSet tset to run
+   */
+  public void runOne(BaseTSet tSet) {
+    BuildContext buildContext = getTSetGraph().buildOne(tSet);
+    executeBuildContext(buildContext);
+  }
+
+  /**
    * Runs a subgraph of TSets from the specified TSet
    *
    * @param leafTset TSet to be run
@@ -176,7 +186,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     LOG.fine(() -> "edges: " + buildCtx.getComputeGraph().getDirectedEdgesSet());
     LOG.fine(() -> "vertices: " + buildCtx.getComputeGraph().getTaskVertexSet());
 
-    getTaskExecutor().itrExecute(buildCtx.getComputeGraph(), buildCtx.getExecutionPlan());
+    // we execute using the associated executor
+    buildCtx.getExecutor().execute();
   }
 
   /**
@@ -200,6 +211,6 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public void finishEval(BaseTSet evalTset) {
     BuildContext ctx = buildCtxCache.remove(TSetUtils.generateBuildId(evalTset));
-    getTaskExecutor().closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
+    ctx.getExecutor().closeExecution();
   }
 }

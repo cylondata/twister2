@@ -302,12 +302,13 @@ public final class JMWorkerAgent {
     Thread jmThread = new Thread(this::startLooping);
 
     jmThread.setName("JM Agent");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     boolean registered = registerWorker(initialState);
     if (!registered) {
       this.close();
-      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
+      throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
 
     return jmThread;
@@ -324,7 +325,7 @@ public final class JMWorkerAgent {
 
     boolean registered = registerWorker(initialState);
     if (!registered) {
-      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
+      throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
   }
 
@@ -460,15 +461,10 @@ public final class JMWorkerAgent {
    */
   private boolean registerWorker(JobMasterAPI.WorkerState initState) {
 
-    boolean fromFailure = false;
-    if (initState == JobMasterAPI.WorkerState.RESTARTING) {
-      fromFailure = true;
-    }
-
     JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerInfo(thisWorker)
-        .setFromFailure(fromFailure)
+        .setInitialState(initState)
         .build();
 
     LOG.fine("Sending RegisterWorker message: \n" + registerWorker);
@@ -489,23 +485,6 @@ public final class JMWorkerAgent {
       LOG.log(Level.SEVERE, bse.getMessage(), bse);
       return false;
     }
-  }
-
-  public boolean sendWorkerRunningMessage() {
-
-    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
-        .setState(JobMasterAPI.WorkerState.RUNNING)
-        .build();
-
-    RequestID requestID = rrClient.sendRequest(workerStateChange);
-    if (requestID == null) {
-      LOG.severe("Could not send Worker RUNNING message.");
-      return false;
-    }
-
-    LOG.fine("Sent Worker RUNNING message: \n" + workerStateChange);
-    return true;
   }
 
   public boolean sendWorkerCompletedMessage() {

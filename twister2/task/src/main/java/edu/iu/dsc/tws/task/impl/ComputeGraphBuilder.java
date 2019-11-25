@@ -35,12 +35,10 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
-import edu.iu.dsc.tws.task.window.api.IWindowedSink;
 
 /**
  * This is the entry point for creating a task graph by the user.
@@ -102,47 +100,6 @@ public final class ComputeGraphBuilder {
 
   public void setTaskGraphName(String taskGraphName) {
     this.taskGraphName = taskGraphName;
-  }
-
-  /**
-   * Add a sink node to the graph
-   *
-   * @param name name of the node
-   * @param sink implementation of the node
-   * @return a compute connection, that can be used to connect this node to other nodes as a child
-   */
-  public ComputeConnection addSink(String name, ISink sink) {
-    return this.addSink(name, sink, defaultParallelism);
-  }
-
-  /**
-   * Add a sink node to the graph
-   *
-   * @param name name of the node
-   * @param sink implementation of the node
-   * @param parallel number of parallel instances
-   * @return a compute connection, that can be used to connect this node to other nodes as a child
-   */
-  public ComputeConnection addSink(String name, ISink sink, int parallel) {
-    Vertex vertex = new Vertex(name, sink, parallel);
-    nodes.put(name, vertex);
-    this.addFTGatherSink(name);
-    return createComputeConnection(name);
-  }
-
-  /**
-   * Add a sink node to the graph
-   *
-   * @param name name of the node
-   * @param sink implementation of the node
-   * @param parallel number of parallel instances
-   * @return a compute connection, that can be used to connect this node to other nodes as a child
-   */
-  public ComputeConnection addSink(String name, IWindowedSink sink, int parallel) {
-    Vertex vertex = new Vertex(name, sink, parallel);
-    nodes.put(name, vertex);
-    this.addFTGatherSink(name);
-    return createComputeConnection(name);
   }
 
   /**
@@ -254,7 +211,8 @@ public final class ComputeGraphBuilder {
   }
 
   private void addFTGatherSink(String sourceName) {
-    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)
+        || this.mode.equals(OperationMode.BATCH)) {
       return;
     }
     String ftTaskName = "ft-" + sourceName;

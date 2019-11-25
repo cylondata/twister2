@@ -4,28 +4,28 @@
 #   then a PersistentVolumeClaim (if persistent storage is requested)
 # need to be created.
 
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: <job-name>-<job-master>
   namespace: <kubernetes.namespace>
   labels:
-    app: twister2-service-label-<job-name>-<job-master>
+    app: t2-srv-lb-<job-name>-<job-master>
     twister2-job-pods: twister2-<job-name>
     twister2-role: <job-name>-job-master
 
 spec:
   replicas: 1
-  serviceName: twister2-service-<jobname>-<job-master>
+  serviceName: t2-srv-<jobname>-<jm>
 
   selector:
     matchLabels:
-      app: twister2-service-label-<job-name>-<job-master>
+      app: t2-srv-lb-<job-name>-<job-master>
 
   template:
     metadata:
       labels:
-        app: twister2-service-label-<job-name>-<job-master>
+        app: t2-srv-lb-<job-name>-<job-master>
 
     spec:
       terminationGracePeriodSeconds: 0
@@ -39,7 +39,7 @@ spec:
 
       containers:
         name: twister2-job-master
-        image: twister2/twister2-k8s:0.2.1
+        image: twister2/twister2-k8s:<version>
         imagePullPolicy: <kubernetes.image.pull.policy>
         ports:
           name: job-master-port

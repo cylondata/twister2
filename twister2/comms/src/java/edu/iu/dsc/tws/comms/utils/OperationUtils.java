@@ -34,6 +34,7 @@ public final class OperationUtils {
 
   /**
    * Progress the receivers and return true if needs further progress
+   *
    * @param finalLock lock for final receiver
    * @param finalReceiver final receiver
    * @param partialLock lock for partial receiver
@@ -69,6 +70,7 @@ public final class OperationUtils {
 
   /**
    * Progress the receivers and return true if needs further progress
+   *
    * @param delegate the channel dataflow opeation
    * @param lock lock for final receiver
    * @param finalReceiver final receiver
@@ -77,8 +79,8 @@ public final class OperationUtils {
    * @return true if need further progress
    */
   public static boolean progressReceivers(ChannelDataFlowOperation delegate, Lock lock,
-                                       MessageReceiver finalReceiver, Lock partialLock,
-                                       MessageReceiver partialReceiver) {
+                                          MessageReceiver finalReceiver, Lock partialLock,
+                                          MessageReceiver partialReceiver) {
     boolean finalNeedsProgress = false;
     boolean partialNeedsProgress = false;
     try {
@@ -106,19 +108,28 @@ public final class OperationUtils {
   }
 
   public static Map<Integer, List<Integer>> getIntegerListMap(InvertedBinaryTreeRouter router,
-                                                               LogicalPlan instancePlan,
-                                                               int destination) {
+                                                              LogicalPlan instancePlan,
+                                                              int destination) {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
     int key = router.mainTaskOfExecutor(instancePlan.getThisWorker(),
         CommunicationContext.DEFAULT_DESTINATION);
-    List<Integer> mainReceives = integerMapMap.get(key);
-    if (mainReceives == null) {
-      mainReceives = new ArrayList<>();
-      integerMapMap.put(key, mainReceives);
-    }
-    if (key != destination) {
-      mainReceives.add(key);
+
+    // only proceed if there is a main task. For some configurations, it's possible
+    // not to have any task for this worker. Example: allgather on 2 workers with
+    // stages = 1,4. Now, this operation can be break down to two sub ops.
+    // 1. gather :  where only the 0th worker is involved.
+    // 2. bcast : where 2 tasks will be on 0 and 2 will be on 1.
+    // when doing the gather, 1st worker will not have any task, hence won't have a main task
+    if (key != -1) {
+      List<Integer> mainReceives = integerMapMap.get(key);
+      if (mainReceives == null) {
+        mainReceives = new ArrayList<>();
+        integerMapMap.put(key, mainReceives);
+      }
+      if (key != destination) {
+        mainReceives.add(key);
+      }
     }
     return integerMapMap;
   }

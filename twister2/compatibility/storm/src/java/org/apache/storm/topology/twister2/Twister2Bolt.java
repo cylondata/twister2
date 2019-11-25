@@ -49,10 +49,9 @@ import org.apache.storm.utils.Utils;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.config.Config;
 
-public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
+public class Twister2Bolt implements ICompute, Twister2StormNode {
 
   private static final Logger LOG = Logger.getLogger(Twister2Bolt.class.getName());
 

@@ -11,28 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.cdfw.task;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;
 
 /**
- * Connected source
+ * Connected source for the connected dataflow example
  */
 public class ConnectedSource extends BaseSource implements Receptor {
-  private DataObject<?> dSet;
+
+  private static final Logger LOG = Logger.getLogger(ConnectedSource.class.getName());
 
   private String edge = TaskConfigurations.DEFAULT_EDGE;
 
-  private boolean finished = false;
+  private DataPartition<?> dataPartition;
 
-  private DataPartition<?> data;
+  private Object dataObject = null;
 
-  private DataPartitionConsumer<?> iterator;
+  private String inputKey;
 
   public ConnectedSource() {
   }
@@ -41,23 +43,15 @@ public class ConnectedSource extends BaseSource implements Receptor {
     this.edge = edge;
   }
 
+  public ConnectedSource(String edge, String inputkey) {
+    this.edge = edge;
+    this.inputKey = inputkey;
+  }
+
   @Override
   public void execute() {
-    if (finished) {
-      return;
-    }
-
-    if (data == null) {
-      data = dSet.getPartition(context.taskIndex());
-      iterator = data.getConsumer();
-    }
-
-    if (iterator.hasNext()) {
-      context.write(edge, iterator.next());
-    } else {
-      context.end(edge);
-      finished = true;
-    }
+    dataObject = dataPartition.first();
+    context.writeEnd(edge, dataObject);
   }
 
   @Override
@@ -74,7 +68,14 @@ public class ConnectedSource extends BaseSource implements Receptor {
   }
 
   @Override
-  public void add(String name, DataObject<?> dataObject) {
-    dSet = dataObject;
+  public void add(String name, DataPartition<?> data) {
+    if (inputKey.equals(name)) {
+      this.dataPartition = data;
+    }
+  }
+
+  @Override
+  public IONames getReceivableNames() {
+    return IONames.declare(inputKey);
   }
 }

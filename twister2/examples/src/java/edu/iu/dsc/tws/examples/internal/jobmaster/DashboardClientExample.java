@@ -38,12 +38,13 @@ public final class DashboardClientExample {
     }
 
     String dashAddress = args[0];
-    String jobID = args[1];
-    DashboardClient dashClient = new DashboardClient(dashAddress, jobID);
+    String jobID = args[1] + (int) (Math.random() * 100000);
+    LOG.info("jobID: " + jobID);
+    DashboardClient dashClient = new DashboardClient(dashAddress, jobID, 2);
 
     // if number of args is 3, kill the job
     if (args.length == 3) {
-      sendJobKilledMessage(dashClient);
+      dashClient.jobStateChange(JobState.KILLED);
       return;
     }
 
@@ -66,21 +67,25 @@ public final class DashboardClientExample {
 
     testRegisterJob(dashClient, job, nodeInfo);
     testRegisterWorker(dashClient, 0, job.getComputeResource(0), nodeInfo);
-//    testRegisterWorker(dashClient, 1, job.getComputeResource(0), nodeInfo);
+    testRegisterWorker(dashClient, 1, job.getComputeResource(0), nodeInfo);
 //    testRegisterWorker(dashClient, 2, job.getComputeResource(0), nodeInfo);
-//    testScalingDown(dashClient, job);
+
+    // test scaling up
     testScalingUp(dashClient, job);
-    sendJobKilledMessage(dashClient);
+//    testRegisterWorker(dashClient, 3, job.getComputeResource(0), nodeInfo);
+//    testRegisterWorker(dashClient, 4, job.getComputeResource(0), nodeInfo);
+
+    // test scaling down
+//    testScalingDown(dashClient, job);
 
     // test state change
-//    dashClient.jobStateChange(JobState.STARTED);
-//    dashClient.workerStateChange(0, JobMasterAPI.WorkerState.RUNNING);
-  }
+    dashClient.workerStateChange(0, JobMasterAPI.WorkerState.COMPLETED);
+    dashClient.jobStateChange(JobState.STARTED);
 
-  public static void sendJobKilledMessage(DashboardClient dashClient) {
-
+    // job killed
     dashClient.jobStateChange(JobState.KILLED);
 
+    dashClient.close();
   }
 
   public static JobAPI.Job testRegisterJob(DashboardClient dashClient,
@@ -98,7 +103,7 @@ public final class DashboardClientExample {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, "123.456.789", 9009, nodeInfo, computeResource);
 
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
     dashClient.registerWorker(workerInfo, initialState);
   }
 
@@ -109,8 +114,6 @@ public final class DashboardClientExample {
     LOG.info("change: " + addedWorkers + " updatedNumberOfWorkers: " + updatedNumberOfWorkers);
 
     List<Integer> workerList = new LinkedList<>();
-    workerList.add(1);
-    workerList.add(2);
     return dashClient.scaledWorkers(
         addedWorkers, updatedNumberOfWorkers, workerList);
   }

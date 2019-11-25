@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.util.HashMap;
-import java.util.logging.Level;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,19 +26,23 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
@@ -55,12 +59,12 @@ public final class HelloExample {
     @Override
     public void execute(CDFWEnv execEnv) {
       // build JobConfig
-      DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+      DataFlowJobConfig dataFlowJobConfig = new DataFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
       ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(execEnv.getConfig());
       graphBuilderX.addSource("source1", firstSource, 4);
-      ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
+      ComputeConnection reduceConn = graphBuilderX.addCompute("sink1", secondSink,
           1);
       reduceConn.reduce("source1")
           .viaEdge("all-reduce")
@@ -70,9 +74,10 @@ public final class HelloExample {
       graphBuilderX.setMode(OperationMode.BATCH);
       ComputeGraph batchGraph = graphBuilderX.build();
 
-      //Invoke CDFW Submitter and send the metagraph
-      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
+      //Invoke CDFW Submitter and send the meta graph
+      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph)
+          .setWorkers(4).addDataFlowJobConfig(dataFlowJobConfig)
+          .setGraphType("non-iterative");
       execEnv.executeDataFlowGraph(job);
     }
   }
@@ -80,25 +85,62 @@ public final class HelloExample {
   private static class FirstSource extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
+    private CollectionPartition<Object> collectionPartition;
+
     @Override
     public void execute() {
-      context.writeEnd("all-reduce", "Hello");
+      LOG.fine("Context task id and index:" + context.taskId() + "\t" + context.taskIndex());
+      for (int i = 0; i < 4; i++) {
+        collectionPartition.add("Task Value" + i);
+      }
+      context.writeEnd("all-reduce", collectionPartition);
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      collectionPartition = new CollectionPartition();
     }
   }
 
   private static class SecondSink extends ConnectedSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
+    private String inputKey;
+
+    private CollectionPartition<Object> partition;
+
+    protected SecondSink() {
+    }
+
+    protected SecondSink(String inputkey) {
+      this.inputKey = inputkey;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      partition = new CollectionPartition<>();
+    }
+
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Message: " + context.getWorkerId()
-          + ":" + context.globalTaskId() + message.getContent());
+      if (message.getContent() instanceof  Iterator) {
+        while (((Iterator<Object>) message.getContent()).hasNext()) {
+          partition.add(((Iterator<Object>) message.getContent()).next());
+        }
+      }
       return true;
     }
 
     @Override
-    public DataPartition<Object> get() {
-      return null;
+    public DataPartition<?> get(String name) {
+      return new EntityPartition<>(partition);
+    }
+
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare(inputKey);
     }
   }
 

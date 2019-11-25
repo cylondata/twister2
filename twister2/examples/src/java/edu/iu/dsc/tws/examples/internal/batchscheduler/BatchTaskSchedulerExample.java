@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -73,7 +72,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     firstGraphBuilder.addSource("firstsource", sourceTask, parallelism);
     ComputeConnection computeConnection = firstGraphBuilder.addCompute(
         "firstcompute", computeTask, parallelism);
-    ComputeConnection sinkConnection = firstGraphBuilder.addSink(
+    ComputeConnection sinkConnection = firstGraphBuilder.addCompute(
         "firstsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -99,7 +98,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     secondGraphBuilder.addSource("secondsource", sourceTask, parallelism);
     ComputeConnection computeConnection = secondGraphBuilder.addCompute(
         "secondcompute", computeTask, parallelism);
-    ComputeConnection sinkConnection = secondGraphBuilder.addSink(
+    ComputeConnection sinkConnection = secondGraphBuilder.addCompute(
         "secondsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -122,7 +121,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     ComputeGraphBuilder thirdGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     thirdGraphBuilder.addSource("thirdsource", sourceTask, parallelism);
-    ComputeConnection sinkConnection = thirdGraphBuilder.addSink(
+    ComputeConnection sinkConnection = thirdGraphBuilder.addCompute(
         "thirdsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the third task graph
@@ -241,7 +240,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     }
   }
 
-  private static class FirstSinkTask extends BaseSink implements Collector {
+  private static class FirstSinkTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] datapoints;
@@ -334,7 +333,7 @@ public class BatchTaskSchedulerExample implements IWorker {
   }
 
 
-  private static class SecondSinkTask extends BaseSink implements Collector {
+  private static class SecondSinkTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] datapoints;
@@ -410,7 +409,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     }
   }
 
-  private static class ThirdSinkTask extends BaseSink implements Collector {
+  private static class ThirdSinkTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] datapoints;

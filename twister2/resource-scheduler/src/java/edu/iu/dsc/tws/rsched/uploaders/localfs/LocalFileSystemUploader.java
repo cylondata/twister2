@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.uploaders.localfs;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -73,16 +74,14 @@ public class LocalFileSystemUploader implements IUploader {
     LOG.log(Level.INFO, String.format("Copying job directory at '%s' to target "
         + "working directory '%s'", sourceLocation, filePath.toString()));
     try {
-      //if (!FileUtils.copyDirectoryToDirectory(sourceLocation, destinationDirectory)) {//prev. ver
-      if (!FileUtils.copyDirectory(sourceLocation, destinationDirectory)) {
-        throw new RuntimeException(String.format("Failed to copy directory %s to %s",
-            filePath.toString(), destinationDirectory));
-      }
-      //return new URI(Paths.get(destinationDirectory, directoryName).toString());//previous version
+      FileUtils.copyDirectory(sourceLocation, destinationDirectory);
       return new URI(destinationDirectory);
     }  catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Failed to copy directory %s to %s",
+          filePath.toString(), destinationDirectory));
     }
   }
 

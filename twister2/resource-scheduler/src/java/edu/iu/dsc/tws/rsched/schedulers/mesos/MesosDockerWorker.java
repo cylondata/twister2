@@ -34,15 +34,15 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 //import java.util.ArrayList;
 //import java.util.List;
-
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
 public class MesosDockerWorker {
 
@@ -190,8 +190,8 @@ public class MesosDockerWorker {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
 
-    //TODO: should be either WorkerState.STARTING or WorkerState.RESTARTING
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    //TODO: should be either WorkerState.STARTED or WorkerState.RESTARTED
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
 
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
         jobMasterPort, numberOfWorkers, initialState);

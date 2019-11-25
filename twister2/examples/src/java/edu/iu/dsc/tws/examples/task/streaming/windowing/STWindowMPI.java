@@ -50,7 +50,7 @@ public class STWindowMPI extends BenchTaskWorker {
         .withTumblingCountWindow(1);
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, dw, sinkParallelism);
     computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
     return computeGraphBuilder;

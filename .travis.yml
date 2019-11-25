@@ -10,28 +10,43 @@ addons:
 
 jdk: oraclejdk11
 
+cache:
+  directories:
+    - $HOME/.cache/bazel
+    - $HOME/.cache/apt
+
 before_install:
   - echo "s:======================================"
   - echo "Downloading bazel"
   - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
   - sha256sum -c tools/bazel_1.1.0-linux-x86_64.deb.sha256
   - sudo dpkg -i bazel_1.1.0-linux-x86_64.deb
+  - |
+    exist() {
+        [ -e "$1" ]
+    }
+  - |
+    if exist $HOME/.cache/apt/*.deb
+    then
+        sudo mv $HOME/.cache/apt/*.deb /var/cache/apt/archives/
+    fi
   - echo "Installing C++ and Python"
-  - sudo apt-get install g++
-  - sudo apt-get install  python-dev python-pip python3-dev python3-pip
+  - sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven
+  - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
 
-script:
-  - echo "PATH CHECK:vb"
-  - bazel version
-  - echo " BAZEL BUILD START"
-  - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
-  - echo " BAZEL BUILD END"
-  - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
-  - echo "BAZEL PACKAGE START"
-  - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
-  - echo "BAZEL PACKAGE END"
-  - echo " END ALL "
-  - echo "e:============================================"
+jobs:
+  include:
+    - stage: "Build Stages"
+      script:
+        - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
+        - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
+      name: "Build & Test"
+    - script:
+        - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
+      name: "Tar Package"
+    - script:
+        - sh util/mvn/install-local-snapshot.sh
+      name: "Maven Package"
 
 notifications:
   slack:

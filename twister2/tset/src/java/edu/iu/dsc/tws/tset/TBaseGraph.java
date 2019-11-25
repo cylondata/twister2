@@ -33,14 +33,12 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.google.common.graph.ElementOrder;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
-
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.tset.env.BuildContext;
+import edu.iu.dsc.tws.tset.graph.DAGMutableGraph;
+import edu.iu.dsc.tws.tset.graph.MutableGraph;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class TBaseGraph {
@@ -53,11 +51,12 @@ public class TBaseGraph {
   private Set<BuildableTSet> sources;
 
   public TBaseGraph(OperationMode operationMode) {
-    this.graph = GraphBuilder.directed()
-        .allowsSelfLoops(false) // because this is a DAG
-        .expectedNodeCount(100000) // use config and change this value
-        .nodeOrder(ElementOrder.insertion())
-        .build();
+//    this.graph = GraphBuilder.directed()
+//        .allowsSelfLoops(false) // because this is a DAG
+//        .expectedNodeCount(100000) // use config and change this value
+//        .nodeOrder(ElementOrder.insertion())
+//        .build();
+    this.graph = new DAGMutableGraph<>();
 
     this.opMode = operationMode;
 
@@ -109,11 +108,13 @@ public class TBaseGraph {
   }
 
   public Set<TBase> getSuccessors(TBase tSet) {
-    return this.graph.successors(tSet);
+    Set<TBase> res = this.graph.successors(tSet);
+    return res != null ? res : Collections.emptySet();
   }
 
   public Set<TBase> getPredecessors(TBase tSet) {
-    return this.graph.predecessors(tSet);
+    Set<TBase> res = this.graph.predecessors(tSet);
+    return res != null ? res : Collections.emptySet();
   }
 
   private boolean removeNode(TBase tSet) {
@@ -131,6 +132,21 @@ public class TBaseGraph {
     LOG.info(() -> "Build order for " + buildId + " : " + buildSeq.toString());
 
     return new BuildContext(buildId, roots, buildSeq, opMode);
+  }
+
+  /**
+   * Builds only one TSet (NOT the subgraph)
+   *
+   * @param tSet TSet to build
+   * @return build context
+   */
+  public BuildContext buildOne(BuildableTSet tSet) {
+    String buildId = TSetUtils.generateBuildId(tSet);
+
+    LOG.info(() -> "Build order for " + buildId + " : " + tSet.toString());
+
+    return new BuildContext(buildId, Collections.singleton(tSet), Collections.singleton(tSet),
+        opMode);
   }
 
   /**

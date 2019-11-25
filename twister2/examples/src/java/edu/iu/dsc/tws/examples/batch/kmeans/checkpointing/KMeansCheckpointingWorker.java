@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.checkpointing.Snapshot;
 import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
 import edu.iu.dsc.tws.api.comms.packing.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -40,9 +41,8 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -93,26 +93,24 @@ public class KMeansCheckpointingWorker implements IWorker {
     LOG.info("Task worker starting: " + workerId + " Current snapshot ver: "
         + snapshot.getVersion());
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
+    int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
+    int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
+    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = config.getStringValue(
+        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
-
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    ComputeGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = KMeansComputeJob.buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -125,7 +123,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     DataObject<Object> centroidsDataObject;
     if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
-      ComputeGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
+      ComputeGraph centroidsTaskGraph = KMeansComputeJob.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
       //Get the execution plan for the second task graph
       ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
@@ -142,27 +140,14 @@ public class KMeansCheckpointingWorker implements IWorker {
 
 
     /* Third Graph to do the actual calculation **/
-    ComputeGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = KMeansComputeJob.buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
-    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-
-    int i = (int) snapshot.getOrDefault(I_KEY, 0);      // recover from checkpoint
-    for (; i < iterations; i++) {
-      //add the datapoints and centroids as input to the kmeanssource task.
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
+    IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
+    for (int i = 0; i < iterations; i++) {
       //actual execution of the third task graph
-      taskExecutor.itrExecute(kmeansTaskGraph, plan);
-      //retrieve the new centroid value for the next iterations
-      centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-
-      // at each iteration, commit the checkpoint.
-      checkpointingEnv.commitSnapshot();
+      ex.execute(i == iterations - 1);
     }
-    taskExecutor.closeExecution(kmeansTaskGraph, plan);
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();

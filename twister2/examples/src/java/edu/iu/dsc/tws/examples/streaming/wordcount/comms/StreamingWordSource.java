@@ -17,13 +17,13 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class StreamingWordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(StreamingWordSource.class.getName());
 
-  private SKeyedReduce operation;
+  private SPartition operation;
 
   private Random random = new Random();
 
@@ -37,7 +37,7 @@ public class StreamingWordSource implements Runnable {
 
   private boolean done;
 
-  public StreamingWordSource(SKeyedReduce operation, int words,
+  public StreamingWordSource(SPartition operation, int words,
                              int tId, int noOfSampleWords) {
     this.operation = operation;
     this.noOfWords = words;
@@ -54,7 +54,7 @@ public class StreamingWordSource implements Runnable {
     for (int i = 0; i < noOfWords; i++) {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
       // lets try to process if send doesn't succeed
-      while (!operation.reduce(taskId, word, new int[]{1}, 0)) {
+      while (!operation.partition(taskId, word, 0)) {
         operation.progress();
       }
     }

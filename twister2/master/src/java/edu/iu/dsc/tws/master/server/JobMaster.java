@@ -14,12 +14,13 @@ package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
@@ -32,7 +33,6 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKMasterController;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -90,7 +90,7 @@ public class JobMaster {
   /**
    * the ip address of this job master
    */
-  private String masterAddress;
+  private String jmAddress;
 
   /**
    * port number of this job master
@@ -187,14 +187,14 @@ public class JobMaster {
    * JobMaster constructor
    *
    * @param config configuration
-   * @param masterAddress master host
+   * @param jmAddress master host
    * @param port the port number
    * @param jobTerminator terminator
    * @param job the job in proto format
    * @param nodeInfo node info of master
    */
   public JobMaster(Config config,
-                   String masterAddress,
+                   String jmAddress,
                    int port,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
@@ -202,7 +202,7 @@ public class JobMaster {
                    IScalerPerCluster clusterScaler,
                    JobMasterAPI.JobMasterState initialState) {
     this.config = config;
-    this.masterAddress = masterAddress;
+    this.jmAddress = jmAddress;
     this.jobTerminator = jobTerminator;
     this.job = job;
     this.nodeInfo = nodeInfo;
@@ -215,7 +215,8 @@ public class JobMaster {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
       this.dashClient = null;
     } else {
-      this.dashClient = new DashboardClient(dashboardHost, job.getJobId());
+      this.dashClient = new DashboardClient(
+          dashboardHost, job.getJobId(), JobMasterContext.jmToDashboardConnections(config));
     }
   }
 
@@ -224,20 +225,20 @@ public class JobMaster {
    * file
    *
    * @param config configuration
-   * @param masterAddress master host
+   * @param jmAddress master host
    * @param jobTerminator terminator
    * @param job the job in proto format
    * @param nodeInfo node info of master
    */
   public JobMaster(Config config,
-                   String masterAddress,
+                   String jmAddress,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
                    JobMasterAPI.NodeInfo nodeInfo,
                    IScalerPerCluster clusterScaler,
                    JobMasterAPI.JobMasterState initialState) {
 
-    this(config, masterAddress, JobMasterContext.jobMasterPort(config),
+    this(config, jmAddress, JobMasterContext.jobMasterPort(config),
         jobTerminator, job, nodeInfo, clusterScaler, initialState);
   }
 
@@ -245,7 +246,7 @@ public class JobMaster {
   /**
    * initialize the Job Master
    */
-  private void init() {
+  private void init() throws Twister2Exception {
 
     looper = new Progress();
 
@@ -260,7 +261,7 @@ public class JobMaster {
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
     rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+        new RRServer(config, jmAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     // init Driver if it exists
     // this ha to be done before WorkerMonitor initialization
@@ -269,12 +270,10 @@ public class JobMaster {
     boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver, faultTolerant);
 
-    workerHandler = new WorkerHandler(workerMonitor, rrServer);
+    workerHandler =
+        new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
     pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
-
-    // if ZoKeeper server is used for this job, initialize that
-    initZKMasterController(workerMonitor);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -330,6 +329,13 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
+    // if ZoKeeper server is used for this job, initialize that
+    try {
+      initZKMasterController(workerMonitor);
+    } catch (Twister2Exception e) {
+      throw e;
+    }
+
     //initialize checkpoint manager
     if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
@@ -346,15 +352,18 @@ public class JobMaster {
 
     rrServer.start();
     looper.loop();
-
   }
 
   /**
    * start the Job Master in a Thread
    */
-  public Thread startJobMasterThreaded() {
+  public Thread startJobMasterThreaded() throws Twister2Exception {
     // first call the init method
-    init();
+    try {
+      init();
+    } catch (Twister2Exception e) {
+      throw e;
+    }
 
     // start Driver thread if the driver exists
     startDriverThread();
@@ -374,11 +383,16 @@ public class JobMaster {
   /**
    * start the Job Master in a blocking call
    */
-  public void startJobMasterBlocking() {
+  public void startJobMasterBlocking() throws Twister2Exception {
     // first call the init method
-    init();
+    try {
+      init();
+    } catch (Twister2Exception e) {
+      throw e;
+    }
 
     // start Driver thread if the driver exists
+
     startDriverThread();
 
     startLooping();
@@ -388,7 +402,7 @@ public class JobMaster {
    * Job Master loops until all workers in the job completes
    */
   private void startLooping() {
-    LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
+    LOG.info("JobMaster [" + jmAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
     while (!jobCompleted) {
@@ -404,6 +418,10 @@ public class JobMaster {
 
     if (jobTerminator != null) {
       jobTerminator.terminateJob(job.getJobName());
+    }
+
+    if (dashClient != null) {
+      dashClient.close();
     }
   }
 
@@ -446,38 +464,51 @@ public class JobMaster {
     driverThread.setName("driver");
     driverThread.start();
 
+    // if all workers already joined, publish that event to the driver
+    // this usually happens when jm restarted
+    // TODO: make sure driver thread started before publishing this event
+    //       as a temporary solution, wait 50 ms before starting new thread
+    if (workerMonitor.isAllJoined()) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
+
+      Executors.newSingleThreadExecutor().execute(new Runnable() {
+        @Override
+        public void run() {
+          workerMonitor.informDriverForAllJoined();
+        }
+      });
+    }
+
     return driverThread;
   }
 
   /**
    * initialize ZKMasterController if ZooKeeper used
    */
-  private void initZKMasterController(WorkerMonitor wMonitor) {
+  private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController = new ZKMasterController(config, job.getJobName(),
-          job.getNumberOfWorkers(), ZKContext.serverAddresses(config));
+          job.getNumberOfWorkers(), jmAddress, workerMonitor);
 
       try {
         zkMasterController.initialize(initialState);
-      } catch (Exception e) {
-        throw new Twister2RuntimeException(e);
+      } catch (Twister2Exception e) {
+        throw e;
       }
-
-      zkMasterController.addFailureListener(wMonitor);
-      zkMasterController.addWorkerStatusListener(wMonitor);
     }
 
   }
 
-  /**
-   * this method is called when all workers became RUNNING
-   * we let the dashboard know that the job STARTED
-   */
-  public void allWorkersBecameRunning() {
-    // if Dashboard is used, tell it that the job has STARTED
-    if (dashClient != null) {
-      dashClient.jobStateChange(JobState.STARTED);
-    }
+  public ZKMasterController getZkMasterController() {
+    return zkMasterController;
+  }
+
+  public WorkerHandler getWorkerHandler() {
+    return workerHandler;
   }
 
   /**

@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.dataset.partition.EntityPartition;
  * This class receives the message from the DataObjectSource and writes the output into the
  * DataObject.
  */
-public class DataObjectSink<T> extends BaseSink implements Collector {
+public class DataObjectSink<T> extends BaseCompute implements Collector {
 
   private static final Logger LOG = Logger.getLogger(DataObjectSink.class.getName());
 

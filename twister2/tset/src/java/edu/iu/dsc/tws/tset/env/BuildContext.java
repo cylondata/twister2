@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.env;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TBase;
@@ -34,6 +35,10 @@ public class BuildContext {
 
   private ComputeGraph computeGraph;
   private ExecutionPlan executionPlan;
+  /**
+   * Current executor, this can be null in the begining
+   */
+  private IExecutor executor;
 
   public BuildContext(String bId, Set<BuildableTSet> roots, Set<TBase> buildSeq,
                       OperationMode opMode) {
@@ -69,6 +74,10 @@ public class BuildContext {
     return buildSequence;
   }
 
+  public IExecutor getExecutor() {
+    return executor;
+  }
+
   public boolean build(TaskExecutor taskExecutor) {
     if (computeGraph == null || executionPlan == null) {
       GraphBuilder graphBuilder = GraphBuilder.newBuilder();
@@ -85,6 +94,9 @@ public class BuildContext {
       computeGraph.setGraphName(buildId);
 
       executionPlan = taskExecutor.plan(computeGraph);
+
+      // here we create the executor for this graph, it will be used to execut the graph
+      executor = taskExecutor.createExecution(computeGraph, executionPlan);
 
       return true;
     }

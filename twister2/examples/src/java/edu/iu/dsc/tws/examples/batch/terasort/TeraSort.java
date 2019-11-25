@@ -47,6 +47,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
@@ -164,8 +165,7 @@ public class TeraSort implements IWorker {
       ComputeGraph sampleGraphBuild = samplingGraph.build();
       ExecutionPlan sampleTaskPlan = cEnv.getTaskExecutor().plan(sampleGraphBuild);
       cEnv.getTaskExecutor().execute(sampleGraphBuild, sampleTaskPlan);
-      DataObject<byte[]> output = cEnv.getTaskExecutor().getOutput(sampleGraphBuild,
-          sampleTaskPlan, TASK_SAMPLER_REDUCE);
+      DataObject<byte[]> output = cEnv.getTaskExecutor().getOutput("sample-reduce");
       LOG.info("Sample output received");
       taskPartitioner = new TaskPartitionerForSampledData(
           output.getPartitions()[0].getConsumer().next(),
@@ -189,7 +189,7 @@ public class TeraSort implements IWorker {
         config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    KeyedGatherConfig keyedGatherConfig = teraSortTaskGraph.addSink(TASK_RECV, receiver,
+    KeyedGatherConfig keyedGatherConfig = teraSortTaskGraph.addCompute(TASK_RECV, receiver,
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE)
         .viaEdge(EDGE)
@@ -256,6 +256,11 @@ public class TeraSort implements IWorker {
     public boolean allReduce(byte[] content) {
       this.minMax = new EntityPartition<>(0, content);
       return true;
+    }
+
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare("sample-reduce");
     }
   }
 

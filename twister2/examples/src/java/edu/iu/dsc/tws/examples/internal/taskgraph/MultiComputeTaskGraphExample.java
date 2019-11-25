@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,16 +35,14 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -86,8 +83,6 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     SecondComputeTask secondComputeTask = new SecondComputeTask();
     ReduceTask reduceTask = new ReduceTask();
 
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
-
     String dataDirectory = (String) config.get(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
     String centroidDirectory = (String) config.get(DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
@@ -99,7 +94,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     LOG.info("Input Values:" + dataDirectory + centroidDirectory + dimension + numFiles);
 
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
     //Adding the user-defined constraints to the graph
@@ -117,7 +112,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
         "firstcompute", firstComputeTask, parallel);
     ComputeConnection secondComputeConnection = builder.addCompute(
         "secondcompute", secondComputeTask, parallel);
-    ComputeConnection reduceConnection = builder.addSink("sink", reduceTask, parallel);
+    ComputeConnection reduceConnection = builder.addCompute("compute", reduceTask, parallel);
 
     firstComputeConnection.direct("source")
         .viaEdge("fdirect")
@@ -147,15 +142,9 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
     ComputeGraph graph = builder.build();
-    LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints()
-        + "\tNode Constraints:%%%" + graph.getNodeConstraints().entrySet());
+    LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints());
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
-
-    DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-    DataPartition<double[]> values = dataSet.getPartitions()[0];
-    double[] newValue = values.getConsumer().next();
-    LOG.info("Final Aggregated Values Are:" + Arrays.toString(newValue));
   }
 
   /**
@@ -247,7 +236,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     }
   }
 
-  private static class ReduceTask extends BaseSink implements Collector {
+  private static class ReduceTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] newValues;

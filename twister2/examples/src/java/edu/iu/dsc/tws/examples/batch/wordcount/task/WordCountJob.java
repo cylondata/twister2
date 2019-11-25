@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -70,7 +70,7 @@ public class WordCountJob implements IWorker {
     // build the task graph
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
-    builder.addSink("word-aggregator", counter, 4)
+    builder.addCompute("word-aggregator", counter, 4)
         .keyedReduce("word-source")
         .viaEdge(EDGE)
         .withReductionFunction(new ReduceFn(Op.SUM, MessageTypes.INTEGER_ARRAY))
@@ -121,7 +121,7 @@ public class WordCountJob implements IWorker {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private static class WordAggregator extends BaseSink {
+  private static class WordAggregator extends BaseCompute {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override

@@ -20,10 +20,13 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -50,14 +53,20 @@ public final class ComputeEnvironment {
 
   private ComputeEnvironment(Config config, int workerId, IWorkerController wController,
                              IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    this.workerEnvironment = WorkerEnvironment.init(config, workerId,
-        wController, pVolume, vVolume);
-    this.taskExecutor = new TaskExecutor(workerEnvironment);
+    this(WorkerEnvironment.init(config, workerId, wController, pVolume, vVolume));
   }
 
   private ComputeEnvironment(WorkerEnvironment workerEnv) {
     this.workerEnvironment = workerEnv;
     this.taskExecutor = new TaskExecutor(workerEnv);
+
+    // if checkpointing enabled lets register for receiving faults
+    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnv.getConfig())) {
+      IWorkerFailureListener listener = workerEnv.getWorkerController().getFailureListener();
+      if (listener instanceof IManagedFailureListener) {
+        ((IManagedFailureListener) listener).registerFaultAcceptor(taskExecutor);
+      }
+    }
   }
 
   /**
@@ -136,6 +145,14 @@ public final class ComputeEnvironment {
       workerEnvironment.getWorkerController().waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+    // if checkpointing enabled lets register for receiving faults
+    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
+      IWorkerFailureListener listener =
+          workerEnvironment.getWorkerController().getFailureListener();
+      if (listener instanceof IManagedFailureListener) {
+        ((IManagedFailureListener) listener).unRegisterFaultAcceptor(taskExecutor);
+      }
     }
     // close the task executor
     taskExecutor.close();

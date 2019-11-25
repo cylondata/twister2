@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionState;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutionHook;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.config.Config;
@@ -41,7 +42,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private int workerId;
 
   // not stopped
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   // clean up is called
   private boolean cleanUpCalled = false;
@@ -51,15 +52,16 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
-    super(cfg, channel);
+  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan,
+                              IExecutionHook hook) {
+    super(cfg, channel, plan, hook);
     this.workerId = workerId;
   }
 
   /**
    * Execution Method for Batch Tasks
    */
-  public boolean runExecution(ExecutionPlan executionPlan) {
+  public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -80,8 +82,21 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       channel.progress();
     }
 
-    cleanUp(executionPlan, nodes);
+    cleanUp(nodes);
     return true;
+  }
+
+  @Override
+  public boolean execute(boolean close) {
+    boolean e = execute();
+    if (close) {
+      closeExecution();
+    }
+    return e;
+  }
+
+  public boolean isNotStopped() {
+    return notStopped;
   }
 
   private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
@@ -114,7 +129,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
-  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
       doneSignal.await();
@@ -127,10 +142,12 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
+    // execute the hook
+    executionHook.afterExecution();
   }
 
   @Override
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
+  public IExecution runIExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -149,8 +166,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
-    Map<Integer, INodeInstance> nodes = plan.getNodes();
+  public boolean closeExecution() {
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -161,12 +178,11 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleWaitFor(nodes);
 
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size()) {
+    while (isNotStopped() && finishedInstances.get() != nodes.size()) {
       channel.progress();
     }
 
-    close(plan, nodes);
-
+    close(executionPlan, nodes);
     return true;
   }
 
@@ -218,7 +234,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
-
+    executionHook.onClose(this);
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
@@ -233,7 +249,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
@@ -292,7 +308,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public void run() {
       if (this.bindTaskToThread) {
-        while (notStopped) {
+        while (isNotStopped()) {
           boolean needsFurther = this.task.execute();
           if (!needsFurther) {
             finishedInstances.incrementAndGet(); //(task.getId(), true);
@@ -300,7 +316,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           }
         }
       } else {
-        while (notStopped && finishedInstances.get() != tasks.size()) {
+        while (isNotStopped() && finishedInstances.get() != tasks.size()) {
           try {
             int nodeInstanceIndex = this.getNext();
             if (nodeInstanceIndex != -1) {
@@ -343,16 +359,16 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.get() != nodeMap.size()) {
+      while (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
       }
       // we are going to set to executed
       executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
-      cleanUp(executionPlan, nodeMap);
+      cleanUp(nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 
@@ -367,7 +383,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         // we are going to set to executed
         executionPlan.setExecutionState(ExecutionState.EXECUTED);
         // clean up
-        cleanUp(executionPlan, nodeMap);
+        cleanUp(nodeMap);
         cleanUpCalled = false;
         // if we finish, lets schedule
         scheduleWaitFor(nodeMap);
@@ -375,7 +391,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.get() != nodeMap.size()) {
+      if (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         return true;
       }
@@ -384,12 +400,13 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
       if (!cleanUpCalled) {
         BatchSharingExecutor.this.close(executionPlan, nodeMap);
+        executionHook.onClose(BatchSharingExecutor.this);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

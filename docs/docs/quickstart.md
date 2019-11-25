@@ -4,7 +4,7 @@ title: Quickstart
 sidebar_label: Quickstart
 ---
 
-Lets look at how to setup Twister2 and run few examples. Lets start with the simplest possible Twister2 job where we spawn set of parallel workers and print a log.
+Lets look at how to setup Twister2 and run few examples. Lets start with a simple Twister2 job to spawn set of parallel workers and print a log.
 
 ### Building Twister2
 

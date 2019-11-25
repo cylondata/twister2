@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
@@ -38,12 +39,26 @@ public class BBroadcast extends BaseOperation {
   public BBroadcast(Communicator comm, LogicalPlan plan,
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType, int edgeID,
-                    MessageSchema messageSchema) {
+                    MessageSchema messageSchema, boolean useDisk) {
     super(comm, false, CommunicationContext.BROADCAST);
+
+
+    MessageType rcvType = dataType;
+    if (useDisk) {
+      rcvType = MessageTypes.BYTE_ARRAY;
+    }
+
     TreeBroadcast bcast = new TreeBroadcast(comm.getChannel(), sources, target,
-        new DirectBatchFinalReceiver(rcvr), messageSchema);
-    bcast.init(comm.getConfig(), dataType, plan, edgeID);
+        new DirectBatchFinalReceiver(rcvr, useDisk, dataType), messageSchema);
+    bcast.init(comm.getConfig(), dataType, rcvType, plan, edgeID);
     op = bcast;
+  }
+
+  public BBroadcast(Communicator comm, LogicalPlan plan,
+                    int sources, Set<Integer> target,
+                    BulkReceiver rcvr, MessageType dataType, int edgeID,
+                    MessageSchema messageSchema) {
+    this(comm, plan, sources, target, rcvr, dataType, edgeID, messageSchema, false);
   }
 
   /**
@@ -67,6 +82,13 @@ public class BBroadcast extends BaseOperation {
     this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources().iterator().next(),
         logicalPlanBuilder.getTargets(), rcvr, dataType,
         comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BBroadcast(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                    BulkReceiver rcvr, MessageType dataType, boolean useDisk) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources().iterator().next(),
+        logicalPlanBuilder.getTargets(), rcvr, dataType,
+        comm.nextEdge(), MessageSchema.noSchema(), useDisk);
   }
 
   public BBroadcast(Communicator comm, LogicalPlan plan,

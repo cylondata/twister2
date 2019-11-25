@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -55,7 +54,7 @@ public class CheckpointingTaskExample implements IWorker {
     computeGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
         .direct("source").viaEdge("so-c").withDataType(MessageTypes.INTEGER);
 
-    computeGraphBuilder.addSink("sink", new SinkTask(), parallelism)
+    computeGraphBuilder.addCompute("sink", new SinkTask(), parallelism)
         .direct("compute")
         .viaEdge("c-si")
         .withDataType(MessageTypes.INTEGER);
@@ -92,7 +91,7 @@ public class CheckpointingTaskExample implements IWorker {
     }
   }
 
-  public static class SinkTask extends BaseSink<Integer> implements CheckpointableTask {
+  public static class SinkTask extends BaseCompute<Integer> implements CheckpointableTask {
 
     private int count = 0;
 

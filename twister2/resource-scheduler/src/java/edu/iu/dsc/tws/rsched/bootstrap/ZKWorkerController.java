@@ -589,7 +589,6 @@ public class ZKWorkerController implements IWorkerController {
     }
   }
 
-
   /**
    * close the children cache
    * close persistent node for this worker

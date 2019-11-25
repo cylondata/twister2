@@ -164,6 +164,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
     jobConfig.put(Constants.ARGS_STREAM, stream);
+    jobConfig.put(Constants.ARG_RESOURCE_MEMORY, memory);
     jobConfig.put(BenchmarkMetadata.ARG_RUN_BENCHMARK, runBenchmark);
     if (runBenchmark) {
       jobConfig.put(BenchmarkMetadata.ARG_BENCHMARK_METADATA, benchmarkMetadata);

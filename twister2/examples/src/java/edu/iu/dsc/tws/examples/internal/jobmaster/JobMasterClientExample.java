@@ -50,6 +50,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -108,7 +109,9 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState =
+        K8sWorkerStarter.initialStateAndUpdate(config, job.getJobName(), workerInfo);
+
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     IWorkerStatusUpdater statusUpdater = WorkerRuntime.getWorkerStatusUpdater();
@@ -124,23 +127,30 @@ public final class JobMasterClientExample {
       }
     });
 
-    // wait up to 2sec
-    sleeeep((long) (Math.random() * 2 * 1000));
+//    WorkerRuntime.addAllJoinedListener(new IAllJoinedListener() {
+//      @Override
+//      public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+//        LOG.info("All workers joined, IDs: " + getIDs(workerList));
+//      }
+//    });
 
-    statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
+    // wait up to 2sec
+//    sleeeep((long) (Math.random() * 2 * 1000));
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Currently joined worker IDs: " + getIDs(workerList));
 
     try {
       workerList = workerController.getAllWorkers();
-      LOG.info("All workers joined. IDs: " + getIDs(workerList));
+      LOG.info("All workers joined... IDs: " + getIDs(workerList));
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
 
-    // wait up to 10sec
+    // wait
+    sleeeep(200 * 1000);
+
     try {
       workerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.......");
@@ -148,8 +158,12 @@ public final class JobMasterClientExample {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
+    int id = job.getNumberOfWorkers() - 1;
+    JobMasterAPI.WorkerInfo info = workerController.getWorkerInfoForID(id);
+    LOG.info("WorkerInfo for " + id + ": \n" + info);
+
     // wait up to 3sec
-//    sleeeep((long) (Math.random() * 100 * 1000));
+    sleeeep((long) (Math.random() * 10 * 1000));
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 

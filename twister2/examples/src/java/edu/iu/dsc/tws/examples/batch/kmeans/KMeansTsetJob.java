@@ -46,21 +46,20 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     int workerId = tc.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(tc.getConfig());
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(tc.getConfig());
+    Config config = tc.getConfig();
+    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
+    int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
+    int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
+    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = config.getStringValue(
+        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
-
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+    KMeansUtils.generateDataPoints(tc.getConfig(), dimension, numFiles,
+        dsize, csize, dataDirectory, centroidDirectory);
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
@@ -117,7 +116,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     public void prepare(TSetContext context) {
       super.prepare(context);
       Config cfg = context.getConfig();
-      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
+      this.dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
 
     }
 
@@ -125,8 +124,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     public double[][] map(double[][] data) {
       double[][] centers = (double[][]) getTSetContext()
           .getInput("centers").getConsumer().next();
-      KMeansCalculator kMeansCalculator = new KMeansCalculator(data, centers, dimension);
-      return kMeansCalculator.calculate();
+      return KMeansUtils.findNearestCenter(dimension, data, centers);
     }
   }
 
@@ -164,15 +162,14 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
       int para = context.getParallelism();
       Config cfg = context.getConfig();
-      this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
-      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
+      this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 12);
+      this.dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
           + context.getWorkerId();
-      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
       this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
-          Path(datainputDirectory), context.getParallelism(), cfg, datasize),
+          Path(datainputDirectory), context.getParallelism(), cfg, dataSize),
           context.getParallelism());
     }
 
@@ -223,8 +220,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       Config cfg = context.getConfig();
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
           + context.getWorkerId();
-      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-      int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
+      this.dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
+      int csize = cfg.getIntegerValue(DataObjectConstants.CSIZE, 4);
 
       this.centers = new double[csize][dimension];
       this.source = new DataSource(cfg, new LocalCompleteTextInputPartitioner(new

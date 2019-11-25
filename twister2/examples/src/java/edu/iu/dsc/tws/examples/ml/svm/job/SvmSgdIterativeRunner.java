@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Context;
@@ -308,7 +309,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         = datapointsComputeGraphBuilder.addCompute(dataObjectComputeStr,
         dataObjectCompute, parallelism);
     ComputeConnection computeConnectionSink = datapointsComputeGraphBuilder
-        .addSink(dataObjectSinkStr,
+        .addCompute(dataObjectSinkStr,
             iterativeSVMPrimaryDataObjectDirectSink,
             parallelism);
     datapointComputeConnection.direct(dataObjectSourceStr)
@@ -343,7 +344,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE,
             weightVectorObjectCompute, dataStreamerParallelism);
     ComputeConnection weightVectorSinkConnection = weightVectorComputeGraphBuilder
-        .addSink(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
+        .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
             dataStreamerParallelism);
 
     weightVectorComputeConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SOURCE)
@@ -362,7 +363,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private void runTrainingGraph() {
     iterativeSVMTrainingTaskGraph = buildSvmSgdIterativeTrainingTG();
     iterativeSVMTrainingExecutionPlan = taskExecutor.plan(iterativeSVMTrainingTaskGraph);
-
+    IExecutor ex = taskExecutor.createExecution(iterativeSVMTrainingTaskGraph,
+        iterativeSVMTrainingExecutionPlan);
     for (int i = 0; i < this.binaryBatchModel.getIterations(); i++) {
       LOG.info(String.format("Iteration  %d ", i));
       taskExecutor.addInput(
@@ -373,13 +375,13 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           Constants.SimpleGraphConfig.ITERATIVE_DATASTREAMER_SOURCE,
           Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputDoubleWeightvectorObject);
 
-      taskExecutor.itrExecute(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
+      ex.execute();
 
       inputDoubleWeightvectorObject = taskExecutor.getOutput(iterativeSVMTrainingTaskGraph,
           iterativeSVMTrainingExecutionPlan,
           Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE);
     }
-    taskExecutor.closeExecution(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
+    ex.closeExecution();
   }
 
   private ComputeGraph buildSvmSgdIterativeTrainingTG() {
@@ -391,7 +393,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_DATASTREAMER_SOURCE,
         iterativeDataStream, dataStreamerParallelism);
     ComputeConnection svmComputeConnection = trainingBuilder
-        .addSink(Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE,
+        .addCompute(Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE,
             iterativeSVMRiterativeSVMWeightVectorReduce,
             dataStreamerParallelism);
 
@@ -433,7 +435,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     testingBuilder.addSource(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK,
         iterativePredictionDataStreamer, dataStreamerParallelism);
     ComputeConnection svmComputeConnection = testingBuilder
-        .addSink(Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK, iterativeSVMAccuracyReduce,
+        .addCompute(Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK, iterativeSVMAccuracyReduce,
             dataStreamerParallelism);
 
     svmComputeConnection.allreduce(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK)

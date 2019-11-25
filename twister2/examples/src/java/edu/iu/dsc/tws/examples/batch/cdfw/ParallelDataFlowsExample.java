@@ -9,22 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,19 +24,19 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -97,7 +84,7 @@ public final class ParallelDataFlowsExample {
         .setJobName(ParallelDataFlowsExample.class.getName())
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(ParallelDataflowsDriver.class.getName())
-        .addComputeResource(1, 512, instances)
+        .addComputeResource(1, 512, instances, true)
         .setConfig(jobConfig)
         .build();
     // now submit the job
@@ -105,14 +92,14 @@ public final class ParallelDataFlowsExample {
   }
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                DafaFlowJobConfig jobConfig) {
+                                                int workers, DataFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
-    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
+    ComputeConnection partitionConnection = graphBuilderX.addCompute("sink1", connectedSink,
         parallelismValue);
     partitionConnection.partition("source1")
         .viaEdge("partition")
@@ -122,21 +109,20 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addOutput("first_out", "sink1").setGraphType("non-iterative");
-
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .setGraphType("non-iterative");
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 DafaFlowJobConfig jobConfig) {
+                                                 int workers, DataFlowJobConfig jobConfig) {
 
-    ConnectedSource connectedSource = new ConnectedSource("reduce");
+    ConnectedSource connectedSource = new ConnectedSource("reduce", "first_out");
     ConnectedSink connectedSink = new ConnectedSink();
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
+    ComputeConnection reduceConn = graphBuilderX.addCompute("sink1", connectedSink,
         1);
     reduceConn.reduce("source1")
         .viaEdge("reduce")
@@ -147,9 +133,8 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out", "source1").setGraphType("non-iterative");
-
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .setGraphType("non-iterative");
     return job;
   }
 
@@ -160,16 +145,26 @@ public final class ParallelDataFlowsExample {
 
       Config config = cdfwEnv.getConfig();
 
-      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
+      DataFlowJobConfig jobConfig = new DataFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, 2, 2, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, 2, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
+
+      /*if (cdfwEnv.increaseWorkers(2)) {
+        DataFlowGraph job3 = generateFirstJob(config, 4, 4, jobConfig);
+        DataFlowGraph job4 = generateSecondJob(config, 4, 4, jobConfig);
+
+        cdfwEnv.executeDataFlowGraph(job3);
+        cdfwEnv.executeDataFlowGraph(job4);
+      }*/
+      cdfwEnv.close();
     }
   }
 
-  private static class FirstSourceTask extends BaseSource implements Receptor {
+  /*private static class FirstSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -180,6 +175,30 @@ public final class ParallelDataFlowsExample {
     @Override
     public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
+    }
+  }*/
+
+  private static class FirstSourceTask extends BaseSource {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private CollectionPartition<Object> collectionPartition;
+
+    protected FirstSourceTask() {
+    }
+
+    @Override
+    public void execute() {
+      LOG.fine("Context task id and index:" + context.taskId() + "\t" + context.taskIndex());
+      for (int i = 0; i < 4; i++) {
+        collectionPartition.add("PartitionValue" + i);
+      }
+      context.writeEnd("partition", collectionPartition);
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      collectionPartition = new CollectionPartition();
     }
   }
 

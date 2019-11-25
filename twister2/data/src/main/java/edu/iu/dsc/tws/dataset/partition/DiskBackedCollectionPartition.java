@@ -28,24 +28,30 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
   private static final String CONFIG_FS_ROOT = "twister2.data.fs.root";
   private static final String FS_PROTO = "file://";
 
-  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
-                                       int bufferedBytes, Config config, String reference) {
+  public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
+                                       long bufferedBytes, Config config, String reference) {
     super(maxFramesInMemory, dataType, bufferedBytes, config, reference);
   }
 
-  public DiskBackedCollectionPartition(int maxFramesInMemory, Config config) {
+  public DiskBackedCollectionPartition(long maxFramesInMemory, Config config) {
     super(maxFramesInMemory, config);
   }
 
-  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType, Config config) {
+  public DiskBackedCollectionPartition(long maxFramesInMemory, Config config,
+                                       String reference) {
+    super(maxFramesInMemory, config, reference);
+  }
+
+  public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
+                                       Config config) {
     super(maxFramesInMemory, dataType, config);
   }
 
-  public DiskBackedCollectionPartition(MessageType dataType, int bufferedBytes, Config config) {
+  public DiskBackedCollectionPartition(MessageType dataType, long bufferedBytes, Config config) {
     super(dataType, bufferedBytes, config);
   }
 
-  public DiskBackedCollectionPartition(MessageType dataType, int bufferedBytes,
+  public DiskBackedCollectionPartition(MessageType dataType, long bufferedBytes,
                                        Config config, String reference) {
     super(dataType, bufferedBytes, config, reference);
   }

@@ -50,4 +50,27 @@ class TSet:
         self.__java_ref.addInput(name, input_tset.__java_ref)
 
     def cache(self):  # todo should return a cached tset instead
-        return TSet(self.__java_ref.cache(False), self.__env)
+        return TSet(self.__java_ref.cache(), self.__env)
+
+    def lazy_cache(self):
+        return TSet(self.__java_ref.lazyCache(), self.__env)
+
+    def persist(self):
+        return TSet(self.__java_ref.persist(), self.__env)
+
+    # TLink functions
+
+    def map(self, lam):
+        return self.direct().map(lam)
+
+    def flat_map(self, lam):
+        return self.direct().flat_map(lam)
+
+    def sink(self, sink_func):
+        return self.direct().sink(sink_func)
+
+    def compute(self, compute_func):
+        return self.direct().compute(compute_func)
+
+    def for_each(self, foreach_func):
+        return self.direct().for_each(foreach_func)

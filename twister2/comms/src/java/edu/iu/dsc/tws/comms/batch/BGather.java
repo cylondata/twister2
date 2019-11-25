@@ -48,21 +48,21 @@ public class BGather extends BaseOperation {
    * @param target target tasks
    * @param rcvr receiver
    * @param dataType data type
-   * @param shuffle weather to use disks
+   * @param useDisk weather to use disks
    */
   public BGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType,
-                 BulkReceiver rcvr, boolean shuffle) {
-    this(comm, plan, sources, target, dataType, rcvr, shuffle,
+                 BulkReceiver rcvr, boolean useDisk) {
+    this(comm, plan, sources, target, dataType, rcvr, useDisk,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public BGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
                  MessageType dataType,
-                 BulkReceiver rcvr, boolean shuffle) {
+                 BulkReceiver rcvr, boolean useDisk) {
     this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
-        logicalPlanBuilder.getTargets().iterator().next(), dataType, rcvr, shuffle,
+        logicalPlanBuilder.getTargets().iterator().next(), dataType, rcvr, useDisk,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 
@@ -70,18 +70,18 @@ public class BGather extends BaseOperation {
   public BGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType,
-                 BulkReceiver rcvr, boolean shuffle, MessageSchema messageSchema) {
-    this(comm, plan, sources, target, dataType, rcvr, shuffle,
+                 BulkReceiver rcvr, boolean useDisk, MessageSchema messageSchema) {
+    this(comm, plan, sources, target, dataType, rcvr, useDisk,
         comm.nextEdge(), messageSchema);
   }
 
   public BGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType,
-                 BulkReceiver rcvr, boolean shuffle, int edgeId, MessageSchema messageSchema) {
+                 BulkReceiver rcvr, boolean useDisk, int edgeId, MessageSchema messageSchema) {
     super(comm, false, CommunicationContext.GATHER);
     MessageReceiver finalRcvr;
-    if (!shuffle) {
+    if (!useDisk) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);
     } else {
       finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory(target));

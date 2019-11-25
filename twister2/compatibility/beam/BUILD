@@ -20,6 +20,7 @@ common_deps_files = [
        "@org_apache_beam_beam_runners_core_java//jar",
        "@org_apache_beam_beam_sdks_java_core//jar",
        "@org_apache_beam_beam_model_pipeline//jar",
+       "@commons_cli_commons_cli//jar",
        "@org_apache_beam_beam_runners_java_fn_execution//jar",
        "@com_fasterxml_jackson_core_jackson_annotations//jar",
        "@joda_time_joda_time//jar",
@@ -27,6 +28,7 @@ common_deps_files = [
        "@com_google_guava_guava//jar",
        "//third_party:vendored_grpc_1_21_0",
        "//third_party:vendored_guava_26_0_jre",
+       "@com_google_code_findbugs_jsr305//jar"
 ]
 
 t2_java_lib(

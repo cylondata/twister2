@@ -39,6 +39,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -235,17 +236,14 @@ public final class MPIWorker {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    // should be either WorkerState.STARTING or WorkerState.RESTARTING
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    // should be either WorkerState.STARTED or WorkerState.RESTARTED
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers, initialState);
     LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
-
-    // now lets send the starting message
-    jobMasterAgent.sendWorkerRunningMessage();
 
     return jobMasterAgent;
   }
@@ -398,6 +396,9 @@ public final class MPIWorker {
       LOG.log(Level.INFO, "Master done... ");
     } catch (UnknownHostException e) {
       LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      throw new RuntimeException(e);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
     }
   }

@@ -37,11 +37,8 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
    */
   protected Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
 
-  private int tag;
-
   public JoinPartitionBatchReceiver(SingularReceiver receiver, int tag) {
     this.receiver = receiver;
-    this.tag = tag;
   }
 
   @Override
@@ -65,7 +62,6 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
   protected boolean sendToTarget(int source, int target) {
     List<Object> values = readyToSend.get(target);
 
-    calledReceive = true;
     if (values == null || values.isEmpty()) {
       values = new ArrayList<>();
     }
@@ -91,7 +87,7 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
   @Override
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-        && messages.get(target).isEmpty();
+        && readyToSend.get(target) != null && !readyToSend.get(target).isEmpty();
   }
 
   @Override

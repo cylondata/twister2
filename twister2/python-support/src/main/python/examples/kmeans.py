@@ -32,13 +32,13 @@ centers = env.create_source(PointSource(10, 20), 2).cache()
 
 def apply_kmeans(points, ctx: TSetContext):
     from sklearn.cluster import KMeans
-    c = ctx.get_input("centroids")
-    centers = c.get_partition(ctx.get_index()).consumer().__next__()
+    data_partition = ctx.get_input("centroids")
+    centers = data_partition.first()
     kmeans = KMeans(init=centers, n_clusters=20, n_init=1).fit(points)
     return kmeans.cluster_centers_
 
 
-mapped = data.direct().map(apply_kmeans)
+mapped = data.map(apply_kmeans)
 
 
 def reduce_centroids(c1, c2):
@@ -56,4 +56,4 @@ for i in range(10):
     mapped.add_input("centroids", centers)
     centers = reduced.cache()
 
-centers.direct().for_each(lambda x: print(x))
+centers.for_each(lambda x: print(x))

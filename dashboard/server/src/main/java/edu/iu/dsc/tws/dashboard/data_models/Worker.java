@@ -56,7 +56,7 @@ public class Worker {
 
   @Column
   @Enumerated(EnumType.STRING)
-  private WorkerState state = WorkerState.STARTING;
+  private WorkerState state = WorkerState.STARTED;
 
   @ManyToOne(optional = false, cascade = CascadeType.PERSIST)
   private ComputeResource computeResource;

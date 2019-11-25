@@ -12,6 +12,9 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +27,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -53,9 +56,9 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new KeyedReduceSinkTask();
+    ICompute r = new KeyedReduceSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE)
         .viaEdge(edge)
         .withOperation(operation, dataType)
@@ -65,7 +68,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class KeyedReduceSinkTask
-      extends BKeyedReduceCompute<Integer, int[]> implements ISink {
+      extends BKeyedReduceCompute<Integer, int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
 
@@ -78,21 +81,34 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-        int sinksCount = ctx.getTasksByName(SINK).size();
-        Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
+        List<Integer> sinkIndex = ctx.getTasksByName(SINK).stream()
             .map(TaskInstancePlan::getTaskIndex)
-            .filter(i -> i % sinksCount == ctx.taskIndex())
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
+
+        sinkIndex.sort(Comparator.comparingInt(o -> o));
+
+        int thisTaskIndex = Integer.parseInt(args.get("taskIndex").toString());
+
+        Set<Integer> keysRoutedToThis = new HashSet<>();
+        for (Integer i = 0; i < jobParameters.getTotalIterations(); i++) {
+          if (sinkIndex.get(i.hashCode() % sinkIndex.size()) == thisTaskIndex) {
+            keysRoutedToThis.add(i);
+          }
+        }
+
+
         int[] reducedInts = GeneratorUtils.multiplyIntArray(
             ints,
-            jobParameters.getTotalIterations()
+            ctx.getTasksByName(SOURCE).size()
         );
-        List<Tuple<Integer, int[]>> finalOutput = new ArrayList<>();
 
-        taskIds.forEach(key -> {
-          finalOutput.add(new Tuple<>(key, reducedInts));
-        });
-        return finalOutput.iterator();
+        List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
+
+        for (Integer key : keysRoutedToThis) {
+          expectedData.add(new Tuple<>(key, reducedInts));
+        }
+
+        return expectedData.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
               (d1, d2) -> true, //return true for any key, since we
@@ -109,7 +125,8 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
           context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
-      this.verified = verifyResults(resultsVerifier, content, null, verified);
+      this.verified = verifyResults(resultsVerifier, content,
+          Collections.singletonMap("taskIndex", context.taskIndex()), verified);
       return true;
     }
   }

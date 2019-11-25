@@ -8,5 +8,6 @@ t2_java_lib(
     artifact_name = "Twiter2 Fault Tolerance API",
     deps = [
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
     ],
 )

@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
-import edu.iu.dsc.tws.api.resource.IJobMasterListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.ISenderToDriver;
@@ -50,6 +50,8 @@ public final class WorkerRuntime {
   private static IWorkerStatusUpdater workerStatusUpdater;
   private static ISenderToDriver senderToDriver;
 
+  private static IWorkerFailureListener failureListener;
+
   private WorkerRuntime() {
   }
 
@@ -70,20 +72,6 @@ public final class WorkerRuntime {
 
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
 
-    // if there is a driver in the job, we need to start JMWorkerAgent
-    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
-    if (!job.getDriverClassName().isEmpty()) {
-      // construct JMWorkerAgent
-      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
-
-      // start JMWorkerAgent
-      jmWorkerAgent.startThreaded();
-
-      // initialize JMSenderToDriver
-      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
-    }
-
     // if the job is fault tolerant or uses ZK for group management
     // get IWorkerController and IWorkerStatusUpdater through ZKWorkerController
     if (ZKContext.isZooKeeperServerUsed(config)) {
@@ -102,19 +90,30 @@ public final class WorkerRuntime {
       // if ZK is not used for group management, use JobMaster
     } else {
 
-      // if jobMasterAgent has not already been initialized, start it
-      if (jmWorkerAgent == null) {
+      // construct JMWorkerAgent
+      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
 
-        // construct JMWorkerAgent
-        jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
-
-        // start JMWorkerAgent
-        jmWorkerAgent.startThreaded();
-      }
+      // start JMWorkerAgent
+      jmWorkerAgent.startThreaded();
 
       workerController = jmWorkerAgent.getJMWorkerController();
       workerStatusUpdater = new JMWorkerStatusUpdater(jmWorkerAgent);
+      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+    }
+
+    // if there is a driver in the job, we need to start JMWorkerAgent
+    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
+    if (ZKContext.isZooKeeperServerUsed(config) && !job.getDriverClassName().isEmpty()) {
+      // construct JMWorkerAgent
+      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
+
+      // start JMWorkerAgent
+      jmWorkerAgent.startThreaded();
+
+      // initialize JMSenderToDriver
+      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
     }
 
     initialized = true;
@@ -148,11 +147,20 @@ public final class WorkerRuntime {
    * A listener can be only added when ZKWorkerController is used.
    */
   public static boolean addWorkerFailureListener(IWorkerFailureListener workerFailureListener) {
+    failureListener = workerFailureListener;
     if (zkWorkerController != null) {
       return zkWorkerController.addFailureListener(workerFailureListener);
     }
 
     return false;
+  }
+
+  /**
+   * Get the failure listener
+   * @return the failure listener
+   */
+  public static IWorkerFailureListener getFailureListener() {
+    return failureListener;
   }
 
   /**
@@ -197,8 +205,8 @@ public final class WorkerRuntime {
    */
   public static boolean addScalerListener(IScalerListener scalerListener) {
 
-    if (job.getDriverClassName().isEmpty()) {
-      return false;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      return zkWorkerController.addScalerListener(scalerListener);
     }
 
     if (jmWorkerAgent != null) {
@@ -209,13 +217,13 @@ public final class WorkerRuntime {
   }
 
   /**
-   * add a IJobMasterListener
+   * add a IJobMasterFailureListener
    * Currently failure notification is only implemented with ZKWorkerController
    * A listener can be only added when ZKWorkerController is used.
    */
-  public static boolean addJobMasterListener(IJobMasterListener jobMasterListener) {
+  public static boolean addJMFailureListener(IJobMasterFailureListener jobMasterListener) {
     if (zkWorkerController != null) {
-      return zkWorkerController.addJobMasterListener(jobMasterListener);
+      return zkWorkerController.addJMFailureListener(jobMasterListener);
     }
 
     return false;

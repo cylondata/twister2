@@ -23,13 +23,13 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -105,25 +105,22 @@ public abstract class BasicComputation extends TaskWorker {
 
 //third task graph for computations
     ComputeGraph computationTaskgraph = computation();
-    ExecutionPlan plan = taskExecutor.plan(computationTaskgraph);
+    IExecutor ex = taskExecutor.createExecution(computationTaskgraph);
+
     int unlimitedItr = 0;
 
     long startime = System.currentTimeMillis();
     if (iterations != 0) {
       for (int i = 0; i < iterations; i++) {
-        taskExecutor.itrExecute(computationTaskgraph, plan, i == iterations - 1);
-
+        ex.execute(i == iterations - 1);
       }
-
     } else {
       while (globaliterationStatus) {
-
-        taskExecutor.itrExecute(computationTaskgraph, plan, false);
+        ex.execute(false);
         unlimitedItr++;
 
       }
-      taskExecutor.closeExecution(computationTaskgraph, plan);
-      taskExecutor.close();
+      ex.closeExecution();
     }
     taskExecutor.close();
     long endTime = System.currentTimeMillis();
@@ -153,7 +150,7 @@ public abstract class BasicComputation extends TaskWorker {
         parallelismValue);
     ComputeConnection datapointComputeConnection1 = graphPartitionTaskGraphBuilder.addCompute(
         "Graphdatacompute", graphPartiton, parallelismValue);
-    ComputeConnection datapointComputeConnection2 = graphPartitionTaskGraphBuilder.addSink(
+    ComputeConnection datapointComputeConnection2 = graphPartitionTaskGraphBuilder.addCompute(
         "GraphPartitionSink", dataSinkTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -187,7 +184,7 @@ public abstract class BasicComputation extends TaskWorker {
         parallelismValue);
     ComputeConnection datapointComputeConnection = initialationTaskGraphBuilder.addCompute(
         "graphInitializationCompute", graphInitialization, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = initialationTaskGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = initialationTaskGraphBuilder.addCompute(
         "GraphInitializationSink", dataInitializationSinkTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -222,7 +219,7 @@ public abstract class BasicComputation extends TaskWorker {
     ComputeConnection computeConnectionKeyedReduce = computationTaskGraphBuilder.addCompute(
         "compute", computeTask, parallelismValue);
 
-    ComputeConnection computeConnectionAllReduce = computationTaskGraphBuilder.addSink(
+    ComputeConnection computeConnectionAllReduce = computationTaskGraphBuilder.addCompute(
         "sink", sinkTask, parallelismValue);
 
     if (reductionFunction == null) {
@@ -378,7 +375,7 @@ public abstract class BasicComputation extends TaskWorker {
 
   //general Sink class
 
-  private static class SinkTask extends BaseSink implements Collector {
+  private static class SinkTask extends BaseCompute implements Collector {
     private DataObject<Object> datapoints = null;
     private HashMap<String, VertexStatus> finalout;
 
