@@ -101,11 +101,11 @@ export default class WorkerCard extends React.Component {
                             <Tag intent={Intent.NONE} icon="tag" minimal={true} style={{height: 25}}
                                  className="tw-worker-row-status-tag">{this.state.worker.workerID}</Tag>
                         </Tooltip>
-                        <Tooltip content="Heartbeat" position={Position.TOP}>
-                            <Tag icon="pulse" style={{height: 25}} intent={Intent.NONE} minimal={true}>
-                                {new Date(this.state.worker.heartbeatTime).toLocaleString()}
-                            </Tag>
-                        </Tooltip>
+                        {/*<Tooltip content="Heartbeat" position={Position.TOP}>*/}
+                        {/*    <Tag icon="pulse" style={{height: 25}} intent={Intent.NONE} minimal={true}>*/}
+                        {/*        {new Date(this.state.worker.heartbeatTime).toLocaleString()}*/}
+                        {/*    </Tag>*/}
+                        {/*</Tooltip>*/}
                         <WorkerStateTag state={this.state.worker.state}/>
                         <Tooltip content="Sync" position={Position.TOP}>
                             <Button icon="refresh" onClick={this.syncWorker} small={true} minimal={true}/>
