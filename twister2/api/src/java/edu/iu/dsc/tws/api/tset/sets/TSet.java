@@ -45,110 +45,120 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
- * Twister data set.
+ * Twister data set. A {@link TSet} would abstract a Task level computation (Source/ Compute or
+ * Sink) in a more user friendly API. A {@link TSet} would be followed by a {@link TLink} that
+ * would expose the communication level operations performed on the computation.
+ *
+ * Note the extensions to this implementation
+ * {@link edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet} and
+ * {@link edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet}. These would intimately separate
+ * out the operations based on the {@link edu.iu.dsc.tws.api.compute.graph.OperationMode} of the
+ * data flow graph.
  *
  * @param <T> type of the data set
  */
 public interface TSet<T> extends TBase {
+
   /**
-   * Name of the tset
+   * Sets the name
    */
   @Override
   TSet<T> setName(String name);
 
   /**
-   * Direct operation
+   * Returns a Direct {@link TLink} that corresponds to the communication operation where the data
+   * will be transferred to another TSet directly.
    *
-   * @return this TSet
+   * @return Direct TLink
    */
   TLink<?, T> direct();
 
   /**
-   * Reduce operation on the data
+   * Returns a Reduce {@link TLink} that reduce data on to the target TSet instance (in the runtime)
+   * with index 0.
    *
-   * @param reduceFn the reduce function
-   * @return this set
+   * @param reduceFn Reduce function
+   * @return Reduce TLink
    */
   TLink<?, T> reduce(ReduceFunc<T> reduceFn);
 
   /**
-   * All reduce operation
+   * Similar to reduce, but all instances of the target {@link TSet} would receive the reduced
+   * result.
    *
-   * @param reduceFn reduce function
-   * @return this set
+   * @param reduceFn Reduce function
+   * @return AllReduce TLink
    */
   TLink<?, T> allReduce(ReduceFunc<T> reduceFn);
 
   /**
-   * Partition the data according the to partition function
+   * Returns a Partition {@link TLink} that would partition data according based on a function
+   * provided. The parallelism of the target {@link TSet} can also be specified.
    *
-   * @param partitionFn       partition function
-   * @param targetParallelism target parallelism
-   * @return this set
+   * @param partitionFn       Partition function
+   * @param targetParallelism Target parallelism
+   * @return Partition TLink
    */
   TLink<?, T> partition(PartitionFunc<T> partitionFn, int targetParallelism);
 
   /**
-   * Partition with the same parallelism
+   * Same as above, but the parallelism will be preserved in the target {@link TSet}.
    *
-   * @param partitionFn function
-   * @return the link
+   * @param partitionFn Partition function
+   * @return Partition TLink
    */
   TLink<?, T> partition(PartitionFunc<T> partitionFn);
 
   /**
-   * Gather the set of values into a single partition
+   * Returns a Gather {@link TLink} that would gather data to the target TSet instance with index
+   * 0 (in the runtime).
    *
-   * @return this set
+   * @return Gather TLink
    */
   TLink<?, T> gather();
 
   /**
-   * Gather the set of values into a single partition
+   * Same as gather, but all the target TSet instances would receive the gathered result in the
+   * runtime.
    *
-   * @return this set
+   * @return AllGather TLink
    */
   TLink<?, T> allGather();
 
   /**
-   * Select a set of values
+   * Creates a {@link TupleTSet} based on the {@link MapFunc} provided. This will an entry point
+   * to keyed communication operations from a non-keyed {@link TSet}.
    *
-   * @param <K> the type for partitioning
-   * @return grouped set
+   * @param <K> type of key
+   * @param <V> type of value
+   * @param mapToTupleFn Map function
+   * @return Tuple TSet
    */
   <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   /**
-   * Create a cloned dataset
+   * Returns a Replicate {@link TLink} that would clone/broadcast the data from this {@link TSet}.
+   * Note that the parallelism of this {@link TSet} should be 1.
    *
-   * @return the cloned set
+   * @param replicas Replicas of data (= target TSet parallelism)
+   * @return Replicate TLink
    */
-  TLink<?, T> replicate(int replications);
-
-//  /**
-//   * Allows users to pass in other TSets as inputs for a TSet
-//   *
-//   * @param key the key used to store the given TSet
-//   * @param input a @{@link Storable} TSet to be added as an input
-//   * @return this TSet
-//   */
-//  TSet<T> addInput(String key, Storable<?> input);
+  TLink<?, T> replicate(int replicas);
 
   /**
-   * Union operation which results in a single TSet, In order for this to work both TSet's should
-   * have the same type
+   * Returns a single {@link TSet} that create a union of data in both {@link TSet}s. In order for
+   * this to work both TSets should be of the same type
    *
    * @param unionTSet TSet to union with
-   * @return A TSet that is a union of the two TSets
+   * @return Union TSet
    */
   TSet<T> union(TSet<T> unionTSet);
 
   /**
-   * Union operation which results in a single TSet, In order for this to work all TSet's should
-   * have the same type
+   * Same as above, but accepts a {@link Collection} of {@link TSet}s.
    *
    * @param tSets a collection of TSet's to union with
-   * @return A TSet that is a union of all the TSets
+   * @return Union TSet
    */
   TSet<T> union(Collection<TSet<T>> tSets);
 }
