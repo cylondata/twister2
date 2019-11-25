@@ -16,7 +16,8 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
- * TSet with a key and a value
+ * Twister data set for keyed data. This would abstract the Task level keyed computations in a
+ * more user friendly API.
  *
  * @param <K> key type
  * @param <V> value type
