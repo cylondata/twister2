@@ -6,17 +6,15 @@ sidebar_label: Operators
 
 # Communication Examples
 
-Communication examples demonstrate the usage of communication API. 
-The communication api has the capability of creating the communication among the
-tasks by abstracting the communication logic to the api users. 
-Basically, the communication layer does the job of creating the communication of the tasks in the 
-task graph based on the user description. Communication api supports a simple thread model
-to spawn the processes to run the the tasks using built communication. The
-communication logic is visible to the users when the communication API is used.
-Twister2 has the modular structure for supporting the developer's need. They can 
-plug in the Twister2:Net to support the communication in the projects without using
-the other layers in Twister2. In the communication examples we demonstrate how to 
-create the following collective communications. 
+Communication examples demonstrate the usage of communication API. The communication API has the 
+capability of creating the communication among the tasks by abstracting the communication logic to 
+the API users. Basically, the communication layer does the job of creating the communication of the 
+tasks in the task graph based on the user description. Communication API supports a simple thread model
+to spawn the processes to run the the tasks using built communication. The communication logic is visible 
+to the users when the communication API is used. Twister2 has the modular structure for supporting 
+the developer's need. They can plug in the Twister2:Net to support the communication in the projects 
+without using the other layers in Twister2. In the communication examples we demonstrate how to create 
+the following collective communications. 
 
 ## Twister2 Collective Communications
 

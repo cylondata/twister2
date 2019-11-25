@@ -48,7 +48,7 @@ Open MPI separately and not using the project built Open MPI version.
     9. keyed-partition
 5. stages : has to params 
     1. source_parallelism : depending on the collective communication that you prefer select this number
-    2. compute_parallelism : depending on the collective communication that you prefer select this number
+    2. sink_parallelism : depending on the collective communication that you prefer select this number
     Example : For reduce communication it can be 4,1 as sink has to be a single point of receive in the reduction 
     process and source has more data generating points. 
 6. flag : for a batch job this flag must be empty, if it is an streaming job, -stream would state the flag. 
@@ -534,7 +534,7 @@ The sink task is abstracted from `ReduceCompute<int[]>` and the `ReduceCompute<T
 
 ```java 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ICompute {
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> {
       private static final long serialVersionUID = -254264903510284798L;
       private ResultsVerifier<int[], int[]> resultsVerifier;
       private boolean verified = true;
