@@ -33,11 +33,24 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
 
+/**
+ * Implementation of {@link TSetEnvironment} for batch {@link OperationMode}.
+ * <p>
+ * There are 2 ways a tset be executed.
+ * 1. running a tset (at the completion, execution will be closed)
+ * 2. evaluating a tset (execution will be kept alive until 'finishEval' method is called)
+ * <p>
+ * And there are 3 execution options.
+ * 1. Running/ evaluating a subgraph/ DAG from a specified TSet
+ * 2. Running/ evaluating a tset and update another with the results
+ * 3. Running just a single source TSet
+ */
 public class BatchTSetEnvironment extends TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(BatchTSetEnvironment.class.getName());
 
-  // todo: make this fault tolerant. May be we can cache the buildContext along with the compute
-  //  graphs and make build contexts serializable. So, that the state of these can be preserved.
+  /**
+   * private cache of {@link BuildContext}s to be reused during execution
+   */
   private Map<String, BuildContext> buildCtxCache = new HashMap<>();
 
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
@@ -158,7 +171,6 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public <T, ST extends BaseTSet<T> & StorableTBase<T>> void runAndUpdate(ST runTSet,
                                                                           ST updateTSet) {
-    // first run the TSet then update
     run(runTSet);
     updateTSet(runTSet, updateTSet);
   }
@@ -201,7 +213,6 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public <T, ST extends BaseTSet<T> & StorableTBase<T>> void evalAndUpdate(ST evalTSet,
                                                                            ST updateTSet) {
-    // first eval the TSet then update
     eval(evalTSet);
     updateTSet(evalTSet, updateTSet);
   }
