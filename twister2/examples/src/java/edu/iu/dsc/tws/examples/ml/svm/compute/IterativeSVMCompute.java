@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 
+
 public class IterativeSVMCompute extends BaseCompute {
 
   private static final long serialVersionUID = -254264120110286748L;
