@@ -24,11 +24,11 @@ communication usage with Twister2.
 9. KeyedPartition
 
 After building the project, you can run the batch mode examples as follows. First you need to extract 
-the twister2-0.2.1.tar.gz located within the bazel-bin/scripts/package, if you have already installed 
+the twister2-VERSION.tar.gz located within the bazel-bin/scripts/package, if you have already installed 
 Open MPI separately and not using the project built Open MPI version. 
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<compute_parallelism> -<flag> -verify
 ```
 
 ### Running Option Definitions
@@ -54,7 +54,7 @@ Open MPI separately and not using the project built Open MPI version.
 6. flag : for a batch job this flag must be empty, if it is an streaming job, -stream would state the flag. 
 7. verify : -verify flag does the verification of the collective operation. This is an optional parameter. 
 
-First, you need to create a source and a sink task for the most simple data flow application in Twister2. 
+First, you need to create a source and a sink task for the most simple dataflow application in Twister2. 
 
 For the batch or stream tasks, the source task and sink task has to be defined. In the example
 package we have abstracted the source task in the task abstraction. The source task means 
@@ -63,10 +63,10 @@ In the examples we generate an array of user given size in the source task.
 
 ```java 
 BaseSource g = new SourceTask(edge);
-ISink r = new ReduceSinkTask();
+ICompute r = new ReduceSinkTask();
 ```
 
-The BaseSource and ISink are the base level source and sink tasks for batch and streaming mode 
+The BaseSource and ICompute are the base level source and sink tasks for batch and streaming mode 
 applications.
 
 For the source tasks we specify the edge name or the connection name between source and the sink tasks. 
@@ -81,7 +81,7 @@ to a reduction based example, which will be elaborated in the following sections
 
 ```java 
 computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
 computeConnection.reduce(SOURCE, edge, operation, DataType.INTEGER);
 ```
 
@@ -128,10 +128,10 @@ SourceTask as the source task for all the batch examples.
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new ReduceSinkTask();
+    ICompute r = new ReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     return computeGraphBuilder;
   }
@@ -142,7 +142,7 @@ The sink task is abstracted from `ReduceCompute<int[]>` and the `ReduceCompute<T
 
 ```java 
 @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     private boolean timingCondition;
@@ -193,10 +193,10 @@ can see the SourceTask as the source task for all the batch examples.
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new AllReduceSinkTask();
+    ICompute r = new AllReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     return computeGraphBuilder;
   }
@@ -231,10 +231,10 @@ can see the SourceTask as the source task for all the batch examples.
     String edge = "edge";
     
     BaseSource g = new SourceTask(edge);
-    ISink r = new GatherSinkTask();
+    ICompute r = new GatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     return computeGraphBuilder;
   }
@@ -268,10 +268,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     ISource g = new SourceTask(edge);
-    ISink r = new AllGatherSinkTask();
+    ICompute r = new AllGatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
     return computeGraphBuilder;
   }
@@ -304,10 +304,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new BroadcastSinkTask();
+    ICompute r = new BroadcastSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return computeGraphBuilder;
   }
@@ -341,10 +341,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new PartitionSinkTask();
+    ICompute r = new PartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return computeGraphBuilder;
   }
@@ -381,10 +381,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new KeyedReduceSinkTask();
+    ICompute r = new KeyedReduceSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return computeGraphBuilder;
   }
@@ -419,10 +419,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new KeyedGatherSinkTask();
+    ICompute r = new KeyedGatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return computeGraphBuilder;
   }
@@ -459,10 +459,10 @@ can see the SourceTask as the source task for all the batch examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new BKeyedPartitionSinkTask();
+    ICompute r = new BKeyedPartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return computeGraphBuilder;
   }
@@ -519,10 +519,10 @@ class, you can see the SourceTask as the source task for all the streaming examp
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new ReduceSinkTask();
+    ICompute r = new ReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
     return computeGraphBuilder;
@@ -534,7 +534,7 @@ The sink task is abstracted from `ReduceCompute<int[]>` and the `ReduceCompute<T
 
 ```java 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> {
       private static final long serialVersionUID = -254264903510284798L;
       private ResultsVerifier<int[], int[]> resultsVerifier;
       private boolean verified = true;
@@ -596,10 +596,10 @@ can see the SourceTask as the source task for all the streaming examples.
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new AllReduceSinkTask();
+    ICompute r = new AllReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
     return computeGraphBuilder;
@@ -635,10 +635,10 @@ can see the SourceTask as the source task for all the streaming examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new GatherSinkTask();
+    ICompute r = new GatherSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     return computeGraphBuilder;
   }
@@ -673,10 +673,10 @@ can see the SourceTask as the source task for all the streaming examples.
       
       String edge = "edge";
       BaseSource g = new SourceTask(edge);
-      ISink r = new AllGatherSinkTask();
+      ICompute r = new AllGatherSinkTask();
       
       computeGraphBuilder.addSource(SOURCE, g, psource);
-      computeConnection = computeGraphBuilder.addSink(SINK, r, psink);
+      computeConnection = computeGraphBuilder.addCompute(SINK, r, psink);
       computeConnection.allgather(SOURCE, edge, dataType);
       return computeGraphBuilder;
     }
@@ -709,10 +709,10 @@ can see the SourceTask as the source task for all the streaming examples.
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new BroadCastSinkTask();
+    ICompute r = new BroadCastSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return computeGraphBuilder;
   }
@@ -746,10 +746,10 @@ can see the SourceTask as the source task for all the streaming examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new PartitionSinkTask();
+    ICompute r = new PartitionSinkTask();
     
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return computeGraphBuilder;
   }
@@ -785,9 +785,9 @@ can see the SourceTask as the source task for all the streaming examples.
     
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new SKeyedPartitionSinkTask();
+    ICompute r = new SKeyedPartitionSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return computeGraphBuilder;
   }
@@ -808,81 +808,3 @@ and sink parallelism of 8.
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "keyed-partition" -stages 8,8 -verify -stream
 ```
 
-### Streaming KeyedReduce Example
-
-The source task is abstracted from the user in the examples, but in the BenchTaskWorker class, you 
-can see the SourceStreamTask as the source task for all the streaming examples. 
-
-```java 
-@Override
-  public TaskGraphBuilder buildTaskGraph() {
-    List<Integer> taskStages = jobParameters.getTaskStages();
-    int sourceParallelism = taskStages.get(0);
-    int sinkParallelism = taskStages.get(1);
-    Op operation = Op.SUM;
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
-    
-    String edge = "edge";
-    BaseSource g = new KeyedSourceStreamTask(edge);
-    ISink r = new KeyedReduceSinkTask();
-    
-    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
-    return computeGraphBuilder;
-  }
-```
-The sink task is  abstracted from `SKeyedReduceCompute<Object, int[]>` and the `SKeyedReduceCompute<K, T>` 
-is abstracted from `AbstractSingleDataCompute<Tuple<K, T>>`.
-
-[Task based Streaming Keyed-Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedReduceExample.java)
-
-### To Run Streaming KeyedReduce Example
-
-Running a keyed reduce operation on a size of 8 array with 4 workers iterating once with source parallelism of 8
-and sink parallelism of 1. 
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "keyed-reduce" -stages 8,1 -verify -stream
-```
-
-### Streaming KeyedGather Example
-
-The source task is abstracted from the user in the examples, but in the BenchTaskWorker class, you 
-can see the SourceStreamTask as the source task for all the streaming examples. 
-
-```java 
-@Override
-  public TaskGraphBuilder buildTaskGraph() {
-    List<Integer> taskStages = jobParameters.getTaskStages();
-    int sourceParallelism = taskStages.get(0);
-    int sinkParallelism = taskStages.get(1);
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
-    
-    String edge = "edge";
-    BaseSource g = new KeyedSourceStreamTask(edge);
-    ISink r = new KeyedGatherSinkTask();
-    
-    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
-    return computeGraphBuilder;
-  }
-```
-
-The sink task is abstracted from `KeyedGatherCompute<Object, int[]>` and the `KeyedGatherCompute<K, T>` 
-is abstracted from `AbstractIterableDataCompute<Tuple<K, T>>`.
-
-[Task based Streaming Keyed-Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedGatherExample.java)
-
-
-### To Run Streaming KeyedGather Example
-
-Running a keyed gather operation on a size of 8 array with 4 workers iterating once with source parallelism of 8
-and sink parallelism of 1. 
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "keyed-gather" -stages 8,1 -verify -stream
-```

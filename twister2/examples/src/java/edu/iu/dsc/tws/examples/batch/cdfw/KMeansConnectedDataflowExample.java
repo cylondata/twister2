@@ -51,8 +51,6 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
-//import edu.iu.dsc.tws.api.JobConfig;
-
 public final class KMeansConnectedDataflowExample {
   private static final Logger LOG
       = Logger.getLogger(KMeansConnectedDataflowExample.class.getName());
@@ -137,7 +135,7 @@ public final class KMeansConnectedDataflowExample {
     ComputeGraph dataObjectTaskGraph = dataGenerationGraphBuilder.build();
     dataGenerationGraphBuilder.setTaskGraphName("datageneratorTG");
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorsink", dataObjectTaskGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorTG", dataObjectTaskGraph)
         .setWorkers(workers).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
     return job;
@@ -175,7 +173,7 @@ public final class KMeansConnectedDataflowExample {
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("dsink", firstGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsTG", firstGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
     return job;
@@ -209,11 +207,11 @@ public final class KMeansConnectedDataflowExample {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
-    centroidsComputeGraphBuilder.setTaskGraphName("centTG");
+    centroidsComputeGraphBuilder.setTaskGraphName("centroidTG");
 
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("csink", secondGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidTG", secondGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
     return job;
