@@ -162,6 +162,16 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
+  public KeyedPersistedTSet<K, V> persist() {
+    return keyedDirect().persist();
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> lazyPersist() {
+    return null;
+  }
+
+  @Override
   public BatchTupleTSetImpl<K, V> addInput(String key, Storable<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;

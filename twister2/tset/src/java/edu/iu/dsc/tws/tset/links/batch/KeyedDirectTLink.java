@@ -16,11 +16,9 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
-import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public class KeyedDirectTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "kdirect", sourceParallelism);
   }
@@ -28,7 +26,6 @@ public class KeyedDirectTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
   public KeyedTSet<K, V> mapToTuple() {
     return super.mapToTuple((MapFunc<Tuple<K, V>, Tuple<K, V>>) input -> input);
   }
-
 
   @Override
   public KeyedDirectTLink<K, V> setName(String name) {
@@ -41,19 +38,19 @@ public class KeyedDirectTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
     return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 
-  @Override
-  public KeyedCachedTSet<K, V> lazyCache() {
-    KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
-        getTargetParallelism());
-    addChildToGraph(cacheTSet);
-
-    return cacheTSet;
-  }
-
-  @Override
-  public KeyedCachedTSet<K, V> cache() {
-    KeyedCachedTSet<K, V> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
-    return cacheTSet;
-  }
+//  @Override
+//  public KeyedCachedTSet<K, V> lazyCache() {
+//    KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
+//        getTargetParallelism());
+//    addChildToGraph(cacheTSet);
+//
+//    return cacheTSet;
+//  }
+//
+//  @Override
+//  public KeyedCachedTSet<K, V> cache() {
+//    KeyedCachedTSet<K, V> cacheTSet = lazyCache();
+//    getTSetEnv().run(cacheTSet);
+//    return cacheTSet;
+//  }
 }
