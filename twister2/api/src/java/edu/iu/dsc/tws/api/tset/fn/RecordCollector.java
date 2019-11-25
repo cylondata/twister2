@@ -13,7 +13,9 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 /**
- * Record collector that will be passed on to a {@link ComputeCollectorFunc}
+ * Record collector that will be passed on to a {@link ComputeCollectorFunc} or
+ * {@link FlatMapFunc}. Acts as an intermediary between the data transformation and writing the
+ * output to the following edges of the data flow graph.
  *
  * @param <T> input type
  */
@@ -22,7 +24,7 @@ public interface RecordCollector<T> {
   /**
    * Collects the record
    *
-   * @param record this will be sent
+   * @param record data record
    */
   void collect(T record);
 
