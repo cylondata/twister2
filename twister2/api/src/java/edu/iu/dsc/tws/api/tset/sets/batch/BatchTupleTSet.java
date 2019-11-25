@@ -43,12 +43,12 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
+import edu.iu.dsc.tws.api.tset.StoringData;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.api.tset.sets.StoringData;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 /**
