@@ -45,7 +45,7 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
   public void execute(BatchTSetEnvironment env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
-    SourceTSet<Integer> intSource = env.createSource(new SourceFunc<Integer>() {
+    SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
       private int count = 0;
 
@@ -60,7 +60,7 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
       }
     }, 4);
 
-    intSource.direct().compute((itr, collector) -> {
+    sourceX.direct().compute((itr, collector) -> {
       itr.forEachRemaining(i -> {
         collector.collect(i * 5);
       });

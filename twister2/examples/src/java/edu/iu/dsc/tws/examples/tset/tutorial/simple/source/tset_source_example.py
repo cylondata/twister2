@@ -21,6 +21,6 @@ class IntSource(SourceFunc):
         return res
 
 
-source = env.create_source(IntSource(), 4)
+source_x = env.create_source(IntSource(), 4)
 
-source.for_each(lambda i: print("i : %d" % i))
+source_x.for_each(lambda i: print("i : %d" % i))

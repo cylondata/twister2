@@ -24,7 +24,7 @@ class IntSource(SourceFunc):
         return res
 
 
-source = env.create_source(IntSource(), 4)
+source_x = env.create_source(IntSource(), 4)
 
 
 def mul_by_five(itr, collector, ctx: TSetContext):
@@ -38,7 +38,7 @@ def add_two(itr, collector, ctx: TSetContext):
 
 
 t1 = datetime.now()
-two_computes = source.compute(mul_by_five).compute(add_two)
+two_computes = source_x.compute(mul_by_five).compute(add_two)
 t2 = datetime.now()
 print("Time taken for two_computes %d" % (t2 - t1).total_seconds())
 

@@ -22,7 +22,7 @@ class IntSource(SourceFunc):
         return res
 
 
-source = env.create_source(IntSource(), 4)
+source_x = env.create_source(IntSource(), 4)
 
 
 def mul_by_five(itr, collector, ctx: TSetContext):
@@ -35,5 +35,5 @@ def add_two(itr, collector, ctx: TSetContext):
         collector.collect(i + 2)
 
 
-source.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
+source_x.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
     .for_each(lambda i: print("SUM = %d" % i))
