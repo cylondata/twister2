@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
@@ -27,14 +28,20 @@ public class ComputeFunctions extends TFunc<ComputeFunc> {
   public static class ComputeFuncImpl implements ComputeFunc, Serializable {
 
     private PythonLambdaProcessor lambdaProcessor;
+    private TSetContext ctx;
 
     ComputeFuncImpl(byte[] byBinary) {
       this.lambdaProcessor = new PythonLambdaProcessor(byBinary);
     }
 
     @Override
+    public void prepare(TSetContext context) {
+      this.ctx = context;
+    }
+
+    @Override
     public Object compute(Object input) {
-      return this.lambdaProcessor.invoke(input);
+      return this.lambdaProcessor.invoke(input, ctx);
     }
   }
 

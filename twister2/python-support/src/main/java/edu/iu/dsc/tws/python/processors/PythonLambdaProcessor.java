@@ -16,6 +16,10 @@ public class PythonLambdaProcessor extends AbstractPythonProcessor {
     return super.invoke(this.objectId, getEmptyKwargs(), arg1, arg2);
   }
 
+  public Object invoke(Object arg1, Object arg2, Object arg3) {
+    return super.invoke(this.objectId, getEmptyKwargs(), arg1, arg2, arg3);
+  }
+
   public Object invoke(Object args, Map<String, Object> kwargs) {
     return super.invoke(this.objectId, kwargs, args);
   }

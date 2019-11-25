@@ -66,13 +66,15 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    intSource.direct().compute((itr, c) -> {
+    intSource.direct().compute((itr, collector) -> {
+      // if each element of the iterator should be processed individually, compute
+      // function which accepts a ComputeCollector can be used.
       itr.forEachRemaining(i -> {
-        c.collect(i * 5);
+        collector.collect(i * 5);
       });
-    }).direct().compute((itr, c) -> {
+    }).direct().compute((itr, collector) -> {
       itr.forEachRemaining(i -> {
-        c.collect((int) i + 2);
+        collector.collect((int) i + 2);
       });
     }).direct().forEach(i -> {
       LOG.info("(i x 5 ) + 2 = " + i);
