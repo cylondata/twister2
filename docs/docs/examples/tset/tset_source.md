@@ -31,6 +31,10 @@ SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
         return count++;
       }
 }, 4);
+
+sourceX.direct().forEach(i -> {
+      LOG.info("i : " + i);
+    });
 ```
 
 <!--Python-->
@@ -50,6 +54,8 @@ class IntSource(SourceFunc):
         return res
 
 source_x = env.create_source(IntSource(), 4)
+
+source_x.for_each(lambda i: print("i : %d" % i))
 ```
 <!--END_DOCUSAURUS_CODE_TABS-->
 
