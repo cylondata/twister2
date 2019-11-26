@@ -4,7 +4,10 @@ title: WordCount
 sidebar_label: WordCount
 ---
 
-Lets look at a word count example. This is a standard example in every big data system. The code related to example can be found in
+Lets look at a word count example. This is a standard example in every big data system. 
+
+We expect you to follow the [Setup Twister2](setting_up.md) before running these two examples. Both
+examples assume you are inside the twister2 binary distribution folder.
 
 ## Batch WordCount
 
