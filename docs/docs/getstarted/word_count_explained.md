@@ -8,7 +8,7 @@ Lets look at the batch word count and streaming word count sources.
 
 ### Batch WordCount
 
-The source can be found in [WordCount.java]()https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/tset/WordCount.java).
+The source can be found in [WordCount.java](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/tset/WordCount.java).
 
 First lets look at the job creation code.
 
