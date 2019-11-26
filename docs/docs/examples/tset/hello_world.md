@@ -79,3 +79,31 @@ print("Hello from worker %d" % env.worker_id)
 
 ## Submitting the job to twister2
 
+Twister2 accept 4 types of jobs written in two different programing languages.
+
+<!--DOCUSAURUS_CODE_TABS-->
+<!--Java Jar-->
+A single jar file including the main class and main method.
+```bash
+./bin/twister2 submit standalone jar <path to jar> <fully qualified class name of main class> <job_args>
+```
+
+<!--Java Zip-->
+A zip file including the main class and main method.
+```bash
+./bin/twister2 submit standalone java_zip <path to zip> <fully qualified class name of main class> <job_args>
+```
+
+<!--Python File-->
+A single python file which creates a Twister2Environment
+```bash
+./bin/twister2 submit standalone python <path to py file> <job_args>
+```
+
+<!--Python Zip-->
+A zip file containing multiple python files
+```bash
+./bin/twister2 submit standalone python_zip <path to zip file> <main python file> <job_args>
+```
+<!--END_DOCUSAURUS_CODE_TABS-->
+

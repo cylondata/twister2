@@ -61,7 +61,12 @@
   },
   "tutorial": {
     "Tutorial": [
-      "examples/tset/hello_world"
+      "examples/tset/hello_world",
+      "examples/tset/tset_source",
+      "examples/tset/tset_compute",
+      "examples/tset/tset_communication",
+      "examples/tset/tset_caching",
+      "examples/tset/tset_persisting"
     ]
   },
   "developers": {
