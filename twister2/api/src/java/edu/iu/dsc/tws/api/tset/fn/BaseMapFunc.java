@@ -11,5 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Extended {@link MapFunc} with access to {@link edu.iu.dsc.tws.api.tset.TSetContext}
+ *
+ * @param <O> output type
+ * @param <I> input type
+ */
 public abstract class BaseMapFunc<O, I> extends BaseTFunction<O, I> implements MapFunc<O, I> {
 }

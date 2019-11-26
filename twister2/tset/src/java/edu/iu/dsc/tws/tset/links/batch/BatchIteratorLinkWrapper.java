@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
@@ -19,7 +20,7 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
 
 /**
  * Wrapper class for {@link BatchIteratorLink} that implements
- * {@link edu.iu.dsc.tws.api.tset.Storable} related methods. Intended to be used with non-keyed
+ * {@link StorableTBase} related methods. Intended to be used with non-keyed
  * TLinks that would produce an {@link java.util.Iterator}
  *
  * @param <T> type

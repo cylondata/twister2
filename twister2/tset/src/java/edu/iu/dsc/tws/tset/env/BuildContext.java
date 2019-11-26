@@ -28,15 +28,38 @@ import edu.iu.dsc.tws.tset.sets.BuildableTSet;
  * graph
  */
 public class BuildContext {
+  /**
+   * Unique id for a tset graph execution
+   */
   private String buildId;
+
+  /**
+   * Set of root Tsets of the tset subgraph
+   */
   private Set<BuildableTSet> rootTBases;
+
+  /**
+   * The order in which the tsets and tlinks will be built
+   */
   private Set<TBase> buildSequence;
+
+  /**
+   * Batch or streaming mode
+   */
   private OperationMode operationMode;
 
-  private ComputeGraph computeGraph;
-  private ExecutionPlan executionPlan;
   /**
-   * Current executor, this can be null in the begining
+   * Compute graph based on the build order
+   */
+  private ComputeGraph computeGraph;
+
+  /**
+   * Execution plan based on the compute graph
+   */
+  private ExecutionPlan executionPlan;
+
+  /**
+   * Current executor, this can be null in the beginning
    */
   private IExecutor executor;
 

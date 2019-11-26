@@ -12,6 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Computes an output of type O based on an input of type I
+ *
+ * @param <O> output type
+ * @param <I> input type
+ */
 public interface ComputeFunc<O, I> extends TFunction<O, I> {
 
   O compute(I input);

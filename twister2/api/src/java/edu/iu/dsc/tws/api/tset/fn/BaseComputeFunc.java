@@ -12,6 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Extended {@link ComputeFunc} with access to {@link edu.iu.dsc.tws.api.tset.TSetContext}
+ *
+ * @param <O> output type
+ * @param <I> input type
+ */
 public abstract class BaseComputeFunc<O, I> extends BaseTFunction<O, I> implements
     ComputeFunc<O, I> {
 

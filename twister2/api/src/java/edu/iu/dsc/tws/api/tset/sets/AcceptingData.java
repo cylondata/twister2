@@ -21,18 +21,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
 
+/**
+ * Adds the capability for {@link TSet}s to accept data from another TSet as an input. Only the
+ * Batch TSets can accept inputs.
+ * <p>
+ * This remains as a separate interface because SinkTSet behaves differently to all other
+ * BatchTSets. i.e. It does not expose any communication operations. But a SinkTSet needs to be
+ * able to accept data from another TSet. Therefore, that capability was separated out.
+ *
+ * @param <T> tset type
+ */
 public interface AcceptingData<T> {
   /**
    * Allows users to pass in other TSets as inputs for a TSet
    *
    * @param key   the key used to store the given TSet
-   * @param input a @{@link Storable} TSet to be added as an input
+   * @param input a {@link StorableTBase} TSet to be added as an input
    * @return this TSet
    */
-  TBase addInput(String key, Storable<?> input);
+  TBase addInput(String key, StorableTBase<?> input);
 }
