@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.fn;
 import edu.iu.dsc.tws.api.compute.IFunction;
 
 /**
- * Reduce function
+ * Reduce function wrapping the {@link IFunction} from the communication layer
  */
 public interface ReduceFunc<T> extends TFunction<T, T>, IFunction<T> {
   /**

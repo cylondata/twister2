@@ -75,15 +75,56 @@ public abstract class TSetEnvironment {
     this.tBaseGraph = new TBaseGraph(getOperationMode());
   }
 
+  /**
+   * Returns the {@link OperationMode}
+   *
+   * @return operation mode
+   */
   public abstract OperationMode getOperationMode();
 
+  /**
+   * Creates a source TSet based on the {@link SourceFunc}
+   *
+   * @param source      source function
+   * @param parallelism parallelism
+   * @param <T>         data type
+   * @return Source TSet
+   */
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
 
+  /**
+   * Same as above, but a source tset name can be provided at the instantiation
+   *
+   * @param name        name for the tset
+   * @param source      source function
+   * @param parallelism parallelism
+   * @param <T>         data type
+   * @return Source TSet
+   */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
 
+  /**
+   * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
+   *
+   * @param source      source function
+   * @param parallelism parallelism
+   * @param <K>         key type
+   * @param <V>         value type
+   * @return Keyed Source TSet
+   */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
                                                            int parallelism);
 
+  /**
+   * Same as above, but a source tset name can be provided at the instantiation
+   *
+   * @param name        name for the tset
+   * @param source      source function
+   * @param parallelism parallelism
+   * @param <K>         key type
+   * @param <V>         value type
+   * @return Keyed Source TSet
+   */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
                                                            SourceFunc<Tuple<K, V>> source,
                                                            int parallelism);
@@ -116,7 +157,7 @@ public abstract class TSetEnvironment {
   }
 
   /**
-   * returns the config object passed on to the iWorker Config
+   * returns the config object received from the iWorker Config
    *
    * @return config
    */
@@ -172,20 +213,20 @@ public abstract class TSetEnvironment {
   }
 
   /**
-   * initialize the Tset environment in batch mode
+   * initialize the Tset environment in batch {@link OperationMode}
    *
    * @param wEnv worker environment
-   * @return tset environment for batch operation
+   * @return BatchTSetEnvironment
    */
   public static BatchTSetEnvironment initBatch(WorkerEnvironment wEnv) {
     return (BatchTSetEnvironment) init(wEnv, OperationMode.BATCH);
   }
 
   /**
-   * initialize the Tset environment in streaming mode
+   * initialize the Tset environment in streaming {@link OperationMode}
    *
    * @param wEnv worker environment
-   * @return tset environment for streaming operation
+   * @return StreamingTSetEnvironment
    */
   public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
     return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);

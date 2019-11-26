@@ -13,24 +13,23 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.RecordCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
-  private MapIterCompute<Tuple<K, O>, I> mapFunction;
+public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
+  private ComputeCollectorFunc<Tuple<K, O>, I> mapFunction;
 
-  public MapToTupleIterOp() {
+  public ComputeCollectorToTupleOp() {
   }
 
-  public MapToTupleIterOp(MapIterCompute<Tuple<K, O>, I> mapToTupFn, BaseTSet origin,
-                          Map<String, String> receivables) {
+  public ComputeCollectorToTupleOp(ComputeCollectorFunc<Tuple<K, O>, I> mapToTupFn,
+                                   BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
     this.mapFunction = mapToTupFn;
   }
@@ -41,10 +40,8 @@ public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
   }
 
   @Override
-  public boolean execute(IMessage<Iterator<I>> content) {
-    Iterator<I> input = content.getContent();
-
-    mapFunction.compute(input, new RecordCollector<Tuple<K, O>>() {
+  public boolean execute(IMessage<I> content) {
+    mapFunction.compute(content.getContent(), new RecordCollector<Tuple<K, O>>() {
       @Override
       public void collect(Tuple<K, O> record) {
         keyedWriteToEdges(record.getKey(), record.getValue());

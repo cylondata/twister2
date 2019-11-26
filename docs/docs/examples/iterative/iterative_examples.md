@@ -12,7 +12,6 @@ and the SinkTask which receives the messages is named as the ParitionTask.
 
 
 ```java
-
 private static class IterativeSourceTask extends BaseBatchSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
@@ -68,7 +67,6 @@ private static class IterativeSourceTask extends BaseBatchSource implements Rece
       return new Partition<>(context.taskIndex(), list);
     }
   }
-
 ```
 
 The iterative logic is defined in the executor method. Here there are 10 iterations
@@ -106,7 +104,8 @@ public void execute() {
 
 ### To Run Iterative Task Graph Example
 
+```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.IterativeJob
-
+```
 
 [Iterative Task Graph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/IterativeJob.java)

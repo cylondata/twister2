@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -58,14 +57,9 @@ public class TSetSourceExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
-    SourceTSet<Integer> intSource = env.createSource(new SourceFunc<Integer>() {
+    SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
       private int count = 0;
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
 
       @Override
       public boolean hasNext() {
@@ -78,8 +72,8 @@ public class TSetSourceExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    intSource.direct().forEach(i -> {
-      System.out.println("i : " + i);
+    sourceX.direct().forEach(i -> {
+      LOG.info("i : " + i);
     });
   }
 }

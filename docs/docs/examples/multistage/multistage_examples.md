@@ -1,4 +1,9 @@
-# Multistage Example
+---
+id: multistage
+title: Multistage
+sidebar_label: multistage
+---
+## Multistage Example
 
 Multistage example refers to one or more intermediate tasks between the source and sink 
 task. 
@@ -153,26 +158,27 @@ task to the sink task.
 
 Run the following command to run this example. 
 
-## Batch Example
-
-[MultiStage TaskGraph Batch Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/MultiStageGraph.java)
+## To run Multistage Batch Example
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.MultiStageGraph
 ```
 
-## Streaming Example
+[MultiStage TaskGraph Batch Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/MultiStageGraph.java)
 
-[MultiStage TaskGraph Streaming Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
+## To run Multistage Streaming Example
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.streaming.MultiStageGraph
 ```
 
-## Multiple Compute Jobs Task Graph Example
+[MultiStage TaskGraph Streaming Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
 
-The multiple compute job task graph consists of a source node and sends output to multiple compute 
-dataflow nodes. Also, the final compute task receives the input from multiple compute dataflow nodes.
+
+## Multiple Compute Tasks Example
+
+The multiple compute tasks consists of a source node and sends output to multiple compute dataflow 
+nodes. Also, the final compute task receive the input from multiple compute dataflow nodes.
 
 The structure of the graph is given below:
 
@@ -187,10 +193,9 @@ The structure of the graph is given below:
     V     V
   Target (Task 4)
 ```
-
-  ![MultiComputeNodes Task Graph](assets/multicompute_taskgraph.png)
+![MultiComputeNodes Task Graph](assets/multicompute_taskgraph.png)
  
-### Multiple Compute Jobs Task Graph Example
+### Multiple Compute Tasks Example
 
 This example is described in four stages namely 
 1. defining the task graph
@@ -236,10 +241,10 @@ the execute method to execute the generated task graph.
     taskExecutor.execute(graph, plan);
 ```
 
-## To Run Multiple Compute Jobs Task Graph Example
+## To Run Multiple Compute Tasks Example
 
-[Multiple Compute Jobs  Task Graph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/internal/taskgraph/MultiComputeTaskGraphExample.java)
-
-```text
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTaskGraphExample -dsize 100 -parallelism 2 -workers 2 -dim 2 -csize 4 -dinput /tmp/dinput -cinput /tmp/dinput -filesys local -nFiles 1
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTasksGraphExample -dsize 100 -parallelism 2 -workers 2 -dim 2 -csize 4 -dinput /tmp/dinput -cinput /tmp/dinput -filesys local -nFiles 1
 ```
+
+[Multiple Compute Tasks Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/internal/taskgraph/MultiComputeTasksGraphExample.java)

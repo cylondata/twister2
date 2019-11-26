@@ -282,7 +282,7 @@ IsMemoryMapped = true
 ## Running MDS Application
 
 ```bash
- /home/kannan/twister2/bazel-bin/scripts/package/twister2-0.3.0/bin/twister2 submit standalone jar target/mds-0.3.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.dsc.tws.apps.MDSProgram -dinput /tmp/matrix -filesys local -byteType big -config /home/kannan/twister2applications/twister2/mds/config.properties -datainput generate -workers 4 -parallelism 4 -dsize 1000 -dim 1000
+ /home/kannan/twister2/bazel-bin/scripts/package/twister2-0.4.0/bin/twister2 submit standalone jar target/mds-0.3.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.dsc.tws.apps.MDSProgram -dinput /tmp/matrix -filesys local -byteType big -config /home/kannan/twister2applications/twister2/mds/config.properties -datainput generate -workers 4 -parallelism 4 -dsize 1000 -dim 1000
 ```
 
 ### Sample Output 

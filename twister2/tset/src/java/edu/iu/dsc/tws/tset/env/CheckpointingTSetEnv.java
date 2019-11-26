@@ -17,6 +17,9 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 
+/**
+ * Extension to the {@link BatchTSetEnvironment} with checkpointing capability.
+ */
 public class CheckpointingTSetEnv extends BatchTSetEnvironment {
 
   private static final Logger LOG = Logger.getLogger(CheckpointingTSetEnv.class.getName());
@@ -50,6 +53,9 @@ public class CheckpointingTSetEnv extends BatchTSetEnvironment {
     return (T) value;
   }
 
+  /**
+   * Commits the snapshot
+   */
   public void commit() {
     if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
       this.checkpointingWorkerEnv.commitSnapshot();

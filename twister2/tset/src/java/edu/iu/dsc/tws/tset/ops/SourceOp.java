@@ -35,7 +35,7 @@ public class SourceOp<T> extends BaseOp implements ISource, Closable {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    gettSetContext().update(cfg, ctx);
+    gettSetContext().updateRuntimeInfo(cfg, ctx);
     this.source.prepare(gettSetContext());
     this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
   }

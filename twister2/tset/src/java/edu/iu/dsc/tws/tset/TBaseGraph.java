@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
@@ -145,7 +146,7 @@ public class TBaseGraph implements Serializable {
     String buildId = TSetUtils.generateBuildId(roots);
 
     Set<TBase> buildSeq = conditionalBFS(roots, nodesExtractor);
-    LOG.info(() -> "Build order for " + buildId + " : " + buildSeq.toString());
+    LOG.log(Level.FINE, () -> "Build order for " + buildId + " : " + buildSeq.toString());
 
     return new BuildContext(buildId, roots, buildSeq, opMode);
   }

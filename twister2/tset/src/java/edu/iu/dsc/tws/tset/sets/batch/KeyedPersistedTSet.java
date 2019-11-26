@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
@@ -31,7 +31,7 @@ public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
   }
 
   @Override
-  public KeyedPersistedTSet<K, V> addInput(String key, Storable<?> input) {
+  public KeyedPersistedTSet<K, V> addInput(String key, StorableTBase<?> input) {
     return (KeyedPersistedTSet<K, V>) super.addInput(key, input);
   }
 

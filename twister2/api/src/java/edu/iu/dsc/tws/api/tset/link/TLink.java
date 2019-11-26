@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -19,10 +20,16 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 /**
- * Link represents the connections between data Links.
- * This would map to some form of communication patter in the communication layer
+ * Link represents the connections between {@link TSet}s and {@link TupleTSet}s. These would map to
+ * some form of communication operations in the communication layer.
+ *
+ * Communication layer outputs three variations/types of data outputs (corresponds to T1).
+ *  - Single value
+ *  - Iterator of values
+ *  - Special iterator for gather operations
  *
  * @param <T1> Type output from the communication layer for the corresponding edge
  * @param <T0> Base type of the edge
@@ -33,59 +40,72 @@ public interface TLink<T1, T0> extends TBase {
    * Name of the TSet and return the same tlink
    *
    * @param name name
-   * @return same TLink
+   * @return this tlink
    */
   @Override
   TLink<T1, T0> setName(String name);
 
   /**
-   * Base compute implementation
+   * Creates a Compute {@link TSet} based on the {@link ComputeFunc} provided.
    *
    * @param computeFunction comp function. Takes in T0 type object and map to the output type O
    * @param <O>             output tset base type
-   * @return output TSet
+   * @return Compute TSet
    */
   <O> TSet<O> compute(ComputeFunc<O, T1> computeFunction);
 
   /**
-   * Base compute implementation which would take in a Collector<O>
+   * Creates a Compute {@link TSet} based on the {@link ComputeCollectorFunc} provided.
    *
    * @param computeFunction compute function with collector
-   * @param <O>             output type (Collector type)
-   * @return output TSet
+   * @param <O>             output type (for the {@link edu.iu.dsc.tws.api.tset.fn.RecordCollector})
+   * @return Compute TSet
    */
   <O> TSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
 
   /**
-   * Elementwise map operation
+   * Performs elementwise map operation based on the {@link MapFunc} provided
    *
    * @param mapFn map function T0 to O
    * @param <O>   output type
-   * @return output TSet
+   * @return Compute tset
    */
   <O> TSet<O> map(MapFunc<O, T0> mapFn);
 
   /**
-   * Flatmap operation
+   * Performs flat map operation based on the {@link FlatMapFunc} provided
    *
    * @param mapFn map function which can produce multiple elements for a single <T0> element
    * @param <O>   map function to T0 to multiple elements of <O>
-   * @return output TSet
+   * @return Compute TSet
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
   /**
-   * Applies a functoin elementwise
+   * Maps the data passed through the TLink to {@link Tuple} based on a {@link MapFunc} and thereby
+   * creating a {@link TupleTSet}
+   *
+   * @param genTupleFn {@link MapFunc} to generate a {@link Tuple}
+   * @param <K>        key type
+   * @param <V>        value type
+   * @return Keyed TSet
+   */
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
+
+  /**
+   * Applies a function elementwise. Similar to compute, but the {@link ApplyFunc} does not
+   * return anything.
    *
    * @param applyFunction apply function
    */
   void forEach(ApplyFunc<T0> applyFunction);
 
   /**
-   * Sink function
+   * Creates a Sink TSet based on the {@link SinkFunc}.
    *
    * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
    *                     return any TSet
+   * @return Sink tset. This would would be a terminal TSet with no transformation capabilities.
    */
   TBase sink(SinkFunc<T1> sinkFunction);
 }

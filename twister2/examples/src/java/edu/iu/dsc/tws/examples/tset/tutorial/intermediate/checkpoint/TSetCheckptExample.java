@@ -10,9 +10,10 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.tutorial.intermediate.comm;
+package edu.iu.dsc.tws.examples.tset.tutorial.intermediate.checkpoint;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -20,21 +21,23 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class TSetCommunicationExample implements BatchTSetIWorker, Serializable {
+public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
 
-  private static final Logger LOG = Logger.getLogger(TSetCommunicationExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(TSetCheckptExample.class.getName());
 
   public static void main(String[] args) {
 
     JobConfig jobConfig = new JobConfig();
 
     Twister2Job job = Twister2Job.newBuilder()
-        .setJobName(TSetCommunicationExample.class.getName())
+        .setJobName(TSetCheckptExample.class.getName())
         .setConfig(jobConfig)
-        .setWorkerClass(TSetCommunicationExample.class)
+        .setWorkerClass(TSetCheckptExample.class)
         .addComputeResource(1, 512, 4)
         .build();
 
@@ -51,7 +54,7 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
 
       @Override
       public boolean hasNext() {
-        return count < 10;
+        return count < 1000000;
       }
 
       @Override
@@ -60,15 +63,33 @@ public class TSetCommunicationExample implements BatchTSetIWorker, Serializable 
       }
     }, 4);
 
-    sourceX.direct().compute((itr, collector) -> {
+    long t1 = System.currentTimeMillis();
+    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
-        collector.collect(i * 5);
+        c.collect(i * 5);
       });
-    }).direct().compute((itr, collector) -> {
+    }).direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
-        collector.collect((int) i + 2);
+        c.collect((int) i + 2);
       });
-    }).reduce((i1, i2) -> {
+    });
+    LOG.info("Time for two computes : " + (System.currentTimeMillis() - t1));
+
+    t1 = System.currentTimeMillis();
+    PersistedTSet<Object> persist = twoComputes.persist();
+    LOG.info("TIme for cache : " + (System.currentTimeMillis() - t1));
+    // When persist() is called, twister2 performs all the computations/communication
+    // upto this point and persists the result into the disk.
+    // This makes previous data garbage collectible and frees some memory.
+    // If persist() is called in a checkpointing enabled job, this will create
+    // a snapshot at this point and will start straightaway from this point if the
+    // job is restarted.
+
+    // Similar to CachedTSets, PersistedTSets can be added as inputs for other TSets and
+    // operations
+
+
+    persist.reduce((i1, i2) -> {
       return (int) i1 + (int) i2;
     }).forEach(i -> {
       LOG.info("SUM=" + i);

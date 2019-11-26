@@ -50,9 +50,9 @@ RUN wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28
 # clone & build twister2
 RUN git clone https://github.com/DSC-SPIDAL/twister2.git && \
     cd twister2 && ~/.bazel/bin/bazel build --config=ubuntu scripts/package:tarpkgs && cd && \
-    tar -xzvf twister2/bazel-bin/scripts/package/twister2-0.3.0.tar.gz && \
+    tar -xzvf twister2/bazel-bin/scripts/package/twister2-0.4.0.tar.gz && \
     echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64" >> ~/.bashrc && \
-    sed -i '/twister2.resource.scheduler.mpi.mpirun.file/c\twister2.resource.scheduler.mpi.mpirun.file: "mpirun"' /home/twister2/twister2-0.3.0/conf/standalone/resource.yaml && \
+    sed -i '/twister2.resource.scheduler.mpi.mpirun.file/c\twister2.resource.scheduler.mpi.mpirun.file: "mpirun"' /home/twister2/twister2-0.4.0/conf/standalone/resource.yaml && \
     rm -rf bin ~/.cache/bazel
 
 
