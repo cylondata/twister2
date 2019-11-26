@@ -122,6 +122,7 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
 
       }
     }, (left, right) -> ByteArrayComparator.getInstance().compare(left, right))
+        .useDisk()
         .forEach(new ApplyFunc<Tuple<byte[], Iterator<byte[]>>>() {
 
           private byte[] previousKey;

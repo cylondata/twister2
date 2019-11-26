@@ -200,7 +200,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   @Override
   @SuppressWarnings("unchecked")
   public boolean onMessage(int source, int path,
-                          int target, int flags, Object object) {
+                           int target, int flags, Object object) {
     if (lock.tryLock()) {
       try {
         Shuffle sortedMerger = sortedMergers.get(target);
@@ -242,7 +242,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             Object data = kc.getValue();
             byte[] d;
             if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
-                || !(data instanceof byte[])) {
+                || !(data instanceof byte[])
+                || ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL
+                && partition.getDataType() == MessageTypes.OBJECT)) {
+              // 3rd case handles, when user use Object data type, but send a byte[]
               d = partition.getDataType().getDataPacker().packToByteArray(data);
               kc.setValue(d);
             }
