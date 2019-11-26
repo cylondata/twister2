@@ -33,6 +33,9 @@ public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
     super(env, n, sourceP, targetP);
   }
 
+  protected BatchIteratorLinkWrapper() {
+  }
+
   @Override
   public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),

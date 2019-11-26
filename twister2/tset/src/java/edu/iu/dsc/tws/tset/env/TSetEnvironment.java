@@ -147,9 +147,9 @@ public abstract class TSetEnvironment {
    * Adds a {@link edu.iu.dsc.tws.api.tset.sets.TSet} to another
    * {@link edu.iu.dsc.tws.api.tset.sets.TSet} as an input that will be identified by the inputKey
    *
-   * @param tSetID      TSet ID
+   * @param tSetID TSet ID
    * @param inputTSetID input TSet ID
-   * @param inputKey    key given to the input TSet
+   * @param inputKey key given to the input TSet
    */
   public void addInput(String tSetID, String inputTSetID, String inputKey) {
     if (tSetInputMap.containsKey(tSetID)) {
@@ -196,7 +196,7 @@ public abstract class TSetEnvironment {
    *
    * @param tBaseGraph TBase graph
    */
-  protected void settBaseGraph(TBaseGraph tBaseGraph) {
+  public void settBaseGraph(TBaseGraph tBaseGraph) {
     this.tBaseGraph = tBaseGraph;
   }
 
