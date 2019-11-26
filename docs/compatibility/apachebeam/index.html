@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Apache Beam Runner · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.&lt;/p&gt;
-"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Apache Beam Runner · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="&lt;p&gt;Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.&lt;/p&gt;
-"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class="siteNavGroupActive"><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contributors</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>APIs</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">App Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/streaming_jobs">Streaming Jobs</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/batch_jobs">Batch Jobs</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">APIs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/worker_api">Worker API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/tset_api">Data API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/task_api">Compute API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/windowing/windowing_api">Windowing API</a></li><li class="navListItem"><a class="navItem" href="/docs/compatibility/storm">Storm API</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/compatibility/apachebeam">Apache Beam</a></li><li class="navListItem"><a class="navItem" href="/docs/compatibility/pythonapi">Python API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/kubernetes/Kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/minikube/Minikube">Minikube</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/nomad/nomad">Nomad</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/logging">Logging</a></li><li class="navListItem"><a class="navItem" href="/docs/configurations/configurations">Configurations</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/concepts">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/distributed_runtime">Architecture</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/par_ops">Operators</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/task-system/concept_task">Task System</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/data-access/data_access">Data Access</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/examples/examples">General</a></li><li class="navListItem"><a class="navItem" href="/docs/examples/ml/ml">ML</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Versions</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/release/versions">Versions</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Apache Beam Runner · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Apache Beam Runner · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines."/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class="siteNavGroupActive"><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class=""><a href="/docs/examples/examples" target="_self">Examples</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contributors</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>APIs</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">App Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/streaming_jobs">Streaming Jobs</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/batch_jobs">Batch Jobs</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">APIs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/worker_api">Worker API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/tset_api">Data API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/task_api">Compute API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/windowing/windowing_api">Windowing API</a></li><li class="navListItem"><a class="navItem" href="/docs/compatibility/storm">Storm API</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/compatibility/apachebeam">Apache Beam</a></li><li class="navListItem"><a class="navItem" href="/docs/compatibility/pythonapi">Python API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/kubernetes/Kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/minikube/Minikube">Minikube</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/nomad/nomad">Nomad</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/docs/deployment/logging">Logging</a></li><li class="navListItem"><a class="navItem" href="/docs/configurations/configurations">Configurations</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/concepts/concepts">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/distributed_runtime">Architecture</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/par_ops">Operators</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/task-system/concept_task">Task System</a></li><li class="navListItem"><a class="navItem" href="/docs/concepts/data-access/data_access">Data Access</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/publications">Publications</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
             for (var i = 0; i < coll.length; i++) {
@@ -56,7 +54,7 @@
                 };
               }
             });
-        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Apache Beam Runner</h1></header><article><div><span><p>Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Apache Beam Runner</h1></header><article><div><span><p>Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.
 Beam provides several open sources SDK's which can he used to build a pipline. This pipline is then
 executed using one of the many distributed processing back-ends supported by Apache beam. Currently
 Frameworks such as Apache Spark and Apache Flink are supported, these are called runners.</p>
@@ -70,150 +68,150 @@ distribution setup.</p>
 <pre><code class="hljs css language-text">./bin/twister2 submit standalone jar $pathtoJar org.apache.beam.runners.twister2.examples.TestRunner
  -input <path-to-text-input-file> -output <path-to-text-output-file> -workers 1 1>&2 | tee out.txt
 </code></pre>
-<pre><code class="hljs css language-java">    <span class="hljs-keyword">package</span> org.apache.beam.runners.twister2.examples;
+<pre><code class="hljs css language-java">    package org.apache.beam.runners.twister2.examples;
     
-    <span class="hljs-keyword">import</span> java.io.Serializable;
+    import java.io.Serializable;
     
-    <span class="hljs-keyword">import</span> org.apache.beam.runners.twister2.Twister2LegacyRunner;
-    <span class="hljs-keyword">import</span> org.apache.beam.runners.twister2.Twister2PipelineOptions;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.Pipeline;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.io.TextIO;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Counter;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Distribution;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.metrics.Metrics;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Default;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Description;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.PipelineOptions;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.PipelineOptionsFactory;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.options.Validation;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.Count;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.DoFn;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.MapElements;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.PTransform;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.ParDo;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.transforms.SimpleFunction;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.values.KV;
-    <span class="hljs-keyword">import</span> org.apache.beam.sdk.values.PCollection;
+    import org.apache.beam.runners.twister2.Twister2LegacyRunner;
+    import org.apache.beam.runners.twister2.Twister2PipelineOptions;
+    import org.apache.beam.sdk.Pipeline;
+    import org.apache.beam.sdk.io.TextIO;
+    import org.apache.beam.sdk.metrics.Counter;
+    import org.apache.beam.sdk.metrics.Distribution;
+    import org.apache.beam.sdk.metrics.Metrics;
+    import org.apache.beam.sdk.options.Default;
+    import org.apache.beam.sdk.options.Description;
+    import org.apache.beam.sdk.options.PipelineOptions;
+    import org.apache.beam.sdk.options.PipelineOptionsFactory;
+    import org.apache.beam.sdk.options.Validation;
+    import org.apache.beam.sdk.transforms.Count;
+    import org.apache.beam.sdk.transforms.DoFn;
+    import org.apache.beam.sdk.transforms.MapElements;
+    import org.apache.beam.sdk.transforms.PTransform;
+    import org.apache.beam.sdk.transforms.ParDo;
+    import org.apache.beam.sdk.transforms.SimpleFunction;
+    import org.apache.beam.sdk.values.KV;
+    import org.apache.beam.sdk.values.PCollection;
     
-    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.config.Config;
-    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-    <span class="hljs-keyword">import</span> edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+    import edu.iu.dsc.tws.api.config.Config;
+    import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+    import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
     
-    <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">WordCount</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Serializable</span>, <span class="hljs-title">BatchTSetIWorker</span> </span>{
+    public class WordCount implements Serializable, BatchTSetIWorker {
     
-      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String TOKENIZER_PATTERN = <span class="hljs-string">"[^\\p{L}]+"</span>;
+      public static final String TOKENIZER_PATTERN = "[^\\p{L}]+";
     
-      <span class="hljs-meta">@Override</span>
-      <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(BatchTSetEnvironment env)</span> </span>{
+      @Override
+      public void execute(BatchTSetEnvironment env) {
     
         Config config = env.getConfig();
-        String input = config.getStringValue(<span class="hljs-string">"input"</span>);
-        String output = config.getStringValue(<span class="hljs-string">"output"</span>);
-        System.out.println(<span class="hljs-string">"Rank "</span> + env.getWorkerID());
+        String input = config.getStringValue("input");
+        String output = config.getStringValue("output");
+        System.out.println("Rank " + env.getWorkerID());
         Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
         options.setTSetEnvironment(env);
         options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
         runWordCount(options, input, output);
       }
     
-      <span class="hljs-comment">/**
+      /**
        * Concept #2: You can make your pipeline assembly code less verbose by defining your DoFns
        * statically out-of-line. This DoFn tokenizes lines of text into individual words; we pass it to
        * a ParDo in the pipeline.
-       */</span>
-      <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ExtractWordsFn</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DoFn</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">String</span>&gt; </span>{
-        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Counter emptyLines = Metrics.counter(ExtractWordsFn.class, <span class="hljs-string">"emptyLines"</span>);
-        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Distribution lineLenDist =
-            Metrics.distribution(ExtractWordsFn.class, <span class="hljs-string">"lineLenDistro"</span>);
+       */
+      static class ExtractWordsFn extends DoFn&lt;String, String&gt; {
+        private final Counter emptyLines = Metrics.counter(ExtractWordsFn.class, "emptyLines");
+        private final Distribution lineLenDist =
+            Metrics.distribution(ExtractWordsFn.class, "lineLenDistro");
     
-        <span class="hljs-meta">@ProcessElement</span>
-        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">processElement</span><span class="hljs-params">(@Element String element, OutputReceiver&lt;String&gt; receiver)</span> </span>{
+        @ProcessElement
+        public void processElement(@Element String element, OutputReceiver&lt;String&gt; receiver) {
           lineLenDist.update(element.length());
-          <span class="hljs-keyword">if</span> (element.trim().isEmpty()) {
+          if (element.trim().isEmpty()) {
             emptyLines.inc();
           }
     
-          <span class="hljs-comment">// Split the line into words.</span>
-          String[] words = element.split(TOKENIZER_PATTERN, -<span class="hljs-number">1</span>);
+          // Split the line into words.
+          String[] words = element.split(TOKENIZER_PATTERN, -1);
     
-          <span class="hljs-comment">// Output each word encountered into the output PCollection.</span>
-          <span class="hljs-keyword">for</span> (String word : words) {
-            <span class="hljs-keyword">if</span> (!word.isEmpty()) {
+          // Output each word encountered into the output PCollection.
+          for (String word : words) {
+            if (!word.isEmpty()) {
               receiver.output(word);
             }
           }
         }
       }
     
-      <span class="hljs-comment">/** A SimpleFunction that converts a Word and Count into a printable string. */</span>
-      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FormatAsTextFn</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">SimpleFunction</span>&lt;<span class="hljs-title">KV</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">Long</span>&gt;, <span class="hljs-title">String</span>&gt; </span>{
-        <span class="hljs-meta">@Override</span>
-        <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">apply</span><span class="hljs-params">(KV&lt;String, Long&gt; input)</span> </span>{
-          <span class="hljs-keyword">return</span> input.getKey() + <span class="hljs-string">": "</span> + input.getValue();
+      /** A SimpleFunction that converts a Word and Count into a printable string. */
+      public static class FormatAsTextFn extends SimpleFunction&lt;KV&lt;String, Long&gt;, String&gt; {
+        @Override
+        public String apply(KV&lt;String, Long&gt; input) {
+          return input.getKey() + ": " + input.getValue();
         }
       }
     
-      <span class="hljs-comment">/**
+      /**
        * A PTransform that converts a PCollection containing lines of text into a PCollection of
        * formatted word counts.
        *
        * &lt;p&gt;Concept #3: This is a custom composite transform that bundles two transforms (ParDo and
        * Count) as a reusable PTransform subclass. Using composite transforms allows for easy reuse,
        * modular testing, and an improved monitoring experience.
-       */</span>
-      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CountWords</span>
-          <span class="hljs-keyword">extends</span> <span class="hljs-title">PTransform</span>&lt;<span class="hljs-title">PCollection</span>&lt;<span class="hljs-title">String</span>&gt;, <span class="hljs-title">PCollection</span>&lt;<span class="hljs-title">KV</span>&lt;<span class="hljs-title">String</span>, <span class="hljs-title">Long</span>&gt;&gt;&gt; </span>{
-        <span class="hljs-meta">@Override</span>
-        <span class="hljs-keyword">public</span> PCollection&lt;KV&lt;String, Long&gt;&gt; expand(PCollection&lt;String&gt; lines) {
+       */
+      public static class CountWords
+          extends PTransform&lt;PCollection&lt;String&gt;, PCollection&lt;KV&lt;String, Long&gt;&gt;&gt; {
+        @Override
+        public PCollection&lt;KV&lt;String, Long&gt;&gt; expand(PCollection&lt;String&gt; lines) {
     
-          <span class="hljs-comment">// Convert lines of text into individual words.</span>
-          PCollection&lt;String&gt; words = lines.apply(ParDo.of(<span class="hljs-keyword">new</span> ExtractWordsFn()));
+          // Convert lines of text into individual words.
+          PCollection&lt;String&gt; words = lines.apply(ParDo.of(new ExtractWordsFn()));
     
-          <span class="hljs-comment">// Count the number of times each word occurs.</span>
+          // Count the number of times each word occurs.
           PCollection&lt;KV&lt;String, Long&gt;&gt; wordCounts = words.apply(Count.perElement());
     
-          <span class="hljs-keyword">return</span> wordCounts;
+          return wordCounts;
         }
       }
     
-      <span class="hljs-comment">/**
-       * Options supported by {<span class="hljs-doctag">@link</span> WordCount}.
+      /**
+       * Options supported by {@link WordCount}.
        *
        * &lt;p&gt;Concept #4: Defining your own configuration options. Here, you can add your own arguments to
        * be processed by the command-line parser, and specify default values for them. You can then
        * access the options values in your pipeline code.
        *
        * &lt;p&gt;Inherits standard configuration options.
-       */</span>
-      <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">WordCountOptions</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">PipelineOptions</span> </span>{
+       */
+      public interface WordCountOptions extends PipelineOptions {
     
-        <span class="hljs-comment">/**
+        /**
          * By default, this example reads from a public dataset containing the text of King Lear. Set
          * this option to choose a different input file or glob.
-         */</span>
-        <span class="hljs-meta">@Description</span>(<span class="hljs-string">"Path of the file to read from"</span>)
-        <span class="hljs-meta">@Default</span>.String(<span class="hljs-string">"gs://apache-beam-samples/shakespeare/kinglear.txt"</span>)
-        <span class="hljs-function">String <span class="hljs-title">getInputFile</span><span class="hljs-params">()</span></span>;
+         */
+        @Description("Path of the file to read from")
+        @Default.String("gs://apache-beam-samples/shakespeare/kinglear.txt")
+        String getInputFile();
     
-        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">setInputFile</span><span class="hljs-params">(String value)</span></span>;
+        void setInputFile(String value);
     
-        <span class="hljs-comment">/** Set this required option to specify where to write the output. */</span>
-        <span class="hljs-meta">@Description</span>(<span class="hljs-string">"Path of the file to write to"</span>)
-        <span class="hljs-meta">@Validation</span>.<span class="hljs-function">Required
-        String <span class="hljs-title">getOutput</span><span class="hljs-params">()</span></span>;
+        /** Set this required option to specify where to write the output. */
+        @Description("Path of the file to write to")
+        @Validation.Required
+        String getOutput();
     
-        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">setOutput</span><span class="hljs-params">(String value)</span></span>;
+        void setOutput(String value);
       }
     
-      <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">runWordCount</span><span class="hljs-params">(Twister2PipelineOptions options, String input, String output)</span> </span>{
+      static void runWordCount(Twister2PipelineOptions options, String input, String output) {
         Pipeline p = Pipeline.create(options);
     
-        <span class="hljs-comment">// Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the</span>
-        <span class="hljs-comment">// static FormatAsTextFn() to the ParDo transform.</span>
-        p.apply(<span class="hljs-string">"ReadLines"</span>, TextIO.read().from(input))
-            .apply(<span class="hljs-keyword">new</span> CountWords())
-            .apply(MapElements.via(<span class="hljs-keyword">new</span> FormatAsTextFn()))
-            .apply(<span class="hljs-string">"WriteCounts"</span>, TextIO.write().to(output));
+        // Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the
+        // static FormatAsTextFn() to the ParDo transform.
+        p.apply("ReadLines", TextIO.read().from(input))
+            .apply(new CountWords())
+            .apply(MapElements.via(new FormatAsTextFn()))
+            .apply("WriteCounts", TextIO.write().to(output));
     
         p.run().waitUntilFinish();
       }
