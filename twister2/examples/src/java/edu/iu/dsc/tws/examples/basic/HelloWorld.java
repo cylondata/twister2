@@ -12,20 +12,16 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -48,25 +44,6 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
-
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
-    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
-
-    try {
-      LOG.info("I am sleeping for 1 minute and then exiting.");
-      Thread.sleep(60 * 1000);
-      LOG.info("I am done sleeping. Exiting.");
-    } catch (InterruptedException e) {
-      LOG.severe("Thread sleep interrupted.");
-    }
-
   }
 
   public static void main(String[] args) {

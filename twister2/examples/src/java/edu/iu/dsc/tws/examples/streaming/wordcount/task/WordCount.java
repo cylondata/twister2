@@ -42,8 +42,8 @@ import edu.iu.dsc.tws.task.typed.streaming.SPartitionCompute;
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated. Example is done using the compute API.
  */
-public class WordCountJob implements IWorker {
-  private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
+public class WordCount implements IWorker {
+  private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   private static final String EDGE = "partition-edge";
 
@@ -130,7 +130,7 @@ public class WordCountJob implements IWorker {
     JobConfig jobConfig = new JobConfig();
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("wordcount-streaming-task");
-    jobBuilder.setWorkerClass(WordCountJob.class);
+    jobBuilder.setWorkerClass(WordCount.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
