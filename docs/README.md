@@ -44,6 +44,8 @@ sudo apt-get update && sudo apt-get install yarn
 ### Install Docusaurus
 
 ```bash
+cd website
+
 sudo npm install -g docusaurus --unsafe-perm=true --allow-root
 
 yarn add @babel/plugin-proposal-class-properties --dev

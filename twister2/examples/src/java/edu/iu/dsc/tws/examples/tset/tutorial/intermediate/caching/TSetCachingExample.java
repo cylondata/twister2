@@ -18,7 +18,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -49,18 +52,13 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
-    SourceTSet<Integer> intSource = env.createSource(new SourceFunc<Integer>() {
+    SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
       private int count = 0;
 
       @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      @Override
       public boolean hasNext() {
-        return count < 1000000;
+        return count < 10;
       }
 
       @Override
@@ -69,8 +67,7 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    long t1 = System.currentTimeMillis();
-    ComputeTSet<Object, Iterator<Object>> twoComputes = intSource.direct().compute((itr, c) -> {
+    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
         c.collect(i * 5);
       });
@@ -79,17 +76,48 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
         c.collect((int) i + 2);
       });
     });
-    LOG.info("Time for two computes : " + (System.currentTimeMillis() - t1));
 
-    t1 = System.currentTimeMillis();
     CachedTSet<Object> cached = twoComputes.cache();
-    LOG.info("TIme for cache : " + (System.currentTimeMillis() - t1));
+    // when cache is called, twister2 will run everything upto this point and cache the result
+    // into the memory. Cached TSets can be added as inputs for other TSets and operations.
 
+    SourceTSet<Integer> sourceZ = env.createSource(new SourceFunc<Integer>() {
 
-    cached.reduce((i1, i2) -> {
-      return (int) i1 + (int) i2;
-    }).forEach(i -> {
-      LOG.info("SUM=" + i);
+      private int count = 0;
+
+      @Override
+      public boolean hasNext() {
+        return count < 10;
+      }
+
+      @Override
+      public Integer next() {
+        return count++;
+      }
+    }, 4);
+
+    ComputeTSet<Integer, Iterator<Integer>> calc = sourceZ.direct().compute(
+        new ComputeCollectorFunc<Integer, Iterator<Integer>>() {
+
+          private DataPartitionConsumer<Integer> xValues;
+
+          @Override
+          public void prepare(TSetContext context) {
+            this.xValues = (DataPartitionConsumer<Integer>) context.getInput("x").getConsumer();
+          }
+
+          @Override
+          public void compute(Iterator<Integer> zValues, RecordCollector<Integer> output) {
+            while (zValues.hasNext()) {
+              output.collect(xValues.next() + zValues.next());
+            }
+          }
+        });
+
+    calc.addInput("x", cached);
+
+    calc.direct().forEach(i -> {
+      LOG.info("(x * 5) + 2 + z =" + i);
     });
   }
 }

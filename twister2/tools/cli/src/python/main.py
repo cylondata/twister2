@@ -54,7 +54,7 @@ class _HelpAction(argparse._HelpAction):
                 print(subparser.format_help())
                 return
 
-def create_parser():
+def create_parser(for_python=False):
     '''
     Main parser
     :return:
@@ -71,7 +71,7 @@ def create_parser():
 
     cli_help.create_parser(subparsers)
     kill.create_parser(subparsers)
-    submit.create_parser(subparsers)
+    submit.create_parser(subparsers, for_python)
     dashboard.create_parser(subparsers)
     restart.create_parser(subparsers)
 
@@ -130,8 +130,10 @@ def main():
     # verify if the environment variables are correctly set
     check_environment()
 
+    for_python = len(sys.argv) > 4 and sys.argv[3] == "python"
+
     # create the argument parser
-    parser = create_parser()
+    parser = create_parser(for_python)
 
     # if no argument is provided, print help and exit
     if len(sys.argv[1:]) == 0:

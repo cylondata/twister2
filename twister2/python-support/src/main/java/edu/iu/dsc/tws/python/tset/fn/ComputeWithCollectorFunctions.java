@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.python.tset.fn;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.tset.RecordCollector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
@@ -28,14 +29,20 @@ public class ComputeWithCollectorFunctions extends TFunc<ComputeCollectorFunc> {
   public static class ComputeFuncImpl implements ComputeCollectorFunc, Serializable {
 
     private PythonLambdaProcessor lambdaProcessor;
+    private TSetContext ctx;
 
     ComputeFuncImpl(byte[] byBinary) {
       this.lambdaProcessor = new PythonLambdaProcessor(byBinary);
     }
 
     @Override
+    public void prepare(TSetContext context) {
+      this.ctx = context;
+    }
+
+    @Override
     public void compute(Object input, RecordCollector output) {
-      this.lambdaProcessor.invoke(input, output);
+      this.lambdaProcessor.invoke(input, output, ctx);
     }
   }
 

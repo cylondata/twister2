@@ -29,7 +29,7 @@ import twister2.tools.cli.src.python.config as config
 # pylint: disable=too-many-return-statements
 
 ################################################################################
-def create_parser(subparsers):
+def create_parser(subparsers, for_python=False):
     '''
     Create a subparser for the submit command
     :param subparsers:
@@ -47,7 +47,8 @@ def create_parser(subparsers):
     cli_args.add_cluster_role_env(parser)
     cli_args.add_job_type(parser)
     cli_args.add_job_file(parser)
-    cli_args.add_job_class(parser)
+    if not for_python:
+        cli_args.add_job_class(parser)
     cli_args.add_verbose(parser)
     cli_args.add_debug(parser)
 
@@ -180,9 +181,7 @@ def submit_python(cl_args, unknown_args):
     # execute main of the job to create the job definition
     job_file = cl_args['job-file-name']
 
-    main_class = cl_args['job-class-name']
-
-    java_system_props += ["python_file=" + job_file, "main_file=" + main_class]
+    java_system_props += ["python_file=" + job_file, "main_file=" + job_file]
 
     res = execute.twister2_class(
         class_name="edu.iu.dsc.tws.python.PythonWorker",
