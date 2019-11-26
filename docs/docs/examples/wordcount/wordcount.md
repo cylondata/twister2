@@ -18,7 +18,7 @@ When we install Twister2, it will compile the examples. Lets go to the installat
 
 ```text
 cd bazel-bin/scripts/package/twister2-dist/
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 
 After running the streaming example, your terminal will show the following set of lines :
