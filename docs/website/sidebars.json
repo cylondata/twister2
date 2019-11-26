@@ -62,7 +62,9 @@
   "tutorial": {
     "Tutorial": [
       "examples/tset/hello_world",
-      "examples/tset/tset_source"
+      "examples/tset/tset_source",
+      "examples/tset/tset_compute",
+      "examples/tset/tset_communication"
     ]
   },
   "developers": {

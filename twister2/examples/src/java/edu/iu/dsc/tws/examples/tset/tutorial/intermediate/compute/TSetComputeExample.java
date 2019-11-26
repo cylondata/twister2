@@ -46,14 +46,9 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
-    SourceTSet<Integer> intSource = env.createSource(new SourceFunc<Integer>() {
+    SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
       private int count = 0;
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
 
       @Override
       public boolean hasNext() {
@@ -66,7 +61,7 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    intSource.direct().compute((itr, collector) -> {
+    sourceX.direct().compute((itr, collector) -> {
       // if each element of the iterator should be processed individually, compute
       // function which accepts a ComputeCollector can be used.
       itr.forEachRemaining(i -> {
@@ -77,7 +72,7 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
         collector.collect((int) i + 2);
       });
     }).direct().forEach(i -> {
-      LOG.info("(i x 5 ) + 2 = " + i);
+      LOG.info("(x * 5 ) + 2 = " + i);
     });
   }
 }

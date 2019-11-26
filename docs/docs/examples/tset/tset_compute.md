@@ -15,7 +15,7 @@ TSet sources can be created through the TSetEnvironment.
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->
 ```java
-intSource.direct().compute((itr, collector) -> {
+sourceX.direct().compute((itr, collector) -> {
       // if each element of the iterator should be processed individually, compute
       // function which accepts a ComputeCollector can be used.
       itr.forEachRemaining(i -> {
@@ -31,6 +31,7 @@ intSource.direct().compute((itr, collector) -> {
 ```
 
 <!--Python-->
+Compute functions should be self executable. They can't refer to outside variables, functions or imports. Whatever required should be imported within the function itself.
 ```python
 class IntSource(SourceFunc):
 def mul_by_five(itr, collector, ctx: TSetContext):
@@ -57,5 +58,7 @@ and you can process them internally within the compute and output a single value
 2. Compute with an output collector
 
 In this variant, you receive an iterator of data from previous operation and you can output multiple values as the output through the collector. 
+
+# TODO : LINK TO TSET NON COMMUNICATION OPS DOC
 
 
