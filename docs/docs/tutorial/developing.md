@@ -55,7 +55,7 @@ To run batch word count example
 ```
 To run streaming word count example
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 To run K-means example
 ```bash
@@ -365,7 +365,7 @@ cd twister2-0.4.0
 And run the command below  using kubernetes resource scheduler
 
 ```bash
-./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 
 
@@ -379,10 +379,10 @@ It will run 4 executors with 8 tasks
 After running the example, you will see an output like the following;
 
 ```bash
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word wA count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word 4 count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word lJx count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word gxsn count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 2 Word wA count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 0 Word 4 count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 2 Word lJx count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 0 Word gxsn count 1
 ```
 
 At this point you should manually stop the process (CTRL+C)

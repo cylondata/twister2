@@ -49,8 +49,11 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class TSetWordCount implements BatchTSetIWorker, Serializable {
-  private static final Logger LOG = Logger.getLogger(TSetWordCount.class.getName());
+/**
+ * A word count where we read text files with words
+ */
+public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
+  private static final Logger LOG = Logger.getLogger(FileBasedWordCount.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -188,7 +191,7 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("tset-wordcount");
-    jobBuilder.setWorkerClass(TSetWordCount.class);
+    jobBuilder.setWorkerClass(FileBasedWordCount.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 

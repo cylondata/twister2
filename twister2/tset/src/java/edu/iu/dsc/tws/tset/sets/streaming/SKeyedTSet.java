@@ -19,10 +19,11 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
+import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
+import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
 
 /**
  * Attaches a key to the oncoming data.
@@ -33,13 +34,7 @@ import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
 
-  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, MapCompute<Tuple<K, V>, ?> mapFn,
-                    int parallelism) {
-    super(tSetEnv, "skeyed", parallelism);
-    this.mapToTupleFunc = mapFn;
-  }
-
-  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, MapIterCompute<Tuple<K, V>, ?> mapFn,
+  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFn,
                     int parallelism) {
     super(tSetEnv, "skeyed", parallelism);
     this.mapToTupleFunc = mapFn;
@@ -49,15 +44,17 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   public ICompute getINode() {
 
     if (mapToTupleFunc instanceof MapCompute) {
-      return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
           Collections.emptyMap());
     } else if (mapToTupleFunc instanceof MapIterCompute) {
-      return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeCollectorToTupleOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
           Collections.emptyMap());
+    } else if (mapToTupleFunc instanceof GatherMapCompute) {
+      return new ComputeCollectorToTupleOp<>((GatherMapCompute<Tuple<K, V>, ?>) mapToTupleFunc,
+          this, Collections.emptyMap());
     }
 
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);
-
   }
 
   @Override

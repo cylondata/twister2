@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 /**
  * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
@@ -66,6 +67,14 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
     GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
     return compute("smap", comp);
+  }
+
+  @Override
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
+    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
+        getTargetParallelism());
+    addChildToGraph(set);
+    return set;
   }
 
   @Override

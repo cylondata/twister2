@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
   private FlatMapFunc<O, I> mapFn;

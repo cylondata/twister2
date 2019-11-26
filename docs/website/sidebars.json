@@ -2,7 +2,8 @@
   "starting": {
     "Getting Started": [
       "introduction",
-      "quickstart"
+      "getstarted/setup_twister2",
+      "getstarted/started_word_count"
     ]
   },
   "docs": {
@@ -48,10 +49,6 @@
       "concepts/task-system/concept_task",
       "concepts/data-access/data_access"
     ],
-    "Examples": [
-      "examples/examples",
-      "examples/ml/ml"
-    ],
     "Versions": [
       "release/versions"
     ],
@@ -69,6 +66,12 @@
       "examples/tset/tset_persisting"
     ]
   },
+  "examples": {
+    "Examples": [
+      "examples/examples",
+      "examples/ml/ml"
+    ]
+  },
   "developers": {
     "Contributors": [
       "developers/debugging",
@@ -77,6 +80,12 @@
       "developers/tests",
       "community/contributing",
       "community/mailing"
+    ]
+  },
+  "download": {
+    "Download": [
+      "download",
+      "release/versions"
     ]
   }
 }

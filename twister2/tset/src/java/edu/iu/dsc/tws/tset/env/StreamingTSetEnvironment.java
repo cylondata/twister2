@@ -19,6 +19,11 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
+/**
+ * Implementation of {@link TSetEnvironment} for streaming {@link OperationMode}.
+ * <p>
+ * There is only a single execution mode that would run the entire TSet graph.
+ */
 public class StreamingTSetEnvironment extends TSetEnvironment {
 
   public StreamingTSetEnvironment(WorkerEnvironment wEnv) {

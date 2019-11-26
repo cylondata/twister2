@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
 
@@ -34,7 +34,7 @@ public class KeyedSourceTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   }
 
   @Override
-  public KeyedSourceTSet<K, V> addInput(String key, Storable<?> input) {
+  public KeyedSourceTSet<K, V> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }

@@ -26,8 +26,8 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
@@ -44,7 +44,7 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
   }
 
   @Override
-  public SourceTSet<T> addInput(String key, Storable<?> input) {
+  public SourceTSet<T> addInput(String key, StorableTBase<?> input) {
     return (SourceTSet<T>) super.addInput(key, input);
   }
 

@@ -12,8 +12,13 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
-
+/**
+ * Computes an output of type O based on an input of type I and the output would be passed on to
+ * a {@link RecordCollector} object.
+ *
+ * @param <O> output type
+ * @param <I> input type
+ */
 public interface ComputeCollectorFunc<O, I> extends TFunction<O, I> {
 
   void compute(I input, RecordCollector<O> output);

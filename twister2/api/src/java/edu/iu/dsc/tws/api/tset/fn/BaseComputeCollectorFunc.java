@@ -13,6 +13,12 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Extended {@link ComputeCollectorFunc} with access to {@link edu.iu.dsc.tws.api.tset.TSetContext}
+ *
+ * @param <O> output type
+ * @param <I> input type
+ */
 public abstract class BaseComputeCollectorFunc<O, I> extends BaseTFunction<O, I> implements
     ComputeCollectorFunc<O, I> {
 

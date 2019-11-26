@@ -1,15 +1,39 @@
 ---
 id: quickstart
-title: Quickstart
-sidebar_label: Quickstart
+title: First Application
+sidebar_label: First Application
 ---
 
 Lets look at how to setup Twister2 and run few examples. Lets start with a simple Twister2 job to spawn set of parallel workers and print a log.
 
-### Building Twister2
+### Compiling Twister2
 
-First we need to build Twister2. [Compiling Twister2](compiling/compiling.md) explains how to build it. After building the code and
+First we need to compile Twister2. [Compiling Twister2](compiling/compiling.md) explains the steps in detail. After building the code and
 following the instructions in [Twister2 Distribution](compiling/linux.md) you should have a extracted folder named `twister2-0.4.0`, this would be your twister2 home folder.
+
+Here are the essential steps in compiling Twister2.
+
+```bash
+wget https://github.com/DSC-SPIDAL/twister2/archive/0.4.0.tar.gz
+tar -xvf twister2-0.4.0.tar.gz
+
+cd twister2-0.4.0
+./build_linux.sh
+```
+
+The above command will install Twister2 along with system dependencies. You will need to give sudo
+access to the script. It will take about 20 minutes to build Twister2 depending on the system
+configuration. 
+
+The above command will build a twister2 distribution and we need to extract it.
+
+```bash
+# the binary is created inside this package
+cd bazel-bin/scripts/package
+tar -xvf twister2-0.4.0.tar.gz
+# go inside the twister2 binary
+cd twister2-0.4.0
+```
 
 ### Starting parallel workers
 

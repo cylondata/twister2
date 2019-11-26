@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 
 public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
-    implements Storable<Tuple<K, V>> {
+    implements StorableTBase<Tuple<K, V>> {
 
   // batch keyed comms only output iterators
   private String storedSourcePrefix;

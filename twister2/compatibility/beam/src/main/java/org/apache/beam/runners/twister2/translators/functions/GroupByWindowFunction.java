@@ -43,9 +43,9 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.joda.time.Instant;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 /**
  * GroupBy window function.
