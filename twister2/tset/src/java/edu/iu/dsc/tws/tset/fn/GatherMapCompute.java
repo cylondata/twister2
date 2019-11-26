@@ -25,6 +25,10 @@ public class GatherMapCompute<O, I> implements
 
   private MapFunc<O, I> mapFn;
 
+  private GatherMapCompute() {
+    //non arg constructor for kryp
+  }
+
   public GatherMapCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
