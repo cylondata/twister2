@@ -38,4 +38,9 @@ public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }

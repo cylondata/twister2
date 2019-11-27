@@ -54,6 +54,7 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
     });
 
     writeEndToEdges();
+    computeFunction.close();
     return true;
   }
 

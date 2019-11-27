@@ -44,6 +44,7 @@ public class ComputeToTupleOp<K, O, I> extends BaseComputeOp<I> {
     Tuple<K, O> tuple = computeFunc.compute(content.getContent());
     keyedWriteToEdges(tuple.getKey(), tuple.getValue());
     writeEndToEdges();
+    computeFunc.close();
     return false;
   }
 }

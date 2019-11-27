@@ -32,4 +32,9 @@ public class MapCompute<O, I> implements ComputeFunc<O, I> {
   public O compute(I input) {
     return mapFn.map(input);
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }
