@@ -45,7 +45,7 @@ const siteConfig = {
         {doc: 'compiling/compile_overview', label: 'Docs'},
         {doc: 'examples/tset/hello_world', label: 'Tutorial'},
         {doc: 'examples/examples', label: 'Examples'},
-        {doc: 'developers/debugging', label: 'Contributors'},
+        {doc: 'developers/debugging', label: 'Contribute'},
         {doc: 'download', label: 'Download'},
         {page: 'configs', label: 'Configurations'},
         {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub", external: true},
