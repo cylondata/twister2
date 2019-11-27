@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 
 /**
@@ -19,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
  * {@link edu.iu.dsc.tws.api.tset.sets.TSet}, {@link edu.iu.dsc.tws.api.tset.link.TLink},
  * {@link edu.iu.dsc.tws.api.tset.sets.TupleTSet} and {@link StorableTBase}.
  */
-public interface TBase {
+public interface TBase extends Serializable {
 
   /**
    * Gets the ID for the {@link TBase}

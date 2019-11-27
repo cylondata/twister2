@@ -31,6 +31,10 @@ import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
 public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
 
+  private KeyedTSet() {
+    //non arg constructor for kryo
+  }
+
   public KeyedTSet(BatchTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFunc,
                    int parallelism) {
     super(tSetEnv, "keyed", parallelism);

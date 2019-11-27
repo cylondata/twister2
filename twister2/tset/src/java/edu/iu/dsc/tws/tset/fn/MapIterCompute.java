@@ -22,6 +22,10 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
   private MapFunc<O, I> mapFn;
 
+  private MapIterCompute() {
+    //non arg constructor for kryp
+  }
+
   public MapIterCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }

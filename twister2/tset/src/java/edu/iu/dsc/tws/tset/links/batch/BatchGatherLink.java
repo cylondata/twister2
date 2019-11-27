@@ -48,6 +48,9 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
     super(env, n, sourceP, targetP);
   }
 
+  protected BatchGatherLink() {
+  }
+
   @Override
   public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
     GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
