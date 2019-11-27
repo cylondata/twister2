@@ -20,13 +20,13 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
-public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
+public class TSetCheckptExample implements CheckpointingBatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetCheckptExample.class.getName());
 
@@ -45,7 +45,7 @@ public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
   }
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(CheckpointingTSetEnv env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
     SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
@@ -54,7 +54,7 @@ public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
 
       @Override
       public boolean hasNext() {
-        return count < 1000000;
+        return count < 10000;
       }
 
       @Override
@@ -77,7 +77,7 @@ public class TSetCheckptExample implements BatchTSetIWorker, Serializable {
 
     t1 = System.currentTimeMillis();
     PersistedTSet<Object> persist = twoComputes.persist();
-    LOG.info("TIme for cache : " + (System.currentTimeMillis() - t1));
+    LOG.info("Time for persist : " + (System.currentTimeMillis() - t1) / 1000);
     // When persist() is called, twister2 performs all the computations/communication
     // upto this point and persists the result into the disk.
     // This makes previous data garbage collectible and frees some memory.

@@ -45,7 +45,7 @@ print("Time taken for two_computes %d" % (t2 - t1).total_seconds())
 t1 = datetime.now()
 persisted = two_computes.persist()
 t2 = datetime.now()
-print("Time taken for cache %d" % (t2 - t1).total_seconds())
+print("Time taken for persist %d" % (t2 - t1).total_seconds())
 
 persisted.reduce(lambda i1, i2: i1 + i2) \
     .for_each(lambda i: print("SUM = %d" % i))
