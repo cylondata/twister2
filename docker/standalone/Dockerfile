@@ -35,11 +35,11 @@ RUN cd && \
 
 
 #install bazel
-RUN wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-linux-x86_64.sh && \
-	chmod +x bazel-0.28.1-installer-linux-x86_64.sh && \
-	./bazel-0.28.1-installer-linux-x86_64.sh --user && \
+RUN wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-linux-x86_64.sh && \
+	chmod +x bazel-1.1.0-installer-linux-x86_64.sh && \
+	./bazel-1.1.0-installer-linux-x86_64.sh --user && \
 	echo "export PATH=~/.bazel/bin:\$PATH" >> ~/.bashrc && \
-	rm bazel-0.28.1-installer-linux-x86_64.sh
+	rm bazel-1.1.0-installer-linux-x86_64.sh
 
 
 ENV JAVA_HOME /usr/lib/jvm/java-1.8.0-openjdk-amd64
