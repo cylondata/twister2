@@ -2,18 +2,18 @@ FROM ubuntu:18.04
 
 
 # install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-8-jdk sudo  \
-	python-dev python-pip g++ git build-essential  \
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-8-jdk sudo \
+	python-dev python-pip g++ git build-essential \
 	automake cmake libtool-bin zip libunwind-setjmp0-dev \
-    zlib1g-dev unzip pkg-config python-setuptools python3-dev python3-pip \
-    maven wget ssh && pip install wheel && pip3 install wheel && \
-    rm -rf /var/lib/apt/lists/* && apt autoclean && apt-get clean && apt autoremove
+  zlib1g-dev unzip pkg-config python-setuptools python3-dev python3-pip \
+  maven wget ssh && pip install wheel && pip3 install wheel && \
+  rm -rf /var/lib/apt/lists/* && apt autoclean && apt-get clean && apt autoremove
 
 
 # add user
 RUN adduser twister2 && \
-    echo "twister2 ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/twister2 && \
-    chmod 0440 /etc/sudoers.d/twister2
+  echo "twister2 ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/twister2 && \
+  chmod 0440 /etc/sudoers.d/twister2
 USER twister2
 WORKDIR /home/twister2
 
