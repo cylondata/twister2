@@ -25,8 +25,8 @@ Apart from these, we have done many code improvements and bug fixes.
 
 ## Next Release
 
-In the next release we are working onto consolidate the Apache Beam integration and improve the
-fault tolerance (automatic restart of wokers) 
+In the next release we are working to improve the Fault tolerance, fix issues and integrate with AI
+systems.
 
 ## Components in Twister2
 
