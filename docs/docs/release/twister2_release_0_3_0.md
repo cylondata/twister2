@@ -1,4 +1,9 @@
-# Twister2 Release 0.3.0
+---
+id: 0.3.0
+title: Twister2 Release 0.3.0
+sidebar_label: Twister2 Release 0.3.0
+---
+
 
 This is a major release of Twister2. 
 
