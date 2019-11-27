@@ -39,4 +39,9 @@ public class GatherFlatMapCompute<O, I> implements
       mapFn.flatMap(input.next().getValue(), output);
     }
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }

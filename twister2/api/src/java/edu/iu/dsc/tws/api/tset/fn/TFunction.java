@@ -25,12 +25,13 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 /**
  * Base class for all the functions in TSet implementation
  */
-public interface TFunction<O, I> extends Serializable {
+public interface TFunction<O, I> extends Closable, Serializable {
 
   /**
    * Prepare the function. Use this context in case you need to add/get inputs
@@ -38,6 +39,11 @@ public interface TFunction<O, I> extends Serializable {
    * @param context CONTEXT
    */
   default void prepare(TSetContext context) {
+
+  }
+
+  @Override
+  default void close() {
 
   }
 }

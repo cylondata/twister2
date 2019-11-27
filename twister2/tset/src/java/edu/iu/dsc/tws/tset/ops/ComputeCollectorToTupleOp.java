@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private ComputeCollectorFunc<Tuple<K, O>, I> mapFunction;
+  private ComputeCollectorFunc<Tuple<K, O>, I> compFunction;
 
   public ComputeCollectorToTupleOp() {
   }
@@ -31,17 +31,17 @@ public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
   public ComputeCollectorToTupleOp(ComputeCollectorFunc<Tuple<K, O>, I> mapToTupFn,
                                    BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
-    this.mapFunction = mapToTupFn;
+    this.compFunction = mapToTupFn;
   }
 
   @Override
   public TFunction getFunction() {
-    return mapFunction;
+    return compFunction;
   }
 
   @Override
   public boolean execute(IMessage<I> content) {
-    mapFunction.compute(content.getContent(), new RecordCollector<Tuple<K, O>>() {
+    compFunction.compute(content.getContent(), new RecordCollector<Tuple<K, O>>() {
       @Override
       public void collect(Tuple<K, O> record) {
         keyedWriteToEdges(record.getKey(), record.getValue());
@@ -54,6 +54,7 @@ public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
     });
 
     writeEndToEdges();
+    compFunction.close();
     return false;
   }
 }
