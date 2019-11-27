@@ -135,9 +135,8 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
     public void prepare(TSetContext ctx) {
       super.prepare(ctx);
       try {
-        String fileWithIdx = ctx.getConfig().get("OUTPUT_FILE") + "."
-            + getTSetContext().getIndex();
-        File outFile = new File(fileWithIdx);
+        String file = ctx.getConfig().get("OUTPUT_FILE") + "." + getTSetContext().getIndex();
+        File outFile = new File(file);
         outFile.getParentFile().mkdirs();
 
         writer = new BufferedWriter(new FileWriter(outFile, false));
@@ -190,7 +189,7 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
 
     String input = cmd.getOptionValue("input");
     if (input == null) {
-      LOG.info("No input is provided! Downloading Pride and Prejudice text from "
+      LOG.warning("No input is provided! Downloading Pride and Prejudice text from "
           + "Gutenberg project");
       input = "/tmp/wc/wordcount.in";
       downloadFile(input);
