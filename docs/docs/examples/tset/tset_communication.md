@@ -49,6 +49,34 @@ source_x.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
 ```
 <!--END_DOCUSAURUS_CODE_TABS-->
 
-# TODO : LINK TO TSET COMMUNICATION OPS DOC
 
+More information on TSet API can be found in [TSet Docs](https://twister2.org/docs/concepts/tset_api).
+
+## Running this example
+
+<!--DOCUSAURUS_CODE_TABS-->
+<!--Java-->
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.tset.tutorial.intermediate.comm.TSetCommunicationExample
+```
+<!--Python-->
+```bash
+./bin/twister2 submit standalone python examples/python/tset_communication.py
+```
+<!--END_DOCUSAURUS_CODE_TABS-->
+
+## Output
+
+We should see a single response showing the sum of all the previous calculations. This time, the output will be printed only from worker 0, as we have applied a reduce operation.
+
+<!--DOCUSAURUS_CODE_TABS-->
+<!--Java-->
+```bash
+[2019-11-27 11:11:48 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.tset.tutorial.intermediate.comm.TSetCommunicationExample: SUM=980 
+```
+<!--Python-->
+```bash
+SUM = 980
+```
+<!--END_DOCUSAURUS_CODE_TABS-->
 
