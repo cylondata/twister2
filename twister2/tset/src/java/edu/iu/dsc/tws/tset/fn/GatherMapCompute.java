@@ -25,6 +25,10 @@ public class GatherMapCompute<O, I> implements
 
   private MapFunc<O, I> mapFn;
 
+  private GatherMapCompute() {
+    //non arg constructor for kryp
+  }
+
   public GatherMapCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
@@ -40,5 +44,10 @@ public class GatherMapCompute<O, I> implements
   @Override
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
+  }
+
+  @Override
+  public void close() {
+    mapFn.close();
   }
 }

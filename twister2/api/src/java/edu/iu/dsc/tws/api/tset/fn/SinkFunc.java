@@ -43,12 +43,6 @@ public interface SinkFunc<T> extends TFunction<T, T> {
   boolean add(T value);
 
   /**
-   * This method will be closed at the completion of data processing.
-   */
-  default void close() {
-  }
-
-  /**
    * Return the data partition associated with this task instance. Specifically to be used for
    * caching functionality.
    *

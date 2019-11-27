@@ -3,7 +3,8 @@
     "Getting Started": [
       "introduction",
       "getstarted/setup_twister2",
-      "getstarted/started_word_count"
+      "getstarted/started_word_count",
+      "getstarted/started_word_count_source"
     ]
   },
   "docs": {

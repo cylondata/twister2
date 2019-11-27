@@ -14,25 +14,34 @@ package edu.iu.dsc.tws.examples.batch.wordcount.tset;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.BaseApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
@@ -57,14 +66,12 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    int sourcePar = 4;
-    Configuration configuration = new Configuration();
+    int sourcePar = (int) env.getConfig().get("PAR");
 
-    configuration.set(TextInputFormat.INPUT_DIR, "file:///tmp/wc");
+    // read the file line by line by using a single worker
+    SourceTSet<String> lines = env.createSource(new WordCountFileSource(), 1);
 
-    SourceTSet<String> lines = env
-        .createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")), 1);
-
+    // distribute the lines among the workers and performs a flatmap operation to extract words
     ComputeTSet<String, Iterator<String>> words =
         lines.partition(new HashingPartitioner<>(), sourcePar)
             .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
@@ -74,31 +81,25 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
               }
             });
 
+    // attach count as 1 for each word
     KeyedTSet<String, Integer> groupedWords = words.mapToTuple(w -> new Tuple<>(w, 1));
 
+    // performs reduce by key at each worker
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
-    ComputeTSet<Tuple<String, Integer>, Iterator<Tuple<String, Integer>>> map =
-        keyedReduce.map(i -> i);
-
-    map.gather().sink(new WordCountFileLogger((String) env.getConfig().get("OUTPUT_FILE")));
+    // gather the results to worker0 (there is a dummy map op here to pass the values to edges)
+    // and write to a file
+    keyedReduce.map(i -> i).gather().forEach(new WordcountFileWriter());
   }
 
   static class WordCountFileSource extends BaseSourceFunc<String> {
-
-    private String inputFile;
     private DataSource<String, FileInputSplit<String>> dataSource;
     private InputSplit<String> dataSplit;
-
-    WordCountFileSource(String inputFile) {
-      this.inputFile = inputFile;
-    }
 
     @Override
     public void prepare(TSetContext context) {
       super.prepare(context);
-
-      // load the split
+      String inputFile = (String) context.getConfig().get("INPUT_FILE");
       this.dataSource = new DataSource<>(context.getConfig(),
           new LocalTextInputPartitioner(new Path(inputFile), context.getParallelism()),
           context.getParallelism());
@@ -108,18 +109,13 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
     @Override
     public boolean hasNext() {
       try {
-        if (dataSplit != null && !dataSplit.reachedEnd()) {
-          return true;
-        } else {
+        if (dataSplit == null || dataSplit.reachedEnd()) {
           dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
-          if (dataSplit != null) {
-            return true;
-          }
         }
+        return dataSplit != null && !dataSplit.reachedEnd();
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Unable read data split!");
       }
-      return false;
     }
 
     @Override
@@ -127,45 +123,36 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
       try {
         return dataSplit.nextRecord(null);
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Unable read data split!");
       }
-
-      return null;
     }
   }
 
-  static class WordCountFileLogger extends
-      BaseSinkFunc<Iterator<Tuple<Integer, Tuple<String, Integer>>>> {
+  static class WordcountFileWriter extends BaseApplyFunc<Tuple<String, Integer>> {
     private BufferedWriter writer;
-    private String fileName;
-
-    WordCountFileLogger(String fname) {
-      this.fileName = fname;
-    }
 
     @Override
     public void prepare(TSetContext ctx) {
       super.prepare(ctx);
-      String fileWithIdx = String.format("%s.%d", fileName, getTSetContext().getIndex());
       try {
-        writer = new BufferedWriter(new FileWriter(fileWithIdx, false));
+        String file = ctx.getConfig().get("OUTPUT_FILE") + "." + getTSetContext().getIndex();
+        File outFile = new File(file);
+        outFile.getParentFile().mkdirs();
+
+        writer = new BufferedWriter(new FileWriter(outFile, false));
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Unable to create file writer!");
       }
     }
 
     @Override
-    public boolean add(Iterator<Tuple<Integer, Tuple<String, Integer>>> value) {
+    public void apply(Tuple<String, Integer> data) {
       try {
-        while (value.hasNext()) {
-          Tuple<String, Integer> t = value.next().getValue();
-          writer.write(t.getKey() + " " + t.getValue());
-          writer.newLine();
-        }
+        writer.write(data.getKey() + " " + data.getValue());
+        writer.newLine();
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Unable to write!");
       }
-      return true;
     }
 
     @Override
@@ -173,26 +160,59 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
       try {
         writer.close();
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Unable to close the writer!");
       }
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  private static void downloadFile(String dest) {
+    InputStream in;
+    try {
+      in = new URL("https://www.gutenberg.org/files/1342/1342-0.txt").openStream();
+      Files.copy(in, Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
-    String input = "/tmp/wc/wordcount.in";
-    String output = "/tmp/wc/wordcount.out";
+  public static void main(String[] args) throws Exception {
+    LOG.log(Level.INFO, "Starting wordcount Job");
+
+    Options options = new Options();
+    options.addOption("input", true, "Input file");
+    options.addOption("output", true, "Output file");
+    options.addOption("parallelism", true, "Parallelism");
+    options.addOption("validate", true, "validate?");
+
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
+    String input = cmd.getOptionValue("input");
+    if (input == null) {
+      LOG.warning("No input is provided! Downloading Pride and Prejudice text from "
+          + "Gutenberg project");
+      input = "/tmp/wc/wordcount.in";
+      downloadFile(input);
+    }
+
+    String output = cmd.getOptionValue("output", "/tmp/wc/wordcount.out");
+    int par = Integer.parseInt(cmd.getOptionValue("parallelism", "4"));
+    boolean validate = Boolean.parseBoolean(cmd.getOptionValue("validate", "true"));
+
+    LOG.info("Wordcount input: " + input + " output: " + output + " parallelism: " + par);
+
     long start = System.nanoTime();
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put("INPUT_FILE", input);
     jobConfig.put("OUTPUT_FILE", output);
+    jobConfig.put("PAR", par);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("tset-wordcount");
     jobBuilder.setWorkerClass(FileBasedWordCount.class);
-    jobBuilder.addComputeResource(1, 512, 4);
+    jobBuilder.addComputeResource(1, 512, par);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -200,49 +220,52 @@ public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
 
     LOG.info("time elapsed ms " + (System.nanoTime() - start) * 1e-6);
 
-    // validate
-    Map<String, Integer> trusted = new TreeMap<>();
+    // perform validation
+    if (validate) {
+      LOG.info("validating results!");
+      Map<String, Integer> trusted = new TreeMap<>();
 
-    try (BufferedReader br = new BufferedReader(new FileReader(input))) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        StringTokenizer itr = new StringTokenizer(line);
-        while (itr.hasMoreTokens()) {
-          String word = itr.nextToken();
-          trusted.putIfAbsent(word, 0);
-          int count = trusted.get(word);
-          trusted.put(word, ++count);
+      try (BufferedReader br = new BufferedReader(new FileReader(input))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+          StringTokenizer itr = new StringTokenizer(line);
+          while (itr.hasMoreTokens()) {
+            String word = itr.nextToken();
+            trusted.putIfAbsent(word, 0);
+            int count = trusted.get(word);
+            trusted.put(word, ++count);
+          }
         }
       }
-    }
 
 
-    Map<String, Integer> test1 = new TreeMap<>();
-    try (BufferedReader br = new BufferedReader(new FileReader(output + ".0"))) {
-      String line;
-      while ((line = br.readLine()) != null && !line.isEmpty()) {
-        String[] sp = line.split(" ");
-        test1.put(sp[0].trim(), Integer.parseInt(sp[1]));
+      Map<String, Integer> test1 = new TreeMap<>();
+      try (BufferedReader br = new BufferedReader(new FileReader(output + ".0"))) {
+        String line;
+        while ((line = br.readLine()) != null && !line.isEmpty()) {
+          String[] sp = line.split(" ");
+          test1.put(sp[0].trim(), Integer.parseInt(sp[1]));
+        }
       }
-    }
 
-    for (Map.Entry<String, Integer> e : trusted.entrySet()) {
-      int t = test1.get(e.getKey());
-      if (t != e.getValue()) {
-        LOG.severe(String.format("Expected: %s %d Got: %s %d", e.getKey(), e.getValue(),
-            e.getKey(), t));
+      for (Map.Entry<String, Integer> e : trusted.entrySet()) {
+        int t = test1.get(e.getKey());
+        if (t != e.getValue()) {
+          LOG.severe(String.format("Expected: %s %d Got: %s %d", e.getKey(), e.getValue(),
+              e.getKey(), t));
+        }
       }
-    }
 
-    if (test1.equals(trusted)) {
-      LOG.info("RESULTS VALID!");
-    } else {
-      LOG.severe("UNSUCCESSFUL!");
+      if (test1.equals(trusted)) {
+        LOG.info("RESULTS VALID!");
+      } else {
+        LOG.severe("UNSUCCESSFUL!");
 
-      try (BufferedWriter br = new BufferedWriter(new FileWriter(output + ".trusted",
-          false))) {
-        for (Map.Entry<String, Integer> e : trusted.entrySet()) {
-          br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
+        try (BufferedWriter br = new BufferedWriter(new FileWriter(output + ".trusted",
+            false))) {
+          for (Map.Entry<String, Integer> e : trusted.entrySet()) {
+            br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
+          }
         }
       }
     }

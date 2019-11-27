@@ -33,6 +33,9 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     super(env, n, sourceP, targetP);
   }
 
+  protected BatchTLinkImpl() {
+  }
+
   @Override
   public BatchTSetEnvironment getTSetEnv() {
     return (BatchTSetEnvironment) super.getTSetEnv();

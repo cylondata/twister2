@@ -46,9 +46,9 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
-  private WorkerEnvironment workerEnv;
-  private TBaseGraph tBaseGraph;
-  private TaskExecutor taskExecutor;
+  private transient WorkerEnvironment workerEnv;
+  private transient TBaseGraph tBaseGraph;
+  private transient TaskExecutor taskExecutor;
 
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
@@ -188,9 +188,9 @@ public abstract class TSetEnvironment {
    * Adds a {@link edu.iu.dsc.tws.api.tset.sets.TSet} to another
    * {@link edu.iu.dsc.tws.api.tset.sets.TSet} as an input that will be identified by the inputKey
    *
-   * @param tSetID      TSet ID
+   * @param tSetID TSet ID
    * @param inputTSetID input TSet ID
-   * @param inputKey    key given to the input TSet
+   * @param inputKey key given to the input TSet
    */
   public void addInput(String tSetID, String inputTSetID, String inputKey) {
     if (tSetInputMap.containsKey(tSetID)) {
@@ -237,7 +237,7 @@ public abstract class TSetEnvironment {
    *
    * @param tBaseGraph TBase graph
    */
-  protected void settBaseGraph(TBaseGraph tBaseGraph) {
+  public void settBaseGraph(TBaseGraph tBaseGraph) {
     this.tBaseGraph = tBaseGraph;
   }
 

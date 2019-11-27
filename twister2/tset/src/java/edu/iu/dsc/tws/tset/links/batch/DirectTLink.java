@@ -19,6 +19,10 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
 
+  private DirectTLink() {
+    //non arg constructor for kryp
+  }
+
   public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "direct", sourceParallelism);
   }

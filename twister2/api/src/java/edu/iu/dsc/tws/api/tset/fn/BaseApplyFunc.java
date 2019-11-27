@@ -9,35 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.tset.fn;
 
-/**
- * Represents a source producing values
- *
- * @param <T> type of values produced by source
- */
-public interface SourceFunc<T> extends TFunction<T, T> {
-
-  /**
-   * Weather we have more data
-   *
-   * @return true if there is more data to be read
-   */
-  boolean hasNext();
-
-  /**
-   * Get the next value
-   *
-   * @return the next value
-   */
-  T next();
-
-  /**
-   * Closes the source
-   */
-  @Override
-  default void close() {
-
-  }
+public abstract class BaseApplyFunc<T> extends BaseTFunction<T, T> implements ApplyFunc<T> {
 }

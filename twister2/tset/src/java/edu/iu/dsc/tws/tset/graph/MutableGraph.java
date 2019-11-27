@@ -90,4 +90,10 @@ public interface MutableGraph<T> extends Serializable {
    * Returns true if the edges in this graph are directed.
    */
   boolean isDirected();
+
+  /**
+   * returns the node which has the given Id or null if no such node exsists
+   * @param id the id of the node to return
+   */
+  T getNodeById(String id);
 }

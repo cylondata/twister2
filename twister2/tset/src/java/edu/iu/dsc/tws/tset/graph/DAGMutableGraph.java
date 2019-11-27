@@ -18,33 +18,38 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.tset.TBase;
+
 /**
  * DAG graph implementation
  *
  * @param <T> node type
  */
-public class DAGMutableGraph<T> implements MutableGraph<T> {
+public class DAGMutableGraph<T extends TBase> implements MutableGraph<T> {
 
   private final boolean directed;
-  private Map<T, Set<T>> childList;
-  private Map<T, Set<T>> parentList;
+  private Map<String, T> index;
+  private Map<String, Set<String>> childList;
+  private Map<String, Set<String>> parentList;
   private boolean allowsSelfLoop;
 
   public DAGMutableGraph() {
     this.directed = true;
     this.allowsSelfLoop = false;
+    index = new HashMap<>();
     childList = new HashMap<>();
     parentList = new HashMap<>();
   }
 
   @Override
   public boolean addNode(T node) {
-    if (childList.containsKey(node)) {
+    if (index.containsKey(node.getId())) {
       return false;
     }
 
-    childList.put(node, new HashSet<>());
-    parentList.put(node, new HashSet<>());
+    index.put(node.getId(), node);
+    childList.put(node.getId(), new HashSet<>());
+    parentList.put(node.getId(), new HashSet<>());
     return true;
   }
 
@@ -56,36 +61,36 @@ public class DAGMutableGraph<T> implements MutableGraph<T> {
     }
     addNode(orgin);
     addNode(target);
-    if (childList.get(orgin).contains(target)) {
+    if (childList.get(orgin.getId()).contains(target.getId())) {
       return false;
     }
 
-    childList.get(orgin).add(target);
-    parentList.get(target).add(orgin);
+    childList.get(orgin.getId()).add(target.getId());
+    parentList.get(target.getId()).add(orgin.getId());
     return true;
   }
 
   @Override
   public Set<T> nodes() {
-    return childList.keySet();
+    return new HashSet<>(index.values());
   }
 
   @Override
   public boolean removeNode(T node) {
-    if (!childList.containsKey(node)) {
+    if (!index.containsKey(node.getId())) {
       return false;
     }
 
     // remove the edges to the node from its parents
-    Set<T> parents = parentList.remove(node);
-    for (T parent : parents) {
-      childList.get(parent).remove(node);
+    Set<String> parentIds = parentList.remove(node.getId());
+    for (String parent : parentIds) {
+      childList.get(parent).remove(node.getId());
     }
 
     // remove this node from the parent list form all the child nodes
-    Set<T> childs = childList.remove(node);
-    for (T child : childs) {
-      parentList.get(child).remove(node);
+    Set<String> childIds = childList.remove(node.getId());
+    for (String child : childIds) {
+      parentList.get(child).remove(node.getId());
     }
 
     return true;
@@ -93,28 +98,43 @@ public class DAGMutableGraph<T> implements MutableGraph<T> {
 
   @Override
   public boolean removeEdge(T origin, T target) {
-    if (!childList.get(origin).contains(target)) {
+    if (!childList.get(origin.getId()).contains(target.getId())) {
       return false;
     }
 
-    childList.get(origin).remove(target);
-    parentList.get(target).remove(origin);
+    childList.get(origin.getId()).remove(target.getId());
+    parentList.get(target.getId()).remove(origin.getId());
     return true;
   }
 
   @Override
   public Set<T> successors(T node) {
-    return childList.get(node);
+    Set<String> successorIds = childList.get(node.getId());
+    Set<T> successors = new HashSet<>();
+    for (String successorId : successorIds) {
+      successors.add(index.get(successorId));
+    }
+    return successors;
   }
 
   @Override
   public Set<T> predecessors(T node) {
-    return parentList.get(node);
+    Set<String> predecessorIds = parentList.get(node.getId());
+    Set<T> predecessors = new HashSet<>();
+    for (String predecessorId : predecessorIds) {
+      predecessors.add(index.get(predecessorId));
+    }
+    return predecessors;
   }
 
   @Override
   public boolean isDirected() {
     return directed;
+  }
+
+  @Override
+  public T getNodeById(String id) {
+    return index.get(id);
   }
 
   /**
@@ -129,17 +149,17 @@ public class DAGMutableGraph<T> implements MutableGraph<T> {
       return true;
     }
 
-    Deque<T> stack = new ArrayDeque<>();
+    Deque<String> stack = new ArrayDeque<>();
 
-    stack.add(target);
+    stack.add(target.getId());
     while (!stack.isEmpty()) {
-      T current = stack.pop();
-      Set<T> childs = childList.get(current);
-      if (childs.contains(origin)) {
+      String current = stack.pop();
+      Set<String> childs = childList.get(current);
+      if (childs.contains(origin.getId())) {
         return true;
       }
 
-      for (T child : childs) {
+      for (String child : childs) {
         stack.push(child);
       }
     }

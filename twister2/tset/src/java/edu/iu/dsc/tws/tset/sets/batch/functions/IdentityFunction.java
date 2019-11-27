@@ -9,32 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.tset.sets.batch.functions;
 
-package edu.iu.dsc.tws.tset.fn;
-
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class MapCompute<O, I> implements ComputeFunc<O, I> {
-  private MapFunc<O, I> mapFn;
-
-  public MapCompute(MapFunc<O, I> mapFunction) {
-    this.mapFn = mapFunction;
-  }
-
+/**
+ * function that simply does a one to one forwarding of the input values.
+ * @param <T> type of input.
+ */
+public class IdentityFunction<T> implements MapFunc<T, T> {
   @Override
-  public void prepare(TSetContext context) {
-    mapFn.prepare(context);
-  }
-
-  @Override
-  public O compute(I input) {
-    return mapFn.map(input);
-  }
-
-  @Override
-  public void close() {
-    mapFn.close();
+  public T map(T input) {
+    return input;
   }
 }
