@@ -6,8 +6,9 @@ sidebar_label: TSet Communication
 
 ## About this example
 
-The compute operations discussed in the previous section, performs it's calculations withing the same node.
-Twister2 has another set of communication operations which can be used to distribute(partition, broadcast), gather or reduce data through the network. Twister2 internally do various optimizations on these operations to effectively utlize the resources(mainly network, cpu and memory) of the cluster. This example shows how a reduce operation can be chained with other operations.
+The compute operations discussed in the previous section, performs it's calculations withing the same node consuming the data available within the node.
+
+Twister2 has another set of communication operations which can be used to distribute(partition, broadcast), gather or reduce data across the network. Twister2 internally do various optimizations on these operations to effectively utlize the resources(mainly network, cpu and memory) of the cluster. This example shows how a reduce operation can be chained with local compute operations.
 
 ## TSet Reduce Operation
 
@@ -50,7 +51,7 @@ source_x.compute(mul_by_five).compute(add_two).reduce(lambda i1, i2: i1 + i2) \
 <!--END_DOCUSAURUS_CODE_TABS-->
 
 
-More information on TSet API can be found in [TSet Docs](https://twister2.org/docs/concepts/tset_api).
+TSet API has many more communication operations similar to reduce(). More information on TSet API can be found in [TSet Docs](https://twister2.org/docs/concepts/tset_api).
 
 ## Running this example
 

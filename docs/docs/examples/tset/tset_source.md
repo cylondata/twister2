@@ -6,16 +6,15 @@ sidebar_label: TSet Source
 
 ## About this example
 
-Twister2 is a composable framework for high performance data analytics. twister2 has the capability to handle terabytes of data and can be configured to minimize the latency and improve throughput based on the requirement.
+Twister2 is a composable framework for high performance data analytics. twister2 has the capability to handle terabytes of data and can be fine tuned to minimize the latency and improve throughput based on the requirement.
 
-Every twister2 TSet application can be started with one or more data sources. Data source can be backed by local disk, hdfs or even from a database.
+Every twister2 TSet application can be started with one or more data sources. Data source can be backed by the local disk, hdfs or even from a database.
 
 ## Defining a TSet Source
 
-TSet sources can be created through the TSetEnvironment.
-
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->
+TSet sources can be created through the TSetEnvironment.
 ```java
 SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
@@ -38,6 +37,7 @@ sourceX.direct().forEach(i -> {
 ```
 
 <!--Python-->
+TSet sources can be created through the Twister2Environment.
 ```python
 class IntSource(SourceFunc):
 
@@ -59,7 +59,7 @@ source_x.for_each(lambda i: print("i : %d" % i))
 ```
 <!--END_DOCUSAURUS_CODE_TABS-->
 
-Twister2 internally calls the hasNext function to check if anymore data is available from the source. If data is available, it will call next() function to retrieve and feed the data into the pipeline.
+Twister2 internally calls the hasNext function to check if data is available from the source. If data is available, it will call next() function to retrieve and feed the data into the pipeline.
 
 ## Running this example
 

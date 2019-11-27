@@ -6,7 +6,7 @@ sidebar_label: TSet Compute
 
 ## About this example
 
-Data received from the sources can be transformed and perform computations by chaining compute operations. This example shows how, compute() chaining works in twister2. 
+Data received from the sources can be transformed or perform computations on them by chaining compute operations. This example shows how, compute() chaining works in twister2. 
 
 ## TSet Compute
 
@@ -59,7 +59,7 @@ and you can process them internally within the compute and output a single value
 
 In this variant, you receive an iterator of data from previous operation and you can output multiple values as the output through the collector. 
 
-More information on TSet API can be found in [TSet Docs](https://twister2.org/docs/concepts/tset_api).
+TSet API has many other utility functions that works similar to compute(). More information on TSet API can be found in [TSet Docs](https://twister2.org/docs/concepts/tset_api).
 
 ## Running this example
 

@@ -6,11 +6,13 @@ sidebar_label: TSet Persisting / Checkpointing
 
 ## About this example
 
-Everything we discussed so far happens on memory. When our data doesn't fit into the memory, persist() command can be used to offload data directly into the local disk. This makes all previous residuals garbage collectible and helps to free up memory for the upcoming operations. 
+Everything we discussed so far happens on memory. When our data doesn't fit into the memory, persist() command can be used to offload data into the local disk. This makes all previous residuals garbage collectible and helps to free up memory for the upcoming computations. 
 
 ## TSet Persist Operation
 
 Other than giving the ability to use disk, persist() command serves another purpose when it comes to fault tolerence. If you run twister2 with fault tolerence enabled, when persist() command is executed, twister2 internally creates a checkpoint and on failure, you can restart the same job from the last persist()ed point.
+
+Similar to catch()ed TSets, persist()ed TSets can also be added as inputs for subsequent computations.
 
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->

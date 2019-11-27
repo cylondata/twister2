@@ -6,11 +6,12 @@ sidebar_label: TSet Caching
 
 ## About this example
 
-There are instances where we need to merge two datasets(TSets) do a single computation. In TSets, even you define your TSet operations in a top down approach, twister2 doesn't execute them unless you call a terminal command. A terminal command can be a sink() or a  forEach() where you actually consume the output or it even can be a cache() or a persist() where you don't consume the output instead hold the output in memory or disk. This example shows how cache() command can be useful when adding a dataset as an input of computation of another dataset.
+There are instances where we need to merge two datasets(TSets) to do a single computation. In TSets, although you define your TSet operations in a top down approach, twister2 doesn't execute them straight away unless you call a terminal command. A terminal command can be a sink() or a  forEach() where you actually consume the output or it can even be a cache() or a persist() where you don't consume the output, instead hold the output in memory or disk. 
+This example shows how cache() command can be useful when adding a dataset as an input of computation of another dataset.
 
 ## TSet Cache Operation
 
-When you call cache() on a TSet, twister2 executes everything in the chain, upto that point and holds the resulting datset in memory.
+When you call cache() on a TSet, twister2 executes everything in the chain, upto that point and holds the resulting datset in memory. Cached TSets can be added as inputs for subsequent computations. 
 
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->
