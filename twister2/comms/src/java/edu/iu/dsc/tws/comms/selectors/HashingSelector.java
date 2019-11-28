@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.selectors;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,14 +46,24 @@ public class HashingSelector implements DestinationSelector {
   @Override
   public int next(int source, Object key, Object data) {
     List<Integer> destinations = destination.get(source);
-    int next = Math.abs(key.hashCode()) % destinations.size();
+    int next;
+    if (key instanceof byte[]) {
+      next = Math.abs(ByteBuffer.wrap((byte[]) key).hashCode() % destinations.size());
+    } else {
+      next = Math.abs(key.hashCode()) % destinations.size();
+    }
     return destinations.get(next);
   }
 
   @Override
   public int next(int source, Object data) {
     List<Integer> destinations = destination.get(source);
-    int next = data.hashCode() % destinations.size();
+    int next;
+    if (data instanceof byte[]) {
+      next = ByteBuffer.wrap((byte[]) data).hashCode() % destinations.size();
+    } else {
+      next = data.hashCode() % destinations.size();
+    }
     return destinations.get(next);
   }
 

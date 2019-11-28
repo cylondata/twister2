@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -73,13 +74,23 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-
-      List<Object> currentVal = targetValues.get(t.getKey());
-      if (currentVal == null) {
-        currentVal = new AggregatedObjects<>();
-        targetValues.put(t.getKey(), currentVal);
+      if (t.getKey() instanceof byte[]) {
+        ByteBuffer bufKey = ByteBuffer.wrap((byte[]) t.getKey());
+        List<Object> currentVal = targetValues.get(bufKey);
+        if (currentVal == null) {
+          currentVal = new AggregatedObjects<>();
+          targetValues.put(bufKey, currentVal);
+        }
+        currentVal.add(t.getValue());
+      } else {
+        List<Object> currentVal = targetValues.get(t.getKey());
+        if (currentVal == null) {
+          currentVal = new AggregatedObjects<>();
+          targetValues.put(t.getKey(), currentVal);
+        }
+        currentVal.add(t.getValue());
       }
-      currentVal.add(t.getValue());
+
     }
     dests.clear();
   }
@@ -145,7 +156,14 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
 
     @Override
     public Object next() {
-      Tuple tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++));
+      Tuple tuple;
+      if (this.currentKey instanceof ByteBuffer) {
+        tuple = new Tuple(((ByteBuffer) this.currentKey).array(),
+            currentValues.get(currentIndex++));
+      } else {
+        tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++));
+      }
+
 
       if (this.currentIndex == this.currentValues.size()) {
         this.moveToNextKey();
@@ -175,6 +193,9 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     public Object next() {
       Object key = keyList.poll();
       List value = messageMap.remove(key);
+      if (key instanceof ByteBuffer) {
+        return new Tuple(((ByteBuffer) key).array(), value.iterator());
+      }
       return new Tuple(key, value.iterator());
     }
   }

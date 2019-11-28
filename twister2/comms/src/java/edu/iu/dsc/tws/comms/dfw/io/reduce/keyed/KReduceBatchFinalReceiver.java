@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,13 +70,24 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-
-      Object currentVal = targetValues.get(t.getKey());
-      if (currentVal != null) {
-        Object newVal = reduceFunction.reduce(currentVal, t.getValue());
-        targetValues.put(t.getKey(), newVal);
+      //TODO: check if more lightweight solution exists to replace the ByteBuffer wrapping
+      if (t.getKey() instanceof byte[]) {
+        ByteBuffer bufKey = ByteBuffer.wrap((byte[]) t.getKey());
+        Object currentVal = targetValues.get(bufKey);
+        if (currentVal != null) {
+          Object newVal = reduceFunction.reduce(currentVal, t.getValue());
+          targetValues.put(bufKey, newVal);
+        } else {
+          targetValues.put(bufKey, t.getValue());
+        }
       } else {
-        targetValues.put(t.getKey(), t.getValue());
+        Object currentVal = targetValues.get(t.getKey());
+        if (currentVal != null) {
+          Object newVal = reduceFunction.reduce(currentVal, t.getValue());
+          targetValues.put(t.getKey(), newVal);
+        } else {
+          targetValues.put(t.getKey(), t.getValue());
+        }
       }
     }
     dests.clear();
@@ -127,6 +139,9 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     @Override
     public Tuple next() {
       Map.Entry<Object, Object> entry = it.next();
+      if (entry.getKey() instanceof byte[]) {
+        return new Tuple(((ByteBuffer) entry.getKey()).array(), entry.getValue());
+      }
       return new Tuple(entry.getKey(), entry.getValue());
     }
   }
