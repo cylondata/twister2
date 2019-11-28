@@ -21,6 +21,9 @@ import twister2.tools.cli.src.python.jars as jars
 from twister2.tools.cli.src.python.log import Log
 
 ################################################################################
+import twister2.tools.cli.src.python.submit as submit
+
+
 def create_parser(subparsers, action, help_arg):
     '''
     :param subparsers:
@@ -72,12 +75,17 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
     if Log.getEffectiveLevel() == logging.DEBUG:
         new_args.append("--verbose")
 
+    java_defines = []
+    conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
+    java_defines.append("java.util.logging.config.file=" + conf_dir_common + "/logger.properties")
+
     # invoke the runtime manager to kill the job
     result = execute.twister2_class(
         'edu.iu.dsc.tws.rsched.core.RuntimeManagerMain',
         lib_jars,
         extra_jars=[],
-        args=new_args
+        args=new_args,
+        java_defines=java_defines
     )
 
     err_msg = "Failed to %s %s" % (action, job_name)
