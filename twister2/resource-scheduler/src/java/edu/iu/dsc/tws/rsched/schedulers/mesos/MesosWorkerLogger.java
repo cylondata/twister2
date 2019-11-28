@@ -39,13 +39,10 @@ public class MesosWorkerLogger {
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
-
     // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cfg)) {
+    if (LoggingContext.fileLoggingRequested()) {
 
-      if (LoggingContext.redirectSysOutErr(cfg)) {
+      if (LoggingContext.redirectSysOutErr()) {
         LOG.warning("Redirecting System.out and System.err to the log file. "
             + "Check the log file for the upcoming log messages. ");
       }

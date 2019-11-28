@@ -1,13 +1,4 @@
 ###################################################################
-# Logging related settings
-# for Twister2 workers
-###################################################################
-
-# Do workers request persistent logging? it could be true or false
-# default value is false
-persistent.logging.requested: true
-
-###################################################################
 # Twister2 Job Master related settings
 ###################################################################
 

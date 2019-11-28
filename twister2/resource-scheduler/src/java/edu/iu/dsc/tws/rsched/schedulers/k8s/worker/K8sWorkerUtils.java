@@ -75,17 +75,13 @@ public final class K8sWorkerUtils {
   }
 
   /**
-   * itinialize the logger
+   * initialize the logger
    */
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
 
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
+    if (pv != null && LoggingContext.fileLoggingRequested()) {
 
-    // if persistent logging is requested, initialize it
-    if (pv != null && LoggingContext.persistentLoggingRequested(cnfg)) {
-
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
+      if (LoggingContext.redirectSysOutErr()) {
         LOG.warning("Redirecting System.out and System.err to the log file. "
             + "Check the log file for the upcoming log messages. ");
       }
@@ -98,13 +94,10 @@ public final class K8sWorkerUtils {
   }
 
   /**
-   * itinialize the logger
+   * initialize the logger
    * entityName can be "jobMaster", "mpiMaster", etc.
    */
   public static void initLogger(Config cnfg, String entityName) {
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
-
     // if no persistent volume requested, return
     if ("jobMaster".equalsIgnoreCase(entityName)
         && !JobMasterContext.persistentVolumeRequested(cnfg)) {
@@ -117,9 +110,9 @@ public final class K8sWorkerUtils {
     }
 
     // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cnfg)) {
+    if (LoggingContext.fileLoggingRequested()) {
 
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
+      if (LoggingContext.redirectSysOutErr()) {
         LOG.warning("Redirecting System.out and System.err to the log file. "
             + "Check the log file for the upcoming log messages. ");
       }
