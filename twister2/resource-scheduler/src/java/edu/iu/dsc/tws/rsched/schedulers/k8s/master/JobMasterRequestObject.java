@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -278,6 +279,10 @@ public final class JobMasterRequestObject {
           .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
           .value(ScpContext.downloadDirectory(config)));
     }
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
+        .value(LoggingContext.LOGGER_PROPERTIES_FILE));
 
     return envVars;
   }

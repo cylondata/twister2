@@ -100,6 +100,16 @@ public class KGatherExample extends BatchTsetExample {
         })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    //Test byte[] key value pairs for KeyedGather
+    SourceTSet<String> srcString = dummyStringSource(env, 25, PARALLELISM);
+    KeyedGatherTLink<byte[], Integer> keyedGatherLink = srcString
+        .mapToTuple(s -> new Tuple<>(s.getBytes(), 1)).keyedGather();
+    LOG.info("test foreach");
+    keyedGatherLink.forEach((ApplyFunc<Tuple<byte[], Iterator<Integer>>>)
+        data -> LOG.info(new String(data.getKey()) + " -> " + iterToString(data.getValue()))
+    );
+
   }
 
 

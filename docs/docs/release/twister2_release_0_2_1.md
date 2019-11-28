@@ -1,4 +1,9 @@
-# Twister2 Release 0.2.1
+---
+id: 0.2.1
+title: Twister2 Release 0.2.1
+sidebar_label: Twister2 Release 0.2.1
+---
+
 
 Twister2 0.2.1 is a patch release of Twister2 where we improve its performance and bugs.
 
