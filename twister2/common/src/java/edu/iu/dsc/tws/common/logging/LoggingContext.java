@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.api.config.Config;
 
 public final class LoggingContext {
 
+  public static final String LOGGER_PROPERTIES_FILE = "common/logger.properties";
+
   private static Properties loggingProperties = new Properties();
 
   static {

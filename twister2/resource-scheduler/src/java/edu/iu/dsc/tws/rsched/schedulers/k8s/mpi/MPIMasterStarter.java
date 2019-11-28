@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -71,6 +72,7 @@ public final class MPIMasterStarter {
     }
 
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
+    String logPropsFile = configDir + "/" + LoggingContext.LOGGER_PROPERTIES_FILE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
@@ -147,8 +149,8 @@ public final class MPIMasterStarter {
     LOG.info("Getting all pods running took: " + duration + " ms.");
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
-    String[] mpirunCommand =
-        generateMPIrunCommand(classToRun, workersPerPod, jobMasterIP, encodedNodeInfoList);
+    String[] mpirunCommand = generateMPIrunCommand(
+        classToRun, workersPerPod, jobMasterIP, encodedNodeInfoList, logPropsFile);
 
     // when all pods become running, sshd may have not started on some pods yet
     // it takes some time to start sshd, after pods become running
@@ -206,7 +208,8 @@ public final class MPIMasterStarter {
   public static String[] generateMPIrunCommand(String className,
                                                int workersPerPod,
                                                String jobMasterIP,
-                                               String encodedNodeInfoList) {
+                                               String encodedNodeInfoList,
+                                               String logPropsFile) {
 
     String jobMasterCLArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
 
@@ -225,6 +228,8 @@ public final class MPIMasterStarter {
 //            "/twister2-memory-dir/logfile",
             "-tag-output",
             "java",
+            "-Djava.util.logging.config.file=" + logPropsFile,
+            "-cp", System.getenv("CLASSPATH"),
             className,
             jobMasterCLArgument,
             jobName,

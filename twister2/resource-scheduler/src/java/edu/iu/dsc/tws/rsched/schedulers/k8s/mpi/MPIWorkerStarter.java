@@ -165,8 +165,8 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    // TODO: get initialState from checkpoint manager or from starting script
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    JobMasterAPI.WorkerState initialState =
+        K8sWorkerUtils.initialStateAndUpdate(config, jobName, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
