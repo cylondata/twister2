@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable {
-  static final int COUNT = 5;
+  static final int COUNT = 25;
   static final int PARALLELISM = 2;
 
   SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
@@ -41,6 +41,23 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       @Override
       public Integer next() {
         return c++;
+      }
+    }, parallel);
+  }
+
+  SourceTSet<String> dummyStringSource(BatchTSetEnvironment env, int count, int parallel) {
+    return env.createSource(new SourceFunc<String>() {
+      private int c = 0;
+      private String[] dataList = {"The", "at", "one", "two", "three"};
+
+      @Override
+      public boolean hasNext() {
+        return c < count;
+      }
+
+      @Override
+      public String next() {
+        return dataList[c++ % dataList.length];
       }
     }, parallel);
   }
