@@ -46,4 +46,9 @@ public class FlatMapCompute<O, I> implements ComputeCollectorFunc<O, I> {
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }

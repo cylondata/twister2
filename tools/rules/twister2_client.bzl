@@ -216,6 +216,11 @@ def twister2_client_example_files():
         "//twister2/examples/src/java:examples-java",
     ]
 
+def twister2_client_python_example_files():
+    return [
+        "//twister2/examples/src/python:examples-python",
+    ]
+
 def twister2_client_lib_third_party_files():
     return [
         "@org_slf4j_slf4j_api//jar",

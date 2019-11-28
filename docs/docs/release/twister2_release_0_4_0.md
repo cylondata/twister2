@@ -1,7 +1,7 @@
 ---
-id: 0.3.0
-title: Twister2 Release 0.3.0
-sidebar_label: Twister2 Release 0.3.0
+id: 0.4.0
+title: Twister2 Release 0.4.0
+sidebar_label: Twister2 Release 0.4.0
 ---
 
 
@@ -13,27 +13,20 @@ You can download source code from [Github](https://github.com/DSC-SPIDAL/twister
 
 In this release we moved to OpenMPI 4.0.1 and Python 3. Also we tested Twister2 with JDK 11. 
 
-1. The initial version of Apache BEAM integration
+1. Python API
 2. Fully functioning TSet API
-3. Simulator for writing applications with IDE
-4. Organize the APIs to facilitate easy creation of applications
-5. Improvements to performance including a new routing algorithm for shuffle operations
-6. Improved batch task scheduler (new batch scheduler)
-7. Inner joins and outer joins
-8. Support for reading HDFS files through TSet API
-9. The initial version of fault tolerance with manual restart
-10. Configuration structure improvements
-11. Nomad scheduler improvements
-12. New documentation website
-
+3. ZooKeeper based automatic restart of workers when failures happen
+4. Improvements to performance including a new routing algorithm for shuffle operations
+5. BEAM integration improvements
+ 
 ## Minor features
 
 Apart from these, we have done many code improvements and bug fixes.
 
 ## Next Release
 
-In the next release we are working onto consolidate the Apache Beam integration and improve the
-fault tolerance (automatic restart of wokers) 
+In the next release we are working to improve the Fault tolerance, fix issues and integrate with AI
+systems.
 
 ## Components in Twister2
 

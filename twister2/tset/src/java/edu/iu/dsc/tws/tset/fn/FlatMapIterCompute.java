@@ -41,4 +41,9 @@ public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterato
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }

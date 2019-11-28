@@ -45,4 +45,9 @@ public class GatherMapCompute<O, I> implements
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
   }
+
+  @Override
+  public void close() {
+    mapFn.close();
+  }
 }

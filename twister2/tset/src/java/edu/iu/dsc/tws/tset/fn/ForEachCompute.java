@@ -34,4 +34,9 @@ public class ForEachCompute<T> implements ComputeFunc<Object, T> {
     applyFn.apply(input);
     return null;
   }
+
+  @Override
+  public void close() {
+    applyFn.close();
+  }
 }

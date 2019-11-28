@@ -41,6 +41,12 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
   }
 
   @Override
+  public KeyedGatherTLink<K, V> useDisk() {
+    super.useDisk();
+    return this;
+  }
+
+  @Override
   public KeyedGatherTLink<K, V> setName(String n) {
     return (KeyedGatherTLink<K, V>) super.setName(n);
   }

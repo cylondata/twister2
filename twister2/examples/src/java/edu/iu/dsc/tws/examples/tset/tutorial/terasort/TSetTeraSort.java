@@ -36,6 +36,9 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
 
   private static final Logger LOG = Logger.getLogger(TSetTeraSort.class.getName());
 
+  private static final String PARAM_DATA_SIZE_GB = "PARAM_DATA_SIZE_GB";
+  private static final String PARAM_PARALLELISM = "PARAM_PARALLELISM";
+
   public static final class ByteArrayComparator implements Comparator<byte[]> {
 
     private static final ByteArrayComparator INSTANCE = new ByteArrayComparator();
@@ -62,6 +65,9 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+    final int parallelism = env.getConfig().getIntegerValue(PARAM_PARALLELISM);
+    final int dataSize = env.getConfig().getIntegerValue(PARAM_DATA_SIZE_GB);
+
     KeyedSourceTSet<byte[], byte[]> keyedSource = env.createKeyedSource(
         new SourceFunc<Tuple<byte[], byte[]>>() {
 
@@ -72,7 +78,11 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
           public void prepare(TSetContext context) {
             Arrays.fill(data, (byte) 1);
             Random random = new Random();
-            for (int i = 0; i < 1000; i++) {
+            int noOfTuples = (int) ((dataSize * 1024 * 1024 * 1024 * 1.0d) / parallelism / 100);
+            if (context.getIndex() == 0) {
+              LOG.info(noOfTuples + " tuples will be produced in each source");
+            }
+            for (int i = 0; i < noOfTuples; i++) {
               byte[] key = new byte[10];
               random.nextBytes(key);
               keys.add(key);
@@ -88,7 +98,7 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
           public Tuple<byte[], byte[]> next() {
             return new Tuple<>(keys.poll(), data);
           }
-        }, 4);
+        }, parallelism);
 
     keyedSource.keyedGather(new PartitionFunc<byte[]>() {
 
@@ -122,6 +132,7 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
 
       }
     }, (left, right) -> ByteArrayComparator.getInstance().compare(left, right))
+        .useDisk()
         .forEach(new ApplyFunc<Tuple<byte[], Iterator<byte[]>>>() {
 
           private byte[] previousKey;
@@ -140,7 +151,19 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
   }
 
   public static void main(String[] args) {
+
+    if (args.length < 2) {
+      LOG.warning("Missing arguments. Expected <parallelism> <data size>");
+    }
+
+    int parallelism = Integer.parseInt(args[0]);
+    int dataSize = Integer.parseInt(args[1]);
+
+    LOG.info(String.format("Data Size : %d, Parallelism : %d", dataSize, parallelism));
+
     JobConfig jobConfig = new JobConfig();
+    jobConfig.put(PARAM_PARALLELISM, parallelism);
+    jobConfig.put(PARAM_DATA_SIZE_GB, dataSize);
 
     Twister2Job job = Twister2Job.newBuilder()
         .setJobName(TSetTeraSort.class.getName())

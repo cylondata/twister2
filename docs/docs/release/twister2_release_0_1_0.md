@@ -1,4 +1,8 @@
-# Twister2 Release 0.1.0
+---
+id: 0.1.0
+title: Twister2 Release 0.1.0
+sidebar_label: Twister2 Release 0.1.0
+---
 
 Twister2 0.1.0 is the first open source public release of Twister2. We are excited to bring a high performance data analytics
 hosting environment that can work in both cloud and HPC environments. This is the first step towards 
