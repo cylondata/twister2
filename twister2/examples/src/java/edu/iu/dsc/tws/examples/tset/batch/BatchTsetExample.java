@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable {
-  static final int COUNT = 25;
+  static final int COUNT = 5;
   static final int PARALLELISM = 2;
 
   SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
