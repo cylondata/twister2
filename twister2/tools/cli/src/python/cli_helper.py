@@ -21,7 +21,6 @@ import twister2.tools.cli.src.python.jars as jars
 from twister2.tools.cli.src.python.log import Log
 
 ################################################################################
-import twister2.tools.cli.src.python.submit as submit
 
 
 def create_parser(subparsers, action, help_arg):
