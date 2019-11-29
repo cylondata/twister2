@@ -62,7 +62,6 @@ import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-
 import mpi.MPI;
 import mpi.MPIException;
 
@@ -88,7 +87,6 @@ public class ConstraintTaskExample implements IWorker {
     options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY,
         true, "Data points Input directory", true));
 
-    @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -150,23 +148,19 @@ public class ConstraintTaskExample implements IWorker {
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
     taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
 
-    DataObject<Object> firstGraphObject = taskExecutor.getOutput(
-        firstGraph, firstGraphExecutionPlan, "firstsink");
+    DataObject<Object> firstGraphObject = taskExecutor.getOutput("firstsink");
 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
-    taskExecutor.addInput(secondGraph, secondGraphExecutionPlan,
-        "secondsource", "firstgraphpoints", firstGraphObject);
+    taskExecutor.addInput("firstgraphpoints", firstGraphObject);
     taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
 
     long endTime = System.currentTimeMillis();
     LOG.info("Total Execution Time: " + (endTime - startTime));
   }
 
-  private ComputeGraph buildFirstGraph(int parallelism, Config conf,
-                                       String dataInput, int dataSize,
-                                       int dimension, String inputKey,
-                                       String constraint) {
+  private ComputeGraph buildFirstGraph(int parallelism, Config conf, String dataInput, int dataSize,
+                                       int dimension, String inputKey, String constraint) {
 
     FirstSourceTask sourceTask = new FirstSourceTask(dataInput, dataSize);
     FirstSinkTask sinkTask = new FirstSinkTask(dimension, inputKey);
@@ -180,14 +174,13 @@ public class ConstraintTaskExample implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     firstGraphBuilder.setMode(OperationMode.BATCH);
     firstGraphBuilder.setTaskGraphName("firstTG");
-    firstGraphBuilder.addGraphConstraints(
-        Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, constraint);
+    firstGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER,
+        constraint);
     return firstGraphBuilder.build();
   }
 
-  private ComputeGraph buildSecondGraph(int parallelism, Config conf,
-                                        int dimension, String inputKey,
-                                        String constraint) {
+  private ComputeGraph buildSecondGraph(int parallelism, Config conf, int dimension,
+                                        String inputKey, String constraint) {
 
     SecondSourceTask sourceTask = new SecondSourceTask(inputKey);
     SecondSinkTask sinkTask = new SecondSinkTask(dimension);
@@ -294,8 +287,11 @@ public class ConstraintTaskExample implements IWorker {
     }
 
     @Override
-    public DataPartition<double[][]> get() {
-      return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+    public DataPartition<double[][]> get(String name) {
+      if (!name.equals(inputKey)) {
+        throw new RuntimeException("Requesting an unrelated partition " + name);
+      }
+      return new EntityPartition<>(dataPointsLocal);
     }
 
     @Override
@@ -312,8 +308,7 @@ public class ConstraintTaskExample implements IWorker {
   private static class SecondSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private DataObject<?> dataPointsObject = null;
-    private double[][] datapoints = null;
+    private DataPartition<?> dataPointsPartition = null;
     private String inputKey;
 
     SecondSourceTask(String inputkey) {
@@ -322,8 +317,7 @@ public class ConstraintTaskExample implements IWorker {
 
     @Override
     public void execute() {
-      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
-      datapoints = (double[][]) dataPartition.getConsumer().next();
+      double[][] datapoints = (double[][]) dataPointsPartition.getConsumer().next();
       LOG.info("Context Task Index:" + context.taskIndex() + "\t" + datapoints.length);
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, datapoints);
     }
@@ -334,10 +328,10 @@ public class ConstraintTaskExample implements IWorker {
     }
 
     @Override
-    public void add(String name, DataObject<?> data) {
+    public void add(String name, DataPartition<?> data) {
       LOG.log(Level.INFO, "Received input: " + name);
       if (inputKey.equals(name)) {
-        this.dataPointsObject = data;
+        this.dataPointsPartition = data;
       }
     }
 
@@ -377,7 +371,7 @@ public class ConstraintTaskExample implements IWorker {
         }
       }
 
-      //TODO: SEND THE RECEIVED DATA FOR THE COMPUTATION
+      //TODO: SEND THE RECEIVED DATAinputKey FOR THE COMPUTATION
       try {
         worldRank = MPI.COMM_WORLD.getRank();
         worldSize = MPI.COMM_WORLD.getSize();
