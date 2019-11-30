@@ -32,16 +32,16 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
+
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 
 
 public final class NomadJobMasterStarter {
@@ -341,9 +341,6 @@ public final class NomadJobMasterStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
-
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
     String jobName = NomadContext.jobName(cfg);

@@ -12,16 +12,20 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -44,6 +48,51 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
+
+    // lets wait for all workers to join the job
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
+
+    // lets sync with all workers
+    LOG.info("Waiting on a barrier ........................ ");
+    try {
+      long start = System.currentTimeMillis();
+      workerController.waitOnBarrier();
+      long delay = System.currentTimeMillis() - start;
+      LOG.info("Barrier wait time: " + delay + " ms for worker: " + workerID);
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    LOG.info("Proceeded through the barrier ........................ ");
+
+    waitAndComplete();
+  }
+
+  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
+    return workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .sorted()
+        .collect(Collectors.toList());
+  }
+
+  private void waitAndComplete() {
+
+    long duration = 60;
+    try {
+      LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
+      Thread.sleep(duration * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   public static void main(String[] args) {

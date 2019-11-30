@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
@@ -351,9 +350,6 @@ public final class NomadWorkerStarter {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
-
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
     String jobName = NomadContext.jobName(cfg);

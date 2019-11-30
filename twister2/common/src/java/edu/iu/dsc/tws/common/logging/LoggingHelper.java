@@ -95,16 +95,6 @@ public final class LoggingHelper {
     Logger.getLogger("").addHandler(handler);
   }
 
-  /**
-   * Don't use this since, it changes all handlers
-   *
-   * @deprecated Configure handlers in logger.properties
-   */
-  @Deprecated
-  public static void setLogLevel(String level) {
-    setLogLevel(Level.parse(level));
-  }
-
   public static void setLogLevel(Level level) {
     Logger rootLogger = Logger.getLogger("");
     for (Handler handler : rootLogger.getHandlers()) {
@@ -163,10 +153,10 @@ public final class LoggingHelper {
 
     // get the value of twister2.logging.maximum.size.mb
     // make it MB
-    int maxFileSize = LoggingContext.maxLogFileSizeBytes(config);
+    int maxFileSize = LoggingContext.maxLogFileSizeBytes();
 
     // get the value of twister2.logging.maximum.files
-    int maxFiles = LoggingContext.maxLogFiles(config);
+    int maxFiles = LoggingContext.maxLogFiles();
 
     boolean appendToFile = LoggingContext.appendToFile();
 
@@ -196,7 +186,7 @@ public final class LoggingHelper {
   public static void setupLogging(Config config, String logDir, String logFile) {
 
     // get the value of twister2.logging.redirect.sysouterr
-    boolean redirectStdOutAndStdErr = LoggingContext.redirectSysOutErr(config);
+    boolean redirectStdOutAndStdErr = LoggingContext.redirectSysOutErr();
 
     try {
       String format = LoggingContext.loggingFormat();
