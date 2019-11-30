@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +26,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+
+import edu.iu.dsc.tws.comms.utils.THashMap;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -57,7 +58,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     super.init(cfg, op, expectedIds);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
     for (int t : expectedIds.keySet()) {
-      gathered.put(t, new HashMap<>());
+      gathered.put(t, new THashMap<>());
     }
   }
 
@@ -74,23 +75,12 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-      if (t.getKey() instanceof byte[]) {
-        ByteBuffer bufKey = ByteBuffer.wrap((byte[]) t.getKey());
-        List<Object> currentVal = targetValues.get(bufKey);
-        if (currentVal == null) {
-          currentVal = new AggregatedObjects<>();
-          targetValues.put(bufKey, currentVal);
-        }
-        currentVal.add(t.getValue());
-      } else {
-        List<Object> currentVal = targetValues.get(t.getKey());
-        if (currentVal == null) {
-          currentVal = new AggregatedObjects<>();
-          targetValues.put(t.getKey(), currentVal);
-        }
-        currentVal.add(t.getValue());
+      List<Object> currentVal = targetValues.get(t.getKey());
+      if (currentVal == null) {
+        currentVal = new AggregatedObjects<>();
+        targetValues.put(t.getKey(), currentVal);
       }
-
+      currentVal.add(t.getValue());
     }
     dests.clear();
   }

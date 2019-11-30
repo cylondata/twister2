@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.selectors;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +48,35 @@ public class HashingSelector implements DestinationSelector {
   public int next(int source, Object key, Object data) {
     List<Integer> destinations = destination.get(source);
     int next;
-    if (key instanceof byte[]) {
-      next = Math.abs(ByteBuffer.wrap((byte[]) key).hashCode() % destinations.size());
+    if (key != null && key.getClass().isArray()) {
+      next = Math.abs(getArrayHashCode(key) % destinations.size());
     } else {
       next = Math.abs(key.hashCode()) % destinations.size();
     }
     return destinations.get(next);
+  }
+
+  private int getArrayHashCode(Object key) {
+    if (key instanceof byte[]) {
+      return Arrays.hashCode((byte[]) key);
+    } else if (key instanceof int[]) {
+      return Arrays.hashCode((int[]) key);
+    } else if (key instanceof long[]) {
+      return Arrays.hashCode((long[]) key);
+    } else if (key instanceof double[]) {
+      return Arrays.hashCode((double[]) key);
+    } else if (key instanceof float[]) {
+      return Arrays.hashCode((float[]) key);
+    } else if (key instanceof short[]) {
+      return Arrays.hashCode((short[]) key);
+    } else if (key instanceof boolean[]) {
+      return Arrays.hashCode((boolean[]) key);
+    } else if (key instanceof char[]) {
+      return Arrays.hashCode((char[]) key);
+    } else {
+      throw new UnsupportedOperationException("Array type of " + key.getClass().getSimpleName()
+          + " Not currently supported");
+    }
   }
 
   @Override
