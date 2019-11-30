@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,6 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-      //TODO: check if more lightweight solution exists to replace the ByteBuffer wrapping
       Object currentVal = targetValues.get(t.getKey());
       if (currentVal != null) {
         Object newVal = reduceFunction.reduce(currentVal, t.getValue());
@@ -129,9 +127,6 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     @Override
     public Tuple next() {
       Map.Entry<Object, Object> entry = it.next();
-      if (entry.getKey() instanceof byte[]) {
-        return new Tuple(((ByteBuffer) entry.getKey()).array(), entry.getValue());
-      }
       return new Tuple(entry.getKey(), entry.getValue());
     }
   }
