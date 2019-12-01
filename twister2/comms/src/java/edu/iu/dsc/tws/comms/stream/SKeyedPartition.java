@@ -58,7 +58,8 @@ public class SKeyedPartition extends BaseOperation {
         dataType, keyType, messageSchema);
 
     partition.init(comm.getConfig(), dataType, plan, edgeId);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets(),
+        keyType, dataType);
     op = partition;
   }
 

@@ -84,7 +84,7 @@ public class SKeyedGather extends BaseOperation {
           dataType, dataType, keyType, keyType, edgeId, messageSchema);
     }
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(comm, sources, targets);
+    this.destinationSelector.prepare(comm, sources, targets, keyType, dataType);
 
   }
 

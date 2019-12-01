@@ -53,7 +53,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     super.init(cfg, op, expectedIds);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
     for (int t : expectedIds.keySet()) {
-      reduced.put(t, new THashMap<>());
+      reduced.put(t, new THashMap<>(op.getKeyType()));
     }
   }
 
@@ -100,7 +100,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
 
     boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
     if (send) {
-      reduced.put(target, new THashMap<>());
+      reduced.put(target, new THashMap<>(operation.getKeyType()));
     }
     return send;
   }

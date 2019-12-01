@@ -56,7 +56,8 @@ public class SPartition extends BaseOperation {
         new PartitionStreamingFinalReceiver(rcvr),
         new TargetPartialReceiver(), dataType, messageSchema);
     partition.init(comm.getConfig(), dataType, plan, edgeId);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets(),
+        null, dataType);
     op = partition;
   }
 

@@ -57,7 +57,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     super.init(cfg, op, expectedIds);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
     for (int t : expectedIds.keySet()) {
-      gathered.put(t, new THashMap<>());
+      gathered.put(t, new THashMap<>(op.getKeyType()));
     }
   }
 

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.selectors;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +21,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 
 /**
  * Hashing selector, that does hash based selection for keys
@@ -30,9 +31,19 @@ public class HashingSelector implements DestinationSelector {
   private static final Logger LOG = Logger.getLogger(HashingSelector.class.getName());
 
   private Map<Integer, List<Integer>> destination = new HashMap<>();
+  private MessageType keyType = null;
+  private MessageType dataType = null;
 
   @Override
   public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
+    prepare(comm, sources, destinations, null, null);
+  }
+
+  @Override
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations,
+                      MessageType kType, MessageType dType) {
+    this.keyType = kType;
+    this.dataType = dType;
     initialize(sources, destinations);
   }
 
@@ -49,33 +60,52 @@ public class HashingSelector implements DestinationSelector {
     List<Integer> destinations = destination.get(source);
     int next;
     if (key != null && key.getClass().isArray()) {
-      next = Math.abs(getArrayHashCode(key) % destinations.size());
+      next = Math.abs(getArrayHashCode(key, keyType) % destinations.size());
     } else {
       next = Math.abs(key.hashCode()) % destinations.size();
     }
     return destinations.get(next);
   }
 
-  private int getArrayHashCode(Object key) {
-    if (key instanceof byte[]) {
-      return Arrays.hashCode((byte[]) key);
-    } else if (key instanceof int[]) {
-      return Arrays.hashCode((int[]) key);
-    } else if (key instanceof long[]) {
-      return Arrays.hashCode((long[]) key);
-    } else if (key instanceof double[]) {
-      return Arrays.hashCode((double[]) key);
-    } else if (key instanceof float[]) {
-      return Arrays.hashCode((float[]) key);
-    } else if (key instanceof short[]) {
-      return Arrays.hashCode((short[]) key);
-    } else if (key instanceof boolean[]) {
-      return Arrays.hashCode((boolean[]) key);
-    } else if (key instanceof char[]) {
-      return Arrays.hashCode((char[]) key);
+  private int getArrayHashCode(Object key, MessageType type) {
+    if (type == MessageTypes.OBJECT || keyType == null) {
+      if (key instanceof byte[]) {
+        return Arrays.hashCode((byte[]) key);
+      } else if (key instanceof int[]) {
+        return Arrays.hashCode((int[]) key);
+      } else if (key instanceof long[]) {
+        return Arrays.hashCode((long[]) key);
+      } else if (key instanceof double[]) {
+        return Arrays.hashCode((double[]) key);
+      } else if (key instanceof float[]) {
+        return Arrays.hashCode((float[]) key);
+      } else if (key instanceof short[]) {
+        return Arrays.hashCode((short[]) key);
+      } else if (key instanceof char[]) {
+        return Arrays.hashCode((char[]) key);
+      } else {
+        throw new UnsupportedOperationException("Array type of " + key.getClass().getSimpleName()
+            + " Not currently supported");
+      }
     } else {
-      throw new UnsupportedOperationException("Array type of " + key.getClass().getSimpleName()
-          + " Not currently supported");
+      if (type == MessageTypes.BYTE_ARRAY) {
+        return Arrays.hashCode((byte[]) key);
+      } else if (type == MessageTypes.INTEGER_ARRAY) {
+        return Arrays.hashCode((int[]) key);
+      } else if (type == MessageTypes.LONG_ARRAY) {
+        return Arrays.hashCode((long[]) key);
+      } else if (type == MessageTypes.DOUBLE_ARRAY) {
+        return Arrays.hashCode((double[]) key);
+      } else if (type == MessageTypes.FLOAT_ARRAY) {
+        return Arrays.hashCode((float[]) key);
+      } else if (type == MessageTypes.SHORT_ARRAY) {
+        return Arrays.hashCode((short[]) key);
+      } else if (type == MessageTypes.CHAR_ARRAY) {
+        return Arrays.hashCode((char[]) key);
+      } else {
+        throw new UnsupportedOperationException("Array type of " + key.getClass().getSimpleName()
+            + " Not currently supported");
+      }
     }
   }
 
@@ -83,8 +113,8 @@ public class HashingSelector implements DestinationSelector {
   public int next(int source, Object data) {
     List<Integer> destinations = destination.get(source);
     int next;
-    if (data instanceof byte[]) {
-      next = ByteBuffer.wrap((byte[]) data).hashCode() % destinations.size();
+    if (data != null && data.getClass().isArray()) {
+      next = Math.abs(getArrayHashCode(data, dataType) % destinations.size());
     } else {
       next = data.hashCode() % destinations.size();
     }
