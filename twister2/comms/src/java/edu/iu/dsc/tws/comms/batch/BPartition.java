@@ -79,7 +79,7 @@ public class BPartition extends BaseOperation {
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
           dataType, dataType, null, null, edgeId, messageSchema);
     }
-    this.destinationSelector.prepare(comm, op.getSources(), op.getTargets());
+    this.destinationSelector.prepare(comm, op.getSources(), op.getTargets(), null, dataType);
   }
 
   public BPartition(Communicator comm, LogicalPlan plan,

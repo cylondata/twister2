@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +25,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+
+import edu.iu.dsc.tws.comms.utils.THashMap;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -56,7 +57,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     super.init(cfg, op, expectedIds);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
     for (int t : expectedIds.keySet()) {
-      gathered.put(t, new HashMap<>());
+      gathered.put(t, new THashMap<>(op.getKeyType()));
     }
   }
 
@@ -73,7 +74,6 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-
       List<Object> currentVal = targetValues.get(t.getKey());
       if (currentVal == null) {
         currentVal = new AggregatedObjects<>();
@@ -145,8 +145,8 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
 
     @Override
     public Object next() {
-      Tuple tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++));
-
+      Tuple tuple;
+      tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++));
       if (this.currentIndex == this.currentValues.size()) {
         this.moveToNextKey();
       }

@@ -64,7 +64,7 @@ public class BKeyedReduce extends BaseOperation {
           dataType, dataType, keyType, keyType, edgeId, messageSchema);
     }
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(comm, sources, destinations);
+    this.destinationSelector.prepare(comm, sources, destinations, keyType, dataType);
   }
 
   public BKeyedReduce(Communicator comm, LogicalPlan plan,
