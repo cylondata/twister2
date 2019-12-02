@@ -249,37 +249,6 @@ public class DashboardClient {
   }
 
   /**
-   * send HeartBeat message to Dashboard for the given worker
-   */
-  public boolean workerHeartbeat(int workerID) {
-    String endPoint = dashHost + "/workers/" + jobID + "/" + workerID + "/beat/";
-
-    String jsonStr = "";
-
-    HttpPost httpPost = constructHttpPost(endPoint, jsonStr);
-    if (httpPost == null) {
-      return false;
-    }
-
-    try {
-      HttpResponse response = httpClient.execute(httpPost);
-      EntityUtils.consume(response.getEntity());
-      if (response.getStatusLine().getStatusCode() == 200) {
-        LOG.fine("Sent HeartBeat message to Dashboard successfully for workerID: " + workerID);
-        return true;
-      } else {
-        LOG.severe("Sending HeartBeat message to Dashboard is unsuccessful. "
-            + "for workerID: " + workerID + " Response: " + response.toString());
-        return false;
-      }
-
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Could not execute Http Request.", e);
-      return false;
-    }
-  }
-
-  /**
    * send WorkerStateChange message to Dashboard
    */
   public boolean workerStateChange(int workerID, JobMasterAPI.WorkerState state) {

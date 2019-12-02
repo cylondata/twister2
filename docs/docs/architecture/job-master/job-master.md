@@ -3,11 +3,10 @@
 The Job Master manages job related activities during job execution such as worker life cycle management, worker discovery, resource cleanup, dynamic resource allocation, fault tolerance, etc.
 
 Currently, we implemented the following services: 
-1. Ping Service 
-2. Worker life-cycle monitoring 
-3. Worker Discovery 
-4. Job Termination 
-5. Barrier Service
+1. Worker life-cycle monitoring 
+2. Worker Discovery 
+3. Job Termination 
+4. Barrier Service
 
 ## Possibilities for Job Master Architecture
 
@@ -54,32 +53,6 @@ We use protocol buffers to exchange messages between workers and the job master.
 ## Job Master Threading
 
 Job Master is developed as a single threaded application. When a request message is received, a single thread is waken up. It processes the message and sends the response if needed. Then it starts to sleep and wait for the next message. It always starts to execute by worker request messages.
-
-## Ping Service
-
-When a worker starts, after it sends the worker STARTING message, it starts sending ping messages. Main client thread sends ping messages to the job master periodically. As long as the job master gets ping messages from a worker, it assumes that the worker is healthy. The job master gets the ping message, saves the ping time and sends a response message back to the worker.
-
-Ping Message Format is shown below. It has the workerID from the sender worker. It also has the ping message and an optional string message for logging purposes.
-
-```text
-message Ping {
-    enum MessageType {
-        WORKER_TO_MASTER = 0;
-        MASTER_TO_WORKER = 1;
-    }
-    oneof idRequired {
-        int32 workerID = 1;
-    }
-    oneof typeRequired {
-        MessageType messageType = 2;
-    }
-    string pingMessage = 3;
-}
-```
-
-Users can set the ping message sending intervals through configuration files. A default value is specified in the code, if they chose to not set it. Configuration parameter name is: twister2.worker.ping.interval
-
-Ping service is started automatically. Users do not need to start it.
 
 ## Worker Life Cycle Monitoring
 
@@ -338,7 +311,6 @@ twister2.job.master.ram: 1024
 twister2.job.master.volatile.volume.size: 1.0
 twister2.job.master.persistent.volume.size: 1.0
 twister2.job.master.port: 11011
-twister2.worker.ping.interval: 10000
 twister2.worker.to.job.master.response.wait.duration: 10000
 ```
 
