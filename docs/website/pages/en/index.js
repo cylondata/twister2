@@ -152,13 +152,15 @@ const Twister2Apps = props => (
                 //image: imgUrl('icon/time.png'),
                 image : imgUrl("ai.png"),
                 imageAlign: 'top',
-                title: "Machine Learning"
+                title: "Machine Learning",
+                imageLink: siteConfig.baseUrl + 'docs/examples/ml/ml'
             },
 {
     content: "Multiple APIs including TSet, Compute & Operator for flexible applications",
         image: imgUrl('api.svg'),
     imageAlign: 'top',
-    title: "API Support"
+    title: "API Support",
+    imageLink: siteConfig.baseUrl + 'docs/concepts/api_overview'
 },
 {
     content: "Dataflow for streaming & batch applications",
@@ -178,19 +180,22 @@ const Twister2Apps2 = props => (
                 content: "Python API for developing data applications",
                 image: imgUrl('speed.svg'),
                 imageAlign: 'top',
-                title: "Python API"
+                title: "Python API",
+                imageLink: siteConfig.baseUrl + 'docs/compatibility/pythonapi'
             },
 {
     content: "Storm API Compatibiltiy for running streaming applications",
         image: imgUrl('streamgraph.png'),
     imageAlign: 'top',
-    title: "Storm API"
+    title: "Storm API",
+    imageLink: siteConfig.baseUrl + 'docs/compatibility/storm'
 },
 {
     content: "Integrates with Apache Beam to run Beam Applications",
         image: imgUrl('api_2.png'),
     imageAlign: 'top',
-    title: "Bean API"
+    title: "Bean API",
+    imageLink: siteConfig.baseUrl + 'docs/compatibility/apachebeam'
 },
 ]}
 </Block>
