@@ -10,9 +10,9 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-const BASE_URL = "http://localhost:8080/";
+//const BASE_URL = "http://localhost:8080/";
 
-//const BASE_URL = "";
+const BASE_URL = "";
 
 export class RestService {
 
