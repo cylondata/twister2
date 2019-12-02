@@ -115,26 +115,30 @@ const FeaturesTop = props => (
     content: "Work with high performance networks to efficiently execute IO intensive applications",
         image: imgUrl('speed.svg'),
     imageAlign: 'top',
-    title: "High Performance"
+    title: "High Performance",
+    imageLink: siteConfig.baseUrl + 'docs/publications'
 },
 {
-    content: `Supports both streaming and batch applications natively in a single engine.`,
+    content: "Microsecond latency & Higher throughput",
         image: imgUrl('Flow.svg'),
     imageAlign: 'top',
-    title: "Streaming & Batch"
+    title: "Streaming",
+    imageLink: siteConfig.baseUrl + 'docs/concepts/streaming_jobs'
 },
 {
-    content: "Provides high level APIs similar to Spark, Hadoop and Storm as well as support for BEAM and Storm APIs",
-        image: imgUrl('api.svg'),
+    content: "5X performance than popular data processing engines",
+        image: imgUrl('dataprocessing.png'),
     imageAlign: 'top',
-    title: "API Support"
+    title: "Batch",
+    imageLink: siteConfig.baseUrl + 'docs/concepts/batch_jobs'
 },
 {
     content: "Offers a set of modular components for building data analytic applications",
         //image: imgUrl('icon/time.png'),
         image : imgUrl("cogs.svg"),
     imageAlign: 'top',
-    title: "Flexible"
+    title: "Flexible",
+    imageLink: siteConfig.baseUrl + 'docs/concepts/distributed_runtime'
 },
 ]}
 </Block>
@@ -151,13 +155,13 @@ const Twister2Apps = props => (
                 title: "Machine Learning"
             },
 {
-    content: "5X performance than popular data processing engines",
-        image: imgUrl('dataprocessing.png'),
+    content: "Multiple APIs including TSet, Compute & Operator for flexible applications",
+        image: imgUrl('api.svg'),
     imageAlign: 'top',
-    title: "Data Processing"
+    title: "API Support"
 },
 {
-    content: "Applications can be developed as dataflow programs",
+    content: "Dataflow for streaming & batch applications",
         image: imgUrl('dataflow.png'),
     imageAlign: 'top',
     title: "Dataflow "
@@ -171,22 +175,22 @@ const Twister2Apps2 = props => (
 <Block layout="fourColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "TSet (Twister Set) API similar to Spark RDD, BEAM PCollection",
+                content: "Python API for developing data applications",
                 image: imgUrl('speed.svg'),
                 imageAlign: 'top',
-                title: "Data Abstractions"
+                title: "Python API"
             },
 {
-    content: "Similar APIs for Apache Storm for streaming analytics",
+    content: "Storm API Compatibiltiy for running streaming applications",
         image: imgUrl('streamgraph.png'),
     imageAlign: 'top',
-    title: "Streaming Analytics"
+    title: "Storm API"
 },
 {
-    content: "Support for Apache Storm and Apache BEAM APIs",
+    content: "Integrates with Apache Beam to run Beam Applications",
         image: imgUrl('api_2.png'),
     imageAlign: 'top',
-    title: "Storm and BEAM Support"
+    title: "Bean API"
 },
 ]}
 </Block>
