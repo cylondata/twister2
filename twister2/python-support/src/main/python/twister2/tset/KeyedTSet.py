@@ -46,6 +46,25 @@ class KeyedTSet:
 
         return Tl.TLink(keyed_gather_t_link_java_ref, self.__env)
 
+    def keyed_partition(self, partition_func: PartitionFunc):
+        p_func_java_ref = self.__env.functions.partition.to_java_ref(partition_func)
+        partition_link_java_ref = self.__java_ref.keyedPartition(p_func_java_ref)
+        return Tl.TLink(partition_link_java_ref, self.__env)
+
+    # Functions from TSet
+    def add_input(self, name, input_tset):
+        self.__java_ref.addInput(name, input_tset.__java_ref)
+        return self
+
+    def cache(self):  # todo should return a cached tset instead
+        return KeyedTSet(self.__java_ref.cache(), self.__env)
+
+    def lazy_cache(self):
+        return KeyedTSet(self.__java_ref.lazyCache(), self.__env)
+
+    def persist(self):
+        return KeyedTSet(self.__java_ref.persist(), self.__env)
+
     # TLink functions
     def map(self, lam):
         return self.direct().map(lam)
