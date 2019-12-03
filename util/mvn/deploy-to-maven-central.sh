@@ -26,8 +26,7 @@ bash $(dirname $0)/execute-deploy.sh \
   "gpg:sign-and-deploy-file" \
   "$version_name" \
   "-DrepositoryId=ossrh" \
-  "-Durl=https://oss.sonatype.org/content/repositories/snapshots" \
-#  "-Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/" \
+  "-Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2" \
   "-Dgpg.keyname=${key}"
 
 # Publish javadocs to gh-pages
