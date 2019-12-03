@@ -11,3 +11,23 @@ class TSetContext:
 
     def get_index(self):
         return self.__java_ref.getIndex()
+
+    @property
+    def worker_id(self):
+        return self.__java_ref.getWorkerId()
+
+    @property
+    def id(self):
+        return self.__java_ref.getId()
+
+    @property
+    def index(self):
+        return self.__java_ref.getIndex()
+
+    @property
+    def name(self):
+        return self.__java_ref.getName()
+
+    @property
+    def parallelism(self):
+        return self.__java_ref.getParallelism()

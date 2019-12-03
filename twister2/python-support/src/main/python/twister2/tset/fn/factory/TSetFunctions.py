@@ -14,6 +14,7 @@ class TSetFunctions:
         self.__reduce_functions = GenericFunctions(java_ref.reduce(), env)
         self.__apply_functions = GenericFunctions(java_ref.apply(), env)
         self.__flat_map_functions = GenericFunctions(java_ref.flatMap(), env)
+        self.__comparator_functions = GenericFunctions(java_ref.comparator(), env)
 
     @property
     def partition(self) -> PartitionFunctions:
@@ -46,3 +47,7 @@ class TSetFunctions:
     @property
     def reduce(self) -> GenericFunctions:
         return self.__reduce_functions
+
+    @property
+    def comparator(self) -> GenericFunctions:
+        return self.__comparator_functions

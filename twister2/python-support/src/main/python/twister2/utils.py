@@ -59,6 +59,9 @@ def do_arg_map(arg, numpy_builder=None):
         if hasattr(arg, "getInput"):
             # TSetContext
             return TSetContext(arg)
+        if hasattr(arg, "getKey") and hasattr(arg, "getValue"):
+            # class edu.iu.dsc.tws.api.comms.structs.Tuple
+            return arg.getKey(), arg.getValue()
     elif arg is None:
         return None
 

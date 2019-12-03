@@ -5,6 +5,7 @@ import time
 from py4j.java_gateway import JavaGateway, GatewayParameters
 
 from twister2.tset.TSet import TSet
+from twister2.tset.KeyedTSet import KeyedTSet
 from twister2.tset.fn.SourceFunc import SourceFunc
 from twister2.tset.fn.factory.TSetFunctions import TSetFunctions
 from twister2.utils import SourceWrapper
@@ -31,7 +32,8 @@ class Twister2Environment:
                 self.__entrypoint.setJobName(name)
 
             for resource in resources:
-                self.__entrypoint.createComputeResource(resource["cpu"], resource["ram"], resource["instances"])
+                self.__entrypoint.createComputeResource(resource["cpu"], resource["ram"],
+                                                        resource["instances"])
 
             self.__entrypoint.commit()
             time.sleep(5)
@@ -58,6 +60,19 @@ class Twister2Environment:
 
         source_function_wrapper = SourceWrapper(source_function)
 
-        java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function_wrapper), parallelism)
+        java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function_wrapper),
+                                                      parallelism)
         src_tset = TSet(java_src_ref, self)
+        return src_tset
+
+    def create_keyed_source(self, source_function: SourceFunc, parallelism=0) -> KeyedTSet:
+        if not isinstance(source_function, SourceFunc):
+            raise Exception('source_function should be an instance of {}'.format(SourceFunc))
+
+        source_function_wrapper = SourceWrapper(source_function)
+
+        java_src_ref = self.__entrypoint.createKeyedSource(
+            cp.dumps(source_function_wrapper), parallelism
+        )
+        src_tset = KeyedTSet(java_src_ref, self)
         return src_tset

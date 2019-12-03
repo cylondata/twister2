@@ -54,4 +54,8 @@ public final class TSetFunctions {
   public ApplyFunctions apply() {
     return ApplyFunctions.getInstance();
   }
+
+  public ComparatorFunctions comparator() {
+    return ComparatorFunctions.getInstance();
+  }
 }
