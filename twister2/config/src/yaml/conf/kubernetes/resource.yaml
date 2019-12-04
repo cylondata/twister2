@@ -109,7 +109,8 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 
 #########################################################################
 # Uploader Settings in Kubernetes
-#
+#########################################################################
+
 # When a job is submitted, the job package needs to be transferred to worker pods
 # Two upload methods are provided:
 #   a) Job Package Transfer Using kubectl file copy (default)
@@ -117,7 +118,6 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 #
 # Following two configuration parameters control the uploading with the first method
 # when the submitting client uploads the job package directly to pods using kubectl copy
-#########################################################################
 
 # if the value of this parameter is true,
 # the job package is transferred from submitting client to pods directly
@@ -176,6 +176,7 @@ twister2.resource.uploader.download.method: "HTTP"
 ########################################################################
 # Node locations related settings
 ########################################################################
+
 # If this parameter is set as true,
 # Twister2 will use the below lists for node locations:
 #   kubernetes.datacenters.list
