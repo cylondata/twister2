@@ -42,8 +42,8 @@ import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
  * TSet API based word count example. A simple wordcount program where fixed number of words
  * are generated and the global counts of words are calculated.
  */
-public class WordCountJob implements IWorker, Serializable {
-  private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
+public class WordCount implements IWorker, Serializable {
+  private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   private static final int MAX_CHARS = 5;
 
@@ -117,7 +117,7 @@ public class WordCountJob implements IWorker, Serializable {
     JobConfig jobConfig = new JobConfig();
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("wordcount-streaming-tset");
-    jobBuilder.setWorkerClass(WordCountJob.class);
+    jobBuilder.setWorkerClass(WordCount.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 

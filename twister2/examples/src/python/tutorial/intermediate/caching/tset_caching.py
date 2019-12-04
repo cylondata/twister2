@@ -1,7 +1,6 @@
 from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
-from datetime import datetime
 
 env = Twister2Environment(resources=[{"cpu": 1, "ram": 512, "instances": 4}])
 

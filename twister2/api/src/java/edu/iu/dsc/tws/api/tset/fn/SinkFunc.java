@@ -27,13 +27,15 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.EmptyDataPartition;
 
 /**
- * Add a value at the end of the graph
+ * Adds data sink at the end of the graph. {@link SinkFunc} would receive data from an edge of
+ * the data flow graph.
  *
- * @param <T> input type of sink
+ * @param <T> data type
  */
 public interface SinkFunc<T> extends TFunction<T, T> {
+
   /**
-   * Add a value
+   * Every time an edge produces a value, this method is called.
    *
    * @param value the value to add
    * @return true if success
@@ -41,16 +43,10 @@ public interface SinkFunc<T> extends TFunction<T, T> {
   boolean add(T value);
 
   /**
-   * Call this at the end
-   */
-  default void close() {
-  }
-
-  /**
    * Return the data partition associated with this task instance. Specifically to be used for
    * caching functionality.
    *
-   * @return data partition - type remains unknown as the output of sinked data can be a
+   * @return data partition - type remains unknown as the output of sunk data can be a
    * different type than T. Example, caching gatherTlink, T -> Tuple<int, T> but the output would
    * be T
    */

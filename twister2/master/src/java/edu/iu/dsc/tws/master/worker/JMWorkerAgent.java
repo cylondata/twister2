@@ -72,7 +72,6 @@ public final class JMWorkerAgent {
   private int masterPort;
 
   private RRClient rrClient;
-  private Pinger pinger;
 
   private JMWorkerController workerController;
   private JMSenderToDriver senderToDriver;
@@ -194,15 +193,9 @@ public final class JMWorkerAgent {
     rrClient = new RRClient(masterAddress, masterPort, null, looper,
         thisWorker.getWorkerID(), connectHandler);
 
-    long interval = JobMasterContext.pingInterval(config);
-    pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
-
     senderToDriver = new JMSenderToDriver(this);
 
     // protocol buffer message registrations
-    JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
-    rrClient.registerResponseHandler(pingBuilder, pinger);
-
     JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
         JobMasterAPI.RegisterWorker.newBuilder();
     JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
@@ -281,12 +274,7 @@ public final class JMWorkerAgent {
   private void startLooping() {
 
     while (!stopLooper) {
-      long timeToNextPing = pinger.timeToNextPing();
-      if (timeToNextPing < 30 && registrationSucceeded) {
-        pinger.sendPingMessage();
-      } else {
-        looper.loopBlocking(timeToNextPing);
-      }
+      looper.loopBlocking();
     }
 
     rrClient.disconnect();
@@ -475,7 +463,6 @@ public final class JMWorkerAgent {
           JobMasterContext.responseWaitDuration(config));
 
       if (registrationSucceeded) {
-        pinger.sendPingMessage();
         initJMWorkerController();
       }
 

@@ -14,13 +14,17 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
   private MapFunc<O, I> mapFn;
+
+  private MapIterCompute() {
+    //non arg constructor for kryp
+  }
 
   public MapIterCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
@@ -37,5 +41,10 @@ public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>
   @Override
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
+  }
+
+  @Override
+  public void close() {
+    mapFn.close();
   }
 }

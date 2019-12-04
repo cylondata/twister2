@@ -31,6 +31,9 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
     super(env, n, sourceP, targetP);
   }
 
+  protected KeyedBatchIteratorLinkWrapper() {
+  }
+
   @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),

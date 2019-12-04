@@ -13,16 +13,21 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
 public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   private TFunction<O, I> computeFunc;
+
+  public ComputeTSet() {
+    //non arg constructor needed for kryo
+    super();
+  }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFn,
                      int parallelism) {
@@ -53,7 +58,7 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   }
 
   @Override
-  public ComputeTSet<O, I> addInput(String key, Storable<?> input) {
+  public ComputeTSet<O, I> addInput(String key, StorableTBase<?> input) {
     return (ComputeTSet<O, I>) super.addInput(key, input);
   }
 

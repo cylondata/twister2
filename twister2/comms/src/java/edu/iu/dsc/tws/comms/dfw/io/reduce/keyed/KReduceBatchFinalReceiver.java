@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+
+import edu.iu.dsc.tws.comms.utils.THashMap;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -52,7 +53,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     super.init(cfg, op, expectedIds);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
     for (int t : expectedIds.keySet()) {
-      reduced.put(t, new HashMap<>());
+      reduced.put(t, new THashMap<>(op.getKeyType()));
     }
   }
 
@@ -69,7 +70,6 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
       } else {
         throw new RuntimeException("Un-expected type: " + val.getClass());
       }
-
       Object currentVal = targetValues.get(t.getKey());
       if (currentVal != null) {
         Object newVal = reduceFunction.reduce(currentVal, t.getValue());
@@ -100,7 +100,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
 
     boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
     if (send) {
-      reduced.put(target, new HashMap<>());
+      reduced.put(target, new THashMap<>(operation.getKeyType()));
     }
     return send;
   }

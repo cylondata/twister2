@@ -50,7 +50,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -110,7 +110,7 @@ public final class JobMasterClientExample {
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     JobMasterAPI.WorkerState initialState =
-        K8sWorkerStarter.initialStateAndUpdate(config, job.getJobName(), workerInfo);
+        K8sWorkerUtils.initialStateAndUpdate(config, job.getJobName(), workerInfo);
 
     WorkerRuntime.init(config, job, workerInfo, initialState);
 

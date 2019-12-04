@@ -9,14 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.comms.functions.reduction;
 
-package edu.iu.dsc.tws.api.tset.link.batch;
+public interface AbstractOp {
+  int doInt(int o1, int o2);
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
+  long doLong(long o1, long o2);
 
-public interface BatchTupleMappableLink<I> {
+  short doShort(short o1, short o2);
 
-  <K, O> BatchTupleTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
+  float doFloat(float o1, float o2);
+
+  double doDouble(double o1, double o2);
+
+  byte doByte(byte o1, byte o2);
 }

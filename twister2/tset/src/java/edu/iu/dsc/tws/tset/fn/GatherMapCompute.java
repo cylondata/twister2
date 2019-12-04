@@ -15,15 +15,19 @@ package edu.iu.dsc.tws.tset.fn;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 public class GatherMapCompute<O, I> implements
     ComputeCollectorFunc<O, Iterator<Tuple<Integer, I>>> {
 
   private MapFunc<O, I> mapFn;
+
+  private GatherMapCompute() {
+    //non arg constructor for kryp
+  }
 
   public GatherMapCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
@@ -40,5 +44,10 @@ public class GatherMapCompute<O, I> implements
   @Override
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
+  }
+
+  @Override
+  public void close() {
+    mapFn.close();
   }
 }

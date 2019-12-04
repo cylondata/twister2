@@ -9,14 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.api.tset.fn;
 
-package edu.iu.dsc.tws.api.tset.link.streaming;
-
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
-
-public interface StreamingTupleMappableLink<I> {
-
-  <K, O> StreamingTupleTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
+public abstract class BaseApplyFunc<T> extends BaseTFunction<T, T> implements ApplyFunc<T> {
 }

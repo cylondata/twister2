@@ -21,6 +21,10 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterator<V>> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherTLink.class.getName());
 
+  private KeyedGatherTLink() {
+    //non arg constructor for kryo
+  }
+
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism, false, null);
   }
@@ -34,6 +38,12 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
                           int sourceParallelism, boolean sortByKey, Comparator<K> keyCompartor) {
     super(tSetEnv, partitionFn, sourceParallelism, sortByKey, keyCompartor);
     this.enableGroupByKey();
+  }
+
+  @Override
+  public KeyedGatherTLink<K, V> useDisk() {
+    super.useDisk();
+    return this;
   }
 
   @Override

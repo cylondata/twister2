@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTupleMappableLink;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -27,8 +26,7 @@ import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
-public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T>
-    implements BatchTupleMappableLink<T> {
+public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
   BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
@@ -36,6 +34,9 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
 
   BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
+  }
+
+  protected BatchIteratorLink() {
   }
 
   @Override

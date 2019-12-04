@@ -16,9 +16,9 @@ import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
@@ -39,6 +39,10 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
 
   BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
+  }
+
+  protected BatchTupleTSetImpl() {
+    //non arg constructor for kryo
   }
 
   // since keyed tset is the base impl for BatchTupleTSet, it needs to override the env getter
@@ -172,7 +176,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
-  public BatchTupleTSetImpl<K, V> addInput(String key, Storable<?> input) {
+  public BatchTupleTSetImpl<K, V> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }

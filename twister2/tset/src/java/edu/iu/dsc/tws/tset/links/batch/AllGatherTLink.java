@@ -36,6 +36,10 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
  */
 public class AllGatherTLink<T> extends BatchGatherLink<T> {
 
+  private AllGatherTLink() {
+    //non arg constructor for kryo
+  }
+
   public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "allgather", sourceParallelism);
   }

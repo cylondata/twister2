@@ -45,6 +45,7 @@ public class ComputeOp<O, I> extends BaseComputeOp<I> {
     O output = computeFunction.compute(content.getContent());
     writeToEdges(output);
     writeEndToEdges();
+    computeFunction.close();
     return true;
   }
 }

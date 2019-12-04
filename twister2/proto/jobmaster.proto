@@ -106,21 +106,6 @@ message JobMasterRestarted {
 // Message types exchanged between Job Master and Workers
 /////////////////////////////////////////////////////////////////
 
-// Ping message is sent by workers to the job master periodically
-// it is to show that that the workers are running
-message Ping {
-    enum MessageType {
-        WORKER_TO_MASTER = 0;
-        MASTER_TO_WORKER = 1;
-    }
-    oneof idRequired {
-        int32 workerID = 1;
-    }
-    oneof typeRequired {
-        MessageType messageType = 2;
-    }
-}
-
 // this message is sent when the worker is about to start
 // it registers itself with the job master
 // its status in job master becomes: STARTING when this message is received

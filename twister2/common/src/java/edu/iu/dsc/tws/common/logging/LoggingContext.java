@@ -20,9 +20,9 @@ import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 
-import edu.iu.dsc.tws.api.config.Config;
-
 public final class LoggingContext {
+
+  public static final String LOGGER_PROPERTIES_FILE = "common/logger.properties";
 
   private static Properties loggingProperties = new Properties();
 
@@ -42,50 +42,11 @@ public final class LoggingContext {
 
   public static final String LOGGING_LEVEL_DEFAULT = "INFO";
 
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final String LOGGING_LEVEL = "twister2.logging.level";
-
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final boolean PERSISTENT_LOGGING_REQUESTED_DEFAULT = false;
-
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final String PERSISTENT_LOGGING_REQUESTED = "persistent.logging.requested";
-
   // max log file size in MB
   public static final int MAX_LOG_FILE_SIZE_DEFAULT = 100;
 
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final String MAX_LOG_FILE_SIZE = "twister2.logging.max.file.size.mb";
-
   // max log files for a worker
   public static final int MAX_LOG_FILES_DEFAULT = 5;
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final String MAX_LOG_FILES = "twister2.logging.maximum.files";
 
   // the logging format property
   public static final String DEFAULT_FORMAT =
@@ -95,23 +56,13 @@ public final class LoggingContext {
 
   // whether redirect System.out and System.err to log files
   public static final boolean REDIRECT_SYS_OUT_ERR_DEFAULT = false;
-  /**
-   * This will be handled by logger.properties file with standard parameters
-   *
-   * @deprecated use logger.properties
-   */
-  @Deprecated
-  public static final String REDIRECT_SYS_OUT_ERR = "twister2.logging.redirect.sysouterr";
 
-  public static String loggingLevel(Config cfg) {
+  public static String loggingLevel() {
     //giving priority to logger.properties
-    return loggingProperties.getProperty(
-        ".level",
-        cfg.getStringValue(LOGGING_LEVEL, LOGGING_LEVEL_DEFAULT)
-    );
+    return loggingProperties.getProperty(".level", LOGGING_LEVEL_DEFAULT);
   }
 
-  public static boolean persistentLoggingRequested(Config cfg) {
+  public static boolean fileLoggingRequested() {
     String handlers = loggingProperties.getProperty("handlers", "");
     for (String className : handlers.split(",")) {
       if (className.equals(FileHandler.class.getCanonicalName())
@@ -119,26 +70,26 @@ public final class LoggingContext {
         return true;
       }
     }
-    return cfg.getBooleanValue(PERSISTENT_LOGGING_REQUESTED, PERSISTENT_LOGGING_REQUESTED_DEFAULT);
+    return false;
   }
 
-  public static int maxLogFileSizeBytes(Config cfg) {
+  public static int maxLogFileSizeBytes() {
     //giving priority to logger.properties
     String size = loggingProperties.getProperty(Twister2FileLogHandler.LIMIT);
     try {
       return Integer.valueOf(size);
     } catch (Exception ex) {
-      return cfg.getIntegerValue(MAX_LOG_FILE_SIZE, MAX_LOG_FILE_SIZE_DEFAULT) * 1024 * 1024;
+      return MAX_LOG_FILE_SIZE_DEFAULT * 1024 * 1024;
     }
   }
 
-  public static int maxLogFiles(Config cfg) {
+  public static int maxLogFiles() {
     //giving priority to logger.properties
     String count = loggingProperties.getProperty(Twister2FileLogHandler.COUNT);
     try {
       return Integer.valueOf(count);
     } catch (Exception ex) {
-      return cfg.getIntegerValue(MAX_LOG_FILES, MAX_LOG_FILES_DEFAULT);
+      return MAX_LOG_FILES_DEFAULT;
     }
   }
 
@@ -157,13 +108,13 @@ public final class LoggingContext {
         StandardCharsets.UTF_8.toString());
   }
 
-  public static boolean redirectSysOutErr(Config cfg) {
+  public static boolean redirectSysOutErr() {
     //giving priority to logger.properties
     String redirect = loggingProperties.getProperty(Twister2FileLogHandler.REDIRECT_SYS);
     try {
       return Boolean.valueOf(redirect);
     } catch (Exception ex) {
-      return cfg.getBooleanValue(REDIRECT_SYS_OUT_ERR, REDIRECT_SYS_OUT_ERR_DEFAULT);
+      return REDIRECT_SYS_OUT_ERR_DEFAULT;
     }
   }
 

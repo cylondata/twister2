@@ -17,33 +17,44 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class MapToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private MapCompute<Tuple<K, O>, I> mapFunction;
+public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
+  private ComputeCollectorFunc<Tuple<K, O>, I> compFunction;
 
-  public MapToTupleOp() {
-
+  public ComputeCollectorToTupleOp() {
   }
 
-  public MapToTupleOp(MapCompute<Tuple<K, O>, I> mapToTupFn, BaseTSet origin,
-                      Map<String, String> receivables) {
+  public ComputeCollectorToTupleOp(ComputeCollectorFunc<Tuple<K, O>, I> mapToTupFn,
+                                   BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
-    this.mapFunction = mapToTupFn;
+    this.compFunction = mapToTupFn;
   }
 
   @Override
   public TFunction getFunction() {
-    return mapFunction;
+    return compFunction;
   }
 
   @Override
   public boolean execute(IMessage<I> content) {
-    Tuple<K, O> tuple = mapFunction.compute(content.getContent());
-    keyedWriteToEdges(tuple.getKey(), tuple.getValue());
+    compFunction.compute(content.getContent(), new RecordCollector<Tuple<K, O>>() {
+      @Override
+      public void collect(Tuple<K, O> record) {
+        keyedWriteToEdges(record.getKey(), record.getValue());
+      }
+
+      @Override
+      public void close() {
+
+      }
+    });
+
     writeEndToEdges();
+    compFunction.close();
     return false;
   }
 }

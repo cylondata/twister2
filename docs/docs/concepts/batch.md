@@ -91,20 +91,39 @@ The cache operation or persist operation can be used to save a calculation of a 
 These saved TSets can be used in other TSet transformation as inputs.   
 
 ```java
+  // create a cached tset
+  CachedTSet<Object> cached = env.createSource(new SourceFunc<Integer>() {
+  }, 4).direct().compute((itr, c) -> {
+  }).direct().compute((itr, c) -> {
+  }).cache();
 
+  // second TSet with input added
+  env.createSource(new SourceFunc<Integer>() {
+  }, 4).direct().compute(
+    new ComputeCollectorFunc<Integer, Iterator<Integer>>() {
+
+      private DataPartitionConsumer<Integer> xValues;
+
+      @Override
+      public void prepare(TSetContext context) {
+        // get the input
+        this.xValues = (DataPartitionConsumer<Integer>) context.getInput("x").getConsumer();
+      }
+
+      @Override
+      public void compute(Iterator<Integer> zValues, RecordCollector<Integer> output) {
+        while (zValues.hasNext()) {
+          output.collect(xValues.next() + zValues.next());
+        }
+      }
+      // add input
+    }).addInput("x", cached).direct().forEach(i -> {});
 ```
 
+The ```addInput``` method of can be used to give an cached input to another computation. The cached
+input is available throught a ```DataPartitionConsumer``` which gives an iterator.
 
 Data can be persisted to disk for check-pointing purposes or relieving the memory pressure for large computations 
 without enough memory.  
 
-
-## Compute API
-
-Every TSet job is converted to an Compute API job before executed by the runtime. A user can directly create 
-a Compute API job. 
-
-### Computation Graph Creation
-
-The graph  
 

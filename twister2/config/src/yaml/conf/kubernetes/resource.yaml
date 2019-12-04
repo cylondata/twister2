@@ -2,10 +2,10 @@
 # Kubernetes Docker Image and related settings
 ################################################################################
 # Twister2 Docker image for Kubernetes
-twister2.resource.kubernetes.docker.image: "twister2/twister2-k8s:0.3.0"
+twister2.resource.kubernetes.docker.image: "twister2/twister2-k8s:0.4.0"
 
 # the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.4.0.tar.gz"
 
 twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 

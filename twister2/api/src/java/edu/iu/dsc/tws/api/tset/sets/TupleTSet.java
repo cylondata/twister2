@@ -16,7 +16,17 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
- * TSet with a key and a value
+ * Twister data set for keyed data. This would abstract the Task level keyed computations in a
+ * more user friendly API. A {@link TupleTSet} will be followed by a Keyed {@link TLink} that
+ * would expose keyed communication operations.
+ *
+ * Note the extensions of this interface
+ * {@link edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet} and
+ * {@link edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet}. These would intimately
+ * separate out the operations based on the {@link edu.iu.dsc.tws.api.compute.graph.OperationMode}
+ * of the data flow graph.
+ *
+ * This interface only specifies the common operations for Batch and Streaming operations.
  *
  * @param <K> key type
  * @param <V> value type
@@ -31,17 +41,17 @@ public interface TupleTSet<K, V> extends TBase {
   TupleTSet<K, V> setName(String name);
 
   /**
-   * Do a partition
+   * Partitions data using a {@link PartitionFunc} based on keys
    *
-   * @param partitionFn function to choose the partition
-   * @return partition link
+   * @param partitionFn partition function
+   * @return Keyed Partition TLink
    */
   TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
 
   /**
-   * Direct communication for keyed TSets
+   * Direct/pipe communication
    *
-   * @return partition link
+   * @return Keyed Direct TLink
    */
   TLink<?, ?> keyedDirect();
 }

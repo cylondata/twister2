@@ -40,4 +40,9 @@ public class ForEachIterCompute<T> implements ComputeFunc<Object, Iterator<T>> {
   public void prepare(TSetContext context) {
     applyFn.prepare(context);
   }
+
+  @Override
+  public void close() {
+    applyFn.close();
+  }
 }

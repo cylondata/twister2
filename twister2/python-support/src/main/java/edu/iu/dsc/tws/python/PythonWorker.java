@@ -23,11 +23,14 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
 import py4j.DefaultGatewayServerListener;
 import py4j.GatewayServer;
@@ -108,6 +111,19 @@ public class PythonWorker implements BatchTSetIWorker {
     }
   }
 
+  /**
+   * This class will be used when twister2 is started with checkpointing enabled
+   */
+  public static class CheckpointablePythonWorker implements CheckpointingBatchTSetIWorker {
+
+    private PythonWorker pythonWorker = new PythonWorker();
+
+    @Override
+    public void execute(CheckpointingTSetEnv env) {
+      pythonWorker.execute(env);
+    }
+  }
+
   public static void main(String[] args) throws InterruptedException {
     String pythonFile = System.getProperty("python_file");
     String mainFile = System.getProperty("main_file");
@@ -140,9 +156,16 @@ public class PythonWorker implements BatchTSetIWorker {
     jobConfig.put("python_file", new File(pythonFile).getName());
     jobConfig.put("args", args);
 
+
+    Config config = ResourceAllocator.loadConfig(Collections.emptyMap());
+
+
     Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
         .setJobName(bootstrapPoint.getJobName())
-        .setWorkerClass(PythonWorker.class)
+        .setWorkerClass(
+            CheckpointingConfigurations.isCheckpointingEnabled(config)
+                ? CheckpointablePythonWorker.class : PythonWorker.class
+        )
         .setConfig(jobConfig);
 
     if (!bootstrapPoint.getComputeResources().isEmpty()) {
@@ -158,7 +181,6 @@ public class PythonWorker implements BatchTSetIWorker {
       twister2JobBuilder.addComputeResource(1, 512, 1);
     }
 
-    Config config = ResourceAllocator.loadConfig(Collections.emptyMap());
     Twister2Submitter.submitJob(twister2JobBuilder.build(), config);
   }
 }

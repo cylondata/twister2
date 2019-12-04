@@ -9,23 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.tset.sets.batch.functions;
+
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
 /**
- * Collector for map function
- *
- * @param <T> input type
+ * function that simply does a one to one forwarding of the input values.
+ * @param <T> type of input.
  */
-public interface RecordCollector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
-
-  /**
-   * Close the collector
-   */
-  void close();
+public class IdentityFunction<T> implements MapFunc<T, T> {
+  @Override
+  public T map(T input) {
+    return input;
+  }
 }

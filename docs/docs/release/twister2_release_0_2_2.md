@@ -1,4 +1,9 @@
-# Twister2 Release 0.2.2
+---
+id: 0.2.2
+title: Twister2 Release 0.2.2
+sidebar_label: Twister2 Release 0.2.2
+---
+
 
 This is a patch release of Twister2 with first versions of few major features.
 

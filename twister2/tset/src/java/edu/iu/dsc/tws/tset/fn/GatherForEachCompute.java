@@ -38,4 +38,9 @@ public class GatherForEachCompute<T> implements ComputeFunc<Object, Iterator<Tup
     }
     return null;
   }
+
+  @Override
+  public void close() {
+    applyFn.close();
+  }
 }
