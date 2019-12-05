@@ -246,8 +246,6 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
     }
   }
 
-
-
   private boolean checkAndBufferRecord() throws IOException {
     if (this.readPos < this.limit) {
       //The next record is already in the buffer
