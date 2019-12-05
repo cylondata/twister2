@@ -65,6 +65,10 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
     return this.getMessageType().getDataSizeInBytes(data);
   }
 
+  default boolean bulkCopyToBuffer(A src, ByteBuffer buffer, int offset, int length) {
+    return false;
+  }
+
   @Override
   default void writeDataToBuffer(A data, PackerStore packerStore, int alreadyCopied,
                                  int leftToCopy, int spaceLeft, ByteBuffer targetBuffer) {
@@ -76,9 +80,19 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
 
     int willCopy = Math.min(spacePermitsFor, elementsLeft);
 
-    for (int i = 0; i < willCopy; i++) {
-      this.addToBuffer(targetBuffer, data, i + elementsCopied);
+    // try bulk copy option first
+    if (!bulkCopyToBuffer(data, targetBuffer, elementsCopied, willCopy)) {
+      for (int i = 0; i < willCopy; i++) {
+        this.addToBuffer(targetBuffer, data, i + elementsCopied);
+      }
+    } else {
+      //update buffer position
+      targetBuffer.position(targetBuffer.position() + (willCopy * unitSize));
     }
+  }
+
+  default boolean bulkReadFromBuffer(ByteBuffer buffer, A dest, int offset, int length) {
+    return false;
   }
 
   @SuppressWarnings("unchecked")
@@ -92,22 +106,32 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
     A val = (A) objectBuilder.getPartialDataHolder();
 
     //deserializing
-    int noOfElements = totalDataLength / unitSize;
+    int totalNoOfElements = totalDataLength / unitSize;
     int bufferPosition = currentBufferLocation;
     int bytesRead = 0;
 
     final ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
     int size = dataBuffer.getSize();
-    for (int i = startIndex; i < noOfElements; i++) {
-      int remaining = size - bufferPosition;
-      if (remaining >= unitSize) {
-        this.readFromBufferAndSet(byteBuffer, bufferPosition, val, i);
-        bytesRead += unitSize;
-        bufferPosition += unitSize;
-      } else {
-        break;
+
+    int elementsLeftInBuffer = (size - bufferPosition) / unitSize;
+    int noOfElementsToRead = Math.min(totalNoOfElements - startIndex, elementsLeftInBuffer);
+
+    // first try to bulk read if child implementation supports it
+    if (!bulkReadFromBuffer(byteBuffer, val, startIndex, noOfElementsToRead)) {
+      for (int i = startIndex; i < totalNoOfElements; i++) {
+        int remaining = size - bufferPosition;
+        if (remaining >= unitSize) {
+          this.readFromBufferAndSet(byteBuffer, bufferPosition, val, i);
+          bytesRead += unitSize;
+          bufferPosition += unitSize;
+        } else {
+          break;
+        }
       }
+    } else {
+      bytesRead += unitSize * noOfElementsToRead;
     }
+
     if (totalDataLength == bytesRead + startIndex * unitSize) {
       objectBuilder.setFinalObject(val);
     }
