@@ -43,6 +43,18 @@ public final class FloatArrayPacker implements PrimitiveArrayPacker<float[]> {
   }
 
   @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, float[] dest, int offset, int length) {
+    buffer.asFloatBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkCopyToBuffer(float[] src, ByteBuffer buffer, int offset, int length) {
+    buffer.asFloatBuffer().put(src, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<float[], float[]> getMessageType() {
     return MessageTypes.FLOAT_ARRAY;
   }

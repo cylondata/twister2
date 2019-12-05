@@ -31,6 +31,18 @@ public final class CharArrayPacker implements PrimitiveArrayPacker<char[]> {
   }
 
   @Override
+  public boolean bulkCopyToBuffer(char[] src, ByteBuffer buffer, int offset, int length) {
+    buffer.asCharBuffer().put(src, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, char[] dest, int offset, int length) {
+    buffer.asCharBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<char[], char[]> getMessageType() {
     return MessageTypes.CHAR_ARRAY;
   }
