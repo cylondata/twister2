@@ -117,6 +117,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
     int noOfElementsToRead = Math.min(totalNoOfElements - startIndex, elementsLeftInBuffer);
 
     // first try to bulk read if child implementation supports it
+    byteBuffer.position(currentBufferLocation);
     if (!bulkReadFromBuffer(byteBuffer, val, startIndex, noOfElementsToRead)) {
       for (int i = startIndex; i < totalNoOfElements; i++) {
         int remaining = size - bufferPosition;
