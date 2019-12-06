@@ -23,6 +23,7 @@ load("//tools/rules:twister2_client.bzl", "twister2_client_lib_data_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_data_lmdb_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_communication_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_example_files")
+load("//tools/rules:twister2_client.bzl", "twister2_client_python_example_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_common_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_executor_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_connector_files")
@@ -86,8 +87,6 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
-        ":twister2-curator-zookeeper-libs",
-        ":twister2-kubernetes-libs",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -99,6 +98,8 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
+        ":twister2-curator-zookeeper-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-master-jersey",
         ":twister2-master-lib",
         ":twister2-python-support",
@@ -115,8 +116,6 @@ pack_tw2(
     deps = [
         ":twister2-beam",
         ":twister2-checkpointing",
-        ":twister2-curator-zookeeper-libs",
-        ":twister2-kubernetes-libs",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -128,7 +127,9 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
+        ":twister2-curator-zookeeper-libs",
         ":twister2-harp-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-master-jersey",
         ":twister2-master-lib",
         ":twister2-ompi-bin",
@@ -295,8 +296,6 @@ pack_tw2(
     deps = [
         ":twister2-bin",
         ":twister2-checkpointing",
-        ":twister2-curator-zookeeper-libs",
-        ":twister2-kubernetes-libs",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-dashboard",
@@ -307,12 +306,14 @@ pack_tw2(
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-curator-zookeeper-libs",
         ":twister2-dashboard",
         ":twister2-deeplearning",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-fault-tolerance",
         ":twister2-harp-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-lib-api",
         ":twister2-lib-common",
         ":twister2-lib-connector",
@@ -324,6 +325,7 @@ pack_tw2(
         ":twister2-lib-third_party",
         ":twister2-master-jersey",
         ":twister2-master-lib",
+        ":twister2-python-examples",
         ":twister2-python-support",
         ":twister2-restarter",
         ":twister2-tset",
@@ -340,8 +342,6 @@ pack_tw2(
         ":twister2-beam",
         ":twister2-bin",
         ":twister2-checkpointing",
-        ":twister2-curator-zookeeper-libs",
-        ":twister2-kubernetes-libs",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-common",
@@ -353,11 +353,13 @@ pack_tw2(
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-curator-zookeeper-libs",
         ":twister2-dashboard",
         ":twister2-deeplearning",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-lib-api",
         ":twister2-lib-common",
         ":twister2-lib-connector",
@@ -373,6 +375,7 @@ pack_tw2(
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-python-examples",
         ":twister2-python-support",
         ":twister2-restarter",
         ":twister2-storm",
@@ -541,6 +544,13 @@ pack_tw2(
     name = "twister2-examples",
     srcs = twister2_client_example_files(),
     package_dir = "examples",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-python-examples",
+    srcs = twister2_client_python_example_files(),
+    package_dir = "examples/python",
     version = T2_VERSION,
 )
 

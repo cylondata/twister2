@@ -20,9 +20,10 @@ fi
 
 # update the classpath with the user job jar package
 CLASSPATH=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$USER_JOB_JAR_FILE:$CLASSPATH
+LOGGER_PROPERTIES_FILE=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$LOGGER_PROPERTIES_FILE
 
 # start the class to run
 echo "Starting $CLASS_TO_RUN .... "
-exec java $CLASS_TO_RUN
+exec java -Djava.util.logging.config.file=$LOGGER_PROPERTIES_FILE $CLASS_TO_RUN
 echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
 sleep infinity

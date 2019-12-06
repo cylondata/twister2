@@ -30,10 +30,10 @@ sudo docker run -it twister2tutorial/twister2:standalone bash
 
 Docker image has Twister2 installed and you can run examples.
 
-You should go into twister2-0.3.0 directory first.
+You should go into twister2-0.4.0 directory first.
 
 ```bash
-cd twister2-0.3.0/
+cd twister2-0.4.0/
 
 ls
 ```
@@ -55,7 +55,7 @@ To run batch word count example
 ```
 To run streaming word count example
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 To run K-means example
 ```bash
@@ -108,7 +108,7 @@ Twister2 is installed under twister2 directory.
 Go to the directory:
 
 ```bash
-cd twister2-0.3.0
+cd twister2-0.4.0
 ```
 
 Then, to run an example you can use the ```twister2 submit``` command.
@@ -174,7 +174,7 @@ You can submit HelloWorld job in examples package with 8 workers as;
 If you are using our testbed cluster “Echo”,
 
 1. Login to your account in Echo
-2. Change you directory to  ```twister2-0.3.0```
+2. Change you directory to  ```twister2-0.4.0```
 3. Run the command above.
 
 You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
@@ -291,7 +291,7 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
 
 In order to run the example go to the following directory
 ```bash
-cd twister2-0.3.0
+cd twister2-0.4.0
 ```
 
 
@@ -358,14 +358,14 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
 In order to run the example go to the following directory
 
 ```bash
-cd twister2-0.3.0
+cd twister2-0.4.0
 ```
 
 
 And run the command below  using kubernetes resource scheduler
 
 ```bash
-./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 
 
@@ -379,10 +379,10 @@ It will run 4 executors with 8 tasks
 After running the example, you will see an output like the following;
 
 ```bash
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word wA count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word 4 count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word lJx count 1
-[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word gxsn count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 2 Word wA count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 0 Word 4 count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 2 Word lJx count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount: 0 Word gxsn count 1
 ```
 
 At this point you should manually stop the process (CTRL+C)

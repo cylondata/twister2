@@ -14,11 +14,11 @@ The example code can be found in
 twister2/examples/src/java/edu/iu/dsc/tws/examples/basic/streaming/wordcount/task
 ```
 
-When we install Twister2, it will compile the examples. Lets go to the installtion directory and run the example.
+When we install Twister2, it will compile the examples. Lets go to the installation directory and run the example.
 
 ```text
 cd bazel-bin/scripts/package/twister2-dist/
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCount
 ```
 
 After running the streaming example, your terminal will show the following set of lines :

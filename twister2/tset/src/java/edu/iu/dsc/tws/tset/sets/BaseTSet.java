@@ -23,7 +23,7 @@ public abstract class BaseTSet<T> implements BuildableTSet {
   /**
    * The TSet Env to use for runtime operations of the Tset
    */
-  private TSetEnvironment tSetEnv;
+  private transient TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
@@ -69,6 +69,10 @@ public abstract class BaseTSet<T> implements BuildableTSet {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
+  public BaseTSet() {
+    //non arg constructor needed for kryo
+  }
+
   public BaseTSet(TSetEnvironment tSetEnv, String id) {
     this(tSetEnv, id, tSetEnv.getDefaultParallelism());
   }
@@ -102,6 +106,10 @@ public abstract class BaseTSet<T> implements BuildableTSet {
 
   public TSetEnvironment getTSetEnv() {
     return tSetEnv;
+  }
+
+  public void setTSetEnv(TSetEnvironment newEnv) {
+    tSetEnv = newEnv;
   }
 
   protected Map<String, String> getInputs() {
@@ -155,4 +163,6 @@ public abstract class BaseTSet<T> implements BuildableTSet {
   public int hashCode() {
     return Objects.hash(id);
   }
+
+
 }

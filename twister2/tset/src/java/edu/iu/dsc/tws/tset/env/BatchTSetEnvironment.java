@@ -23,9 +23,9 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
@@ -33,11 +33,24 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
 
+/**
+ * Implementation of {@link TSetEnvironment} for batch {@link OperationMode}.
+ * <p>
+ * There are 2 ways a tset be executed.
+ * 1. running a tset (at the completion, execution will be closed)
+ * 2. evaluating a tset (execution will be kept alive until 'finishEval' method is called)
+ * <p>
+ * And there are 3 execution options.
+ * 1. Running/ evaluating a subgraph/ DAG from a specified TSet
+ * 2. Running/ evaluating a tset and update another with the results
+ * 3. Running just a single source TSet
+ */
 public class BatchTSetEnvironment extends TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(BatchTSetEnvironment.class.getName());
 
-  // todo: make this fault tolerant. May be we can cache the buildContext along with the compute
-  //  graphs and make build contexts serializable. So, that the state of these can be preserved.
+  /**
+   * private cache of {@link BuildContext}s to be reused during execution
+   */
   private Map<String, BuildContext> buildCtxCache = new HashMap<>();
 
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
@@ -107,7 +120,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   // get data from a tset and update the another
-  private <T, ST extends BaseTSet<T> & Storable<T>> void updateTSet(ST tSet, ST updateTSet) {
+  private <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(ST tSet, ST updateTSet) {
     // get the data from the evaluation
     DataObject<T> data = getData(tSet.getId());
 
@@ -156,8 +169,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param runTSet    TSet to be run
    * @param updateTSet TSet to be updated
    */
-  public <T, ST extends BaseTSet<T> & Storable<T>> void runAndUpdate(ST runTSet, ST updateTSet) {
-    // first run the TSet then update
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void runAndUpdate(ST runTSet,
+                                                                          ST updateTSet) {
     run(runTSet);
     updateTSet(runTSet, updateTSet);
   }
@@ -198,8 +211,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param updateTSet TSet to be updated
    * @param <T>        type
    */
-  public <T, ST extends BaseTSet<T> & Storable<T>> void evalAndUpdate(ST evalTSet, ST updateTSet) {
-    // first eval the TSet then update
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void evalAndUpdate(ST evalTSet,
+                                                                           ST updateTSet) {
     eval(evalTSet);
     updateTSet(evalTSet, updateTSet);
   }

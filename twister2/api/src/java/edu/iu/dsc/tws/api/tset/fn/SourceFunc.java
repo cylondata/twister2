@@ -12,14 +12,13 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.compute.modifiers.Closable;
-
 /**
  * Represents a source producing values
  *
  * @param <T> type of values produced by source
  */
-public interface SourceFunc<T> extends TFunction<T, T>, Closable {
+public interface SourceFunc<T> extends TFunction<T, T> {
+
   /**
    * Weather we have more data
    *
@@ -34,6 +33,9 @@ public interface SourceFunc<T> extends TFunction<T, T>, Closable {
    */
   T next();
 
+  /**
+   * Closes the source
+   */
   @Override
   default void close() {
 

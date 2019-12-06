@@ -30,6 +30,8 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
   private boolean sortByKey;
   private boolean groupByKey = false;
 
+  private boolean useDisk = false;
+
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism, false, null);
   }
@@ -51,6 +53,11 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
     }
   }
 
+  public KeyedGatherUngroupedTLink() {
+    //non arg constructor for kryo
+    LOG.warning("This constructors should only be used by kryo");
+  }
+
   @Override
   public Edge getEdge() {
     Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());
@@ -62,11 +69,17 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
     if (this.keyCompartor != null) {
       e.addProperty(CommunicationContext.KEY_COMPARATOR, this.keyCompartor);
     }
+    e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }
 
   void enableGroupByKey() {
     this.groupByKey = true;
+  }
+
+  public KeyedGatherUngroupedTLink<K, V> useDisk() {
+    this.useDisk = true;
+    return this;
   }
 
   @Override

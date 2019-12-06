@@ -16,10 +16,10 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -32,8 +32,13 @@ import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.functions.IdentityFunction;
 
 public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<T> {
+
+  public BatchTSetImpl() {
+    //non arg constructor needed for kryo
+  }
 
   BatchTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
@@ -107,7 +112,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
     }
 
     ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
-        new MapIterCompute<>((MapFunc<T, T>) input -> input));
+        new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
@@ -125,7 +130,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
   public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
 
     ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
-        new MapIterCompute<>((MapFunc<T, T>) input -> input));
+        new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
@@ -178,7 +183,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
   }
 
   @Override
-  public BatchTSetImpl<T> addInput(String key, Storable<?> input) {
+  public BatchTSetImpl<T> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }

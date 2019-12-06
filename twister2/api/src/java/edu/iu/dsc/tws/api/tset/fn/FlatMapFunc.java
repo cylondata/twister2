@@ -23,10 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
-
 /**
- * Flat map function interface
+ * Flat map function
  *
  * @param <O> output type
  * @param <I> input type

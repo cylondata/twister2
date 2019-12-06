@@ -23,6 +23,7 @@ t2_java_lib(
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@org_apache_commons_commons_collections4//jar",
     ],
 )
 

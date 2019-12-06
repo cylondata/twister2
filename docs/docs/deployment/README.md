@@ -6,7 +6,8 @@ deployment of data analytics applications as simple as possible.
 In the deployment section we discuss the following topics.
 
 * [Job Submit](job-submit.md)
-* [Kubernetes](kubernetes/running-jobs.md)
+* [Kubernetes](kubernetes/twister2-install-kubernetes.md)
+* [Minikube](minikube/twister2-install-minikube.md)
 * [Standalone](standalone/running-jobs.md)
 * [Mesos](mesos/running-jobs.md)
 * [Slurm](slurm/running-jobs.md)

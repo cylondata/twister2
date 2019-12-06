@@ -1,0 +1,16 @@
+{
+  "id": "comms_keyed_partition",
+  "parent": "all_to_all_base",
+  "resultsFile": "comms_keyed_partition.csv",
+  "args": [
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "\"keyedpartition\""
+      }
+    }
+  ]
+}

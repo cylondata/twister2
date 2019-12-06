@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -46,14 +45,9 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
-    SourceTSet<Integer> intSource = env.createSource(new SourceFunc<Integer>() {
+    SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
 
       private int count = 0;
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
 
       @Override
       public boolean hasNext() {
@@ -66,16 +60,18 @@ public class TSetComputeExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    intSource.direct().compute((itr, c) -> {
+    sourceX.direct().compute((itr, collector) -> {
+      // if each element of the iterator should be processed individually, compute
+      // function which accepts a ComputeCollector can be used.
       itr.forEachRemaining(i -> {
-        c.collect(i * 5);
+        collector.collect(i * 5);
       });
-    }).direct().compute((itr, c) -> {
+    }).direct().compute((itr, collector) -> {
       itr.forEachRemaining(i -> {
-        c.collect((int) i + 2);
+        collector.collect((int) i + 2);
       });
     }).direct().forEach(i -> {
-      LOG.info("(i x 5 ) + 2 = " + i);
+      LOG.info("(x * 5 ) + 2 = " + i);
     });
   }
 }

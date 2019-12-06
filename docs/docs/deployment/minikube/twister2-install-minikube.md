@@ -115,4 +115,4 @@ When the job completes and its resources deleted, this directory will also be de
 ## Modifying Twister2 Core Components
 
 If you want to modify Twister2 core components, you need to build Twister2 Docker image. 
-Please consult [Building Docker Image for Kubernetes](../kubernetes/buiding-docker-image.md)
+Please consult [Building Docker Image for Kubernetes](../kubernetes/twister2-install-kubernetes.md#building-twister2-docker-image-for-kubernetes)

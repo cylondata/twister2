@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public abstract class BaseTFunction<O, I> implements TFunction<O, I> {
   /**
-   * The runtime context that is made avilable to users who create functions that
+   * The runtime context that is made available to users who create functions that
    * extend from the TBaseFunction abstract class
    */
   private TSetContext context;

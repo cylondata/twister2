@@ -26,13 +26,17 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class SourceTSet<T> extends BatchTSetImpl<T> {
   private SourceFunc<T> source;
+
+  public SourceTSet() {
+    //non arg constructor needed for kryo
+  }
 
   public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     this(tSetEnv, "source", src, parallelism);
@@ -44,7 +48,7 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
   }
 
   @Override
-  public SourceTSet<T> addInput(String key, Storable<?> input) {
+  public SourceTSet<T> addInput(String key, StorableTBase<?> input) {
     return (SourceTSet<T>) super.addInput(key, input);
   }
 

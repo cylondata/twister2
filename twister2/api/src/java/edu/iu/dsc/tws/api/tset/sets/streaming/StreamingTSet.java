@@ -18,9 +18,18 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
+/**
+ * Batch extension of {@link TSet} interface. Adds methods related to
+ * Batch {@link edu.iu.dsc.tws.api.compute.graph.OperationMode} and overrides generic
+ * {@link TSet} and {@link TLink} return type to {@link StreamingTSet}
+ * and {@link StreamingTLink} in all methods.
+ *
+ * @param <T> tset type
+ */
 public interface StreamingTSet<T> extends TSet<T> {
   @Override
   StreamingTSet<T> setName(String name);

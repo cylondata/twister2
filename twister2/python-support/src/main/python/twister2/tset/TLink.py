@@ -30,7 +30,7 @@ class TLink:
     def compute(self, compute_func):
         compute_wrapper = function_wrapper(compute_func)
         # if function has two arguments, user is expecting the collector version of compute
-        if len(signature(compute_func).parameters) is 2:
+        if len(signature(compute_func).parameters) is 3:
             compute_collector_func_java_ref = self.__env.functions \
                 .compute_with_collector.build(compute_wrapper)
             return ts.TSet(self.__java_ref.compute(compute_collector_func_java_ref), self.__env)

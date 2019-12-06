@@ -41,7 +41,8 @@ public class BKeyedPartition extends BaseOperation {
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType, messageSchema);
     partition.init(comm.getConfig(), dataType, plan, edgeId);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets(), keyType,
+        dataType);
     this.op = partition;
   }
 

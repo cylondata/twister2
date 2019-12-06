@@ -48,6 +48,7 @@ class TSet:
 
     def add_input(self, name, input_tset):
         self.__java_ref.addInput(name, input_tset.__java_ref)
+        return self
 
     def cache(self):  # todo should return a cached tset instead
         return TSet(self.__java_ref.cache(), self.__env)

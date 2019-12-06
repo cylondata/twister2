@@ -159,7 +159,7 @@ public class BKeyedGather extends BaseOperation {
     }
 
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(comm, sources, destinations);
+    this.destinationSelector.prepare(comm, sources, destinations, keyType, dataType);
   }
 
   public boolean gather(int source, Object key, Object data, int flags) {

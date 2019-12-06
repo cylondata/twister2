@@ -44,7 +44,6 @@ public final class LocalSubmitter {
         "data.yaml",
         "resource.yaml",
         "task.yaml",
-        "logger.properties"
     };
 
     for (String file : filesList) {
@@ -60,7 +59,8 @@ public final class LocalSubmitter {
 
     // setup logging
     try {
-      FileInputStream fis = new FileInputStream(new File(cDir, "logger.properties"));
+      File commonConfig = new File(configDir, "common");
+      FileInputStream fis = new FileInputStream(new File(commonConfig, "logger.properties"));
       LogManager.getLogManager().readConfiguration(fis);
     } catch (IOException e) {
       LOG.warning("Couldn't load logging configuration");

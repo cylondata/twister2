@@ -42,10 +42,10 @@ public class Twister2FileLogHandler extends Handler {
   public void init(String loggingDir, String workerId, Config config) throws IOException {
     String pattern = loggingDir + "/" + workerId + ".log.%g";
 
-    int maxFileSize = LoggingContext.maxLogFileSizeBytes(config);
+    int maxFileSize = LoggingContext.maxLogFileSizeBytes();
 
     // get the value of twister2.logging.maximum.files
-    int maxFiles = LoggingContext.maxLogFiles(config);
+    int maxFiles = LoggingContext.maxLogFiles();
 
     boolean appendToFile = LoggingContext.appendToFile();
     this.fileHandler = new FileHandler(

@@ -12,5 +12,10 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
+/**
+ * Extended {@link SourceFunc} with access to {@link edu.iu.dsc.tws.api.tset.TSetContext}
+ *
+ * @param <T> output type
+ */
 public abstract class BaseSourceFunc<T> extends BaseTFunction<T, T> implements SourceFunc<T> {
 }

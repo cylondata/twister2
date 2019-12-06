@@ -14,13 +14,17 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
 public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
   private FlatMapFunc<O, I> mapFn;
+
+  public FlatMapIterCompute() {
+    //no args constructor for kryo
+  }
 
   public FlatMapIterCompute(FlatMapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
@@ -36,5 +40,10 @@ public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterato
   @Override
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
+  }
+
+  @Override
+  public void close() {
+    mapFn.close();
   }
 }

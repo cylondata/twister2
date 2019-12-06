@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.python;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.python.tset.PyTSetKeyedSource;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
 import edu.iu.dsc.tws.python.tset.fn.TSetFunctions;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class Twister2Environment {
@@ -36,6 +38,11 @@ public class Twister2Environment {
   public SourceTSet createSource(byte[] lambda, int parallelism) {
     PyTSetSource pyTSetSource = new PyTSetSource(lambda);
     return (SourceTSet) tSetEnvironment.createSource(pyTSetSource, parallelism);
+  }
+
+  public KeyedSourceTSet createKeyedSource(byte[] lambda, int parallelism) {
+    PyTSetKeyedSource pyTSetSource = new PyTSetKeyedSource(lambda);
+    return (KeyedSourceTSet) tSetEnvironment.createKeyedSource(pyTSetSource, parallelism);
   }
 
   public TSetFunctions functions() {

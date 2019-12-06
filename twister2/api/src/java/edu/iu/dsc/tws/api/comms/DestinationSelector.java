@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.api.comms;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+
 /**
  * Destination selector interface needs to be implemented when creating destination selection
  * logic. For example for a keyed operation a destination selector will be used to calculate the
@@ -29,7 +31,23 @@ public interface DestinationSelector {
   void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations);
 
   /**
+   * Prepare the destination selector, if this method is not overridden to support keyType
+   * and dataType those values will be simply discarded.
+   *
+   * @param comm the communicator
+   * @param sources sources
+   * @param destinations destination
+   * @param keyType type of key that this selector handles
+   * @param dataType type of data that this selector handles
+   */
+  default void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations,
+                       MessageType keyType, MessageType dataType) {
+    prepare(comm, sources, destinations);
+  }
+
+  /**
    * Get next destination using source and the data
+   *
    * @param source source
    * @param data data
    * @return the next destination
@@ -38,6 +56,7 @@ public interface DestinationSelector {
 
   /**
    * Get next destination using source, key and data
+   *
    * @param source source
    * @param key key
    * @param data data

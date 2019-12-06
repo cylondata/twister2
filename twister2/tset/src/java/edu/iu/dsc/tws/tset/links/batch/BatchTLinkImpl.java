@@ -12,11 +12,11 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
@@ -31,6 +31,9 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
   BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
+  }
+
+  protected BatchTLinkImpl() {
   }
 
   @Override
@@ -85,8 +88,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
    * TSets. Hence, it produces both CachedTSet<T> as well as KeyedCachedTSet<K, V>
    */
   @Override
-  public Storable<T0> cache() {
-    Storable<T0> cacheTSet = lazyCache();
+  public StorableTBase<T0> cache() {
+    StorableTBase<T0> cacheTSet = lazyCache();
     getTSetEnv().run((BaseTSet) cacheTSet);
     return cacheTSet;
   }
@@ -95,7 +98,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
    * Similar to cache, but stores data in disk rather than in memory.
    */
   @Override
-  public Storable<T0> persist() {
+  public StorableTBase<T0> persist() {
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
       String persistVariableName = this.getId() + "-persisted";
@@ -119,7 +122,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
         return checkTSet;
       } else {
-        Storable<T0> storable = this.doPersist();
+        StorableTBase<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
         chkEnv.commit();
         return storable;
@@ -128,8 +131,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return doPersist();
   }
 
-  private Storable<T0> doPersist() {
-    Storable<T0> lazyPersist = lazyPersist();
+  private StorableTBase<T0> doPersist() {
+    StorableTBase<T0> lazyPersist = lazyPersist();
     getTSetEnv().run((BaseTSet) lazyPersist);
     return lazyPersist;
   }

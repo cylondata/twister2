@@ -31,6 +31,18 @@ public final class IntegerArrayPacker implements PrimitiveArrayPacker<int[]> {
   }
 
   @Override
+  public boolean bulkCopyToBuffer(int[] data, ByteBuffer buffer, int offset, int length) {
+    buffer.asIntBuffer().put(data, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, int[] dest, int offset, int length) {
+    buffer.asIntBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<int[], int[]> getMessageType() {
     return MessageTypes.INTEGER_ARRAY;
   }

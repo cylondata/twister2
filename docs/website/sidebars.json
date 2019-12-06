@@ -1,10 +1,13 @@
 {
-  "docs": {
+  "starting": {
     "Getting Started": [
       "introduction",
-      "download",
-      "quickstart"
-    ],
+      "getstarted/setup_twister2",
+      "getstarted/started_word_count",
+      "getstarted/started_word_count_source"
+    ]
+  },
+  "docs": {
     "Compiling": [
       "compiling/compile_overview",
       "compiling/linux",
@@ -15,6 +18,9 @@
       "concepts/api_overview",
       "guides/developing_twister2",
       "concepts/streaming_jobs",
+      "concepts/batch_jobs"
+    ],
+    "APIs": [
       "concepts/worker_api",
       "concepts/tset_api",
       "concepts/task_api",
@@ -22,7 +28,7 @@
       "concepts/windowing/windowing_api",
       "compatibility/storm",
       "compatibility/apachebeam",
-      "compatibility/python"
+      "compatibility/pythonapi"
     ],
     "Deployment": [
       "deployment/job-submit",
@@ -44,23 +50,43 @@
       "concepts/task-system/concept_task",
       "concepts/data-access/data_access"
     ],
+    "Versions": [
+      "release/versions"
+    ],
+    "Resources": [
+      "publications"
+    ]
+  },
+  "tutorial": {
+    "Tutorial": [
+      "examples/tset/hello_world",
+      "examples/tset/tset_source",
+      "examples/tset/tset_compute",
+      "examples/tset/tset_communication",
+      "examples/tset/tset_caching",
+      "examples/tset/tset_persisting"
+    ]
+  },
+  "examples": {
     "Examples": [
       "examples/examples",
       "examples/ml/ml"
-    ],
-    "Developer Resources": [
+    ]
+  },
+  "developers": {
+    "Contributors": [
       "developers/debugging",
       "developers/devenv",
       "developers/faq",
       "developers/tests",
       "community/contributing",
       "community/mailing"
-    ],
-    "Versions": [
+    ]
+  },
+  "download": {
+    "Download": [
+      "download",
       "release/versions"
-    ],
-    "Resources": [
-      "publications"
     ]
   }
 }

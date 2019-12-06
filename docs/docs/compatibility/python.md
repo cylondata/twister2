@@ -47,6 +47,14 @@ Now copy the Location and update the LD_LIBRARY_PATH as follows.
 export LD_LIBRARY_PATH=/home/username/.local/lib/python3.7/site-packages/jep:$LD_LIBRARY_PATH
 ```
 
+On latest MacOS versions, setting LD_LIBRARY_PATH will not work due to System Integrity Protect (SIP) . SIP can be disabled with following steps.
+
+1. Restart your Mac.
+2. Before OS X starts up, hold down Command-R and keep it held down until you see an Apple icon and a progress bar. Release. This boots you into Recovery.
+3. From the Utilities menu, select Terminal.
+4. At the prompt type exactly the following and then press Return: csrutil disable
+5. Restart
+
 ## Writing your first application
 
 ### Twister2 Environment

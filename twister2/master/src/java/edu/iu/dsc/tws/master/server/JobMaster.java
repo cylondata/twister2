@@ -158,11 +158,6 @@ public class JobMaster {
   private WorkerHandler workerHandler;
 
   /**
-   * PingHandler object
-   */
-  private PingHandler pingHandler;
-
-  /**
    * BarrierHandler object
    */
   private BarrierHandler barrierHandler;
@@ -272,10 +267,7 @@ public class JobMaster {
 
     workerHandler =
         new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
-    pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
-
-    JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
     JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
         JobMasterAPI.RegisterWorker.newBuilder();
@@ -306,8 +298,6 @@ public class JobMaster {
         = JobMasterAPI.WorkerMessageResponse.newBuilder();
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
-
-    rrServer.registerRequestHandler(pingBuilder, pingHandler);
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);

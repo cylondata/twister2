@@ -173,13 +173,11 @@ public class MesosWorker implements Executor {
    * Initialize the logger
    */
   public static void initLogging(Config cnfg, String logDir, String logFileName) {
-    // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
     // if persistent logging is requested, initialize it
-    if (LoggingContext.persistentLoggingRequested(cnfg)) {
+    if (LoggingContext.fileLoggingRequested()) {
 
-      if (LoggingContext.redirectSysOutErr(cnfg)) {
+      if (LoggingContext.redirectSysOutErr()) {
         LOG.warning("Redirecting System.out and System.err to the log file. "
             + "Check the log file for the upcoming log messages. ");
       }

@@ -115,7 +115,7 @@ public class BJoin extends BaseOperation {
 
     this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
     this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
-    this.destinationSelector.prepare(comm, sources, targets);
+    this.destinationSelector.prepare(comm, sources, targets, keyType, null);
   }
 
   public BJoin(Communicator comm, LogicalPlan plan,
