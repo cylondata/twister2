@@ -32,6 +32,18 @@ public final class LongArrayPacker implements PrimitiveArrayPacker<long[]> {
   }
 
   @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, long[] dest, int offset, int length) {
+    buffer.asLongBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkCopyToBuffer(long[] src, ByteBuffer buffer, int offset, int length) {
+    buffer.asLongBuffer().put(src, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<long[], long[]> getMessageType() {
     return MessageTypes.LONG_ARRAY;
   }

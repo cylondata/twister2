@@ -58,6 +58,21 @@ const benchmarks = {
         title: "[BATCH] Comms Gather",
         path: "/N/u/cwidanage/.twister2/jobs/edu.iu.dsc.tws.examples.comms.batch.BGatherExample/comms_gather.csv",
         averageColumn: false
+    },
+    "b_comms_keyed_gather": {
+        title: "[BATCH] Comms Keyed Gather",
+        path: "/N/u/cwidanage/.twister2/jobs/edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample/comms_keyed_gather.csv",
+        averageColumn: false
+    },
+    "b_comms_keyed_reduce": {
+        title: "[BATCH] Comms Keyed Reduce",
+        path: "/N/u/cwidanage/.twister2/jobs/edu.iu.dsc.tws.examples.comms.batch.BKeyedReduceExample/comms_keyed_reduce.csv",
+        averageColumn: false
+    },
+    "b_comms_keyed_partition": {
+        title: "[BATCH] Comms Keyed Partition",
+        path: "/N/u/cwidanage/.twister2/jobs/edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample/comms_keyed_partition.csv",
+        averageColumn: false
     }
 };
 

@@ -12,7 +12,10 @@
 
 package edu.iu.dsc.tws.api.resource;
 
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,6 +76,12 @@ public final class WorkerEnvironment {
    * Singleton environment
    */
   private static volatile WorkerEnvironment workerEnv;
+
+  /**
+   * This can be used to temporary hold runtime objects or as a medium to share runtime objects
+   * between two disconnected classes
+   */
+  private static volatile Map<String, Object> sharedKeyValueStore = new HashMap<>();
 
   private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
                             IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
@@ -167,5 +176,43 @@ public final class WorkerEnvironment {
       }
     }
     return workerEnv;
+  }
+
+  /*Shared Key-Value Store Related Methods*/
+
+  public static void putSharedValue(String key, Object value) {
+    sharedKeyValueStore.put(key, value);
+  }
+
+  /**
+   * This method will wrap the value with a {@link WeakReference} before inserting into the
+   * key-value store.
+   */
+  public static void putWeakSharedValue(String key, Object value) {
+    putSharedValue(key, new WeakReference<>(value));
+  }
+
+  public static void removeSharedValue(String key) {
+    sharedKeyValueStore.remove(key);
+  }
+
+  public static Object getSharedValue(String key) {
+    Object obj = sharedKeyValueStore.get(key);
+    if (obj != null) {
+      if (obj instanceof WeakReference) {
+        return ((WeakReference) obj).get();
+      } else {
+        return obj;
+      }
+    }
+    return null;
+  }
+
+  public static <T> T getSharedValue(String key, Class<T> clazz) {
+    Object obj = getSharedValue(key);
+    if (obj != null) {
+      return clazz.cast(obj);
+    }
+    return null;
   }
 }

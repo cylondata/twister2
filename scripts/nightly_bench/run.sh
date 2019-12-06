@@ -47,6 +47,13 @@ timeout $TIMEOUT python3 launcher.py comms_all_gather
 timeout $TIMEOUT python3 launcher.py comms_all_reduce
 timeout $TIMEOUT python3 launcher.py comms_gather
 
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/util/test/tests/comms/comms_base.json
+cp comms_base.json bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/util/test/tests/comms/
+
+timeout $TIMEOUT python3 launcher.py comms_keyed_gather
+timeout $TIMEOUT python3 launcher.py comms_keyed_partition
+timeout $TIMEOUT python3 launcher.py comms_keyed_reduce
+
 #return to current location
 cd /N/u/cwidanage/auto-t2
 node auto.js
