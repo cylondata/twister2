@@ -25,7 +25,8 @@ public class MapBasedSourceFunction<K, V> implements SourceFunc<Tuple<K, V>> {
   private String mapName;
   private Map<K, V> dataMap;
   private List<K> keysList;
-  private int index, endIndex;
+  private int index;
+  private int endIndex;
 
   public MapBasedSourceFunction(String listName, String mapName) {
     this.listName = listName;
@@ -36,10 +37,12 @@ public class MapBasedSourceFunction<K, V> implements SourceFunc<Tuple<K, V>> {
   public void prepare(TSetContext context) {
     this.dataMap = WorkerEnvironment.getSharedValue(mapName, Map.class);
     this.keysList = WorkerEnvironment.getSharedValue(listName, List.class);
-    int parallelism = context.getParallelism();
-    int chunk = (this.keysList.size() / parallelism) + 1;
-    index = chunk * context.getIndex();
-    endIndex = Math.min(index + chunk, keysList.size());
+    if (this.dataMap != null && this.keysList != null) {
+      int parallelism = context.getParallelism();
+      int chunk = (this.keysList.size() / parallelism) + 1;
+      index = chunk * context.getIndex();
+      endIndex = Math.min(index + chunk, keysList.size());
+    }
   }
 
   @Override

@@ -21,7 +21,8 @@ public class ListBasedSourceFunction<T> implements SourceFunc<T> {
 
   private String listName;
   private List<T> dataList;
-  private int index, endIndex;
+  private int index;
+  private int endIndex;
 
   public ListBasedSourceFunction(String listName) {
     this.listName = listName;
@@ -30,10 +31,12 @@ public class ListBasedSourceFunction<T> implements SourceFunc<T> {
   @Override
   public void prepare(TSetContext context) {
     this.dataList = WorkerEnvironment.getSharedValue(listName, List.class);
-    int parallelism = context.getParallelism();
-    int chunk = (this.dataList.size() / parallelism) + 1;
-    index = chunk * context.getIndex();
-    endIndex = Math.min(index + chunk, dataList.size());
+    if (this.dataList != null) {
+      int parallelism = context.getParallelism();
+      int chunk = (this.dataList.size() / parallelism) + 1;
+      index = chunk * context.getIndex();
+      endIndex = Math.min(index + chunk, dataList.size());
+    }
   }
 
   @Override
