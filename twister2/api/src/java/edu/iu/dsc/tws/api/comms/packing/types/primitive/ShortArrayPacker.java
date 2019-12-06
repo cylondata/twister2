@@ -44,6 +44,18 @@ public final class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
   }
 
   @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, short[] dest, int offset, int length) {
+    buffer.asShortBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkCopyToBuffer(short[] src, ByteBuffer buffer, int offset, int length) {
+    buffer.asShortBuffer().put(src, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<short[], short[]> getMessageType() {
     return MessageTypes.SHORT_ARRAY;
   }

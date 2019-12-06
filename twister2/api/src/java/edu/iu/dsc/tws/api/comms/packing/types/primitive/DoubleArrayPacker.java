@@ -32,6 +32,18 @@ public final class DoubleArrayPacker implements PrimitiveArrayPacker<double[]> {
   }
 
   @Override
+  public boolean bulkReadFromBuffer(ByteBuffer buffer, double[] dest, int offset, int length) {
+    buffer.asDoubleBuffer().get(dest, offset, length);
+    return true;
+  }
+
+  @Override
+  public boolean bulkCopyToBuffer(double[] src, ByteBuffer buffer, int offset, int length) {
+    buffer.asDoubleBuffer().put(src, offset, length);
+    return true;
+  }
+
+  @Override
   public MessageType<double[], double[]> getMessageType() {
     return MessageTypes.DOUBLE_ARRAY;
   }
