@@ -186,7 +186,7 @@ public final class WorkerEnvironment {
 
   /**
    * This method will wrap the value with a {@link WeakReference} before inserting into the
-   * key-value store
+   * key-value store.
    */
   public static void putWeakSharedValue(String key, Object value) {
     putSharedValue(key, new WeakReference<>(value));
