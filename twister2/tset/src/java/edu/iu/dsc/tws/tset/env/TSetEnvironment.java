@@ -12,6 +12,9 @@
 
 package edu.iu.dsc.tws.tset.env;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,7 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
+import edu.iu.dsc.tws.tset.fn.impl.MapBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
@@ -125,6 +129,26 @@ public abstract class TSetEnvironment {
     return createSource(new ListBasedSourceFunction<>(varName), parallelism);
   }
 
+  public <K extends Comparable, V> TupleTSet<K, V> parallelize(Map<K, V> map, int parallelism) {
+    String listName = UUID.randomUUID().toString();
+    String mapName = UUID.randomUUID().toString();
+    List<K> keysList = new ArrayList<>(map.keySet());
+    Collections.sort(keysList);
+    WorkerEnvironment.putWeakSharedValue(mapName, map);
+    WorkerEnvironment.putWeakSharedValue(listName, keysList);
+    return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
+  }
+
+  public <K, V> TupleTSet<K, V> parallelize(Map<K, V> map, int parallelism,
+                                            Comparator<K> keyComparator) {
+    String listName = UUID.randomUUID().toString();
+    String mapName = UUID.randomUUID().toString();
+    List<K> keysList = new ArrayList<>(map.keySet());
+    Collections.sort(keysList, keyComparator);
+    WorkerEnvironment.putWeakSharedValue(mapName, map);
+    WorkerEnvironment.putWeakSharedValue(listName, keysList);
+    return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
+  }
 
   /**
    * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
