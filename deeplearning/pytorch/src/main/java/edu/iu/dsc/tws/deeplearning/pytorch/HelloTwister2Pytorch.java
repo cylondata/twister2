@@ -50,7 +50,6 @@ public class HelloTwister2Pytorch implements IWorker {
     String helloKeyValue = config.getStringValue("hello-key");
     scriptPath = config.getStringValue("scriptPath");
     workers = config.getIntegerValue("workers", 2);
-
     System.out.println("Worker Id: " + workerID + "," + scriptPath + "," + workers);
 
     try {
