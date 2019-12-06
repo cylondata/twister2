@@ -22,8 +22,9 @@ class Twister2Environment:
 
         port = int(os.environ['T2_PORT'])
         bootstrap = os.environ['T2_BOOTSTRAP'] == "true"
-        gateway = JavaGateway(gateway_parameters=GatewayParameters(port=port))
-        self.__entrypoint = gateway.entry_point
+        self.__gateway = JavaGateway(
+            gateway_parameters=GatewayParameters(port=port, auto_convert=True))
+        self.__entrypoint = self.__gateway.entry_point
 
         if bootstrap:
             for key in config:
@@ -38,7 +39,7 @@ class Twister2Environment:
 
             self.__entrypoint.commit()
             time.sleep(5)
-            gateway.shutdown()
+            self.__gateway.shutdown()
             sys.exit(0)
         else:
             self.__predef_functions = TSetFunctions(self.__entrypoint.functions(), self)
@@ -66,20 +67,19 @@ class Twister2Environment:
         src_tset = TSet(java_src_ref, self)
         return src_tset
 
-    def parallelize(self, lst: list, parallelism=0) -> TSet:
+    def parallelize_list(self, lst: list, parallelism=0) -> TSet:
         java_src_ref = self.__entrypoint.parallelize(lst, parallelism)
         src_tset = TSet(java_src_ref, self)
         return src_tset
 
-    def parallelize(self, kv_map: dict, parallelism=0) -> KeyedTSet:
-        java_src_ref = self.__entrypoint.parallelize(kv_map, parallelism)
-        src_tset = TSet(java_src_ref, self)
-        return src_tset
-
-    def parallelize(self, kv_map: dict, key_comparator, parallelism=0) -> KeyedTSet:
+    def parallelize_dict(self, kv_map: dict, parallelism=0, key_comparator=None) -> KeyedTSet:
         comparator_java_ref = self.functions.comparator.build(key_comparator)
-        java_src_ref = self.__entrypoint.parallelize(kv_map, comparator_java_ref, parallelism)
-        src_tset = TSet(java_src_ref, self)
+        if key_comparator is not None:
+            java_src_ref = self.__entrypoint.parallelize(kv_map, comparator_java_ref,
+                                                         parallelism)
+        else:
+            java_src_ref = self.__entrypoint.parallelize(kv_map, parallelism)
+        src_tset = KeyedTSet(java_src_ref, self)
         return src_tset
 
     def create_keyed_source(self, source_function: SourceFunc, parallelism=0) -> KeyedTSet:
