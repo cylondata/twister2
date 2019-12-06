@@ -87,6 +87,16 @@ public final class MPIWorker {
    */
   private JobMasterAPI.WorkerInfo wInfo;
 
+  public void finalizeMPI() {
+    try {
+      // lets do a barrier here so everyone is synchronized at the end
+      // commenting out barrier to fix stale workers issue
+      // MPI.COMM_WORLD.barrier();
+      MPI.Finalize();
+    } catch (MPIException ignore) {
+    }
+  }
+
   /**
    * Construct the MPIWorker starter
    *
@@ -97,6 +107,13 @@ public final class MPIWorker {
     try {
       MPI.InitThread(args, MPI.THREAD_MULTIPLE);
       int rank = MPI.COMM_WORLD.getRank();
+
+      // on any uncaught exception, we will call MPI Finalize and exit
+      Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+        LOG.log(Level.SEVERE, "Uncaught exception in thread "
+            + thread + ". Finalizing this worker...", throwable);
+        finalizeMPI();
+      });
 
       cmdOptions = setupOptions();
       CommandLineParser parser = new DefaultParser();
@@ -161,13 +178,7 @@ public final class MPIWorker {
       String msg = "Un-expected error";
       LOG.log(Level.SEVERE, msg, t);
     } finally {
-      try {
-        // lets do a barrier here so everyone is synchronized at the end
-        // commenting out barrier to fix stale workers issue
-        // MPI.COMM_WORLD.barrier();
-        MPI.Finalize();
-      } catch (MPIException ignore) {
-      }
+      finalizeMPI();
     }
   }
 
