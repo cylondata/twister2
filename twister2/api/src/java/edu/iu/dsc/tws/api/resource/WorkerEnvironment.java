@@ -81,7 +81,7 @@ public final class WorkerEnvironment {
    * This can be used to temporary hold runtime objects or as a medium to share runtime objects
    * between two disconnected classes
    */
-  private static Map<String, Object> sharedKeyValueStore = new HashMap<>();
+  private static volatile Map<String, Object> sharedKeyValueStore = new HashMap<>();
 
   private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
                             IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {

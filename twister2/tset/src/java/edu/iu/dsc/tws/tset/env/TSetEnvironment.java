@@ -110,7 +110,7 @@ public abstract class TSetEnvironment {
    */
   public <T> BaseTSet<T> parallelize(String name, List<T> list, int parallelism) {
     String varName = UUID.randomUUID().toString();
-    WorkerEnvironment.putWeakSharedValue(varName, list);
+    WorkerEnvironment.putSharedValue(varName, list);
     return createSource(name, new ListBasedSourceFunction<>(varName), parallelism);
   }
 
@@ -125,7 +125,7 @@ public abstract class TSetEnvironment {
    */
   public <T> BaseTSet<T> parallelize(List<T> list, int parallelism) {
     String varName = UUID.randomUUID().toString();
-    WorkerEnvironment.putWeakSharedValue(varName, list);
+    WorkerEnvironment.putSharedValue(varName, list);
     return createSource(new ListBasedSourceFunction<>(varName), parallelism);
   }
 
@@ -134,8 +134,8 @@ public abstract class TSetEnvironment {
     String mapName = UUID.randomUUID().toString();
     List<K> keysList = new ArrayList<>(map.keySet());
     Collections.sort(keysList);
-    WorkerEnvironment.putWeakSharedValue(mapName, map);
-    WorkerEnvironment.putWeakSharedValue(listName, keysList);
+    WorkerEnvironment.putSharedValue(mapName, map);
+    WorkerEnvironment.putSharedValue(listName, keysList);
     return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
   }
 
@@ -145,8 +145,8 @@ public abstract class TSetEnvironment {
     String mapName = UUID.randomUUID().toString();
     List<K> keysList = new ArrayList<>(map.keySet());
     Collections.sort(keysList, keyComparator);
-    WorkerEnvironment.putWeakSharedValue(mapName, map);
-    WorkerEnvironment.putWeakSharedValue(listName, keysList);
+    WorkerEnvironment.putSharedValue(mapName, map);
+    WorkerEnvironment.putSharedValue(listName, keysList);
     return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
   }
 

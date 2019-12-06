@@ -48,12 +48,12 @@ public class Twister2Environment {
     return (SourceTSet) tSetEnvironment.parallelize(data, parallelism);
   }
 
-  public SourceTSet parallelize(Map map, int parallelism) {
-    return (SourceTSet) tSetEnvironment.parallelize(map, parallelism);
+  public KeyedSourceTSet parallelize(Map map, int parallelism) {
+    return (KeyedSourceTSet) tSetEnvironment.parallelize(map, parallelism);
   }
 
-  public SourceTSet parallelize(Map map, Comparator comparator, int parallelism) {
-    return (SourceTSet) tSetEnvironment.parallelize(map, parallelism, comparator);
+  public KeyedSourceTSet parallelize(Map map, Comparator comparator, int parallelism) {
+    return (KeyedSourceTSet) tSetEnvironment.parallelize(map, parallelism, comparator);
   }
 
   public KeyedSourceTSet createKeyedSource(byte[] lambda, int parallelism) {
