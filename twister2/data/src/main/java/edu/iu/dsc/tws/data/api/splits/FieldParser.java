@@ -12,9 +12,6 @@
 package edu.iu.dsc.tws.data.api.splits;
 
 public class FieldParser<T> {
-  public static boolean endsWithDelimiter(byte[] bytes, int i, byte[] fieldDelim) {
-    return true;
-  }
 
   public int resetErrorStateAndParse(byte[] bytes, int startPos, int limit, byte[] fieldDelim,
                                      Object reuse) {
@@ -22,6 +19,38 @@ public class FieldParser<T> {
   }
 
   public Object getLastResult() {
+    return null;
+  }
+
+  public static final boolean delimiterNext(byte[] bytes, int startPos, byte[] delim) {
+
+    for (int pos = 0; pos < delim.length; pos++) {
+      // check each position
+      if (delim[pos] != bytes[startPos + pos]) {
+        return false;
+      }
+    }
+    return true;
+
+  }
+
+  public static final boolean endsWithDelimiter(byte[] bytes, int endPos, byte[] delim) {
+    if (endPos < delim.length - 1) {
+      return false;
+    }
+    for (int pos = 0; pos < delim.length; ++pos) {
+      if (delim[pos] != bytes[endPos - delim.length + 1 + pos]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public T createValue() {
+    return null;
+  }
+
+  public T getErrorState() {
     return null;
   }
 }

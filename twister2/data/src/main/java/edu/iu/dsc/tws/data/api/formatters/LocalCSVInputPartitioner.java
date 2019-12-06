@@ -11,28 +11,54 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class LocalCSVInputPartitioner<T> extends CSVInputPartitioner<T> {
+public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 
-  public LocalCSVInputPartitioner(Path filePath, int parallelism, Config cfg) {
-    super(filePath);
+  private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
+
+  private int numberOfTasks;
+
+  private Config config;
+
+  private int recordLength;
+
+  private LocatableInputSplitAssigner assigner;
+
+  public LocalCSVInputPartitioner(Path filePath, int recordLen) {
+    super(filePath, recordLen);
+    this.recordLength = recordLen;
   }
 
-  @Override
-  public void configure(Config parameters) {
+  public LocalCSVInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
+    super(filePath, recordLen, nTasks);
+    this.numberOfTasks = nTasks;
+    this.recordLength = recordLen;
+    this.config = cfg;
   }
 
-  @Override
-  public FileInputSplit<T>[] createInputSplits(int minNumSplits) throws Exception {
-    return new FileInputSplit[0];
+  public LocalCSVInputPartitioner(Path path, int parallelism, Config cfg) {
+    super(path, parallelism, cfg);
   }
 
-  @Override
-  public InputSplitAssigner<T> getInputSplitAssigner(FileInputSplit<T>[] inputSplits) {
-    return null;
+  protected CSVInputSplit createSplit(int num, Path file, long start,
+                                         long length, String[] hosts) {
+    return new CSVInputSplit(num, file, start, length, hosts);
+  }
+
+  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+    if (assigner == null) {
+      assigner = new LocatableInputSplitAssigner(inputSplits);
+    }
+    return assigner;
   }
 }

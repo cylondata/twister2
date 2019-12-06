@@ -71,18 +71,18 @@ public class DataObjectCSVSource extends BaseSource {
   public void execute() {
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     while (inputSplit != null) {
-    try {
-      while (!inputSplit.reachedEnd()) {
-        Object value = inputSplit.nextRecord(null);
-        if (value != null) {
-          context.write(getEdgeName(), value);
+      try {
+        while (!inputSplit.reachedEnd()) {
+          Object value = inputSplit.nextRecord(null);
+          if (value != null) {
+            context.write(getEdgeName(), value);
+          }
         }
+        inputSplit = source.getNextSplit(context.taskIndex());
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
-      inputSplit = source.getNextSplit(context.taskIndex());
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to read the input", e);
     }
-  }
     context.end(getEdgeName());
   }
 

@@ -9,26 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.utils;
+package edu.iu.dsc.tws.data.api.splits;
 
-import javax.annotation.Nullable;
-
-public final class PreConditions {
-
-  private PreConditions() {
-  }
-
-  public static <T> T checkNotNull(T reference, @Nullable String errorMessage) {
-    if (reference == null) {
-      throw new NullPointerException(String.valueOf(errorMessage));
-    }
-    return reference;
-  }
-
-  public static String checkNotNull(String charset, @Nullable String errorMessage) {
-    if (charset == null) {
-      throw new NullPointerException(String.valueOf(errorMessage));
-    }
-    return charset;
-  }
+public @interface PublicEvolving {
 }

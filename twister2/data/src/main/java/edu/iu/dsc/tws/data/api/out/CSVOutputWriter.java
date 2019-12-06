@@ -9,26 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.utils;
+package edu.iu.dsc.tws.data.api.out;
 
-import javax.annotation.Nullable;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 
-public final class PreConditions {
+public class CSVOutputWriter extends FileOutputWriter<String> {
 
-  private PreConditions() {
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
+    super(writeMode, outPath);
   }
 
-  public static <T> T checkNotNull(T reference, @Nullable String errorMessage) {
-    if (reference == null) {
-      throw new NullPointerException(String.valueOf(errorMessage));
-    }
-    return reference;
+  @Override
+  protected void createOutput(int partition, FSDataOutputStream out) {
   }
 
-  public static String checkNotNull(String charset, @Nullable String errorMessage) {
-    if (charset == null) {
-      throw new NullPointerException(String.valueOf(errorMessage));
-    }
-    return charset;
+  @Override
+  protected void writeRecord(int partition, String data) {
   }
 }

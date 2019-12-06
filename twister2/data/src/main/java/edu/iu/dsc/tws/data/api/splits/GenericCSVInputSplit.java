@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.data.Path;
 
-public class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
+public abstract class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
 
   private static final long serialVersionUID = 1L;
 
@@ -70,34 +70,114 @@ public class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     super(num, file, start, length, hosts);
   }
 
-  @Override
-  public Object readRecord(Object reuse, byte[] bytes, int readOffset, int numBytes)
-      throws IOException {
-    boolean[] included = this.fieldIncluded;
+//  @Override
+//  public void open(FileInputSplit split) throws IOException {
+//    super.open(split);
+//
+//    // instantiate the parsers
+//    FieldParser<?>[] parsers = new FieldParser<?>[fieldTypes.length];
+//
+//    for (int i = 0; i < fieldTypes.length; i++) {
+//      if (fieldTypes[i] != null) {
+//        Class<? extends FieldParser<?>> parserType = FieldParser.getParserForType(fieldTypes[i]);
+//        if (parserType == null) {
+//          throw new RuntimeException("No parser available for type
+//          '" + fieldTypes[i].getName() + "'.");
+//        }
+//
+//        FieldParser<?> p = InstantiationUtil.instantiate(parserType, FieldParser.class);
+//
+//        p.setCharset(getCharset());
+//        if (this.quotedStringParsing) {
+//          if (p instanceof StringParser) {
+//            ((StringParser)p).enableQuotedStringParsing(this.quoteCharacter);
+//          } else if (p instanceof StringValueParser) {
+//            ((StringValueParser)p).enableQuotedStringParsing(this.quoteCharacter);
+//          }
+//        }
+//
+//        parsers[i] = p;
+//      }
+//    }
+//    this.fieldParsers = parsers;
+//
+//    // skip the first line, if we are at the beginning of a file and have the option set
+//    if (this.skipFirstLineAsHeader && this.splitStart == 0) {
+//      readLine(); // read and ignore
+//    }
+//  }
 
-    int startPos = readOffset;
-    final int limit = readOffset + numBytes;
+  protected int skipFields(byte[] bytes, int startPos, int limit, byte[] delim) {
 
-    for (int field = 0, output = 0; field < included.length; field++) {
+    int i = startPos;
+
+    final int delimLimit = limit - delim.length + 1;
+
+    if (quotedStringParsing && bytes[i] == quoteCharacter) {
+
+      // quoted string parsing enabled and field is quoted
+      // search for ending quote character, continue when it is escaped
+      i++;
+
+      while (i < limit && (bytes[i] != quoteCharacter || bytes[i - 1] == BACKSLASH)) {
+        i++;
+      }
+      i++;
+
+      if (i == limit) {
+        // we are at the end of the record
+        return limit;
+      } else if (i < delimLimit && FieldParser.delimiterNext(bytes, i, delim)) {
+        // we are not at the end, check if delimiter comes next
+        return i + delim.length;
+      } else {
+        // delimiter did not follow end quote. Error...
+        return -1;
+      }
+    } else {
+      // field is not quoted
+      while (i < delimLimit && !FieldParser.delimiterNext(bytes, i, delim)) {
+        i++;
+      }
+
+      if (i >= delimLimit) {
+        // no delimiter found. We are at the end of the record
+        return limit;
+      } else {
+        // delimiter found.
+        return i + delim.length;
+      }
+    }
+  }
+
+
+  protected boolean parseRecord(Object[] holders, byte[] bytes, int offset, int numBytes) {
+    //throws ParseException {
+
+    boolean[] fieldincluded = this.fieldIncluded;
+
+    int startPos = offset;
+    final int limit = offset + numBytes;
+
+    for (int field = 0, output = 0; field < fieldincluded.length; field++) {
 
       // check valid start position
-      if (startPos > limit || (startPos == limit && field != included.length - 1)) {
+      if (startPos > limit || (startPos == limit && field != fieldincluded.length - 1)) {
         if (lenient) {
           return false;
         } else {
-//          throw new ParseException("Row too short: " + new String(
-//          bytes, readOffset, numBytes, getCharset()));
+          //throw new ParseException("Row too short: " + new String(bytes, offset, numBytes,
+          // getCharset()));
         }
       }
 
-      if (included[field]) {
+      if (fieldincluded[field]) {
         // parse field
         @SuppressWarnings("unchecked")
-        FieldParser<Object> parser = null; // = (FieldParser<Object>) this.fieldParsers[output];
-        Object[] holders = new Object[0];
-        Object reuseobj = holders[output];
-        startPos = parser.resetErrorStateAndParse(bytes, startPos, limit, this.fieldDelim,
-            reuseobj);
+        //FieldParser<Object> parser = (FieldParser<Object>) this.fieldParsers[output];
+        FieldParser<Object> parser = null;
+        Object reuse = holders[output];
+        startPos = parser.resetErrorStateAndParse(bytes, startPos, limit, this.fieldDelim, reuse);
         holders[output] = parser.getLastResult();
 
         // check parse result
@@ -106,21 +186,21 @@ public class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
           if (lenient) {
             return false;
           } else {
-            String lineAsString = new String(bytes, readOffset, numBytes, getCharset());
-//            throw new ParseException("Line could not be parsed: '" + lineAsString + "'\n"
-//                + "ParserError " + parser.getErrorState() + " \n"
-//                + "Expect field types: "+fieldTypesToString() + " \n"
-//                + "in file: " + currentSplit.getPath());
+            String lineAsString = new String(bytes, offset, numBytes, getCharset());
+            //throw new ParseException("Line could not be parsed: '" + lineAsString + "'\n"
+            //    + "ParserError " + parser.getErrorState() + " \n"
+            //    + "Expect field types: "+fieldTypesToString() + " \n"
+            //    + "in file: " + currentSplit.getPath());
           }
         } else if (startPos == limit
-            && field != included.length - 1
+            && field != fieldincluded.length - 1
             && !FieldParser.endsWithDelimiter(bytes, startPos - 1, fieldDelim)) {
           // We are at the end of the record, but not all fields have been read
           // and the end is not a field delimiter indicating an empty last field.
           if (lenient) {
             return false;
           } else {
-//            throw new ParseException("Row too short: " + new String(bytes, offset, numBytes));
+            //throw new ParseException("Row too short: " + new String(bytes, offset, numBytes));
           }
         }
         output++;
@@ -129,22 +209,22 @@ public class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
         startPos = skipFields(bytes, startPos, limit, this.fieldDelim);
         if (startPos < 0) {
           if (!lenient) {
-            String lineAsString = new String(bytes, readOffset, numBytes, getCharset());
-//            throw new ParseException("Line could not be parsed: '" + lineAsString+"'\n"
-//                + "Expect field types: "+fieldTypesToString()+" \n"
-//                + "in file: " + currentSplit.getPath());
+            String lineAsString = new String(bytes, offset, numBytes, getCharset());
+            //throw new ParseException("Line could not be parsed: '" + lineAsString+"'\n"
+            //    + "Expect field types: "+fieldTypesToString()+" \n"
+            //   + "in file: " + currentSplit.getPath());
           } else {
             return false;
           }
         } else if (startPos == limit
-            && field != included.length - 1
+            && field != fieldincluded.length - 1
             && !FieldParser.endsWithDelimiter(bytes, startPos - 1, fieldDelim)) {
           // We are at the end of the record, but not all fields have been read
           // and the end is not a field delimiter indicating an empty last field.
           if (lenient) {
             return false;
           } else {
-//            throw new ParseException("Row too short: " + new String(bytes, offset, numBytes));
+            //throw new ParseException("Row too short: " + new String(bytes, offset, numBytes));
           }
         }
       }
@@ -152,7 +232,6 @@ public class GenericCSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     return true;
   }
 
-  private int skipFields(byte[] bytes, int startPos, int limit, byte[] fieldDelim) {
-    return 1;
-  }
+  public abstract OT readRecord(OT reuse, byte[] bytes, int offset, int numBytes)
+      throws IOException;
 }
