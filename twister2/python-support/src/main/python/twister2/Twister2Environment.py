@@ -1,11 +1,12 @@
-import cloudpickle as cp
 import os
+
+import cloudpickle as cp
 import sys
 import time
 from py4j.java_gateway import JavaGateway, GatewayParameters
 
-from twister2.tset.TSet import TSet
 from twister2.tset.KeyedTSet import KeyedTSet
+from twister2.tset.TSet import TSet
 from twister2.tset.fn.SourceFunc import SourceFunc
 from twister2.tset.fn.factory.TSetFunctions import TSetFunctions
 from twister2.utils import SourceWrapper
@@ -62,6 +63,22 @@ class Twister2Environment:
 
         java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function_wrapper),
                                                       parallelism)
+        src_tset = TSet(java_src_ref, self)
+        return src_tset
+
+    def parallelize(self, lst: list, parallelism=0) -> TSet:
+        java_src_ref = self.__entrypoint.parallelize(lst, parallelism)
+        src_tset = TSet(java_src_ref, self)
+        return src_tset
+
+    def parallelize(self, kv_map: dict, parallelism=0) -> KeyedTSet:
+        java_src_ref = self.__entrypoint.parallelize(kv_map, parallelism)
+        src_tset = TSet(java_src_ref, self)
+        return src_tset
+
+    def parallelize(self, kv_map: dict, key_comparator, parallelism=0) -> KeyedTSet:
+        comparator_java_ref = self.functions.comparator.build(key_comparator)
+        java_src_ref = self.__entrypoint.parallelize(kv_map, comparator_java_ref, parallelism)
         src_tset = TSet(java_src_ref, self)
         return src_tset
 
