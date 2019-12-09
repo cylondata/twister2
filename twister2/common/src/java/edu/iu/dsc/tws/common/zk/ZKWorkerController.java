@@ -156,7 +156,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private IAllJoinedListener allJoinedListener;
 
   // Inform events related to the job master
-  private IJobMasterFailureListener jmFailureListener;
+  private List<IJobMasterFailureListener> jmFailureListeners = new LinkedList<>();
 
   // Inform scaling events
   private IScalerListener scalerListener;
@@ -530,22 +530,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   /**
    * TODO: jm restarted implemented, but jm failed not implemented yet
-   * add a single IJobMasterFailureListener
-   * if additional IJobMasterFailureListener tried to be added,
-   * do not add and return false
+   * Supports multiple IJobMasterFailureListeners
    */
   public boolean addJMFailureListener(IJobMasterFailureListener iJobMasterFailureListener) {
-    if (jmFailureListener != null) {
-      return false;
-    }
 
-    jmFailureListener = iJobMasterFailureListener;
+    jmFailureListeners.add(iJobMasterFailureListener);
     // if allJoinedEventToDeliver is not null, deliver that message in a new thread
     if (jmRestartedCache != null) {
       Executors.newSingleThreadExecutor().execute(new Runnable() {
         @Override
         public void run() {
-          jmFailureListener.restarted(jmRestartedCache.getJmAddress());
+          jmFailureListeners.forEach(l -> l.restarted(jmRestartedCache.getJmAddress()));
           LOG.fine("JobMasterRestarted event delivered from cache.");
         }
       });
@@ -742,8 +737,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       JobMasterAPI.JobMasterRestarted jmRestarted = jobEvent.getJmRestarted();
       LOG.info("JobMasterRestarted event received. JM Address: " + jmRestarted.getJmAddress());
 
-      if (jmFailureListener != null) {
-        jmFailureListener.restarted(jmRestarted.getJmAddress());
+      if (jmFailureListeners.size() != 0) {
+        jmFailureListeners.forEach(l -> l.restarted(jmRestarted.getJmAddress()));
       } else {
         jmRestartedCache = jmRestarted;
       }

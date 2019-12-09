@@ -78,6 +78,9 @@ public final class JMWorkerAgent {
 
   private boolean registrationSucceeded;
 
+  private boolean reconnect = false;
+  private boolean reconnected = false;
+
   private int numberOfWorkers;
 
   /**
@@ -186,9 +189,7 @@ public final class JMWorkerAgent {
   private void init() {
 
     looper = new Progress();
-
     ClientConnectHandler connectHandler = new ClientConnectHandler();
-
 
     rrClient = new RRClient(masterAddress, masterPort, null, looper,
         thisWorker.getWorkerID(), connectHandler);
@@ -275,6 +276,22 @@ public final class JMWorkerAgent {
 
     while (!stopLooper) {
       looper.loopBlocking();
+
+      if (reconnect) {
+        // first disconnect
+        LOG.fine("Worker is disconnecting from JobMaster from previous session.");
+        rrClient.disconnect();
+
+        // reconnect
+        reconnected = tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
+        if (reconnected) {
+          LOG.info("Worker Re-connected to JobMaster.");
+        } else {
+          LOG.info("Worker could not re-connect to JobMaster.");
+        }
+
+        reconnect = false;
+      }
     }
 
     rrClient.disconnect();
@@ -294,7 +311,9 @@ public final class JMWorkerAgent {
     jmThread.start();
 
     boolean registered = registerWorker(initialState);
-    if (!registered) {
+    if (registered) {
+      initJMWorkerController();
+    } else {
       this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
@@ -311,8 +330,12 @@ public final class JMWorkerAgent {
 
     startLooping();
 
+    //TODO: this should be tested
     boolean registered = registerWorker(initialState);
-    if (!registered) {
+    if (registered) {
+      initJMWorkerController();
+    } else {
+      this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
   }
@@ -359,12 +382,44 @@ public final class JMWorkerAgent {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.fine("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
+        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
 
     return false;
+  }
+
+  /**
+   * this method is called after job master is restarted
+   * it reconnects the worker to the job master
+   */
+  public void reconnect() {
+
+    reconnect = true;
+    reconnected = false;
+    looper.wakeup();
+
+    long startTime = System.currentTimeMillis();
+    long delay = 0;
+
+    while (!reconnected && delay < CONNECTION_TRY_TIME_LIMIT) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted. Will try again.");
+      }
+
+      delay = System.currentTimeMillis() - startTime;
+    }
+
+    if (!reconnected) {
+      throw new RuntimeException("Could not reconnect Worker with JobMaster. Exiting .....");
+    }
+
+    // register the worker
+    LOG.info("Worker re-registering with JobMaster to initialize things.");
+    registerWorker(initialState);
   }
 
   /**
@@ -463,9 +518,8 @@ public final class JMWorkerAgent {
           JobMasterContext.responseWaitDuration(config));
 
       if (registrationSucceeded) {
-        initJMWorkerController();
+        LOG.info("Registered worker[" + thisWorker.getWorkerID() + "] with JobMaster.");
       }
-
       return registrationSucceeded;
 
     } catch (BlockingSendException bse) {
@@ -652,7 +706,7 @@ public final class JMWorkerAgent {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.fine(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
+        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {
