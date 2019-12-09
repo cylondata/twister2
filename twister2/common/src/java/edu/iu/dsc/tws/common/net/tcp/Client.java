@@ -88,6 +88,15 @@ public class Client implements SelectHandler {
     fixedBuffers = fixBuffers;
   }
 
+  /**
+   * this method must be called when the client is disconnected
+   * @param host
+   * @param port
+   */
+  public void setHostAndPort(String host, int port) {
+    address = new InetSocketAddress(host, port);
+  }
+
   public boolean connect() {
     try {
       socketChannel = SocketChannel.open();
