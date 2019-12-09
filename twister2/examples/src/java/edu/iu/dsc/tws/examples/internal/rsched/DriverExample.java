@@ -38,9 +38,10 @@ public class  DriverExample implements IDriver {
 
     waitAllWorkersToJoin();
 
-//    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
     scalingExample(scaler, messenger);
+    broadcastExample(messenger);
+    sendCompleteMessage(messenger);
 
     LOG.info("Driver has finished execution.");
   }
@@ -128,35 +129,29 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-    int toRemove = 3;
-    LOG.info("removing " + toRemove + " workers.");
-    scaler.scaleDownWorkers(toRemove);
+//    int toRemove = 3;
+//    LOG.info("removing " + toRemove + " workers.");
+//    scaler.scaleDownWorkers(toRemove);
+//
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+//
+//    LOG.info("Adding " + toAdd + " new workers.");
+//    scaler.scaleUpWorkers(toAdd);
+//
+//    waitAllWorkersToJoin();
+//
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
 
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("Adding " + toAdd + " new workers.");
-    scaler.scaleUpWorkers(toAdd);
-
-    waitAllWorkersToJoin();
-
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    JobMasterAPI.WorkerStateChange stateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setState(JobMasterAPI.WorkerState.COMPLETED)
-        .build();
-
-    LOG.info("Broadcasting the message: " + stateChange);
-    messenger.broadcastToAllWorkers(stateChange);
   }
 
   private void broadcastExample(IDriverMessenger messenger) {
@@ -189,6 +184,15 @@ public class  DriverExample implements IDriver {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+
+  public void sendCompleteMessage(IDriverMessenger messenger) {
+    JobMasterAPI.WorkerStateChange stateChange = JobMasterAPI.WorkerStateChange.newBuilder()
+        .setState(JobMasterAPI.WorkerState.COMPLETED)
+        .build();
+
+    LOG.info("Broadcasting COMPLETED message: " + stateChange);
+    messenger.broadcastToAllWorkers(stateChange);
   }
 
   @Override

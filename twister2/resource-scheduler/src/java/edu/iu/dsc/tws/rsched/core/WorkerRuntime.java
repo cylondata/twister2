@@ -127,7 +127,7 @@ public final class WorkerRuntime {
           @Override
           public void restarted(String jobMasterAddress) {
             LOG.info("JobMaster restarted. Worker will try to reconnect and re-register.");
-            jmWorkerAgent.reconnect();
+            jmWorkerAgent.reconnect(jobMasterAddress);
           }
         });
       }

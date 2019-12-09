@@ -68,8 +68,8 @@ public final class JMWorkerAgent {
   private Config config;
   private WorkerInfo thisWorker;
 
-  private String masterAddress;
-  private int masterPort;
+  private String jmAddress;
+  private int jmPort;
 
   private RRClient rrClient;
 
@@ -143,14 +143,14 @@ public final class JMWorkerAgent {
    */
   private JMWorkerAgent(Config config,
                         WorkerInfo thisWorker,
-                        String masterHost,
-                        int masterPort,
+                        String jmAddress,
+                        int jmPort,
                         int numberOfWorkers,
                         JobMasterAPI.WorkerState initialState) {
     this.config = config;
     this.thisWorker = thisWorker;
-    this.masterAddress = masterHost;
-    this.masterPort = masterPort;
+    this.jmAddress = jmAddress;
+    this.jmPort = jmPort;
     this.numberOfWorkers = numberOfWorkers;
     this.initialState = initialState;
   }
@@ -161,8 +161,8 @@ public final class JMWorkerAgent {
    */
   public static JMWorkerAgent createJMWorkerAgent(Config config,
                                                   WorkerInfo thisWorker,
-                                                  String masterHost,
-                                                  int masterPort,
+                                                  String jmAddress,
+                                                  int jmPort,
                                                   int numberOfWorkers,
                                                   JobMasterAPI.WorkerState initialState) {
     if (workerAgent != null) {
@@ -170,7 +170,7 @@ public final class JMWorkerAgent {
     }
 
     workerAgent = new JMWorkerAgent(
-        config, thisWorker, masterHost, masterPort, numberOfWorkers, initialState);
+        config, thisWorker, jmAddress, jmPort, numberOfWorkers, initialState);
     return workerAgent;
   }
 
@@ -191,7 +191,7 @@ public final class JMWorkerAgent {
     looper = new Progress();
     ClientConnectHandler connectHandler = new ClientConnectHandler();
 
-    rrClient = new RRClient(masterAddress, masterPort, null, looper,
+    rrClient = new RRClient(jmAddress, jmPort, null, looper,
         thisWorker.getWorkerID(), connectHandler);
 
     senderToDriver = new JMSenderToDriver(this);
@@ -281,6 +281,9 @@ public final class JMWorkerAgent {
         // first disconnect
         LOG.fine("Worker is disconnecting from JobMaster from previous session.");
         rrClient.disconnect();
+
+        // update jmHost anf jmPort
+        rrClient.setHostAndPort(jmAddress, jmPort);
 
         // reconnect
         reconnected = tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -382,7 +385,7 @@ public final class JMWorkerAgent {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
+        LOG.info("Still trying to connect to the Job Master: " + jmAddress + ":" + jmPort);
         nextLogTime += logInterval;
       }
     }
@@ -394,10 +397,12 @@ public final class JMWorkerAgent {
    * this method is called after job master is restarted
    * it reconnects the worker to the job master
    */
-  public void reconnect() {
+  public void reconnect(String jobMasterAddress) {
 
+    this.jmAddress = jobMasterAddress;
     reconnect = true;
     reconnected = false;
+
     looper.wakeup();
 
     long startTime = System.currentTimeMillis();
