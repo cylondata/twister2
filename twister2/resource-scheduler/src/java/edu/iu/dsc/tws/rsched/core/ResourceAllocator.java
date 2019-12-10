@@ -285,7 +285,8 @@ public class ResourceAllocator {
 
     // create an instance of launcher
     try {
-      launcher = ReflectionUtils.newInstance(launcherClass);
+      launcher = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          launcherClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
@@ -293,7 +294,8 @@ public class ResourceAllocator {
 
     // create an instance of uploader
     try {
-      uploader = ReflectionUtils.newInstance(uploaderClass);
+      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          uploaderClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new UploaderException(
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
@@ -363,7 +365,8 @@ public class ResourceAllocator {
 
     // create an instance of launcher
     try {
-      launcher = ReflectionUtils.newInstance(launcherClass);
+      launcher = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          launcherClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
