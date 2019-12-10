@@ -26,7 +26,7 @@ public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
-  private static final int MAX_JOB_NAME_LENGTH = 45;
+  private static final int MAX_JOB_NAME_LENGTH = 49;
 
   private KubernetesUtils() {
   }
@@ -134,7 +134,7 @@ public final class KubernetesUtils {
   }
 
   public static String createJobPodsLabel(String jobName) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_PREFIX + jobName;
+    return KubernetesConstants.TWISTER2_JOB_PODS_LABEL_PREFIX + jobName;
   }
 
   /**
