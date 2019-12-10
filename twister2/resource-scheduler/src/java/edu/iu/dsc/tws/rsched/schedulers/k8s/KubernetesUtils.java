@@ -26,6 +26,12 @@ public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
+  // statefulset pods has the following label
+  // controller-revision-hash=t2-job-sdf-123456789-123456789-123456789-1234-jm-f56767777
+  // label values can be at most 63 chars in length
+  // This label has the pod name and 10 char suffix as the value
+  // so, the pod name can be at most 52 chars, since jm pod name has a 3 char suffix
+  // jobNames can have at most 49 chars
   private static final int MAX_JOB_NAME_LENGTH = 49;
 
   private KubernetesUtils() {
