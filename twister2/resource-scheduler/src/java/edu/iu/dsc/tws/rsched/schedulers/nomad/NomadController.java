@@ -317,7 +317,7 @@ public class NomadController implements IController {
     commands.put("procs", job.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
-    LOG.log(Level.INFO, "Job class path: " + jobClassPath);
+    LOG.log(Level.FINE, "Job class path: " + jobClassPath);
     String systemClassPath = JobUtils.systemClassPath(cfg);
     String classPath = jobClassPath + ":" + systemClassPath;
     commands.put("classpath", classPath);
