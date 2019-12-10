@@ -314,3 +314,7 @@ def load_modules():
     _maven_import(artifact = "org.apache.commons:commons-lang3:3.9",licenses = ["notice"],sha256 = "de2e1dcdcf3ef917a8ce858661a06726a9a944f28e33ad7f9e08bea44dc3c230",)
     _maven_import(artifact = "org.easymock:easymock:4.0.2",licenses = ["notice"],sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123",)
     _maven_import(artifact = "org.apache.commons:commons-collections4:4.4",licenses = ["notice"],sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1",)
+
+    # for arrow
+    _maven_import(artifact = "org.apache.arrow:arrow-vector:0.15.1",licenses = ["notice"],sha256 = "67675afd59c237245849064de14118bbf64bbfc07565d1602407bf8cb031ba0f",)
+    _maven_import(artifact = "org.apache.arrow:arrow-memory:0.15.1",licenses = ["notice"],sha256 = "4fc766a0d853fa81756a41805f3456ee5d65b3e4bf07050fe5523d2724433943",)
