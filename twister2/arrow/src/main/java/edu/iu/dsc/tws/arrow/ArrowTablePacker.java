@@ -11,13 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.arrow;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.util.Preconditions;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.VectorLoader;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.VectorUnloader;
+import org.apache.arrow.vector.ipc.ReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBuffer;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
@@ -27,9 +35,10 @@ import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.api.comms.packing.ObjectBuilder;
 import edu.iu.dsc.tws.api.comms.packing.PackerStore;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import io.netty.buffer.ArrowBuf;
 
-public class ArrowTablePacker implements DataPacker<ArrowTable, ArrowBuf> {
+public class ArrowTablePacker implements DataPacker<ArrowTable, byte[]> {
   @Override
   public int determineLength(ArrowTable data, PackerStore store) {
     // lets create the schema and the
@@ -109,10 +118,39 @@ public class ArrowTablePacker implements DataPacker<ArrowTable, ArrowBuf> {
   }
 
   @Override
-  public int readDataFromBuffer(ObjectBuilder<ArrowTable, ArrowBuf> objectBuilder,
+  public int readDataFromBuffer(ObjectBuilder<ArrowTable, byte[]> objectBuilder,
                                 int currentBufferLocation, DataBuffer dataBuffer) {
+    int totalDataLength = objectBuilder.getTotalSize();
+    int startIndex = objectBuilder.getCompletedSize();
+    byte[] val = objectBuilder.getPartialDataHolder();
 
-    return 0;
+    ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
+    int remainingInBuffer = dataBuffer.getSize() - currentBufferLocation;
+    int leftToRead = totalDataLength - startIndex;
+
+    int elementsToRead = Math.min(leftToRead, remainingInBuffer);
+
+    byteBuffer.position(currentBufferLocation); //setting position for bulk read
+    byteBuffer.get(val, startIndex, elementsToRead);
+
+    if (totalDataLength == elementsToRead + startIndex) {
+      try {
+        ArrowRecordBatch batch = (ArrowRecordBatch) MessageSerializer.deserializeMessageBatch(new ReadChannel(
+            Channels.newChannel(new ByteArrayInputStream(objectBuilder.getPartialDataHolder(), 0, val.length)))
+            , new RootAllocator());
+
+        // create the schema
+        VectorSchemaRoot vectorSchemaRoot = new VectorSchemaRoot(new ArrayList<>());
+        VectorLoader loader = new VectorLoader(vectorSchemaRoot);
+        loader.load(batch);
+
+        ArrowTable table = new ArrowTable((FieldVector[]) vectorSchemaRoot.getFieldVectors().toArray());
+        objectBuilder.setFinalObject(table);
+      } catch (IOException e) {
+        throw new Twister2RuntimeException("Failed to read Arrow message", e);
+      }
+    }
+    return elementsToRead;
   }
 
   @Override
@@ -131,8 +169,8 @@ public class ArrowTablePacker implements DataPacker<ArrowTable, ArrowBuf> {
   }
 
   @Override
-  public ArrowBuf wrapperForByteLength(int byteLength) {
-    return null;
+  public byte[] wrapperForByteLength(int byteLength) {
+    return new byte[byteLength];
   }
 
   @Override
