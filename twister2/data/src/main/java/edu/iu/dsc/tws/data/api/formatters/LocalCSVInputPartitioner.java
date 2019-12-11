@@ -50,8 +50,7 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
     super(path, parallelism, cfg);
   }
 
-  protected CSVInputSplit createSplit(int num, Path file, long start,
-                                         long length, String[] hosts) {
+  protected CSVInputSplit createSplit(int num, Path file, long start, long length, String[] hosts) {
     return new CSVInputSplit(num, file, start, length, hosts);
   }
 

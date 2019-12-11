@@ -37,7 +37,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
   protected transient int recordLength;
   protected transient int numSplits;
 
-  protected CSVInputPartitioner(Path filePath, int recordLen) {
+  public  CSVInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
     this.recordLength = recordLen;
   }
@@ -78,7 +78,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
 
-    final FileSystem fs = FileSystemUtils.get(path); //path.getFileSystem();
+    final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {
@@ -141,7 +141,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
 
   @Override
   public InputSplitAssigner<Object> getInputSplitAssigner(FileInputSplit<Object>[] inputSplits) {
-    return new LocatableInputSplitAssigner<Object>(inputSplits);
+    return new LocatableInputSplitAssigner<>(inputSplits);
   }
 
   @Override
