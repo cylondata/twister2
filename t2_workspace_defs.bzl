@@ -318,3 +318,6 @@ def load_modules():
     # for arrow
     _maven_import(artifact = "org.apache.arrow:arrow-vector:0.15.1",licenses = ["notice"],sha256 = "67675afd59c237245849064de14118bbf64bbfc07565d1602407bf8cb031ba0f",)
     _maven_import(artifact = "org.apache.arrow:arrow-memory:0.15.1",licenses = ["notice"],sha256 = "4fc766a0d853fa81756a41805f3456ee5d65b3e4bf07050fe5523d2724433943",)
+    _maven_import(artifact = "io.netty:netty-buffer:4.1.27.Final",licenses = ["notice"],sha256 = "bd086ac6143dc5a8d8c515af2bd0d4cbc5170dd82bf8f6687f85b9be1e0c5522",)
+    _maven_import(artifact = "io.netty:netty-common:4.1.27.Final",licenses = ["notice"],sha256 = "18353e652194f5e715a851a6081795b656b8a9643f30964b14fb24cd812e3408",)
+    _maven_import(artifact = "com.google.flatbuffers:flatbuffers-java:1.9.0",licenses = ["notice"],sha256 = "bca905c497fc67f5863d3ae9ece778073176c2ab588dedebdc8ab17da848ee48",)

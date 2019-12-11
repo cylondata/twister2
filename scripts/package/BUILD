@@ -27,6 +27,7 @@ load("//tools/rules:twister2_client.bzl", "twister2_client_python_example_files"
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_common_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_executor_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_connector_files")
+load("//tools/rules:twister2_client.bzl", "twister2_client_lib_arrow_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_conf_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_lib_communication_files")
@@ -103,6 +104,7 @@ pack_tw2(
         ":twister2-master-lib",
         ":twister2-python-support",
         ":twister2-tset",
+        ":twister2-arrow",
     ],
 )
 
@@ -138,6 +140,7 @@ pack_tw2(
         ":twister2-ompi-lib",
         ":twister2-python-support",
         ":twister2-tset",
+        ":twister2-arrow",
     ],
 )
 
@@ -327,6 +330,7 @@ pack_tw2(
         ":twister2-python-support",
         ":twister2-restarter",
         ":twister2-tset",
+        ":twister2-arrow",
     ],
 )
 
@@ -387,6 +391,7 @@ pack_tw2(
         ":twister2-test-util",
         ":twister2-test-values",
         ":twister2-tset",
+        ":twister2-arrow",
     ],
 )
 
@@ -688,5 +693,12 @@ pack_tw2(
     name = "twister2-test-tests-integration-task",
     srcs = ["//util/test:test_tests_integration_task"],
     package_dir = "util/test/tests/integration/task",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-arrow",
+    srcs =  twister2_client_lib_arrow_files(),
+    package_dir = "lib",
     version = T2_VERSION,
 )

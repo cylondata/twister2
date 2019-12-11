@@ -23,7 +23,7 @@ common_deps_files = [
 ]
 
 t2_java_lib(
-    name = "arrow-integration-java",
+    name = "arrow-java",
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
 )

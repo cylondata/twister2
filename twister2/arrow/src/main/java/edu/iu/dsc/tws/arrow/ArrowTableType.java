@@ -19,6 +19,10 @@ import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 public class ArrowTableType implements MessageType {
   private Schema schema;
 
+  public ArrowTableType(Schema schema) {
+    this.schema = schema;
+  }
+
   @Override
   public boolean isPrimitive() {
     return false;
@@ -41,15 +45,11 @@ public class ArrowTableType implements MessageType {
 
   @Override
   public DataPacker getDataPacker() {
-    return new ArrowTablePacker();
+    return new ArrowTablePacker(schema);
   }
 
   @Override
   public boolean isArray() {
     return false;
-  }
-
-  public Schema getSchema() {
-    return schema;
   }
 }
