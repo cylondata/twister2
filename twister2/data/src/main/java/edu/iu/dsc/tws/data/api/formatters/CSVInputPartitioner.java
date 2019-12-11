@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.data.api.formatters;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -24,21 +23,17 @@ import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
-import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.api.splits.LocatableInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public abstract class CSVInputPartitioner extends FileInputPartitioner<Object> {
+public class CSVInputPartitioner extends FileInputPartitioner<Object> {
 
   private static final long serialVersionUID = -1L;
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
-  /**
-   * The length of a single record in the given binary file.
-   */
   protected transient int recordLength;
   protected transient int numSplits;
 
@@ -93,10 +88,6 @@ public abstract class CSVInputPartitioner extends FileInputPartitioner<Object> {
       totalLength += pathFile.getLen();
     }
 
-    //TODO L3: Handle if unsplittable
-    //Splits will be made so that records are not broken into two splits
-    //Odd records will be divided among the first splits so the max diff would be 1 record
-
     if (totalLength % this.recordLength != 0) {
       throw new IllegalStateException("The Binary file has a incomplete record");
     }
@@ -133,7 +124,7 @@ public abstract class CSVInputPartitioner extends FileInputPartitioner<Object> {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
 
           // create a new split
-          FileInputSplit fis = new BinaryInputSplit(splitNum++, file.getPath(), position,
+          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position,
               currentSplitSize, blocks[blockIndex].getHosts());
           inputSplits.add(fis);
 
@@ -148,9 +139,9 @@ public abstract class CSVInputPartitioner extends FileInputPartitioner<Object> {
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<Object> inputSplits) {
-    //TODO: We have to check the type cast
-    return new LocatableInputSplitAssigner((Collection<LocatableInputSplit>) inputSplits);
+  @Override
+  public InputSplitAssigner<Object> getInputSplitAssigner(FileInputSplit<Object>[] inputSplits) {
+    return new LocatableInputSplitAssigner<Object>(inputSplits);
   }
 
   @Override

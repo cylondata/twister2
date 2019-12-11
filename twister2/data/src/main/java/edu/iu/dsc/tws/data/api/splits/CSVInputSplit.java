@@ -15,8 +15,11 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.data.utils.PreConditions;
 
 public class CSVInputSplit extends FileInputSplit<Object> {
@@ -31,17 +34,12 @@ public class CSVInputSplit extends FileInputSplit<Object> {
 
   private static final byte[] DEFAULT_FIELD_DELIMITER = new byte[]{','};
 
-  // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
 
   private String delimiterString = null;
 
   private static final byte BACKSLASH = 92;
 
-  // --------------------------------------------------------------------------------------------
-  //  Variables for internal operation.
-  //  They are all transient, because we do not want them so be serialized
-  // --------------------------------------------------------------------------------------------
   private transient FieldParser<?>[] fieldParsers;
 
   private transient Charset charset;
@@ -76,6 +74,29 @@ public class CSVInputSplit extends FileInputSplit<Object> {
 
   private String commentPrefixString = null;
 
+  protected transient int recordLength;
+
+  private int bufferSize = -1;
+
+  private transient byte[] readBuffer;
+
+  private transient byte[] wrapBuffer;
+
+  private transient int readPos;
+
+  private transient int limit;
+
+  private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
+  private transient int currOffset;      // offset in above buffer
+  private transient int currLen;        // length of current byte sequence
+
+  private transient boolean overLimit;
+
+  private transient boolean end;
+
+  private long offset = -1;
+
+
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
   }
@@ -84,10 +105,136 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     super(num, file, hosts);
   }
 
+  public CSVInputSplit(int num, Path file, int recordLen, String[] hosts) {
+    super(num, file, hosts);
+    this.recordLength = recordLen;
+  }
+
+  @Override
+  public void configure(Config parameters) {
+    super.configure(parameters);
+    int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    int recordLen = datasize * Short.BYTES;
+    if (recordLen > 0) {
+      setRecordLength(recordLen);
+    }
+  }
+
+  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
+
+  public void setRecordLength(int recordLen) {
+    if (recordLen <= 0) {
+      throw new IllegalArgumentException("RecordLength must be larger than 0");
+    }
+    this.recordLength = recordLen;
+    if (this.bufferSize % recordLen != 0) {
+      int bufferFactor = 1;
+      if (this.bufferSize > 0) {
+        bufferFactor = bufferSize / recordLen;
+      } else {
+        bufferFactor = DEFAULT_READ_BUFFER_SIZE / recordLen;
+      }
+      if (bufferFactor >= 1) {
+        setBufferSize(recordLen * bufferFactor);
+      } else {
+        setBufferSize(recordLen * 8);
+      }
+    }
+  }
+
+  public int getBufferSize() {
+    return bufferSize;
+  }
+
+  public void setBufferSize(int buffSize) {
+    if (buffSize < 2) {
+      throw new IllegalArgumentException("Buffer size must be at least 2.");
+    }
+    this.bufferSize = buffSize;
+  }
+
+
   @Override
   public boolean reachedEnd() throws IOException {
     return false;
   }
+
+  private void initBuffers() {
+    this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
+
+    if (this.bufferSize % this.recordLength != 0) {
+      throw new IllegalArgumentException("Buffer size must be a multiple of the record length");
+    }
+
+    if (this.readBuffer == null || this.readBuffer.length != this.bufferSize) {
+      this.readBuffer = new byte[this.bufferSize];
+    }
+    if (this.wrapBuffer == null || this.wrapBuffer.length < 256) {
+      this.wrapBuffer = new byte[256];
+    }
+
+    this.readPos = 0;
+    this.limit = 0;
+    this.overLimit = false;
+    this.end = false;
+  }
+
+  public void open() throws IOException {
+    super.open();
+    initBuffers();
+    long recordMod = this.splitStart % this.recordLength;
+    if (recordMod != 0) {
+      this.offset = this.splitStart + this.recordLength - recordMod;
+      if (this.offset > this.splitStart + this.splitLength) {
+        this.end = true;
+      }
+    } else {
+      this.offset = splitStart;
+    }
+
+    if (this.splitStart != 0) {
+      this.stream.seek(offset);
+    }
+    fillBuffer(0);
+  }
+
+  private boolean fillBuffer(int fillOffset) throws IOException {
+    int maxReadLength = this.readBuffer.length - fillOffset;
+    if (this.splitLength == FileInputPartitioner.READ_WHOLE_SPLIT_FLAG) {
+      int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
+      if (read == -1) {
+        this.stream.close();
+        this.stream = null;
+        return false;
+      } else {
+        this.readPos = fillOffset;
+        this.limit = read;
+        return true;
+      }
+    }
+
+    int toRead;
+    if (this.splitLength > 0) {
+      toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
+    } else {
+      toRead = maxReadLength;
+      this.overLimit = true;
+      return false;
+    }
+
+    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
+    if (read == -1) {
+      this.stream.close();
+      this.stream = null;
+      return false;
+    } else {
+      this.splitLength -= read;
+      this.readPos = fillOffset;
+      this.limit = read + fillOffset;
+      return true;
+    }
+  }
+
 
   @Override
   public Object nextRecord(Object reuse) throws IOException {
@@ -100,10 +247,7 @@ public class CSVInputSplit extends FileInputSplit<Object> {
 
   public Object readRecord(Object reuse, byte[] bytes, int offset, int numBytes)
       throws IOException {
-    /*
-     * Fix to support windows line endings in CSVInputFiles with standard delimiter setup = \n
-     */
-    // Found window's end line, so find carriage return before the newline
+
     if (this.lineDelimiterIsLinebreak && numBytes > 0 && bytes[offset + numBytes - 1] == '\r') {
       //reduce the number of bytes so that the Carriage return is not taken as data
       //numBytes--;
@@ -142,7 +286,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     @SuppressWarnings("unchecked")
     FieldParser<Object>[] fieldparsers = (FieldParser<Object>[]) getFieldParsers();
 
-    //throw exception if no field parsers are available
     if (fieldparsers.length == 0) {
       throw new IOException("CsvInputFormat.open(FileInputSplit split) - no field parsers "
           + "to parse input");
@@ -154,9 +297,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
       this.parsedValues[i] = fieldparsers[i].createValue();
     }
 
-    // left to right evaluation makes access [0] okay
-    // this marker is used to fasten up readRecord, so that it doesn't have to check each call
-    // if the line ending is set to default
     if (this.getDelimiter().length == 1 && this.getDelimiter()[0] == '\n') {
       this.lineDelimiterIsLinebreak = true;
     }
@@ -170,13 +310,13 @@ public class CSVInputSplit extends FileInputSplit<Object> {
   }
 
 
-  protected boolean parseRecord(Object[] holders, byte[] bytes, int offset, int numBytes)
+  protected boolean parseRecord(Object[] holders, byte[] bytes, int recordOffset, int numBytes)
       throws Twister2RuntimeException {
 
     boolean[] fieldincluded = this.fieldIncluded;
 
-    int startPos = offset;
-    final int limit = offset + numBytes;
+    int startPos = recordOffset;
+    final int limit = recordOffset + numBytes;
 
     for (int field = 0, output = 0; field < fieldincluded.length; field++) {
 
@@ -185,7 +325,7 @@ public class CSVInputSplit extends FileInputSplit<Object> {
         if (lenient) {
           return false;
         } else {
-          throw new Twister2RuntimeException("Row too short: " + new String(bytes, offset, numBytes,
+          throw new Twister2RuntimeException("Row too short: " + new String(bytes, recordOffset, numBytes,
               getCharset()));
         }
       }
@@ -204,7 +344,7 @@ public class CSVInputSplit extends FileInputSplit<Object> {
           if (lenient) {
             return false;
           } else {
-            String lineAsString = new String(bytes, offset, numBytes, getCharset());
+            String lineAsString = new String(bytes, recordOffset, numBytes, getCharset());
             throw new Twister2RuntimeException("Line could not be parsed: '" + lineAsString + "'\n"
                 + "ParserError " + parser.getErrorState() + " \n"
                 + "Expect field types: " + fieldTypesToString() + " \n"
@@ -213,13 +353,11 @@ public class CSVInputSplit extends FileInputSplit<Object> {
         } else if (startPos == limit
             && field != fieldincluded.length - 1
             && !FieldParser.endsWithDelimiter(bytes, startPos - 1, fieldDelim)) {
-          // We are at the end of the record, but not all fields have been read
-          // and the end is not a field delimiter indicating an empty last field.
           if (lenient) {
             return false;
           } else {
             throw new Twister2RuntimeException("Row too short: " + new String(bytes,
-                offset, numBytes));
+                recordOffset, numBytes));
           }
         }
         output++;
@@ -228,7 +366,7 @@ public class CSVInputSplit extends FileInputSplit<Object> {
         startPos = skipFields(bytes, startPos, limit, this.fieldDelim);
         if (startPos < 0) {
           if (!lenient) {
-            String lineAsString = new String(bytes, offset, numBytes, getCharset());
+            String lineAsString = new String(bytes, recordOffset, numBytes, getCharset());
             throw new Twister2RuntimeException("Line could not be parsed: '" + lineAsString + "'\n"
                 + "Expect field types: " + fieldTypesToString() + " \n"
                 + "in file: " + currentSplit.getPath());
@@ -238,13 +376,11 @@ public class CSVInputSplit extends FileInputSplit<Object> {
         } else if (startPos == limit
             && field != fieldincluded.length - 1
             && !FieldParser.endsWithDelimiter(bytes, startPos - 1, fieldDelim)) {
-          // We are at the end of the record, but not all fields have been read
-          // and the end is not a field delimiter indicating an empty last field.
           if (lenient) {
             return false;
           } else {
             throw new Twister2RuntimeException("Row too short: " + new String(bytes,
-                offset, numBytes));
+                recordOffset, numBytes));
           }
         }
       }
