@@ -15,7 +15,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,15 +23,6 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
-
-  // max length for the user provided Twister2 job name
-  // statefulset pods has the following label
-  // controller-revision-hash=t2-job-sdf-123456789-123456789-123456789-1234-jm-f56767777
-  // label values can be at most 63 chars in length
-  // This label has the pod name and 10 char suffix as the value
-  // so, the pod name can be at most 52 chars, since jm pod name has a 3 char suffix
-  // jobNames can have at most 49 chars
-  private static final int MAX_JOB_NAME_LENGTH = 49;
 
   private KubernetesUtils() {
   }
@@ -227,79 +217,6 @@ public final class KubernetesUtils {
       LOG.log(Level.SEVERE, "Exception when converting to IP adress: ", e);
       return null;
     }
-  }
-
-  /**
-   * Resource names in Kubernetes must be in the form of:
-   *   consist of lower case alphanumeric characters, dash(-), and dot(.).
-   *   at most 253 characters in length
-   * since we also add some prefixes or suffixes to job names such as:
-   *   "t2-srv-lbl-", "-jm"
-   * we require that job names be at most 200 chars in length
-   * @param jobName
-   * @return
-   */
-  public static boolean jobNameConformsToK8sNamingRules(String jobName) {
-
-    // first we need to check the length of the job name
-    if (jobName.length() > MAX_JOB_NAME_LENGTH) {
-      LOG.warning("jobName is longer than " + MAX_JOB_NAME_LENGTH + " chars: " + jobName);
-      return false;
-    }
-
-    // first character is a lowercase letter from a to z
-    // last character is an alphanumeric character: [a-z0-9]
-    // in between alphanumeric characters and dashes
-    // first character is mandatory. It has to be at least 1 char in length
-    if (jobName.matches("[a-z]([-a-z0-9]*[a-z0-9])?")) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * we perform the following actions:
-   *   shorten the length of the job name if needed
-   *   replace underscore and dot characters with dashes
-   *   convert to lower case characters
-   *   delete non-alphanumeric characters excluding dots and dashes
-   *   replace the first char with "a", if it is not a letter in between a-z
-   *   replace the last char with "z", if it is dash
-   * @param jobName
-   * @return
-   */
-  public static String convertJobNameToK8sFormat(String jobName) {
-
-    // replace underscores with dashes if any
-    String modifiedJobName = jobName.replace("_", "-");
-    // replace dots with dashes if any
-    modifiedJobName = modifiedJobName.replace(".", "-");
-
-    // convert to lower case
-    modifiedJobName = modifiedJobName.toLowerCase(Locale.ENGLISH);
-
-    // delete all non-alphanumeric characters excluding dashes
-    modifiedJobName = modifiedJobName.replaceAll("[^a-z0-9\\-]", "");
-
-    // make sure the first char is a letter
-    // if not, replace it  with "a"
-    if (modifiedJobName.matches("[^a-z][-a-z0-9]*")) {
-      modifiedJobName = "a" + modifiedJobName.substring(1);
-    }
-
-    // make sure the last char is not dash
-    // if it is, replace it  with "z"
-    if (modifiedJobName.matches("[-a-z0-9]*[-]")) {
-      modifiedJobName = modifiedJobName.substring(0, modifiedJobName.length() - 1) + "z";
-    }
-
-    // shorten the job name if needed
-    if (modifiedJobName.length() > MAX_JOB_NAME_LENGTH) {
-      modifiedJobName = modifiedJobName.substring(0, MAX_JOB_NAME_LENGTH);
-    }
-
-    return modifiedJobName;
   }
 
   /**
