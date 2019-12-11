@@ -86,6 +86,10 @@ public class RRClient {
     client = new Client(host, port, cfg, looper, new Handler(), false);
   }
 
+  public void setHostAndPort(String host, int port) {
+    client.setHostAndPort(host, port);
+  }
+
   public boolean connect() {
     return client.connect();
   }

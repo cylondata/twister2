@@ -128,6 +128,18 @@ public final class TarGzipPacker {
    * @param zipFile the archive file to be copied to the new archive
    */
   public boolean addZipToArchive(String zipFile) {
+    return addZipToArchive(zipFile, JOB_ARCHIVE_DIRECTORY + File.separator);
+  }
+
+  /**
+   * given tar.gz file will be copied to this tar.gz file.
+   * all files will be transferred to new tar.gz file one by one.
+   * original directory structure will be kept intact
+   *
+   * @param zipFile the archive file to be copied to the new archive
+   * @param dirPrefixForTar sub path inside the archive
+   */
+  public boolean addZipToArchive(String zipFile, String dirPrefixForTar) {
     try {
       // construct input stream
       ZipFile zipFileObj = new ZipFile(zipFile);
@@ -136,7 +148,7 @@ public final class TarGzipPacker {
       // copy the existing entries from source gzip file
       while (entries.hasMoreElements()) {
         ZipEntry nextEntry = entries.nextElement();
-        TarArchiveEntry entry = new TarArchiveEntry(nextEntry.getName());
+        TarArchiveEntry entry = new TarArchiveEntry(dirPrefixForTar + nextEntry.getName());
         entry.setSize(nextEntry.getSize());
         entry.setModTime(nextEntry.getTime());
 
