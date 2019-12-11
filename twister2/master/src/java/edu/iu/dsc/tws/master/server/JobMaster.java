@@ -365,6 +365,7 @@ public class JobMaster {
     };
 
     jmThread.setName("JM");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     return jmThread;
