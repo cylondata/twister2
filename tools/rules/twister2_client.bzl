@@ -205,6 +205,7 @@ def twister2_client_lib_communication_files():
         "@com_esotericsoftware_reflectasm//jar",
         "@org_ow2_asm_asm//jar",
         "//third_party:ompi_javabinding_java",
+        "//third_party:ucx_javabinding_java",
     ]
 
 def twister2_client_lib_common_files():
