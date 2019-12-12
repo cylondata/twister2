@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -20,7 +19,6 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.data.utils.PreConditions;
 
 public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
 
@@ -32,8 +30,8 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
   public static final String DEFAULT_FIELD_DELIMITER = ",";
 
   private int bufferSize = -1;
-
   protected transient int recordLength;
+
   private transient int readPos;
   private transient int limit;
   private transient int commentCount;
@@ -44,27 +42,25 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
   private transient byte[] readBuffer;
   private transient byte[] wrapBuffer;
   private transient byte[] currBuffer;
-  protected byte[] commentPrefix = null;
 
+  protected byte[] commentPrefix = null;
   protected transient Object[] parsedValues;
 
   private boolean end;
-  private boolean overLimit;
-  private boolean lenient;
+
   private boolean lineDelimiterIsLinebreak = false;
 
   private boolean[] fieldIncluded;
   private byte[] delimiter;
-
   private String delimiterString;
   private String charsetName;
   private Object charset;
-
-  private static final byte BACKSLASH = 92;
+  private boolean overLimit;
+  private boolean lenient;
   private byte[] fieldDelim;
-
   private transient FieldParser<?>[] fieldParsers;
 
+  private static final byte BACKSLASH = 92;
   private static final Class<?>[] EMPTY_TYPES = new Class<?>[0];
   private Class<?>[] fieldTypes = EMPTY_TYPES;
 
@@ -149,7 +145,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     } else {
       this.offset = splitStart;
     }
-
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
@@ -169,7 +164,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     } else {
       this.offset = splitStart;
     }
-
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
@@ -214,16 +208,15 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
   }
 
   @Override
-  public Object nextRecord(Object reuse) throws IOException {
-    Object returnRecord = null;
+  public Object nextRecord(Object reuse) {
+    Object returnRecord;
     do {
       returnRecord = nextRecord(reuse);
     } while (returnRecord == null && !reachedEnd());
     return returnRecord;
   }
 
-  public Object readRecord(Object reuse, byte[] bytes, int readoffset, int numBytes)
-      throws IOException {
+  public Object readRecord(Object reuse, byte[] bytes, int readoffset, int numBytes) {
 
     if (this.lineDelimiterIsLinebreak && numBytes > 0 && bytes[readoffset + numBytes - 1] == '\r') {
       //reduce the number of bytes so that the Carriage return is not taken as data
@@ -254,11 +247,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
   }
 
   protected Object fillRecord(Object reuse, Object[] parsedvalues) {
-    return null;
-  }
-
-
-  private Object getFieldParsers() {
     return null;
   }
 
@@ -296,8 +284,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
           } else {
             String lineAsString = new String(bytes, recordOffset, numBytes, getCharset());
             throw new Twister2RuntimeException("Line could not be parsed: '" + lineAsString + "'\n"
-                + "ParserError " + parser.getErrorState() + " \n"
-                + "Expect field types: " + fieldTypesToString() + " \n"
                 + "in file: " + currentSplit.getPath());
           }
         } else if (startPos == parselimit
@@ -318,7 +304,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
           if (!lenient) {
             String lineAsString = new String(bytes, recordOffset, numBytes, getCharset());
             throw new Twister2RuntimeException("Line could not be parsed: '" + lineAsString + "'\n"
-                + "Expect field types: " + fieldTypesToString() + " \n"
                 + "in file: " + currentSplit.getPath());
           } else {
             return false;
@@ -336,15 +321,6 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
       }
     }
     return true;
-  }
-
-  private String fieldTypesToString() {
-    StringBuilder string = new StringBuilder();
-    string.append(this.fieldTypes[0].toString());
-    for (int i = 1; i < this.fieldTypes.length; i++) {
-      string.append(", ").append(this.fieldTypes[i]);
-    }
-    return string.toString();
   }
 
   //TODO: Modify this part.
@@ -379,64 +355,5 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
         return i + delim.length;
       }
     }
-  }
-
-  public byte[] getDelimiter() {
-    return delimiter;
-  }
-
-  public void setDelimiter(byte[] delimiter) {
-    if (delimiter == null) {
-      throw new IllegalArgumentException("Delimiter must not be null");
-    }
-    this.delimiter = delimiter;
-    this.delimiterString = null;
-  }
-
-  /**
-   * Get the character set used for the row delimiter. This is also used by
-   * subclasses to interpret field delimiters, comment strings, and for
-   * configuring {@link FieldParser}s.
-   *
-   * @return the charset
-   */
-  @PublicEvolving
-  public Charset getCharset() {
-    if (this.charset == null) {
-      this.charset = Charset.forName(charsetName);
-    }
-    return (Charset) this.charset;
-  }
-
-  /**
-   * Set the name of the character set used for the row delimiter. This is
-   * also used by subclasses to interpret field delimiters, comment strings,
-   * and for configuring {@link FieldParser}s.
-   * <p>
-   * These fields are interpreted when set. Changing the charset thereafter
-   * may cause unexpected results.
-   *
-   * @param charset name of the charset
-   */
-  @PublicEvolving
-  public void setCharset(String charset) {
-    this.charsetName = PreConditions.checkNotNull(charset, null);
-    this.charset = null;
-
-    if (this.delimiterString != null) {
-      this.delimiter = delimiterString.getBytes(getCharset());
-    }
-  }
-
-  public void setDelimiter(char delimiter) {
-    setDelimiter(String.valueOf(delimiter));
-  }
-
-  public void setDelimiter(String delimiter) {
-    if (delimiter == null) {
-      throw new IllegalArgumentException("Delimiter must not be null");
-    }
-    this.delimiter = delimiter.getBytes(getCharset());
-    this.delimiterString = delimiter;
   }
 }

@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -30,7 +29,6 @@ import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.config.Config;
@@ -43,8 +41,6 @@ import edu.iu.dsc.tws.data.api.formatters.CSVInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class CSVInputFormatTest {
 
@@ -59,21 +55,20 @@ public class CSVInputFormatTest {
   public void testUniqueSchedules1() throws IOException {
     int parallel = 2;
     ComputeGraph graph = createBatchGraph(parallel);
-    TaskScheduler scheduler = new TaskScheduler();
     Config config = getConfig();
+
+    /*TaskScheduler scheduler = new TaskScheduler();
     scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);
-
     if (graph.getOperationMode().equals("BATCH")) {
       Assert.assertEquals(scheduler.getClass(),
           TaskSchedulerContext.batchTaskSchedulingClass(config));
     }
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-    Assert.assertNotNull(plan1);
+    Assert.assertNotNull(plan1);*/
 
     final String fileContent = "this is|1|2.0|\n" + "a test|3|4.0|\n"
         + "#next|5|6.0|\n" + "asdadas|5|30.0|\n";
-
     final File tempFile = File.createTempFile("input-stream", "tmp");
     tempFile.deleteOnExit();
     try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
@@ -113,6 +108,7 @@ public class CSVInputFormatTest {
   private ComputeGraph createBatchGraph(int parallel) {
     TestSource testSource = new TestSource();
     TestSink testSink = new TestSink();
+
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
