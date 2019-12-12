@@ -70,10 +70,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
-    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
+    int currentMinimumNumSplits = Math.max(minNumSplits, this.numSplits);
 
     final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
+    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(currentMinimumNumSplits);
 
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
@@ -100,7 +100,6 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
     int splitNum = 0;
     for (final FileStatus file : files) {
       final long len = file.getLen();
-      final long blockSize = file.getBlockSize();
       final long minSplitSize = minRecordsForSplit * this.recordLength;
       long currentSplitSize = minSplitSize;
       long halfSplit = currentSplitSize >>> 1;

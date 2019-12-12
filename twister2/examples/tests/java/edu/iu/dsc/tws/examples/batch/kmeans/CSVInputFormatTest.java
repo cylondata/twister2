@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.nio.Buffer;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -46,11 +50,13 @@ public class CSVInputFormatTest {
 
   private static final Logger LOG = Logger.getLogger(CSVInputFormatTest.class.getName());
 
+  private final Charset defaultCharset = StandardCharsets.UTF_8;
+
   /**
    * To test the CSV Input Format
    */
   @Test
-  public void testUniqueSchedules1() {
+  public void testUniqueSchedules1() throws IOException {
     int parallel = 2;
     ComputeGraph graph = createBatchGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
@@ -65,32 +71,40 @@ public class CSVInputFormatTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
+    final String fileContent = "this is|1|2.0|\n" + "a test|3|4.0|\n"
+        + "#next|5|6.0|\n" + "asdadas|5|30.0|\n";
+
+    final File tempFile = File.createTempFile("input-stream", "tmp");
+    tempFile.deleteOnExit();
+    try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+      fileOutputStream.write(fileContent.getBytes(defaultCharset));
+    }
+
     Path path = new Path("/tmp/2000.csv");
     InputPartitioner csvInputPartitioner = new CSVInputPartitioner(path, 1000 * Short.BYTES);
     csvInputPartitioner.configure(config);
 
-    Buffer buffer;
-
     int minSplits = 4;
-    int count = 0;
-
-    double expectedSum = 1.6375350724E1;
-    double newSum = 0.0;
-
     try {
       InputSplit[] inputSplits = csvInputPartitioner.createInputSplits(minSplits);
       LOG.info("input split values are:" + Arrays.toString(inputSplits));
       InputSplitAssigner inputSplitAssigner
           = csvInputPartitioner.getInputSplitAssigner(inputSplits);
-      InputSplit currentSplit;
-
-      while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost", 0)) != null) {
-        currentSplit.open(config);
-        Object line = null;
-        while (currentSplit.nextRecord(line) != null) {
+      InputSplit currentSplit
+          = inputSplitAssigner.getNextInputSplit("localhost", 0);
+      currentSplit.open(config);
+      while (currentSplit != null) {
+        try {
+          while (!currentSplit.reachedEnd()) {
+            Object value = currentSplit.nextRecord(null);
+            if (value != null) {
+              LOG.info("current split values:" + currentSplit);
+            }
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
         }
       }
-      System.out.println("Sum and count values are:" + newSum + "\t" + count);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -99,7 +113,6 @@ public class CSVInputFormatTest {
   private ComputeGraph createBatchGraph(int parallel) {
     TestSource testSource = new TestSource();
     TestSink testSink = new TestSink();
-
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
@@ -135,6 +148,7 @@ public class CSVInputFormatTest {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String inputKey;
+
     public TestSource() {
     }
 
@@ -160,6 +174,7 @@ public class CSVInputFormatTest {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String inputKey;
+
     public TestSink() {
     }
 

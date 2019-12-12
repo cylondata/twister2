@@ -284,7 +284,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   }
 
   protected final boolean readLine() throws IOException {
-
     if (this.stream == null || this.overLimit) {
       return false;
     }

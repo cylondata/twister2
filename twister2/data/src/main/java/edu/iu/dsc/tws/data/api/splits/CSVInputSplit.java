@@ -22,80 +22,65 @@ import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.data.utils.PreConditions;
 
-public class CSVInputSplit extends FileInputSplit<Object> {
+public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputSplit.class.getName());
 
+  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
+
   public static final String DEFAULT_LINE_DELIMITER = "\n";
-  private static final Class<?>[] EMPTY_TYPES = new Class<?>[0];
-  private static final boolean[] EMPTY_INCLUDED = new boolean[0];
-  private static final byte[] DEFAULT_FIELD_DELIMITER = new byte[]{','};
-  private static final byte BACKSLASH = 92;
-  private Class<?>[] fieldTypes = EMPTY_TYPES;
+  public static final String DEFAULT_FIELD_DELIMITER = ",";
 
-  private String fieldDelimString = null;
-  private String commentPrefixString = null;
-
-  private String charsetName = "UTF-8";
-  private String delimiterString = null;
-
-  private byte[] fieldDelim = DEFAULT_FIELD_DELIMITER;
-  protected byte[] commentPrefix = null;
-  private byte[] delimiter = new byte[]{'\n'};
-  private byte quoteCharacter;
-
-  private transient byte[] readBuffer;
-  private transient byte[] wrapBuffer;
-  private transient byte[] currBuffer;
+  private int bufferSize = -1;
 
   protected transient int recordLength;
   private transient int readPos;
   private transient int limit;
-  private transient int currOffset;      // offset in above buffer
-  private transient int currLen;        // length of current byte sequence
+  private transient int commentCount;
+  private transient int invalidLineCount;
 
-  private transient boolean overLimit;
-  private transient boolean end;
+  private long offset;
 
-  protected boolean lineDelimiterIsLinebreak = false;
-  protected boolean[] fieldIncluded = EMPTY_INCLUDED;
-  private boolean lenient;
-  private boolean skipFirstLineAsHeader;
-  private boolean quotedStringParsing = false;
+  private transient byte[] readBuffer;
+  private transient byte[] wrapBuffer;
+  private transient byte[] currBuffer;
+  protected byte[] commentPrefix = null;
 
-  private transient FieldParser<?>[] fieldParsers;
-  private transient Charset charset;
-  protected transient int commentCount;
-  protected transient int invalidLineCount;
   protected transient Object[] parsedValues;
 
-  private long offset = -1;
-  private int bufferSize = -1;
+  private boolean end;
+  private boolean overLimit;
+  private boolean lenient;
+  private boolean lineDelimiterIsLinebreak = false;
+
+  private boolean[] fieldIncluded;
+  private byte[] delimiter;
+
+  private String delimiterString;
+  private String charsetName;
+  private Object charset;
+
+  private static final byte BACKSLASH = 92;
+  private byte[] fieldDelim;
+
+  private transient FieldParser<?>[] fieldParsers;
+
+  private static final Class<?>[] EMPTY_TYPES = new Class<?>[0];
+  private Class<?>[] fieldTypes = EMPTY_TYPES;
 
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
   }
 
-  public CSVInputSplit(int num, Path file, String[] hosts) {
-    super(num, file, hosts);
-  }
-
-  public CSVInputSplit(int num, Path file, int recordLen, String[] hosts) {
-    super(num, file, hosts);
-    this.recordLength = recordLen;
-  }
-
   @Override
   public void configure(Config parameters) {
     super.configure(parameters);
-    int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
-    int recordLen = datasize * Short.BYTES;
+    int dataSize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    int recordLen = dataSize * Short.BYTES;
     if (recordLen > 0) {
       setRecordLength(recordLen);
     }
   }
-
-  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   public void setRecordLength(int recordLen) {
     if (recordLen <= 0) {
@@ -128,15 +113,13 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     this.bufferSize = buffSize;
   }
 
-
   @Override
-  public boolean reachedEnd() throws IOException {
-    return false;
+  public boolean reachedEnd() {
+    return this.end;
   }
 
   private void initBuffers() {
     this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
-
     if (this.bufferSize % this.recordLength != 0) {
       throw new IllegalArgumentException("Buffer size must be a multiple of the record length");
     }
@@ -192,7 +175,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     }
     fillBuffer(0);
   }
-
 
   private boolean fillBuffer(int fillOffset) throws IOException {
     int maxReadLength = this.readBuffer.length - fillOffset;
@@ -275,31 +257,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     return null;
   }
 
-  //TODO: Modify this part.
-  public void open(FileInputSplit split) throws IOException {
-    //super.open(split);
-
-    @SuppressWarnings("unchecked")
-    FieldParser<Object>[] fieldparsers = (FieldParser<Object>[]) getFieldParsers();
-
-    if (fieldparsers.length == 0) {
-      throw new IOException("CsvInputFormat.open(FileInputSplit split) - no field parsers "
-          + "to parse input");
-    }
-
-    // create the value holders
-    this.parsedValues = new Object[fieldparsers.length];
-    for (int i = 0; i < fieldparsers.length; i++) {
-      this.parsedValues[i] = fieldparsers[i].createValue();
-    }
-
-    if (this.getDelimiter().length == 1 && this.getDelimiter()[0] == '\n') {
-      this.lineDelimiterIsLinebreak = true;
-    }
-
-    this.commentCount = 0;
-    this.invalidLineCount = 0;
-  }
 
   private Object getFieldParsers() {
     return null;
@@ -390,42 +347,35 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     return string.toString();
   }
 
-
   //TODO: Modify this part.
-  protected int skipFields(byte[] bytes, int startPos, int skiplimit, byte[] delim) {
+  protected int skipFields(byte[] bytes, int startPos, int skipLimit, byte[] delim) {
     int i = startPos;
-    final int delimLimit = skiplimit - delim.length + 1;
+    final int delimLimit = skipLimit - delim.length + 1;
 
+    boolean quotedStringParsing = false;
+    byte quoteCharacter = 0;
     if (quotedStringParsing && bytes[i] == quoteCharacter) {
-      // quoted string parsing enabled and field is quoted
-      // search for ending quote character, continue when it is escaped
       i++;
-      while (i < skiplimit && (bytes[i] != quoteCharacter || bytes[i - 1] == BACKSLASH)) {
+      while (i < skipLimit && (bytes[i] != quoteCharacter || bytes[i - 1] == BACKSLASH)) {
         i++;
       }
       i++;
 
-      if (i == skiplimit) {
-        // we are at the end of the record
-        return skiplimit;
+      if (i == skipLimit) {
+        return skipLimit;
       } else if (i < delimLimit && FieldParser.delimiterNext(bytes, i, delim)) {
-        // we are not at the end, check if delimiter comes next
         return i + delim.length;
       } else {
-        // delimiter did not follow end quote. Error...
         return -1;
       }
     } else {
-      // field is not quoted
       while (i < delimLimit && !FieldParser.delimiterNext(bytes, i, delim)) {
         i++;
       }
 
       if (i >= delimLimit) {
-        // no delimiter found. We are at the end of the record
-        return skiplimit;
+        return skipLimit;
       } else {
-        // delimiter found.
         return i + delim.length;
       }
     }
@@ -455,7 +405,7 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     if (this.charset == null) {
       this.charset = Charset.forName(charsetName);
     }
-    return this.charset;
+    return (Charset) this.charset;
   }
 
   /**
@@ -477,7 +427,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
       this.delimiter = delimiterString.getBytes(getCharset());
     }
   }
-
 
   public void setDelimiter(char delimiter) {
     setDelimiter(String.valueOf(delimiter));
