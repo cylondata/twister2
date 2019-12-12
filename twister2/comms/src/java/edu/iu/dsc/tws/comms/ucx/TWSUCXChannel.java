@@ -16,10 +16,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -60,6 +64,9 @@ public class TWSUCXChannel implements TWSChannel {
 
   private int tagWIdOffset = 100000;
 
+  private List<ReceiveProgress> receiveProgresses = new ArrayList<>();
+  private Map<Integer, Map<Integer, Set<ReceiveProgress>>> groupReceives = new HashMap<>();
+
   public TWSUCXChannel(Config config,
                        IWorkerController workerController) {
     createUXCWorker(workerController);
@@ -91,6 +98,7 @@ public class TWSUCXChannel implements TWSChannel {
           new InetSocketAddress(worker.getWorkerIP(), worker.getPort())
       ));
       this.endpoints.put(worker.getWorkerID(), ucpEndpoint);
+      this.closeables.add(ucpEndpoint);
     }
   }
 
@@ -135,13 +143,19 @@ public class TWSUCXChannel implements TWSChannel {
   }
 
 
-  class ReceiveProgress {
+  class ReceiveProgress implements Closeable {
 
     private int group;
     private int id;
     private int edge;
     private ChannelListener callback;
     private Queue<DataBuffer> receiveBuffers;
+
+    private AtomicLong requestIdCounter = new AtomicLong();
+
+    private Map<Long, UcpRequest> requestsMap = new ConcurrentHashMap<>();
+
+    private boolean closed = false;
 
     ReceiveProgress(int group, int id, int edge,
                     ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
@@ -152,13 +166,34 @@ public class TWSUCXChannel implements TWSChannel {
       this.receiveBuffers = receiveBuffers;
     }
 
+    private void removeAndCloseRequest(long requestId) {
+      UcpRequest removed = this.requestsMap.remove(requestId);
+      if (removed != null) {
+        removed.close();
+      }
+    }
+
+    /**
+     * This method will cancel all the requests posted and free the buffers
+     */
+    @Override
+    public void close() {
+      if (!this.closed) {
+        this.closed = true;
+        this.requestsMap.values().forEach(request -> {
+          ucpWorker.cancelRequest(request);
+        });
+      }
+    }
+
     public void progress() {
-      while (!receiveBuffers.isEmpty()) {
+      while (!receiveBuffers.isEmpty() && !closed) {
         final DataBuffer recvBuffer = receiveBuffers.poll();
         int tag = id * tagWIdOffset + edge;
         LOG.log(Level.FINE, () -> String.format("EXPECTING from TAG: %d, Buffer : %s", tag,
             recvBuffer.getByteBuffer()));
-        ucpWorker.recvTaggedNonBlocking(
+        final long requestId = requestIdCounter.incrementAndGet();
+        UcpRequest ucpRequest = ucpWorker.recvTaggedNonBlocking(
             recvBuffer.getByteBuffer(),
             tag,
             0xffff,
@@ -170,6 +205,7 @@ public class TWSUCXChannel implements TWSChannel {
                         id, edge, recvBuffer.getByteBuffer(), tag,
                         recvBuffer.getByteBuffer().getInt(0)));
                 recvBuffer.setSize(recvBuffer.getByteBuffer().getInt(0));
+                removeAndCloseRequest(requestId);
                 callback.onReceiveComplete(id, edge, recvBuffer);
               }
 
@@ -179,15 +215,15 @@ public class TWSUCXChannel implements TWSChannel {
                 String failedMsg = "Failed to receive from " + id + " with status "
                     + ucsStatus + ". Error : " + errorMsg;
                 LOG.severe(failedMsg);
+                removeAndCloseRequest(requestId);
                 throw new Twister2RuntimeException(failedMsg);
               }
             }
         );
+        requestsMap.put(requestId, ucpRequest);
       }
     }
   }
-
-  private List<ReceiveProgress> receiveProgresses = new ArrayList<>();
 
   @Override
   public boolean receiveMessage(int group, int id, int edge, ChannelListener callback,
@@ -196,6 +232,8 @@ public class TWSUCXChannel implements TWSChannel {
         edge, callback, receiveBuffers);
     receiveProgress.progress();
     this.receiveProgresses.add(receiveProgress);
+    this.groupReceives.computeIfAbsent(id, workerId -> new HashMap<>())
+        .computeIfAbsent(edge, edgeId -> new HashSet<>()).add(receiveProgress);
     return true;
   }
 
@@ -216,8 +254,6 @@ public class TWSUCXChannel implements TWSChannel {
   public void progressReceives(int group) {
     this.progress();
   }
-
-  private int count = 0;
 
   @Override
   public boolean isComplete() {
@@ -243,6 +279,9 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public void releaseBuffers(int wId, int e) {
-    this.endpoints.get(wId).close();
+    for (ReceiveProgress receiveProgress : this.groupReceives.getOrDefault(wId,
+        Collections.emptyMap()).getOrDefault(e, Collections.emptySet())) {
+      receiveProgress.close();
+    }
   }
 }
