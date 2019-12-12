@@ -96,7 +96,6 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
-    // todo require throttling? possible to add throttling based on pendingRequests value
     AtomicInteger buffersLeft = new AtomicInteger(message.getBuffers().size());
     for (DataBuffer buffer : message.getBuffers()) {
       //write total limit of buffer
