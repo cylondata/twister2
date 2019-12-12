@@ -55,13 +55,17 @@ public final class JobIDUtils {
     }
 
     String timestamp = timestamp();
-    // leave out characters from the beginning
+    // leave out characters from the beginning if it is longer than max
     // this should not happen until the year 2105
     if (timestamp.length() > MAX_TIMESTAMP_LENGTH) {
       timestamp = timestamp.substring(timestamp.length() - MAX_TIMESTAMP_LENGTH);
     }
 
-    return String.format("%s-%s-%s", userNameInID, jobNameInID, timestamp);
+    if (userNameInID == null || "".equals(userNameInID)) {
+      return String.format("%s-%s", jobNameInID, timestamp);
+    } else {
+      return String.format("%s-%s-%s", userNameInID, jobNameInID, timestamp);
+    }
   }
 
 

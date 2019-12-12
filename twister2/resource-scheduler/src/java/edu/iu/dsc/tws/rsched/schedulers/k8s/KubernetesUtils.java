@@ -67,100 +67,100 @@ public final class KubernetesUtils {
 
   /**
    * create service name from job name
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createServiceName(String jobName) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName;
+  public static String createServiceName(String jobID) {
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID;
   }
 
   /**
    * create service name from job name
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createJobMasterServiceName(String jobName) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-jm";
+  public static String createJobMasterServiceName(String jobID) {
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID + "-jm";
   }
 
   /**
    * create persistent volume claim name name from the job name
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createPersistentVolumeClaimName(String jobName) {
-    return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobName;
+  public static String createPersistentVolumeClaimName(String jobID) {
+    return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobID;
   }
 
   /**
    * create storage claim name name from job name
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createPersistentVolumeName(String jobName) {
-    return "persistent-volume-" + jobName;
+  public static String createPersistentVolumeName(String jobID) {
+    return "persistent-volume-" + jobID;
   }
 
   /**
    * create service label from job name
    * this label is used when constructing statefulset
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createServiceLabel(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName;
+  public static String createServiceLabel(String jobID) {
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID;
   }
 
   /**
    * create service label from job name
    * this label is used when constructing statefulset
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createJobMasterServiceLabel(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-jm";
+  public static String createJobMasterServiceLabel(String jobID) {
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID + "-jm";
   }
 
-  public static String createJobMasterRoleLabel(String jobName) {
-    return jobName + "-jm";
+  public static String createJobMasterRoleLabel(String jobID) {
+    return jobID + "-jm";
   }
 
-  public static String createWorkerRoleLabel(String jobName) {
-    return jobName + "-worker";
+  public static String createWorkerRoleLabel(String jobID) {
+    return jobID + "-worker";
   }
 
-  public static String createJobPodsLabel(String jobName) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_LABEL_PREFIX + jobName;
+  public static String createJobPodsLabel(String jobID) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_LABEL_PREFIX + jobID;
   }
 
   /**
    * this label is used when submitting queries to kubernetes master
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createServiceLabelWithKey(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobName);
+  public static String createServiceLabelWithKey(String jobID) {
+    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobID);
   }
 
   /**
    * this label is used when submitting queries to kubernetes master
-   * @param jobName
+   * @param jobID
    * @return
    */
-  public static String createJobMasterServiceLabelWithKey(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobName);
+  public static String createJobMasterServiceLabelWithKey(String jobID) {
+    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobID);
   }
 
-  public static String createJobPodsLabelWithKey(String jobName) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobName);
+  public static String createJobPodsLabelWithKey(String jobID) {
+    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobID);
   }
 
-  public static String createJobMasterRoleLabelWithKey(String jobName) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createJobMasterRoleLabel(jobName);
+  public static String createJobMasterRoleLabelWithKey(String jobID) {
+    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createJobMasterRoleLabel(jobID);
   }
 
-  public static String createWorkerRoleLabelWithKey(String jobName) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createWorkerRoleLabel(jobName);
+  public static String createWorkerRoleLabelWithKey(String jobID) {
+    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createWorkerRoleLabel(jobID);
   }
 
   /**
@@ -178,8 +178,8 @@ public final class KubernetesUtils {
    * add the given index a suffix to the job name
    * @return
    */
-  public static String createWorkersStatefulSetName(String jobName, int index) {
-    return jobName + "-" + index;
+  public static String createWorkersStatefulSetName(String jobID, int index) {
+    return jobID + "-" + index;
   }
 
   /**
@@ -187,8 +187,8 @@ public final class KubernetesUtils {
    * add a suffix to job name
    * @return
    */
-  public static String createJobMasterStatefulSetName(String jobName) {
-    return jobName + "-jm";
+  public static String createJobMasterStatefulSetName(String jobID) {
+    return jobID + "-jm";
   }
 
   /**
@@ -197,8 +197,8 @@ public final class KubernetesUtils {
    * we add a suffix to statefulset name
    * @return
    */
-  public static String createJobMasterPodName(String jobName) {
-    return createJobMasterStatefulSetName(jobName) + "-0";
+  public static String createJobMasterPodName(String jobID) {
+    return createJobMasterStatefulSetName(jobID) + "-0";
   }
 
   public static String getLocalAddress() {
@@ -252,7 +252,7 @@ public final class KubernetesUtils {
       int index = computeResource.getIndex();
 
       for (int j = 0; j < podsCount; j++) {
-        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), index);
+        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobId(), index);
         String podName = KubernetesUtils.podNameFromStatefulSetName(ssName, j);
         podNames.add(podName);
       }

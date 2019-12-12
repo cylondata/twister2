@@ -23,6 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 
@@ -62,7 +63,7 @@ public final class RuntimeManagerMain {
       case "kill":
         // now load the correct class to terminate the job
         ResourceAllocator resourceAllocator = new ResourceAllocator();
-        resourceAllocator.terminateJob(SchedulerContext.jobName(cfg), cfg);
+        resourceAllocator.terminateJob(Context.jobId(cfg), cfg);
     }
   }
 
@@ -70,7 +71,7 @@ public final class RuntimeManagerMain {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String configDir = cmd.getOptionValue("config_path");
     String cluster = cmd.getOptionValue("cluster");
-    String jobName = cmd.getOptionValue("job_name");
+    String jobID = cmd.getOptionValue("job_id");
     String command = cmd.getOptionValue("command");
 
     LOG.log(Level.INFO, String.format("Initializing process with "
@@ -79,11 +80,12 @@ public final class RuntimeManagerMain {
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir, cluster);
 
-    return Config.newBuilder().putAll(config).
-        put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(SchedulerContext.CONFIG_DIR, config).
-        put(SchedulerContext.JOB_NAME, jobName).
-        put(SchedulerContext.TWISTER2_CLUSTER_TYPE, cluster).build();
+    return Config.newBuilder()
+        .putAll(config)
+        .put(Context.TWISTER2_HOME.getKey(), twister2Home)
+        .put(SchedulerContext.CONFIG_DIR, configDir)
+        .put(Context.JOB_ID, jobID)
+        .put(Context.TWISTER2_CLUSTER_TYPE, cluster).build();
   }
 
   /**
@@ -126,18 +128,18 @@ public final class RuntimeManagerMain {
         .required()
         .build();
 
-    Option jobName = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+    Option jobID = Option.builder("j")
+        .desc("Job id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
     options.addOption(twister2Home);
     options.addOption(cluster);
     options.addOption(configDirectory);
     options.addOption(command);
-    options.addOption(jobName);
+    options.addOption(jobID);
 
     return options;
   }

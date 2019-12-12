@@ -27,14 +27,14 @@ public class ZKJobTerminator implements IJobTerminator {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
 
     boolean zkCleared = true;
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
-      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobName);
+      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobID);
       ZKUtils.closeClient();
     }
 

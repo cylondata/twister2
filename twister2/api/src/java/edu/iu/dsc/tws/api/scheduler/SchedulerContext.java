@@ -170,8 +170,8 @@ public class SchedulerContext extends Context {
     return persistentVolumePerWorker(cfg) > 0;
   }
 
-  public static String createJobDescriptionFileName(String jobName) {
-    return jobName + ".job";
+  public static String createJobDescriptionFileName(String jobID) {
+    return jobID + ".job";
   }
 
   public static int workerEndSyncWaitTime(Config cfg) {

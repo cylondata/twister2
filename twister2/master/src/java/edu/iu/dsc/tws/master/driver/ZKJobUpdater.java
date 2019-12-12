@@ -59,7 +59,7 @@ public class ZKJobUpdater {
    * remove InitialState worker znodes after scaling down
    * @return
    */
-  public boolean removeInitialStateZNodes(String jobName, int minWorkerID, int maxWorkerID) {
+  public boolean removeInitialStateZNodes(String jobID, int minWorkerID, int maxWorkerID) {
 
     // if ZooKeeper server is not used, return. Nothing to be done.
     if (!ZKContext.isZooKeeperServerUsed(config)) {
@@ -70,8 +70,8 @@ public class ZKJobUpdater {
     String rootPath = ZKContext.rootNode(config);
     try {
       ZKPersStateManager.removeScaledDownZNodes(
-          client, rootPath, jobName, minWorkerID, maxWorkerID);
-      ZKBarrierManager.removeScaledDownZNodes(client, rootPath, jobName, minWorkerID, maxWorkerID);
+          client, rootPath, jobID, minWorkerID, maxWorkerID);
+      ZKBarrierManager.removeScaledDownZNodes(client, rootPath, jobID, minWorkerID, maxWorkerID);
 
       return true;
     } catch (Twister2Exception e) {

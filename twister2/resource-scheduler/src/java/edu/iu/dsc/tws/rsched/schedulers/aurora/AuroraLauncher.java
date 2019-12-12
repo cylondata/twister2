@@ -95,14 +95,14 @@ public class AuroraLauncher implements ILauncher {
    * Terminate the Aurora Job
    */
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
 
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraContext.auroraClusterName(config);
     String role = AuroraContext.role(config);
     String env = AuroraContext.environment(config);
     AuroraClientController controller =
-        new AuroraClientController(cluster, role, env, jobName, true);
+        new AuroraClientController(cluster, role, env, jobID, true);
 
     boolean killedAuroraJob = controller.killJob();
     if (killedAuroraJob) {
@@ -112,7 +112,7 @@ public class AuroraLauncher implements ILauncher {
     }
 
     // first clear ZooKeeper data
-    boolean deletedZKNodes = ZKUtil.terminateJob(jobName, config);
+    boolean deletedZKNodes = ZKUtil.terminateJob(jobID, config);
 
     return killedAuroraJob && deletedZKNodes;
   }
@@ -126,7 +126,7 @@ public class AuroraLauncher implements ILauncher {
   public static Map<AuroraField, String> constructEnvVariables(Config config, JobAPI.Job job) {
 
     String jobName = SchedulerContext.jobName(config);
-    String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(job.getJobId());
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
 
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();

@@ -41,7 +41,7 @@ public class  DriverExample implements IDriver {
 //    scalingExampleCLI(scaler);
     scalingExample(scaler, messenger);
     broadcastExample(messenger);
-    sendCompleteMessage(messenger);
+//    sendCompleteMessage(messenger);
 
     LOG.info("Driver has finished execution.");
   }

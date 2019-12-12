@@ -51,7 +51,7 @@ public final class MPIWorkerStarter {
   private static int workerID = -1; // -1 means, not initialized
   private static int numberOfWorkers = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static String jobName = null;
+  private static String jobID = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
@@ -64,15 +64,15 @@ public final class MPIWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
-    jobName = args[1];
+    jobID = args[1];
     String encodedNodeInfoList = args[2];
 
     if (jobMasterIP == null) {
       throw new RuntimeException("JobMasterIP address is null");
     }
 
-    if (jobName == null) {
-      throw new RuntimeException("jobName is null");
+    if (jobID == null) {
+      throw new RuntimeException("jobID is null");
     }
 
     // remove the first and the last single quotas from encodedNodeInfoList
@@ -105,7 +105,7 @@ public final class MPIWorkerStarter {
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
     // read job description file
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
@@ -135,7 +135,7 @@ public final class MPIWorkerStarter {
     int workerPort = KubernetesContext.workerBasePort(config)
         + workerID * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
 
-    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
+    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobID, podIP);
     JobMasterAPI.NodeInfo nodeInfo = null;
     if (nodeIP == null) {
       LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
@@ -166,7 +166,7 @@ public final class MPIWorkerStarter {
     );
 
     JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobName, workerInfo);
+        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -209,7 +209,7 @@ public final class MPIWorkerStarter {
 
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
-      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+      volatileVolume = new K8sVolatileVolume(jobID, workerID);
     }
 
     worker.execute(config, workerID, workerController, pv, volatileVolume);

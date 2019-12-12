@@ -41,7 +41,7 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
     LOG.log(Level.INFO, "Terminating job for cluster: ",
         NomadContext.clusterType(config));
 
@@ -54,8 +54,8 @@ public class NomadLauncher implements ILauncher {
     IController controller = new NomadController(true);
     controller.initialize(newConfig);
 
-    jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobName).toAbsolutePath().toString();
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobName, config);
+    jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobID).toAbsolutePath().toString();
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobID, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
     return controller.kill(job);

@@ -103,10 +103,10 @@ public class KubernetesController {
 
   /**
    * return the list of StatefulSet names that matches this jobs StatefulSet names for workers
-   * they must be in the form of "jobName-index"
+   * they must be in the form of "jobID-index"
    * otherwise return an empty ArrayList
    */
-  public ArrayList<String> getStatefulSetsForJobWorkers(String jobName) {
+  public ArrayList<String> getStatefulSetsForJobWorkers(String jobID) {
     V1StatefulSetList setList = null;
     try {
       setList = appsApi.listNamespacedStatefulSet(
@@ -120,7 +120,7 @@ public class KubernetesController {
 
     for (V1StatefulSet statefulSet : setList.getItems()) {
       String ssName = statefulSet.getMetadata().getName();
-      if (ssName.matches(jobName + "-" + "[0-9]+")) {
+      if (ssName.matches(jobID + "-" + "[0-9]+")) {
         ssNameList.add(ssName);
       }
     }
