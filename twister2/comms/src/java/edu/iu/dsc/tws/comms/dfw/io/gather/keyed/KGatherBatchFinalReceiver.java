@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.comms.utils.THashMap;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 
 /**
  * Final receiver for keyed gather
@@ -68,11 +67,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
                                    Comparator<Object> keyComparator) {
     this.bulkReceiver = receiver;
     this.groupByKey = groupByKey;
-    if (keyComparator != null) {
-      this.gathered = new Int2ObjectRBTreeMap<>(keyComparator);
-    } else {
-      this.gathered = new Int2ObjectOpenHashMap<>();
-    }
+    this.gathered = new Int2ObjectOpenHashMap<>();
   }
 
   @Override
