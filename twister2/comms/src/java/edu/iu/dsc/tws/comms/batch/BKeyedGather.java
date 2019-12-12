@@ -136,11 +136,11 @@ public class BKeyedGather extends BaseOperation {
     MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
-      finalReceiver = new KGatherBatchFinalReceiver(rcvr, groupByKey);
+      finalReceiver = new KGatherBatchFinalReceiver(rcvr, groupByKey, comparator);
     } else {
       receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
+          rcvr, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
     if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(

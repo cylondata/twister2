@@ -64,9 +64,9 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     this.bulkReceiver = bulkReceiver;
     this.joinType = joinType;
     this.leftReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(0),
-        true, shuffleDirs, com, false);
+        shuffleDirs, com, false);
     this.rightReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(1),
-        true, shuffleDirs, com, false);
+        shuffleDirs, com, false);
     this.leftValues = new HashMap<>();
     this.rightValues = new HashMap<>();
     this.comparator = new KeyComparatorWrapper(com);
