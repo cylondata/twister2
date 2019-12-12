@@ -263,7 +263,7 @@ public class MPILauncher implements ILauncher {
     if (jmThread != null && JobMasterContext.isJobMasterUsed(config)
         && JobMasterContext.jobMasterRunsInClient(config)) {
       try {
-        jmThread.join();
+        jmThread.join(10000);
       } catch (InterruptedException ignore) {
       }
     }
