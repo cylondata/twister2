@@ -92,7 +92,9 @@ public final class MPIWorker {
       // lets do a barrier here so everyone is synchronized at the end
       // commenting out barrier to fix stale workers issue
       // MPI.COMM_WORLD.barrier();
-      closeWorker();
+      if (JobMasterContext.isJobMasterUsed(config)) {
+        closeWorker();
+      }
       MPI.Finalize();
     } catch (MPIException ignore) {
     }
@@ -155,14 +157,12 @@ public final class MPIWorker {
 
           if (rank != 0) {
             startWorker(config, rank, comm, job);
-            //closeWorker();
           } else {
             startMaster(config, rank);
           }
         } else {
           wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
           startWorker(config, rank, MPI.COMM_WORLD, job);
-          //closeWorker();
         }
       } else {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
