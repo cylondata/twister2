@@ -104,8 +104,9 @@ public class TWSUCXChannel implements TWSChannel {
       buffer.getByteBuffer().limit(buffer.getSize());
       buffer.getByteBuffer().position(0);
       int tag = this.workerId * tagWIdOffset + message.getHeader().getEdge();
-      LOG.info(String.format("SENDING to %d[%d] : %s, TAG[%d]", id, message.getHeader().getEdge(),
-          buffer.getByteBuffer(), tag));
+      LOG.log(Level.FINE, () ->
+          String.format("SENDING to %d[%d] : %s, TAG[%d]", id, message.getHeader().getEdge(),
+              buffer.getByteBuffer(), tag));
       this.endpoints.get(id).sendTaggedNonBlocking(
           buffer.getByteBuffer(),
           tag,
@@ -155,7 +156,7 @@ public class TWSUCXChannel implements TWSChannel {
       while (!receiveBuffers.isEmpty()) {
         final DataBuffer recvBuffer = receiveBuffers.poll();
         int tag = id * tagWIdOffset + edge;
-        LOG.info(String.format("EXPECTING from TAG: %d, Buffer : %s", tag,
+        LOG.log(Level.FINE, () -> String.format("EXPECTING from TAG: %d, Buffer : %s", tag,
             recvBuffer.getByteBuffer()));
         ucpWorker.recvTaggedNonBlocking(
             recvBuffer.getByteBuffer(),
@@ -164,11 +165,10 @@ public class TWSUCXChannel implements TWSChannel {
             new UcxCallback() {
               @Override
               public void onSuccess(UcpRequest request) {
-                LOG.info(String.format("Recv Buff from %d[%d] : %s, TAG[%d], Size : %d",
-                    id, edge, recvBuffer.getByteBuffer(), tag,
-                    recvBuffer.getByteBuffer().getInt(0)));
-                LOG.info(String.format("Sizes %d:%d", request.getRecvSize(),
-                    recvBuffer.getByteBuffer().getInt(0)));
+                LOG.log(Level.FINE, () ->
+                    String.format("Recv Buff from %d[%d] : %s, TAG[%d], Size : %d",
+                        id, edge, recvBuffer.getByteBuffer(), tag,
+                        recvBuffer.getByteBuffer().getInt(0)));
                 recvBuffer.setSize(recvBuffer.getByteBuffer().getInt(0));
                 callback.onReceiveComplete(id, edge, recvBuffer);
               }
