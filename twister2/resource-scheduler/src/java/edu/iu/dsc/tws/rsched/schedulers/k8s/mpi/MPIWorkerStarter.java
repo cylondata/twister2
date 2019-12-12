@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
@@ -115,6 +116,13 @@ public final class MPIWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+
+    // update jobMasterIP
+    // update config with jobMasterIP
+    config = Config.newBuilder()
+        .putAll(config)
+        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+        .build();
 
     InetAddress localHost = null;
     String podName = null;
