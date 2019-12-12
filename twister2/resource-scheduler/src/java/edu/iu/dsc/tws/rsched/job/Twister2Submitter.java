@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.config.ConfigSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class Twister2Submitter {
@@ -77,6 +78,14 @@ public final class Twister2Submitter {
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);
     String jobId = job.getJobId();
+
+    // write jobID to file
+    String dir = System.getProperty("user.home") + "/.twister2";
+    if (!FileUtils.isDirectoryExists(dir)) {
+      FileUtils.createDirectory(dir);
+    }
+    String filename = dir + "/last-job-id.txt";
+    FileUtils.writeToFile(filename, (jobId + "").getBytes(), true);
 
     //print ascii
     LOG.info("\n\n _____           _     _           ____  \n"
