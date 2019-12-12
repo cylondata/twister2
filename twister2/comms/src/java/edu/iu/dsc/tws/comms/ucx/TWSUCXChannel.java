@@ -166,13 +166,6 @@ public class TWSUCXChannel implements TWSChannel {
       this.receiveBuffers = receiveBuffers;
     }
 
-    private void removeAndCloseRequest(long requestId) {
-      UcpRequest removed = this.requestsMap.remove(requestId);
-      if (removed != null) {
-        removed.close();
-      }
-    }
-
     /**
      * This method will cancel all the requests posted and free the buffers
      */
@@ -181,7 +174,11 @@ public class TWSUCXChannel implements TWSChannel {
       if (!this.closed) {
         this.closed = true;
         this.requestsMap.values().forEach(request -> {
-          ucpWorker.cancelRequest(request);
+          try {
+            ucpWorker.cancelRequest(request);
+          } catch (NullPointerException nex) {
+            // ignored, already cancelled
+          }
         });
       }
     }
@@ -205,18 +202,20 @@ public class TWSUCXChannel implements TWSChannel {
                         id, edge, recvBuffer.getByteBuffer(), tag,
                         recvBuffer.getByteBuffer().getInt(0)));
                 recvBuffer.setSize(recvBuffer.getByteBuffer().getInt(0));
-                removeAndCloseRequest(requestId);
+                requestsMap.remove(requestId);
                 callback.onReceiveComplete(id, edge, recvBuffer);
               }
 
               @Override
               public void onError(int ucsStatus, String errorMsg) {
-                // This is a catastrophic failure
-                String failedMsg = "Failed to receive from " + id + " with status "
-                    + ucsStatus + ". Error : " + errorMsg;
-                LOG.severe(failedMsg);
-                removeAndCloseRequest(requestId);
-                throw new Twister2RuntimeException(failedMsg);
+                if (ucsStatus != -16) { // status -16(cancelled) is ignored
+                  // This is a catastrophic failure
+                  String failedMsg = "Failed to receive from " + id + " with status "
+                      + ucsStatus + ". Error : " + errorMsg;
+                  LOG.severe(failedMsg);
+                  requestsMap.remove(requestId);
+                  throw new Twister2RuntimeException(failedMsg);
+                }
               }
             }
         );
@@ -232,7 +231,7 @@ public class TWSUCXChannel implements TWSChannel {
         edge, callback, receiveBuffers);
     receiveProgress.progress();
     this.receiveProgresses.add(receiveProgress);
-    this.groupReceives.computeIfAbsent(id, workerId -> new HashMap<>())
+    this.groupReceives.computeIfAbsent(id, wi -> new HashMap<>())
         .computeIfAbsent(edge, edgeId -> new HashSet<>()).add(receiveProgress);
     return true;
   }
