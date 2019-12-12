@@ -338,7 +338,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     byteBuffer.flip();
 
     // we have the source of the message at 0th position as an integer
-    int source = byteBuffer.getInt(0);
+    int source = byteBuffer.getInt(Integer.BYTES); // since 0 has the size
     InMessage currentMessage = currentMessages.get(source);
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);

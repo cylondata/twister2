@@ -193,24 +193,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   /**
    * Create the channel operation
-   * @param channel
-   * @param cfg
-   * @param messageType
-   * @param rcvDataType
-   * @param kType
-   * @param rcvKeyType
-   * @param plan
-   * @param graphEdge
-   * @param recvExecutors
-   * @param msgReceiver
-   * @param pendingSendPerSource
-   * @param pRMPS
-   * @param pendingReceiveDesrialize
-   * @param serializer
-   * @param deSerializer
-   * @param keyed
-   * @param sendingGrpTargets
-   * @param receiveGrpsSources
    */
   ControlledChannelOperation(TWSChannel channel, Config cfg,
                              MessageType messageType, MessageType rcvDataType,
@@ -337,6 +319,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   /**
    * Start receiving from the next receiveGroup
+   *
    * @param receiveGroup the next receiveGroup
    */
   public void startGroup(int receiveGroup, int sendGroup,
@@ -390,7 +373,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     byteBuffer.flip();
 
     // we have the source of the message at 0th position as an integer
-    int source = byteBuffer.getInt(0);
+    int source = byteBuffer.getInt(Integer.BYTES); // since 0 has the size
     InMessage currentMessage = currentMessages.get(source);
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);
@@ -626,7 +609,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   /**
    * Progress deserialize
-   * @param receiveId
    */
   public void receiveDeserializeProgress(int receiveId) {
     Queue<InMessage> msgQueue = pendingReceiveDeSerializations.get(receiveId);
@@ -669,8 +651,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   /**
    * Progress the receive
-   *
-   * @param receiveId
    */
   public void receiveProgress(int receiveId) {
     Queue<InMessage> pendingReceiveMessages = pendingReceiveMessagesPerSource.get(receiveId);

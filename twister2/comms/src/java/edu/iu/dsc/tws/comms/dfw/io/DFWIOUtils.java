@@ -22,11 +22,11 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 public final class DFWIOUtils {
 
-  // source(int)+flags(int)+path(int)+num_of_msgs(int)+first_buffer_flag(short)
-  public static final int HEADER_SIZE = 17; // header size of first buffer
+  // size(int)+source(int)+flags(int)+path(int)+num_of_msgs(int)+first_buffer_flag(byte)
+  public static final int HEADER_SIZE = 21; // header size of first buffer
 
-  // source(int)+first_buffer_flag(short)
-  public static final int SHORT_HEADER_SIZE = 5; // header size of buffers other than the first one
+  // size(int)+source(int)+first_buffer_flag(byte)
+  public static final int SHORT_HEADER_SIZE = 9; // header size of buffers other than the first one
 
   private DFWIOUtils() {
     throw new UnsupportedOperationException();
@@ -50,6 +50,11 @@ public final class DFWIOUtils {
       throw new RuntimeException("The buffers should be able to hold the complete header");
     }
     ByteBuffer byteBuffer = buffer.getByteBuffer();
+    // reserve space for size : if the underlying communication mechanism doesn't has
+    // a mechanism to determine the size filled in buffer, this can be used to
+    // send that information
+    byteBuffer.putInt(0);
+
     // now lets put the content of header in
     byteBuffer.putInt(sendMessage.getSource());
     // the path we are on, if not grouped it will be 0 and ignored

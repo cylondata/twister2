@@ -91,6 +91,7 @@ public abstract class BaseSerializer implements MessageSerializer {
         }
         lastBufferIndicatorIndex = DFWIOUtils.HEADER_SIZE - 1;
       } else {
+        buffer.getByteBuffer().putInt(0); // temporarily set the total size as 0
         buffer.getByteBuffer().putInt(sendMessage.getSource());
 
         //indicate this is not the last buffer
