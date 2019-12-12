@@ -17,8 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-
 public final class JobIDUtils {
 
   // JobID format: <username>-<jobName>-<timestamp>
@@ -147,7 +145,7 @@ public final class JobIDUtils {
     try {
       startDate = sdf.parse("01/01/2019");
     } catch (ParseException e) {
-      throw new Twister2RuntimeException("Totally unexpected error when creating Date object");
+      throw new RuntimeException("Totally unexpected error when creating Date object");
     }
     long diff = System.currentTimeMillis() - startDate.getTime();
     return base36(diff);
