@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tset.worker;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -32,14 +33,16 @@ public interface BatchTSetIWorker extends IWorker {
         persistentVolume, volatileVolume);
 
     BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
+    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
 
     execute(tSetEnv);
-    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+
+    //If the execute returns without any errors we assume that the job completed properly
     JobExecutionState.WorkerJobState workerState =
         JobExecutionState.WorkerJobState.newBuilder()
             .setFailure(false)
-            .setJobName("Test Name")
-            .setWorkerMessage("Test Message")
+            .setJobName(config.getStringValue(Context.JOB_ID))
+            .setWorkerMessage("Worker Completed")
             .build();
     senderToDriver.sendToDriver(workerState);
   }
