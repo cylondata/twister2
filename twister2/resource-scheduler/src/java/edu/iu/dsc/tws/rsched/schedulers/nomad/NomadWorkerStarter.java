@@ -143,7 +143,7 @@ public final class NomadWorkerStarter {
         .required()
         .build();
 
-    Option jobName = Option.builder("j")
+    Option jobID = Option.builder("j")
         .desc("Job name")
         .longOpt("job_name")
         .hasArgs()
@@ -154,7 +154,7 @@ public final class NomadWorkerStarter {
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
-    options.addOption(jobName);
+    options.addOption(jobID);
 
     return options;
   }
@@ -164,7 +164,7 @@ public final class NomadWorkerStarter {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobName = cmd.getOptionValue("job_name");
+    String jobID = cmd.getOptionValue("job_name");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
@@ -178,7 +178,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     job.getNumberOfWorkers();
 
@@ -188,7 +188,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(SchedulerContext.JOB_NAME, job.getJobName()).build();
+        put(SchedulerContext.JOB_NAME, job.getJobId()).build();
     return updatedConfig;
   }
 
@@ -244,8 +244,8 @@ public final class NomadWorkerStarter {
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    String jobName = NomadContext.jobName(config);
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
+    String jobID = NomadContext.jobId(config);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + numberOfWorkers);
@@ -352,10 +352,10 @@ public final class NomadWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
+    String jobID = NomadContext.jobId(cfg);
 
     NomadPersistentVolume pv =
-        new NomadPersistentVolume(controller.createPersistentJobDirName(jobName), workerID);
+        new NomadPersistentVolume(controller.createPersistentJobDirName(jobID), workerID);
     String persistentJobDir = pv.getJobDir().getAbsolutePath();
     //LOG.log(Level.INFO, "PERSISTENT LOG DIR is ......: " + persistentJobDir);
     //String persistentJobDir = getTaskDirectory();
@@ -365,7 +365,7 @@ public final class NomadWorkerStarter {
     }
 
 //    if (NomadContext.getLoggingSandbox(cfg)) {
-//      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+//      persistentJobDir = Paths.get(jobWorkingDirectory, jobID).toString();
 //    }
     //nfs/shared/twister2/
     //String logDir = "/etc/nomad.d/"; //"/nfs/shared/twister2" + "/logs";

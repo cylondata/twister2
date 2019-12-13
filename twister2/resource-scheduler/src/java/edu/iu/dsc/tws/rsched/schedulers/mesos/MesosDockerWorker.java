@@ -49,7 +49,7 @@ public class MesosDockerWorker {
   public static final Logger LOG = Logger.getLogger(MesosDockerWorker.class.getName());
   public static JMWorkerAgent jobMasterAgent;
   private static Config config;
-  private static String jobName;
+  private static String jobID;
   private static int startingPort = 30000;
   private static int resourceIndex = 0;
   private static int workerId = 0;
@@ -60,7 +60,7 @@ public class MesosDockerWorker {
     //String homeDir = System.getenv("HOME");
 
     workerId = Integer.parseInt(System.getenv("WORKER_ID"));
-    jobName = System.getenv("JOB_NAME");
+    jobID = System.getenv("JOB_NAME");
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -81,7 +81,7 @@ public class MesosDockerWorker {
     MesosWorkerController workerController = null;
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-        + jobName + ".job");
+        + jobID + ".job");
     try {
 
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
@@ -141,7 +141,7 @@ public class MesosDockerWorker {
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
     String workerClass = job.getWorkerClassName();
     LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;
@@ -159,7 +159,7 @@ public class MesosDockerWorker {
     //volatileVolume needs to be checked from job object
 //    if (SchedulerContext.volatileDiskRequested(config)) {
 //      volatileVolume =
-//          new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
+//          new MesosVolatileVolume(SchedulerContext.jobID(config), workerID);
 //    }
 
     // lets create the resource plan
