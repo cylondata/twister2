@@ -38,7 +38,7 @@ public interface CheckpointingBatchTSetIWorker extends IWorker {
     JobExecutionState.WorkerJobState workerState =
         JobExecutionState.WorkerJobState.newBuilder()
             .setFailure(false)
-            .setJobName(config.getStringValue(Context.JOB_ID))
+            .setJobName(config.getStringValue(Context.JOB_NAME))
             .setWorkerMessage("Worker Completed")
             .build();
     senderToDriver.sendToDriver(workerState);
