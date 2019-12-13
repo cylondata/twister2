@@ -31,7 +31,7 @@ before_install:
         sudo mv $HOME/.cache/apt/*.deb /var/cache/apt/archives/
     fi
   - echo "Installing C++ and Python"
-  - sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven
+  - sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven autoconf
   - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
 
 jobs:
