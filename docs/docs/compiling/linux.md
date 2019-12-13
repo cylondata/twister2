@@ -39,7 +39,7 @@ cd twister2
 3. Install the required tools
 
 ```bash
-sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y libnuma-dev libc-dev
 ```
 
 ```text
