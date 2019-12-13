@@ -63,10 +63,10 @@ public class MesosController {
     return uriBuilder.build();
   }
 
-  public Protos.CommandInfo getCommandInfo(String jobName, String workerName) {
+  public Protos.CommandInfo getCommandInfo(String jobID, String workerName) {
     String command = "java -cp \"twister2-core/lib/*:twister2-job/libexamples-java.jar:"
         + "/root/.twister2/repository/twister2-core/lib/mesos-1.5.0.jar\" "
-        + workerClass + " " + jobName + " " + workerName;
+        + workerClass + " " + jobID + " " + workerName;
     Protos.CommandInfo.Builder cmdInfoBuilder = Protos.CommandInfo.newBuilder();
     cmdInfoBuilder.addUris(getJobUri()); //mesos-fetcher uses this to fetch job
     cmdInfoBuilder.addUris(getCoreUri());
@@ -74,10 +74,10 @@ public class MesosController {
     return cmdInfoBuilder.build();
   }
 
-  public Protos.ExecutorInfo getExecutorInfo(String jobName, String executorName) {
+  public Protos.ExecutorInfo getExecutorInfo(String jobID, String executorName) {
     Protos.ExecutorInfo.Builder builder = Protos.ExecutorInfo.newBuilder();
     builder.setExecutorId(Protos.ExecutorID.newBuilder().setValue(executorName));
-    builder.setCommand(getCommandInfo(jobName, executorName));
+    builder.setCommand(getCommandInfo(jobID, executorName));
     builder.setName(executorName);
     return builder.build();
   }
@@ -113,8 +113,8 @@ public class MesosController {
     return true;
   }
 
-  public String createPersistentJobDirName(String jobName) {
-    return SchedulerContext.nfsServerPath(config) + "/" + jobName;
+  public String createPersistentJobDirName(String jobID) {
+    return SchedulerContext.nfsServerPath(config) + "/" + jobID;
   }
 
   /**

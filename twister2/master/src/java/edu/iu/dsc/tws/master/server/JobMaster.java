@@ -462,6 +462,8 @@ public class JobMaster {
 
     // if all workers already joined, publish that event to the driver
     // this usually happens when jm restarted
+    // since now we require all workers to be both joined and connected,
+    // this should not be an issue, but i am not %100 sure. so keeping it.
     // TODO: make sure driver thread started before publishing this event
     //       as a temporary solution, wait 50 ms before starting new thread
     if (workerMonitor.isAllJoined()) {

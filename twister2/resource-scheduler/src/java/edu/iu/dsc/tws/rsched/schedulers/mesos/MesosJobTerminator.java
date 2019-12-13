@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.master.IJobTerminator;
 
 public class MesosJobTerminator implements IJobTerminator {
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
     return false;
   }
 }

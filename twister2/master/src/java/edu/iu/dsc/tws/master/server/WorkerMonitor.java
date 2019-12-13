@@ -77,6 +77,13 @@ public class WorkerMonitor implements MessageHandler {
   // a flag to show whether all expected workers has already joined
   private boolean allJoined = false;
 
+  // a flag to show whether AllJoined event published to the driver
+  // it is published when the driver exists, all workers joined and all workers connected
+  // it is initially false and becomes true after it is published
+  // it also becomes false after scaling up and becomes true
+  // when AllJoined event published to the driver again
+  private boolean publishedAllJoinedToDriver = false;
+
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -205,7 +212,7 @@ public class WorkerMonitor implements MessageHandler {
       return failMessage;
     }
 
-      // if it is a regular join event
+    // if it is a regular join event
     // add the worker to worker list
     workers.put(workerWithState.getWorkerID(), workerWithState);
     LOG.info("Worker: " + workerWithState.getWorkerID() + " joined the job.");
@@ -243,7 +250,7 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // if this is not a fault tolerant job, we terminate the job with failure
-    // because, this worker has failed previously failed and it is coming from failure
+    // because, this worker has failed previously and it is coming from failure
     if (!faultTolerant) {
       jobState = JobState.FAILED;
       String failMessage =
@@ -270,15 +277,16 @@ public class WorkerMonitor implements MessageHandler {
     return null;
   }
 
+  /**
+   * handle allJoined after started and restarted events
+   */
   private void handleAllJoined() {
 
     if (!allJoined && allWorkersJoined()) {
       allJoined = true;
 
-      // inform Driver if exist
-      if (driver != null) {
-        driver.allWorkersJoined(getWorkerInfoList());
-      }
+      // inform Driver if exist and allConnected
+      informDriverForAllJoined();
 
       // if the job is becoming all joined for the first time, inform dashboard
       if (jobState == JobState.STARTING) {
@@ -288,7 +296,6 @@ public class WorkerMonitor implements MessageHandler {
           dashClient.jobStateChange(JobState.STARTED);
         }
       }
-
     }
   }
 
@@ -379,12 +386,14 @@ public class WorkerMonitor implements MessageHandler {
   public void workersScaledUp(int instancesAdded) {
 
     allJoined = false;
+    publishedAllJoinedToDriver = false;
 
     // keep previous numberOfWorkers and update numberOfWorkers with new value
     numberOfWorkers += instancesAdded;
     if (jobMaster.getZkMasterController() != null) {
       jobMaster.getZkMasterController().jobScaledUp(numberOfWorkers);
-    } else if (jobMaster.getWorkerHandler() != null) {
+    }
+    if (jobMaster.getWorkerHandler() != null) {
       jobMaster.getWorkerHandler().workersScaledUp(instancesAdded);
     }
 
@@ -400,9 +409,7 @@ public class WorkerMonitor implements MessageHandler {
         jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
       }
 
-      if (driver != null) {
-        driver.allWorkersJoined(getWorkerInfoList());
-      }
+      informDriverForAllJoined();
     }
 
     // send Scaled message to the dashboard
@@ -416,7 +423,7 @@ public class WorkerMonitor implements MessageHandler {
    * returns true if allJoined becomes true
    */
   public boolean addJoinedWorkers(List<WorkerWithState> joinedWorkers) {
-    for (WorkerWithState wws: joinedWorkers) {
+    for (WorkerWithState wws : joinedWorkers) {
       workers.put(wws.getWorkerID(), wws);
     }
 
@@ -435,10 +442,12 @@ public class WorkerMonitor implements MessageHandler {
    * inform the driver on restarts if all workers already joined
    */
   public void informDriverForAllJoined() {
-    if (allJoined) {
-      if (driver != null) {
-        driver.allWorkersJoined(getWorkerInfoList());
-      }
+    if (allJoined
+        && driver != null
+        && !publishedAllJoinedToDriver
+        && jobMaster.getWorkerHandler().isAllConnected()) {
+      driver.allWorkersJoined(getWorkerInfoList());
+      publishedAllJoinedToDriver = true;
     }
   }
 
