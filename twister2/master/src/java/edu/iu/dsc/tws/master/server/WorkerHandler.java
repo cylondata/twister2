@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,6 +46,11 @@ public class WorkerHandler implements MessageHandler {
   private RRServer rrServer;
   private boolean zkUsed;
 
+  // shows whether all workers connected to the job master
+  // it is initially false, it becomes true after all workers connected
+  // it also becomes false after scale-up and it becomes true when new workers connected
+  private boolean allConnected = false;
+
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
@@ -52,6 +59,10 @@ public class WorkerHandler implements MessageHandler {
     this.zkUsed = zkUsed;
 
     waitList = new HashMap<>();
+  }
+
+  public boolean isAllConnected() {
+    return allConnected;
   }
 
   @Override
@@ -80,10 +91,19 @@ public class WorkerHandler implements MessageHandler {
 
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
 
+    // if all workers connected, set it
+    handleAllConnected();
+
     if (zkUsed) {
       int wID = message.getWorkerInfo().getWorkerID();
       LOG.fine("Since ZooKeeper is used, ignoring RegisterWorker message for worker: " + wID);
       sendRegisterWorkerResponse(id, wID, true, null);
+
+      // if all workers connected with this worker,
+      // publish all joined event to the driver if exists
+      // if zk is not used, this is handled in workerMonitor
+      workerMonitor.informDriverForAllJoined();
+
       return;
     }
 
@@ -194,6 +214,10 @@ public class WorkerHandler implements MessageHandler {
     }
   }
 
+  /**
+   * workerMonitor calls this method when job is scaled down and zk is not used
+   * @param instancesRemoved
+   */
   public void workersScaledDown(int instancesRemoved) {
 
     int change = 0 - instancesRemoved;
@@ -209,7 +233,18 @@ public class WorkerHandler implements MessageHandler {
     }
   }
 
+  /**
+   * workerMonitor calls this method when the job is scaled up
+   * @param instancesAdded
+   */
   public void workersScaledUp(int instancesAdded) {
+
+    unsetAllConnected();
+
+    if (zkUsed) {
+      return;
+    }
+
     JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
         .setChange(instancesAdded)
         .setNumberOfWorkers(workerMonitor.getNumberOfWorkers())
@@ -299,5 +334,41 @@ public class WorkerHandler implements MessageHandler {
     }
   }
 
+  /**
+   * return true all all workers connected
+   * @return
+   */
+  private boolean allWorkersConnected() {
+    int numberOfWorkers = workerMonitor.getNumberOfWorkers();
+    Set<Integer> connectedWorkers = rrServer.getConnectedWorkers();
+    if (connectedWorkers.size() == numberOfWorkers
+        && Collections.max(connectedWorkers) == numberOfWorkers - 1) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * if all connected, set allConnected flag
+   */
+  private void handleAllConnected() {
+    if (!allConnected && allWorkersConnected()) {
+      allConnected = true;
+    }
+  }
+
+  /**
+   * this is called after worker scale-up
+   * sets allConnected to false
+   */
+  public void unsetAllConnected() {
+    // first check whether all connected
+    // this is possible but very unlikely
+    if (allWorkersConnected()) {
+      return;
+    }
+
+    allConnected = false;
+  }
 
 }
