@@ -11,10 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.util;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.math.BigInteger;
 import java.util.Locale;
 
 public final class JobIDUtils {
@@ -140,34 +137,10 @@ public final class JobIDUtils {
    * @return
    */
   public static String timestamp() {
-    DateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH);
-    Date startDate = null;
-    try {
-      startDate = sdf.parse("01/01/2019");
-    } catch (ParseException e) {
-      throw new RuntimeException("Totally unexpected error when creating Date object");
-    }
-    long diff = System.currentTimeMillis() - startDate.getTime();
-    return base36(diff);
-  }
-
-  /**
-   * convert given time stamp to base36 alpha numeric string
-   * @param ts
-   * @return
-   */
-  public static String base36(long ts) {
-    String digits = "0123456789abcdefghijklmnopqrstuvwxyz";
-    int base = digits.length();
-    long n = ts;
-    String s = "";
-
-    while (n > 0) {
-      long d = n % base;
-      s = digits.charAt((int) d) + s;
-      n = n / base;
-    }
-    return s;
+    // long value of January 01, 2019
+    long jan2019 = 1546290000000L;
+    long diff = System.currentTimeMillis() - jan2019;
+    return BigInteger.valueOf(diff).toString(36);
   }
 
 }
