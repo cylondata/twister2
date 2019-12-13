@@ -86,7 +86,6 @@ public class ReduceExample extends BatchTsetExample {
           return true;
         });
     env.run(sink);
-
   }
 
 

@@ -17,6 +17,9 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
@@ -31,6 +34,14 @@ public interface BatchTSetIWorker extends IWorker {
     BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 
     execute(tSetEnv);
+    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+    JobExecutionState.WorkerJobState workerState =
+        JobExecutionState.WorkerJobState.newBuilder()
+            .setFailure(false)
+            .setJobName("Test Name")
+            .setWorkerMessage("Test Message")
+            .build();
+    senderToDriver.sendToDriver(workerState);
   }
 
   void execute(BatchTSetEnvironment env);

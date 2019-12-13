@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
@@ -74,10 +75,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
+    Twister2JobState state = new Twister2JobState(false);
 
     if (!configParametersOK(job)) {
-      return false;
+      return state;
     }
 
 
@@ -90,7 +92,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!jobFile.exists()) {
       LOG.log(Level.SEVERE, "Can not access job package file: " + jobPackageFile
           + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-      return false;
+      return state;
     }
 
     long jobFileSize = jobFile.length();
@@ -101,7 +103,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // check all relevant entities on Kubernetes master
     boolean allEntitiesOK = checkEntitiesForJob(job);
     if (!allEntitiesOK) {
-      return false;
+      return state;
     }
 
     // create znodes at ZooKeeper server if ZK server is used
@@ -109,7 +111,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       boolean jobZnodeCreated = createJobZnodes(job);
       if (!jobZnodeCreated) {
         // nothing to clear at this point, if the job znode is not created
-        return false;
+        return state;
       }
     }
 
@@ -123,7 +125,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     boolean servicesCreated = initServices(jobName);
     if (!servicesCreated) {
       clearupWhenSubmissionFails(jobName);
-      return false;
+      return state;
     }
 
     // if persistent volume is requested, create a persistent volume claim
@@ -131,7 +133,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       boolean volumesSetup = initPersistentVolumeClaim(job);
       if (!volumesSetup) {
         clearupWhenSubmissionFails(jobName);
-        return false;
+        return state;
       }
     }
 
@@ -139,7 +141,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     boolean statefulSetInitialized = initStatefulSets(job);
     if (!statefulSetInitialized) {
       clearupWhenSubmissionFails(jobName);
-      return false;
+      return state;
     }
 
     if (KubernetesContext.clientToPodsUploading(config)) {
@@ -157,7 +159,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
 
         clearupWhenSubmissionFails(jobName);
-        return false;
+        return state;
       }
     }
 
@@ -168,7 +170,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         LOG.log(Level.SEVERE, "JobMaster can not be started. "
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
         clearupWhenSubmissionFails(jobName);
-        return false;
+        return state;
       }
     }
 
@@ -184,13 +186,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         LOG.warning("Thread Interrupted when waiting for uploader to join.");
       }
     }
-    return true;
+    state.setRequestGranted(true);
+    return state;
   }
 
   /**
    * create znodes on ZooKeeper server for this job
-   * @param job
-   * @return
    */
   public boolean createJobZnodes(JobAPI.Job job) {
 
@@ -283,8 +284,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   /**
    * if dashboard address is a Kubernetes service name
    * get the IP address from service name by querying Kubernetes master
-   * @param dashAddress
-   * @return
    */
   private String getDashboardIP(String dashAddress) {
     // first get dashboard service name from dashboard address
@@ -602,8 +601,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   /**
    * delete job znodes on ZooKeeper server
-   * @param jobName
-   * @return
    */
   public boolean deleteJobZnode(String jobName) {
 

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.LauncherException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -266,7 +267,7 @@ public class ResourceAllocator {
    *
    * @param job the actual job description
    */
-  public void submitJob(JobAPI.Job job, Config config) {
+  public Twister2JobState submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
     String jobDirectory = prepareJobFiles(config, job);
 
@@ -325,11 +326,13 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
-    launcher.launch(updatedJob);
+    Twister2JobState state = launcher.launch(updatedJob);
 
     launcher.close();
 
     clearTemporaryFiles(jobDirectory);
+
+    return state;
   }
 
   /**

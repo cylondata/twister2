@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.driver.IDriverMessenger;
+import edu.iu.dsc.tws.api.driver.IDriverMessenger;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
 
 public class DriverMessenger implements IDriverMessenger {

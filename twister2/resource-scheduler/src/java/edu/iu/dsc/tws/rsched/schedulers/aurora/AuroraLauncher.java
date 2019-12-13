@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
@@ -44,7 +45,7 @@ public class AuroraLauncher implements ILauncher {
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
 
     String jobName = job.getJobName();
 
@@ -80,8 +81,8 @@ public class AuroraLauncher implements ILauncher {
     bindings.put(AuroraField.NUMBER_OF_WORKERS, job.getNumberOfWorkers() + "");
 
     logEnvVariables(bindings);
-
-    return controller.createJob(bindings, auroraFilename);
+    Twister2JobState state = new Twister2JobState(controller.createJob(bindings, auroraFilename));
+    return state;
   }
 
   /**
