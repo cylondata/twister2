@@ -27,30 +27,24 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
   private PartitionFunc<K> partitionFunction;
   private Comparator<K> keyCompartor;
 
-  private boolean sortByKey;
   private boolean groupByKey = false;
 
   private boolean useDisk = false;
 
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism, false, null);
+    this(tSetEnv, null, sourceParallelism, null);
   }
 
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                                    int sourceParallelism) {
-    this(tSetEnv, partitionFn, sourceParallelism, false, null);
+    this(tSetEnv, partitionFn, sourceParallelism, null);
   }
 
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                                   int sourceParallelism, boolean sortByKey,
-                                   Comparator<K> keyCompartor) {
+                                   int sourceParallelism, Comparator<K> keyCompartor) {
     super(tSetEnv, "kgather", sourceParallelism);
     this.partitionFunction = partitionFn;
-    this.sortByKey = sortByKey;
     this.keyCompartor = keyCompartor;
-    if (sortByKey && keyCompartor == null) {
-      LOG.warning("Key comparator cannot be null when sorting is true");
-    }
   }
 
   public KeyedGatherUngroupedTLink() {
@@ -63,7 +57,7 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
     Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());
     e.setKeyed(true);
     e.setPartitioner(partitionFunction);
-    e.addProperty(CommunicationContext.SORT_BY_KEY, this.sortByKey);
+    e.addProperty(CommunicationContext.SORT_BY_KEY, this.keyCompartor != null);
     e.addProperty(CommunicationContext.GROUP_BY_KEY, this.groupByKey);
 
     if (this.keyCompartor != null) {

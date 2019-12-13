@@ -197,7 +197,7 @@ public class TeraSort implements IWorker {
         .withKeyType(MessageTypes.BYTE_ARRAY)
         .withTaskPartitioner(taskPartitioner)
         .useDisk(true)
-        .sortBatchByKey(true, ByteArrayComparator.getInstance())
+        .sortBatchByKey(ByteArrayComparator.getInstance())
         .groupBatchByKey(false);
 
     if (config.getBooleanValue(ARG_FIXED_SCHEMA, false)) {

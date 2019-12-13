@@ -126,9 +126,6 @@ public class BKeyedGather extends BaseOperation {
                       Comparator<Object> comparator,
                       boolean groupByKey, int edgeId, MessageSchema messageSchema) {
     super(comm, false, CommunicationContext.KEYED_GATHER);
-    if (useDisk && comparator == null) {
-      throw new RuntimeException("Key comparator should be specified in disk based mode");
-    }
     this.keyType = kType;
     this.dataType = dType;
 
@@ -136,11 +133,11 @@ public class BKeyedGather extends BaseOperation {
     MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
-      finalReceiver = new KGatherBatchFinalReceiver(rcvr, groupByKey);
+      finalReceiver = new KGatherBatchFinalReceiver(rcvr, groupByKey, comparator);
     } else {
       receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
+          rcvr, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
     if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(

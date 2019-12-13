@@ -103,8 +103,8 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    waitAndComplete();
-//    testScalingMessaging(workerController);
+//    waitAndComplete();
+    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());

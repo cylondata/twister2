@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
 import edu.iu.dsc.tws.comms.utils.THashMap;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
@@ -43,13 +45,29 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   /**
    * The reduced values for each target and key
    */
-  protected Int2ObjectOpenHashMap<Map<Object, List<Object>>> gathered =
-      new Int2ObjectOpenHashMap<>();
+  protected Int2ObjectMap<Map<Object, List<Object>>> gathered;
 
+  /**
+   * Create a receiver without sorting
+   * @param receiver  the receiver
+   * @param groupByKey weather to group return values according to key
+   */
   public KGatherBatchFinalReceiver(BulkReceiver receiver,
                                    boolean groupByKey) {
+    this(receiver, groupByKey, null);
+  }
+
+  /**
+   * Create a receiver with sorting
+   * @param receiver  the receiver
+   * @param groupByKey weather to group return values according to key
+   */
+  public KGatherBatchFinalReceiver(BulkReceiver receiver,
+                                   boolean groupByKey,
+                                   Comparator<Object> keyComparator) {
     this.bulkReceiver = receiver;
     this.groupByKey = groupByKey;
+    this.gathered = new Int2ObjectOpenHashMap<>();
   }
 
   @Override
