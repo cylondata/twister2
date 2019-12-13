@@ -33,8 +33,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class MesosScheduler implements Scheduler {
   public static final Logger LOG = Logger.getLogger(MesosScheduler.class.getName());
-  private final String jobName;
-  private final String jobId;
+  private final String jobID;
   private int taskIdCounter = 0;
   private Config config;
   private MesosController controller;
@@ -53,8 +52,7 @@ public class MesosScheduler implements Scheduler {
     this.config = mconfig;
     totalTaskCount = MesosContext.numberOfContainers(config);
     this.job = myJob;
-    this.jobName = myJob.getJobName();
-    this.jobId = myJob.getJobId();
+    this.jobID = myJob.getJobId();
   }
 
   @Override
@@ -127,7 +125,7 @@ public class MesosScheduler implements Scheduler {
         if (controller.isResourceSatisfy(offer, computeResource)) {
           //creates job directory on nfs
           MesosPersistentVolume pv = new MesosPersistentVolume(
-              controller.createPersistentJobDirName(jobName), workerCounter);
+              controller.createPersistentJobDirName(jobID), workerCounter);
           String persistentVolumeDir = pv.getJobDir().getAbsolutePath();
 
           Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
@@ -165,7 +163,7 @@ public class MesosScheduler implements Scheduler {
             if (MesosContext.getUseDockerContainer(config).equals("true")) {
 
               Protos.Parameter jobNameParam = Protos.Parameter.newBuilder().setKey("env")
-                  .setValue("JOB_NAME=" + jobName).build();
+                  .setValue("JOB_NAME=" + jobID).build();
 
               Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("WORKER_ID=" + (workerCounter - 1)).build();
@@ -178,7 +176,7 @@ public class MesosScheduler implements Scheduler {
                   .setValue("COMPUTE_RESOURCE_INDEX=" + resourceIndex).build();
 
               Protos.Parameter jobIdParam = Protos.Parameter.newBuilder().setKey("env")
-                  .setValue("JOB_ID=" + jobId).build();
+                  .setValue("JOB_ID=" + jobID).build();
 
               Protos.Parameter classNameParam = null;
 
@@ -267,7 +265,7 @@ public class MesosScheduler implements Scheduler {
                   .setCommand(Protos.CommandInfo.newBuilder().setShell(false));
             } else {
               Protos.ExecutorInfo executorInfo =
-                  controller.getExecutorInfo(jobName,
+                  controller.getExecutorInfo(jobID,
                       MesosPersistentVolume.WORKER_DIR_NAME_PREFIX + workerCounter);
 
               ((TaskInfo.Builder) taskBuilder)

@@ -40,7 +40,7 @@ public class MesosWorker implements Executor {
   public static final Logger LOG = Logger.getLogger(MesosWorker.class.getName());
   private static int executorCounter = 0;
   private Config config;
-  private String jobName;
+  private String jobID;
 
   @Override
   public void registered(ExecutorDriver executorDriver,
@@ -71,8 +71,8 @@ public class MesosWorker implements Executor {
     executorDriver.sendStatusUpdate(status);
 
 
-    //jobName = SchedulerContext.jobName(config);
-    //System.out.println("job name is " + jobName);
+    //jobID = SchedulerContext.jobID(config);
+    //System.out.println("job name is " + jobID);
     String workerClass = SchedulerContext.workerClass(config);
     IWorker container;
     try {
@@ -96,7 +96,7 @@ public class MesosWorker implements Executor {
 
     MesosWorkerController workerController;
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
       workerController = new MesosWorkerController(config, job,
           InetAddress.getLocalHost().getHostAddress(), toIntExact(port), id);
       LOG.info("Initializing with zookeeper");
@@ -157,10 +157,10 @@ public class MesosWorker implements Executor {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
 
-    worker.jobName = args[0];
+    worker.jobID = args[0];
     String workerName = args[1];
     initLogging(worker.config, SchedulerContext.nfsServerPath(worker.config)
-        + "/" + worker.jobName + "/logs", workerName);
+        + "/" + worker.jobID + "/logs", workerName);
 
     System.out.println(worker.config);
     MesosExecutorDriver driver = new MesosExecutorDriver(
