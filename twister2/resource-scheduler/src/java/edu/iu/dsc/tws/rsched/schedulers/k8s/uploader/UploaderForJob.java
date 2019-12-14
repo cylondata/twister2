@@ -63,7 +63,7 @@ public class UploaderForJob extends Thread {
   private Config config;
   private String namespace;
   private JobAPI.Job job;
-  private String jobName;
+  private String jobID;
   private String jobPackageFile;
 
   private ArrayList<String> podNames;
@@ -81,13 +81,13 @@ public class UploaderForJob extends Thread {
     this.config = config;
     this.namespace = KubernetesContext.namespace(config);
     this.job = job;
-    this.jobName = job.getJobName();
+    this.jobID = job.getJobId();
     this.jobPackageFile = jobPackageFile;
 
     podNames = KubernetesUtils.generatePodNames(job);
     // add job master pod name
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobName()));
+      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobId()));
     }
   }
 
@@ -117,7 +117,7 @@ public class UploaderForJob extends Thread {
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobID);
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
     String podPhase = "Running";
@@ -150,7 +150,7 @@ public class UploaderForJob extends Thread {
         }
 
         if (item.object != null
-            && item.object.getMetadata().getName().startsWith(jobName)
+            && item.object.getMetadata().getName().startsWith(jobID)
             && podPhase.equals(item.object.getStatus().getPhase())
         ) {
           String podName = item.object.getMetadata().getName();

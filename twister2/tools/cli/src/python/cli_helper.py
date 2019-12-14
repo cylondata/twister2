@@ -33,7 +33,7 @@ def create_parser(subparsers, action, help_arg):
     parser = subparsers.add_parser(
         action,
         help=help_arg,
-        usage="%(prog)s [options] cluster <job-name>",
+        usage="%(prog)s [options] cluster <job-id>",
         add_help=True)
 
     args.add_titles(parser)
@@ -57,13 +57,13 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
     :param action:        description of action taken
     :return:
     '''
-    job_name = cl_args['job-name']
+    job_id = cl_args['job-id']
 
     new_args = [
         "--cluster", cl_args['cluster'],
         "--twister2_home", config.get_twister2_dir(),
         "--config_path", config.get_twister2_conf_dir(),
-        "--job_name", job_name,
+        "--job_id", job_id,
         "--command", command,
     ]
     new_args += extra_args
@@ -87,7 +87,7 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
         java_defines=java_defines
     )
 
-    err_msg = "Failed to %s %s" % (action, job_name)
-    succ_msg = "Successfully %s %s" % (action, job_name)
+    err_msg = "Failed to %s %s" % (action, job_id)
+    succ_msg = "Successfully %s %s" % (action, job_id)
     result.add_context(err_msg, succ_msg)
     return result

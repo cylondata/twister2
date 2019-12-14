@@ -234,7 +234,7 @@ public final class NomadJobMasterStarter {
     }
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          hostAddress, port);
+          hostAddress, port, job.getJobId());
       LOG.info("JobMaster REGISTERED..:" + hostAddress);
     } catch (Exception e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");

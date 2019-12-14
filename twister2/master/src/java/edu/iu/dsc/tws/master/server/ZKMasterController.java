@@ -45,7 +45,7 @@ public class ZKMasterController {
 
   // number of workers in this job
   protected int numberOfWorkers;
-  protected String jobName;
+  protected String jobID;
 
   // config object
   protected Config config;
@@ -83,20 +83,20 @@ public class ZKMasterController {
   private WorkerMonitor workerMonitor;
 
   public ZKMasterController(Config config,
-                            String jobName,
+                            String jobID,
                             int numberOfWorkers,
                             String jmAddress,
                             WorkerMonitor workerMonitor) {
     this.config = config;
-    this.jobName = jobName;
+    this.jobID = jobID;
     this.numberOfWorkers = numberOfWorkers;
     this.jmAddress = jmAddress;
     this.workerMonitor = workerMonitor;
 
     rootPath = ZKContext.rootNode(config);
-    persDir = ZKUtils.persDir(rootPath, jobName);
-    ephemDir = ZKUtils.ephemDir(rootPath, jobName);
-    barrierDir = ZKUtils.barrierDir(rootPath, jobName);
+    persDir = ZKUtils.persDir(rootPath, jobID);
+    ephemDir = ZKUtils.ephemDir(rootPath, jobID);
+    barrierDir = ZKUtils.barrierDir(rootPath, jobID);
   }
 
   /**
@@ -203,7 +203,7 @@ public class ZKMasterController {
   private boolean allJoinedPublished() throws Exception {
 
     TreeMap<Integer, JobMasterAPI.JobEvent> events =
-        ZKEventsManager.getAllEvents(client, rootPath, jobName);
+        ZKEventsManager.getAllEvents(client, rootPath, jobID);
 
     for (JobMasterAPI.JobEvent event: events.values()) {
       // allJoined event with highest index, must have the same number of workers
@@ -245,7 +245,7 @@ public class ZKMasterController {
    * create ephemeral znode for the job master
    */
   private void createJMEphemZnode(JobMasterState initialState) {
-    String jmPath = ZKUtils.jmEphemPath(rootPath, jobName);
+    String jmPath = ZKUtils.jmEphemPath(rootPath, jobID);
 
     // put masterAddress and its state into znode body
     byte[] jmZnodeBody = ZKUtils.encodeJobMasterZnode(jmAddress, initialState.getNumber());
@@ -406,7 +406,7 @@ public class ZKMasterController {
         .setRestarted(workerRestarted)
         .build();
     try {
-      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -422,7 +422,7 @@ public class ZKMasterController {
         .build();
 
     try {
-      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -442,7 +442,7 @@ public class ZKMasterController {
         .setAllJoined(allWorkersJoined)
         .build();
     try {
-      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -459,7 +459,7 @@ public class ZKMasterController {
         .setJmRestarted(jmRestarted)
         .build();
     try {
-      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -493,7 +493,7 @@ public class ZKMasterController {
     WorkerWithState workerWithState;
     try {
       workerWithState =
-          ZKPersStateManager.getWorkerWithState(client, rootPath, jobName, removedWorkerID);
+          ZKPersStateManager.getWorkerWithState(client, rootPath, jobID, removedWorkerID);
       if (workerWithState == null) {
         LOG.severe("worker[" + removedWorkerID + "] removed, but its data can not be retrieved.");
         return;
@@ -532,7 +532,7 @@ public class ZKMasterController {
 
       try {
         ZKPersStateManager.updateWorkerStatus(
-            client, rootPath, jobName, workerWithState.getInfo(), JobMasterAPI.WorkerState.FAILED);
+            client, rootPath, jobID, workerWithState.getInfo(), JobMasterAPI.WorkerState.FAILED);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, e.getMessage(), e);
       }
@@ -574,7 +574,7 @@ public class ZKMasterController {
           .setAllArrived(allArrived)
           .build();
       try {
-        ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+        ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, e.getMessage(), e);
       }
