@@ -105,7 +105,7 @@ public abstract class TaskWorker implements IWorker {
     // lets terminate the network
     workerEnvironment.close();
     // we are done executing
-    //If the execute returns without any errors we assume that the job completed properly
+    // If the execute returns without any errors we assume that the job completed properly
     JobExecutionState.WorkerJobState workerState =
         JobExecutionState.WorkerJobState.newBuilder()
             .setFailure(false)
