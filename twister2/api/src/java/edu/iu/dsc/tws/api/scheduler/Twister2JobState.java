@@ -26,7 +26,8 @@ package edu.iu.dsc.tws.api.scheduler;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.driver.DriverState;
+import edu.iu.dsc.tws.api.driver.DriverJobState;
+import edu.iu.dsc.tws.common.util.JSONUtils;
 
 /**
  * Acts as an reference to the job once it is submitted.
@@ -49,7 +50,7 @@ public class Twister2JobState {
    * The state of the job, since the driver represents the current job, the driver state is
    * taken as the job state
    */
-  private DriverState jobstate;
+  private DriverJobState jobstate;
 
   /**
    * Final messages received from each worker
@@ -60,7 +61,7 @@ public class Twister2JobState {
   public Twister2JobState(boolean granted) {
     this.requestGranted = granted;
     this.isDetached = true;
-    this.jobstate = DriverState.RUNNING;
+    this.jobstate = DriverJobState.RUNNING;
     this.messages = new HashMap<>();
   }
 
@@ -80,11 +81,11 @@ public class Twister2JobState {
     isDetached = detached;
   }
 
-  public DriverState getJobstate() {
+  public DriverJobState getJobstate() {
     return jobstate;
   }
 
-  public void setJobstate(DriverState jobstate) {
+  public void setJobstate(DriverJobState jobstate) {
     this.jobstate = jobstate;
   }
 
@@ -94,5 +95,17 @@ public class Twister2JobState {
 
   public Map<Integer, String> getMessages() {
     return messages;
+  }
+
+  public Exception getCause() {
+    if (jobstate == DriverJobState.FAILED) {
+      for (Integer workerId : messages.keySet()) {
+        if (!messages.get(workerId).equals("Worker Completed")) {
+          Exception exception = JSONUtils.fromJSONString(messages.get(workerId), Exception.class);
+          return exception;
+        }
+      }
+    }
+    return null;
   }
 }

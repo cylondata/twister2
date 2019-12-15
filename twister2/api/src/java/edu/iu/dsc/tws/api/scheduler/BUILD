@@ -12,5 +12,6 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/driver:driver-api-java",
         "//twister2/proto:proto-java",
         "//twister2/proto/utils:proto-utils-java",
+        "//twister2/common/src/java:common-java",
     ],
 )

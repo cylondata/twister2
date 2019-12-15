@@ -28,7 +28,7 @@ public class DefaultDriver implements IDriver {
   private static final Logger LOG = Logger.getLogger(DefaultDriver.class.getName());
 
   private Map<Integer, JobExecutionState.WorkerJobState> workerMessages = new HashMap<>();
-  private DriverState state = DriverState.RUNNING;
+  private DriverJobState state = DriverJobState.RUNNING;
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
@@ -40,9 +40,9 @@ public class DefaultDriver implements IDriver {
     try {
       JobExecutionState.WorkerJobState message =
           anyMessage.unpack(JobExecutionState.WorkerJobState.class);
-      if (state != DriverState.FAILED) {
+      if (state != DriverJobState.FAILED) {
         if (message.getFailure()) {
-          state = DriverState.FAILED;
+          state = DriverJobState.FAILED;
         }
       }
       workerMessages.put(senderWorkerID, message);
@@ -58,7 +58,7 @@ public class DefaultDriver implements IDriver {
   }
 
   @Override
-  public DriverState getState() {
+  public DriverJobState getState() {
     return state;
   }
 

@@ -53,8 +53,8 @@ public interface IDriver {
    *
    * @return the current state
    */
-  default DriverState getState() {
-    return DriverState.RUNNING;
+  default DriverJobState getState() {
+    return DriverJobState.RUNNING;
   }
 
   /**

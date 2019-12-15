@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.driver;
 
-public enum DriverState {
+public enum DriverJobState {
   RUNNING,
   COMPLETED,
   FAILED
