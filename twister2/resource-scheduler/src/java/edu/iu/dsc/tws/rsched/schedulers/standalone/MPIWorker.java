@@ -119,7 +119,7 @@ public final class MPIWorker {
         LOG.log(Level.SEVERE, "Uncaught exception in thread "
             + thread + ". Finalizing this worker...", throwable);
 
-        if (throwable instanceof Exception) {
+        if (JobMasterContext.isJobMasterUsed(config)) {
           JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
           Exception exception = (Exception) throwable;
           JobExecutionState.WorkerJobState workerState =
@@ -129,12 +129,10 @@ public final class MPIWorker {
                   .setWorkerMessage(JSONUtils.toJSONString(exception))
                   .build();
           senderToDriver.sendToDriver(workerState);
-          finalizeMPI();
         } else {
-          //What to do if not an exception, how should an Error be handled, just do
-          // System.exit() ?
+          throw new RuntimeException("Worker faild with exception", throwable);
         }
-
+        finalizeMPI();
       });
 
       cmdOptions = setupOptions();
@@ -528,8 +526,10 @@ public final class MPIWorker {
     LOG.log(Level.INFO, String.format("Worker finished executing - %d", wInfo.getWorkerID()));
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
-    masterClient.close();
+    if (masterClient != null) {
+      masterClient.sendWorkerCompletedMessage();
+      masterClient.close();
+    }
   }
 
   /**

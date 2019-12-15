@@ -272,7 +272,7 @@ public class MPILauncher implements ILauncher {
       } catch (InterruptedException ignore) {
       }
     }
-    if (jobMaster.getDriver() != null) {
+    if (jobMaster != null && jobMaster.getDriver() != null) {
       if (jobMaster.getDriver().getState() != DriverJobState.FAILED) {
         state.setJobstate(DriverJobState.COMPLETED);
       } else {
