@@ -26,7 +26,7 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.driver.DriverState;
+import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
@@ -273,8 +273,8 @@ public class MPILauncher implements ILauncher {
       }
     }
     if (jobMaster.getDriver() != null) {
-      if (jobMaster.getDriver().getState() != DriverState.FAILED) {
-        state.setJobstate(DriverState.COMPLETED);
+      if (jobMaster.getDriver().getState() != DriverJobState.FAILED) {
+        state.setJobstate(DriverJobState.COMPLETED);
       } else {
         state.setJobstate(jobMaster.getDriver().getState());
       }

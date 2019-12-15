@@ -48,12 +48,15 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.util.JSONUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
@@ -115,7 +118,23 @@ public final class MPIWorker {
       Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
         LOG.log(Level.SEVERE, "Uncaught exception in thread "
             + thread + ". Finalizing this worker...", throwable);
-        finalizeMPI();
+
+        if (throwable instanceof Exception) {
+          JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+          Exception exception = (Exception) throwable;
+          JobExecutionState.WorkerJobState workerState =
+              JobExecutionState.WorkerJobState.newBuilder()
+                  .setFailure(true)
+                  .setJobName(config.getStringValue(Context.JOB_NAME))
+                  .setWorkerMessage(JSONUtils.toJSONString(exception))
+                  .build();
+          senderToDriver.sendToDriver(workerState);
+          finalizeMPI();
+        } else {
+          //What to do if not an exception, how should an Error be handled, just do
+          // System.exit() ?
+        }
+
       });
 
       cmdOptions = setupOptions();
@@ -175,12 +194,11 @@ public final class MPIWorker {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
       throw new RuntimeException("Error parsing command line options: ", e);
-    } catch (Throwable t) {
-      String msg = "Un-expected error";
-      LOG.log(Level.SEVERE, msg, t);
-    } finally {
-      finalizeMPI();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Protocol buffer exception ", e);
     }
+
+    finalizeMPI();
   }
 
   /**
