@@ -102,7 +102,7 @@ public class Scaler implements IScaler {
 
     boolean updatedJobInZK = updateJobInZK(0 - instancesToRemove);
     boolean checkZNodesDeleted =
-        zkJobUpdater.removeInitialStateZNodes(job.getJobName(), minID, maxID);
+        zkJobUpdater.removeInitialStateZNodes(job.getJobId(), minID, maxID);
 
     return updatedJobInZK && checkZNodesDeleted;
   }

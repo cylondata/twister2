@@ -44,7 +44,7 @@ public class K8sScaler implements IScalerPerCluster {
     workersPerPod = scalableCompRes.getWorkersPerPod();
     scalable = scalableCompRes.getScalable();
     scalableSSName =
-        KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), computeResourceIndex);
+        KubernetesUtils.createWorkersStatefulSetName(job.getJobId(), computeResourceIndex);
   }
 
   @Override

@@ -134,7 +134,7 @@ public final class PodWatchUtils {
    * mark each pod that reached to Running state in the given map
    */
   public static boolean watchPodsToRunning(String namespace,
-                                           String jobName,
+                                           String jobID,
                                            HashMap<String, Boolean> pods,
                                            int timeout) {
 
@@ -146,7 +146,7 @@ public final class PodWatchUtils {
     }
 
     String phase = "Running";
-    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
+    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobID);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
@@ -159,7 +159,7 @@ public final class PodWatchUtils {
           }.getType());
 
     } catch (ApiException e) {
-      String logMessage = "Exception when watching the pods for the job: " + jobName + "\n"
+      String logMessage = "Exception when watching the pods for the job: " + jobID + "\n"
           + "exCode: " + e.getCode() + "\n"
           + "responseBody: " + e.getResponseBody();
       LOG.log(Level.SEVERE, logMessage, e);
@@ -211,7 +211,7 @@ public final class PodWatchUtils {
    * flag the pods with a true value in the given HashMap
    */
   public static boolean watchPodsToStarting(String namespace,
-                                            String jobName,
+                                            String jobID,
                                             HashMap<String, Boolean> pods,
                                             int timeout) {
 
@@ -222,7 +222,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
     String reason = "Started";
     Integer timeoutSeconds = timeout;
     Watch<V1Event> watch = null;
@@ -273,7 +273,7 @@ public final class PodWatchUtils {
    * @param namespace
    * @return
    */
-  public static String getNodeIP(String namespace, String jobName, String podIP) {
+  public static String getNodeIP(String namespace, String jobID, String podIP) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
@@ -281,7 +281,7 @@ public final class PodWatchUtils {
 
     // this is better but it does not work with another installation
 //    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
 
     V1PodList podList = null;
     try {
@@ -332,14 +332,14 @@ public final class PodWatchUtils {
   /**
    * test watch pods method in the worker pod
    */
-  public static void testWatchPods(String namespace, String jobName, int timeout) {
+  public static void testWatchPods(String namespace, String jobID, int timeout) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
-    LOG.info("Starting the watcher for: " + namespace + ", " + jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobID);
+    LOG.info("Starting the watcher for: " + namespace + ", " + jobID);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
@@ -456,17 +456,17 @@ public final class PodWatchUtils {
    * we assume that the job master has the unique twister2-role label and value pair
    */
   public static String getJobMasterIpByWatchingPodToRunning(String namespace,
-                                                            String jobName,
+                                                            String jobID,
                                                             int timeout) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobName);
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobID);
     String podPhase = "Running";
 
-    LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobName
+    LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobID
         + ", " + jobMasterRoleLabel);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
@@ -528,7 +528,7 @@ public final class PodWatchUtils {
    * return null, if it can not get the full list
    */
   public static ArrayList<String> getWorkerIPsByWatchingPodsToRunning(String namespace,
-                                                            String jobName,
+                                                            String jobID,
                                                             int numberOfPods,
                                                             int timeout) {
 
@@ -536,10 +536,10 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
     String podPhase = "Running";
 
-    LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobName
+    LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobID
         + ", " + workerRoleLabel);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;

@@ -99,7 +99,7 @@ public final class MesosJobMasterStarter {
     ZKJobMasterRegistrar registrar = null;
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          Inet4Address.getLocalHost().getHostAddress(), 11011);
+          Inet4Address.getLocalHost().getHostAddress(), 11011, job.getJobId());
       LOG.info("JobMaster REGISTERED..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");

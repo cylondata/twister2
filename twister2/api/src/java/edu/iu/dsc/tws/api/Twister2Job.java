@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
@@ -24,6 +23,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.util.JobIDUtils;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
@@ -50,6 +50,11 @@ public final class Twister2Job {
    * Name of the job
    */
   private String jobID;
+
+  /**
+   * username to be used in jobID
+   */
+  private String userName;
 
   /**
    * IWorker class name
@@ -101,7 +106,7 @@ public final class Twister2Job {
 
     // if jobID is not set, set it
     if (jobID == null) {
-      jobID = String.format("%s-%s", jobName, UUID.randomUUID().toString());
+      jobID = JobIDUtils.generateJobID(jobName, userName);
     }
     jobBuilder.setJobId(jobID);
 
@@ -220,6 +225,14 @@ public final class Twister2Job {
    */
   public void setJobID(String id) {
     this.jobID = id;
+  }
+
+  /**
+   * we set userName through this interface
+   * Users do not set it, we set it later on in Twister2Submitter
+   */
+  public void setUserName(String userName) {
+    this.userName = userName;
   }
 
   public String getJobName() {

@@ -264,7 +264,7 @@ public final class NomadWorkerStarter {
 
     //find the jobmaster
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+      ZKJobMasterFinder finder = new ZKJobMasterFinder(config, job.getJobId());
       finder.initialize();
 
       String jobMasterIPandPort = finder.getJobMasterIPandPort();

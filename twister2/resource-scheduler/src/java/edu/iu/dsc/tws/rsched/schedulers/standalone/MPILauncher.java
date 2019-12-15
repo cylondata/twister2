@@ -68,7 +68,7 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
     // not implemented yet
     return false;
   }

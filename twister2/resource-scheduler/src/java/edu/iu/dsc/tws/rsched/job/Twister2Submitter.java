@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.common.config.ConfigSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class Twister2Submitter {
@@ -52,7 +52,6 @@ public final class Twister2Submitter {
     if (!startingFromACheckpoint) {
       switch (Context.clusterType(config)) {
         case KubernetesConstants.KUBERNETES_CLUSTER_TYPE:
-          processJobNameForK8s(twister2Job);
           break;
         case "mesos":
         case "nomad":
@@ -65,7 +64,14 @@ public final class Twister2Submitter {
 
     // set jobID if it is set in configuration file,
     // otherwise it will be automatically generated
-    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
+    twister2Job.setJobID(Context.jobId(config));
+
+    // set username
+    String userName = Context.userName(config);
+    if (userName == null) {
+      userName = System.getProperty("user.name");
+    }
+    twister2Job.setUserName(userName);
 
     JobAPI.Job job = twister2Job.serialize();
     LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
@@ -73,6 +79,14 @@ public final class Twister2Submitter {
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);
     String jobId = job.getJobId();
+
+    // write jobID to file
+    String dir = System.getProperty("user.home") + "/.twister2";
+    if (!FileUtils.isDirectoryExists(dir)) {
+      FileUtils.createDirectory(dir);
+    }
+    String filename = dir + "/last-job-id.txt";
+    FileUtils.writeToFile(filename, (jobId + "").getBytes(), true);
 
     //print ascii
     LOG.info("\n\n _____           _     _           ____  \n"
@@ -130,48 +144,10 @@ public final class Twister2Submitter {
   /**
    * terminate a Twister2 job
    */
-  @SuppressWarnings("ParameterAssignment")
-  public static void terminateJob(String jobName, Config config) {
-
-    // if this is a Kubernetes cluster, check the job name,
-    // if it does not conform to Kubernetes rules, change it
-    if (Context.clusterType(config).equals(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)) {
-      if (!KubernetesUtils.jobNameConformsToK8sNamingRules(jobName)) {
-
-        LOG.info("JobName does not conform to Kubernetes naming rules: [" + jobName
-            + "] Only lower case alphanumeric characters and dash(-) are allowed.");
-
-        jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
-
-        LOG.info("****************** JobName modified. Following jobname will be used: " + jobName);
-      }
-    }
-
+  public static void terminateJob(String jobID, Config config) {
     // launch the launcher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
-    resourceAllocator.terminateJob(jobName, config);
-  }
-
-  /**
-   * write the values from Job object to config object
-   * only write the values that are initialized
-   */
-  public static void processJobNameForK8s(Twister2Job twister2Job) {
-
-    String jobName = twister2Job.getJobName();
-
-    // if it is a proper job name, return
-    if (KubernetesUtils.jobNameConformsToK8sNamingRules(jobName)) {
-      return;
-    }
-
-    LOG.info("JobName does not conform to Kubernetes naming rules: " + jobName
-        + " Only lower case alphanumeric characters and dashes(-) are allowed");
-
-    jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
-    twister2Job.setJobName(jobName);
-
-    LOG.info("******************* JobName modified. Following jobname will be used: " + jobName);
+    resourceAllocator.terminateJob(jobID, config);
   }
 
 }

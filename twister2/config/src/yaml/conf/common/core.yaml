@@ -1,4 +1,17 @@
 ###################################################################
+# User name that will be used in JobID
+###################################################################
+# JobID is constructed as:
+#   <username>-<jobName>-<timestamp>
+# if username is specified here, we use this value.
+# Otherwise we get username from shell environment.
+# if the username is longer than 9 characters, we use first 9 characters of it
+# long value of timestamp is converted to alphanumeric string format
+# timestamp long value = current time - 01/01/2019
+#
+# twister2.user.name:
+
+###################################################################
 # Twister2 Job Master related settings
 ###################################################################
 

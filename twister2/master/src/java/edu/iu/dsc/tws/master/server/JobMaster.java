@@ -409,7 +409,7 @@ public class JobMaster {
     }
 
     if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobName());
+      jobTerminator.terminateJob(job.getJobId());
     }
 
     if (dashClient != null) {
@@ -489,7 +489,7 @@ public class JobMaster {
    */
   private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      zkMasterController = new ZKMasterController(config, job.getJobName(),
+      zkMasterController = new ZKMasterController(config, job.getJobId(),
           job.getNumberOfWorkers(), jmAddress, workerMonitor);
 
       try {
@@ -567,7 +567,7 @@ public class JobMaster {
           looper.wakeup();
 
           if (jobTerminator != null) {
-            jobTerminator.terminateJob(job.getJobName());
+            jobTerminator.terminateJob(job.getJobId());
           }
         }
 
