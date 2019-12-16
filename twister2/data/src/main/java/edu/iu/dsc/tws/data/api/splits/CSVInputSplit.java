@@ -218,6 +218,7 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
 
   public Object readRecord(Object reuse, byte[] bytes, int readoffset, int numBytes) {
 
+    //CSVParser csvParser = new CSVParserBuilder()
     if (this.lineDelimiterIsLinebreak && numBytes > 0 && bytes[readoffset + numBytes - 1] == '\r') {
       //reduce the number of bytes so that the Carriage return is not taken as data
       //numBytes--;

@@ -42,6 +42,8 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
+import static org.junit.Assert.assertEquals;
+
 public class CSVInputFormatTest {
 
   private static final Logger LOG = Logger.getLogger(CSVInputFormatTest.class.getName());
@@ -52,26 +54,14 @@ public class CSVInputFormatTest {
    * To test the CSV Input Format
    */
   @Test
-  public void testUniqueSchedules1() throws IOException {
-    int parallel = 2;
-    ComputeGraph graph = createBatchGraph(parallel);
+  public void testUniqueSchedules() throws IOException {
     Config config = getConfig();
-
-    /*TaskScheduler scheduler = new TaskScheduler();
-    scheduler.initialize(config);
-    WorkerPlan workerPlan = createWorkPlan(parallel);
-    if (graph.getOperationMode().equals("BATCH")) {
-      Assert.assertEquals(scheduler.getClass(),
-          TaskSchedulerContext.batchTaskSchedulingClass(config));
-    }
-    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-    Assert.assertNotNull(plan1);*/
-
     final String fileContent = "this is|1|2.0|\n" + "a test|3|4.0|\n"
         + "#next|5|6.0|\n" + "asdadas|5|30.0|\n";
-    final File tempFile = File.createTempFile("input-stream", "tmp");
+    final File tempFile = File.createTempFile("/tmp/input-stream", "tmp");
     tempFile.deleteOnExit();
     try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+      LOG.info("get bytes:" + Arrays.toString(fileContent.getBytes(defaultCharset)));
       fileOutputStream.write(fileContent.getBytes(defaultCharset));
     }
 
@@ -79,7 +69,13 @@ public class CSVInputFormatTest {
     InputPartitioner csvInputPartitioner = new CSVInputPartitioner(path, 1000 * Short.BYTES);
     csvInputPartitioner.configure(config);
 
+   /* CSVParser csvParser = new CSVParserBuilder()
+        .withSeparator(',')
+        .withIgnoreQuotations(true)
+        .build();
+*/
     int minSplits = 4;
+    int recordCounter = 0;
     try {
       InputSplit[] inputSplits = csvInputPartitioner.createInputSplits(minSplits);
       LOG.info("input split values are:" + Arrays.toString(inputSplits));
@@ -92,8 +88,12 @@ public class CSVInputFormatTest {
         try {
           while (!currentSplit.reachedEnd()) {
             Object value = currentSplit.nextRecord(null);
+            recordCounter++;
             if (value != null) {
               LOG.info("current split values:" + currentSplit);
+              if (recordCounter == 1) {
+                assertEquals("this is", value.toString());
+              }
             }
           }
         } catch (IOException ioe) {
@@ -124,7 +124,6 @@ public class CSVInputFormatTest {
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
-
     Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
     return Config.newBuilder().putAll(config).build();
   }

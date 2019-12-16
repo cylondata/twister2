@@ -53,7 +53,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient byte[] wrapBuffer;
 
   private transient int readPos;
-
   private transient int limit;
 
   private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
@@ -61,7 +60,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient int currLen;        // length of current byte sequence
 
   private transient boolean overLimit;
-
   private transient boolean end;
 
   private long offset = -1;

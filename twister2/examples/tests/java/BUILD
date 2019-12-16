@@ -33,6 +33,7 @@ java_library(
         "@commons_io_commons_io//jar",
         "@commons_lang_commons_lang//jar",
         "@log4j_log4j//jar",
+        "@maven//:com_opencsv_opencsv",
         "@org_apache_commons_commons_lang3//jar",
         "@org_apache_hadoop_hadoop_annotations//jar",
         "@org_apache_hadoop_hadoop_auth//jar",

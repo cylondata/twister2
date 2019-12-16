@@ -37,6 +37,7 @@ common_deps_files = [
     "@org_apache_htrace_htrace_core4//jar",
     "@org_apache_hadoop_hadoop_hdfs_client//jar",
     "@org_slf4j_slf4j_api//jar",
+    "@maven//:com_opencsv_opencsv",
 ]
 
 t2_java_lib(

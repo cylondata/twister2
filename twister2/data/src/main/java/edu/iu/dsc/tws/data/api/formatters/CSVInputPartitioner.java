@@ -71,10 +71,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
     int currentMinimumNumSplits = Math.max(minNumSplits, this.numSplits);
+    System.out.println("The file path is:" + this.filePath);
 
     final Path path = this.filePath;
     final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(currentMinimumNumSplits);
-
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
 
@@ -88,8 +88,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       totalLength += pathFile.getLen();
     }
 
+    LOG.info("total length of the file:" + totalLength + "\t" + this.recordLength);
+
     if (totalLength % this.recordLength != 0) {
-      throw new IllegalStateException("The Binary file has a incomplete record");
+      throw new IllegalStateException("The file has a incomplete record");
     }
 
     long numberOfRecords = totalLength / this.recordLength;
@@ -131,8 +133,15 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
           position += currentSplitSize;
           bytesUnassigned -= currentSplitSize;
         }
+
+        if (bytesUnassigned > 0) {
+          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+          final FileInputSplit fis = new CSVInputSplit(splitNum++, filePath, position,
+              bytesUnassigned, blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+        }
       } else {
-        throw new IllegalStateException("The binary file " + file.getPath() + " is Empty");
+        throw new IllegalStateException("The csv file " + file.getPath() + " is Empty");
       }
     }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
@@ -144,8 +153,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
   }
 
   @Override
-  protected FileInputSplit createSplit(int num, Path file, long start, long length,
-                                       String[] hosts) {
+  protected FileInputSplit createSplit(int num, Path file, long start,
+                                       long length, String[] hosts) {
     return null;
   }
 }

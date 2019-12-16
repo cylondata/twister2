@@ -62,6 +62,7 @@ def load_modules():
     maven_install(
         name = "maven",
         artifacts = [
+            "com.opencsv:opencsv:5.0",
             "org.powermock:powermock-module-junit4-common:1.6.2",
             "org.apache.curator:curator-client:4.2.0",
             "org.apache.curator:curator-framework:4.2.0",
@@ -106,7 +107,7 @@ def load_modules():
     _maven_import(artifact = "org.lz4:lz4-java:1.6.0", licenses = ["notice"], sha256 = "d229545aa2b1d5203c876614bdbcffcacc303697f4f8f26f764e1d6c1ed2e416")
 
     #    _maven_import(artifact = "org.lz4:lz4-java:1.4", licenses = ["notice"], sha256 = "9ed51eb236340cab58780ed7d20741ff812bcb3875beb974fa7cf9ddea272358")
-    _maven_import(artifact = "org.apache.hadoop:hadoop-auth:3.2.1",licenses = ["notice"],sha256 = "81645fff08e0b8bd464e033b1b2e10f70b4f7f81a82e057fcb2be88be29a94d5",)
+    _maven_import(artifact = "org.apache.hadoop:hadoop-auth:3.2.1", licenses = ["notice"], sha256 = "81645fff08e0b8bd464e033b1b2e10f70b4f7f81a82e057fcb2be88be29a94d5")
     _maven_import(artifact = "org.lmdbjava:lmdbjava-native-linux-x86_64:0.9.21-1", licenses = ["notice"], sha256 = "d0905caca075b5b63e598398514253dabc1ee7604fd5e12050513aeb6435ac0d")
     _maven_import(artifact = "com.google.code.gson:gson:2.6.2", licenses = ["notice"], sha256 = "b8545ba775f641f8bba86027f06307152279fee89a46a4006df1bf2f874d4d9d")
     _maven_import(artifact = "net.openhft:chronicle-queue:4.6.55", licenses = ["notice"], sha256 = "cc37d54a902b2e125389de06d7e273c6ed366e92d520e5782eb109d933070e6c")
@@ -128,7 +129,7 @@ def load_modules():
     _maven_import(artifact = "com.google.code.findbugs:jsr305:3.0.2", licenses = ["notice"], sha256 = "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7")
     _maven_import(artifact = "org.slf4j:slf4j-api:1.7.7", licenses = ["notice"], sha256 = "69980c038ca1b131926561591617d9c25fabfc7b29828af91597ca8570cf35fe")
     _maven_import(artifact = "org.mockito:mockito-all:1.10.19", licenses = ["notice"], sha256 = "d1a7a7ef14b3db5c0fc3e0a63a81b374b510afe85add9f7984b97911f4c70605")
-    _maven_import(artifact = "org.apache.hadoop:hadoop-annotations:3.2.1",licenses = ["notice"],sha256 = "4b92c11ae697b51c8e66950ab3a3572bc4e09e378ff4f5ba2e6b82167c38da7f",)
+    _maven_import(artifact = "org.apache.hadoop:hadoop-annotations:3.2.1", licenses = ["notice"], sha256 = "4b92c11ae697b51c8e66950ab3a3572bc4e09e378ff4f5ba2e6b82167c38da7f")
     _maven_import(artifact = "org.objenesis:objenesis:2.1", licenses = ["notice"], sha256 = "c74330cc6b806c804fd37e74487b4fe5d7c2750c5e15fbc6efa13bdee1bdef80")
     _maven_import(artifact = "org.bouncycastle:bcpkix-jdk15on:1.56", licenses = ["notice"], sha256 = "7043dee4e9e7175e93e0b36f45b1ec1ecb893c5f755667e8b916eb8dd201c6ca")
     _maven_import(artifact = "joda-time:joda-time:2.9.3", licenses = ["notice"], sha256 = "a05f5b8b021802a71919b18702aebdf286148188b3ee9d26e6ec40e8d0071487")
@@ -152,14 +153,14 @@ def load_modules():
     _maven_import(artifact = "com.google.guava:guava:20.0", licenses = ["notice"], sha256 = "36a666e3b71ae7f0f0dca23654b67e086e6c93d192f60ba5dfd5519db6c288c8")
     _maven_import(artifact = "com.puppycrawl.tools:checkstyle:6.17", licenses = ["notice"], sha256 = "61a8b52d03a5b163d0983cdc4b03396a92ea7f8dc8c007dda30f4db673e9e60c")
     _maven_import(artifact = "org.apache.htrace:htrace-core4:4.2.0-incubating", licenses = ["notice"], sha256 = "fcab21b4ae0829e99142d77240fa2963a85f6ff1ca3fc0f386f8b4ff3cae3b82")
-    _maven_import(artifact = "org.apache.hadoop:hadoop-mapreduce-client-core:3.2.1",licenses = ["notice"],sha256 = "987331ccf68f839b6162517c352eff13fc2792d02c008603513d26fe8a9d4be3",)
+    _maven_import(artifact = "org.apache.hadoop:hadoop-mapreduce-client-core:3.2.1", licenses = ["notice"], sha256 = "987331ccf68f839b6162517c352eff13fc2792d02c008603513d26fe8a9d4be3")
     _maven_import(artifact = "com.fasterxml.jackson.core:jackson-databind:2.9.7", licenses = ["notice"], sha256 = "675376decfc070b039d2be773a97002f1ee1e1346d95bd99feee0d56683a92bf")
     _maven_import(artifact = "org.bouncycastle:bcprov-jdk15on:1.56", licenses = ["notice"], sha256 = "963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349")
     _maven_import(artifact = "org.bouncycastle:bcprov-jdk15on:1.56", licenses = ["notice"], sha256 = "963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349")
-    _maven_import(artifact = "org.apache.hadoop:hadoop-common:3.2.1",licenses = ["notice"],sha256 = "48d55329372a38a4c5395b33e19c53d914c19e626d81e6a1148496d2d2532373",)
-    _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs-client:3.2.1",licenses = ["notice"],sha256 = "284dc541ff2f62e0fc549a88e4d57ba393fc1e93fc4df665b0b041489497d130",)
+    _maven_import(artifact = "org.apache.hadoop:hadoop-common:3.2.1", licenses = ["notice"], sha256 = "48d55329372a38a4c5395b33e19c53d914c19e626d81e6a1148496d2d2532373")
+    _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs-client:3.2.1", licenses = ["notice"], sha256 = "284dc541ff2f62e0fc549a88e4d57ba393fc1e93fc4df665b0b041489497d130")
     _maven_import(artifact = "org.apache.mesos:mesos:1.5.0", licenses = ["notice"], sha256 = "66cb1222778c0fd665d99bbd3b57e05e769fd5fe2683374fecc82dab50cf9376")
-    _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs:3.2.1",licenses = ["notice"],sha256 = "c49ad967a7f5bb69f26f640a76c28a84fece127735fda2f081824ded76dc0aa6",)
+    _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs:3.2.1", licenses = ["notice"], sha256 = "c49ad967a7f5bb69f26f640a76c28a84fece127735fda2f081824ded76dc0aa6")
     _maven_import(artifact = "org.codehaus.woodstox:stax2-api:3.0.1", licenses = ["notice"], sha256 = "68ed11b72b138356063b8baf8551b9d67f46717b3c0001890949195c5b153199")
     _maven_import(artifact = "log4j:log4j:1.2.17", licenses = ["notice"], sha256 = "1d31696445697720527091754369082a6651bd49781b6005deb94e56753406f9")
     _maven_import(artifact = "it.unimi.dsi:fastutil:7.0.13", licenses = ["notice"], sha256 = "2ec909c77642b9c0220ab3e1c69bfcad3072789e2bcae5acdb5fb1df1ca14f04")
@@ -308,9 +309,9 @@ def load_modules():
     _maven_import(artifact = "black.ninia:jep:3.9.0", licenses = ["notice"], sha256 = "de8a69bc028d131f23a41bb964c0707a51dc8defcf7418bb891d7b4ab168b16d")
 
     #for apache commons collections 4.4
-    _maven_import(artifact = "org.hamcrest:hamcrest-core:1.3",licenses = ["notice"],sha256 = "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9",)
-    _maven_import(artifact = "org.objenesis:objenesis:3.0.1",licenses = ["notice"],sha256 = "7a8ff780b9ff48415d7c705f60030b0acaa616e7f823c98eede3b63508d4e984",)
-    _maven_import(artifact = "junit:junit:4.12",licenses = ["notice"],sha256 = "59721f0805e223d84b90677887d9ff567dc534d7c502ca903c0c2b17f05c116a",)
-    _maven_import(artifact = "org.apache.commons:commons-lang3:3.9",licenses = ["notice"],sha256 = "de2e1dcdcf3ef917a8ce858661a06726a9a944f28e33ad7f9e08bea44dc3c230",)
-    _maven_import(artifact = "org.easymock:easymock:4.0.2",licenses = ["notice"],sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123",)
-    _maven_import(artifact = "org.apache.commons:commons-collections4:4.4",licenses = ["notice"],sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1",)
+    _maven_import(artifact = "org.hamcrest:hamcrest-core:1.3", licenses = ["notice"], sha256 = "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9")
+    _maven_import(artifact = "org.objenesis:objenesis:3.0.1", licenses = ["notice"], sha256 = "7a8ff780b9ff48415d7c705f60030b0acaa616e7f823c98eede3b63508d4e984")
+    _maven_import(artifact = "junit:junit:4.12", licenses = ["notice"], sha256 = "59721f0805e223d84b90677887d9ff567dc534d7c502ca903c0c2b17f05c116a")
+    _maven_import(artifact = "org.apache.commons:commons-lang3:3.9", licenses = ["notice"], sha256 = "de2e1dcdcf3ef917a8ce858661a06726a9a944f28e33ad7f9e08bea44dc3c230")
+    _maven_import(artifact = "org.easymock:easymock:4.0.2", licenses = ["notice"], sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123")
+    _maven_import(artifact = "org.apache.commons:commons-collections4:4.4", licenses = ["notice"], sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1")
