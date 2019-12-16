@@ -39,6 +39,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -46,14 +47,16 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.util.JSONUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
@@ -115,6 +118,20 @@ public final class MPIWorker {
       Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
         LOG.log(Level.SEVERE, "Uncaught exception in thread "
             + thread + ". Finalizing this worker...", throwable);
+
+        if (JobMasterContext.isJobMasterUsed(config)) {
+          JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+          Exception exception = (Exception) throwable;
+          JobExecutionState.WorkerJobState workerState =
+              JobExecutionState.WorkerJobState.newBuilder()
+                  .setFailure(true)
+                  .setJobName(config.getStringValue(Context.JOB_NAME))
+                  .setWorkerMessage(JSONUtils.toJSONString(exception))
+                  .build();
+          senderToDriver.sendToDriver(workerState);
+        } else {
+          throw new RuntimeException("Worker faild with exception", throwable);
+        }
         finalizeMPI();
       });
 
@@ -175,12 +192,11 @@ public final class MPIWorker {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
       throw new RuntimeException("Error parsing command line options: ", e);
-    } catch (Throwable t) {
-      String msg = "Un-expected error";
-      LOG.log(Level.SEVERE, msg, t);
-    } finally {
-      finalizeMPI();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Protocol buffer exception ", e);
     }
+
+    finalizeMPI();
   }
 
   /**
@@ -510,8 +526,10 @@ public final class MPIWorker {
     LOG.log(Level.INFO, String.format("Worker finished executing - %d", wInfo.getWorkerID()));
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
-    masterClient.close();
+    if (masterClient != null) {
+      masterClient.sendWorkerCompletedMessage();
+      masterClient.close();
+    }
   }
 
   /**

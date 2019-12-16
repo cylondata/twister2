@@ -42,5 +42,5 @@ public interface ILauncher extends AutoCloseable {
    *
    * @return true if the request is granted
    */
-  boolean launch(JobAPI.Job job);
+  Twister2JobState launch(JobAPI.Job job);
 }

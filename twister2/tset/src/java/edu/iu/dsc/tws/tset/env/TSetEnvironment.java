@@ -305,12 +305,12 @@ public abstract class TSetEnvironment {
   }
 
   // TSet graph for classes that extends TSetEnvironment
-  TBaseGraph getTSetGraph() {
+  public TBaseGraph getTSetGraph() {
     return tBaseGraph;
   }
 
   // task executor for classes that extends TSetEnvironment
-  TaskExecutor getTaskExecutor() {
+  public TaskExecutor getTaskExecutor() {
     return taskExecutor;
   }
 
