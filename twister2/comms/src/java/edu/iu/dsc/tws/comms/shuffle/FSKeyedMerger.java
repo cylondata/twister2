@@ -30,10 +30,9 @@ import edu.iu.dsc.tws.api.util.KryoSerializer;
 /**
  * Un sorted merger
  *
- * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ * This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-@Deprecated
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 

@@ -45,7 +45,7 @@ public final class K8sWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static String jobName = null;
+  private static String jobID = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
@@ -69,10 +69,10 @@ public final class K8sWorkerStarter {
     String hostName = System.getenv(K8sEnvVariables.HOST_NAME + "");
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
     String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
-    jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
 
-    if (jobName == null) {
-      throw new RuntimeException("JobName is null");
+    if (jobID == null) {
+      throw new RuntimeException("JobID is null");
     }
 
     // load the configuration parameters from configuration directory
@@ -81,7 +81,7 @@ public final class K8sWorkerStarter {
     config = K8sWorkerUtils.loadConfig(configDir);
 
     // read job description file
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
@@ -149,7 +149,7 @@ public final class K8sWorkerStarter {
     );
 
     JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobName, workerInfo);
+        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -195,7 +195,7 @@ public final class K8sWorkerStarter {
       // get job master service ip from job master service name and use it as Job master IP
     } else {
       jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
-          KubernetesContext.namespace(config), jobName, 100);
+          KubernetesContext.namespace(config), jobID, 100);
       if (jobMasterIP == null) {
         throw new RuntimeException("Job master is running in a separate pod, but "
             + "this worker can not get the job master IP address from Kubernetes master.\n"
@@ -232,7 +232,7 @@ public final class K8sWorkerStarter {
 
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
-      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+      volatileVolume = new K8sVolatileVolume(jobID, workerID);
     }
     WorkerManager workerManager = new WorkerManager(config, workerID,
         workerController, pv, volatileVolume, worker);

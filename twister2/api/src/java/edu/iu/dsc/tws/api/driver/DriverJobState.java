@@ -9,13 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.nomad;
+package edu.iu.dsc.tws.api.driver;
 
-import edu.iu.dsc.tws.master.IJobTerminator;
-
-public class NomadTerminator implements IJobTerminator {
-  @Override
-  public boolean terminateJob(String jobID) {
-    return false;
-  }
+public enum DriverJobState {
+  RUNNING,
+  COMPLETED,
+  FAILED
 }

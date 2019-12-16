@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.master.driver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.driver.IScaler;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.common.driver.IScaler;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.common.driver.NullScalar;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.JobUtils;
@@ -102,7 +102,7 @@ public class Scaler implements IScaler {
 
     boolean updatedJobInZK = updateJobInZK(0 - instancesToRemove);
     boolean checkZNodesDeleted =
-        zkJobUpdater.removeInitialStateZNodes(job.getJobName(), minID, maxID);
+        zkJobUpdater.removeInitialStateZNodes(job.getJobId(), minID, maxID);
 
     return updatedJobInZK && checkZNodesDeleted;
   }

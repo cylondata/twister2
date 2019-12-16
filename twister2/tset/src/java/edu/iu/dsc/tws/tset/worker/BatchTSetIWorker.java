@@ -12,11 +12,16 @@
 package edu.iu.dsc.tws.tset.worker;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
@@ -31,6 +36,18 @@ public interface BatchTSetIWorker extends IWorker {
     BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 
     execute(tSetEnv);
+
+    //If the execute returns without any errors we assume that the job completed properly
+    if (JobMasterContext.isJobMasterUsed(config)) {
+      JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+      JobExecutionState.WorkerJobState workerState =
+          JobExecutionState.WorkerJobState.newBuilder()
+              .setFailure(false)
+              .setJobName(config.getStringValue(Context.JOB_NAME))
+              .setWorkerMessage("Worker Completed")
+              .build();
+      senderToDriver.sendToDriver(workerState);
+    }
   }
 
   void execute(BatchTSetEnvironment env);

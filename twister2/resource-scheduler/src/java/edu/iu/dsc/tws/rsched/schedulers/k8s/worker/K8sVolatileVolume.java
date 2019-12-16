@@ -21,8 +21,8 @@ public class K8sVolatileVolume implements IVolatileVolume {
   private String workerDirPath;
   private File workerDir;
 
-  public K8sVolatileVolume(String jobName, int workerID) {
-    workerDirPath = KubernetesConstants.POD_VOLATILE_VOLUME + "/" + jobName + "/worker-" + workerID;
+  public K8sVolatileVolume(String jobID, int workerID) {
+    workerDirPath = KubernetesConstants.POD_VOLATILE_VOLUME + "/" + jobID + "/worker-" + workerID;
     workerDir = new File(workerDirPath);
   }
 

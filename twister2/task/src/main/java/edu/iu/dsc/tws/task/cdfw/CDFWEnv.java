@@ -17,8 +17,8 @@ import java.util.logging.Logger;
 import com.google.protobuf.Any;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriverMessenger;
-import edu.iu.dsc.tws.common.driver.IScaler;
+import edu.iu.dsc.tws.api.driver.IDriverMessenger;
+import edu.iu.dsc.tws.api.driver.IScaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class CDFWEnv {

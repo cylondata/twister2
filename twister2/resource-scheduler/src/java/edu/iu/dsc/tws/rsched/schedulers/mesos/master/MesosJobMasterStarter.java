@@ -32,8 +32,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -99,7 +99,7 @@ public final class MesosJobMasterStarter {
     ZKJobMasterRegistrar registrar = null;
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          Inet4Address.getLocalHost().getHostAddress(), 11011);
+          Inet4Address.getLocalHost().getHostAddress(), 11011, job.getJobId());
       LOG.info("JobMaster REGISTERED..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");

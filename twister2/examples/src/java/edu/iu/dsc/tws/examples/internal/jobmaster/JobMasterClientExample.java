@@ -110,7 +110,7 @@ public final class JobMasterClientExample {
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, job.getJobName(), workerInfo);
+        K8sWorkerUtils.initialStateAndUpdate(config, job.getJobId(), workerInfo);
 
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
