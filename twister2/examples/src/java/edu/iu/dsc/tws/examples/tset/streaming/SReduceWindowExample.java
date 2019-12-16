@@ -9,7 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
@@ -23,16 +22,19 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
-
-public class SReduceExample extends StreamingTsetExample {
-  private static final long serialVersionUID = -275307275783819805L;
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+public class SReduceWindowExample extends StreamingTsetExample {
+  private static final long serialVersionUID = -2753072757838198105L;
+  private static final Logger LOG = Logger.getLogger(SReduceWindowExample.class.getName());
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
     SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     SReduceTLink<Integer> link = src.reduce(Integer::sum);
+
+    link.countWindow(5, (input, output) -> output.collect(input + " window"))
+        .direct()
+        .forEach(s -> LOG.info(s.toString()));
 
 //    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
 //
@@ -44,10 +46,6 @@ public class SReduceExample extends StreamingTsetExample {
 //
 //    link.compute((input, output) -> output.collect(input + "DD"))
 //        .direct().forEach(s -> LOG.info(s.toString()));
-
-    link.countWindow(5, (input, output) -> output.collect(input + " window"))
-        .direct()
-        .forEach(s -> LOG.info(s.toString()));
   }
 
 
@@ -55,6 +53,7 @@ public class SReduceExample extends StreamingTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, SReduceExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig,
+        SReduceWindowExample.class.getName());
   }
 }

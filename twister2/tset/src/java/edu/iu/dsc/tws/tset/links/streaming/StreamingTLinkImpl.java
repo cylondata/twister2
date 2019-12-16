@@ -68,12 +68,31 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return compute(null, computeFunction);
   }
 
-
   @Override
   public SSinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
     SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
 
     return sinkTSet;
+  }
+
+  public <P> SComputeTSet<P, T1> countWindow(int windowLen,
+                                             ComputeCollectorFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  public <P> SComputeTSet<P, T1> countWindow(int windowLen, int slidingLen,
+                                             ComputeCollectorFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  public <P> SComputeTSet<P, T1> timeWindow(int windowLen,
+                                             ComputeCollectorFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  public <P> SComputeTSet<P, T1> timeWindow(int windowLen, int slidingLen,
+                                             ComputeCollectorFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
   }
 }
