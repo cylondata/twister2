@@ -11,8 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.splits;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.util.List;
 import java.util.logging.Logger;
+
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
@@ -133,9 +141,40 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     this.end = false;
   }
 
+  /**
+   * To open the input split
+   * @throws IOException
+   */
   public void open() throws IOException {
     super.open();
-    initBuffers();
+
+    CSVParser csvParser = new CSVParserBuilder()
+        .withSeparator(',')
+        .withIgnoreQuotations(true)
+        .build();
+
+    Reader reader = new FileReader("/home/kannan/opencsvexamples/input/ex.csv");
+    CSVReader csvReader = new CSVReaderBuilder(reader)
+        .withSkipLines(0) //'1' it will skip the header
+        .withCSVParser(csvParser)
+        .build();
+
+    List<String[]> list;
+    try {
+      list = csvReader.readAll();
+      LOG.info("%%% List Values:%%%" + list.size());
+      for (String[] first : list) {
+        for (String s : first) {
+          LOG.info("Person Values:" + s);
+        }
+      }
+      reader.close();
+      csvReader.close();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    /*initBuffers();
     long recordMod = this.splitStart % this.recordLength;
     if (recordMod != 0) {
       this.offset = this.splitStart + this.recordLength - recordMod;
@@ -148,13 +187,13 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
-    fillBuffer(0);
+    fillBuffer(0);*/
   }
 
   public void open(Config cfg) throws IOException {
     super.open(cfg);
     this.configure(cfg);
-    initBuffers();
+   /* initBuffers();
     long recordMod = this.splitStart % this.recordLength;
     if (recordMod != 0) {
       this.offset = this.splitStart + this.recordLength - recordMod;
@@ -167,7 +206,7 @@ public class CSVInputSplit<OT> extends DelimitedInputSplit<OT> {
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
-    fillBuffer(0);
+    fillBuffer(0);*/
   }
 
   private boolean fillBuffer(int fillOffset) throws IOException {

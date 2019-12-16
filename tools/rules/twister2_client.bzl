@@ -164,6 +164,7 @@ def twister2_client_lib_data_files():
         "@log4j_log4j//jar",
         "@org_apache_htrace_htrace_core4//jar",
         "@org_apache_hadoop_hadoop_hdfs_client//jar",
+        "@maven//:com_opencsv_opencsv",
     ]
 
 def twister2_client_lib_connector_files():

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -23,7 +24,6 @@ import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
-import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
@@ -36,6 +36,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
 
   protected transient int recordLength;
   protected transient int numSplits;
+
+  public  CSVInputPartitioner(Path filePath) {
+    super(filePath);
+  }
 
   public  CSVInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
@@ -65,17 +69,21 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
     this.config = parameters;
   }
 
+  private long minSplitSize = 0;
+
+  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
+
   @Override
   public FileInputSplit[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
-    int currentMinimumNumSplits = Math.max(minNumSplits, this.numSplits);
+    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
     System.out.println("The file path is:" + this.filePath);
 
     final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(currentMinimumNumSplits);
-    List<FileStatus> files = new ArrayList<FileStatus>();
+    final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
+    List<FileStatus> files = new ArrayList<>();
     long totalLength = 0;
 
     final FileSystem fs = FileSystemUtils.get(path);
@@ -88,8 +96,59 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       totalLength += pathFile.getLen();
     }
 
-    LOG.info("total length of the file:" + totalLength + "\t" + this.recordLength);
+    final long maxSplitSize = totalLength / curminNumSplits
+        + (totalLength % curminNumSplits == 0 ? 0 : 1);
+    LOG.info("max split size:" + maxSplitSize);
 
+    //Generate the splits
+    int splitNum = 0;
+    for (final FileStatus file : files) {
+      final long len = file.getLen();
+      final long blockSize = file.getBlockSize();
+
+      final long localminSplitSize;
+      if (this.minSplitSize <= blockSize) {
+        localminSplitSize = this.minSplitSize;
+      } else {
+        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
+            + " is larger than the block size of " + blockSize
+            + ". Decreasing minimal split size to block size.");
+        localminSplitSize = blockSize;
+      }
+
+      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
+      final long halfSplit = splitSize >>> 1;
+
+      final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
+      if (len > 0) {
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
+        Arrays.sort(blocks);
+
+        long bytesUnassigned = len;
+        long position = 0;
+
+        int blockIndex = 0;
+        while (bytesUnassigned > maxBytesForLastSplit) {
+          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+          FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
+              blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+          position += splitSize;
+          bytesUnassigned -= splitSize;
+        }
+
+        if (bytesUnassigned > 0) {
+          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position,
+              bytesUnassigned, blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+        }
+      } else {
+        throw new IllegalStateException("The csv file " + file.getPath() + " is Empty");
+      }
+    }
+
+    /*LOG.info("total length of the file:" + totalLength + "\t" + this.recordLength);
     if (totalLength % this.recordLength != 0) {
       throw new IllegalStateException("The file has a incomplete record");
     }
@@ -143,7 +202,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       } else {
         throw new IllegalStateException("The csv file " + file.getPath() + " is Empty");
       }
-    }
+    }*/
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 

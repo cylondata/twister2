@@ -10,6 +10,7 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+    "@maven//:com_opencsv_opencsv",
     #"//twister2/comms/src/java:comms-java",
     "@com_esotericsoftware_kryo//jar",
     "//third_party:com_github_jnr_jffi_native",
@@ -37,7 +38,6 @@ common_deps_files = [
     "@org_apache_htrace_htrace_core4//jar",
     "@org_apache_hadoop_hadoop_hdfs_client//jar",
     "@org_slf4j_slf4j_api//jar",
-    "@maven//:com_opencsv_opencsv",
 ]
 
 t2_java_lib(
