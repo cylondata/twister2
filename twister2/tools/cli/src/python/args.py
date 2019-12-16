@@ -80,8 +80,8 @@ def add_job(parser):
     :return:
     '''
     parser.add_argument(
-        'job-name',
-        help='Name of the job')
+        'job-id',
+        help='ID of the job')
     return parser
 
 

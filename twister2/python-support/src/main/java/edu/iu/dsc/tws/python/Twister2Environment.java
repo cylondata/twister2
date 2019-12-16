@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.python.tset.PyTSetKeyedSource;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
@@ -38,6 +42,18 @@ public class Twister2Environment {
   public SourceTSet createSource(byte[] lambda, int parallelism) {
     PyTSetSource pyTSetSource = new PyTSetSource(lambda);
     return (SourceTSet) tSetEnvironment.createSource(pyTSetSource, parallelism);
+  }
+
+  public SourceTSet parallelize(List data, int parallelism) {
+    return (SourceTSet) tSetEnvironment.parallelize(data, parallelism);
+  }
+
+  public KeyedSourceTSet parallelize(Map map, int parallelism) {
+    return (KeyedSourceTSet) tSetEnvironment.parallelize(map, parallelism);
+  }
+
+  public KeyedSourceTSet parallelize(Map map, Comparator comparator, int parallelism) {
+    return (KeyedSourceTSet) tSetEnvironment.parallelize(map, parallelism, comparator);
   }
 
   public KeyedSourceTSet createKeyedSource(byte[] lambda, int parallelism) {

@@ -56,7 +56,7 @@ public final class ZKPersStateManager {
   public static void createPersStateDir(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Twister2Exception {
 
-    String persStatePath = ZKUtils.persDir(rootPath, job.getJobName());
+    String persStatePath = ZKUtils.persDir(rootPath, job.getJobId());
 
     try {
       client
@@ -83,10 +83,10 @@ public final class ZKPersStateManager {
    */
   public static boolean initWorkerPersState(CuratorFramework client,
                                             String rootPath,
-                                            String jobName,
+                                            String jobID,
                                             WorkerInfo workerInfo) throws Twister2Exception {
 
-    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
 
     try {
@@ -123,10 +123,10 @@ public final class ZKPersStateManager {
    */
   public static boolean initJobMasterPersState(CuratorFramework client,
                                                String rootPath,
-                                               String jobName,
+                                               String jobID,
                                                String jmAddress) throws Twister2Exception {
 
-    String jmPersPath = ZKUtils.jmPersPath(rootPath, jobName);
+    String jmPersPath = ZKUtils.jmPersPath(rootPath, jobID);
 
     try {
       // if the worker znode exists,
@@ -164,11 +164,11 @@ public final class ZKPersStateManager {
    */
   public static void removeScaledDownZNodes(CuratorFramework client,
                                             String rootPath,
-                                            String jobName,
+                                            String jobID,
                                             int minID,
                                             int maxID) throws Twister2Exception {
 
-    String checkPath = ZKUtils.persDir(rootPath, jobName);
+    String checkPath = ZKUtils.persDir(rootPath, jobID);
 
     for (int workerID = minID; workerID < maxID; workerID++) {
       String workerCheckPath = ZKUtils.workerPath(checkPath, workerID);
@@ -189,11 +189,11 @@ public final class ZKPersStateManager {
 
   public static boolean updateWorkerStatus(CuratorFramework client,
                                            String rootPath,
-                                           String jobName,
+                                           String jobID,
                                            WorkerInfo workerInfo,
                                            WorkerState newStatus) throws Twister2Exception {
 
-    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
     WorkerWithState workerWithState = new WorkerWithState(workerInfo, newStatus);
 
@@ -221,9 +221,9 @@ public final class ZKPersStateManager {
 
   public static WorkerWithState getWorkerWithState(CuratorFramework client,
                                                    String rootPath,
-                                                   String jobName,
+                                                   String jobID,
                                                    int workerID) throws Twister2Exception {
-    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerID);
     return getWorkerWithState(client, workerPersPath);
   }
@@ -233,9 +233,9 @@ public final class ZKPersStateManager {
    */
   public static LinkedList<WorkerWithState> getWorkers(CuratorFramework client,
                                                        String rootPath,
-                                                       String jobName) throws Twister2Exception {
+                                                       String jobID) throws Twister2Exception {
 
-    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
 
     try {
       List<String> children = client.getChildren().forPath(workersPersDir);
@@ -259,10 +259,10 @@ public final class ZKPersStateManager {
    * read the body of persistent directory body
    * decode and return
    */
-  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName)
+  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobID)
       throws Twister2Exception {
 
-    String persDir = ZKUtils.persDir(rootPath, jobName);
+    String persDir = ZKUtils.persDir(rootPath, jobID);
 
     try {
       byte[] jobBytes = client.getData().forPath(persDir);
@@ -287,7 +287,7 @@ public final class ZKPersStateManager {
   public static void updateJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Twister2Exception {
 
-    String persDir = ZKUtils.persDir(rootPath, job.getJobName());
+    String persDir = ZKUtils.persDir(rootPath, job.getJobId());
     try {
       client
           .setData()

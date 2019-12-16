@@ -217,7 +217,7 @@ public class ResourceAllocator {
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobId());
     boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
     if (!added) {
       throw new RuntimeException("Failed to add the job description file to the archive: "
@@ -285,7 +285,8 @@ public class ResourceAllocator {
 
     // create an instance of launcher
     try {
-      launcher = ReflectionUtils.newInstance(launcherClass);
+      launcher = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          launcherClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
@@ -293,7 +294,8 @@ public class ResourceAllocator {
 
     // create an instance of uploader
     try {
-      uploader = ReflectionUtils.newInstance(uploaderClass);
+      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          uploaderClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new UploaderException(
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
@@ -350,9 +352,9 @@ public class ResourceAllocator {
   /**
    * Terminate a job
    *
-   * @param jobName the name of the job to terminate
+   * @param jobID the name of the job to terminate
    */
-  public void terminateJob(String jobName, Config config) {
+  public void terminateJob(String jobID, Config config) {
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
@@ -363,7 +365,8 @@ public class ResourceAllocator {
 
     // create an instance of launcher
     try {
-      launcher = ReflectionUtils.newInstance(launcherClass);
+      launcher = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          launcherClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
@@ -371,7 +374,7 @@ public class ResourceAllocator {
 
     // initialize the launcher and terminate the job
     launcher.initialize(config);
-    boolean terminated = launcher.terminateJob(jobName);
+    boolean terminated = launcher.terminateJob(jobID);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
     }

@@ -365,6 +365,7 @@ public class JobMaster {
     };
 
     jmThread.setName("JM");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     return jmThread;
@@ -407,7 +408,7 @@ public class JobMaster {
     }
 
     if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobName());
+      jobTerminator.terminateJob(job.getJobId());
     }
 
     if (dashClient != null) {
@@ -456,6 +457,8 @@ public class JobMaster {
 
     // if all workers already joined, publish that event to the driver
     // this usually happens when jm restarted
+    // since now we require all workers to be both joined and connected,
+    // this should not be an issue, but i am not %100 sure. so keeping it.
     // TODO: make sure driver thread started before publishing this event
     //       as a temporary solution, wait 50 ms before starting new thread
     if (workerMonitor.isAllJoined()) {
@@ -481,7 +484,7 @@ public class JobMaster {
    */
   private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      zkMasterController = new ZKMasterController(config, job.getJobName(),
+      zkMasterController = new ZKMasterController(config, job.getJobId(),
           job.getNumberOfWorkers(), jmAddress, workerMonitor);
 
       try {
@@ -559,7 +562,7 @@ public class JobMaster {
           looper.wakeup();
 
           if (jobTerminator != null) {
-            jobTerminator.terminateJob(job.getJobName());
+            jobTerminator.terminateJob(job.getJobId());
           }
         }
 

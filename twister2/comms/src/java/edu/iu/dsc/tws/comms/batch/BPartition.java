@@ -62,7 +62,7 @@ public class BPartition extends BaseOperation {
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDirs, null, true);
+          rcvr, shuffleDirs, null, true);
     } else {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }

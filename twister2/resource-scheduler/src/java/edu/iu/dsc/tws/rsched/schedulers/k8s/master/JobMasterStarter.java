@@ -52,7 +52,7 @@ public final class JobMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // get environment variables
-    String jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    String jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
     String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
 
@@ -62,7 +62,7 @@ public final class JobMasterStarter {
     Config config = K8sWorkerUtils.loadConfig(configDir);
 
     // read job description file
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
@@ -95,7 +95,7 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    JobMasterAPI.JobMasterState initialState = initialStateAndUpdate(config, jobName, podIP);
+    JobMasterAPI.JobMasterState initialState = initialStateAndUpdate(config, jobID, podIP);
 
     JobTerminator jobTerminator = new JobTerminator(config);
     KubernetesController controller = new KubernetesController();
@@ -128,7 +128,7 @@ public final class JobMasterStarter {
    * @return
    */
   public static JobMasterAPI.JobMasterState initialStateAndUpdate(Config config,
-                                                                  String jobName,
+                                                                  String jobID,
                                                                   String jmAddress) {
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
@@ -138,9 +138,9 @@ public final class JobMasterStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobName, jmAddress)) {
-          ZKEventsManager.initEventCounter(client, rootPath, jobName);
-          job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
+        if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobID, jmAddress)) {
+          ZKEventsManager.initEventCounter(client, rootPath, jobID);
+          job = ZKPersStateManager.readJobZNode(client, rootPath, jobID);
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

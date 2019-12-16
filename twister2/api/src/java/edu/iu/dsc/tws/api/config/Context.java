@@ -72,6 +72,7 @@ public class Context {
   public static final String JOB_NAME = "twister2.resource.job.name";
   public static final String JOB_OBJECT = "twister2.job.object";
   public static final String JOB_ID = "twister2.job.id";
+  public static final String USER_NAME = "twister2.user.name";
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -168,6 +169,10 @@ public class Context {
 
   public static String jobId(Config cfg) {
     return cfg.getStringValue(JOB_ID);
+  }
+
+  public static String userName(Config cfg) {
+    return cfg.getStringValue(USER_NAME);
   }
 
   public static String dataConfigurationFile(Config cfg) {

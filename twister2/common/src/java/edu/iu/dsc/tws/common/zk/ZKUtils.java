@@ -100,36 +100,36 @@ public final class ZKUtils {
   /**
    * construct main job directory path for the job
    */
-  public static String jobDir(String rootPath, String jobName) {
-    return rootPath + "/" + jobName;
+  public static String jobDir(String rootPath, String jobID) {
+    return rootPath + "/" + jobID;
   }
 
   /**
    * construct ephemeral directory path for the job
    */
-  public static String ephemDir(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/workers-ephem-state";
+  public static String ephemDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/workers-ephem-state";
   }
 
   /**
    * construct persistent directory path for the job
    */
-  public static String persDir(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/workers-pers-state";
+  public static String persDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/workers-pers-state";
   }
 
   /**
    * construct events directory path for the job
    */
-  public static String eventsDir(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/events";
+  public static String eventsDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/events";
   }
 
   /**
    * construct barrier directory path for the job
    */
-  public static String barrierDir(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/barrier";
+  public static String barrierDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/barrier";
   }
 
   /**
@@ -142,15 +142,15 @@ public final class ZKUtils {
   /**
    * construct the job master path for a persistent znode that will store the job master state
    */
-  public static String jmPersPath(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/jm-pers-state";
+  public static String jmPersPath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/jm-pers-state";
   }
 
   /**
    * construct the job master path for an ephemeral znode that will watch JM liveness
    */
-  public static String jmEphemPath(String rootPath, String jobName) {
-    return jobDir(rootPath, jobName) + "/jm-ephem-state";
+  public static String jmEphemPath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/jm-ephem-state";
   }
 
   /**
@@ -211,11 +211,11 @@ public final class ZKUtils {
   /**
    * check whether there is an active job
    */
-  public static boolean isThereJobZNodes(CuratorFramework clnt, String rootPath, String jobName) {
+  public static boolean isThereJobZNodes(CuratorFramework clnt, String rootPath, String jobID) {
 
     try {
       // check whether the job znode exists, if not, return false, nothing to do
-      String jobDir = jobDir(rootPath, jobName);
+      String jobDir = jobDir(rootPath, jobID);
       if (clnt.checkExists().forPath(jobDir) != null) {
         LOG.info("main jobZnode exists: " + jobDir);
         return true;
@@ -230,12 +230,12 @@ public final class ZKUtils {
   }
 
   /**
-   * delete all znodes related to the given jobName
+   * delete all znodes related to the given jobID
    */
-  public static boolean terminateJob(String zkServers, String rootPath, String jobName) {
+  public static boolean terminateJob(String zkServers, String rootPath, String jobID) {
     try {
       CuratorFramework clnt = connectToServer(zkServers);
-      boolean deleteResult = deleteJobZNodes(clnt, rootPath, jobName);
+      boolean deleteResult = deleteJobZNodes(clnt, rootPath, jobID);
       clnt.close();
       return deleteResult;
     } catch (Exception e) {
@@ -247,12 +247,12 @@ public final class ZKUtils {
   /**
    * delete job related znode from previous sessions
    */
-  public static boolean deleteJobZNodes(CuratorFramework clnt, String rootPath, String jobName) {
+  public static boolean deleteJobZNodes(CuratorFramework clnt, String rootPath, String jobID) {
 
     boolean allDeleted = true;
 
     // delete workers ephemeral znode directory
-    String jobPath = ephemDir(rootPath, jobName);
+    String jobPath = ephemDir(rootPath, jobID);
     try {
       if (clnt.checkExists().forPath(jobPath) != null) {
 
@@ -290,7 +290,7 @@ public final class ZKUtils {
 
     try {
       // delete job directory
-      String jobDir = jobDir(rootPath, jobName);
+      String jobDir = jobDir(rootPath, jobID);
       if (clnt.checkExists().forPath(jobDir) != null) {
         clnt.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
         LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);

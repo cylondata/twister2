@@ -32,7 +32,7 @@ public class HashingPartitioner<T> implements PartitionFunc<T> {
   @Override
   public int partition(int sourceIndex, T val) {
     List<Integer> destinations = destination.get(sourceIndex);
-    int next = val.hashCode() % destinations.size();
+    int next = Math.abs(val.hashCode()) % destinations.size();
     return destinations.get(next);
   }
 

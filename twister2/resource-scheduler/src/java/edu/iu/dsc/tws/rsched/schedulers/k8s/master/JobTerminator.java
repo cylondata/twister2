@@ -37,38 +37,38 @@ public class JobTerminator implements IJobTerminator {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
 
     // delete the StatefulSets for workers
-    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobName);
+    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobID);
     boolean ssForWorkersDeleted = true;
     for (String ssName: ssNameLists) {
       ssForWorkersDeleted &= controller.deleteStatefulSet(ssName);
     }
 
     // delete the job service
-    String serviceName = KubernetesUtils.createServiceName(jobName);
+    String serviceName = KubernetesUtils.createServiceName(jobID);
     boolean serviceForWorkersDeleted = controller.deleteService(serviceName);
 
     // delete the persistent volume claim
-    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
+    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
 
     boolean zkCleared = true;
     if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
-      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobName);
+      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobID);
       ZKUtils.closeClient();
     }
 
     // delete the job master StatefulSet
-    String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
+    String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSet(jobMasterStatefulSetName);
 
     // delete the job master service
-    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
     boolean serviceForJobMasterDeleted = controller.deleteService(jobMasterServiceName);
 
     return ssForWorkersDeleted

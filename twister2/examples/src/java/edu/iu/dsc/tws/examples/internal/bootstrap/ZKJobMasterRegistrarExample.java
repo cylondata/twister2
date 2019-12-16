@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -59,14 +58,15 @@ public final class ZKJobMasterRegistrarExample {
     }
 
     String zkAddress = args[0];
-    String jobName = "test-job";
-    Config cnfg = buildConfig(zkAddress, jobName);
+    String jobID = "test-job";
+    Config cnfg = buildConfig(zkAddress);
 
     String jobMasterIP = "x.y.z.t";
     // get the default port
     int jobMasterPort = JobMasterContext.jobMasterPort(cnfg);
 
-    ZKJobMasterRegistrar registrar = new ZKJobMasterRegistrar(cnfg, jobMasterIP, jobMasterPort);
+    ZKJobMasterRegistrar registrar =
+        new ZKJobMasterRegistrar(cnfg, jobMasterIP, jobMasterPort, jobID);
     boolean initialized = registrar.initialize();
     if (!initialized && registrar.sameZNodeExist()) {
       registrar.deleteJobMasterZNode();
@@ -88,10 +88,9 @@ public final class ZKJobMasterRegistrarExample {
   /**
    * construct a Config object
    */
-  public static Config buildConfig(String zkAddress, String jobName) {
+  public static Config buildConfig(String zkAddress) {
     return Config.newBuilder()
         .put(ZKContext.SERVER_ADDRESSES, zkAddress)
-        .put(Context.JOB_NAME, jobName)
         .build();
   }
 

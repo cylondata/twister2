@@ -212,8 +212,8 @@ public final class K8sWorkerUtils {
   /**
    * get job master service IP from job master service name
    */
-  public static String getJobMasterServiceIP(String namespace, String jobName) {
-    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+  public static String getJobMasterServiceIP(String namespace, String jobID) {
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
     jobMasterServiceName = jobMasterServiceName + "." + namespace + ".svc.cluster.local";
     try {
       return InetAddress.getByName(jobMasterServiceName).getHostAddress();
@@ -268,7 +268,7 @@ public final class K8sWorkerUtils {
    * @return
    */
   public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
-                                                               String jbName,
+                                                               String jbID,
                                                                JobMasterAPI.WorkerInfo wInfo) {
 
     if (ZKContext.isZooKeeperServerUsed(cnfg)) {
@@ -278,7 +278,7 @@ public final class K8sWorkerUtils {
       String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbName, wInfo)) {
+        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbID, wInfo)) {
           return JobMasterAPI.WorkerState.RESTARTED;
         }
 

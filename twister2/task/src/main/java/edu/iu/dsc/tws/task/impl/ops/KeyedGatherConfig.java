@@ -22,26 +22,22 @@ public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig>
 
   private Comparator keyCompartor;
   private boolean grpByKey = true;
-  private boolean srtByKey;
 
   public KeyedGatherConfig(String parent,
                            ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_GATHER, computeConnection);
   }
 
-  public <T> KeyedGatherConfig sortBatchByKey(boolean sortByKey,
-                                              Comparator<T> keyComparator) {
-    this.srtByKey = sortByKey;
+  public <T> KeyedGatherConfig sortBatchByKey(Comparator<T> keyComparator) {
     this.keyCompartor = keyComparator;
-    return this.withProperty(CommunicationContext.SORT_BY_KEY, sortByKey)
+    return this.withProperty(CommunicationContext.SORT_BY_KEY, keyComparator != null)
         .withProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
   }
 
-  public <T> KeyedGatherConfig sortBatchByKey(boolean sortByKey, Class<T> tClass,
+  public <T> KeyedGatherConfig sortBatchByKey(Class<T> tClass,
                                               Comparator<T> keyComparator) {
-    this.srtByKey = sortByKey;
     this.keyCompartor = keyComparator;
-    return this.withProperty(CommunicationContext.SORT_BY_KEY, sortByKey)
+    return this.withProperty(CommunicationContext.SORT_BY_KEY, keyComparator != null)
         .withProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
   }
 
@@ -52,10 +48,6 @@ public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig>
 
   @Override
   void validate() {
-    if (this.srtByKey && this.keyCompartor == null) {
-      failValidation("KeyedGather operation configured to sort by key. "
-          + "But Key Comparator is not specified.");
-    }
   }
 
   @Override
@@ -64,7 +56,7 @@ public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig>
       newEdge.addProperty(CommunicationContext.KEY_COMPARATOR, this.keyCompartor);
     }
 
-    newEdge.addProperty(CommunicationContext.SORT_BY_KEY, this.srtByKey);
+    newEdge.addProperty(CommunicationContext.SORT_BY_KEY, keyCompartor != null);
     newEdge.addProperty(CommunicationContext.GROUP_BY_KEY, this.grpByKey);
 
     return newEdge;
