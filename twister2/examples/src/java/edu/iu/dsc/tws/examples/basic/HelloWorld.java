@@ -41,6 +41,8 @@ public class HelloWorld implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    LOG.info("worker-start: " + System.currentTimeMillis());
+
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 
@@ -86,7 +88,7 @@ public class HelloWorld implements IWorker {
 
   private void waitAndComplete() {
 
-    long duration = 60;
+    long duration = 600;
     try {
       LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
       Thread.sleep(duration * 1000);
