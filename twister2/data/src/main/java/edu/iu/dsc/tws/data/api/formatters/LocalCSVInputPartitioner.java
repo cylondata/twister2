@@ -15,48 +15,42 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
-import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
+import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit;
 
-public class LocalCSVInputPartitioner extends CSVInputPartitioner {
+public class LocalCSVInputPartitioner<OT> extends CSVInputPartitioner<OT> {
 
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
 
-  private int numberOfTasks;
-
   private Config config;
+  private int nTasks;
 
-  private int recordLength;
+  private OrderedInputSplitAssigner<OT> assigner;
 
-  private LocatableInputSplitAssigner assigner;
-
-  public LocalCSVInputPartitioner(Path filePath, int recordLen) {
-    super(filePath, recordLen);
-    this.recordLength = recordLen;
+  public LocalCSVInputPartitioner(Path filePath, int numTasks) {
+    super(filePath);
+    this.nTasks = numTasks;
   }
 
-  public LocalCSVInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
-    super(filePath, recordLen, nTasks);
-    this.numberOfTasks = nTasks;
-    this.recordLength = recordLen;
-    this.config = cfg;
+  public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
+    super(filePath, config);
+    this.nTasks = numTasks;
   }
 
-  public LocalCSVInputPartitioner(Path path, int parallelism, Config cfg) {
-    super(path, parallelism, cfg);
+  @Override
+  protected GenericCSVInputSplit createSplit(int num, Path file, long start,
+                                             long length, String[] hosts) {
+    return new GenericCSVInputSplit(num, file, start, length, hosts);
   }
 
-  protected CSVInputSplit createSplit(int num, Path file, long start, long length, String[] hosts) {
-    return new CSVInputSplit(num, file, start, length, hosts);
-  }
-
-  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+  @Override
+  public OrderedInputSplitAssigner<OT> getInputSplitAssigner(
+      FileInputSplit<OT>[] inputSplits) {
     if (assigner == null) {
-      assigner = new LocatableInputSplitAssigner(inputSplits);
+      assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
     }
     return assigner;
   }

@@ -23,45 +23,35 @@ import edu.iu.dsc.tws.api.data.BlockLocation;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public class CSVInputPartitioner extends FileInputPartitioner<Object> {
+public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
+
+  private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
   private static final long serialVersionUID = -1L;
 
-  private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
+  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
+
+  private boolean enumerateNestedFiles = false;
 
   protected transient int recordLength;
   protected transient int numSplits;
 
-  public  CSVInputPartitioner(Path filePath) {
-    super(filePath);
+  protected Path filePath;
+  protected Config config;
+
+  private long minSplitSize = 0;
+
+  public CSVInputPartitioner(Path filePath) {
+    this.filePath = filePath;
   }
 
-  public  CSVInputPartitioner(Path filePath, int recordLen) {
-    super(filePath);
-    this.recordLength = recordLen;
-  }
-
-  public CSVInputPartitioner(Path filePath, int recordLen, Config cfg) {
-    super(filePath);
-    this.recordLength = recordLen;
-    this.configure(cfg);
-  }
-
-  public CSVInputPartitioner(Path filePath, int recordLen, int numberOfTasks) {
-    super(filePath);
-    this.numSplits = numberOfTasks;
-    this.recordLength = recordLen;
-  }
-
-  public CSVInputPartitioner(Path filePath, int recordLen, int numberOfTasks, Config config) {
-    super(filePath, config);
-    this.numSplits = numberOfTasks;
-    this.recordLength = recordLen;
+  public CSVInputPartitioner(Path filePath, Config cfg) {
+    this.filePath = filePath;
+    this.config = cfg;
   }
 
   @Override
@@ -69,24 +59,26 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
     this.config = parameters;
   }
 
-  private long minSplitSize = 0;
-
-  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
-
+  /**
+   * It create the number of splits based on the task parallelism value.
+   * @param minNumSplits Number of minimal input splits, as a hint.
+   * @return
+   * @throws IOException
+   */
   @Override
-  public FileInputSplit[] createInputSplits(int minNumSplits) throws IOException {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
-    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
-    System.out.println("The file path is:" + this.filePath);
 
-    final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
+    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
+
     List<FileStatus> files = new ArrayList<>();
     long totalLength = 0;
 
-    final FileSystem fs = FileSystemUtils.get(path);
+    final Path path = this.filePath;
+    final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
+    final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {
@@ -96,16 +88,11 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       totalLength += pathFile.getLen();
     }
 
-    final long maxSplitSize = totalLength / curminNumSplits
-        + (totalLength % curminNumSplits == 0 ? 0 : 1);
-    LOG.info("max split size:" + maxSplitSize);
-
-    //Generate the splits
     int splitNum = 0;
+    final long maxSplitSize = totalLength;
     for (final FileStatus file : files) {
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
-
       final long localminSplitSize;
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
@@ -117,103 +104,110 @@ public class CSVInputPartitioner extends FileInputPartitioner<Object> {
       }
 
       final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
-      final long halfSplit = splitSize >>> 1;
-
-      final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
       if (len > 0) {
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
         Arrays.sort(blocks);
-
-        long bytesUnassigned = len;
         long position = 0;
-
         int blockIndex = 0;
-        while (bytesUnassigned > maxBytesForLastSplit) {
-          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+        for (int i = 0; i < curminNumSplits; i++) {
+          blockIndex = getBlockIndexForPosition(blocks, position, splitSize, blockIndex);
           FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
-          position += splitSize;
-          bytesUnassigned -= splitSize;
-        }
-
-        if (bytesUnassigned > 0) {
-          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
-          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position,
-              bytesUnassigned, blocks[blockIndex].getHosts());
-          inputSplits.add(fis);
         }
       } else {
-        throw new IllegalStateException("The csv file " + file.getPath() + " is Empty");
-      }
-    }
-
-    /*LOG.info("total length of the file:" + totalLength + "\t" + this.recordLength);
-    if (totalLength % this.recordLength != 0) {
-      throw new IllegalStateException("The file has a incomplete record");
-    }
-
-    long numberOfRecords = totalLength / this.recordLength;
-    long minRecordsForSplit = Math.floorDiv(numberOfRecords, minNumSplits);
-    long oddRecords = numberOfRecords % minNumSplits;
-
-    //Generate the splits
-    int splitNum = 0;
-    for (final FileStatus file : files) {
-      final long len = file.getLen();
-      final long minSplitSize = minRecordsForSplit * this.recordLength;
-      long currentSplitSize = minSplitSize;
-      long halfSplit = currentSplitSize >>> 1;
-
-      if (oddRecords > 0) {
-        currentSplitSize = currentSplitSize + this.recordLength;
-        oddRecords--;
-      }
-
-      if (len > 0) {
-        // get the block locations and make sure they are in order with respect to their offset
-        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
-        Arrays.sort(blocks);
-
-        long bytesUnassigned = len;
-        long position = 0;
-
-        int blockIndex = 0;
-        while (bytesUnassigned >= currentSplitSize) {
-          // get the block containing the majority of the data
-          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
-
-          // create a new split
-          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position,
-              currentSplitSize, blocks[blockIndex].getHosts());
-          inputSplits.add(fis);
-
-          // adjust the positions
-          position += currentSplitSize;
-          bytesUnassigned -= currentSplitSize;
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
+        String[] hosts;
+        if (blocks.length > 0) {
+          hosts = blocks[0].getHosts();
+        } else {
+          hosts = new String[0];
         }
-
-        if (bytesUnassigned > 0) {
-          blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
-          final FileInputSplit fis = new CSVInputSplit(splitNum++, filePath, position,
-              bytesUnassigned, blocks[blockIndex].getHosts());
+        for (int i = 0; i < curminNumSplits; i++) {
+          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
           inputSplits.add(fis);
         }
-      } else {
-        throw new IllegalStateException("The csv file " + file.getPath() + " is Empty");
       }
-    }*/
+    }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  @Override
-  public InputSplitAssigner<Object> getInputSplitAssigner(FileInputSplit<Object>[] inputSplits) {
-    return new LocatableInputSplitAssigner<>(inputSplits);
+  protected abstract FileInputSplit createSplit(int num, Path file, long start,
+                                               long length, String[] hosts);
+
+  /**
+   * To enumerate the files in the directory in a recursive if the enumeratedNestedFiles is true.
+   * @param path
+   * @param files
+   * @param logExcludedFiles
+   * @return
+   * @throws IOException
+   */
+  long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
+      throws IOException {
+
+    final FileSystem fs = FileSystemUtils.get(path);
+    long length = 0;
+    for (FileStatus file : fs.listFiles(path)) {
+      if (file.isDir()) {
+        if (acceptFile(file) && enumerateNestedFiles) {
+          length += sumFilesInDir(file.getPath(), files, logExcludedFiles);
+        } else {
+          if (logExcludedFiles) {
+            LOG.log(Level.INFO, "Directory " + file.getPath().toString() + " did not pass the "
+                + "file-filter and is excluded.");
+          }
+        }
+      } else {
+        if (acceptFile(file)) {
+          files.add(file);
+          length += file.getLen();
+        } else {
+          if (logExcludedFiles) {
+            LOG.log(Level.INFO, "Directory " + file.getPath().toString()
+                + " did not pass the file-filter and is excluded.");
+          }
+        }
+      }
+    }
+    return length;
   }
 
-  @Override
-  protected FileInputSplit createSplit(int num, Path file, long start,
-                                       long length, String[] hosts) {
-    return null;
+
+  /**
+   * To return the status of file starts with underscore(_) and dot(.)
+   * @param fileStatus
+   * @return
+   */
+  private boolean acceptFile(FileStatus fileStatus) {
+    final String name = fileStatus.getPath().getName();
+    return !name.startsWith("_")
+        && !name.startsWith(".");
+  }
+
+  /**
+   * To retrieve the index of the block location which contains the part of the file described by
+   * the offset.
+   * @param blocks
+   * @param offset
+   * @param halfSplitSize
+   * @param startIndex
+   * @return
+   */
+  int getBlockIndexForPosition(BlockLocation[] blocks, long offset,
+                               long halfSplitSize, int startIndex) {
+    for (int i = startIndex; i < blocks.length; i++) {
+      long blockStart = blocks[i].getOffset();
+      long blockEnd = blockStart + blocks[i].getLength();
+
+      if (offset >= blockStart && offset < blockEnd) {
+        if (i < blocks.length - 1 && blockEnd - offset < halfSplitSize) {
+          return i + 1;
+        } else {
+          return i;
+        }
+      }
+    }
+    throw new IllegalArgumentException("The given offset is not contained in the any block.");
   }
 }

@@ -39,8 +39,10 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.CSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -66,44 +68,61 @@ public class CSVInputFormatTest {
       fileOutputStream.write(fileContent.getBytes(defaultCharset));
     }
 
-    Path path = new Path("/tmp/example.csv");
-    InputPartitioner csvInputPartitioner = new CSVInputPartitioner(path);
+    //Path path = new Path("/tmp/example.csv");
+    Path path = new Path("/tmp/example.txt");
+    String[] arr = new String[] {"localhost"};
+
+    CSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 2);
     csvInputPartitioner.configure(config);
 
+    FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
+    LOG.info("input split values are:" + Arrays.toString(inputSplits));
+    LocalTextInputPartitioner localTextInputPartitioner = new LocalTextInputPartitioner(path, 2);
+    localTextInputPartitioner.configure(config);
+    InputSplitAssigner inputSplitAssigner =
+        csvInputPartitioner.getInputSplitAssigner(inputSplits);
+    InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
+    inputSplit.open(config);
+    while (inputSplit != null) {
+      try {
+        while (!inputSplit.reachedEnd()) {
+          Object value = inputSplit.nextRecord(null);
+          LOG.info("input values are:" + value);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+
+    //TODO:Call the CSV Parser latter.
     CSVParser csvParser = new CSVParserBuilder()
         .withSeparator(',')
         .withIgnoreQuotations(true)
         .build();
 
-    int minSplits = 2;
+/*    int minSplits = 2;
     int recordCounter = 0;
     try {
-      InputSplit[] inputSplits = csvInputPartitioner.createInputSplits(minSplits);
+      FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(minSplits);
       LOG.info("input split values are:" + Arrays.toString(inputSplits));
-      InputSplitAssigner inputSplitAssigner
-          = csvInputPartitioner.getInputSplitAssigner(inputSplits);
-      InputSplit currentSplit
-          = inputSplitAssigner.getNextInputSplit("localhost", 0);
-      currentSplit.open(config);
-      while (currentSplit != null) {
+      InputSplitAssigner inputSplitAssigner =
+          csvInputPartitioner.getInputSplitAssigner(inputSplits);
+      InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
+      inputSplit.open(config);
+      while (inputSplit != null) {
         try {
-          while (!currentSplit.reachedEnd()) {
-            Object value = currentSplit.nextRecord(null);
-            recordCounter++;
-            if (value != null) {
-              LOG.info("current split values:" + currentSplit);
-//              if (recordCounter == 1) {
-//                assertEquals("this is", value.toString());
-//              }
-            }
+          while (!inputSplit.reachedEnd()) {
+            Object value = inputSplit.nextRecord(null);
+            LOG.info("input values are:" + value);
           }
-        } catch (IOException ioe) {
-          ioe.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
         }
       }
     } catch (Exception e) {
       e.printStackTrace();
-    }
+    }*/
   }
 
   private ComputeGraph createBatchGraph(int parallel) {
