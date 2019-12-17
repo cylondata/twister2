@@ -188,7 +188,8 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(SchedulerContext.JOB_NAME, job.getJobId()).build();
+        put(SchedulerContext.JOB_ID, job.getJobId()).
+        put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
 
