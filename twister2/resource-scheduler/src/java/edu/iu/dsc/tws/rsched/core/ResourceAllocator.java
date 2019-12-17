@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.LauncherException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -217,7 +218,7 @@ public class ResourceAllocator {
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobId());
     boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
     if (!added) {
       throw new RuntimeException("Failed to add the job description file to the archive: "
@@ -266,7 +267,7 @@ public class ResourceAllocator {
    *
    * @param job the actual job description
    */
-  public void submitJob(JobAPI.Job job, Config config) {
+  public Twister2JobState submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
     String jobDirectory = prepareJobFiles(config, job);
 
@@ -325,11 +326,13 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
-    launcher.launch(updatedJob);
+    Twister2JobState state = launcher.launch(updatedJob);
 
     launcher.close();
 
     clearTemporaryFiles(jobDirectory);
+
+    return state;
   }
 
   /**
@@ -352,9 +355,9 @@ public class ResourceAllocator {
   /**
    * Terminate a job
    *
-   * @param jobName the name of the job to terminate
+   * @param jobID the name of the job to terminate
    */
-  public void terminateJob(String jobName, Config config) {
+  public void terminateJob(String jobID, Config config) {
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
@@ -374,7 +377,7 @@ public class ResourceAllocator {
 
     // initialize the launcher and terminate the job
     launcher.initialize(config);
-    boolean terminated = launcher.terminateJob(jobName);
+    boolean terminated = launcher.terminateJob(jobID);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
     }

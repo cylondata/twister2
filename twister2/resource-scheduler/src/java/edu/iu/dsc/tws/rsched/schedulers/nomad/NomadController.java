@@ -86,21 +86,21 @@ public class NomadController implements IController {
 
   @Override
   public boolean kill(JobAPI.Job job) {
-    String jobName = job.getJobName();
+    String jobID = job.getJobId();
 
     String uri = NomadContext.nomadSchedulerUri(config);
-    LOG.log(Level.INFO, "Killing Job " + jobName);
+    LOG.log(Level.INFO, "Killing Job " + jobID);
     NomadApiClient nomadApiClient = new NomadApiClient(
         new NomadApiConfiguration.Builder().setAddress(uri).build());
     try {
-      Job nomadJob = getRunningJob(nomadApiClient, job.getJobName());
+      Job nomadJob = getRunningJob(nomadApiClient, job.getJobId());
       if (nomadJob == null) {
-        LOG.log(Level.INFO, "Cannot find the running job: " + job.getJobName());
+        LOG.log(Level.INFO, "Cannot find the running job: " + job.getJobId());
         return false;
       }
       nomadApiClient.getJobsApi().deregister(nomadJob.getId());
     } catch (RuntimeException | IOException | NomadException e) {
-      LOG.log(Level.SEVERE, "Failed to terminate job " + jobName
+      LOG.log(Level.SEVERE, "Failed to terminate job " + jobID
           + " with error: " + e.getMessage(), e);
       return false;
     } finally {
@@ -120,10 +120,10 @@ public class NomadController implements IController {
   }
 
   private Job getJob(JobAPI.Job job) {
-    String jobName = job.getJobName();
+    String jobID = job.getJobId();
     Job nomadJob = new Job();
-    nomadJob.setId(jobName);
-    nomadJob.setName(jobName);
+    nomadJob.setId(jobID);
+    nomadJob.setName(jobID);
     nomadJob.setType("batch");
     nomadJob.addTaskGroups(getTaskGroup(job));
     nomadJob.setDatacenters(Arrays.asList(NomadContext.NOMAD_DEFAULT_DATACENTER));
@@ -142,7 +142,7 @@ public class NomadController implements IController {
     return response.getValue();
   }
 
-  private static Job getRunningJob(NomadApiClient apiClient, String jobName) {
+  private static Job getRunningJob(NomadApiClient apiClient, String jobID) {
     List<JobListStub> jobs = getRunningJobList(apiClient);
     for (JobListStub job : jobs) {
       Job jobActual;
@@ -150,11 +150,11 @@ public class NomadController implements IController {
         jobActual = apiClient.getJobsApi().info(job.getId()).getValue();
       } catch (IOException | NomadException e) {
         String msg = "Failed to retrieve job info for job " + job.getId()
-            + " part of job " + jobName;
+            + " part of job " + jobID;
         LOG.log(Level.SEVERE, msg, e);
         throw new RuntimeException(msg, e);
       }
-      if (jobName.equals(jobActual.getName())) {
+      if (jobID.equals(jobActual.getName())) {
         return jobActual;
       }
     }
@@ -168,26 +168,26 @@ public class NomadController implements IController {
     } else {
       taskGroup.setCount(job.getNumberOfWorkers() + 1);
     }
-    taskGroup.setName(job.getJobName());
+    taskGroup.setName(job.getJobId());
     taskGroup.addTasks(getShellDriver(job));
     return taskGroup;
   }
 
   private static Map<String, String> getMetaData(JobAPI.Job job) {
-    String jobName = job.getJobName();
+    String jobID = job.getJobId();
     Map<String, String> metaData = new HashMap<>();
-    metaData.put(NomadContext.NOMAD_JOB_NAME, jobName);
+    metaData.put(NomadContext.NOMAD_JOB_NAME, jobID);
     return metaData;
   }
 
   private Task getShellDriver(JobAPI.Job job) {
-    String taskName = job.getJobName();
+    String taskName = job.getJobId();
     Task task = new Task();
     // get the job working directory
     String workingDirectory = NomadContext.workingDirectory(config);
-    String jobWorkingDirectory = Paths.get(workingDirectory, job.getJobName()).toString();
+    String jobWorkingDirectory = Paths.get(workingDirectory, job.getJobId()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobName(), SchedulerContext.clusterType(config)).toString();
+        job.getJobId(), SchedulerContext.clusterType(config)).toString();
 
     String corePackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
         + SchedulerContext.corePackageFileName(config);
@@ -272,9 +272,9 @@ public class NomadController implements IController {
 
   private String[] workerProcessCommand(String workingDirectory, JobAPI.Job job) {
 
-    String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
+    String twister2Home = Paths.get(workingDirectory, job.getJobId()).toString();
     //String configDirectoryName = Paths.get(workingDirectory,
-    //    job.getJobName(), SchedulerContext.clusterType(config)).toString();
+    //    job.getJobId(), SchedulerContext.clusterType(config)).toString();
     String configDirectoryName = "";
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
@@ -291,7 +291,7 @@ public class NomadController implements IController {
     mpiCommand.add(map.get("java_props").toString());
     mpiCommand.add(map.get("classpath").toString());
     mpiCommand.add(map.get("container_class").toString());
-    mpiCommand.add(job.getJobName());
+    mpiCommand.add(job.getJobId());
     mpiCommand.add(twister2Home);
     mpiCommand.add(jobId);
 
@@ -332,7 +332,7 @@ public class NomadController implements IController {
     slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
     return slurmCmd;
   }
-  public String createPersistentJobDirName(String jobName) {
-    return SchedulerContext.nfsServerPath(config) + "/" + jobName;
+  public String createPersistentJobDirName(String jobID) {
+    return SchedulerContext.nfsServerPath(config) + "/" + jobID;
   }
 }

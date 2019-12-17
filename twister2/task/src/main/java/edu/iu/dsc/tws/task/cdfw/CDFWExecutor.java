@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
 
+import edu.iu.dsc.tws.api.driver.IDriverMessenger;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 
 public final class CDFWExecutor {

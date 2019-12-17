@@ -69,15 +69,15 @@ public final class RequestObjectBuilder {
   private static final Logger LOG = Logger.getLogger(RequestObjectBuilder.class.getName());
 
   private static Config config;
-  private static String jobName;
+  private static String jobID;
   private static long jobPackageFileSize;
   private static String jobMasterIP = null;
 
   private RequestObjectBuilder() { }
 
-  public static void init(Config cnfg, String jName, long jpFileSize) {
+  public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
-    jobName = jName;
+    jobID = jID;
     jobPackageFileSize = jpFileSize;
 
     if (JobMasterContext.jobMasterRunsInClient(config)) {
@@ -109,18 +109,18 @@ public final class RequestObjectBuilder {
     }
 
     String statefulSetName =
-        KubernetesUtils.createWorkersStatefulSetName(jobName, computeResource.getIndex());
+        KubernetesUtils.createWorkersStatefulSetName(jobID, computeResource.getIndex());
 
     V1StatefulSet statefulSet = new V1StatefulSet();
 
-    // construct metadata and set for jobName setting
+    // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(statefulSetName);
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
     V1StatefulSetSpec setSpec = new V1StatefulSetSpec();
-    setSpec.serviceName(KubernetesUtils.createServiceName(jobName));
+    setSpec.serviceName(KubernetesUtils.createServiceName(jobID));
     // pods will be started in parallel
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
@@ -130,7 +130,7 @@ public final class RequestObjectBuilder {
 
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
+    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
     selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
     setSpec.setSelector(selector);
 
@@ -159,10 +159,10 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(jobID);
     labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, workerRoleLabel);
 
     templateMetaData.setLabels(labels);
@@ -188,7 +188,7 @@ public final class RequestObjectBuilder {
     }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
+      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
       V1Volume persistentVolume = createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
@@ -374,8 +374,8 @@ public final class RequestObjectBuilder {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_NAME + "")
-        .value(jobName));
+        .name(K8sEnvVariables.JOB_ID + "")
+        .value(jobID));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
@@ -501,7 +501,7 @@ public final class RequestObjectBuilder {
     String mappingType = KubernetesContext.workerMappingUniform(config);
     String key = KubernetesConstants.SERVICE_LABEL_KEY;
     String operator = "In";
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
+    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
     List<String> values = Arrays.asList(serviceLabel);
 
     V1LabelSelectorRequirement labelRequirement = new V1LabelSelectorRequirement();
@@ -530,8 +530,8 @@ public final class RequestObjectBuilder {
 
   public static V1Service createJobServiceObject() {
 
-    String serviceName = KubernetesUtils.createServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
+    String serviceName = KubernetesUtils.createServiceName(jobID);
+    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
 
     return createHeadlessServiceObject(serviceName, serviceLabel);
   }
@@ -563,8 +563,8 @@ public final class RequestObjectBuilder {
 
   public static V1Service createNodePortServiceObject() {
 
-    String serviceName = KubernetesUtils.createServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
+    String serviceName = KubernetesUtils.createServiceName(jobID);
+    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
     int workerPort = KubernetesContext.workerBasePort(config);
     int nodePort = KubernetesContext.serviceNodePort(config);
     String protocol = KubernetesContext.workerTransportProtocol(config);

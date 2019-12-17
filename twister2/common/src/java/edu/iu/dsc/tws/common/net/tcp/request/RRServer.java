@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -153,6 +154,10 @@ public class RRServer {
 
     // after sometime we need to stop
     stop();
+  }
+
+  public Set<Integer> getConnectedWorkers() {
+    return workerChannels.values();
   }
 
   /**

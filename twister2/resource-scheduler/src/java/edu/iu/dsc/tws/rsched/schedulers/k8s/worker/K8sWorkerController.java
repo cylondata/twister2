@@ -44,7 +44,7 @@ public class K8sWorkerController implements IWorkerController {
   private static final Logger LOG = Logger.getLogger(K8sWorkerController.class.getName());
 
   private Config config;
-  private String jobName;
+  private String jobID;
   private int numberOfPods;
   private int numberOfWorkers;
   private int workersPerPod;
@@ -54,13 +54,13 @@ public class K8sWorkerController implements IWorkerController {
   private JobMasterAPI.WorkerInfo thisWorker;
 
   public K8sWorkerController(Config config, String podName, String podIpStr, String containerName,
-                             String jobName, int workersPerPod) {
+                             String jobID, int workersPerPod) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);
     this.workersPerPod = workersPerPod;
     numberOfPods = numberOfWorkers / workersPerPod;
     workerList = new ArrayList<JobMasterAPI.WorkerInfo>();
-    this.jobName = jobName;
+    this.jobID = jobID;
 
     int containerIndex = KubernetesUtils.indexFromName(containerName);
     int workerID = calculateWorkerID(podName, containerIndex);
@@ -196,7 +196,7 @@ public class K8sWorkerController implements IWorkerController {
    */
   private void buildWorkerList() {
     String namespace = KubernetesContext.namespace(config);
-    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobName);
+    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobID);
     int basePort = KubernetesContext.workerBasePort(config);
 
     V1PodList list = null;
@@ -204,7 +204,7 @@ public class K8sWorkerController implements IWorkerController {
       list = coreApi.listNamespacedPod(
           namespace, null, null, null, servicelabel, null, null, null, null);
     } catch (ApiException e) {
-      String logMessage = "Exception when getting the pod list for the job: " + jobName + "\n"
+      String logMessage = "Exception when getting the pod list for the job: " + jobID + "\n"
           + "exCode: " + e.getCode() + "\n"
           + "responseBody: " + e.getResponseBody();
       LOG.log(Level.SEVERE, logMessage, e);
@@ -215,7 +215,7 @@ public class K8sWorkerController implements IWorkerController {
 
     for (V1Pod pod : list.getItems()) {
       String podName = pod.getMetadata().getName();
-      if (!podName.startsWith(jobName)) {
+      if (!podName.startsWith(jobID)) {
         LOG.warning("A pod received that does not belong to this job. PodName: " + podName);
         continue;
       }
@@ -299,7 +299,7 @@ public class K8sWorkerController implements IWorkerController {
 
     ArrayList<String> podNameList = new ArrayList<>();
     for (int i = 0; i < numberOfPods; i++) {
-      String podName = jobName + "-" + i;
+      String podName = jobID + "-" + i;
       podNameList.add(podName);
     }
     return podNameList;
@@ -315,7 +315,7 @@ public class K8sWorkerController implements IWorkerController {
 
     String phase = "Running";
     String namespace = KubernetesContext.namespace(config);
-    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobName);
+    String servicelabel = KubernetesUtils.createServiceLabelWithKey(jobID);
     Integer timeoutSeconds = (int) (timeoutMiliSec / 1000);
     Watch<V1Pod> watch = null;
 
@@ -328,7 +328,7 @@ public class K8sWorkerController implements IWorkerController {
           }.getType());
 
     } catch (ApiException e) {
-      String logMessage = "Exception when watching the pods for the job: " + jobName + "\n"
+      String logMessage = "Exception when watching the pods for the job: " + jobID + "\n"
           + "exCode: " + e.getCode() + "\n"
           + "responseBody: " + e.getResponseBody();
       LOG.log(Level.SEVERE, logMessage, e);

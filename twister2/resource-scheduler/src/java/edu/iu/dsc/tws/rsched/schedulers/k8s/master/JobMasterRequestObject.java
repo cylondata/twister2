@@ -55,15 +55,15 @@ public final class JobMasterRequestObject {
   private static final Logger LOG = Logger.getLogger(JobMasterRequestObject.class.getName());
 
   private static Config config;
-  private static String jobName;
+  private static String jobID;
   private static String encodedNodeInfoList;
   private static long jobPackageFileSize;
 
   private JobMasterRequestObject() { }
 
-  public static void init(Config cnfg, String jName, long jpFileSize) {
+  public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
-    jobName = jName;
+    jobID = jID;
     jobPackageFileSize = jpFileSize;
   }
 
@@ -81,19 +81,19 @@ public final class JobMasterRequestObject {
 
     V1StatefulSet statefulSet = new V1StatefulSet();
 
-    // construct metadata and set for jobName setting
+    // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(KubernetesUtils.createJobMasterStatefulSetName(jobName));
+    meta.setName(KubernetesUtils.createJobMasterStatefulSetName(jobID));
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
     V1StatefulSetSpec setSpec = new V1StatefulSetSpec();
-    setSpec.serviceName(KubernetesUtils.createJobMasterServiceName(jobName));
+    setSpec.serviceName(KubernetesUtils.createJobMasterServiceName(jobID));
     setSpec.setReplicas(1);
 
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
-    String jobMasterServiceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+    String jobMasterServiceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
     selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, jobMasterServiceLabel);
     setSpec.setSelector(selector);
 
@@ -116,12 +116,12 @@ public final class JobMasterRequestObject {
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
-        KubernetesUtils.createJobMasterServiceLabel(jobName));
+        KubernetesUtils.createJobMasterServiceLabel(jobID));
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
 
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobName);
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobID);
     labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, jobMasterRoleLabel);
 
     templateMetaData.setLabels(labels);
@@ -147,7 +147,7 @@ public final class JobMasterRequestObject {
     }
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
+      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
       V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
@@ -225,8 +225,8 @@ public final class JobMasterRequestObject {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_NAME + "")
-        .value(jobName));
+        .name(K8sEnvVariables.JOB_ID + "")
+        .value(jobID));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
@@ -293,8 +293,8 @@ public final class JobMasterRequestObject {
    */
   public static V1Service createJobMasterServiceObject() {
 
-    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+    String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
@@ -330,8 +330,8 @@ public final class JobMasterRequestObject {
    */
   public static V1Service createJobMasterHeadlessServiceObject() {
 
-    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+    String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
