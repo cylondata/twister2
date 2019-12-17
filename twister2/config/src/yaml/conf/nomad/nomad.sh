@@ -55,11 +55,11 @@ echo "11" $11
 
 
 
-#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nomad --config_dir $6"
+#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_id $4 --twister2_home $5 --cluster_type nomad --config_dir $6"
 if [ $NOMAD_ALLOC_INDEX = "0" ] && [ $1 = "false" ]; then
-  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadJobMasterStarter --container_class $4 --job_name $5 --job_id $7 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
+  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadJobMasterStarter --container_class $4 --job_id $5 --job_id $7 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
 else
-  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $4 --job_name $5 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
+  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $4 --job_id $5 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
 fi
 
 cat out.txt

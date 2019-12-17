@@ -146,8 +146,8 @@ public final class MPIWorker {
       // normal worker
       LOG.log(Level.FINE, "A worker process is starting...");
 
-      String jobName = MPIContext.jobName(config);
-      String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
+      String jobId = MPIContext.jobId(config);
+      String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
       /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
@@ -317,11 +317,11 @@ public final class MPIWorker {
         .required()
         .build();
 
-    Option jobName = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+    Option jobId = Option.builder("j")
+        .desc("Job Id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
 
@@ -345,7 +345,7 @@ public final class MPIWorker {
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
-    options.addOption(jobName);
+    options.addOption(jobId);
     options.addOption(jobMasterIP);
     options.addOption(jobMasterPort);
 
@@ -357,7 +357,7 @@ public final class MPIWorker {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobName = cmd.getOptionValue("job_name");
+    String jobId = cmd.getOptionValue("job_id");
     String jIp = cmd.getOptionValue("job_master_ip");
     int jPort = Integer.parseInt(cmd.getOptionValue("job_master_port"));
 
@@ -373,7 +373,7 @@ public final class MPIWorker {
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -382,7 +382,7 @@ public final class MPIWorker {
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.JOB_NAME, jobName).
+        put(MPIContext.JOB_ID, jobId).
         put(MPIContext.JOB_OBJECT, job).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(JobMasterContext.JOB_MASTER_IP, jIp).
@@ -651,9 +651,9 @@ public final class MPIWorker {
 
     String persistentJobDir;
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
+    String jobId = NomadContext.jobId(cfg);
     if (NomadContext.getLoggingSandbox(cfg)) {
-      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobId).toString();
     } else {
       persistentJobDir = logDirectory;
     }
@@ -673,7 +673,7 @@ public final class MPIWorker {
   }
 
 
-  private IPersistentVolume initPersistenceVolume(Config cfg, String jobName, int rank) {
+  private IPersistentVolume initPersistenceVolume(Config cfg, String jobId, int rank) {
     File baseDir = new File(MPIContext.fileSystemMount(cfg));
 
     // if the base dir does not exist
