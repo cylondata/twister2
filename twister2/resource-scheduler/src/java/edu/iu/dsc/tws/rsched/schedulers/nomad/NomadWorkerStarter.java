@@ -144,10 +144,10 @@ public final class NomadWorkerStarter {
         .build();
 
     Option jobID = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+        .desc("Job id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
     options.addOption(twister2Home);
@@ -164,7 +164,7 @@ public final class NomadWorkerStarter {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobID = cmd.getOptionValue("job_name");
+    String jobID = cmd.getOptionValue("job_id");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",

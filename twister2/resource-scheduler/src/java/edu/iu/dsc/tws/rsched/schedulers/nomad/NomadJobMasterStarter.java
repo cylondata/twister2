@@ -115,10 +115,10 @@ public final class NomadJobMasterStarter {
         .build();
 
     Option jobID = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+        .desc("Job Id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
     Option jobId = Option.builder("i")
@@ -144,7 +144,7 @@ public final class NomadJobMasterStarter {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobID = cmd.getOptionValue("job_name");
+    String jobID = cmd.getOptionValue("job_id");
     String jobId = cmd.getOptionValue("job_id");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
