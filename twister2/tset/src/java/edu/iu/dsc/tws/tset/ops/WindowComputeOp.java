@@ -42,19 +42,20 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
   private Map<String, String> rcvTSets;
 
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
+
   private ComputeFunc<O, List<IMessage<I>>> computeFunction;
 
-  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction) {
+  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction,
+                         WindowParameter winParam) {
     this.computeFunction = computeFunction;
-    this.windowParameter = new WindowParameter();
-    this.windowParameter.withTumblingCountWindow(2);
+    this.windowParameter = winParam;
   }
 
   public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction,
-                         BaseTSet originTSet, Map<String, String> receivableTSets) {
+                         BaseTSet originTSet, Map<String, String> receivableTSets,
+                         WindowParameter winParam) {
     this.computeFunction = computeFunction;
-    this.windowParameter = new WindowParameter();
-    this.windowParameter.withTumblingCountWindow(2);
+    this.windowParameter = winParam;
     this.receivables = IONames.declare(receivableTSets.keySet());
     this.rcvTSets = receivableTSets;
 
@@ -73,29 +74,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
 
   @Override
   public boolean execute(IWindowMessage<I> windowMessage) {
-
-    int workId = tSetContext.getWorkerId();
-    int tsetIndex = tSetContext.getIndex();
-
     List<IMessage<I>> output = windowMessage.getWindow();
-
-//    if (output.size() == 0) {
-//      System.out.println("Warning: Empty Window");
-//    }
-//    String s = "";
-//    for (IMessage<I> m : output
-//    ) {
-//      if (m.getContent() instanceof Integer) {
-//        s += ((Integer) m.getContent()).intValue() + " ";
-//      } else if (m.getContent() instanceof List) {
-//        ArrayList<IMessage<I>> m1 = (ArrayList<IMessage<I>>) m.getContent();
-//      }
-//      else {
-//        System.out.println("Warning! Other Type : " + m.getContent().getClass());
-//      }
-//    }
-    System.out.println("Fire window execute : " + output.size());
-    Object out = this.computeFunction.compute(output);
     writeToEdges(this.computeFunction.compute(output));
     //this.computeFunction.close();
     return true;

@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
@@ -26,26 +27,32 @@ import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
+  private WindowParameter windowParameter;
+
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
-                      int parallelism) {
-    this(tSetEnv, "wcompute", computeFunction, parallelism);
+                           int parallelism, WindowParameter winParam) {
+    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
   }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
-                      int parallelism) {
-    this(tSetEnv, "wcomputec", compOp, parallelism);
+                           int parallelism, WindowParameter winParam) {
+    this(tSetEnv, "wcomputec", compOp, parallelism, winParam);
   }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeFunc<O, I> computeFunction, int parallelism) {
+                           ComputeFunc<O, I> computeFunction, int parallelism,
+                           WindowParameter winParam) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = computeFunction;
+    this.windowParameter = winParam;
   }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeCollectorFunc<O, I> compOp, int parallelism) {
+                           ComputeCollectorFunc<O, I> compOp, int parallelism,
+                           WindowParameter winParam) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = compOp;
+    this.windowParameter = winParam;
   }
 
   @Override
@@ -60,7 +67,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
       return new WindowComputeOp<O, I>((ComputeFunc<O, List<IMessage<I>>>) computeFunc, this,
-          Collections.emptyMap());
+          Collections.emptyMap(), windowParameter);
     } else if (computeFunc instanceof ComputeCollectorFunc) {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
           Collections.emptyMap());

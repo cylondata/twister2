@@ -12,14 +12,17 @@
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 public class SReduceWindowExample extends StreamingTsetExample {
@@ -28,24 +31,21 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
-    SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SSourceTSet<Integer> src = dummySource(env, 8, PARALLELISM);
 
-    SReduceTLink<Integer> link = src.reduce(Integer::sum);
+    SDirectTLink<Integer> link = src.direct();
 
-//    link.countWindow(5, (input, output) -> output.collect(input + " window"))
-//        .direct()
-//        .forEach(s -> LOG.info(s.toString()));
-
-//    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
-//
-//    link.flatmap((i, c) -> c.collect("fm" + i))
-//        .direct().forEach(i -> LOG.info(i.toString()));
-//
-//    link.compute(i -> i + "C")
-//        .direct().forEach(i -> LOG.info(i));
-//
-//    link.compute((input, output) -> output.collect(input + "DD"))
-//        .direct().forEach(s -> LOG.info(s.toString()));
+    link.countWindow(2, input -> input)
+        .direct()
+        .forEach(new ApplyFunc<List<IMessage<Integer>>>() {
+          @Override
+          public void apply(List<IMessage<Integer>> data) {
+            for (IMessage<Integer> m : data) {
+              System.out.print(m.getContent().intValue() + ", ");
+            }
+            System.out.println();
+          }
+        });
   }
 
 

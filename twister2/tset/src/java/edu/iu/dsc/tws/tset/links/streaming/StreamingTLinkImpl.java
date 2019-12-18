@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
+import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
@@ -28,6 +29,8 @@ import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
 public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
+
+  private WindowParameter windowParameter;
 
   StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
@@ -55,9 +58,11 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
                                                                  computeFunction) {
     WindowComputeTSet<P, List<IMessage<T1>>> set;
     if (n != null && !n.isEmpty()) {
-      set = new WindowComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+      set = new WindowComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          this.windowParameter);
     } else {
-      set = new WindowComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+      set = new WindowComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(),
+          this.windowParameter);
     }
     addChildToGraph(set);
 
@@ -95,7 +100,9 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   }
 
   public <P> WindowComputeTSet<P, List<IMessage<T1>>> countWindow(
-      int windowLen, ComputeFunc<P, List<IMessage<T1>>> computeFunction) {
+      long windowLen, ComputeFunc<P, List<IMessage<T1>>> computeFunction) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(windowLen);
     return window("wcompute", computeFunction);
   }
 

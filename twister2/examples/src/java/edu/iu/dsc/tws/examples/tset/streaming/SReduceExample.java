@@ -13,10 +13,13 @@
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -35,42 +38,18 @@ public class SReduceExample extends StreamingTsetExample {
 
     SDirectTLink<Integer> link = src.direct();
 
-//    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
-//
-//    link.flatmap((i, c) -> c.collect("fm" + i))
-//        .direct().forEach(i -> LOG.info(i.toString()));
-//
-//    link.compute(i -> i + "C")
-//        .direct().forEach(i -> LOG.info(i));
-//
-//    link.compute((input, output) -> output.collect(input + "DD"))
-//        .direct().forEach(s -> LOG.info(s.toString()));
+    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
 
-    link.countWindow(2, input -> input)
-        .direct()
-        .forEach(i -> LOG.info(i.toString()));
-//    link.countWindow(2, input -> input)
-//        .direct()
-//        .forEach(new ApplyFunc<List<IMessage<Integer>>>() {
-//          @Override
-//          public void apply(List<IMessage<Integer>> data) {
-//            System.out.println("Window Received=> : " + data.size());
-//            for (IMessage<Integer> m : data) {
-//              Object o = m.getContent();
-//              if (o instanceof List) {
-//                ArrayList<?> x = (ArrayList<?>) o;
-//                System.out.println("s1: " + x.size());
-//                for (Object o1 : x
-//                ) {
-//                  IMessage<Integer> it = (IMessage<Integer>) o1;
-//                  System.out.println("s3 : " + o1.getClass().getName() + ", "
-//                      + it.getContent().intValue());
-//
-//                }
-//              }
-//            }
-//          }
-//        });
+    link.flatmap((i, c) -> c.collect("fm" + i))
+        .direct().forEach(i -> LOG.info(i.toString()));
+
+    link.compute(i -> i + "C")
+        .direct().forEach(i -> LOG.info(i));
+
+    link.compute((input, output) -> output.collect(input + "DD"))
+        .direct().forEach(s -> LOG.info(s.toString()));
+
+
   }
 
 
