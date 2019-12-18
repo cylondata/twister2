@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
 public class DJoinBatchFinalReceiver2 implements MessageReceiver {
 
@@ -140,7 +140,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
         leftValues.put(target, it);
 
         if (rightValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.join(
+          bulkReceiver.receive(target, SortJoinUtils.join(
               (RestorableIterator) it,
               (RestorableIterator) rightValues.get(target),
               comparator, joinType)
@@ -150,7 +150,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
         rightValues.put(target, it);
 
         if (leftValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.join(
+          bulkReceiver.receive(target, SortJoinUtils.join(
               (RestorableIterator) leftValues.get(target),
               (RestorableIterator) it,
               comparator, joinType)
