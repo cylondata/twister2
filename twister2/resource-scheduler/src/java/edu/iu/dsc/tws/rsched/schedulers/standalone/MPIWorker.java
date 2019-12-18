@@ -125,7 +125,7 @@ public final class MPIWorker {
           JobExecutionState.WorkerJobState workerState =
               JobExecutionState.WorkerJobState.newBuilder()
                   .setFailure(true)
-                  .setJobName(config.getStringValue(Context.JOB_NAME))
+                  .setJobName(config.getStringValue(Context.JOB_ID))
                   .setWorkerMessage(JSONUtils.toJSONString(exception))
                   .build();
           senderToDriver.sendToDriver(workerState);
