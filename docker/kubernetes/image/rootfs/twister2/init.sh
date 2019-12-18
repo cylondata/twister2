@@ -9,7 +9,7 @@
 #   starts the worker class
 ####################################################################
 
-echo "PodName: $POD_NAME PodStartTime: " $(date +%s%3N)
+echo "timestamp PodName: $POD_NAME PodStartTime: " $(date +%s%3N)
 
 # get the job package first
 ./get_job_package.sh

@@ -41,7 +41,7 @@ public class HelloWorld implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    LOG.info("worker-start: " + System.currentTimeMillis());
+    LOG.info("timestamp workerStart: " + System.currentTimeMillis());
 
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
@@ -60,6 +60,7 @@ public class HelloWorld implements IWorker {
       return;
     }
 
+    LOG.info("timestamp allWorkersJoined: " + System.currentTimeMillis());
     LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
 
     // lets sync with all workers
