@@ -38,6 +38,36 @@ public final class HashJoinUtils {
 
   }
 
+  public static List<Object> rightOuterJoin(List<Tuple> leftRelation,
+                                            List<Tuple> rightRelation,
+                                            KeyComparatorWrapper comparator) {
+    Map<Object, List<Tuple>> leftHash = new HashMap<>();
+
+    List<Object> joinedTuples = new ArrayList<>();
+
+    for (Tuple tuple : leftRelation) {
+      leftHash.computeIfAbsent(tuple.getKey(), k -> new ArrayList<>())
+          .add(tuple);
+    }
+
+    for (Tuple rightTuple : rightRelation) {
+      List<Tuple> leftTuples = leftHash.getOrDefault(rightTuple.getKey(), Collections.emptyList());
+      boolean matched = false;
+      for (Tuple leftTuple : leftTuples) {
+        if (comparator.compare(leftTuple, rightTuple) == 0) {
+          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+              rightTuple.getValue()));
+          matched = true;
+        }
+      }
+
+      if (!matched) {
+        joinedTuples.add(JoinedTuple.of(rightTuple.getKey(), null, rightTuple.getValue()));
+      }
+    }
+    return joinedTuples;
+  }
+
   public static List<Object> leftOuterJoin(List<Tuple> leftRelation,
                                            List<Tuple> rightRelation,
                                            KeyComparatorWrapper comparator) {

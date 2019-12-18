@@ -90,11 +90,39 @@ public class JoinRandomTest {
     KeyComparatorWrapper intComparator = intComparator();
 
     long t1 = System.currentTimeMillis();
-    List<Object> hashResult = HashJoinUtils.leftOuterJoin(leftRelation, rightRelation, intComparator);
+    List<Object> hashResult = HashJoinUtils.leftOuterJoin(leftRelation, rightRelation,
+        intComparator);
     LOG.info("Time for hash join : " + (System.currentTimeMillis() - t1));
 
     t1 = System.currentTimeMillis();
     List<Object> sortResult = SortJoinUtils.leftOuterJoin(leftRelation, rightRelation,
+        intComparator);
+    LOG.info("Time for sort join : " + (System.currentTimeMillis() - t1));
+
+    Assert.assertEquals(hashResult.size(), sortResult.size());
+
+    hashResult.sort(JoinTestUtils.getJoinedTupleComparator());
+    sortResult.sort(JoinTestUtils.getJoinedTupleComparator());
+
+    for (int i = 0; i < hashResult.size(); i++) {
+      Assert.assertEquals(hashResult.get(i), sortResult.get(i));
+    }
+  }
+
+  @Test
+  public void rightJoinTest() {
+    List<Tuple> leftRelation = randomData(1000000);
+    List<Tuple> rightRelation = randomData(1000000);
+
+    KeyComparatorWrapper intComparator = intComparator();
+
+    long t1 = System.currentTimeMillis();
+    List<Object> hashResult = HashJoinUtils.rightOuterJoin(leftRelation, rightRelation,
+        intComparator);
+    LOG.info("Time for hash join : " + (System.currentTimeMillis() - t1));
+
+    t1 = System.currentTimeMillis();
+    List<Object> sortResult = SortJoinUtils.rightOuterJoin(leftRelation, rightRelation,
         intComparator);
     LOG.info("Time for sort join : " + (System.currentTimeMillis() - t1));
 
