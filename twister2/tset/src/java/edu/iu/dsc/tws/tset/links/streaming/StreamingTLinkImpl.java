@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
+import edu.iu.dsc.tws.common.pojo.Time;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
@@ -54,8 +55,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   }
 
   public <P> WindowComputeTSet<P, Iterator<T1>> window(String n,
-                                                             ComputeFunc<P, Iterator<T1>>
-                                                                 computeFunction) {
+                                                       ComputeFunc<P, Iterator<T1>>
+                                                           computeFunction) {
     WindowComputeTSet<P, Iterator<T1>> set;
     if (n != null && !n.isEmpty()) {
       set = new WindowComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
@@ -113,16 +114,19 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return compute("w-count-tumbling-compute", computeFunction);
   }
 
-  public <P> SComputeTSet<P, T1> timeWindow(int windowLen,
+  public <P> SComputeTSet<P, T1> timeWindow(Time windowLen,
                                             ComputeCollectorFunc<P, T1> computeFunction) {
 
     this.windowParameter = new WindowParameter();
-    this.windowParameter.withTumblingDurationWindow(windowLen, TimeUnit.MILLISECONDS);
-    return compute("w-count-tumbling-compute", computeFunction);
+    this.windowParameter.withTumblingDurationWindow(windowLen.getSize(), windowLen.getUnit());
+    return compute("w-time-tumbling-compute", computeFunction);
   }
 
-  public <P> SComputeTSet<P, T1> timeWindow(int windowLen, int slidingLen,
+  public <P> SComputeTSet<P, T1> timeWindow(Time windowLen, Time slidingLen,
                                             ComputeCollectorFunc<P, T1> computeFunction) {
-    return compute("w-count-tumbling-compute", computeFunction);
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingDurationWindow(windowLen.getSize(), windowLen.getUnit(),
+        slidingLen.getSize(), slidingLen.getUnit());
+    return compute("w-time-sliding-compute", computeFunction);
   }
 }
