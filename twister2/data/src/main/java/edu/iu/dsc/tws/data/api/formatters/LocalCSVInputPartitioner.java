@@ -19,16 +19,16 @@ import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit;
 
-public class LocalCSVInputPartitioner<OT> extends CSVInputPartitioner<OT> {
+public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
+  private static final Logger LOG = Logger.getLogger(LocalCSVInputPartitioner.class.getName());
 
   private Config config;
   private int nTasks;
 
-  private OrderedInputSplitAssigner<OT> assigner;
+  private OrderedInputSplitAssigner<String> assigner;
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
@@ -36,19 +36,19 @@ public class LocalCSVInputPartitioner<OT> extends CSVInputPartitioner<OT> {
   }
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config);
+    super(filePath, config, numTasks);
     this.nTasks = numTasks;
   }
 
   @Override
   protected GenericCSVInputSplit createSplit(int num, Path file, long start,
-                                             long length, String[] hosts) {
+                                                           long length, String[] hosts) {
     return new GenericCSVInputSplit(num, file, start, length, hosts);
   }
 
   @Override
-  public OrderedInputSplitAssigner<OT> getInputSplitAssigner(
-      FileInputSplit<OT>[] inputSplits) {
+  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
+      FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
       assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
     }

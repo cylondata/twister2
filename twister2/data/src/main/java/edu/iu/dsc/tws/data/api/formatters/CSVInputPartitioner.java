@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
+//public class CSVInputPartitioner extends FileInputPartitioner<String> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
@@ -49,9 +50,10 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     this.filePath = filePath;
   }
 
-  public CSVInputPartitioner(Path filePath, Config cfg) {
-    this.filePath = filePath;
+  public CSVInputPartitioner(Path filepath, Config cfg, int numberOfTasks) {
+    this.filePath = filepath;
     this.config = cfg;
+    this.numSplits = numberOfTasks;
   }
 
   @Override
@@ -61,6 +63,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
   /**
    * It create the number of splits based on the task parallelism value.
+   *
    * @param minNumSplits Number of minimal input splits, as a hint.
    * @return
    * @throws IOException
@@ -72,15 +75,16 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     }
 
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);
-
-    List<FileStatus> files = new ArrayList<>();
     long totalLength = 0;
 
-    final Path path = this.filePath;
     final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
+
+    final Path path = this.filePath;
+    LOG.info("file system:" + this.filePath);
     final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
+    List<FileStatus> files = new ArrayList<>();
     if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
@@ -91,9 +95,11 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     int splitNum = 0;
     final long maxSplitSize = totalLength;
     for (final FileStatus file : files) {
+
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
       final long localminSplitSize;
+
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
       } else {
@@ -124,19 +130,31 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
           hosts = new String[0];
         }
         for (int i = 0; i < curminNumSplits; i++) {
-          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
           inputSplits.add(fis);
         }
       }
     }
+    LOG.info("input splits value:" + inputSplits.size() + "\t"
+        + Arrays.toString(inputSplits.toArray()));
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
+//  public InputSplitAssigner<String> getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
+//    return new LocatableInputSplitAssigner(inputSplits);
+//  }
+//
+//  protected FileInputSplit createSplit(int num, Path file, long start, long length,
+//                                       String[] hosts) {
+//    return null;
+//  }
+
   protected abstract FileInputSplit createSplit(int num, Path file, long start,
-                                               long length, String[] hosts);
+                                                long length, String[] hosts);
 
   /**
    * To enumerate the files in the directory in a recursive if the enumeratedNestedFiles is true.
+   *
    * @param path
    * @param files
    * @param logExcludedFiles
@@ -176,6 +194,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
   /**
    * To return the status of file starts with underscore(_) and dot(.)
+   *
    * @param fileStatus
    * @return
    */
@@ -188,6 +207,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
   /**
    * To retrieve the index of the block location which contains the part of the file described by
    * the offset.
+   *
    * @param blocks
    * @param offset
    * @param halfSplitSize

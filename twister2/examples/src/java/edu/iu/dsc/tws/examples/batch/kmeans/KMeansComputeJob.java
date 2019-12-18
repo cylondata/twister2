@@ -264,8 +264,7 @@ public class KMeansComputeJob implements IWorker {
       double[][] kMeansCenters = (double[][]) object1;
       double[][] kMeansCenters1 = (double[][]) object2;
 
-      double[][] newCentroids = new double[kMeansCenters.length]
-          [kMeansCenters[0].length];
+      double[][] newCentroids = new double[kMeansCenters.length][kMeansCenters[0].length];
 
       if (kMeansCenters.length != kMeansCenters1.length) {
         throw new RuntimeException("Center sizes not equal " + kMeansCenters.length

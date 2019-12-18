@@ -11,15 +11,232 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.splits;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public abstract class CSVInputSplit<OT> extends DelimitedInputSplit<String> {
+public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
+//public class CSVInputSplit<OT> extends FileInputSplit<OT> {
 
-  public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
-    super(num, file, start, length, hosts);
+  private static final Logger LOG = Logger.getLogger(CSVInputSplit.class.getName());
+
+  private static final long serialVersionUID = 1L;
+
+  private final Path file;
+
+  private long start;
+  private long length;
+
+  protected long splitStart;
+  protected long splitLength;
+  protected long openTimeout;
+
+  protected int numSplits = -1;
+
+  private Config config;
+
+  protected FSDataInputStream stream;
+
+  public Path getPath() {
+    return file;
   }
 
+  public long getStart() {
+    return start;
+  }
 
+  public void setStart(long start) {
+    this.start = start;
+  }
+
+  public long getLength() {
+    return length;
+  }
+
+  public void setLength(long length) {
+    this.length = length;
+  }
+
+  public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
+    //super(num, file, start, length, hosts);
+    super(num, hosts);
+    this.file = file;
+    this.start = start;
+    this.length = length;
+  }
+
+  public CSVInputSplit(int num, Path file, String[] hosts) {
+    //super(num, file, hosts);
+    super(num, hosts);
+    this.file = file;
+  }
+
+  @Override
+  public int hashCode() {
+    return getSplitNumber() ^ (file == null ? 0 : file.hashCode());
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    } else if (obj instanceof CSVInputSplit && super.equals(obj)) {
+      CSVInputSplit other = (CSVInputSplit) obj;
+      return this.start == other.start
+          && this.length == other.length
+          && (this.file == null ? other.file == null : (other.file != null
+          && this.file.equals(other.file)));
+    } else {
+      return false;
+    }
+  }
+
+  public void configure(Config parameters) {
+    this.config = parameters;
+  }
+
+  @Override
+  public void open() throws IOException {
+    this.splitStart = getStart();
+    this.splitLength = getLength();
+    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+        + splitStart + "," + splitLength + "]");
+
+    final CSVInputSplit.InputSplitOpenThread inputSplitOpenThread
+        = new CSVInputSplit.InputSplitOpenThread(this, this.openTimeout);
+    inputSplitOpenThread.start();
+
+    try {
+      this.stream = inputSplitOpenThread.waitForCompletion();
+    } catch (Throwable t) {
+      throw new IOException("Error opening the Input Split " + getPath()
+          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
+    }
+    if (this.splitStart != 0) {
+      this.stream.seek(this.splitStart);
+    }
+  }
+
+  @Override
+  public void open(Config cfg) throws IOException {
+//    super.open(cfg);
+    this.splitStart = getStart();
+    this.splitLength = getLength();
+    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+        + splitStart + "," + splitLength + "]");
+
+    final CSVInputSplit.InputSplitOpenThread inputSplitOpenThread
+        = new CSVInputSplit.InputSplitOpenThread(this, this.openTimeout, cfg);
+    inputSplitOpenThread.start();
+
+    try {
+      this.stream = inputSplitOpenThread.waitForCompletion();
+    } catch (Throwable t) {
+      throw new IOException("Error opening the Input Split " + getPath()
+          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
+    }
+    if (this.splitStart != 0) {
+      this.stream.seek(this.splitStart);
+    }
+  }
+
+  private transient boolean end;
+
+  @Override
+  public boolean reachedEnd() {
+    return this.end;
+  }
+
+  public class InputSplitOpenThread extends Thread {
+
+    private final CSVInputSplit split;
+
+    private final long timeout;
+
+    private volatile FSDataInputStream fdis;
+    private volatile Throwable error;
+    private volatile boolean aborted;
+
+    private Config config;
+
+    public InputSplitOpenThread(CSVInputSplit csvInputSplit, long openTimeout) {
+      super("InputSplit Opener");
+      setDaemon(true);
+      this.split = csvInputSplit;
+      this.timeout = openTimeout;
+    }
+
+    public InputSplitOpenThread(CSVInputSplit csvInputSplit, long openTimeout, Config cfg) {
+      super("InputSplit Opener");
+      setDaemon(true);
+      this.split = csvInputSplit;
+      this.timeout = openTimeout;
+      this.config = cfg;
+    }
+
+    public void run() {
+      try {
+        final FileSystem fileSystem = FileSystemUtils.get(this.split.getPath().toUri(), config);
+        this.fdis = fileSystem.open(this.split.getPath());
+        LOG.info("I am inside the run method");
+        if (this.aborted) {
+          final FSDataInputStream fsDataInputStream = this.fdis;
+          fsDataInputStream.close();
+        }
+      } catch (Throwable t) {
+        this.error = t;
+      }
+    }
+
+    public FSDataInputStream waitForCompletion() throws Throwable {
+      final long startTime = System.currentTimeMillis();
+      long remaining = this.timeout;
+      do {
+        try {
+          this.join(remaining);
+        } catch (InterruptedException iex) {
+          abortWait();
+          throw iex;
+        }
+      } while (this.error == null && this.fdis == null
+          && (remaining = this.timeout + startTime - System.currentTimeMillis()) > 0);
+
+      if (this.error != null) {
+        throw this.error;
+      }
+      if (this.fdis != null) {
+        return this.fdis;
+      } else {
+        abortWait();
+        final boolean stillAlive = this.isAlive();
+        final StringBuilder bld = new StringBuilder(256);
+        for (StackTraceElement e : this.getStackTrace()) {
+          bld.append("\tat ").append(e.toString()).append('\n');
+        }
+        throw new IOException("Input opening request timed out. Opener was "
+            + (stillAlive ? "" : "NOT ")
+            + " alive. Stack of split open thread:\n" + bld.toString());
+      }
+    }
+
+    private void abortWait() {
+      this.aborted = true;
+      final FSDataInputStream inStream = this.fdis;
+      this.fdis = null;
+      if (inStream != null) {
+        try {
+          inStream.close();
+        } catch (Throwable ignore) {
+        }
+      }
+    }
+  }
 }
 
 

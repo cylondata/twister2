@@ -194,6 +194,8 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
         inputSplits.add(fis);
       }
     }
+    LOG.info("input splits value:" + inputSplits.size() + "\t"
+        + Arrays.toString(inputSplits.toArray()));
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
