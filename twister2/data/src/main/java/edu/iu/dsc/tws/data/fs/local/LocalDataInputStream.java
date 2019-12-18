@@ -14,7 +14,9 @@ package edu.iu.dsc.tws.data.fs.local;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.channels.FileChannel;
 
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
@@ -31,6 +33,8 @@ public class LocalDataInputStream extends FSDataInputStream {
   private final FileInputStream fis;
   private final FileChannel fileChannel;
 
+  private File fileN;
+
   /**
    * Constructs a new <code>LocalDataInputStream</code> object from a given {@link File} object.
    *
@@ -38,6 +42,7 @@ public class LocalDataInputStream extends FSDataInputStream {
    * @throws IOException Thrown if the data input stream cannot be created.
    */
   public LocalDataInputStream(File file) throws IOException {
+    this.fileN = file;
     this.fis = new FileInputStream(file);
     this.fileChannel = fis.getChannel();
   }
@@ -57,6 +62,10 @@ public class LocalDataInputStream extends FSDataInputStream {
   @Override
   public int read() throws IOException {
     return this.fis.read();
+  }
+
+  public Reader getReader() throws IOException {
+    return new FileReader(this.fileN);
   }
 
   @Override

@@ -11,9 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.splits;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
@@ -64,7 +71,6 @@ public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
   }
 
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
-    //super(num, file, start, length, hosts);
     super(num, hosts);
     this.file = file;
     this.start = start;
@@ -72,7 +78,6 @@ public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
   }
 
   public CSVInputSplit(int num, Path file, String[] hosts) {
-    //super(num, file, hosts);
     super(num, hosts);
     this.file = file;
   }
@@ -125,7 +130,6 @@ public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
 
   @Override
   public void open(Config cfg) throws IOException {
-//    super.open(cfg);
     this.splitStart = getStart();
     this.splitLength = getLength();
     LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
@@ -184,7 +188,19 @@ public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
       try {
         final FileSystem fileSystem = FileSystemUtils.get(this.split.getPath().toUri(), config);
         this.fdis = fileSystem.open(this.split.getPath());
-        LOG.info("I am inside the run method");
+
+        //TODO: Checking the integration of CSV
+        CSVParser csvParser = new CSVParserBuilder()
+            .withSeparator(',')
+            .withIgnoreQuotations(true)
+            .build();
+
+        Reader reader = new FileReader("/home/kannan/opencsvexamples/input/ex.csv");
+        CSVReader csvReader = new CSVReaderBuilder(reader)
+            .withSkipLines(0) //if we put '1' it will skip the header
+            .withCSVParser(csvParser)
+            .build();
+
         if (this.aborted) {
           final FSDataInputStream fsDataInputStream = this.fdis;
           fsDataInputStream.close();

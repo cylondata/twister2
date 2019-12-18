@@ -48,7 +48,7 @@ public class LocalCompleteTextInputPartitioner extends CompleteFileInputPartitio
   public OrderedInputSplitAssigner<String> getInputSplitAssigner(
       FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner<String>(inputSplits, nTasks);
+      assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
     }
     return assigner;
   }

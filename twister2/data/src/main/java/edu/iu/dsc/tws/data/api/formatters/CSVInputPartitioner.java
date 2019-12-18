@@ -28,17 +28,13 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
-//public class CSVInputPartitioner extends FileInputPartitioner<String> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
   private static final long serialVersionUID = -1L;
 
-  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
-
   private boolean enumerateNestedFiles = false;
 
-  protected transient int recordLength;
   protected transient int numSplits;
 
   protected Path filePath;
@@ -103,9 +99,9 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
       } else {
-        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
-            + " is larger than the block size of " + blockSize
-            + ". Decreasing minimal split size to block size.");
+        LOG.log(Level.WARNING, "Minimal split size of "
+            + this.minSplitSize + " is larger than the block size of "
+            + blockSize + ". Decreasing minimal split size to block size.");
         localminSplitSize = blockSize;
       }
 
@@ -139,15 +135,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
         + Arrays.toString(inputSplits.toArray()));
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
-
-//  public InputSplitAssigner<String> getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
-//    return new LocatableInputSplitAssigner(inputSplits);
-//  }
-//
-//  protected FileInputSplit createSplit(int num, Path file, long start, long length,
-//                                       String[] hosts) {
-//    return null;
-//  }
 
   protected abstract FileInputSplit createSplit(int num, Path file, long start,
                                                 long length, String[] hosts);
