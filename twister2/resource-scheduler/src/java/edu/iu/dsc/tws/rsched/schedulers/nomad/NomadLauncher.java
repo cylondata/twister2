@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.master.NomadMasterStarter;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -62,9 +63,11 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         NomadContext.clusterType(config));
+
+    Twister2JobState state = new Twister2JobState(false);
 
     NomadMasterStarter master = new NomadMasterStarter();
     master.initialize(job, config);
@@ -73,12 +76,14 @@ public class NomadLauncher implements ILauncher {
     if (!terminateJob(job.getJobId())) {
       LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobId());
     }
-    return start;
+    state.setRequestGranted(start);
+    return state;
   }
 
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job job, String jobWorkingDirectory) {

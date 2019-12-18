@@ -9,9 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.driver;
+package edu.iu.dsc.tws.api.driver;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.protobuf.Any;
 
@@ -27,16 +29,15 @@ public interface IDriver {
   /**
    * After the job is submitted,
    * an instance of this method will be executed in the Job Master
-   *
+   * <p>
    * Implementing Driver program can communicate with the workers through provided IDriverMessenger
    * and it can scale up/down the number of workers in the job by using IScaler
-   *
-   * @param scaler
    */
   void execute(Config config, IScaler scaler, IDriverMessenger messenger);
 
   /**
    * received a protocol buffer message from a worker
+   *
    * @param anyMessage received message from the worker
    */
   void workerMessageReceived(Any anyMessage, int senderWorkerID);
@@ -44,8 +45,24 @@ public interface IDriver {
   /**
    * this method is invoked when all workers joined the job initially
    * and also, after each scale up operation,
-   * @param workerList
    */
   void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
 
+  /**
+   * returns the current state of the driver
+   *
+   * @return the current state
+   */
+  default DriverJobState getState() {
+    return DriverJobState.RUNNING;
+  }
+
+  /**
+   * get the messages sent by workers to this driver
+   *
+   * @return a map containing messages from each worker
+   */
+  default Map<Integer, String> getMessages() {
+    return new HashMap<>();
+  }
 }

@@ -9,13 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.driver;
+package edu.iu.dsc.tws.api.driver;
 
 /**
  * An interface that scales up/down the number of workers in a Twister2 job
+ * in a specific cluster
+ * An implementtaion of this interface will be written for each cluster
+ * such as Kubernetes, Mesos, Slurm, Nomad, etc
  */
 
-public interface IScaler {
+public interface IScalerPerCluster {
 
   /**
    * whether this job is scalable

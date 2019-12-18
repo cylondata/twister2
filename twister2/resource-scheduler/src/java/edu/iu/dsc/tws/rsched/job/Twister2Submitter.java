@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -44,7 +45,7 @@ public final class Twister2Submitter {
    *
    * @param twister2Job job
    */
-  public static void submitJob(Twister2Job twister2Job, Config config) {
+  public static Twister2JobState submitJob(Twister2Job twister2Job, Config config) {
     // if this is a Kubernetes cluster, check the job name,
     // if it does not conform to Kubernetes rules, change it
     boolean startingFromACheckpoint = CheckpointingConfigurations.startingFromACheckpoint(config);
@@ -137,7 +138,7 @@ public final class Twister2Submitter {
 
     // launch the launcher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
-    resourceAllocator.submitJob(job, updatedConfig);
+    return resourceAllocator.submitJob(job, updatedConfig);
   }
 
   /**

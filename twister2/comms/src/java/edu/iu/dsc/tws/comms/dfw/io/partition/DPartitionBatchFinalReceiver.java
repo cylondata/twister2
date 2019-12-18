@@ -237,7 +237,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             byte[] d;
             if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
                 || !(data instanceof byte[])
-                || ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL
+                || ((flags & MessageFlags.ORIGIN_SENDER) == MessageFlags.ORIGIN_SENDER
                 && partition.getDataType() == MessageTypes.OBJECT)) {
               // 3rd case handles, when user use Object data type, but send a byte[]
               d = partition.getDataType().getDataPacker().packToByteArray(data);
@@ -249,7 +249,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
           List<Object> contents = (List<Object>) object;
           for (Object kc : contents) {
             byte[] d;
-            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
+            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
+                || !(kc instanceof byte[])
+                || ((flags & MessageFlags.ORIGIN_SENDER) == MessageFlags.ORIGIN_SENDER
+                && partition.getDataType() == MessageTypes.OBJECT)) {
               d = partition.getDataType().getDataPacker().packToByteArray(kc);
             } else {
               d = (byte[]) kc;

@@ -72,7 +72,7 @@ public class MPIController implements IController {
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
         MPIContext.clusterType(config), containers));
 
-    String jobDirectory = Paths.get(this.workingDirectory, job.getJobName()).toString();
+    String jobDirectory = Paths.get(this.workingDirectory, job.getJobId()).toString();
     boolean jobCreated = createJob(this.workingDirectory, jobDirectory, job);
 
     if (!jobCreated) {
@@ -107,7 +107,6 @@ public class MPIController implements IController {
   public boolean createJob(String jobWorkingDirectory, String twister2Home, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
     List<String> cmds = command.mpiCommand(jobWorkingDirectory, job);
-
     // change the empty strings of command args to "", because batch
     // doesn't recognize space as an arguments
     List<String> transformedArgs = new ArrayList<>();
