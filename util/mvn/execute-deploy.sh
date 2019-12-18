@@ -110,6 +110,10 @@ deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance \
   fault-tolerance-api-java
 
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/driver \
+  driver-api-java
+
 # End of APIs
 
 deploy_library \
