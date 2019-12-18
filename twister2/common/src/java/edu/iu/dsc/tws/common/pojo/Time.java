@@ -22,6 +22,7 @@ public class Time implements Serializable {
   private final TimeUnit unit;
 
   /**
+   * Initializes Time
    * @param size time period
    * @param unit TimeUnit type
    */
@@ -31,6 +32,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Returns size of the time unit
    * @return size of the time
    */
   public long getSize() {
@@ -38,6 +40,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Returns the TimeUnit type
    * @return TimeUnit
    */
   public TimeUnit getUnit() {
@@ -45,6 +48,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Returns the TimeUnit value in Milliseconds
    * @return time into milliseconds
    */
   public long toMilliseconds() {
@@ -74,6 +78,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Set Time with length and TimeUnit
    * @param size length of the time duration
    * @param unit TimeUnit type
    * @return Time Object
@@ -83,6 +88,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Set Time with length with milliseconds
    * @param milliseconds Time as milliseconds
    * @return
    */
@@ -91,6 +97,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Set Time with length and seconds
    * @param seconds Time as seconds
    * @return
    */
@@ -99,6 +106,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Set Time with length and minutes
    * @param minutes Time as minutes
    * @return
    */
@@ -107,6 +115,7 @@ public class Time implements Serializable {
   }
 
   /**
+   * Set Time with length and hours
    * @param hours Time as hours
    * @return
    */
@@ -116,6 +125,7 @@ public class Time implements Serializable {
 
 
   /**
+   * Set Time with length and days
    * @param days Time as days
    * @return
    */

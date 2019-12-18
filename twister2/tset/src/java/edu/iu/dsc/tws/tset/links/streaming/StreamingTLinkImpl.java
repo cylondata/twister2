@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.tset.links.streaming;
 
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
