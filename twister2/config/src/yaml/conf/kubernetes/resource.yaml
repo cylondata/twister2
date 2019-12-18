@@ -55,10 +55,10 @@ twister2.resource.worker.compute.resources:
 
 # worker class to run
 # twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 
 # by default each worker has one port
 # additional ports can be requested for all workers in a job
