@@ -12,9 +12,8 @@
 package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -66,7 +65,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   public ICompute<I> getINode() {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new WindowComputeOp<O, I>((ComputeFunc<O, List<IMessage<I>>>) computeFunc, this,
+      return new WindowComputeOp<O, I>((ComputeFunc<O, Iterator<I>>) computeFunc, this,
           Collections.emptyMap(), windowParameter);
     } else if (computeFunc instanceof ComputeCollectorFunc) {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,

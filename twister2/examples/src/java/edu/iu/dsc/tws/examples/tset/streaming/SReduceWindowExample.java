@@ -12,11 +12,10 @@
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
@@ -37,11 +36,11 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     link.countWindow(2, input -> input)
         .direct()
-        .forEach(new ApplyFunc<List<IMessage<Integer>>>() {
+        .forEach(new ApplyFunc<Iterator<Integer>>() {
           @Override
-          public void apply(List<IMessage<Integer>> data) {
-            for (IMessage<Integer> m : data) {
-              System.out.print(m.getContent().intValue() + ", ");
+          public void apply(Iterator<Integer> data) {
+            while (data.hasNext()) {
+              System.out.print(data.next() + ", ");
             }
             System.out.println();
           }

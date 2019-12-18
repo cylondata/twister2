@@ -13,13 +13,10 @@
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -35,7 +32,6 @@ public class SReduceExample extends StreamingTsetExample {
   public void buildGraph(StreamingTSetEnvironment env) {
     SSourceTSet<Integer> src = dummySource(env, 8, PARALLELISM);
 
-
     SDirectTLink<Integer> link = src.direct();
 
     link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
@@ -48,7 +44,6 @@ public class SReduceExample extends StreamingTsetExample {
 
     link.compute((input, output) -> output.collect(input + "DD"))
         .direct().forEach(s -> LOG.info(s.toString()));
-
 
   }
 

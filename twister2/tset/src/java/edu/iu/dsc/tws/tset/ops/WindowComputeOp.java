@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tset.ops;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -43,15 +44,15 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
 
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
 
-  private ComputeFunc<O, List<IMessage<I>>> computeFunction;
+  private ComputeFunc<O, Iterator<I>> computeFunction;
 
-  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction,
+  public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
     this.windowParameter = winParam;
   }
 
-  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction,
+  public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
                          BaseTSet originTSet, Map<String, String> receivableTSets,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
@@ -75,7 +76,19 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
   @Override
   public boolean execute(IWindowMessage<I> windowMessage) {
     List<IMessage<I>> output = windowMessage.getWindow();
-    writeToEdges(this.computeFunction.compute(output));
+    Iterator<IMessage<I>> itrMsg =  output.stream().iterator();
+    Iterator<I> iterator = new Iterator<I>() {
+      @Override
+      public boolean hasNext() {
+        return itrMsg.hasNext();
+      }
+
+      @Override
+      public I next() {
+        return itrMsg.next().getContent();
+      }
+    };
+    writeToEdges(this.computeFunction.compute(iterator));
     //this.computeFunction.close();
     return true;
   }
@@ -159,7 +172,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
     return tSetContext;
   }
 
-  public ComputeFunc<O, List<IMessage<I>>> getFunction() {
+  public ComputeFunc<O, Iterator<I>> getFunction() {
     return computeFunction;
   }
 }
