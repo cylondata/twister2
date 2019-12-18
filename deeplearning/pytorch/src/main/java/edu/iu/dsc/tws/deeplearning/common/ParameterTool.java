@@ -30,8 +30,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.sun.istack.internal.Nullable;
-
 import org.apache.commons.lang.math.NumberUtils;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -146,7 +144,7 @@ public final class ParameterTool implements Serializable, Cloneable {
     return fromMap((Map) props);
   }
 
-  public static <T> T checkNotNull(T reference, @Nullable String errorMessage) {
+  public static <T> T checkNotNull(T reference, String errorMessage) {
     if (reference == null) {
       throw new NullPointerException(String.valueOf(errorMessage));
     }
