@@ -11,25 +11,58 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.task.window.api.GlobalStreamId;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public abstract class WindowComputeOp<O,I> extends BaseWindowedSink<I> {
+public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Receptor,
+    Serializable {
+
+  private TSetContext tSetContext = new TSetContext();
+
+  // keys of the data partitions this op receives
+  private IONames receivables;
+
+  // map (TSetID --> input Name)
+  private Map<String, String> rcvTSets;
 
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
-  private ComputeFunc<O, I> computeFunction;
+  private ComputeFunc<O, List<IMessage<I>>> computeFunction;
 
-  public WindowComputeOp(ComputeFunc<O, I> computeFunction) {
+  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction) {
     this.computeFunction = computeFunction;
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingCountWindow(2);
+  }
+
+  public WindowComputeOp(ComputeFunc<O, List<IMessage<I>>> computeFunction,
+                         BaseTSet originTSet, Map<String, String> receivableTSets) {
+    this.computeFunction = computeFunction;
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(2);
+    this.receivables = IONames.declare(receivableTSets.keySet());
+    this.rcvTSets = receivableTSets;
+
+    if (originTSet != null) {
+      this.tSetContext.setId(originTSet.getId());
+      this.tSetContext.setName(originTSet.getName());
+      this.tSetContext.setParallelism(originTSet.getParallelism());
+    }
   }
 
   @Override
@@ -40,21 +73,43 @@ public abstract class WindowComputeOp<O,I> extends BaseWindowedSink<I> {
 
   @Override
   public boolean execute(IWindowMessage<I> windowMessage) {
-    O output = (O) windowMessage.getWindow();
-    //O output = computeFunction.compute(windowMessage.getContent());
-    writeToEdges(output);
-    writeEndToEdges();
-    computeFunction.close();
+
+    int workId = tSetContext.getWorkerId();
+    int tsetIndex = tSetContext.getIndex();
+
+    List<IMessage<I>> output = windowMessage.getWindow();
+
+//    if (output.size() == 0) {
+//      System.out.println("Warning: Empty Window");
+//    }
+//    String s = "";
+//    for (IMessage<I> m : output
+//    ) {
+//      if (m.getContent() instanceof Integer) {
+//        s += ((Integer) m.getContent()).intValue() + " ";
+//      } else if (m.getContent() instanceof List) {
+//        ArrayList<IMessage<I>> m1 = (ArrayList<IMessage<I>>) m.getContent();
+//      }
+//      else {
+//        System.out.println("Warning! Other Type : " + m.getContent().getClass());
+//      }
+//    }
+    System.out.println("Fire window execute : " + output.size());
+    Object out = this.computeFunction.compute(output);
+    writeToEdges(this.computeFunction.compute(output));
+    //this.computeFunction.close();
     return true;
   }
 
   @Override
   public boolean getExpire(IWindowMessage<I> expiredMessages) {
+    // TODO implement this
     return true;
   }
 
   @Override
   public boolean getLateMessages(IMessage<I> lateMessages) {
+    // TODO implement this
     return true;
   }
 
@@ -109,4 +164,23 @@ public abstract class WindowComputeOp<O,I> extends BaseWindowedSink<I> {
     multiEdgeOpAdapter.keyedWriteToEdges(key, val);
   }
 
+  @Override
+  public void add(String key, DataPartition<?> data) {
+    // when it is sent to the tset context, users would not know about the key here. Therefore,
+    // translate it to the user specified key
+    this.tSetContext.addInput(rcvTSets.get(key), data);
+  }
+
+  @Override
+  public IONames getReceivableNames() {
+    return receivables;
+  }
+
+  TSetContext gettSetContext() {
+    return tSetContext;
+  }
+
+  public ComputeFunc<O, List<IMessage<I>>> getFunction() {
+    return computeFunction;
+  }
 }

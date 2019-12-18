@@ -13,6 +13,9 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import java.util.List;
+
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -21,6 +24,7 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
 public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
@@ -40,6 +44,20 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
       set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+    }
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  public <P> WindowComputeTSet<P, List<IMessage<T1>>> window(String n,
+                                                             ComputeFunc<P, List<IMessage<T1>>>
+                                                                 computeFunction) {
+    WindowComputeTSet<P, List<IMessage<T1>>> set;
+    if (n != null && !n.isEmpty()) {
+      set = new WindowComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+    } else {
+      set = new WindowComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
     }
     addChildToGraph(set);
 
@@ -76,9 +94,9 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return sinkTSet;
   }
 
-  public <P> SComputeTSet<P, T1> countWindow(int windowLen,
-                                             ComputeCollectorFunc<P, T1> computeFunction) {
-    return compute(null, computeFunction);
+  public <P> WindowComputeTSet<P, List<IMessage<T1>>> countWindow(
+      int windowLen, ComputeFunc<P, List<IMessage<T1>>> computeFunction) {
+    return window("wcompute", computeFunction);
   }
 
   public <P> SComputeTSet<P, T1> countWindow(int windowLen, int slidingLen,
@@ -87,12 +105,12 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   }
 
   public <P> SComputeTSet<P, T1> timeWindow(int windowLen,
-                                             ComputeCollectorFunc<P, T1> computeFunction) {
+                                            ComputeCollectorFunc<P, T1> computeFunction) {
     return compute(null, computeFunction);
   }
 
   public <P> SComputeTSet<P, T1> timeWindow(int windowLen, int slidingLen,
-                                             ComputeCollectorFunc<P, T1> computeFunction) {
+                                            ComputeCollectorFunc<P, T1> computeFunction) {
     return compute(null, computeFunction);
   }
 }

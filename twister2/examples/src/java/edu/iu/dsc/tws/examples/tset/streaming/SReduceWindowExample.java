@@ -32,9 +32,9 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     SReduceTLink<Integer> link = src.reduce(Integer::sum);
 
-    link.countWindow(5, (input, output) -> output.collect(input + " window"))
-        .direct()
-        .forEach(s -> LOG.info(s.toString()));
+//    link.countWindow(5, (input, output) -> output.collect(input + " window"))
+//        .direct()
+//        .forEach(s -> LOG.info(s.toString()));
 
 //    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
 //

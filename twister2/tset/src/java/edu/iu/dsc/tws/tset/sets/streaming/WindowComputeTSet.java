@@ -9,46 +9,47 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
+import java.util.List;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.tset.ops.ComputeOp;
+import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
-public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
+public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
                       int parallelism) {
-    this(tSetEnv, "scompute", computeFunction, parallelism);
+    this(tSetEnv, "wcompute", computeFunction, parallelism);
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
                       int parallelism) {
-    this(tSetEnv, "scomputec", compOp, parallelism);
+    this(tSetEnv, "wcomputec", compOp, parallelism);
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
                       ComputeFunc<O, I> computeFunction, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = computeFunction;
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
                       ComputeCollectorFunc<O, I> compOp, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = compOp;
   }
 
   @Override
-  public SComputeTSet<O, I> setName(String name) {
+  public WindowComputeTSet<O, I> setName(String name) {
     rename(name);
     return this;
   }
@@ -58,7 +59,7 @@ public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   public ICompute<I> getINode() {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<O, I>((ComputeFunc<O, I>) computeFunc, this,
+      return new WindowComputeOp<O, I>((ComputeFunc<O, List<IMessage<I>>>) computeFunc, this,
           Collections.emptyMap());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,

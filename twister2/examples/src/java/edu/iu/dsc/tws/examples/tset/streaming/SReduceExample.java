@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 
@@ -30,9 +30,10 @@ public class SReduceExample extends StreamingTsetExample {
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
-    SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SSourceTSet<Integer> src = dummySource(env, 8, PARALLELISM);
 
-    SReduceTLink<Integer> link = src.reduce(Integer::sum);
+
+    SDirectTLink<Integer> link = src.direct();
 
 //    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
 //
@@ -45,9 +46,31 @@ public class SReduceExample extends StreamingTsetExample {
 //    link.compute((input, output) -> output.collect(input + "DD"))
 //        .direct().forEach(s -> LOG.info(s.toString()));
 
-    link.countWindow(5, (input, output) -> output.collect(input + " window"))
+    link.countWindow(2, input -> input)
         .direct()
-        .forEach(s -> LOG.info(s.toString()));
+        .forEach(i -> LOG.info(i.toString()));
+//    link.countWindow(2, input -> input)
+//        .direct()
+//        .forEach(new ApplyFunc<List<IMessage<Integer>>>() {
+//          @Override
+//          public void apply(List<IMessage<Integer>> data) {
+//            System.out.println("Window Received=> : " + data.size());
+//            for (IMessage<Integer> m : data) {
+//              Object o = m.getContent();
+//              if (o instanceof List) {
+//                ArrayList<?> x = (ArrayList<?>) o;
+//                System.out.println("s1: " + x.size());
+//                for (Object o1 : x
+//                ) {
+//                  IMessage<Integer> it = (IMessage<Integer>) o1;
+//                  System.out.println("s3 : " + o1.getClass().getName() + ", "
+//                      + it.getContent().intValue());
+//
+//                }
+//              }
+//            }
+//          }
+//        });
   }
 
 
