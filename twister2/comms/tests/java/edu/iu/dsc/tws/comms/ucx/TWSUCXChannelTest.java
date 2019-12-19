@@ -113,7 +113,7 @@ public class TWSUCXChannelTest {
   @Test
   public void ucxTest() throws InterruptedException {
 
-    final int dataSize = 1024;
+    final int dataSize = 25;
 
     final int[] data = new int[dataSize];
     for (int i = 0; i < dataSize; i++) {
@@ -199,8 +199,9 @@ public class TWSUCXChannelTest {
         LOG.info("Received : " + recvCount.get());
         if (this.inMessage.addBufferAndCalculate(message)) {
           LOG.info("Built");
-          received.set(true);
+          dataDeserializer.build(this.inMessage, 1);
           receivedData[0] = (int[]) this.inMessage.getDataBuilder().getFinalObject();
+          received.set(true);
         }
 
         dataDeserializer.build(this.inMessage, 1);
