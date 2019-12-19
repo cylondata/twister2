@@ -11,22 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.streaming;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
+import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
 public class SReduceWindowExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
   private static final Logger LOG = Logger.getLogger(SReduceWindowExample.class.getName());
+
+  private static final boolean CASE_1 = false;
+  private static final boolean CASE_2 = false;
+  private static final boolean CASE_3 = true;
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
@@ -34,17 +44,65 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     SDirectTLink<Integer> link = src.direct();
 
-    link.countWindow(2, input -> input)
-        .direct()
-        .forEach(new ApplyFunc<Iterator<Integer>>() {
-          @Override
-          public void apply(Iterator<Integer> data) {
+    if (CASE_1) {
+      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> windowComputeTSet
+          = link.countWindow(2, input -> input);
+
+      windowComputeTSet.direct()
+          .forEach((ApplyFunc<Iterator<Integer>>) data -> {
             while (data.hasNext()) {
               System.out.print(data.next() + ", ");
             }
             System.out.println();
-          }
-        });
+          });
+
+    }
+
+    if (CASE_2) {
+
+      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
+          (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+            List<Integer> items = new ArrayList<Integer>();
+            while (input.hasNext()) {
+              items.add(input.next() * 2);
+            }
+            return items.iterator();
+          });
+
+      itrTSet.direct().forEach((ApplyFunc<Iterator<Integer>>) data -> {
+        while (data.hasNext()) {
+          System.out.print(data.next() + ", ");
+        }
+        System.out.println();
+      });
+
+    }
+
+    if (CASE_3) {
+
+      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
+          (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+            List<Integer> items = new ArrayList<Integer>();
+            while (input.hasNext()) {
+              items.add(input.next() * 2);
+            }
+            return items.iterator();
+          });
+
+      SComputeTSet<Integer, Iterator<Integer>> mapTSet = itrTSet
+          .direct()
+          .map((MapFunc<Integer, Iterator<Integer>>) input -> {
+            Integer sum = 0;
+            while (input.hasNext()) {
+              sum += input.next();
+            }
+            return sum;
+          });
+
+      mapTSet.direct().forEach((ApplyFunc<Integer>) data -> System.out.println(data));
+    }
+
+
   }
 
 

@@ -106,6 +106,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return window("w-count-tumbling-compute", computeFunction);
   }
 
+
   public <P> SComputeTSet<P, T1> countWindow(int windowLen, int slidingLen,
                                              ComputeCollectorFunc<P, T1> computeFunction) {
     this.windowParameter = new WindowParameter();

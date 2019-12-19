@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
@@ -75,4 +76,15 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);
 
   }
+
+  public SComputeTSet<O, I> process(MapCompute<O, I> processFn) {
+    SComputeTSet<O, I> process = null;
+    // now the following relationship is created
+    // this -- directThis -- unionTSet
+
+
+    return process;
+  }
+
+
 }
