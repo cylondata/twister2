@@ -96,11 +96,11 @@ public final class JobMasterExample {
     if ("start".equalsIgnoreCase(args[0])) {
 
       createJobZnodes(config, job);
-      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobId(), host);
 
     } else if ("restart".equalsIgnoreCase(args[0])) {
 
-      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobName(), host);
+      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobId(), host);
       job = JobMasterStarter.job;
 
       if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
@@ -139,7 +139,7 @@ public final class JobMasterExample {
 
     LOG.info("Threaded Job Master started:"
         + "\nnumberOfWorkers: " + job.getNumberOfWorkers()
-        + "\njobName: " + job.getJobName()
+        + "\njobID: " + job.getJobId()
     );
 
   }
@@ -154,18 +154,18 @@ public final class JobMasterExample {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
     String rootPath = ZKContext.rootNode(conf);
 
-    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobName())) {
-      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobName());
+    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobId())) {
+      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobId());
     }
 
     try {
-      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
       ZKPersStateManager.createPersStateDir(client, rootPath, job);
-      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
-      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobName());
+      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
 
       // test job znode content reading
-      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobName());
+      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobId());
       LOG.info("JobZNode content: " + readJob);
 
     } catch (Exception e) {

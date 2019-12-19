@@ -194,7 +194,7 @@ const Twister2Apps2 = props => (
     content: "Integrates with Apache Beam to run Beam Applications",
         image: imgUrl('api_2.png'),
     imageAlign: 'top',
-    title: "Bean API",
+    title: "Beam API",
     imageLink: siteConfig.baseUrl + 'docs/compatibility/apachebeam'
 },
 ]}

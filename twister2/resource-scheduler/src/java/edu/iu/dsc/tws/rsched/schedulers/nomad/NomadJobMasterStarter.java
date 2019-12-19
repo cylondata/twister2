@@ -28,10 +28,10 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -114,11 +114,11 @@ public final class NomadJobMasterStarter {
         .required()
         .build();
 
-    Option jobName = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+    Option jobID = Option.builder("j")
+        .desc("Job Id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
     Option jobId = Option.builder("i")
@@ -133,7 +133,7 @@ public final class NomadJobMasterStarter {
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
-    options.addOption(jobName);
+    options.addOption(jobID);
     options.addOption(jobId);
 
     return options;
@@ -144,7 +144,6 @@ public final class NomadJobMasterStarter {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobName = cmd.getOptionValue("job_name");
     String jobId = cmd.getOptionValue("job_id");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
@@ -160,7 +159,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.JOB_ID, jobId).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
     job = JobUtils.readJobFile(null, jobDescFile);
     job.getNumberOfWorkers();
 
@@ -234,7 +233,7 @@ public final class NomadJobMasterStarter {
     }
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          hostAddress, port);
+          hostAddress, port, job.getJobId());
       LOG.info("JobMaster REGISTERED..:" + hostAddress);
     } catch (Exception e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");
@@ -324,7 +323,7 @@ public final class NomadJobMasterStarter {
     LOG.log(Level.INFO, "Job Package URI is ......: " + jobPackageURI);
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
-        jb.getJobName(),
+        jb.getJobId(),
         jobWorkingDirectory,
         corePackage,
         jobPackageURI,
@@ -343,10 +342,11 @@ public final class NomadJobMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
+    //String jobID = NomadContext.jobId(cfg);
+    String jobID = NomadContext.jobId(cfg);
 
     NomadPersistentVolume pv =
-        new NomadPersistentVolume(controller.createPersistentJobDirName(jobName), workerID);
+        new NomadPersistentVolume(controller.createPersistentJobDirName(jobID), workerID);
     String persistentJobDir = pv.getJobDir().getAbsolutePath();
     //LOG.log(Level.INFO, "PERSISTENT LOG DIR is ......: " + persistentJobDir);
     //String persistentJobDir = getTaskDirectory();
@@ -356,7 +356,7 @@ public final class NomadJobMasterStarter {
     }
 
 //    if (NomadContext.getLoggingSandbox(cfg)) {
-//      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+//      persistentJobDir = Paths.get(jobWorkingDirectory, jobID).toString();
 //    }
     //nfs/shared/twister2/
     //String logDir = "/etc/nomad.d/"; //"/nfs/shared/twister2" + "/logs";

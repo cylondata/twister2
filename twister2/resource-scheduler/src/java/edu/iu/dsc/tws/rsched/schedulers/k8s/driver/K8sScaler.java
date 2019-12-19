@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -24,37 +24,33 @@ public class K8sScaler implements IScalerPerCluster {
 
   private static final Logger LOG = Logger.getLogger(K8sScaler.class.getName());
 
-  private JobAPI.Job job;
   private Config config;
   private KubernetesController k8sController;
 
-  // replicas and workersPerPod values for scalable compute resource (scalable statefulSet)
+  // values for scalable ComputeResource in the job
   private String scalableSSName;
   private int replicas;
   private int workersPerPod;
-  private int computeResourceIndex;
-
+  private boolean scalable;
 
   public K8sScaler(Config config, JobAPI.Job job, KubernetesController k8sController) {
     this.k8sController = k8sController;
-    this.job = job;
     this.config = config;
 
-    computeResourceIndex = job.getComputeResourceCount() - 1;
+    int computeResourceIndex = job.getComputeResourceCount() - 1;
+    JobAPI.ComputeResource scalableCompRes = job.getComputeResource(computeResourceIndex);
 
-    this.replicas = job.getComputeResource(computeResourceIndex).getInstances();
-    this.workersPerPod = job.getComputeResource(computeResourceIndex).getWorkersPerPod();
-
-    scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
-        job.getJobName(), job.getComputeResourceCount() - 1);
+    replicas = scalableCompRes.getInstances();
+    workersPerPod = scalableCompRes.getWorkersPerPod();
+    scalable = scalableCompRes.getScalable();
+    scalableSSName =
+        KubernetesUtils.createWorkersStatefulSetName(job.getJobId(), computeResourceIndex);
   }
 
   @Override
   public boolean isScalable() {
     // if there is no scalable compute resource in the job, can not be scalable
-    boolean computeResourceScalable =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
-    if (!computeResourceScalable) {
+    if (!scalable) {
       return false;
     }
 

@@ -27,10 +27,10 @@ public final class ZKBarrierManager {
   /**
    * create parent directory for ephemeral worker znodes
    */
-  public static void createBarrierDir(CuratorFramework client, String rootPath, String jobName)
+  public static void createBarrierDir(CuratorFramework client, String rootPath, String jobID)
       throws Twister2Exception {
 
-    String barrierDirPath = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierDirPath = ZKUtils.barrierDir(rootPath, jobID);
 
     try {
       client
@@ -52,9 +52,9 @@ public final class ZKBarrierManager {
    */
   public static void createWorkerZNode(CuratorFramework client,
                                        String rootPath,
-                                       String jobName,
+                                       String jobID,
                                        int workerID) throws Twister2Exception {
-    String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierPath = ZKUtils.barrierDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
     try {
@@ -77,9 +77,9 @@ public final class ZKBarrierManager {
    */
   public static void deleteWorkerZNode(CuratorFramework client,
                                        String rootPath,
-                                       String jobName,
+                                       String jobID,
                                        int workerID) throws Twister2Exception {
-    String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierPath = ZKUtils.barrierDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
     try {
@@ -100,9 +100,9 @@ public final class ZKBarrierManager {
    */
   public static boolean existWorkerZNode(CuratorFramework client,
                                          String rootPath,
-                                         String jobName,
+                                         String jobID,
                                          int workerID) throws Twister2Exception {
-    String barrierPath = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierPath = ZKUtils.barrierDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
 
     try {
@@ -119,11 +119,11 @@ public final class ZKBarrierManager {
    */
   public static void removeScaledDownZNodes(CuratorFramework client,
                                             String rootPath,
-                                            String jobName,
+                                            String jobID,
                                             int minID,
                                             int maxID) throws Twister2Exception {
 
-    String barrierDir = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierDir = ZKUtils.barrierDir(rootPath, jobID);
 
     for (int workerID = minID; workerID < maxID; workerID++) {
       String workerPath = ZKUtils.workerPath(barrierDir, workerID);
@@ -143,9 +143,9 @@ public final class ZKBarrierManager {
 
   public static int getNumberOfWorkersAtBarrier(CuratorFramework client,
                                                 String rootPath,
-                                                String jobName) throws Twister2Exception {
+                                                String jobID) throws Twister2Exception {
 
-    String barrierDir = ZKUtils.barrierDir(rootPath, jobName);
+    String barrierDir = ZKUtils.barrierDir(rootPath, jobID);
 
     try {
       int numberOfWorkersAt = client.getChildren().forPath(barrierDir).size();
@@ -156,6 +156,5 @@ public final class ZKBarrierManager {
           + barrierDir, e);
     }
   }
-
 
 }

@@ -14,12 +14,13 @@ package edu.iu.dsc.tws.master.driver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.driver.IScaler;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.common.driver.IScaler;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.common.driver.NullScalar;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.JobUtils;
 
 public class Scaler implements IScaler {
 
@@ -72,10 +73,7 @@ public class Scaler implements IScaler {
     }
 
     workerMonitor.workersScaledUp(instancesToAdd);
-
-    // calculate numberOfWorkers in the job
-    int numberOfWorkers = job.getNumberOfWorkers() + instancesToAdd;
-    return updateJobInZK(numberOfWorkers);
+    return updateJobInZK(instancesToAdd);
   }
 
   @Override
@@ -102,20 +100,17 @@ public class Scaler implements IScaler {
     int minID = job.getNumberOfWorkers() - instancesToRemove;
     int maxID = job.getNumberOfWorkers();
 
-    // calculate numberOfWorkers in the job
-    int numberOfWorkers = job.getNumberOfWorkers() - instancesToRemove;
-
-    boolean updatedJobInZK = updateJobInZK(numberOfWorkers);
+    boolean updatedJobInZK = updateJobInZK(0 - instancesToRemove);
     boolean checkZNodesDeleted =
-        zkJobUpdater.removeInitialStateZNodes(job.getJobName(), minID, maxID);
+        zkJobUpdater.removeInitialStateZNodes(job.getJobId(), minID, maxID);
 
     return updatedJobInZK && checkZNodesDeleted;
   }
 
-  private boolean updateJobInZK(int numberOfWorkers) {
+  private boolean updateJobInZK(int workerChange) {
 
     // update the job object
-    job = job.toBuilder().setNumberOfWorkers(numberOfWorkers).build();
+    job = JobUtils.scaleJob(job, workerChange);
 
     // update the job in ZooKeeper if it is used
     try {

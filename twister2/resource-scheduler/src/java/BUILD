@@ -15,6 +15,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/driver:driver-api-java",
         "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",

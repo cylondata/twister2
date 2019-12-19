@@ -45,10 +45,10 @@ public final class ZKEphemStateManager {
   /**
    * create parent directory for ephemeral worker znodes
    */
-  public static void createEphemDir(CuratorFramework client, String rootPath, String jobName)
+  public static void createEphemDir(CuratorFramework client, String rootPath, String jobID)
       throws Twister2Exception {
 
-    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobName);
+    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobID);
 
     try {
       client
@@ -67,10 +67,10 @@ public final class ZKEphemStateManager {
 
   public static PersistentNode createWorkerZnode(CuratorFramework client,
                                                  String rootPath,
-                                                 String jobName,
+                                                 String jobID,
                                                  int workerID) {
 
-    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobName);
+    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(ephemDirPath, workerID);
     byte[] znodeBody = ("" + workerID).getBytes(StandardCharsets.UTF_8);
 
@@ -86,9 +86,9 @@ public final class ZKEphemStateManager {
    */
   public static void removeEphemZNode(CuratorFramework client,
                                       String rootPath,
-                                      String jobName,
+                                      String jobID,
                                       int workerID) throws Twister2Exception {
-    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobName);
+    String ephemDirPath = ZKUtils.ephemDir(rootPath, jobID);
 
     try {
       List<String> children = client.getChildren().forPath(ephemDirPath);

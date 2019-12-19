@@ -22,7 +22,6 @@ import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * it is a single node controller
@@ -44,18 +43,18 @@ public class ZKJobMasterRegistrar {
   private String jobMasterPath;
   private PersistentNode jobMasterNode;
 
-  public ZKJobMasterRegistrar(Config config, String jobMasterIP, int jobMasterPort) {
+  public ZKJobMasterRegistrar(Config config, String jobMasterIP, int jobMasterPort, String jobID) {
     this.config = config;
     this.jobMasterIP = jobMasterIP;
     this.jobMasterPort = jobMasterPort;
-    jobMasterPath = constructJobMasterPath(config);
+    jobMasterPath = constructJobMasterPath(config, jobID);
   }
 
   /**
    * construct job master path
    */
-  public static String constructJobMasterPath(Config config) {
-    return ZKContext.rootNode(config) + "/" + Context.jobName(config) + "-job-master";
+  public static String constructJobMasterPath(Config config, String jobID) {
+    return ZKContext.rootNode(config) + "/" + jobID + "-job-master";
   }
 
   /**

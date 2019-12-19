@@ -12,8 +12,13 @@
 
 package edu.iu.dsc.tws.tset.env;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -25,6 +30,8 @@ import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
+import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
+import edu.iu.dsc.tws.tset.fn.impl.MapBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
@@ -73,9 +80,9 @@ public abstract class TSetEnvironment {
   /**
    * Creates a source TSet based on the {@link SourceFunc}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
@@ -83,21 +90,73 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
 
   /**
+   * This method will create a source based on the list and each source will read only a part
+   * of the list specified.
+   *
+   * @param name name of the tset
+   * @param list list to be parallelized
+   * @param parallelism no of sources to be created
+   * @param <T> data type of the list
+   * @return Source TSet
+   */
+  public <T> BaseTSet<T> parallelize(String name, List<T> list, int parallelism) {
+    String varName = UUID.randomUUID().toString();
+    WorkerEnvironment.putSharedValue(varName, list);
+    return createSource(name, new ListBasedSourceFunction<>(varName), parallelism);
+  }
+
+  /**
+   * This method will create a source based on the list and each source will read only a part
+   * of the list specified.
+   *
+   * @param list list to be parallelized
+   * @param parallelism no of sources to be created
+   * @param <T> data type of the list
+   * @return Source TSet
+   */
+  public <T> BaseTSet<T> parallelize(List<T> list, int parallelism) {
+    String varName = UUID.randomUUID().toString();
+    WorkerEnvironment.putSharedValue(varName, list);
+    return createSource(new ListBasedSourceFunction<>(varName), parallelism);
+  }
+
+  public <K extends Comparable, V> TupleTSet<K, V> parallelize(Map<K, V> map, int parallelism) {
+    String listName = UUID.randomUUID().toString();
+    String mapName = UUID.randomUUID().toString();
+    List<K> keysList = new ArrayList<>(map.keySet());
+    Collections.sort(keysList);
+    WorkerEnvironment.putSharedValue(mapName, map);
+    WorkerEnvironment.putSharedValue(listName, keysList);
+    return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
+  }
+
+  public <K, V> TupleTSet<K, V> parallelize(Map<K, V> map, int parallelism,
+                                            Comparator<K> keyComparator) {
+    String listName = UUID.randomUUID().toString();
+    String mapName = UUID.randomUUID().toString();
+    List<K> keysList = new ArrayList<>(map.keySet());
+    Collections.sort(keysList, keyComparator);
+    WorkerEnvironment.putSharedValue(mapName, map);
+    WorkerEnvironment.putSharedValue(listName, keysList);
+    return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
+  }
+
+  /**
    * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
@@ -106,11 +165,11 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
@@ -246,12 +305,12 @@ public abstract class TSetEnvironment {
   }
 
   // TSet graph for classes that extends TSetEnvironment
-  TBaseGraph getTSetGraph() {
+  public TBaseGraph getTSetGraph() {
     return tBaseGraph;
   }
 
   // task executor for classes that extends TSetEnvironment
-  TaskExecutor getTaskExecutor() {
+  public TaskExecutor getTaskExecutor() {
     return taskExecutor;
   }
 

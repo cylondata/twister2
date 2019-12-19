@@ -394,22 +394,22 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     private void runExecution() {
-      try {
-        int nodeInstanceIndex = this.getNext();
-        if (nodeInstanceIndex != -1) {
-          INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
-          boolean needsFurther = nodeInstance.execute();
-          if (!needsFurther) {
-            finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
-          } else {
-            //need further execution
-            this.ignoreIndex[nodeInstanceIndex].set(false);
-          }
+//      try {
+      int nodeInstanceIndex = this.getNext();
+      if (nodeInstanceIndex != -1) {
+        INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
+        boolean needsFurther = nodeInstance.execute();
+        if (!needsFurther) {
+          finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
+        } else {
+          //need further execution
+          this.ignoreIndex[nodeInstanceIndex].set(false);
         }
-      } catch (Throwable t) {
-        LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
-        throw new RuntimeException("Error occurred in execution of task", t);
       }
+//      } catch (Throwable t) {
+//        LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+//        throw new RuntimeException("Error occurred in execution of task", t);
+//      }
     }
   }
 

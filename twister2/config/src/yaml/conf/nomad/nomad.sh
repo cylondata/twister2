@@ -16,7 +16,7 @@ echo $debug
 
 # download the package
 #wget http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz .
-#wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.4.0.tar.gz .
+#wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.5.0-SNAPSHOT.tar.gz .
 
 method=$10
 
@@ -25,13 +25,13 @@ method=$10
 
 if [ $method = "LOCAL" ]; then
   cp $11/twister2-job.tar.gz .
-  cp $11/twister2-core-0.4.0.tar.gz .
+  cp $11/twister2-core-0.5.0-SNAPSHOT.tar.gz .
 else
   wget $8 .
   wget $9 .
 fi
 
-tar -xvf twister2-core-0.4.0.tar.gz
+tar -xvf twister2-core-0.5.0-SNAPSHOT.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=
@@ -39,7 +39,7 @@ debug=
 
 ls
 cp="*:twister2-core/lib/*"
-#cp="*:twister2-0.4.0/lib/*"
+#cp="*:twister2-0.5.0-SNAPSHOT/lib/*"
 echo $cp
 echo "1" $1
 echo "2" $2
@@ -55,11 +55,11 @@ echo "11" $11
 
 
 
-#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nomad --config_dir $6"
+#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_id $4 --twister2_home $5 --cluster_type nomad --config_dir $6"
 if [ $NOMAD_ALLOC_INDEX = "0" ] && [ $1 = "false" ]; then
-  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadJobMasterStarter --container_class $4 --job_name $5 --job_id $7 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
+  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadJobMasterStarter --container_class $4 --job_id $5 --job_id $7 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
 else
-  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $4 --job_name $5 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
+  java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=common/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $4 --job_id $5 --twister2_home . --cluster_type nomad --config_dir . 2>&1 | tee out.txt
 fi
 
 cat out.txt

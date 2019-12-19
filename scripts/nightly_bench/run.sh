@@ -17,27 +17,27 @@ echo "Twister2 built...."
 cd bazel-bin/scripts/package/ || (echo "Build has failed" && exit)
 
 # extract
-tar -xvzf twister2-0.4.0.tar.gz
+tar -xvzf twister2-0.5.0-SNAPSHOT.tar.gz
 
 # copy hosts
 cd ../../../../
-rm twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/nodes -f
-cp nodes twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/nodes -f
+cp nodes twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/
 
-rm twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/core.yaml -f
-cp core.yaml twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/core.yaml -f
+cp core.yaml twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/
 
-rm twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/common/core.yaml -f
-cp common_core.yaml twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/common/core.yaml
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/common/core.yaml -f
+cp common_core.yaml twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/common/core.yaml
 
-rm twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/mpi.sh -f
-cp mpi.sh twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/mpi.sh -f
+cp mpi.sh twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/
 
-rm twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/resource.yaml -f
-cp resource.yaml twister2/bazel-bin/scripts/package/twister2-0.4.0/conf/standalone/
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/resource.yaml -f
+cp resource.yaml twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/conf/standalone/
 
 # navigate to test root
-cd twister2/bazel-bin/scripts/package/twister2-0.4.0/util/test/
+cd twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/util/test/
 
 # run tests
 TIMEOUT=10800
@@ -46,6 +46,13 @@ timeout $TIMEOUT python3 launcher.py comms_reduce
 timeout $TIMEOUT python3 launcher.py comms_all_gather
 timeout $TIMEOUT python3 launcher.py comms_all_reduce
 timeout $TIMEOUT python3 launcher.py comms_gather
+
+rm twister2/bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/util/test/tests/comms/comms_base.json
+cp comms_base.json bazel-bin/scripts/package/twister2-0.5.0-SNAPSHOT/util/test/tests/comms/
+
+timeout $TIMEOUT python3 launcher.py comms_keyed_gather
+timeout $TIMEOUT python3 launcher.py comms_keyed_partition
+timeout $TIMEOUT python3 launcher.py comms_keyed_reduce
 
 #return to current location
 cd /N/u/cwidanage/auto-t2

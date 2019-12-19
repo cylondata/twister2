@@ -20,6 +20,7 @@ import org.apache.mesos.Scheduler;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 //import org.apache.mesos.v1.scheduler.Scheduler;
@@ -29,7 +30,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * Launch a topology to mesos cluster
  */
 public class MesosLauncher implements ILauncher {
-
 
 
   private MesosController controller;
@@ -50,7 +50,7 @@ public class MesosLauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
     //Protos.Status status = driver.stop();
     boolean status;
     if (driver == null) {
@@ -63,12 +63,13 @@ public class MesosLauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
+    Twister2JobState state = new Twister2JobState(false);
 
 //    runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
     runFramework(MesosContext.getMesosMasterUri(config), job);
-
-    return false;
+    //TODO when to return true?
+    return state;
   }
 
   private void runFramework(String mesosMaster, JobAPI.Job job) {
