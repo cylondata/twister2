@@ -20,6 +20,7 @@ edu.iu.dsc.tws.api.compute.schedule.elements
 edu.iu.dsc.tws.api.config
 edu.iu.dsc.tws.api.data
 edu.iu.dsc.tws.api.dataset
+edu.iu.dsc.tws.api.driver
 edu.iu.dsc.tws.api.exceptions
 edu.iu.dsc.tws.api.exceptions.net
 edu.iu.dsc.tws.api.faulttolerance
@@ -44,7 +45,6 @@ edu.iu.dsc.tws.checkpointing.task
 edu.iu.dsc.tws.checkpointing.util
 edu.iu.dsc.tws.checkpointing.worker
 edu.iu.dsc.tws.common.config
-edu.iu.dsc.tws.common.driver
 edu.iu.dsc.tws.common.logging
 edu.iu.dsc.tws.common.net
 edu.iu.dsc.tws.common.net.tcp
@@ -284,6 +284,7 @@ edu.iu.dsc.tws.tset.cdfw
 edu.iu.dsc.tws.tset.data
 edu.iu.dsc.tws.tset.env
 edu.iu.dsc.tws.tset.fn
+edu.iu.dsc.tws.tset.fn.impl
 edu.iu.dsc.tws.tset.graph
 edu.iu.dsc.tws.tset.links
 edu.iu.dsc.tws.tset.links.batch
