@@ -48,7 +48,7 @@ const siteConfig = {
         {doc: 'developers/debugging', label: 'Contribute'},
         {doc: 'download', label: 'Download'},
         {page: 'configs', label: 'Configurations'},
-        {page: 'javadoc/index.html', label: "Java Docs"},
+        {page: 'javadocs/index.html', label: "Java Docs"},
         {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub", external: true},
         {blog: true, label: 'Blog'},
     ],
