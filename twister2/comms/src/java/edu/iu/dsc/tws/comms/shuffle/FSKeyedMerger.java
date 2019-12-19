@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.util.KryoSerializer;
 /**
  * Un sorted merger
  *
- * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ * @deprecated This merger can't output data in the expected format {@literal Iterator<Tuple<Key,Iterator>>}
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 @Deprecated

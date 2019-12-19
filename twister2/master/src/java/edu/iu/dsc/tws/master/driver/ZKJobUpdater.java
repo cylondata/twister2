@@ -36,7 +36,6 @@ public class ZKJobUpdater {
   /**
    * update Job on ZooKeeper
    * @param job
-   * @return
    */
   public void updateJob(JobAPI.Job job) throws Twister2Exception {
 

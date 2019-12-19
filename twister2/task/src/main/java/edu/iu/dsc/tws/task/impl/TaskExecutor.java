@@ -143,7 +143,7 @@ public class TaskExecutor implements FaultAcceptable {
    * Create execution plans for each graph.
    *
    * @param graph list of graphs
-   * @return graph name -> execution plan map
+   * @return graph name {@literal ->} execution plan map
    */
   public Map<String, ExecutionPlan> plan(ComputeGraph... graph) {
 
