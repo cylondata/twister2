@@ -36,7 +36,7 @@ public class StatefulWindowManager<T> extends WindowManager<T> {
    * Constructs a {@link StatefulWindowManager}
    *
    * @param lifecycleListener the {@link WindowLifecycleListener}
-   * @param queue a collection where the events in the window can be enqueued. <br/>
+   * @param queue a collection where the events in the window can be enqueued. <br><br/>
    * <b>Note:</b> This collection has to be thread safe.
    */
   public StatefulWindowManager(WindowLifecycleListener<T> lifecycleListener,

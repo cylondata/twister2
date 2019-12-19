@@ -47,9 +47,9 @@ import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
  * containers which is based on the task configuration values and the allocated work values
  * respectively.
  * <p>
- * For example, if there are two tasks with parallelism value of 2, 1st task -> instance 0 will
+ * {@literal For example, if there are two tasks with parallelism value of 2, 1st task -> instance 0 will
  * go to container 0, 2nd task -> instance 0 will go to container 1, 1st task -> instance 1 will
- * go to container 1, 2nd task -> instance 1 will go to container 1.
+ * go to container 1, 2nd task -> instance 1 will go to container 1.}
  */
 
 public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
