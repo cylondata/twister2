@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -34,9 +35,12 @@ public class SReduceWindowExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
   private static final Logger LOG = Logger.getLogger(SReduceWindowExample.class.getName());
 
-  private static final boolean CASE_1 = false;
-  private static final boolean CASE_2 = false;
-  private static final boolean CASE_3 = true;
+  private static final boolean IS_COUNT_WINDOW = false;
+  private static final boolean IS_WINDOW_FUNCTION_WITH_END = false;
+  private static final boolean IS_WINDOW_FUNCTION_WITH_DOWNSTREAM = false;
+  private static final boolean IS_WINDOW_FUNCTION_WITH_WINDOWEDREDUCE = false;
+  private static final boolean IS_WINDOW_FUNCTION_WITH_WINDOW_PROCESS_USABLE = true;
+
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
@@ -44,9 +48,10 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     SDirectTLink<Integer> link = src.direct();
 
-    if (CASE_1) {
+    if (IS_COUNT_WINDOW) {
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> windowComputeTSet
-          = link.countWindow(2, input -> input);
+          = link
+          .countWindow(2, (ComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> input);
 
       windowComputeTSet.direct()
           .forEach((ApplyFunc<Iterator<Integer>>) data -> {
@@ -58,7 +63,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     }
 
-    if (CASE_2) {
+    if (IS_WINDOW_FUNCTION_WITH_END) {
 
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
           (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
@@ -78,7 +83,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     }
 
-    if (CASE_3) {
+    if (IS_WINDOW_FUNCTION_WITH_DOWNSTREAM) {
 
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
           (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
@@ -102,6 +107,37 @@ public class SReduceWindowExample extends StreamingTsetExample {
       mapTSet.direct().forEach((ApplyFunc<Integer>) data -> System.out.println(data));
     }
 
+    if (IS_WINDOW_FUNCTION_WITH_WINDOWEDREDUCE) {
+
+      link.countWindow(2, (MapFunc<Integer, Iterator<Integer>>) input -> {
+        Integer sum = 0;
+        while (input.hasNext()) {
+          sum += input.next();
+        }
+        return sum;
+      });
+
+      //link.countWindow().reduce(a,b-> a + b)
+
+    }
+
+    if (IS_WINDOW_FUNCTION_WITH_WINDOW_PROCESS_USABLE) {
+
+      WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.countWindow(2);
+      WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
+          .process((WindowComputeFunc<Integer, Iterator<Integer>>) input -> {
+            Integer sum = 0;
+            while (input.hasNext()) {
+              sum += input.next();
+            }
+            return sum;
+          });
+
+      processedTSet.direct().forEach((ApplyFunc<Integer>) data -> System.out.println(data));
+
+      //link.countWindow().reduce(a,b-> a + b)
+
+    }
 
   }
 

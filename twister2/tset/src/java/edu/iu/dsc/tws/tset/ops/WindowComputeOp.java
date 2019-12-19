@@ -88,6 +88,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
         return itrMsg.next().getContent();
       }
     };
+
     writeToEdges(this.computeFunction.compute(iterator));
     //this.computeFunction.close();
     return true;

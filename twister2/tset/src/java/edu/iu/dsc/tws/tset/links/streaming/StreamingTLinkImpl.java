@@ -17,11 +17,13 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.common.pojo.Time;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
@@ -53,9 +55,9 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return set;
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> window(String n,
-                                                       ComputeFunc<P, Iterator<T1>>
-                                                           computeFunction) {
+  private <P> WindowComputeTSet<P, Iterator<T1>> window(String n,
+                                                        ComputeFunc<P, Iterator<T1>>
+                                                            computeFunction) {
     WindowComputeTSet<P, Iterator<T1>> set;
     if (n != null && !n.isEmpty()) {
       set = new WindowComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
@@ -66,6 +68,21 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     }
     addChildToGraph(set);
 
+    return set;
+  }
+
+  private <P> WindowComputeTSet<P, Iterator<T1>> windowReduce(String n,
+                                                              MapCompute<P, Iterator<T1>>
+                                                                  mapComp) {
+    WindowComputeTSet<P, Iterator<T1>> set;
+    if (n != null && !n.isEmpty()) {
+      set = new WindowComputeTSet<>(getTSetEnv(), n, mapComp, getTargetParallelism(),
+          this.windowParameter);
+    } else {
+      set = new WindowComputeTSet<>(getTSetEnv(), mapComp, getTargetParallelism(),
+          this.windowParameter);
+    }
+    addChildToGraph(set);
     return set;
   }
 
@@ -95,7 +112,6 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public SSinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
     SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
-
     return sinkTSet;
   }
 
@@ -106,6 +122,18 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return window("w-count-tumbling-compute", computeFunction);
   }
 
+  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(windowLen);
+    return window("w-count-tumbling-compute-prev", (ComputeFunc<P, Iterator<T1>>) input -> null);
+  }
+
+  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(int windowLen,
+                                                            MapFunc<P, Iterator<T1>> reduceFn) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(windowLen);
+    return windowReduce("reduce-partition", new MapCompute<>(reduceFn));
+  }
 
   public <P> SComputeTSet<P, T1> countWindow(int windowLen, int slidingLen,
                                              ComputeCollectorFunc<P, T1> computeFunction) {

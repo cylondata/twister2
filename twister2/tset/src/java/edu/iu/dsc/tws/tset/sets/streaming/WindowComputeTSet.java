@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
@@ -33,6 +32,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
                            int parallelism, WindowParameter winParam) {
     this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
   }
+
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
                            int parallelism, WindowParameter winParam) {
@@ -77,13 +77,9 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   }
 
-  public SComputeTSet<O, I> process(MapCompute<O, I> processFn) {
-    SComputeTSet<O, I> process = null;
-    // now the following relationship is created
-    // this -- directThis -- unionTSet
-
-
-    return process;
+  public WindowComputeTSet<O, I> process(TFunction<O, I> processFunction) {
+    this.computeFunc = processFunction;
+    return this;
   }
 
 
