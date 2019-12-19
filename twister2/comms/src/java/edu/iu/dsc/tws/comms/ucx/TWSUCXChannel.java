@@ -49,6 +49,17 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * This class uses UCX framework underneath to connect to the twister2's network
+ * of Worker processes. {@link TWSUCXChannel} leverages tags based communication of UCX
+ * to virtually create multiple communication channels between the workers based on the edge.
+ * The tag for each message is calculated as follows.
+ * <p>
+ * tag = sendingWorkerId * tagWIdOffset + edge
+ * </p>
+ *
+ * @since 0.5.0
+ */
 public class TWSUCXChannel implements TWSChannel {
 
   private static final Logger LOG = Logger.getLogger(TWSUCXChannel.class.getName());
