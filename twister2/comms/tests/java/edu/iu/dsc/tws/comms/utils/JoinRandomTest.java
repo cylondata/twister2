@@ -41,13 +41,14 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 public class JoinRandomTest {
 
   private static final Logger LOG = Logger.getLogger(JoinTestUtils.class.getName());
+  private static final int ARRAY_SIZE = 1000000;
 
   private Random random = new Random(System.currentTimeMillis());
 
-  private List<Tuple> randomData(int noOfTupples) {
+  private List<Tuple> randomData() {
     List<Tuple> tuples = new ArrayList<>();
 
-    for (int i = 0; i < noOfTupples; i++) {
+    for (int i = 0; i < JoinRandomTest.ARRAY_SIZE * random.nextInt(100); i++) {
       tuples.add(Tuple.of(random.nextInt(), i));
     }
     return tuples;
@@ -59,8 +60,8 @@ public class JoinRandomTest {
 
   @Test
   public void innerJoinTest() {
-    List<Tuple> leftRelation = randomData(1000000);
-    List<Tuple> rightRelation = randomData(1000000);
+    List<Tuple> leftRelation = randomData();
+    List<Tuple> rightRelation = randomData();
 
     KeyComparatorWrapper intComparator = intComparator();
 
@@ -84,8 +85,8 @@ public class JoinRandomTest {
 
   @Test
   public void leftJoinTest() {
-    List<Tuple> leftRelation = randomData(1000000);
-    List<Tuple> rightRelation = randomData(1000000);
+    List<Tuple> leftRelation = randomData();
+    List<Tuple> rightRelation = randomData();
 
     KeyComparatorWrapper intComparator = intComparator();
 
@@ -111,8 +112,8 @@ public class JoinRandomTest {
 
   @Test
   public void rightJoinTest() {
-    List<Tuple> leftRelation = randomData(1000000);
-    List<Tuple> rightRelation = randomData(1000000);
+    List<Tuple> leftRelation = randomData();
+    List<Tuple> rightRelation = randomData();
 
     KeyComparatorWrapper intComparator = intComparator();
 
