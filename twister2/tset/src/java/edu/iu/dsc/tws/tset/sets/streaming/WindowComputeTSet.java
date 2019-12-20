@@ -17,6 +17,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -26,6 +27,8 @@ import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
 public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
+
+  private ReduceFunc reduceFunc;
 
   private WindowParameter windowParameter;
 
@@ -84,6 +87,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
           Collections.emptyMap());
     }
 
+
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);
 
   }
@@ -93,8 +97,13 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-  public WindowComputeTSet<O, I> reduce(TFunction<O, I> processFunction) {
+  public WindowComputeTSet<O, I> reduce(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
+    return this;
+  }
+
+  public <K> WindowComputeTSet<O, I> localReduce(ReduceFunc<K> reduceFn) {
+    this.reduceFunc = reduceFn;
     return this;
   }
 

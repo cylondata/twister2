@@ -34,6 +34,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
   private WindowParameter windowParameter;
 
+
+
   StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }

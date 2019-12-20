@@ -11,32 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.fn;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 
 
-public class ReduceWindowCompute<I> implements WindowCompute<I, Iterator<I>> {
+public class ReduceWindowCompute<O, I> implements WindowCompute<O, I> {
 
-  private MapFunc<I, Iterator<I>> reduceFn;
+  private final ReduceFunc<O> reduceFunc;
+  private O agg;
 
-  public ReduceWindowCompute(MapFunc<I, Iterator<I>> reduceFn) {
-    this.reduceFn = reduceFn;
+  public ReduceWindowCompute(ReduceFunc<O> reduceFunc) {
+    this.reduceFunc = reduceFunc;
   }
 
   @Override
-  public I compute(Iterator<I> input) {
-    return this.reduceFn.map(input);
+  public O compute(I input) {
+
+    return null;
   }
 
   @Override
   public void prepare(TSetContext ctx) {
-    this.reduceFn.prepare(ctx);
+    this.reduceFunc.prepare(ctx);
   }
 
   @Override
   public void close() {
-    this.reduceFn.close();
+    this.reduceFunc.close();
   }
 }
