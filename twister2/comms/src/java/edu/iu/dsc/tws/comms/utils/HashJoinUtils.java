@@ -125,6 +125,9 @@ public final class HashJoinUtils {
     return joinedTuples;
   }
 
+  /**
+   * Disk based inner join
+   */
   public static Iterator<JoinedTuple> innerJoin(ResettableIterator<Tuple<?, ?>> leftIt,
                                                 ResettableIterator<Tuple<?, ?>> rightIt,
                                                 KeyComparatorWrapper comparator) {
