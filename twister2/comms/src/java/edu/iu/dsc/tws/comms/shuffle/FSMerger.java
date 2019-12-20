@@ -178,12 +178,12 @@ public class FSMerger implements Shuffle {
   /**
    * This method gives the values
    */
-  public Iterator<Object> readIterator() {
+  public ResettableIterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<Object> {
+  private class FSIterator implements ResettableIterator<Object> {
     // the current file index
     private int currentFileIndex = -1;
     // Index of the current file
@@ -195,6 +195,14 @@ public class FSMerger implements Shuffle {
 
     FSIterator() {
       it = objectsInMemory.iterator();
+    }
+
+    @Override
+    public void reset() {
+      it = objectsInMemory.iterator();
+      currentFileIndex = -1;
+      currentFileIndex = 0;
+      openValues = null;
     }
 
     @Override
