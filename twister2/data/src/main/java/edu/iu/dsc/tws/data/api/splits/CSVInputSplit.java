@@ -32,11 +32,9 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
   private static final long serialVersionUID = 1L;
 
   public static final String DEFAULT_LINE_DELIMITER = "\n";
-
   public static final String DEFAULT_FIELD_DELIMITER = ",";
 
   private byte[] delimiter = new byte[]{'\n'};
-
   private String delimiterString = null;
 
   protected boolean lineDelimiterIsLinebreak = false;
@@ -53,13 +51,10 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   protected int numSplits = -1;
 
-  private transient byte[] currBuffer;
   private transient byte[] wrapBuffer;
-  protected transient byte[] parsedValues;
   private transient byte[] readBuffer;
 
   private transient boolean end;
-  private transient boolean overLimit;
 
   private transient int readPos;
   private transient int limit;
@@ -70,10 +65,8 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
   protected transient int invalidLineCount;
 
   private long offset = -1;
-  protected byte[] commentPrefix = null;
-  private String commentPrefixString = null;
-
   private int bufferSize = -1;
+
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
@@ -283,7 +276,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
     this.readPos = 0;
     this.limit = 0;
-    this.overLimit = false;
     this.end = false;
   }
 
@@ -318,7 +310,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
       toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
     } else {
       toRead = maxReadLength;
-      this.overLimit = true;
       return false;
     }
 
