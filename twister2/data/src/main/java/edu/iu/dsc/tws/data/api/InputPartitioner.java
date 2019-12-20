@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * <p>
  * The life cycle of an input format is the following:
  * <ol>
- * // *   <li>After being instantiated (parameterless), it is configured with a Configuration object.
+ * <li>After being instantiated (parameterless), it is configured with a Configuration object.
  * Basic fields are read from the configuration, such as for example a file path,
  * if the format describes
  * files as input.</li>

@@ -45,10 +45,12 @@ import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
  * <p>
  * These are the steps for submitting a job
  * <p>
- * 1. Figure out the environment from the place where this is executed
- * We will take properties from java system < environment < job
- * 1. Create the job information file and save it
- * 2. Create a job package with jars and job information file to be uploaded to the cluster
+ * <ol>
+ * <li>Figure out the environment from the place where this is executed</li>
+ * <li>We will take properties from java {@literal system < environment < job}</li>
+ * <li>Create the job information file and save it</li>
+ * <li>Create a job package with jars and job information file to be uploaded to the cluster</li>
+ * </ol>
  */
 public class ResourceAllocator {
   public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
