@@ -8,6 +8,7 @@ from torch.multiprocessing import Process
 def run(rank, size, hostname):
     print(f"I am {rank} of {size} in {hostname}")
     tensor = torch.zeros(1)
+
     if rank == 0:
         tensor += 1
         # Send the tensor to process 1
@@ -20,7 +21,7 @@ def run(rank, size, hostname):
 
 def init_processes(rank, size, hostname, fn, backend='tcp'):
     """ Initialize the distributed environment. """
-    #dist.init_process_group(backend, rank=rank, world_size=size)
+    dist.init_process_group(backend, rank=rank, world_size=size)
     fn(rank, size, hostname)
 
 
