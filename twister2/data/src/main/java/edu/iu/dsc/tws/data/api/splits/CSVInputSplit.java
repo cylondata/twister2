@@ -73,6 +73,9 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
   protected byte[] commentPrefix = null;
   private String commentPrefixString = null;
 
+  private int bufferSize = -1;
+  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
+
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
     this.file = file;
@@ -148,7 +151,7 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     }
     this.recordLength = recordLen;
     if (this.bufferSize % recordLen != 0) {
-      int bufferFactor = 1;
+      int bufferFactor;
       if (this.bufferSize > 0) {
         bufferFactor = bufferSize / recordLen;
       } else {
@@ -197,19 +200,13 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     super.open(cfg);
     this.configure(cfg);
     initBuffers();
-//    if (this.getDelimiter().length == 1 && this.getDelimiter()[0] == '\n') {
-//      this.lineDelimiterIsLinebreak = true;
-//    }
     this.commentCount = 0;
     this.invalidLineCount = 0;
     long recordMod = this.splitStart % this.recordLength;
     if (recordMod != 0) {
-      //We are not at the start of a record, we change the offset to take it to the start of the
-      //next record
       this.offset = this.splitStart + this.recordLength - recordMod;
-      //TODO: when debugging check if this shoould be >=
       if (this.offset > this.splitStart + this.splitLength) {
-        this.end = true; // We do not have a record in this split
+        this.end = true;
       }
     } else {
       this.offset = splitStart;
@@ -270,10 +267,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     }
   }
 
-  private int bufferSize = -1;
-
-  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
-
   private void initBuffers() {
     this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
 
@@ -295,7 +288,7 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
   }
 
   public byte[] readRecord(byte[] reusable, byte[] bytes, int readOffset, int numBytes) {
-    if (reusable != null) /*&& reusable.length == this.recordLength)*/ {
+    if (reusable != null && reusable.length == this.recordLength) {
       System.arraycopy(bytes, readOffset, reusable, 0, numBytes);
       return reusable;
     } else {
@@ -303,32 +296,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
       System.arraycopy(bytes, readOffset, tmp, 0, numBytes);
       return tmp;
     }
-//    if (this.lineDelimiterIsLinebreak && numBytes > 0
-//    && bytes[readOffset + numBytes - 1] == '\r') {
-//      //numBytes -= 1;
-//    }
-//
-//    if (commentPrefix != null && commentPrefix.length <= numBytes) {
-//      //check record for comments
-//      boolean isComment = true;
-//      for (int i = 0; i < commentPrefix.length; i++) {
-//        if (commentPrefix[i] != bytes[readOffset + i]) {
-//          isComment = false;
-//          break;
-//        }
-//      }
-//      if (isComment) {
-//        this.commentCount++;
-//        return null;
-//      }
-//    }
-
-//    if (parseRecord(parsedValues, bytes, fillOffset, numBytes)) {
-//      return fillBuffer(fillOffset);
-//    } else {
-//      this.invalidLineCount++;
-//      return null;
-//    }
   }
 
   private boolean fillBuffer(int fillOffset) throws IOException {
