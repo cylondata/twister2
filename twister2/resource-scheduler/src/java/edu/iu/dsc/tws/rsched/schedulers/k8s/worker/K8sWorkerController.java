@@ -365,7 +365,6 @@ public class K8sWorkerController implements IWorkerController {
 
   /**
    * not implemented
-   * @return
    */
   @Override
   public void waitOnBarrier() throws TimeoutException {

@@ -67,7 +67,7 @@ public class WindowManager<T> implements TriggerHandler {
    * Constructs a {@link WindowManager}
    *
    * @param lifecycleListener the {@link WindowLifecycleListener}
-   * @param queue a collection where the events in the window can be enqueued. <br/>
+   * @param queue a collection where the events in the window can be enqueued. <br><br/>
    * <b>Note:</b> This collection has to be thread safe.
    */
   public WindowManager(WindowLifecycleListener<T> lifecycleListener, Collection<Event<T>> queue) {

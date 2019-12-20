@@ -10,17 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
 import java.io.IOException;
@@ -39,7 +28,8 @@ import edu.iu.dsc.tws.api.config.Config;
  * A single node registers, others discover that node
  * In our case, Job Master registers, workers discover the job master
  * Job Master creates an eph persistent znode
- * Job Master IP and port number is put as the payload to this node in the form of: <ip>:<port>
+ * Job Master IP and port number is put as the payload to this node in the form of:
+ * {@literal <ip>:<port>}
  * the node must be deleted after the job completes
  */
 public class ZKJobMasterRegistrar {
@@ -62,8 +52,6 @@ public class ZKJobMasterRegistrar {
 
   /**
    * construct job master path
-   * @param config
-   * @return
    */
   public static String constructJobMasterPath(Config config, String jobID) {
     return ZKContext.rootNode(config) + "/" + jobID + "-job-master";
@@ -71,7 +59,6 @@ public class ZKJobMasterRegistrar {
 
   /**
    * connect to ZooKeeper server
-   * @return
    */
   public boolean initialize() {
     // connect to ZooKeeper server if it is not already connected
@@ -102,7 +89,6 @@ public class ZKJobMasterRegistrar {
    * ZooKeeper takes around 30 seconds to delete ephemeral znodes in those cases
    * During this time, if JobMasterRegistrar restarts with the same job name,
    * this can happen
-   * @return
    */
   public boolean sameZNodeExist() {
     if (client == null) {
