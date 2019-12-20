@@ -152,7 +152,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     if (REDUCE_WINDOW) {
 
-      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> winTSet
+      WindowComputeTSet<Integer, Iterator<Integer>> winTSet
           = link.countWindow(2);
 
 //      WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
@@ -166,10 +166,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
 //
 //      processedTSet.direct().forEach(d -> System.out.println(d));
 
-      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> reducedTSet = winTSet
-          .process((WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> input);
-
-      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> localReducedTSet = winTSet
+      WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
           .localReduce((ReduceFunc<Integer>) (t1, t2) -> t1 + t2);
 
       localReducedTSet.direct().forEach(d -> System.out.println(d));

@@ -99,11 +99,57 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   public WindowComputeTSet<O, I> reduce(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
+
     return this;
   }
 
-  public <K> WindowComputeTSet<O, I> localReduce(ReduceFunc<K> reduceFn) {
-    this.reduceFunc = reduceFn;
+  /**
+   * This method reduces the values inside a window
+   *
+   * @param reduceFn reduce function definition
+   * @return reduced value of type O
+   */
+  public WindowComputeTSet<O, I> localReduce(ReduceFunc<O> reduceFn) {
+    //this.reduceFunc = reduceFn;
+
+    this.process(new WindowCompute<O, I>() {
+      @Override
+      public O compute(I input) {
+        O initial = null;
+        if (input instanceof Iterator) {
+          Iterator<O> itr = (Iterator<O>) input;
+          while (itr.hasNext()) {
+            if (initial == null) {
+              initial = itr.next();
+            }
+            O next = itr.next();
+            initial = reduceFn.reduce(initial, next);
+          }
+        } else {
+          throw new IllegalArgumentException("Invalid Data Type or Reduce Function Type");
+        }
+        return initial;
+      }
+    });
+
+
+//
+//
+//    process(new WindowCompute<I, Iterator<I>>() {
+//      @Override
+//      public I compute(Iterator<I> input) {
+//        I agg = null;
+//        while (input.hasNext()) {
+//          if (agg == null) {
+//            input.next();
+//          } else {
+//            agg = reduceFn.reduce(agg, input.next());
+//          }
+//        }
+//
+//        return agg;
+//      }
+//    });
     return this;
   }
 

@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.task.window.api.GlobalStreamId;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.api.WindowLifeCycleListener;
@@ -47,7 +46,6 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
 
   private ComputeFunc<O, Iterator<I>> computeFunction;
 
-  private ReduceFunc reduceFunc;
 
   public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
                          WindowParameter winParam) {
@@ -59,14 +57,6 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
                          BaseTSet originTSet, Map<String, String> receivables,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
-    this.initialize(originTSet, receivables, winParam);
-  }
-
-  public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
-                         BaseTSet originTSet, Map<String, String> receivables,
-                         WindowParameter winParam, ReduceFunc reduceFn) {
-    this.computeFunction = computeFunction;
-    this.reduceFunc = reduceFn;
     this.initialize(originTSet, receivables, winParam);
   }
 
@@ -106,6 +96,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
     };
 
     writeToEdges(this.computeFunction.compute(iterator));
+
     //this.computeFunction.close();
     return true;
   }
