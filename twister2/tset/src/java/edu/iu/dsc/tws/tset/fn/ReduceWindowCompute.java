@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
 
-public class ReduceWindowCompute<I> implements WindowComputeFunc<I, Iterator<I>> {
+public class ReduceWindowCompute<I> implements WindowCompute<I, Iterator<I>> {
 
   private MapFunc<I, Iterator<I>> reduceFn;
 

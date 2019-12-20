@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
+import edu.iu.dsc.tws.tset.fn.WindowCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
@@ -39,10 +39,10 @@ public class SReduceWindowExample extends StreamingTsetExample {
   private static final boolean IS_WINDOW_FUNCTION_WITH_END = false;
   private static final boolean IS_WINDOW_FUNCTION_WITH_DOWNSTREAM = false;
   private static final boolean IS_WINDOW_FUNCTION_WITH_WINDOWEDREDUCE = false;
-  private static final boolean REDUCE_WINDOW = true;
+  private static final boolean REDUCE_WINDOW = false;
   private static final boolean PROCESS_WINDOW = false;
   private static final boolean AGGREGATE_WINDOW = false;
-  private static final boolean FOLD_WINDOW = false;
+  private static final boolean FOLD_WINDOW = true;
 
 
   @Override
@@ -69,7 +69,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
     if (IS_WINDOW_FUNCTION_WITH_END) {
 
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
-          (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+          (WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
             List<Integer> items = new ArrayList<Integer>();
             while (input.hasNext()) {
               items.add(input.next() * 2);
@@ -89,7 +89,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
     if (IS_WINDOW_FUNCTION_WITH_DOWNSTREAM) {
 
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> itrTSet = link.countWindow(2,
-          (WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+          (WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
             List<Integer> items = new ArrayList<Integer>();
             while (input.hasNext()) {
               items.add(input.next() * 2);
@@ -129,7 +129,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> winTSet = link.countWindow(2);
 
       WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> processedTSet = winTSet
-          .process((WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+          .process((WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
             List<Integer> list = new ArrayList<>();
             while (input.hasNext()) {
               list.add(input.next() * 2);
@@ -153,7 +153,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
       WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.countWindow(2);
 
       WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
-          .reduce((WindowComputeFunc<Integer, Iterator<Integer>>) input -> {
+          .reduce((WindowCompute<Integer, Iterator<Integer>>) input -> {
             Integer sum = 0;
             while (input.hasNext()) {
               sum += input.next();
@@ -164,6 +164,40 @@ public class SReduceWindowExample extends StreamingTsetExample {
       processedTSet.direct().forEach(d -> System.out.println(d));
 
       //link.countWindow().reduce(a,b-> a + b)
+
+    }
+
+    if (AGGREGATE_WINDOW) {
+
+      WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.countWindow(2);
+
+      WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
+          .aggregate((WindowCompute<Integer, Iterator<Integer>>) input -> {
+            Integer sum = 0;
+            while (input.hasNext()) {
+              sum += input.next() * 3;
+            }
+            return sum;
+          });
+
+      processedTSet.direct().forEach(d -> System.out.println(d));
+
+    }
+
+    if (FOLD_WINDOW) {
+
+      WindowComputeTSet<String, Iterator<Integer>> winTSet = link.countWindow(2);
+
+      WindowComputeTSet<String, Iterator<Integer>> processedTSet = winTSet
+          .fold((WindowCompute<String, Iterator<Integer>>) input -> {
+            String sum = "";
+            while (input.hasNext()) {
+              sum += input.next() * 3 + ", ";
+            }
+            return sum;
+          });
+
+      processedTSet.direct().forEach(d -> System.out.println(d));
 
     }
 

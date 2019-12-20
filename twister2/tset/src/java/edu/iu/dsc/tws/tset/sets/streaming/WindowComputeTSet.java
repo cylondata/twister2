@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
+import edu.iu.dsc.tws.tset.fn.WindowCompute;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
@@ -88,7 +88,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   }
 
-  public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
+  public WindowComputeTSet<O, I> process(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
     return this;
   }
@@ -98,12 +98,12 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-  public WindowComputeTSet<O, I> aggregate(TFunction<O, I> processFunction) {
+  public WindowComputeTSet<O, I> aggregate(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
     return this;
   }
 
-  public WindowComputeTSet<O, I> fold(TFunction<O, I> processFunction) {
+  public WindowComputeTSet<O, I> fold(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
     return this;
   }

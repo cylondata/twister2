@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.tset.fn;
 
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 
-public interface WindowComputeFunc<O, I> extends ComputeFunc<O, I> {
+public interface WindowCompute<O, I> extends ComputeFunc<O, I> {
 
 
 }
