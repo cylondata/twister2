@@ -39,7 +39,10 @@ public class SReduceWindowExample extends StreamingTsetExample {
   private static final boolean IS_WINDOW_FUNCTION_WITH_END = false;
   private static final boolean IS_WINDOW_FUNCTION_WITH_DOWNSTREAM = false;
   private static final boolean IS_WINDOW_FUNCTION_WITH_WINDOWEDREDUCE = false;
-  private static final boolean IS_WINDOW_FUNCTION_WITH_WINDOW_PROCESS_USABLE = true;
+  private static final boolean REDUCE_WINDOW = true;
+  private static final boolean PROCESS_WINDOW = false;
+  private static final boolean AGGREGATE_WINDOW = false;
+  private static final boolean FOLD_WINDOW = false;
 
 
   @Override
@@ -121,11 +124,36 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
     }
 
-    if (IS_WINDOW_FUNCTION_WITH_WINDOW_PROCESS_USABLE) {
+    if (PROCESS_WINDOW) {
+
+      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> winTSet = link.countWindow(2);
+
+      WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> processedTSet = winTSet
+          .process((WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
+            List<Integer> list = new ArrayList<>();
+            while (input.hasNext()) {
+              list.add(input.next() * 2);
+            }
+            return list.iterator();
+          });
+
+      processedTSet.direct().forEach((ApplyFunc<Iterator<Integer>>) data -> {
+        while (data.hasNext()) {
+          System.out.println(data.next());
+        }
+      });
+      //processedTSet.direct().forEach((ApplyFunc<Integer>) data -> System.out.println(data));
+
+      //link.countWindow().reduce(a,b-> a + b)
+
+    }
+
+    if (REDUCE_WINDOW) {
 
       WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.countWindow(2);
+
       WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
-          .process((WindowComputeFunc<Integer, Iterator<Integer>>) input -> {
+          .reduce((WindowComputeFunc<Integer, Iterator<Integer>>) input -> {
             Integer sum = 0;
             while (input.hasNext()) {
               sum += input.next();
@@ -133,7 +161,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
             return sum;
           });
 
-      processedTSet.direct().forEach((ApplyFunc<Integer>) data -> System.out.println(data));
+      processedTSet.direct().forEach(d -> System.out.println(d));
 
       //link.countWindow().reduce(a,b-> a + b)
 

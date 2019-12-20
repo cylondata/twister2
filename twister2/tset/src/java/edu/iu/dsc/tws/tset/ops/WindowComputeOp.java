@@ -53,17 +53,22 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
   }
 
   public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
-                         BaseTSet originTSet, Map<String, String> receivableTSets,
+                         BaseTSet originTSet, Map<String, String> receivables,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
-    this.windowParameter = winParam;
-    this.receivables = IONames.declare(receivableTSets.keySet());
-    this.rcvTSets = receivableTSets;
+    this.initialize(originTSet, receivables, winParam);
+  }
 
-    if (originTSet != null) {
-      this.tSetContext.setId(originTSet.getId());
-      this.tSetContext.setName(originTSet.getName());
-      this.tSetContext.setParallelism(originTSet.getParallelism());
+  public void initialize(BaseTSet origin, Map<String, String> recvs,
+                         WindowParameter winParm) {
+    this.windowParameter = winParm;
+    this.receivables = IONames.declare(recvs.keySet());
+    this.rcvTSets = recvs;
+
+    if (origin != null) {
+      this.tSetContext.setId(origin.getId());
+      this.tSetContext.setName(origin.getName());
+      this.tSetContext.setParallelism(origin.getParallelism());
     }
   }
 
@@ -76,7 +81,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
   @Override
   public boolean execute(IWindowMessage<I> windowMessage) {
     List<IMessage<I>> output = windowMessage.getWindow();
-    Iterator<IMessage<I>> itrMsg =  output.stream().iterator();
+    Iterator<IMessage<I>> itrMsg = output.stream().iterator();
     Iterator<I> iterator = new Iterator<I>() {
       @Override
       public boolean hasNext() {
@@ -176,4 +181,6 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
   public ComputeFunc<O, Iterator<I>> getFunction() {
     return computeFunction;
   }
+
+
 }

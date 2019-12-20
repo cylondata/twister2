@@ -71,6 +71,20 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return set;
   }
 
+  private <P> WindowComputeTSet<P, Iterator<T1>> window(String n) {
+    WindowComputeTSet<P, Iterator<T1>> set;
+    if (n != null && !n.isEmpty()) {
+      set = new WindowComputeTSet<>(getTSetEnv(), n, getTargetParallelism(),
+          this.windowParameter);
+    } else {
+      set = new WindowComputeTSet<>(getTSetEnv(), getTargetParallelism(),
+          this.windowParameter);
+    }
+    addChildToGraph(set);
+
+    return set;
+  }
+
   private <P> WindowComputeTSet<P, Iterator<T1>> windowReduce(String n,
                                                               MapCompute<P, Iterator<T1>>
                                                                   mapComp) {
@@ -125,7 +139,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingCountWindow(windowLen);
-    return window("w-count-tumbling-compute-prev", (ComputeFunc<P, Iterator<T1>>) input -> null);
+    return window("w-count-tumbling-compute-prev");
   }
 
   public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(int windowLen,

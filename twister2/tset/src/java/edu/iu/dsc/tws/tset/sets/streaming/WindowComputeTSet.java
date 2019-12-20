@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
@@ -33,6 +34,10 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
   }
 
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv,
+                           int parallelism, WindowParameter winParam) {
+    this(tSetEnv, "wcompute", parallelism, winParam);
+  }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
                            int parallelism, WindowParameter winParam) {
@@ -44,6 +49,12 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
                            WindowParameter winParam) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = computeFunction;
+    this.windowParameter = winParam;
+  }
+
+  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+                           WindowParameter winParam) {
+    super(tSetEnv, name, parallelism);
     this.windowParameter = winParam;
   }
 
@@ -77,7 +88,22 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   }
 
-  public WindowComputeTSet<O, I> process(TFunction<O, I> processFunction) {
+  public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
+    this.computeFunc = processFunction;
+    return this;
+  }
+
+  public WindowComputeTSet<O, I> reduce(TFunction<O, I> processFunction) {
+    this.computeFunc = processFunction;
+    return this;
+  }
+
+  public WindowComputeTSet<O, I> aggregate(TFunction<O, I> processFunction) {
+    this.computeFunc = processFunction;
+    return this;
+  }
+
+  public WindowComputeTSet<O, I> fold(TFunction<O, I> processFunction) {
     this.computeFunc = processFunction;
     return this;
   }
