@@ -23,11 +23,15 @@ import edu.iu.dsc.tws.api.data.BlockLocation;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.InputPartitioner;
+import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
+//public abstract class CSVInputPartitioner<OT>
+// implements InputPartitioner<OT, FileInputSplit<OT>> {
+public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
@@ -42,11 +46,13 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
   private long minSplitSize = 0;
 
-  public CSVInputPartitioner(Path filePath) {
-    this.filePath = filePath;
+  public CSVInputPartitioner(Path filepath) {
+    super(filepath);
+    this.filePath = filepath;
   }
 
   public CSVInputPartitioner(Path filepath, Config cfg, int numberOfTasks) {
+    super(filepath, cfg);
     this.filePath = filepath;
     this.config = cfg;
     this.numSplits = numberOfTasks;
@@ -65,7 +71,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
    * @throws IOException
    */
   @Override
-  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
+  public FileInputSplit[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
@@ -91,10 +97,12 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     int splitNum = 0;
     final long maxSplitSize = totalLength;
     for (final FileStatus file : files) {
-
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
       final long localminSplitSize;
+
+      final int numberOfLines = (int) file.getLen();
+      LOG.info("number of lines in the file:" + numberOfLines);
 
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
@@ -113,7 +121,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
         int blockIndex = 0;
         for (int i = 0; i < curminNumSplits; i++) {
           blockIndex = getBlockIndexForPosition(blocks, position, splitSize, blockIndex);
-          FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
+          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
         }
@@ -126,7 +134,8 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
           hosts = new String[0];
         }
         for (int i = 0; i < curminNumSplits; i++) {
-          FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          //FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
           inputSplits.add(fis);
         }
       }
@@ -136,8 +145,15 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  protected abstract FileInputSplit createSplit(int num, Path file, long start,
-                                                long length, String[] hosts);
+  @Override
+  public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
+    return new LocatableInputSplitAssigner<>(inputSplits);
+  }
+
+  protected FileInputSplit createSplit(int num, Path file, long start,
+                                                long length, String[] hosts) {
+    return null;
+  }
 
   /**
    * To enumerate the files in the directory in a recursive if the enumeratedNestedFiles is true.

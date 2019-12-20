@@ -258,7 +258,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.splitLength = getLength();
     this.config = cfg;
 
-    LOG.log(Level.FINE, "Opening input split " + getPath() + " ["
+    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
         + splitStart + "," + splitLength + "]");
 
     // open the split in an asynchronous thread
@@ -322,6 +322,19 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
         //final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
         final FileSystem fs = FileSystemUtils.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
+        LOG.info("Twister2 file input reader:" + this.fdis.getReader());
+
+//        //TODO: Checking the integration of CSV
+//        CSVParser csvParser = new CSVParserBuilder()
+//            .withSeparator(',')
+//            .withIgnoreQuotations(true)
+//            .build();
+//        //Reader reader = new FileReader("/home/kannan/opencsvexamples/input/ex.csv");
+//        CSVReader csvReader = new CSVReaderBuilder(this.fdis.getReader())
+//            .withSkipLines(1) //if we put '1' it will skip the header
+//            .withCSVParser(csvParser)
+//            .build();
+//        LOG.info("csv reader contents:" + Arrays.toString(csvReader.readNext()));
         // check for canceling and close the stream in that case, because no one will obtain it
         if (this.aborted) {
           final FSDataInputStream f = this.fdis;

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.data.fs.local;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -64,9 +65,13 @@ public class LocalDataInputStream extends FSDataInputStream {
     return this.fis.read();
   }
 
-  public Reader getReader() throws IOException {
-    return new FileReader(this.fileN);
+  public Reader getReader() throws FileNotFoundException {
+    return new FileReader(fileN);
   }
+
+//  public Reader getReader(File fileN) throws IOException {
+//    return this.getReader(fileN);
+//  }
 
   @Override
   public int read(byte[] buffer, int offset, int length) throws IOException {

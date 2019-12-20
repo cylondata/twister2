@@ -71,7 +71,6 @@ public class PointDataSource extends BaseSource implements Collector {
   @Override
   public void execute() {
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-    LOG.info("%%%%%%%%%%%%%% input split values:" + inputSplit.getSplitNumber());
     List<double[]> points = new ArrayList<>();
     while (inputSplit != null) {
       try {
@@ -86,7 +85,7 @@ public class PointDataSource extends BaseSource implements Collector {
             points.add(row);
           }
         }
-        LOG.info("contex task index:" + context.taskIndex() + "\t" + points.size());
+        LOG.info("context task index:" + context.taskIndex() + "\t" + points.size());
         inputSplit = source.getNextSplit(context.taskIndex());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -105,8 +104,8 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    /*this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-        new Path(dataDirectory), context.getParallelism(), cfg));*/
+//    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+//        new Path(dataDirectory), context.getParallelism(), cfg));
     this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
         new Path(dataDirectory), context.getParallelism(), cfg));
   }
