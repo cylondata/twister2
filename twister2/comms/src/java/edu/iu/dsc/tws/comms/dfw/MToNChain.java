@@ -1215,7 +1215,7 @@ public class MToNChain implements DataFlowOperation, ChannelReceiver {
     mergeFinishSources.add(source);
 
     Set<Integer> tOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
-    for (int dest : tOfThisWorker) {
+    for (int dest : targets) {
       // first we need to call finish on the partial receivers
       while (!send(source, new int[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish
