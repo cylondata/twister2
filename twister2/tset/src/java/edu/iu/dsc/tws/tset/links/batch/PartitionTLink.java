@@ -13,12 +13,15 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
+
+  private boolean useDisk = false;
 
   private PartitionFunc<T> partitionFunction;
 
@@ -44,12 +47,18 @@ public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }
+    e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }
 
   @Override
   public PartitionTLink<T> setName(String n) {
     rename(n);
+    return this;
+  }
+
+  public PartitionTLink<T> useDisk() {
+    this.useDisk = true;
     return this;
   }
 }
