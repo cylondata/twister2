@@ -39,6 +39,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -46,14 +47,16 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.util.JSONUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
@@ -92,6 +95,9 @@ public final class MPIWorker {
       // lets do a barrier here so everyone is synchronized at the end
       // commenting out barrier to fix stale workers issue
       // MPI.COMM_WORLD.barrier();
+      if (JobMasterContext.isJobMasterUsed(config)) {
+        closeWorker();
+      }
       MPI.Finalize();
     } catch (MPIException ignore) {
     }
@@ -112,6 +118,20 @@ public final class MPIWorker {
       Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
         LOG.log(Level.SEVERE, "Uncaught exception in thread "
             + thread + ". Finalizing this worker...", throwable);
+
+        if (JobMasterContext.isJobMasterUsed(config)) {
+          JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+          Exception exception = (Exception) throwable;
+          JobExecutionState.WorkerJobState workerState =
+              JobExecutionState.WorkerJobState.newBuilder()
+                  .setFailure(true)
+                  .setJobName(config.getStringValue(Context.JOB_NAME))
+                  .setWorkerMessage(JSONUtils.toJSONString(exception))
+                  .build();
+          senderToDriver.sendToDriver(workerState);
+        } else {
+          throw new RuntimeException("Worker faild with exception", throwable);
+        }
         finalizeMPI();
       });
 
@@ -126,8 +146,8 @@ public final class MPIWorker {
       // normal worker
       LOG.log(Level.FINE, "A worker process is starting...");
 
-      String jobName = MPIContext.jobName(config);
-      String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
+      String jobId = MPIContext.jobId(config);
+      String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
       /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
@@ -154,14 +174,12 @@ public final class MPIWorker {
 
           if (rank != 0) {
             startWorker(config, rank, comm, job);
-            closeWorker();
           } else {
             startMaster(config, rank);
           }
         } else {
           wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
           startWorker(config, rank, MPI.COMM_WORLD, job);
-          closeWorker();
         }
       } else {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
@@ -174,12 +192,11 @@ public final class MPIWorker {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
       throw new RuntimeException("Error parsing command line options: ", e);
-    } catch (Throwable t) {
-      String msg = "Un-expected error";
-      LOG.log(Level.SEVERE, msg, t);
-    } finally {
-      finalizeMPI();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Protocol buffer exception ", e);
     }
+
+    finalizeMPI();
   }
 
   /**
@@ -300,11 +317,11 @@ public final class MPIWorker {
         .required()
         .build();
 
-    Option jobName = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+    Option jobId = Option.builder("j")
+        .desc("Job Id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
 
@@ -328,7 +345,7 @@ public final class MPIWorker {
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
-    options.addOption(jobName);
+    options.addOption(jobId);
     options.addOption(jobMasterIP);
     options.addOption(jobMasterPort);
 
@@ -340,7 +357,7 @@ public final class MPIWorker {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobName = cmd.getOptionValue("job_name");
+    String jobId = cmd.getOptionValue("job_id");
     String jIp = cmd.getOptionValue("job_master_ip");
     int jPort = Integer.parseInt(cmd.getOptionValue("job_master_port"));
 
@@ -356,7 +373,7 @@ public final class MPIWorker {
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -365,7 +382,7 @@ public final class MPIWorker {
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.JOB_NAME, jobName).
+        put(MPIContext.JOB_ID, jobId).
         put(MPIContext.JOB_OBJECT, job).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(JobMasterContext.JOB_MASTER_IP, jIp).
@@ -509,8 +526,10 @@ public final class MPIWorker {
     LOG.log(Level.INFO, String.format("Worker finished executing - %d", wInfo.getWorkerID()));
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
-    masterClient.close();
+    if (masterClient != null) {
+      masterClient.sendWorkerCompletedMessage();
+      masterClient.close();
+    }
   }
 
   /**
@@ -632,9 +651,9 @@ public final class MPIWorker {
 
     String persistentJobDir;
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
+    String jobId = NomadContext.jobId(cfg);
     if (NomadContext.getLoggingSandbox(cfg)) {
-      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobId).toString();
     } else {
       persistentJobDir = logDirectory;
     }
@@ -651,10 +670,11 @@ public final class MPIWorker {
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
+    LOG.fine(String.format("Logging is setup with file %s" + logDir));
   }
 
 
-  private IPersistentVolume initPersistenceVolume(Config cfg, String jobName, int rank) {
+  private IPersistentVolume initPersistenceVolume(Config cfg, String jobId, int rank) {
     File baseDir = new File(MPIContext.fileSystemMount(cfg));
 
     // if the base dir does not exist

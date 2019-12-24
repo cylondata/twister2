@@ -57,11 +57,6 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   private Int2ObjectOpenHashMap<Shuffle> sortedMergers = new Int2ObjectOpenHashMap<>();
 
   /**
-   * weather we need to sort the records according to key
-   */
-  private boolean sorted;
-
-  /**
    * Comparator for sorting records
    */
   private Comparator<Object> comparator;
@@ -134,12 +129,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    */
   private boolean complete = false;
 
-  public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
+  public DPartitionBatchFinalReceiver(BulkReceiver receiver,
                                       List<String> shuffleDirs,
                                       Comparator<Object> com,
                                       boolean groupByKey) {
     this.bulkReceiver = receiver;
-    this.sorted = srt;
     this.comparator = com;
     this.shuffleDirectories = shuffleDirs;
     this.groupByKey = groupByKey;
@@ -181,7 +175,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
             DFWIOUtils.getOperationName(target, partition, refresh), partition.getDataType());
       } else {
-        if (sorted) {
+        if (comparator != null) {
           sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxFileSize,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
               partition.getKeyType(), partition.getDataType(), comparator, target,
@@ -243,7 +237,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             byte[] d;
             if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
                 || !(data instanceof byte[])
-                || ((flags & MessageFlags.ORIGIN_PARTIAL) == MessageFlags.ORIGIN_PARTIAL
+                || ((flags & MessageFlags.ORIGIN_SENDER) == MessageFlags.ORIGIN_SENDER
                 && partition.getDataType() == MessageTypes.OBJECT)) {
               // 3rd case handles, when user use Object data type, but send a byte[]
               d = partition.getDataType().getDataPacker().packToByteArray(data);
@@ -255,7 +249,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
           List<Object> contents = (List<Object>) object;
           for (Object kc : contents) {
             byte[] d;
-            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
+            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
+                || !(kc instanceof byte[])
+                || ((flags & MessageFlags.ORIGIN_SENDER) == MessageFlags.ORIGIN_SENDER
+                && partition.getDataType() == MessageTypes.OBJECT)) {
               d = partition.getDataType().getDataPacker().packToByteArray(kc);
             } else {
               d = (byte[]) kc;

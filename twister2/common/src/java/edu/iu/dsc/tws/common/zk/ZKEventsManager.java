@@ -37,10 +37,10 @@ public final class ZKEventsManager {
    * Assumes that there is no znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
-  public static void createEventsZNode(CuratorFramework client, String rootPath, String jobName)
+  public static void createEventsZNode(CuratorFramework client, String rootPath, String jobID)
       throws Twister2Exception {
 
-    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
     try {
       client
@@ -59,9 +59,9 @@ public final class ZKEventsManager {
 
   public static void initEventCounter(CuratorFramework client,
                                       String rootPath,
-                                      String jobName) throws Twister2Exception {
+                                      String jobID) throws Twister2Exception {
 
-    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
     try {
       eventCounter = client.getChildren().forPath(eventsDir).size();
@@ -76,16 +76,16 @@ public final class ZKEventsManager {
    * construct the next event path
    * increase the eventCounter by one
    */
-  public static String constructEventPath(String rootPath, String jobName) {
-    return ZKUtils.eventsDir(rootPath, jobName) + "/" + eventCounter++;
+  public static String constructEventPath(String rootPath, String jobID) {
+    return ZKUtils.eventsDir(rootPath, jobID) + "/" + eventCounter++;
   }
 
   public static void publishEvent(CuratorFramework client,
                                   String rootPath,
-                                  String jobName,
+                                  String jobID,
                                   JobMasterAPI.JobEvent jobEvent) throws Twister2Exception {
 
-    String eventPath = constructEventPath(rootPath, jobName);
+    String eventPath = constructEventPath(rootPath, jobID);
 
     try {
       client
@@ -104,9 +104,9 @@ public final class ZKEventsManager {
 
   public static int getNumberOfPastEvents(CuratorFramework client,
                                           String rootPath,
-                                          String jobName) throws Twister2Exception {
+                                          String jobID) throws Twister2Exception {
 
-    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
     try {
       int numberOfPastEvents = client.getChildren().forPath(eventsDir).size();
@@ -131,10 +131,10 @@ public final class ZKEventsManager {
    */
   public static TreeMap<Integer, JobMasterAPI.JobEvent> getAllEvents(CuratorFramework client,
                                                                      String rootPath,
-                                                                     String jobName)
+                                                                     String jobID)
       throws Twister2Exception {
 
-    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
     try {
       TreeMap<Integer, JobMasterAPI.JobEvent> events = new TreeMap<>(Collections.reverseOrder());

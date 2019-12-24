@@ -20,6 +20,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.driver.DefaultDriver;
+import edu.iu.dsc.tws.api.driver.IDriver;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
@@ -27,8 +30,6 @@ import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
-import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -365,6 +366,7 @@ public class JobMaster {
     };
 
     jmThread.setName("JM");
+    jmThread.setDaemon(true);
     jmThread.start();
 
     return jmThread;
@@ -407,7 +409,7 @@ public class JobMaster {
     }
 
     if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobName());
+      jobTerminator.terminateJob(job.getJobId());
     }
 
     if (dashClient != null) {
@@ -417,6 +419,10 @@ public class JobMaster {
 
   private void initDriver() {
 
+    //If the job master is running on the client set the driver to default driver.
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      driver = new DefaultDriver();
+    }
     // if Driver is not set, can not initialize Driver
     if (job.getDriverClassName().isEmpty()) {
       return;
@@ -456,6 +462,8 @@ public class JobMaster {
 
     // if all workers already joined, publish that event to the driver
     // this usually happens when jm restarted
+    // since now we require all workers to be both joined and connected,
+    // this should not be an issue, but i am not %100 sure. so keeping it.
     // TODO: make sure driver thread started before publishing this event
     //       as a temporary solution, wait 50 ms before starting new thread
     if (workerMonitor.isAllJoined()) {
@@ -481,7 +489,7 @@ public class JobMaster {
    */
   private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      zkMasterController = new ZKMasterController(config, job.getJobName(),
+      zkMasterController = new ZKMasterController(config, job.getJobId(),
           job.getNumberOfWorkers(), jmAddress, workerMonitor);
 
       try {
@@ -559,7 +567,7 @@ public class JobMaster {
           looper.wakeup();
 
           if (jobTerminator != null) {
-            jobTerminator.terminateJob(job.getJobName());
+            jobTerminator.terminateJob(job.getJobId());
           }
         }
 
@@ -567,6 +575,10 @@ public class JobMaster {
     };
 
     Runtime.getRuntime().addShutdownHook(hookThread);
+  }
+
+  public IDriver getDriver() {
+    return driver;
   }
 
   public class ServerConnectHandler implements ConnectHandler {

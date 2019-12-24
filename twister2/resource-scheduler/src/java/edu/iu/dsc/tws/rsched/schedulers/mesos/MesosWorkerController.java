@@ -33,7 +33,7 @@ public class MesosWorkerController implements IWorkerController {
 
   public static final Logger LOG = Logger.getLogger(MesosWorkerController.class.getName());
   private Config config;
-  private String jobName;
+  private String jobID;
   private JobAPI.Job job;
   private String workerIp;
   private int workerIdd;
@@ -46,7 +46,7 @@ public class MesosWorkerController implements IWorkerController {
 
   public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID) {
     config = cfg;
-    this.jobName = job.getJobName();
+    this.jobID = job.getJobId();
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
@@ -62,7 +62,7 @@ public class MesosWorkerController implements IWorkerController {
                                JobAPI.ComputeResource computeResource,
                                Map<String, Integer> additionalPorts) {
     config = cfg;
-    this.jobName = job.getJobName();
+    this.jobID = job.getJobId();
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
@@ -121,7 +121,7 @@ public class MesosWorkerController implements IWorkerController {
     //TODO: need to provide real ComputeResource object
     JobAPI.ComputeResource computeResource = null;
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
+        new ZKWorkerController(config, job.getJobId(), workerHostPort, numberOfWorkers,
             nodeInfo, computeResource);
 
     zkWorkerController.initialize(workerIdd);

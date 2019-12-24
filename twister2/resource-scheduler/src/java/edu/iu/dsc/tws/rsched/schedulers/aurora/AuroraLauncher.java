@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
@@ -44,7 +45,7 @@ public class AuroraLauncher implements ILauncher {
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
 
     String jobName = job.getJobName();
 
@@ -80,8 +81,8 @@ public class AuroraLauncher implements ILauncher {
     bindings.put(AuroraField.NUMBER_OF_WORKERS, job.getNumberOfWorkers() + "");
 
     logEnvVariables(bindings);
-
-    return controller.createJob(bindings, auroraFilename);
+    Twister2JobState state = new Twister2JobState(controller.createJob(bindings, auroraFilename));
+    return state;
   }
 
   /**
@@ -95,14 +96,14 @@ public class AuroraLauncher implements ILauncher {
    * Terminate the Aurora Job
    */
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
 
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraContext.auroraClusterName(config);
     String role = AuroraContext.role(config);
     String env = AuroraContext.environment(config);
     AuroraClientController controller =
-        new AuroraClientController(cluster, role, env, jobName, true);
+        new AuroraClientController(cluster, role, env, jobID, true);
 
     boolean killedAuroraJob = controller.killJob();
     if (killedAuroraJob) {
@@ -112,7 +113,7 @@ public class AuroraLauncher implements ILauncher {
     }
 
     // first clear ZooKeeper data
-    boolean deletedZKNodes = ZKUtil.terminateJob(jobName, config);
+    boolean deletedZKNodes = ZKUtil.terminateJob(jobID, config);
 
     return killedAuroraJob && deletedZKNodes;
   }
@@ -126,7 +127,7 @@ public class AuroraLauncher implements ILauncher {
   public static Map<AuroraField, String> constructEnvVariables(Config config, JobAPI.Job job) {
 
     String jobName = SchedulerContext.jobName(config);
-    String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(job.getJobId());
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
 
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();

@@ -77,7 +77,7 @@ public final class WorkerRuntime {
     // get IWorkerController and IWorkerStatusUpdater through ZKWorkerController
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkWorkerController =
-          new ZKWorkerController(config, job.getJobName(), job.getNumberOfWorkers(), workerInfo);
+          new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
       try {
         zkWorkerController.initialize(initialState);
       } catch (Exception e) {

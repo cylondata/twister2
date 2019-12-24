@@ -26,17 +26,17 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism, false, null);
+    this(tSetEnv, null, sourceParallelism, null);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism) {
-    this(tSetEnv, partitionFn, sourceParallelism, false, null);
+    this(tSetEnv, partitionFn, sourceParallelism, null);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                          int sourceParallelism, boolean sortByKey, Comparator<K> keyCompartor) {
-    super(tSetEnv, partitionFn, sourceParallelism, sortByKey, keyCompartor);
+                          int sourceParallelism, Comparator<K> keyCompartor) {
+    super(tSetEnv, partitionFn, sourceParallelism, keyCompartor);
     this.enableGroupByKey();
   }
 

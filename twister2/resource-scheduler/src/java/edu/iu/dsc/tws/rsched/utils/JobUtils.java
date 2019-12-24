@@ -88,10 +88,10 @@ public final class JobUtils {
     if (job.getJobFormat().getType() == JobAPI.JobFormatType.JAR
         || job.getJobFormat().getType() == JobAPI.JobFormatType.PYTHON) {
       classPathBuilder.append(
-          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+          Paths.get(wd, job.getJobId(), job.getJobFormat().getJobFile()).toString());
     } else {
       // now get the files
-      File jobLib = Paths.get(wd, job.getJobName(), "lib").toFile();
+      File jobLib = Paths.get(wd, job.getJobId(), "lib").toFile();
       File[] listOfFiles = jobLib.listFiles();
       if (listOfFiles != null) {
         for (int i = 0; i < listOfFiles.length; i++) {

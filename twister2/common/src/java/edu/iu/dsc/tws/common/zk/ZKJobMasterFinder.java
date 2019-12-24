@@ -52,9 +52,9 @@ public class ZKJobMasterFinder {
   private String jobMasterIP;
   private String jobMasterPort;
 
-  public ZKJobMasterFinder(Config config) {
+  public ZKJobMasterFinder(Config config, String jobID) {
     this.config = config;
-    jobMasterPath = ZKJobMasterRegistrar.constructJobMasterPath(config);
+    jobMasterPath = ZKJobMasterRegistrar.constructJobMasterPath(config, jobID);
   }
 
   /**

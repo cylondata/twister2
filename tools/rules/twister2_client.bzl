@@ -133,6 +133,7 @@ def twister2_client_lib_api_files():
         "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/driver:driver-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
@@ -163,6 +164,7 @@ def twister2_client_lib_data_files():
         "@log4j_log4j//jar",
         "@org_apache_htrace_htrace_core4//jar",
         "@org_apache_hadoop_hadoop_hdfs_client//jar",
+        "@org_apache_commons_commons_configuration2//jar",
     ]
 
 def twister2_client_lib_connector_files():

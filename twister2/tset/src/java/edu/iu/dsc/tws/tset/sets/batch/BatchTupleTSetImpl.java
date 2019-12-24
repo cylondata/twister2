@@ -93,7 +93,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   public KeyedGatherTLink<K, V> keyedGather(PartitionFunc<K> partitionFn,
                                             Comparator<K> comparator) {
     KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), true, comparator);
+        partitionFn, getParallelism(), comparator);
     addChildToGraph(gather);
     return gather;
   }
@@ -118,7 +118,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn,
                                                               Comparator<K> comparator) {
     KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), true, comparator);
+        partitionFn, getParallelism(), comparator);
     addChildToGraph(gather);
     return gather;
   }
