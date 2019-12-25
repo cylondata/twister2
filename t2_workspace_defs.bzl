@@ -309,9 +309,10 @@ def load_modules():
     _maven_import(artifact = "black.ninia:jep:3.9.0", licenses = ["notice"], sha256 = "de8a69bc028d131f23a41bb964c0707a51dc8defcf7418bb891d7b4ab168b16d")
 
     #for apache commons collections 4.4
-    _maven_import(artifact = "org.hamcrest:hamcrest-core:1.3", licenses = ["notice"], sha256 = "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9")
-    _maven_import(artifact = "org.objenesis:objenesis:3.0.1", licenses = ["notice"], sha256 = "7a8ff780b9ff48415d7c705f60030b0acaa616e7f823c98eede3b63508d4e984")
-    _maven_import(artifact = "junit:junit:4.12", licenses = ["notice"], sha256 = "59721f0805e223d84b90677887d9ff567dc534d7c502ca903c0c2b17f05c116a")
-    _maven_import(artifact = "org.apache.commons:commons-lang3:3.9", licenses = ["notice"], sha256 = "de2e1dcdcf3ef917a8ce858661a06726a9a944f28e33ad7f9e08bea44dc3c230")
-    _maven_import(artifact = "org.easymock:easymock:4.0.2", licenses = ["notice"], sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123")
-    _maven_import(artifact = "org.apache.commons:commons-collections4:4.4", licenses = ["notice"], sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1")
+    _maven_import(artifact = "org.hamcrest:hamcrest-core:1.3",licenses = ["notice"],sha256 = "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9",)
+    _maven_import(artifact = "org.objenesis:objenesis:3.0.1",licenses = ["notice"],sha256 = "7a8ff780b9ff48415d7c705f60030b0acaa616e7f823c98eede3b63508d4e984",)
+    _maven_import(artifact = "junit:junit:4.12",licenses = ["notice"],sha256 = "59721f0805e223d84b90677887d9ff567dc534d7c502ca903c0c2b17f05c116a",)
+    _maven_import(artifact = "org.apache.commons:commons-lang3:3.9",licenses = ["notice"],sha256 = "de2e1dcdcf3ef917a8ce858661a06726a9a944f28e33ad7f9e08bea44dc3c230",)
+    _maven_import(artifact = "org.easymock:easymock:4.0.2",licenses = ["notice"],sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123",)
+    _maven_import(artifact = "org.apache.commons:commons-collections4:4.4",licenses = ["notice"],sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1",)
+    _maven_import(artifact = "org.apache.commons:commons-configuration2:2.6",licenses = ["notice"],sha256 = "225788911e53af0b29a31a18e0d03b05d86aa9c9e0b3c6686982c30c10f931fb",)

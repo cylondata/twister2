@@ -179,9 +179,7 @@ public abstract class CompleteFileInputPartitioner<OT>
   long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
       throws IOException {
     final FileSystem fs = FileSystemUtils.get(path);
-
     long length = 0;
-
     for (FileStatus file : fs.listFiles(path)) {
       if (file.isDir()) {
         if (acceptFile(file) && enumerateNestedFiles) {

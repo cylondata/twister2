@@ -15,9 +15,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
-import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
+import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner {
@@ -29,9 +30,9 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
   private Config config;
   private int nTasks;
 
-  //private OrderedInputSplitAssigner<String> assigner;
+  private OrderedInputSplitAssigner<String> assigner;
 
-  private LocatableInputSplitAssigner assigner;
+  //private LocatableInputSplitAssigner assigner;
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
@@ -49,23 +50,27 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 //    return new GenericCSVInputSplit(num, file, start, length, hosts);
 //  }
 
-  protected BinaryInputSplit createSplit(int num, Path file, long start,
-                                                             long length, String[] hosts) {
-    return new BinaryInputSplit(num, file, start, length, hosts);
+  protected CSVInputSplit createSplit(int num, Path file, long start,
+                                      long length, String[] hosts) {
+    return new CSVInputSplit(num, file, start, length, hosts);
   }
 
-//  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
-//      FileInputSplit<String>[] inputSplits) {
+//  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
 //    if (assigner == null) {
-//      assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
+//      assigner = new LocatableInputSplitAssigner(inputSplits);
 //    }
 //    return assigner;
 //  }
-
-  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
+      FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
-      assigner = new LocatableInputSplitAssigner(inputSplits);
+      assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
     }
     return assigner;
+  }
+
+  @Override
+  public InputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
+    return null;
   }
 }

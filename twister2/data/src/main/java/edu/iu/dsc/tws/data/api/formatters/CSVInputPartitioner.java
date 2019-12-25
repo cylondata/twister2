@@ -23,15 +23,14 @@ import edu.iu.dsc.tws.api.data.BlockLocation;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-//public abstract class CSVInputPartitioner<OT>
-// implements InputPartitioner<OT, FileInputSplit<OT>> {
-public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
+public abstract class CSVInputPartitioner<OT>
+    implements InputPartitioner<OT, FileInputSplit<OT>> {
+//public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
@@ -47,12 +46,12 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
   private long minSplitSize = 0;
 
   public CSVInputPartitioner(Path filepath) {
-    super(filepath);
+    //super(filepath);
     this.filePath = filepath;
   }
 
   public CSVInputPartitioner(Path filepath, Config cfg, int numberOfTasks) {
-    super(filepath, cfg);
+    //super(filepath, cfg);
     this.filePath = filepath;
     this.config = cfg;
     this.numSplits = numberOfTasks;
@@ -121,7 +120,9 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
         int blockIndex = 0;
         for (int i = 0; i < curminNumSplits; i++) {
           blockIndex = getBlockIndexForPosition(blocks, position, splitSize, blockIndex);
-          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
+          //FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
+          //    blocks[blockIndex].getHosts());
+          FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
         }
@@ -134,8 +135,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           hosts = new String[0];
         }
         for (int i = 0; i < curminNumSplits; i++) {
-          //FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
-          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          //FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
           inputSplits.add(fis);
         }
       }
@@ -145,15 +146,18 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  @Override
+  protected abstract CSVInputSplit createSplit(int num, Path file, long start,
+                                                long length, String[] hosts);
+
+  /*@Override
   public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
     return new LocatableInputSplitAssigner<>(inputSplits);
-  }
+  }*/
 
-  protected FileInputSplit createSplit(int num, Path file, long start,
+  /*protected FileInputSplit createSplit(int num, Path file, long start,
                                                 long length, String[] hosts) {
     return null;
-  }
+  }*/
 
   /**
    * To enumerate the files in the directory in a recursive if the enumeratedNestedFiles is true.
