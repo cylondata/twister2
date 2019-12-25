@@ -207,4 +207,7 @@ public final class JobUtils {
     return jobStr;
   }
 
+  public static String createJobPackageFileName(String jobID) {
+    return jobID + ".tar.gz";
+  }
 }

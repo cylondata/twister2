@@ -111,14 +111,11 @@ public class ResourceAllocator {
     // do not use a regular uploader
     // Kubernetes client will directly upload the job package to the pods
     String uploaderClass = SchedulerContext.uploaderClass(config);
-    String nullUploader = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
     if (clusterType.equalsIgnoreCase(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)
-        && KubernetesContext.clientToPodsUploading(config)
-        && !uploaderClass.equalsIgnoreCase(nullUploader)) {
+        && KubernetesContext.kubernetesUploading(config)) {
 
-      uploaderClass = nullUploader;
-      LOG.info("Since this is a Kubernetes cluster and the upload method is set as client-to-pods,"
-          + " uploader class is set to " + uploaderClass);
+      uploaderClass = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
+      LOG.fine("Since this is a Kubernetes cluster, uploader class is set to " + uploaderClass);
     }
 
     return Config.newBuilder().

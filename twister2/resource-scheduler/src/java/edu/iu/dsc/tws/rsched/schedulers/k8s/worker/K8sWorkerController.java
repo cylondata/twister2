@@ -32,13 +32,14 @@ import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Configuration;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodList;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.Watch;
+import okhttp3.OkHttpClient;
 
 public class K8sWorkerController implements IWorkerController {
   private static final Logger LOG = Logger.getLogger(K8sWorkerController.class.getName());
@@ -73,16 +74,17 @@ public class K8sWorkerController implements IWorkerController {
   }
 
   public static void createApiInstances() {
-
     try {
       apiClient = io.kubernetes.client.util.Config.defaultClient();
-      apiClient.getHttpClient().setReadTimeout(0, TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
     }
-    Configuration.setDefaultApiClient(apiClient);
 
+    OkHttpClient httpClient =
+        apiClient.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    apiClient.setHttpClient(httpClient);
+    Configuration.setDefaultApiClient(apiClient);
     coreApi = new CoreV1Api(apiClient);
   }
 
@@ -202,7 +204,7 @@ public class K8sWorkerController implements IWorkerController {
     V1PodList list = null;
     try {
       list = coreApi.listNamespacedPod(
-          namespace, null, null, null, servicelabel, null, null, null, null);
+          namespace, null, null, null, null, servicelabel, null, null, null, null);
     } catch (ApiException e) {
       String logMessage = "Exception when getting the pod list for the job: " + jobID + "\n"
           + "exCode: " + e.getCode() + "\n"
@@ -322,8 +324,8 @@ public class K8sWorkerController implements IWorkerController {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, servicelabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, servicelabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 

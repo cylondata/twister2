@@ -32,14 +32,20 @@ public class UploaderToPod extends Thread {
   private String namespace;
   private String podName;
   private String jobPackageFile;
+  private String podFile;
 
   private boolean transferred = false;
   private boolean cancelFileTransfer = false;
 
-  public UploaderToPod(String namespace, String podName, String jobPackageFile) {
+  public UploaderToPod(String namespace, String podName, String jobPackageFile, String podFile) {
     this.namespace = namespace;
     this.podName = podName;
     this.jobPackageFile = jobPackageFile;
+    this.podFile = podFile;
+  }
+
+  public String getPodName() {
+    return podName;
   }
 
   /**
@@ -57,7 +63,8 @@ public class UploaderToPod extends Thread {
   @Override
   public void run() {
     // generate copy command
-    String[] copyCommand = KubernetesUtils.createCopyCommand(jobPackageFile, namespace, podName);
+    String[] copyCommand =
+        KubernetesUtils.createCopyCommand(jobPackageFile, namespace, podName, podFile);
 
     // count transfer attempts
     int attemptCount = 0;

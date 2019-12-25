@@ -67,15 +67,28 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  public static final boolean CLIENT_TO_PODS_UPLOADING_DEFAULT = true;
-  public static final String CLIENT_TO_PODS_UPLOADING =
-      "twister2.resource.kubernetes.client.to.pods.uploading";
+  public static final boolean KUBERNETES_UPLOADING_DEFAULT = true;
+  public static final String KUBERNETES_UPLOADING = "twister2.resource.kubernetes.uploading";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
-  public static final boolean WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT = true;
-  public static final String WATCH_BEFORE_UPLOAD_ATTEMPTS =
-      "twister2.resource.kubernetes.uploader.watch.pods.starting";
+  // uploader web server parameters
+  // uploader web server service name, host address
+  public static final String K8S_UPLOADER_WEB_SERVER_DEFAULT =
+      "http://twister2-uploader.default.svc.cluster.local";
+  public static final String K8S_UPLOADER_WEB_SERVER =
+      "twister2.kubernetes.uploader.web.server";
+
+  // uploader web server directory
+  // job package will be uploaded to this directory
+  public static final String K8S_UPLOADER_WEB_SERVER_DIRECTORY_DEFAULT = "/usr/share/nginx/html";
+  public static final String K8S_UPLOADER_WEB_SERVER_DIRECTORY =
+      "twister2.kubernetes.uploader.web.server.directory";
+
+  // label for uploader web server pods
+  public static final String K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT = "app=twister2-uploader";
+  public static final String K8S_UPLOADER_WEB_SERVER_LABEL =
+      "twister2.kubernetes.uploader.web.server.label";
 
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
@@ -150,24 +163,32 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String uploadMethod(Config cfg) {
-    if (clientToPodsUploading(cfg)) {
+    if (kubernetesUploading(cfg)) {
       return "client-to-pods";
     } else {
       return "webserver";
     }
   }
 
-  public static boolean clientToPodsUploading(Config cfg) {
-    return cfg.getBooleanValue(CLIENT_TO_PODS_UPLOADING, CLIENT_TO_PODS_UPLOADING_DEFAULT);
+  public static boolean kubernetesUploading(Config cfg) {
+    return cfg.getBooleanValue(KUBERNETES_UPLOADING, KUBERNETES_UPLOADING_DEFAULT);
   }
 
   public static String secretName(Config cfg) {
     return cfg.getStringValue(SECRET_NAME);
   }
 
-  public static boolean watchBeforeUploadAttempts(Config cfg) {
-    return cfg.getBooleanValue(WATCH_BEFORE_UPLOAD_ATTEMPTS, WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT);
+  public static String uploaderWebServer(Config cfg) {
+    return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER, K8S_UPLOADER_WEB_SERVER_DEFAULT);
   }
 
+  public static String uploaderWebServerDirectory(Config cfg) {
+    return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_DIRECTORY,
+        K8S_UPLOADER_WEB_SERVER_DIRECTORY_DEFAULT);
+  }
 
+  public static String uploaderWebServerLabel(Config cfg) {
+    return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_LABEL,
+        K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT);
+  }
 }

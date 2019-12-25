@@ -20,12 +20,13 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.models.V1Event;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.util.Watch;
 
 /**
@@ -87,7 +88,8 @@ public class JobPackageTransferThread extends Thread {
     this.namespace = namespace;
     this.jobPackageFile = jobPackageFile;
     this.podName = podName;
-    copyCommand = KubernetesUtils.createCopyCommand(jobPackageFile, namespace, podName);
+    copyCommand = KubernetesUtils.createCopyCommand(jobPackageFile, namespace, podName,
+        KubernetesConstants.POD_MEMORY_VOLUME);
   }
 
   /**
@@ -174,18 +176,14 @@ public class JobPackageTransferThread extends Thread {
     /** Event Reasons: SuccessfulMountVolume, Killing, Scheduled, Pulled, Created, Started
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    if (PodWatchUtils.apiClient == null || PodWatchUtils.coreApi == null) {
-      PodWatchUtils.createApiInstances();
-    }
-
     String fieldSelector = "involvedObject.name=" + podName;
     String reason = "Started";
 
     try {
       watcher = Watch.createWatch(
-          PodWatchUtils.apiClient,
-          PodWatchUtils.coreApi.listNamespacedEventCall(namespace, null, null, fieldSelector,
-              null, null, null, MAX_WAIT_TIME_FOR_POD_START, Boolean.TRUE, null, null),
+          PodWatchUtils.getApiClient(),
+          PodWatchUtils.getCoreApi().listNamespacedEventCall(namespace, null, null, null,
+              fieldSelector, null, null, null, MAX_WAIT_TIME_FOR_POD_START, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Event>>() {
           }.getType());
 

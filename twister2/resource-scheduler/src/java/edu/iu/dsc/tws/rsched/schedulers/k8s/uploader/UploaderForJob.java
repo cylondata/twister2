@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.uploader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -25,15 +26,18 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Configuration;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1Pod;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
+import okhttp3.OkHttpClient;
 
 /**
  * watch scalable StatefulSet in a job
@@ -64,11 +68,16 @@ public class UploaderForJob extends Thread {
   private String namespace;
   private JobAPI.Job job;
   private String jobID;
-  private String jobPackageFile;
+  private String localJobPackageFile;
+  private List<String> webServerPodNames;
+
+  private boolean uploadToWebServers = false;
 
   private ArrayList<String> podNames;
   private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap<>();
   private ArrayList<UploaderToPod> uploaders = new ArrayList<>();
+
+  private ArrayList<UploaderToPod> uploadersToWebServers = new ArrayList<>();
 
   private Watch<V1Pod> watcher;
   private boolean stopUploader = false;
@@ -76,48 +85,117 @@ public class UploaderForJob extends Thread {
 
   public UploaderForJob(Config config,
                         JobAPI.Job job,
-                        String jobPackageFile) {
+                        String localJobPackageFile,
+                        List<String> webServerPodNames) {
 
     this.config = config;
     this.namespace = KubernetesContext.namespace(config);
     this.job = job;
     this.jobID = job.getJobId();
-    this.jobPackageFile = jobPackageFile;
+    this.localJobPackageFile = localJobPackageFile;
+    this.webServerPodNames = webServerPodNames;
 
-    podNames = KubernetesUtils.generatePodNames(job);
-    // add job master pod name
-    if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobId()));
+    if (webServerPodNames.size() == 0) {
+      uploadToWebServers = false;
+    } else {
+      uploadToWebServers = true;
     }
   }
 
   @Override
   public void run() {
     createApiInstances();
-    watchScaledUpPods();
+
+    if (uploadToWebServers) {
+      startUploadersToWebServers();
+    } else {
+      watchPodsStartUploaders();
+    }
+
   }
 
   private void createApiInstances() {
 
     try {
       apiClient = io.kubernetes.client.util.Config.defaultClient();
-      apiClient.getHttpClient().setReadTimeout(0, TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
     }
-    Configuration.setDefaultApiClient(apiClient);
 
+    OkHttpClient httpClient =
+        apiClient.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    apiClient.setHttpClient(httpClient);
+    Configuration.setDefaultApiClient(apiClient);
     coreApi = new CoreV1Api(apiClient);
   }
 
+  public String getUploadMethod() {
+    if (uploadToWebServers) {
+      return "webserver";
+    } else {
+      return "client-to-pods";
+    }
+  }
 
-  private void watchScaledUpPods() {
+  private void startUploadersToWebServers() {
+
+    String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
+    String targetFile = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
+
+    for (String webServerPodName: webServerPodNames) {
+      UploaderToPod uploader =
+          new UploaderToPod(namespace, webServerPodName, localJobPackageFile, targetFile);
+      uploader.start();
+      uploadersToWebServers.add(uploader);
+    }
+  }
+
+  private boolean completeFileTransfersToWebServers() {
+    // wait all transfer threads to finish up
+    boolean allTransferred = true;
+    for (UploaderToPod uploader: uploadersToWebServers) {
+
+      try {
+        uploader.join();
+        if (!uploader.packageTransferred()) {
+          LOG.log(Level.SEVERE, "Job Package is not transferred to the web server pod: "
+              + uploader.getPodName());
+          allTransferred = false;
+          break;
+        }
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      }
+    }
+
+    // if one transfer fails, tell all transfer threads to stop and return false
+    if (!allTransferred) {
+      for (UploaderToPod uploader: uploadersToWebServers) {
+        uploader.cancelTransfer();
+      }
+    }
+
+    return allTransferred;
+  }
+
+  /**
+   * watch job pods until they become Running and start an uploader for each pod afterward
+   */
+  private void watchPodsStartUploaders() {
 
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
+    podNames = KubernetesUtils.generatePodNames(job);
+    // add job master pod name
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobId()));
+    }
+
     String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobID);
+    String targetFile = KubernetesConstants.POD_MEMORY_VOLUME
+        + "/" + JobUtils.createJobPackageFileName(jobID);
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
     String podPhase = "Running";
@@ -125,8 +203,8 @@ public class UploaderForJob extends Thread {
     try {
       watcher = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, jobPodsLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobPodsLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -160,7 +238,8 @@ public class UploaderForJob extends Thread {
           // if DeletionTimestamp is not null,
           // it means that the pod is in the process of being deleted
           if (item.object.getMetadata().getDeletionTimestamp() == null) {
-            UploaderToPod uploader = new UploaderToPod(namespace, podName, jobPackageFile);
+            UploaderToPod uploader =
+                new UploaderToPod(namespace, podName, localJobPackageFile, targetFile);
             uploader.start();
 
             if (podNames.contains(podName)) {
@@ -191,6 +270,10 @@ public class UploaderForJob extends Thread {
    * @return
    */
   public boolean completeFileTransfers() {
+
+    if (uploadToWebServers) {
+      return completeFileTransfersToWebServers();
+    }
 
     // wait until all transfer threads to be started
     while (!podNames.isEmpty()) {
@@ -295,6 +378,5 @@ public class UploaderForJob extends Thread {
 
     return true;
   }
-
 
 }

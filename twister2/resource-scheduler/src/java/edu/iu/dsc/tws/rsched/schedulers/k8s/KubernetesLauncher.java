@@ -43,9 +43,9 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForJob;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-import io.kubernetes.client.models.V1PersistentVolumeClaim;
-import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1StatefulSet;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
 
 public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
@@ -76,6 +76,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   @Override
   public Twister2JobState launch(JobAPI.Job job) {
+
     Twister2JobState state = new Twister2JobState(false);
 
     if (!configParametersOK(job)) {
@@ -97,9 +98,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     long jobFileSize = jobFile.length();
 
-    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize);
-    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize);
-
     // check all relevant entities on Kubernetes master
     boolean allEntitiesOK = checkEntitiesForJob(job);
     if (!allEntitiesOK) {
@@ -116,10 +114,15 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // start job package transfer threads to watch pods to starting
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      uploader = new UploaderForJob(config, job, jobPackageFile);
+    if (KubernetesContext.kubernetesUploading(config)) {
+      List<String> uploaderPods =
+          controller.getUploaderWebServerPods(KubernetesContext.uploaderWebServerLabel(config));
+      uploader = new UploaderForJob(config, job, jobPackageFile, uploaderPods);
       uploader.start();
     }
+
+    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize, uploader.getUploadMethod());
+    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize, uploader.getUploadMethod());
 
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobID);
@@ -144,7 +147,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return state;
     }
 
-    if (KubernetesContext.clientToPodsUploading(config)) {
+    if (KubernetesContext.kubernetesUploading(config)) {
       // transfer the job package to pods, measure the transfer time
       long start = System.currentTimeMillis();
       boolean transferred = uploader.completeFileTransfers();
@@ -179,7 +182,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // It waits in case a new worker is added by IDriver
     // User should finish this process with control-C
     // TODO: may be we can watch the job somehow and exit it when the job completes
-    if (KubernetesContext.clientToPodsUploading(config)) {
+    if (KubernetesContext.kubernetesUploading(config)) {
       try {
         uploader.join();
       } catch (InterruptedException e) {
@@ -631,7 +634,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     LOG.info("Will clear up any resources created during the job submission process.");
 
-    if (KubernetesContext.clientToPodsUploading(config) && uploader != null) {
+    if (KubernetesContext.kubernetesUploading(config) && uploader != null) {
       uploader.stopUploader();
     }
 

@@ -68,16 +68,16 @@ wait_for_flag_file(){
 }
 
 ###########################################################
-# download the job package from the download directory and write the flag file
+# download the job package from the webserver and write the flag file
 get_job_package_with_wget(){
 
-  wget $DOWNLOAD_DIRECTORY/$JOB_PACKAGE_FILENAME -P $POD_MEMORY_VOLUME
+  wget $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME -P $POD_MEMORY_VOLUME
   # check whether job package downloaded successfully
   if [ $? -ne 0 ]; then
-    echo "Job package can not be retrieved from: $DOWNLOAD_DIRECTORY/$JOB_PACKAGE_FILENAME"
+    echo "Job package can not be retrieved from: $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME"
     return 1
   else
-    echo "Job package downloaded successfully into the pod from: $DOWNLOAD_DIRECTORY/$JOB_PACKAGE_FILENAME"
+    echo "Job package downloaded successfully into the pod from: $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME"
 
     # unpack the job package
     tar -xf $JOB_PACKAGE_FILE -C $POD_MEMORY_VOLUME

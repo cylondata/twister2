@@ -19,7 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
@@ -51,9 +50,12 @@ public final class KubernetesUtils {
    * create file copy command to a pod
    * @return
    */
-  public static String[] createCopyCommand(String filename, String namespace, String podName) {
+  public static String[] createCopyCommand(String filename,
+                                           String namespace,
+                                           String podName,
+                                           String podFile) {
 
-    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
+    String targetDir = String.format("%s/%s:%s", namespace, podName, podFile);
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
 
