@@ -10,8 +10,8 @@
 # If it is uploaded to a web server, this script (get_job_package_with_wget) downloads the job package with wget
 # and unpacks it
 #
-# There can be more than one container in a pods
-# In that case, the first container in each pods gets the job package and unpacks it
+# There can be more than one container in pods
+# In that case, the first container in each pod gets the job package and unpacks it
 # after they are done with getting the package and unpacking it, they write a flag file to inform other containers
 # other containers just wait for the flag file by calling (wait_for_flag_file) method
 
@@ -71,22 +71,32 @@ wait_for_flag_file(){
 # download the job package from the webserver and write the flag file
 get_job_package_with_wget(){
 
-  wget $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME -P $POD_MEMORY_VOLUME
-  # check whether job package downloaded successfully
-  if [ $? -ne 0 ]; then
-    echo "Job package can not be retrieved from: $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME"
-    return 1
-  else
-    echo "Job package downloaded successfully into the pod from: $UPLOADER_WEB_SERVER/$JOB_PACKAGE_FILENAME"
+  # sleep 500ms in between wget requests
+  # we can also implement exponantial backoff
+  # but this should happen very rarely
+  SLEEP_INTERVAL=0.5
 
-    # unpack the job package
-    tar -xf $JOB_PACKAGE_FILE -C $POD_MEMORY_VOLUME
+  for i in {1..20}; do
+    wget ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME} -P $POD_MEMORY_VOLUME
+    # check whether job package downloaded successfully
+    if [ $? -ne 0 ]; then
+      echo "$i Job package can not be retrieved from: ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME}"
+      sleep $SLEEP_INTERVAL
+    else
+      echo "Job package downloaded successfully into the pod from: ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME}"
 
-    # write the flag file
-    echo "1" >> $FLAG_FILE
+      # unpack the job package
+      tar -xf $JOB_PACKAGE_FILE -C $POD_MEMORY_VOLUME
 
-    return 0
-  fi
+      # write the flag file
+      echo "1" >> $FLAG_FILE
+
+      return 0
+    fi
+  done
+
+  echo "Job package can not be downloaded from the web server...."
+  return 1
 }
 
 ###########################################################
