@@ -1,0 +1,71 @@
+################################################################
+# Running Nginx web server as Twister2 uploader server as a StatefulSet without Persistent Storage
+#
+# We define:
+#   a service,
+#   a StatefulSet
+#
+# Things to update when running in a new cluster:
+#   1. default namespace is used. If you are using another namespace,
+#      please change namespace value in both entities below.
+#   2. Update compute resources.
+#      By default it uses 1.0 core and 2048MB of memory
+#
+################################################################
+# ------------------- Uploader Service ---------------------- #
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: twister2-uploader
+  name: twister2-uploader
+  namespace: default
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: twister2-uploader
+
+---
+################################################################
+# ------------------- Uploader StatefulSet ------------------ #
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: twister2-uploader
+  namespace: default
+  labels:
+    app: twister2-uploader
+
+spec:
+  replicas: 2
+  serviceName: twister2-uploader
+
+  selector:
+    matchLabels:
+      app: twister2-uploader
+
+  template:
+    metadata:
+      labels:
+        app: twister2-uploader
+
+    spec:
+      terminationGracePeriodSeconds: 0
+
+      containers:
+        - name: twister2-uploader
+          image: nginx
+
+          ports:
+            - name: http
+              containerPort: 80
+
+          resources:
+            requests:
+              cpu: 1.0
+              memory: 256Mi
+
