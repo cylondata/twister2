@@ -327,43 +327,31 @@ the value of the following configuration parameter has to be specified as false 
 When users submit a Twister2 job in Kubernetes cluster, 
 submitting client needs to transfer the job package to workers and the job master. 
 The submitting client first packs all job related files into a tar package file. 
-This archived file needs to be transferred to each worker that will be started.
+This archive file needs to be transferred to each worker that will be started.
 
 We provide [two methods](../../architecture/resource-schedulers/kubernetes/twister2-on-kubernetes.md):
 
-* Job Package Transfer Using kubectl file copy
-* Job Package Transfer Through a Web Server
+* Job package file transfer from submitting client to job pods directly
+* Job package file transfer through uploader web server pods
 
-By default, we use the first method to transfer the job package. This method does not require any installations. 
-It transfers the job package from client to workers directly by using kubectl copy method.
-Just make sure that the value of following configuration parameter in resource.yaml file is true: 
+We first check whether there is any uploader web server running in the cluster.
+If there is, we upload the job package to the uploader web server pods. 
+Job pods download the job package from uploader pods. 
+Otherwise, submitting client uploads the job package to all pods in the job directly. 
+Both methods transfer the job package from client to pods by using kubectl copy method.
 
-```text
-   twister2.resource.kubernetes.client.to.pods.uploading
+If you are running many Twister2 jobs with many workers, 
+it would be helpful to run uploader web server pods. 
+It is more efficient and faster. 
+We designed a StatefulSet that runs an nginx web server. 
+You can deploy it with following command: 
+
+```bash
+$ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-uploader-wo-ps.yaml
 ```
 
-Second method transfers the job package once to a web server running in the cluster. 
-Workers download the job package from this web server. 
-This method is more efficient since it transfers the job package only once from client machine to a web server. 
-If the submitting clients are running on the cluster machines, this may not be important. 
-However, if the submitting client is running on a machine outside the cluster with limited bandwidth, 
-then this can be important.
-
-First, the client to pods uploading parameter has to be disabled by assigning false in resource.yaml file:
-
-```text
-   twister2.resource.kubernetes.client.to.pods.uploading
-```
-
-For the transfer through a web server to work, a web server must exist in the cluster and 
-the submitting client must have write permission to that directory. 
-Then, you need to specify the web server directory and address information for the following configuration parameters in uploader.yaml file: 
-
-```text
-   twister2.resource.uploader.scp.command.connection: user@host
-   twister2.resource.uploader.directory: "/path/to/web-server/directory/"
-   twister2.resource.download.directory: "http://host:port/web-server-directory"
-```
+You can modify the number of replicas in uploader web server or 
+the compute resources used in the above yaml file. 
 
 ## Building Twister2 Docker Image for Kubernetes
 

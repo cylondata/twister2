@@ -8,8 +8,8 @@
 # Things to update when running in a new cluster:
 #   1. default namespace is used. If you are using another namespace,
 #      please change namespace value in both entities below.
-#   2. Update compute resources.
-#      By default it uses 1.0 core and 2048MB of memory
+#   2. Update replicas. Depending on your workload, you may want to run many replicas.
+#   3. Update compute resources of uploader web server.
 #
 ################################################################
 # ------------------- Uploader Service ---------------------- #
