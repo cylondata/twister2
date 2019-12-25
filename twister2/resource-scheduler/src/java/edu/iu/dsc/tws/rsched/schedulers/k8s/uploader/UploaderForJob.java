@@ -40,17 +40,27 @@ import io.kubernetes.client.util.Watch;
 import okhttp3.OkHttpClient;
 
 /**
- * watch scalable StatefulSet in a job
- * when a pod is added by scaling up,
- * transfer the job package to that worker
- * This class runs in the submitting client
- * It needs to run continually in the client to upload the job package in case of scaling up
+ * Upload job package to either:
+ *   uploader web server pods
+ *   all job pods
+ *
+ * If there are uploader web server pods in the cluster, job package is uploaded to all those pods.
+ * After uploading is finished, uploader completes.
+ *
+ * If there are no uploader web servers,
+ * the job package is uploaded to each pod in the job separately.
+ *   we watch the job pods for both workers and the job master
+ *   when a pod becomes Running, we transfer the job package to that pod.
+ *   This class runs in the submitting client.
+ *   It needs to run continually in the client to upload the job package in case of scaling up
+ *   or pod failures. If the job is neither scalable nor fault tolerant,
+ *   then it can exit after uploading the package to all pods.
  *
  * Note:
  * There is a problem with pod Running state
- * When a pod deleted by scaling down, two Running state messages are generated
+ * When a pod is deleted by scaling down, two Running state messages are generated.
  * This is unfortunate. It may be a bug.
- * Currently I try to upload the job package with each Running message
+ * Currently I try to upload the job package with each Running message.
  * If the pod is being deleted, it does not succeed.
  * So in failure case, I do not print log message.
  * I only print log message in success case.
