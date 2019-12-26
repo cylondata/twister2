@@ -150,8 +150,7 @@ public class UploaderForJob extends Thread {
 
   private void startUploadersToWebServers() {
 
-    String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
-    String targetFile = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
+    String targetFile = KubernetesUtils.jobPackageFullPath(config, jobID);
 
     for (String webServerPodName: webServerPodNames) {
       UploaderToPod uploader =

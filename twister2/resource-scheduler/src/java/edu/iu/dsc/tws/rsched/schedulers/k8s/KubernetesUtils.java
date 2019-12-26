@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
@@ -201,6 +203,12 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterPodName(String jobID) {
     return createJobMasterStatefulSetName(jobID) + "-0";
+  }
+
+  public static String jobPackageFullPath(Config config, String jobID) {
+    String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
+    String jobPackageFullPath = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
+    return jobPackageFullPath;
   }
 
   public static String getLocalAddress() {
