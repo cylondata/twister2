@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
+import io.kubernetes.client.Exec;
 import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -620,6 +621,56 @@ public class KubernetesController {
         .collect(Collectors.toList());
 
     return podNames;
+  }
+
+  /**
+   * delete job package file from uploader web server pods
+   * currently it does not delete job package file from multiple uploader pods
+   * so, It is not in use
+   */
+  public boolean deleteJobPackage(List<String> uploaderPods, String jobPackageName) {
+
+    // command to execute
+    // if [ -f test.txt ]; then rm -f test.txt; else exit 1; fi
+    // if file exist, remove it. Otherwise exit 1
+//    String command = String.format("if [ -f %s ]; then rm -f %s; else exit 1; fi",
+//        jobPackageName, jobPackageName);
+    String command = String.format("rm -f %s", jobPackageName);
+    String[] fullCommand = {"bash", "-c", command};
+
+    boolean allDeleted = true;
+    for (String uploaderPod : uploaderPods) {
+
+      try {
+        Exec exec = new Exec(client);
+        final Process proc = exec.exec(namespace, uploaderPod, fullCommand, false, false);
+        proc.waitFor();
+        proc.destroy();
+
+        if (proc.exitValue() == 0) {
+          LOG.info("Deleted job package from uploader web server pod: " + uploaderPod);
+        } else {
+          LOG.info("Could not delete the job package from uploader web server pod: " + uploaderPod
+              + ", process exit code: " + proc.exitValue());
+          allDeleted = false;
+        }
+
+      } catch (ApiException e) {
+        LOG.log(Level.INFO,
+            String.format("Exception when deleting the job package from uploader web server [%s]",
+                uploaderPod), e);
+      } catch (IOException e) {
+        LOG.log(Level.INFO,
+            String.format("Exception when deleting the job package from uploader web server [%s]",
+                uploaderPod), e);
+      } catch (InterruptedException e) {
+        LOG.log(Level.INFO,
+            String.format("Exception when deleting the job package from uploader web server [%s]",
+                uploaderPod), e);
+      }
+    }
+
+    return allDeleted;
   }
 
 }
