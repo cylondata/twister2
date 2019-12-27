@@ -248,10 +248,10 @@ public class KeyedDataDeSerializer implements MessageDeSerializer {
    */
   @Override
   public MessageHeader buildHeader(DataBuffer buffer, int edge) {
-    int sourceId = buffer.getByteBuffer().getInt(Integer.BYTES);
-    int flags = buffer.getByteBuffer().getInt(Integer.BYTES * 2);
-    int destId = buffer.getByteBuffer().getInt(Integer.BYTES * 3);
-    int length = buffer.getByteBuffer().getInt(Integer.BYTES * 4);
+    int sourceId = buffer.getByteBuffer().getInt(0);
+    int flags = buffer.getByteBuffer().getInt(Integer.BYTES);
+    int destId = buffer.getByteBuffer().getInt(Integer.BYTES * 2);
+    int length = buffer.getByteBuffer().getInt(Integer.BYTES * 3);
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);
