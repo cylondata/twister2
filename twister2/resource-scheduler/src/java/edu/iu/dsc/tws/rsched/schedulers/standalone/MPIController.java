@@ -69,7 +69,7 @@ public class MPIController implements IController {
       return false;
     }
     long containers = job.getNumberOfWorkers();
-    LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
+    LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of workers = %d",
         MPIContext.clusterType(config), containers));
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobId()).toString();
