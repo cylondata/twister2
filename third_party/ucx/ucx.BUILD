@@ -23,7 +23,7 @@ genrule(
         'cp -pLR $$(pwd)/external/ucx/* $$TMP_DIR',
         'cd $$TMP_DIR',
         './autogen.sh',
-        './contrib/configure-release --prefix=$$INSTALL_DIR --with-java --enable-mt',
+        './contrib/configure-release --prefix=$$INSTALL_DIR --with-java --enable-mt --disable-numa',
         'make -j 4; make install',
         'rm -rf $$TMP_DIR',
     ]),
