@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
+import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
@@ -72,16 +73,14 @@ public final class RequestObjectBuilder {
   private static String jobID;
   private static long jobPackageFileSize;
   private static String jobMasterIP = null;
-  private static String uploadMethod;
 
   private RequestObjectBuilder() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize, String uploadType) {
+  public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
     jobID = jID;
     jobPackageFileSize = jpFileSize;
-    uploadMethod = uploadType;
 
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       jobMasterIP = ResourceSchedulerUtils.getHostIP();
@@ -451,7 +450,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(uploadMethod));
+        .value(K8sUploader.getUploadMethod()));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOADER_WEB_SERVER + "")

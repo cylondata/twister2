@@ -111,8 +111,10 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # Uploader Settings in Kubernetes
 #########################################################################
 
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
+
 # When a job is submitted, the job package needs to be transferred to worker pods
-# Two upload methods are provided:
+# K8sUploader provides two upload methods:
 #   a) Transferring job package to job pods from submitting client directly
 #   b) Transferring job package to web server pods.
 #      Job pods download the job package from web server pods.
@@ -122,13 +124,6 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # We first check whether there is any uploader web server running,
 # if there is, we upload the job package to the uploader web server pods.
 # Otherwise, we upload the job package to job pods directly from submitting client.
-
-# if the value of this parameter is true,
-# the job package is transferred from submitting client to pods directly
-#   or to the uploader web server pods
-# if it is false, the job package will be transferred to pods through some other means such as S3
-# default value is true
-# twister2.resource.kubernetes.uploading: true
 
 # uploader web server address
 # it is by default: "http://twister2-uploader.default.svc.cluster.local"

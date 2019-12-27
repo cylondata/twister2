@@ -15,6 +15,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,7 +41,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForJob;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
@@ -55,7 +55,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private KubernetesController controller;
   private String namespace;
   private JobSubmissionStatus jobSubmissionStatus;
-  private UploaderForJob uploader;
 
   public KubernetesLauncher() {
     controller = new KubernetesController();
@@ -82,7 +81,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!configParametersOK(job)) {
       return state;
     }
-
 
     String jobID = job.getJobId();
 
@@ -113,16 +111,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // start job package transfer threads to watch pods to starting
-    if (KubernetesContext.kubernetesUploading(config)) {
-      List<String> uploaderPods =
-          controller.getUploaderWebServerPods(KubernetesContext.uploaderWebServerLabel(config));
-      uploader = new UploaderForJob(config, job, jobPackageFile, uploaderPods);
-      uploader.start();
-    }
-
-    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize, uploader.getUploadMethod());
-    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize, uploader.getUploadMethod());
+    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize);
+    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize);
 
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobID);
@@ -147,25 +137,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return state;
     }
 
-    if (KubernetesContext.kubernetesUploading(config)) {
-      // transfer the job package to pods, measure the transfer time
-      long start = System.currentTimeMillis();
-      boolean transferred = uploader.completeFileTransfers();
-
-      if (transferred) {
-        long duration = System.currentTimeMillis() - start;
-        LOG.info("Transferring all files took: " + duration + " ms.");
-      } else {
-        LOG.log(Level.SEVERE, "Transferring the job package to some pods failed."
-            + "\nPlease run terminate job to clear up any artifacts from previous jobs, "
-            + "or submit the job with a different name."
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-
-        clearupWhenSubmissionFails(jobID);
-        return state;
-      }
-    }
-
     // start the Job Master locally if requested
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       boolean jobMasterCompleted = startJobMasterOnClient(job);
@@ -177,18 +148,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // If clientToPodsUploading is used, wait uploader thread to finish
-    // When dynamic IDriver is used, this thread never finishes
-    // It waits in case a new worker is added by IDriver
-    // User should finish this process with control-C
-    // TODO: may be we can watch the job somehow and exit it when the job completes
-    if (KubernetesContext.kubernetesUploading(config)) {
-      try {
-        uploader.join();
-      } catch (InterruptedException e) {
-        LOG.warning("Thread Interrupted when waiting for uploader to join.");
-      }
-    }
     state.setRequestGranted(true);
     return state;
   }
@@ -542,6 +501,16 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   private boolean configParametersOK(JobAPI.Job job) {
 
+    // check whether the uploader is supported
+    List<String> uploaders = Arrays.asList("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader");
+    if (!uploaders.contains(SchedulerContext.uploaderClass(config))) {
+      LOG.log(Level.SEVERE, String.format("Provided uploader is not supported: "
+          + SchedulerContext.uploaderClass(config)
+          + ". \nSupporter uploaders: " + uploaders
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++"));
+      return false;
+    }
+
     // when OpenMPI is enabled, all pods need to have equal numbers workers
     // we check whether all workersPerPod values are equal to first ComputeResource workersPerPod
     if (SchedulerContext.useOpenMPI(config)) {
@@ -633,10 +602,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private void clearupWhenSubmissionFails(String jobID) {
 
     LOG.info("Will clear up any resources created during the job submission process.");
-
-    if (KubernetesContext.kubernetesUploading(config) && uploader != null) {
-      uploader.stopUploader();
-    }
 
     // first delete the service objects
     // delete the job service

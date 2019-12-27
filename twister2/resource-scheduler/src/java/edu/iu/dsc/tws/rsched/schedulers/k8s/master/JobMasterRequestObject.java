@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
+import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.custom.IntOrString;
@@ -58,16 +59,14 @@ public final class JobMasterRequestObject {
   private static String jobID;
   private static String encodedNodeInfoList;
   private static long jobPackageFileSize;
-  private static String uploadMethod;
 
   private JobMasterRequestObject() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize, String uploadType) {
+  public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
     jobID = jID;
     jobPackageFileSize = jpFileSize;
-    uploadMethod = uploadType;
   }
 
   /**
@@ -272,7 +271,7 @@ public final class JobMasterRequestObject {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(uploadMethod));
+        .value(K8sUploader.getUploadMethod()));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOADER_WEB_SERVER + "")

@@ -55,16 +55,16 @@ public class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
   private String namespace;
-  private ApiClient client = null;
-  private CoreV1Api coreApi;
-  private AppsV1Api appsApi;
+  private static ApiClient client = null;
+  private static CoreV1Api coreApi;
+  private static AppsV1Api appsApi;
 
   public void init(String nspace) {
     this.namespace = nspace;
-    createApiInstances();
+    initApiInstances();
   }
 
-  public void createApiInstances() {
+  public static void initApiInstances() {
     try {
       client = io.kubernetes.client.util.Config.defaultClient();
     } catch (IOException e) {
@@ -603,12 +603,16 @@ public class KubernetesController {
     return nodeInfoList;
   }
 
-  public List<String> getUploaderWebServerPods(String uploaderLabel) {
+  public static List<String> getUploaderWebServerPods(String ns, String uploaderLabel) {
+
+    if (coreApi == null) {
+      initApiInstances();
+    }
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, uploaderLabel, null, null, null, null);
+          ns, null, null, null, null, uploaderLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting uploader pod list.", e);
       throw new RuntimeException(e);

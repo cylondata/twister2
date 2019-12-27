@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.TypeUtils;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 
 public class HdfsUploader implements IUploader {
@@ -34,7 +35,7 @@ public class HdfsUploader implements IUploader {
   private HdfsController controller;
 
   @Override
-  public void initialize(Config ipconfig) {
+  public void initialize(Config ipconfig, JobAPI.Job job) {
     this.config = ipconfig;
 
     // Instantiate the hdfs controller
@@ -102,6 +103,11 @@ public class HdfsUploader implements IUploader {
           + destTopologyDirectoryURI, e);
     }
 
+  }
+
+  @Override
+  public boolean complete() {
+    return false;
   }
 
   @Override

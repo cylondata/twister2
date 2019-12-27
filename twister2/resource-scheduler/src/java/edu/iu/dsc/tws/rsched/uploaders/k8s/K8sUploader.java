@@ -9,9 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s.uploader;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.rsched.uploaders.k8s;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +37,14 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -66,8 +83,8 @@ import okhttp3.OkHttpClient;
  * I only print log message in success case.
  * Not accurate but a temporary solution.
  */
-public class UploaderForJob extends Thread {
-  private static final Logger LOG = Logger.getLogger(UploaderForJob.class.getName());
+public class K8sUploader extends Thread implements IUploader {
+  private static final Logger LOG = Logger.getLogger(K8sUploader.class.getName());
 
   public static final long MAX_WAIT_TIME_FOR_POD_START = 300 * 1000L; // in seconds
 
@@ -81,7 +98,7 @@ public class UploaderForJob extends Thread {
   private String localJobPackageFile;
   private List<String> webServerPodNames;
 
-  private boolean uploadToWebServers = false;
+  private static boolean uploadToWebServers;
 
   private ArrayList<String> podNames;
   private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap<>();
@@ -93,23 +110,44 @@ public class UploaderForJob extends Thread {
   private boolean stopUploader = false;
   private long watcherStartTime = System.currentTimeMillis();
 
-  public UploaderForJob(Config config,
-                        JobAPI.Job job,
-                        String localJobPackageFile,
-                        List<String> webServerPodNames) {
+  public K8sUploader() {
+  }
 
-    this.config = config;
+  @Override
+  public void initialize(Config cnfg, JobAPI.Job jb) {
+
+    this.config = cnfg;
     this.namespace = KubernetesContext.namespace(config);
-    this.job = job;
+    this.job = jb;
     this.jobID = job.getJobId();
-    this.localJobPackageFile = localJobPackageFile;
-    this.webServerPodNames = webServerPodNames;
+    webServerPodNames = KubernetesController.getUploaderWebServerPods(
+        namespace, KubernetesContext.uploaderWebServerLabel(config));
 
     if (webServerPodNames.size() == 0) {
       uploadToWebServers = false;
     } else {
       uploadToWebServers = true;
     }
+  }
+
+  @Override
+  public URI uploadPackage(String sourceLocation) throws UploaderException {
+
+    localJobPackageFile = sourceLocation + "/" + SchedulerContext.jobPackageFileName(config);
+
+    // start uploader thread
+    start();
+
+    if (uploadToWebServers) {
+      String uri = KubernetesContext.uploaderWebServer(config) + "/"
+          + JobUtils.createJobPackageFileName(jobID);
+      try {
+        return new URI(uri);
+      } catch (URISyntaxException e) {
+        LOG.log(Level.SEVERE, "Can not generate URI for uploader web server: " + uri, e);
+      }
+    }
+    return null;
   }
 
   @Override
@@ -121,7 +159,6 @@ public class UploaderForJob extends Thread {
     } else {
       watchPodsStartUploaders();
     }
-
   }
 
   private void createApiInstances() {
@@ -140,7 +177,7 @@ public class UploaderForJob extends Thread {
     coreApi = new CoreV1Api(apiClient);
   }
 
-  public String getUploadMethod() {
+  public static String getUploadMethod() {
     if (uploadToWebServers) {
       return "webserver";
     } else {
@@ -276,9 +313,16 @@ public class UploaderForJob extends Thread {
   /**
    * wait for all transfer threads to finish
    * if any one of them fails, stop all active ones
+   *
+   * When upload method is "client-to-pods" and
+   * dynamic IDriver is used, this thread never finishes
+   * It waits in case a new worker is added by IDriver
+   * User should finish this process with control-C
+   // TODO: may be we can watch the job somehow and exit it when the job completes
    * @return
    */
-  public boolean completeFileTransfers() {
+  @Override
+  public boolean complete() {
 
     if (uploadToWebServers) {
       return completeFileTransfersToWebServers();
@@ -323,7 +367,7 @@ public class UploaderForJob extends Thread {
       }
     }
 
-    if (!isJobScalable() || !allTransferred) {
+    if (!JobUtils.isJobScalable(config, job) || !allTransferred) {
       stopUploader();
     }
 
@@ -358,34 +402,14 @@ public class UploaderForJob extends Thread {
     }
   }
 
-  /**
-   * For the job to be scalable:
-   *   Driver class shall be specified
-   *   a scalable compute resource shall be given
-   *   itshould not be an openMPI job
-   *
-   * @return
-   */
-  public boolean isJobScalable() {
-
-    // if Driver is not set, it means there is nothing to scale the job
-    if (job.getDriverClassName().isEmpty()) {
-      return false;
-    }
-
-    // if there is no scalable compute resource in the job, can not be scalable
-    boolean computeResourceScalable =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
-    if (!computeResourceScalable) {
-      return false;
-    }
-
-    // if it is an OpenMPI job, it is not scalable
-    if (SchedulerContext.useOpenMPI(config)) {
-      return false;
-    }
-
-    return true;
+  @Override
+  public boolean undo() {
+    stopUploader();
+    return false;
   }
 
+  @Override
+  public void close() {
+
+  }
 }
