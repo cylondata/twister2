@@ -23,12 +23,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 RULES_JVM_EXTERNAL_TAG = "2.2"
+
 RULES_JVM_EXTERNAL_SHA = "f1203ce04e232ab6fdd81897cf0ff76f2c04c0741424d192f28e65ae752ce2d6"
 
 http_archive(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     sha256 = RULES_JVM_EXTERNAL_SHA,
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
@@ -123,6 +124,14 @@ http_archive(
     build_file = "@//:third_party/ompi3darwin/ompi.darwin.BUILD",
     strip_prefix = "openmpi-4.0.1",
     urls = ["https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz"],
+)
+
+http_archive(
+    name = "ucx",
+    build_file = "@//:third_party/ucx/ucx.BUILD",
+    sha256 = "6038eba0d785e0b88296394db8cb7e5f66cf7567ea3b10dd0d52f79de22247a8",
+    strip_prefix = "ucx-43152f76ded60710cf72d5e6230a89c67970597f",
+    urls = ["https://github.com/openucx/ucx/archive/43152f76ded60710cf72d5e6230a89c67970597f.zip"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")
