@@ -126,14 +126,6 @@ http_archive(
     urls = ["https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz"],
 )
 
-#http_archive(
-#    name = "ucx",
-#    build_file = "@//:third_party/ucx/ucx.BUILD",
-#    sha256 = "bd9864adeb33261c787410edb973cdf5ee4f72d45ad90c01d04986ec2d44e148",
-#    strip_prefix = "ucx-05d2c5e8c7475b6cd1694929011b8ab156a22f93",
-#    urls = ["https://github.com/openucx/ucx/archive/05d2c5e8c7475b6cd1694929011b8ab156a22f93.zip"],
-#)
-
 http_archive(
     name = "ucx",
     build_file = "@//:third_party/ucx/ucx.BUILD",
