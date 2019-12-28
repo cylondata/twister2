@@ -59,7 +59,6 @@ public class ZKJobMasterFinder {
 
   /**
    * connect to ZooKeeper server
-   * @return
    */
   public void initialize() {
     client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));

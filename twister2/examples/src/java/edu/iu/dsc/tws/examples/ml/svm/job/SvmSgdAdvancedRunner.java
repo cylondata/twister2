@@ -266,7 +266,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * you can increase the parallelism the way you want. But it is adviced to keep these
    * values equal. Dynamic parallelism in training is not yet tested fully in Twister2 Framework.
    *
-   * @return Twister2 DataObject<double[]> containing the reduced weight vector
+   * @return Twister2 DataObject{@literal <double[]>} containing the reduced weight vector
    */
   public DataObject<double[]> executeTrainingGraph() {
 
@@ -327,7 +327,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * you can increase the parallelism the way you want. But it is adviced to keep these
    * values equal. Dynamic parallelism in training is not yet tested fully in Twister2 Framework.
    *
-   * @return Twister2 DataObject<double[]> containing the reduced weight vector
+   * @return Twister2 DataObject{@literal <double[]>} containing the reduced weight vector
    */
   public DataObject<double[]> executeIterativeTrainingGraph() {
 
