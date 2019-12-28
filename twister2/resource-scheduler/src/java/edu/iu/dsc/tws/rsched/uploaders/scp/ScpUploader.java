@@ -100,7 +100,7 @@ public class ScpUploader implements IUploader {
 
   @Override
   public boolean complete() {
-    return false;
+    return true;
   }
 
   @Override

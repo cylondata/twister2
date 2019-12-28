@@ -88,7 +88,7 @@ public class LocalFileSystemUploader implements IUploader {
 
   @Override
   public boolean complete() {
-    return false;
+    return true;
   }
 
   @Override
