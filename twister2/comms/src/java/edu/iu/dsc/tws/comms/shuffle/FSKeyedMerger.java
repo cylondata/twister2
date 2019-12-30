@@ -188,7 +188,7 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * This method gives the values
    */
-  public Iterator<Object> readIterator() {
+  public ResettableIterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
@@ -203,12 +203,14 @@ public class FSKeyedMerger implements Shuffle {
     // the current values
     private List<Tuple> openValue;
 
+    private Tuple nextTuple;
+
     FSIterator() {
       it = objectsInMemory.iterator();
+      this.createNextTuple();
     }
 
-    @Override
-    public boolean hasNext() {
+    private boolean nextTupleAvailable() {
       // we are reading from in memory
       boolean next;
       if (currentFileIndex == -1) {
@@ -242,6 +244,25 @@ public class FSKeyedMerger implements Shuffle {
       return false;
     }
 
+    private void createNextTuple() {
+      nextTuple = null;
+      if (nextTupleAvailable()) {
+        if (currentFileIndex == -1) {
+          nextTuple = it.next();
+        }
+
+        if (currentFileIndex >= 0) {
+          nextTuple = openValue.get(currentIndex);
+          currentIndex++;
+        }
+      }
+    }
+
+    @Override
+    public boolean hasNext() {
+      return nextTuple != null;
+    }
+
 
     private void openFilePart() {
       // lets read the bytes from the file
@@ -253,26 +274,18 @@ public class FSKeyedMerger implements Shuffle {
 
     @Override
     public Tuple next() {
-      // we are reading from in memory
-      if (currentFileIndex == -1) {
-        return it.next();
-      }
-
-      if (currentFileIndex >= 0) {
-        Tuple kv = openValue.get(currentIndex);
-        currentIndex++;
-        return kv;
-      }
-
-      return null;
+      Tuple next = nextTuple;
+      createNextTuple();
+      return next;
     }
 
     @Override
     public void reset() {
       it = objectsInMemory.iterator();
       currentFileIndex = -1;
-      currentFileIndex = 0;
+      currentIndex = 0;
       openValue = null;
+      this.createNextTuple();
     }
   }
 
