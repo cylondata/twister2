@@ -23,17 +23,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.utils;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSMerger;
+import edu.iu.dsc.tws.comms.shuffle.ResettableIterator;
 
 public class HashJoinUtilsTest {
 
@@ -64,14 +70,61 @@ public class HashJoinUtilsTest {
 
   @Test
   public void innerJoinMemoryVsDiskTest() {
+
+    int noOfTuples = 1000;
+
+    List<Integer> keys1 = new ArrayList<>();
+    List<Integer> keys2 = new ArrayList<>();
+    for (int i = 0; i < noOfTuples; i++) {
+      keys1.add(i);
+      keys2.add(i);
+    }
+    Collections.shuffle(keys1);
+    Collections.shuffle(keys2);
+
     FSKeyedMerger fsMerger1 = new FSKeyedMerger(0, 0,
-        "/tmp", "op", MessageTypes.INTEGER, MessageTypes.INTEGER);
+        "/tmp", "op-left", MessageTypes.INTEGER, MessageTypes.INTEGER);
 
-    List<Integer> keys = new ArrayList<>();
-    for (int i = 0; i < 10000; i++) {
+    FSKeyedMerger fsMerger2 = new FSKeyedMerger(0, 0,
+        "/tmp", "op-right", MessageTypes.INTEGER, MessageTypes.INTEGER);
 
+    byte[] key1 = ByteBuffer.wrap(new byte[4]).putInt(1).array();
+    byte[] key2 = ByteBuffer.wrap(new byte[4]).putInt(2).array();
+
+    for (int i = 0; i < noOfTuples; i++) {
+      fsMerger1.add(keys1.get(i), key1, Integer.BYTES);
+      fsMerger2.add(keys2.get(i), key2, Integer.BYTES);
+      fsMerger1.run();
+      fsMerger2.run();
     }
 
     fsMerger1.switchToReading();
+    fsMerger2.switchToReading();
+
+    ResettableIterator it1 = fsMerger1.readIterator();
+    ResettableIterator it2 = fsMerger2.readIterator();
+
+    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2, new KeyComparatorWrapper(
+        new Comparator<Integer>() {
+          @Override
+          public int compare(Integer integer, Integer t1) {
+            return integer.compareTo(t1);
+          }
+        })
+    );
+
+    Set<Integer> keysReceived = new HashSet<>();
+
+    while (iterator.hasNext()) {
+      JoinedTuple joinedTuple = iterator.next();
+      Assert.assertEquals(1, joinedTuple.getLeftValue());
+      Assert.assertEquals(2, joinedTuple.getRightValue());
+      keysReceived.add((Integer) joinedTuple.getKey());
+    }
+
+    Assert.assertEquals(noOfTuples, keysReceived.size());
+
+    fsMerger1.clean();
+    fsMerger2.clean();
   }
 }

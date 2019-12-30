@@ -132,7 +132,6 @@ public final class HashJoinUtils {
                                                 ResettableIterator<Tuple<?, ?>> rightIt,
                                                 KeyComparatorWrapper comparator) {
     final double amountToKeepFree = Runtime.getRuntime().maxMemory() * 0.75;
-    ResettableIterator<Tuple<?, ?>> rightItRef = rightIt;
     return new Iterator<JoinedTuple>() {
 
       private boolean hashingDone;
@@ -170,7 +169,7 @@ public final class HashJoinUtils {
        * This method should be guaranteed to create a {@link JoinedTuple}
        */
       private void progressProbing() {
-        JoinedTuple joinedTuple = JoinedTuple.of(
+        this.nextJoinTuple = JoinedTuple.of(
             this.nextRightTuple.getKey(),
             leftListForCurrentKey.get(leftListIndex),
             this.nextRightTuple.getValue()
@@ -179,6 +178,7 @@ public final class HashJoinUtils {
         if (leftListIndex == leftListForCurrentKey.size()) {
           nextRightTuple = null;
           leftListForCurrentKey = null;
+          leftListIndex = 0;
         }
       }
 
@@ -223,6 +223,7 @@ public final class HashJoinUtils {
               + "Use hasNext() to check the status.");
         }
         JoinedTuple currentJoinTuple = nextJoinTuple;
+        nextJoinTuple = null;
         doProbing();
         return currentJoinTuple;
       }

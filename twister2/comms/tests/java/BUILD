@@ -61,6 +61,7 @@ java_tests(
 #        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
 #        "edu.iu.dsc.tws.comms.utils.HeapTest",
 #        "edu.iu.dsc.tws.comms.utils.JoinUtilsTest",
+#        "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.DataSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",
