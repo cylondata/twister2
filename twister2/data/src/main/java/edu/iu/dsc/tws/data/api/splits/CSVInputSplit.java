@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
-//public abstract class CSVInputSplit<OT> extends LocatableInputSplit<OT> {
 public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputSplit.class.getName());
@@ -33,6 +32,8 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   public static final String DEFAULT_LINE_DELIMITER = "\n";
   public static final String DEFAULT_FIELD_DELIMITER = ",";
+
+  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   private byte[] delimiter = new byte[]{'\n'};
   private String delimiterString = null;
@@ -43,31 +44,27 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
   private Config config;
   protected FSDataInputStream stream;
 
+  private long offset = -1;
   private long start;
   private long length;
   protected long splitStart;
   protected long splitLength;
   protected long openTimeout;
 
-  protected int numSplits = -1;
-
   private transient byte[] wrapBuffer;
   private transient byte[] readBuffer;
 
   private transient boolean end;
 
+  protected int numSplits = -1;
+  private int bufferSize = -1;
   private transient int readPos;
   private transient int limit;
-  protected transient int recordLength;
+  private transient int recordLength;
   private transient int currOffset;
   private transient int currLen;
-  protected transient int commentCount;
-  protected transient int invalidLineCount;
-
-  private long offset = -1;
-  private int bufferSize = -1;
-
-  private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
+  private transient int commentCount;
+  private transient int invalidLineCount;
 
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
@@ -130,7 +127,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   public void configure(Config parameters) {
     this.config = parameters;
-
     int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
     int recordLen = datasize * Double.BYTES;
     if (recordLen > 0) {
@@ -172,13 +168,11 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     if (this.getDelimiter().length == 1 && this.getDelimiter()[0] == '\n') {
       this.lineDelimiterIsLinebreak = true;
     }
-
     this.commentCount = 0;
     this.invalidLineCount = 0;
     if (this.splitStart != 0) {
       this.stream.seek(this.offset);
     }
-
     CSVReader csvReader = new CSVReader(new InputStreamReader(this.stream));
     try {
       LOG.info("Read all csv values:" + csvReader.readAll());
@@ -208,6 +202,12 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
+
+//    // skip the first line, if we are at the beginning of a file and have the option set
+//    if (this.skipFirstLineAsHeader && this.splitStart == 0) {
+//      readLine(); // read and ignore
+//    }
+
 //    //TODO: Checking the integration of CSV
 //    CSVParser csvParser = new CSVParserBuilder()
 //        .withSeparator(',')

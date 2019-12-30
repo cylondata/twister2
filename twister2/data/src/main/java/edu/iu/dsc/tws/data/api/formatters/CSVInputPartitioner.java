@@ -75,9 +75,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     long totalLength = 0;
 
     final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
-
     final Path path = this.filePath;
-    LOG.info("file system:" + this.filePath);
     final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
@@ -96,9 +94,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
       final long blockSize = file.getBlockSize();
       final long localminSplitSize;
 
-      final int numberOfLines = (int) file.getLen();
-      LOG.info("number of lines in the file:" + numberOfLines);
-
+      //final int numberOfLines = (int) file.getLen();
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
       } else {

@@ -59,6 +59,9 @@ public abstract class CompleteFileInputPartitioner<OT>
    */
   protected Path filePath;
 
+  /**
+   * Config file required for Hdfs connection
+   */
   protected Config config;
 
   /**
