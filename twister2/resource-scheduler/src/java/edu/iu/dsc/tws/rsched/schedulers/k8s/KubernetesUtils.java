@@ -18,8 +18,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
@@ -51,9 +52,12 @@ public final class KubernetesUtils {
    * create file copy command to a pod
    * @return
    */
-  public static String[] createCopyCommand(String filename, String namespace, String podName) {
+  public static String[] createCopyCommand(String filename,
+                                           String namespace,
+                                           String podName,
+                                           String podFile) {
 
-    String targetDir = String.format("%s/%s:%s", namespace, podName, POD_MEMORY_VOLUME);
+    String targetDir = String.format("%s/%s:%s", namespace, podName, podFile);
     return new String[]{"kubectl", "cp", filename, targetDir};
   }
 
@@ -199,6 +203,12 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterPodName(String jobID) {
     return createJobMasterStatefulSetName(jobID) + "-0";
+  }
+
+  public static String jobPackageFullPath(Config config, String jobID) {
+    String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
+    String jobPackageFullPath = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
+    return jobPackageFullPath;
   }
 
   public static String getLocalAddress() {

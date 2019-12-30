@@ -30,7 +30,7 @@ public final class ScpTest {
         put(ScpContext.TWISTER2_UPLOADER_SSH_CONNECTION, "root@149.165.150.81").build();
 
     ScpUploader uploader = new ScpUploader();
-    uploader.initialize(config);
+    uploader.initialize(config, null);
 
     //upload
     URI destURI = uploader.uploadPackage("/Users/user1/Desktop/tobecopied");

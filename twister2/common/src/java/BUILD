@@ -7,7 +7,7 @@ common_deps_files = [
     "@com_google_guava_guava//jar",
     "@com_esotericsoftware_kryo//jar",
     "@org_apache_commons_commons_lang3//jar",
-    "@com_google_code_gson_gson//jar",
+    "@maven//:com_google_code_gson_gson",
     "@maven//:org_apache_curator_curator_client",
     "@maven//:org_apache_curator_curator_framework",
     "@maven//:org_apache_curator_curator_recipes",

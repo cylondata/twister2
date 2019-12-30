@@ -23,44 +23,45 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
-import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
+import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.models.V1Affinity;
-import io.kubernetes.client.models.V1Container;
-import io.kubernetes.client.models.V1ContainerPort;
-import io.kubernetes.client.models.V1EmptyDirVolumeSource;
-import io.kubernetes.client.models.V1EnvVar;
-import io.kubernetes.client.models.V1EnvVarSource;
-import io.kubernetes.client.models.V1LabelSelector;
-import io.kubernetes.client.models.V1LabelSelectorRequirement;
-import io.kubernetes.client.models.V1NFSVolumeSource;
-import io.kubernetes.client.models.V1NodeAffinity;
-import io.kubernetes.client.models.V1NodeSelector;
-import io.kubernetes.client.models.V1NodeSelectorRequirement;
-import io.kubernetes.client.models.V1NodeSelectorTerm;
-import io.kubernetes.client.models.V1ObjectFieldSelector;
-import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1PersistentVolume;
-import io.kubernetes.client.models.V1PersistentVolumeClaim;
-import io.kubernetes.client.models.V1PersistentVolumeClaimSpec;
-import io.kubernetes.client.models.V1PersistentVolumeClaimVolumeSource;
-import io.kubernetes.client.models.V1PersistentVolumeSpec;
-import io.kubernetes.client.models.V1PodAffinity;
-import io.kubernetes.client.models.V1PodAffinityTerm;
-import io.kubernetes.client.models.V1PodAntiAffinity;
-import io.kubernetes.client.models.V1PodSpec;
-import io.kubernetes.client.models.V1PodTemplateSpec;
-import io.kubernetes.client.models.V1ResourceRequirements;
-import io.kubernetes.client.models.V1SecretVolumeSource;
-import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1ServicePort;
-import io.kubernetes.client.models.V1ServiceSpec;
-import io.kubernetes.client.models.V1StatefulSet;
-import io.kubernetes.client.models.V1StatefulSetSpec;
-import io.kubernetes.client.models.V1Volume;
-import io.kubernetes.client.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.V1Affinity;
+import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1ContainerPort;
+import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
+import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1EnvVarSource;
+import io.kubernetes.client.openapi.models.V1LabelSelector;
+import io.kubernetes.client.openapi.models.V1LabelSelectorRequirement;
+import io.kubernetes.client.openapi.models.V1NFSVolumeSource;
+import io.kubernetes.client.openapi.models.V1NodeAffinity;
+import io.kubernetes.client.openapi.models.V1NodeSelector;
+import io.kubernetes.client.openapi.models.V1NodeSelectorRequirement;
+import io.kubernetes.client.openapi.models.V1NodeSelectorTerm;
+import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolume;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
+import io.kubernetes.client.openapi.models.V1PodAffinity;
+import io.kubernetes.client.openapi.models.V1PodAffinityTerm;
+import io.kubernetes.client.openapi.models.V1PodAntiAffinity;
+import io.kubernetes.client.openapi.models.V1PodSpec;
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
+import io.kubernetes.client.openapi.models.V1StatefulSetSpec;
+import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeMount;
 
 /**
  * build objects to submit to Kubernetes master
@@ -73,7 +74,8 @@ public final class RequestObjectBuilder {
   private static long jobPackageFileSize;
   private static String jobMasterIP = null;
 
-  private RequestObjectBuilder() { }
+  private RequestObjectBuilder() {
+  }
 
   public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
@@ -98,10 +100,9 @@ public final class RequestObjectBuilder {
 
   /**
    * create StatefulSet object for a job
-   * @return
    */
   public static V1StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
-                                                               String encodedNodeInfoList) {
+                                                          String encodedNodeInfoList) {
 
     if (config == null) {
       LOG.severe("RequestObjectBuilder.init method has not been called.");
@@ -147,8 +148,6 @@ public final class RequestObjectBuilder {
 
   /**
    * construct pod template
-   * @param serviceLabel
-   * @return
    */
   public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
                                                        String serviceLabel,
@@ -249,7 +248,7 @@ public final class RequestObjectBuilder {
     V1Volume volatileVolume = new V1Volume();
     volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-    volumeSource2.setSizeLimit(String.format("%.2fGi", volumeSize));
+    volumeSource2.setSizeLimit(new Quantity(String.format("%.2fGi", volumeSize)));
     volatileVolume.setEmptyDir(volumeSource2);
     return volatileVolume;
   }
@@ -275,8 +274,6 @@ public final class RequestObjectBuilder {
 
   /**
    * construct a container
-   * @param containerIndex
-   * @return
    */
   public static V1Container constructContainer(ComputeResource computeResource,
                                                int containerIndex,
@@ -365,7 +362,6 @@ public final class RequestObjectBuilder {
 
   /**
    * set environment variables for containers
-   * @param containerName
    */
   public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
                                                              int workerPort,
@@ -446,7 +442,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
-        .value(SchedulerContext.jobPackageFileName(config)));
+        .value(JobUtils.createJobPackageFileName(jobID)));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.WORKER_PORT + "")
@@ -454,13 +450,11 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(KubernetesContext.uploadMethod(config)));
+        .value(K8sUploader.getUploadMethod()));
 
-    if (!KubernetesContext.clientToPodsUploading(config)) {
-      envVars.add(new V1EnvVar()
-          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
-          .value(ScpContext.downloadDirectory(config)));
-    }
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.UPLOADER_WEB_SERVER + "")
+        .value(KubernetesContext.uploaderWebServer(config)));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
@@ -607,8 +601,6 @@ public final class RequestObjectBuilder {
    * we initially used this method to create PersistentVolumes
    * we no longer use this method
    * it is just here in case we may need it for some reason at one point
-   * @param pvName
-   * @return
    */
   public static V1PersistentVolume createPersistentVolumeObject(String pvName) {
     V1PersistentVolume pv = new V1PersistentVolume();
