@@ -107,7 +107,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     Map<Object, List<Object>> values = gathered.get(target);
 
     if (values == null || values.isEmpty()) {
-      return true;
+      return isFilledToSend(target);
     }
 
     boolean send = bulkReceiver.receive(target,
