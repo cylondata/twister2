@@ -87,11 +87,6 @@ public class LocalFileSystemUploader implements IUploader {
   }
 
   @Override
-  public boolean complete() {
-    return true;
-  }
-
-  @Override
   public boolean undo() {
     LOG.info("Clean uploaded jar");
     File file = new File(destinationDirectory);

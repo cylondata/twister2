@@ -52,7 +52,9 @@ public interface IUploader extends AutoCloseable {
    * this method will wait for the threaded uploading to finish
    * @return
    */
-  boolean complete();
+  default boolean complete() {
+    return true;
+  }
 
   /**
    * If subsequent stages fail, undo will be called to free resources used by

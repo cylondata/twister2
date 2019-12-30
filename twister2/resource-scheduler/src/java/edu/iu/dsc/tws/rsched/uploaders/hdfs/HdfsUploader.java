@@ -106,11 +106,6 @@ public class HdfsUploader implements IUploader {
   }
 
   @Override
-  public boolean complete() {
-    return true;
-  }
-
-  @Override
   public boolean undo() {
 
     return controller.delete(packageURI.toString());
