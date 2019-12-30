@@ -201,7 +201,7 @@ public class FSMerger implements Shuffle {
     public void reset() {
       it = objectsInMemory.iterator();
       currentFileIndex = -1;
-      currentFileIndex = 0;
+      currentIndex = 0;
       openValues = null;
     }
 
