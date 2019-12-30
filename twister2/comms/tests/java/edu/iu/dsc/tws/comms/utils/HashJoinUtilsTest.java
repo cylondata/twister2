@@ -23,17 +23,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 
 public class HashJoinUtilsTest {
 
   @Test
-  public void innerJoinTest() {
+  public void innerJoinMemoryTest() {
     List<Tuple> departments = JoinTestUtils.getDepartments();
     List<Tuple> employees = JoinTestUtils.getEmployees();
 
@@ -55,5 +60,18 @@ public class HashJoinUtilsTest {
     for (int i = 0; i < innerJoined.size(); i++) {
       Assert.assertEquals(innerJoined.get(i), joined.get(i));
     }
+  }
+
+  @Test
+  public void innerJoinMemoryVsDiskTest() {
+    FSKeyedMerger fsMerger1 = new FSKeyedMerger(0, 0,
+        "/tmp", "op", MessageTypes.INTEGER, MessageTypes.INTEGER);
+
+    List<Integer> keys = new ArrayList<>();
+    for (int i = 0; i < 10000; i++) {
+
+    }
+
+    fsMerger1.switchToReading();
   }
 }

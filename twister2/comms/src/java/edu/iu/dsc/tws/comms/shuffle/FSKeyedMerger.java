@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 /**
  * Un sorted merger
- *
+ * <p>
  * This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -193,7 +193,7 @@ public class FSKeyedMerger implements Shuffle {
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<Object> {
+  private class FSIterator implements ResettableIterator<Object> {
     // the current file index
     private int currentFileIndex = -1;
     // Index of the current file
@@ -265,6 +265,14 @@ public class FSKeyedMerger implements Shuffle {
       }
 
       return null;
+    }
+
+    @Override
+    public void reset() {
+      it = objectsInMemory.iterator();
+      currentFileIndex = -1;
+      currentFileIndex = 0;
+      openValue = null;
     }
   }
 
