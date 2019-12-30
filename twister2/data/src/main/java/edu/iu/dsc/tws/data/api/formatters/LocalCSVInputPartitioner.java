@@ -17,9 +17,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 
@@ -32,8 +30,6 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 
   private OrderedInputSplitAssigner<String> assigner;
 
-  //private LocatableInputSplitAssigner assigner;
-
   public LocalCSVInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
     this.nTasks = numTasks;
@@ -44,33 +40,16 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
     this.nTasks = numTasks;
   }
 
-//  @Override
-//  protected GenericCSVInputSplit createSplit(int num, Path file, long start,
-//                                                           long length, String[] hosts) {
-//    return new GenericCSVInputSplit(num, file, start, length, hosts);
-//  }
-
   protected CSVInputSplit createSplit(int num, Path file, long start,
                                       long length, String[] hosts) {
     return new CSVInputSplit(num, file, start, length, hosts);
   }
 
-//  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
-//    if (assigner == null) {
-//      assigner = new LocatableInputSplitAssigner(inputSplits);
-//    }
-//    return assigner;
-//  }
-  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
-      FileInputSplit<String>[] inputSplits) {
+  @Override
+  public OrderedInputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
     if (assigner == null) {
       assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
     }
     return assigner;
-  }
-
-  @Override
-  public InputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
-    return null;
   }
 }

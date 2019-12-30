@@ -28,9 +28,7 @@ import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public abstract class CSVInputPartitioner<OT>
-    implements InputPartitioner<OT, FileInputSplit<OT>> {
-//public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
+public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
@@ -46,12 +44,10 @@ public abstract class CSVInputPartitioner<OT>
   private long minSplitSize = 0;
 
   public CSVInputPartitioner(Path filepath) {
-    //super(filepath);
     this.filePath = filepath;
   }
 
   public CSVInputPartitioner(Path filepath, Config cfg, int numberOfTasks) {
-    //super(filepath, cfg);
     this.filePath = filepath;
     this.config = cfg;
     this.numSplits = numberOfTasks;
@@ -120,8 +116,6 @@ public abstract class CSVInputPartitioner<OT>
         int blockIndex = 0;
         for (int i = 0; i < curminNumSplits; i++) {
           blockIndex = getBlockIndexForPosition(blocks, position, splitSize, blockIndex);
-          //FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
-          //    blocks[blockIndex].getHosts());
           FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
@@ -136,7 +130,6 @@ public abstract class CSVInputPartitioner<OT>
         }
         for (int i = 0; i < curminNumSplits; i++) {
           FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
-          //FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
           inputSplits.add(fis);
         }
       }
@@ -148,16 +141,6 @@ public abstract class CSVInputPartitioner<OT>
 
   protected abstract CSVInputSplit createSplit(int num, Path file, long start,
                                                 long length, String[] hosts);
-
-  /*@Override
-  public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
-    return new LocatableInputSplitAssigner<>(inputSplits);
-  }*/
-
-  /*protected FileInputSplit createSplit(int num, Path file, long start,
-                                                long length, String[] hosts) {
-    return null;
-  }*/
 
   /**
    * To enumerate the files in the directory in a recursive if the enumeratedNestedFiles is true.
