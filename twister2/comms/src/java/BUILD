@@ -2,13 +2,19 @@ package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib")
 
+srcs_without_ucx = glob(["**/*.java"])
+
+srcs_without_ucx.remove("edu/iu/dsc/tws/comms/ucx/TWSUCXChannel.java")
+
 t2_java_lib(
     name = "comms-java",
-    srcs = glob(["**/*.java"]),
+    srcs = select({
+        "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
+        "//conditions:default": glob(["**/*.java"]),
+    }),
     artifact_name = "Twsiter2 Communication",
     deps = [
         "//third_party:ompi_javabinding_java",
-        "//third_party:ucx_javabinding_java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
@@ -25,7 +31,10 @@ t2_java_lib(
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_collections4//jar",
         "@org_apache_commons_commons_lang3//jar",
-    ],
+    ] + select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["//third_party:ucx_javabinding_java"],
+    }),
 )
 
 #java_binary(
