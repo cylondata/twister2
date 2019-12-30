@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public class LocalFileSystemUploader implements IUploader {
@@ -32,7 +33,7 @@ public class LocalFileSystemUploader implements IUploader {
   private String destinationDirectory;
 
   @Override
-  public void initialize(Config config) {
+  public void initialize(Config config, JobAPI.Job job) {
     this.destinationDirectory = FsContext.uploaderJobDirectory(config);
   }
 
@@ -83,6 +84,11 @@ public class LocalFileSystemUploader implements IUploader {
       throw new RuntimeException(String.format("Failed to copy directory %s to %s",
           filePath.toString(), destinationDirectory));
     }
+  }
+
+  @Override
+  public boolean complete() {
+    return true;
   }
 
   @Override
