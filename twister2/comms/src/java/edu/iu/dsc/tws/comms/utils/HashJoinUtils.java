@@ -183,7 +183,7 @@ public final class HashJoinUtils {
       // (which has been returned by next()) will be kept in memory since it should be combined
       // with all the tuples in leftListForCurrentKey. But this has to be done on demand, on next()
       // call of joined iterator.
-      private Tuple<?, ?> currentRightTuple;
+      private Tuple<?, ?> currentProbingTuple;
 
       // list of tuples from left relation(hashing relation),
       // that matches with the currentRightTuple
@@ -199,14 +199,14 @@ public final class HashJoinUtils {
        * currentRightTuple is processed.
        */
       private void progressProbing() {
-        Object key = this.currentRightTuple.getKey();
+        Object key = this.currentProbingTuple.getKey();
 
         // we have interchanged original iterators based on the join type.
         // that should be taken into consideration when creating the JoinedTuple
         Object left = joinType.equals(CommunicationContext.JoinType.LEFT)
-            ? this.currentRightTuple.getValue() : leftListForCurrentKey.get(leftListIndex);
+            ? this.currentProbingTuple.getValue() : leftListForCurrentKey.get(leftListIndex);
         Object right = joinType.equals(CommunicationContext.JoinType.LEFT)
-            ? leftListForCurrentKey.get(leftListIndex) : this.currentRightTuple.getValue();
+            ? leftListForCurrentKey.get(leftListIndex) : this.currentProbingTuple.getValue();
 
         this.nextJoinTuple = JoinedTuple.of(
             key,
@@ -218,7 +218,7 @@ public final class HashJoinUtils {
 
         // if end of the list has reached, reset everything!
         if (leftListIndex == leftListForCurrentKey.size()) {
-          currentRightTuple = null;
+          currentProbingTuple = null;
           leftListForCurrentKey = null;
           leftListIndex = 0;
         }
@@ -232,15 +232,30 @@ public final class HashJoinUtils {
         while (this.nextJoinTuple == null) {
           // if the currentRightTuple is non null, that means we have already found the relevant
           // hashed list and still in the middle of combining that list
-          if (this.currentRightTuple == null) {
+          if (this.currentProbingTuple == null) {
             if (probingRelation.hasNext()) {
-              this.currentRightTuple = probingRelation.next();
-              this.leftListForCurrentKey = this.keyHash.get(currentRightTuple.getKey());
+              this.currentProbingTuple = probingRelation.next();
+              this.leftListForCurrentKey = this.keyHash.get(currentProbingTuple.getKey());
               if (this.leftListForCurrentKey == null) {
-                // not left tuples from left relation to join
+                // not left tuples from hashing relation to join
 
-                // inner join
-                this.currentRightTuple = null;
+                // handle left and right joins here
+                if (joinType.equals(CommunicationContext.JoinType.LEFT)) {
+                  this.nextJoinTuple = JoinedTuple.of(
+                      currentProbingTuple.getKey(),
+                      currentProbingTuple.getValue(),
+                      null
+                  );
+                } else if (joinType.equals(CommunicationContext.JoinType.RIGHT)) {
+                  this.nextJoinTuple = JoinedTuple.of(
+                      currentProbingTuple.getKey(),
+                      null,
+                      currentProbingTuple.getValue()
+                  );
+                }
+
+                // any join : We are done with currentProbingTuple
+                this.currentProbingTuple = null;
               } else {
                 progressProbing();
               }
