@@ -28,7 +28,7 @@ public final class LFSTest {
     Config config = Config.newBuilder().put(FsContext.UPLOAD_DIRECTORY,
                 "/home/user/Desktop/test1/").build();
     LocalFileSystemUploader lsf = new LocalFileSystemUploader();
-    lsf.initialize(config);
+    lsf.initialize(config, null);
     URI returned = lsf.uploadPackage("/home/user/Desktop/tobecopied/");
     System.out.printf(returned.toString());
   }
