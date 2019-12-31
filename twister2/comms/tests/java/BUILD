@@ -1,8 +1,15 @@
 load("//tools/rules:java_tests.bzl", "java_tests")
 
+srcs_without_ucx = glob(["**/*.java"])
+
+srcs_without_ucx.remove("edu/iu/dsc/tws/comms/ucx/TWSUCXChannelTest.java")
+
 java_library(
     name = "comms-tests",
-    srcs = glob(["**/*.java"]),
+    srcs = select({
+        "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
+        "//conditions:default": glob(["**/*.java"]),
+    }),
     deps = [
         "//third_party:ompi_javabinding_java",
         "//third_party/java:junit4",

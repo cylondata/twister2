@@ -26,12 +26,14 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.DriverJobState;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.common.driver.NullScalar;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -66,7 +68,7 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
     // not implemented yet
     return false;
   }
@@ -122,7 +124,7 @@ public class MPILauncher implements ILauncher {
       coreFilePath = coreFile.getAbsolutePath();
     }
 
-    Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobName(), "");
+    Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobId(), "");
     int np = this.createOneSlotPerNodeFile(tempHotsFile);
 
     String mpiRunFile = MPIContext.mpiRunFile(config);
@@ -134,7 +136,7 @@ public class MPILauncher implements ILauncher {
             "conf/standalone/bootstrap.sh",
             Integer.toString(np),
             tempHotsFile.toAbsolutePath().toString(),
-            job.getJobName(),
+            job.getJobId(),
             this.jobWorkingDirectory,
             jobFilePath,
             jobFileMD5,
@@ -183,9 +185,10 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(JobAPI.Job job) {
+  public Twister2JobState launch(JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterType(config));
+    Twister2JobState state = new Twister2JobState(false);
 
     //distributing bundle if not running in shared file system
     if (!MPIContext.isSharedFs(config)) {
@@ -200,7 +203,7 @@ public class MPILauncher implements ILauncher {
     } else {
       LOG.info("Configured as SHARED file system. "
           + "Skipping bootstrap procedure & setting up working directory");
-      if (!setupWorkingDirectory(job.getJobName())) {
+      if (!setupWorkingDirectory(job.getJobId())) {
         throw new RuntimeException("Failed to setup the directory");
       }
     }
@@ -212,6 +215,9 @@ public class MPILauncher implements ILauncher {
     Thread jmThread = null;
     if (JobMasterContext.isJobMasterUsed(config)
         && JobMasterContext.jobMasterRunsInClient(config)) {
+      // Since the job master is running on client we can collect job information
+      state.setDetached(false);
+
       try {
         int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
@@ -252,7 +258,6 @@ public class MPILauncher implements ILauncher {
       start[0] = controller.start(job);
     });
     controllerThread.start();
-
     // wait until the controller finishes
     try {
       controllerThread.join();
@@ -267,8 +272,16 @@ public class MPILauncher implements ILauncher {
       } catch (InterruptedException ignore) {
       }
     }
-
-    return start[0];
+    if (jobMaster != null && jobMaster.getDriver() != null) {
+      if (jobMaster.getDriver().getState() != DriverJobState.FAILED) {
+        state.setJobstate(DriverJobState.COMPLETED);
+      } else {
+        state.setJobstate(jobMaster.getDriver().getState());
+      }
+      state.setFinalMessages(jobMaster.getDriver().getMessages());
+    }
+    state.setRequestGranted(start[0]);
+    return state;
   }
 
   /**
@@ -277,7 +290,7 @@ public class MPILauncher implements ILauncher {
    *
    * @return false if setup fails
    */
-  protected boolean setupWorkingDirectory(String jobName) {
+  protected boolean setupWorkingDirectory(String jobId) {
     // get the path of core release URI
     String corePackage = MPIContext.corePackageFileName(config);
 
@@ -286,7 +299,7 @@ public class MPILauncher implements ILauncher {
 
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
-        jobName,
+        jobId,
         jobWorkingDirectory,
         corePackage,
         jobPackageURI,

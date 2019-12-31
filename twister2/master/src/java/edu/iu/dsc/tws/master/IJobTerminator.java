@@ -16,5 +16,5 @@ package edu.iu.dsc.tws.master;
  * It calls this method when all workers in a job sent COMPLETED message
  */
 public interface IJobTerminator {
-  boolean terminateJob(String jobName);
+  boolean terminateJob(String jobID);
 }

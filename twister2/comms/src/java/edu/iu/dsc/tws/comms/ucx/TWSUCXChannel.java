@@ -49,6 +49,17 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * This class uses UCX framework underneath to connect to the twister2's network
+ * of Worker processes. {@link TWSUCXChannel} leverages tags based communication of UCX
+ * to virtually create multiple communication channels between the workers based on the edge.
+ * The tag for each message is calculated as follows.
+ * <p>
+ * tag = sendingWorkerId * tagWIdOffset + edge
+ * </p>
+ *
+ * @since 0.5.0
+ */
 public class TWSUCXChannel implements TWSChannel {
 
   private static final Logger LOG = Logger.getLogger(TWSUCXChannel.class.getName());
@@ -106,9 +117,6 @@ public class TWSUCXChannel implements TWSChannel {
   public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
     AtomicInteger buffersLeft = new AtomicInteger(message.getBuffers().size());
     for (DataBuffer buffer : message.getBuffers()) {
-      //write total limit of buffer
-      buffer.getByteBuffer().putInt(0, buffer.getSize());
-
       buffer.getByteBuffer().limit(buffer.getSize());
       buffer.getByteBuffer().position(0);
       int tag = this.workerId * tagWIdOffset + message.getHeader().getEdge();
@@ -201,7 +209,7 @@ public class TWSUCXChannel implements TWSChannel {
                     String.format("Recv Buff from %d[%d] : %s, TAG[%d], Size : %d",
                         id, edge, recvBuffer.getByteBuffer(), tag,
                         recvBuffer.getByteBuffer().getInt(0)));
-                recvBuffer.setSize(recvBuffer.getByteBuffer().getInt(0));
+                recvBuffer.setSize((int) request.getRecvSize());
                 requestsMap.remove(requestId);
                 callback.onReceiveComplete(id, edge, recvBuffer);
               }

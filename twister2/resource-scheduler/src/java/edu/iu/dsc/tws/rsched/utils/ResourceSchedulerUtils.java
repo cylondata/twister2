@@ -37,7 +37,7 @@ public final class ResourceSchedulerUtils {
   }
 
   public static boolean setupWorkingDirectory(
-      String jobName,
+      String jobId,
       String workingDirectory,
       String corePackageName,
       String jobPackageURI,
@@ -46,11 +46,11 @@ public final class ResourceSchedulerUtils {
 
     String corePackagePath = Paths.get(jobPackageURI, corePackageName).toString();
     String corePackageDestination = Paths.get(workingDirectory,
-        jobName, corePackageName).toString();
+        jobId, corePackageName).toString();
 
     // And then delete the downloaded release package
     // now lets copy other files
-    String dst = Paths.get(workingDirectory, jobName).toString();
+    String dst = Paths.get(workingDirectory, jobId).toString();
     LOG.info(String.format("Downloading package %s to %s", jobPackageURI, dst));
     try {
       FileUtils.copyDirectory(jobPackageURI, dst);
@@ -66,9 +66,9 @@ public final class ResourceSchedulerUtils {
       return false;
     }
 
-    ProcessUtils.extractPackageWithoutDir(workingDirectory + "/" + jobName
+    ProcessUtils.extractPackageWithoutDir(workingDirectory + "/" + jobId
             + "/twister2-job.tar.gz",
-        workingDirectory + "/" + jobName, false, false);
+        workingDirectory + "/" + jobId, false, false);
 
     return true;
   }

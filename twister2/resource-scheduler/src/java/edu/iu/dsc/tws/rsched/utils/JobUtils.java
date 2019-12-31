@@ -88,10 +88,10 @@ public final class JobUtils {
     if (job.getJobFormat().getType() == JobAPI.JobFormatType.JAR
         || job.getJobFormat().getType() == JobAPI.JobFormatType.PYTHON) {
       classPathBuilder.append(
-          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+          Paths.get(wd, job.getJobId(), job.getJobFormat().getJobFile()).toString());
     } else {
       // now get the files
-      File jobLib = Paths.get(wd, job.getJobName(), "lib").toFile();
+      File jobLib = Paths.get(wd, job.getJobId(), "lib").toFile();
       File[] listOfFiles = jobLib.listFiles();
       if (listOfFiles != null) {
         for (int i = 0; i < listOfFiles.length; i++) {
@@ -205,6 +205,40 @@ public final class JobUtils {
     }
 
     return jobStr;
+  }
+
+  public static String createJobPackageFileName(String jobID) {
+    return jobID + ".tar.gz";
+  }
+
+  /**
+   * For the job to be scalable:
+   *   Driver class shall be specified
+   *   a scalable compute resource shall be given
+   *   itshould not be an openMPI job
+   *
+   * @return
+   */
+  public static boolean isJobScalable(Config config, JobAPI.Job job) {
+
+    // if Driver is not set, it means there is nothing to scale the job
+    if (job.getDriverClassName().isEmpty()) {
+      return false;
+    }
+
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    // if it is an OpenMPI job, it is not scalable
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+
+    return true;
   }
 
 }

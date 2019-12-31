@@ -94,7 +94,7 @@ public class MesosDockerWorker {
       LOG.severe("Error " + e.getMessage());
     }
     //find the jobmaster
-    ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+    ZKJobMasterFinder finder = new ZKJobMasterFinder(config, job.getJobId());
     finder.initialize();
 
     String jobMasterIPandPort = finder.getJobMasterIPandPort();

@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
  * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
  * etc will be done on the tuple value only (key will be dropped, as key is an information
  * forcibly attached at the communication level). If the key information is required, users can
- * use the compute methods which enables the use of Iterator<Tuple<K, T>>
+ * use the compute methods which enables the use of {@literal Iterator<Tuple<K, T>>}
  *
  * @param <T> value type
  */

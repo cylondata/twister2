@@ -10,17 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
 import java.io.IOException;
@@ -33,14 +22,14 @@ import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * it is a single node controller
  * A single node registers, others discover that node
  * In our case, Job Master registers, workers discover the job master
  * Job Master creates an eph persistent znode
- * Job Master IP and port number is put as the payload to this node in the form of: <ip>:<port>
+ * Job Master IP and port number is put as the payload to this node in the form of:
+ * {@literal <ip>:<port>}
  * the node must be deleted after the job completes
  */
 public class ZKJobMasterRegistrar {
@@ -54,25 +43,22 @@ public class ZKJobMasterRegistrar {
   private String jobMasterPath;
   private PersistentNode jobMasterNode;
 
-  public ZKJobMasterRegistrar(Config config, String jobMasterIP, int jobMasterPort) {
+  public ZKJobMasterRegistrar(Config config, String jobMasterIP, int jobMasterPort, String jobID) {
     this.config = config;
     this.jobMasterIP = jobMasterIP;
     this.jobMasterPort = jobMasterPort;
-    jobMasterPath = constructJobMasterPath(config);
+    jobMasterPath = constructJobMasterPath(config, jobID);
   }
 
   /**
    * construct job master path
-   * @param config
-   * @return
    */
-  public static String constructJobMasterPath(Config config) {
-    return ZKContext.rootNode(config) + "/" + Context.jobName(config) + "-job-master";
+  public static String constructJobMasterPath(Config config, String jobID) {
+    return ZKContext.rootNode(config) + "/" + jobID + "-job-master";
   }
 
   /**
    * connect to ZooKeeper server
-   * @return
    */
   public boolean initialize() {
     // connect to ZooKeeper server if it is not already connected
@@ -103,7 +89,6 @@ public class ZKJobMasterRegistrar {
    * ZooKeeper takes around 30 seconds to delete ephemeral znodes in those cases
    * During this time, if JobMasterRegistrar restarts with the same job name,
    * this can happen
-   * @return
    */
   public boolean sameZNodeExist() {
     if (client == null) {

@@ -143,7 +143,7 @@ public class TaskExecutor implements FaultAcceptable {
    * Create execution plans for each graph.
    *
    * @param graph list of graphs
-   * @return graph name -> execution plan map
+   * @return graph name {@literal ->} execution plan map
    */
   public Map<String, ExecutionPlan> plan(ComputeGraph... graph) {
 
@@ -166,6 +166,7 @@ public class TaskExecutor implements FaultAcceptable {
 
   /**
    * Create a execution plan
+   *
    * @param graph the graph
    * @param taskSchedulePlan task schedule
    * @return the execution plan
@@ -183,8 +184,8 @@ public class TaskExecutor implements FaultAcceptable {
    * the execution is done.
    *
    * @param taskConfig the user configuration to be passed to the task instances
-   * @param graph      the dataflow graph
-   * @param plan       the execution plan
+   * @param graph the dataflow graph
+   * @param plan the execution plan
    */
   public void execute(Config taskConfig, ComputeGraph graph, ExecutionPlan plan) {
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
@@ -201,7 +202,7 @@ public class TaskExecutor implements FaultAcceptable {
    * the execution is done.
    *
    * @param graph the dataflow graph
-   * @param plan  the execution plan
+   * @param plan the execution plan
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
     execute(config, graph, plan);
@@ -226,7 +227,7 @@ public class TaskExecutor implements FaultAcceptable {
    * the execution is done.
    *
    * @param graph the dataflow graph
-   * @param plan  the execution plan
+   * @param plan the execution plan
    */
   public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
     IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode(),
@@ -253,11 +254,11 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Add input to the the task instances
    *
-   * @param graph    task graph
-   * @param plan     execution plan
+   * @param graph task graph
+   * @param plan execution plan
    * @param taskName task name
    * @param inputKey inputkey
-   * @param input    input
+   * @param input input
    * @deprecated Inputs are automatically handled now
    */
   @Deprecated
@@ -282,10 +283,10 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Add input to the the task instances
    *
-   * @param ex     execution plan
+   * @param ex execution plan
    * @param taskName task name
    * @param inputKey inputkey
-   * @param input    input
+   * @param input input
    * @deprecated Inputs are automatically handled now
    */
   @Deprecated
@@ -297,10 +298,10 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Add input to the the task instances
    *
-   * @param graph    task graph
-   * @param plan     execution plan
+   * @param graph task graph
+   * @param plan execution plan
    * @param inputKey inputkey
-   * @param input    input
+   * @param input input
    * @deprecated Inputs are handled automatically now
    */
   @Deprecated
@@ -324,9 +325,9 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Add input to the the task instances
    *
-   * @param ex     execution plan
+   * @param ex execution plan
    * @param inputKey inputkey
-   * @param input    input
+   * @param input input
    * @deprecated Inputs are handled automatically now
    */
   @Deprecated
@@ -338,8 +339,8 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Extract output from a task graph
    *
-   * @param graph    the graph
-   * @param plan     plan created from the graph
+   * @param graph the graph
+   * @param plan plan created from the graph
    * @param taskName name of the output to retrieve
    * @return a DataObjectImpl with set of partitions from each task in this executor
    * @deprecated There is no need of using this method anymore.
@@ -355,8 +356,8 @@ public class TaskExecutor implements FaultAcceptable {
   /**
    * Extract output from a task graph
    *
-   * @param graph    the graph
-   * @param plan     plan created from the graph
+   * @param graph the graph
+   * @param plan plan created from the graph
    * @param taskName name of the output to retrieve
    * @param dataName name of the data set
    * @return a DataObjectImpl with set of partitions from each task in this executor
@@ -387,7 +388,7 @@ public class TaskExecutor implements FaultAcceptable {
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}
    */
   public static void collectData(Config cfg, ExecutionPlan executionPlan,
-                                  Map<String, DataObject> dataMap) {
+                                 Map<String, DataObject> dataMap) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     Map<String, DataObject> dataObjectMapForPlan = new HashMap<>();
     if (nodes != null) {
