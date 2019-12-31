@@ -1,0 +1,29 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools:maven.bzl", "t2_java_lib")
+
+common_deps_files = [
+    "@org_yaml_snakeyaml//jar",
+    "//twister2/common/src/java:common-java",
+    "//twister2/comms/src/java:comms-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+    "//twister2/data/src/main/java:data-java",
+    "//twister2/checkpointing/src/java:checkpointing-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
+    "//twister2/proto:proto-java",
+    "@com_google_guava_guava//jar",
+    "@org_apache_arrow_arrow_vector//jar",
+    "@org_apache_arrow_arrow_memory//jar",
+]
+
+java_library(
+    name = "arrow-java-tests",
+    srcs = glob(["**/*.java"]),
+    deps = common_deps_files,
+)
