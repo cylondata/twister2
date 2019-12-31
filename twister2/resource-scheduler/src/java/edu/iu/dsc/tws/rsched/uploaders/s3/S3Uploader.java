@@ -52,6 +52,7 @@ public class S3Uploader implements IUploader {
     long linkExpDur = S3Context.linkExpirationDuration(config);
 
     String cmd = String.format(uploaderScript + " %s %s %s", localJobPackFile, s3File, linkExpDur);
+    LOG.info("cmd for s3 upload: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
     Process p = null;
