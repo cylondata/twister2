@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -69,7 +70,7 @@ public class HashJoinUtilsTest {
   }
 
   @Test
-  public void innerJoinMemoryVsDiskTest() {
+  public void innerJoinDiskTest() {
 
     int noOfTuples = 1000;
 
@@ -104,8 +105,7 @@ public class HashJoinUtilsTest {
     ResettableIterator it1 = fsMerger1.readIterator();
     ResettableIterator it2 = fsMerger2.readIterator();
 
-    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2,
-        CommunicationContext.JoinType.INNER);
+    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2);
 
     Set<Integer> keysReceived = new HashSet<>();
 
@@ -113,6 +113,72 @@ public class HashJoinUtilsTest {
       JoinedTuple joinedTuple = iterator.next();
       Assert.assertEquals(1, joinedTuple.getLeftValue());
       Assert.assertEquals(2, joinedTuple.getRightValue());
+      keysReceived.add((Integer) joinedTuple.getKey());
+    }
+
+    Assert.assertEquals(noOfTuples, keysReceived.size());
+
+    fsMerger1.clean();
+    fsMerger2.clean();
+  }
+
+  @Test
+  public void leftJoinDiskTest() {
+
+    int noOfTuples = 1000;
+
+    Random random = new Random(System.currentTimeMillis());
+
+    List<Integer> keys1 = new ArrayList<>();
+    List<Integer> keys2 = new ArrayList<>();
+    for (int i = 0; i < noOfTuples; i++) {
+      keys1.add(i);
+      if (random.nextBoolean()) {
+        keys2.add(i);
+      }
+    }
+    Collections.shuffle(keys1);
+    Collections.shuffle(keys2);
+
+    FSKeyedMerger fsMerger1 = new FSKeyedMerger(0, 0,
+        "/tmp", "op-left", MessageTypes.INTEGER, MessageTypes.INTEGER);
+
+    FSKeyedMerger fsMerger2 = new FSKeyedMerger(0, 0,
+        "/tmp", "op-right", MessageTypes.INTEGER, MessageTypes.INTEGER);
+
+    byte[] key1 = ByteBuffer.wrap(new byte[4]).putInt(1).array();
+    byte[] key2 = ByteBuffer.wrap(new byte[4]).putInt(2).array();
+
+    for (int i = 0; i < keys1.size(); i++) {
+      fsMerger1.add(keys1.get(i), key1, Integer.BYTES);
+      fsMerger1.run();
+    }
+
+    for (int i = 0; i < keys2.size(); i++) {
+      fsMerger2.add(keys2.get(i), key2, Integer.BYTES);
+      fsMerger2.run();
+    }
+
+    fsMerger1.switchToReading();
+    fsMerger2.switchToReading();
+
+    ResettableIterator it1 = fsMerger1.readIterator();
+    ResettableIterator it2 = fsMerger2.readIterator();
+
+    Iterator<JoinedTuple> iterator = HashJoinUtils.leftJoin(it1, it2);
+
+    Set<Integer> keysReceived = new HashSet<>();
+
+    Set<Integer> rightKeysLookup = new HashSet<>(keys2);
+
+    while (iterator.hasNext()) {
+      JoinedTuple joinedTuple = iterator.next();
+      Assert.assertEquals(1, joinedTuple.getLeftValue());
+      if (rightKeysLookup.contains(joinedTuple.getKey())) {
+        Assert.assertEquals(2, joinedTuple.getRightValue());
+      } else {
+        Assert.assertNull(joinedTuple.getRightValue());
+      }
       keysReceived.add((Integer) joinedTuple.getKey());
     }
 
