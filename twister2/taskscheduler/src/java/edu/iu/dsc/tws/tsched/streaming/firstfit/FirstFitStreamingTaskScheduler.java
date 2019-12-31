@@ -40,11 +40,11 @@ import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
  * the task instances based on the required ram configuration. Also, it provides the support of
  * heterogeneous container and task instance allocation.
  * <p>
- * For example, if there are two tasks with parallelism value of 2, 1st task -> instance 0 will
+ * {@literal For example, if there are two tasks with parallelism value of 2, 1st task -> instance 0 will
  * go to container 0, 1st task -> instance 1 will go to container 0, 2nd task -> instance 0 will
  * go to container 0 (if the total task instance required values doesn't reach the maximum size of
  * container 0. If the container has reached its maximum limit then it will allocate the
- * 2nd task -> instance 1 will go to container 1.
+ * 2nd task -> instance 1 will go to container 1.}
  */
 public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
 

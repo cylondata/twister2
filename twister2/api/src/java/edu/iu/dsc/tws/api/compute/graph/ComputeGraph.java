@@ -23,7 +23,8 @@ import java.util.logging.Logger;
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
  * <p>
- * todo redundant {@link ComputeGraph} <- {@link BaseDataflowTaskGraph} <- {@link ITaskGraph}
+ * todo redundant {@link ComputeGraph} {@literal <-} {@link BaseDataflowTaskGraph}
+ * {@literal <-} {@link ITaskGraph}
  * chain
  */
 public class ComputeGraph extends BaseDataflowTaskGraph<Vertex, Edge> {

@@ -207,4 +207,38 @@ public final class JobUtils {
     return jobStr;
   }
 
+  public static String createJobPackageFileName(String jobID) {
+    return jobID + ".tar.gz";
+  }
+
+  /**
+   * For the job to be scalable:
+   *   Driver class shall be specified
+   *   a scalable compute resource shall be given
+   *   itshould not be an openMPI job
+   *
+   * @return
+   */
+  public static boolean isJobScalable(Config config, JobAPI.Job job) {
+
+    // if Driver is not set, it means there is nothing to scale the job
+    if (job.getDriverClassName().isEmpty()) {
+      return false;
+    }
+
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    // if it is an OpenMPI job, it is not scalable
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+
+    return true;
+  }
+
 }

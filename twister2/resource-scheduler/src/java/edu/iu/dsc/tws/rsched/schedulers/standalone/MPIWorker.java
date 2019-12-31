@@ -670,7 +670,7 @@ public final class MPIWorker {
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
-    LOG.fine(String.format("Logging is setup with file %s" + logDir));
+    LOG.fine(String.format("Logging is setup with file %s", logDir));
   }
 
 
