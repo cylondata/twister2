@@ -295,6 +295,11 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, "Calling uploader to upload the package content");
     URI packageURI = uploader.uploadPackage(jobDirectory);
 
+    // TODO: delete
+    if (packageURI != null) {
+      return null;
+    }
+
     // add scp address as a prefix to returned URI: user@ip
     String scpServerAdress = ScpContext.scpConnection(updatedConfig);
     String scpPath = scpServerAdress;

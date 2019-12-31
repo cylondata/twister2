@@ -145,6 +145,7 @@ public class K8sUploader extends Thread implements IUploader {
         return new URI(uri);
       } catch (URISyntaxException e) {
         LOG.log(Level.SEVERE, "Can not generate URI for uploader web server: " + uri, e);
+        throw new UploaderException("Can not generate URI for download link: " + uri, e);
       }
     }
     return null;
