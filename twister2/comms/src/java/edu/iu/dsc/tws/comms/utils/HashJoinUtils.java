@@ -115,10 +115,25 @@ public final class HashJoinUtils {
     return joinedTuples;
   }
 
+  public static Iterator<JoinedTuple> innerJoin(ResettableIterator<Tuple<?, ?>> leftIt,
+                                                ResettableIterator<Tuple<?, ?>> rightIt) {
+    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.INNER);
+  }
+
+  public static Iterator<JoinedTuple> leftJoin(ResettableIterator<Tuple<?, ?>> leftIt,
+                                               ResettableIterator<Tuple<?, ?>> rightIt) {
+    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.LEFT);
+  }
+
+  public static Iterator<JoinedTuple> rightJoin(ResettableIterator<Tuple<?, ?>> leftIt,
+                                                ResettableIterator<Tuple<?, ?>> rightIt) {
+    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.RIGHT);
+  }
+
   /**
    * Disk based inner join
    */
-  public static Iterator<JoinedTuple> innerJoin(ResettableIterator<Tuple<?, ?>> leftIt,
+  private static Iterator<JoinedTuple> diskJoin(ResettableIterator<Tuple<?, ?>> leftIt,
                                                 ResettableIterator<Tuple<?, ?>> rightIt,
                                                 CommunicationContext.JoinType joinType) {
     // choosing hashing and probing relations
