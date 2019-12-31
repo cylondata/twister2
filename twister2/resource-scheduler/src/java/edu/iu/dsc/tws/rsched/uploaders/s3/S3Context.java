@@ -27,7 +27,7 @@ public final class S3Context {
   private S3Context() { }
 
   public static String uploaderScript(Config config) {
-    return Context.conf(config) + "/scripts/s3Uploader.sh";
+    return Context.twister2Home(config) + "/conf/scripts/s3Uploader.sh";
   }
 
   public static String s3BucketName(Config config) {
