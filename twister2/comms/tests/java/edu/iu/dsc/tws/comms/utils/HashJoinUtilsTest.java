@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.comms.utils;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +34,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -104,14 +104,8 @@ public class HashJoinUtilsTest {
     ResettableIterator it1 = fsMerger1.readIterator();
     ResettableIterator it2 = fsMerger2.readIterator();
 
-    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2, new KeyComparatorWrapper(
-        new Comparator<Integer>() {
-          @Override
-          public int compare(Integer integer, Integer t1) {
-            return integer.compareTo(t1);
-          }
-        })
-    );
+    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2,
+        CommunicationContext.JoinType.INNER);
 
     Set<Integer> keysReceived = new HashSet<>();
 
