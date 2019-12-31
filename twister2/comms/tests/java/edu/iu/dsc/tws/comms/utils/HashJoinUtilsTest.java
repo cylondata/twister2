@@ -35,7 +35,6 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -183,6 +182,73 @@ public class HashJoinUtilsTest {
     }
 
     Assert.assertEquals(noOfTuples, keysReceived.size());
+
+    fsMerger1.clean();
+    fsMerger2.clean();
+  }
+
+
+  @Test
+  public void rightJoinDiskTest() {
+
+    int noOfTuples = 1000;
+
+    Random random = new Random(System.currentTimeMillis());
+
+    List<Integer> keys1 = new ArrayList<>();
+    List<Integer> keys2 = new ArrayList<>();
+    for (int i = 0; i < noOfTuples; i++) {
+      keys1.add(i);
+      if (random.nextBoolean()) {
+        keys2.add(i);
+      }
+    }
+    Collections.shuffle(keys1);
+    Collections.shuffle(keys2);
+
+    FSKeyedMerger fsMerger1 = new FSKeyedMerger(0, 0,
+        "/tmp", "op-left", MessageTypes.INTEGER, MessageTypes.INTEGER);
+
+    FSKeyedMerger fsMerger2 = new FSKeyedMerger(0, 0,
+        "/tmp", "op-right", MessageTypes.INTEGER, MessageTypes.INTEGER);
+
+    byte[] key1 = ByteBuffer.wrap(new byte[4]).putInt(1).array();
+    byte[] key2 = ByteBuffer.wrap(new byte[4]).putInt(2).array();
+
+    for (int i = 0; i < keys1.size(); i++) {
+      fsMerger1.add(keys1.get(i), key1, Integer.BYTES);
+      fsMerger1.run();
+    }
+
+    for (int i = 0; i < keys2.size(); i++) {
+      fsMerger2.add(keys2.get(i), key2, Integer.BYTES);
+      fsMerger2.run();
+    }
+
+    fsMerger1.switchToReading();
+    fsMerger2.switchToReading();
+
+    ResettableIterator it1 = fsMerger1.readIterator();
+    ResettableIterator it2 = fsMerger2.readIterator();
+
+    Iterator<JoinedTuple> iterator = HashJoinUtils.rightJoin(it1, it2);
+
+    Set<Integer> keysReceived = new HashSet<>();
+
+    Set<Integer> leftKeyLookup = new HashSet<>(keys1);
+
+    while (iterator.hasNext()) {
+      JoinedTuple joinedTuple = iterator.next();
+      Assert.assertEquals(2, joinedTuple.getRightValue());
+      if (leftKeyLookup.contains(joinedTuple.getKey())) {
+        Assert.assertEquals(1, joinedTuple.getLeftValue());
+      } else {
+        Assert.assertNull(joinedTuple.getLeftValue());
+      }
+      keysReceived.add((Integer) joinedTuple.getKey());
+    }
+
+    Assert.assertEquals(keys2.size(), keysReceived.size());
 
     fsMerger1.clean();
     fsMerger2.clean();
