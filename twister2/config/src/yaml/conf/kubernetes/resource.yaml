@@ -111,7 +111,7 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # K8sUploader Settings
 #########################################################################
 
-# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
 
 # When a job is submitted, the job package needs to be transferred to worker pods
 # K8sUploader provides two upload methods:
@@ -149,11 +149,11 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # S3Uploader Settings
 #########################################################################
 
-twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
 # s3 bucket name to upload the job package
 # workers will download the job package from this location
-twister2.s3.bucket.name: "s3://twister2-scalability-tests"
+twister2.s3.bucket.name: "s3://<bucket-name>"
 
 # job package link will be available this much time
 # by default, it is 2 hours

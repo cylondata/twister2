@@ -18,7 +18,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -52,7 +51,7 @@ public class S3Uploader implements IUploader {
     long linkExpDur = S3Context.linkExpirationDuration(config);
 
     String cmd = String.format(uploaderScript + " %s %s %s", localJobPackFile, s3File, linkExpDur);
-    LOG.info("cmd for s3 upload: " + cmd);
+    LOG.fine("cmd for s3 upload: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
     Process p = null;
@@ -60,7 +59,6 @@ public class S3Uploader implements IUploader {
       p = Runtime.getRuntime().exec(fullCmd);
       p.waitFor();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when executing uploader script: " + uploaderScript, e);
       throw new UploaderException("Exception when executing uploader script: " + uploaderScript, e);
     } catch (InterruptedException e) {
       throw new UploaderException("Exception when waiting uploader script to complete: "
@@ -71,11 +69,10 @@ public class S3Uploader implements IUploader {
 
     if (exitCode == 0) {
       String url = readUrlFile();
-      LOG.info("Job Package Download URL: " + url);
+      LOG.fine("Job Package Download URL: " + url);
       try {
         return new URI(url);
       } catch (URISyntaxException e) {
-        LOG.log(Level.SEVERE, "Can not generate URI for download link: " + url, e);
         throw new UploaderException("Can not generate URI for download link: " + url, e);
       }
 

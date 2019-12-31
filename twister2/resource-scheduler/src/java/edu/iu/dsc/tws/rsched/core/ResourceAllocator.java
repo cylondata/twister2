@@ -288,12 +288,15 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    LOG.log(Level.INFO, "Initialize uploader");
+    LOG.fine("Initialize uploader");
     // now upload the content of the package
     uploader.initialize(updatedConfig, updatedJob);
     // gives the url of the file to be uploaded
-    LOG.log(Level.INFO, "Calling uploader to upload the package content");
+    LOG.fine("Calling uploader to upload the job package");
+    long start = System.currentTimeMillis();
     URI packageURI = uploader.uploadPackage(jobDirectory);
+    long delay = System.currentTimeMillis() - start;
+    LOG.info("Job package uploaded. It took: " + delay + "ms");
 
     // add scp address as a prefix to returned URI: user@ip
     String scpServerAdress = ScpContext.scpConnection(updatedConfig);
