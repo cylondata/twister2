@@ -318,7 +318,10 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
+    start = System.currentTimeMillis();
     Twister2JobState state = launcher.launch(updatedJob);
+    delay = System.currentTimeMillis() - start;
+    LOG.info("Job launching took took: " + delay + "ms");
 
     launcher.close();
 
