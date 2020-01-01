@@ -17,7 +17,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 
@@ -26,18 +27,25 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
   private static final Logger LOG = Logger.getLogger(LocalCSVInputPartitioner.class.getName());
 
   private Config config;
-  private int nTasks;
+  private int numberOfTasks;
+  private int recordLength;
 
   private OrderedInputSplitAssigner<String> assigner;
 
-  public LocalCSVInputPartitioner(Path filePath, int numTasks) {
+  public LocalCSVInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
-    this.nTasks = numTasks;
+    this.recordLength = recordLen;
   }
 
-  public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config, numTasks);
-    this.nTasks = numTasks;
+  public LocalCSVInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
+    super(filePath, recordLen, nTasks);
+    this.numberOfTasks = nTasks;
+    this.recordLength = recordLen;
+    this.config = cfg;
+  }
+
+  public LocalCSVInputPartitioner(Path path, int parallelism, Config cfg) {
+    super(path, parallelism);
   }
 
   protected CSVInputSplit createSplit(int num, Path file, long start,
@@ -45,10 +53,9 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
     return new CSVInputSplit(num, file, start, length, hosts);
   }
 
-  @Override
-  public OrderedInputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
+  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner<>(inputSplits, nTasks);
+      assigner = new OrderedInputSplitAssigner<>(inputSplits, numberOfTasks);
     }
     return assigner;
   }

@@ -12,17 +12,13 @@
 package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.logging.Logger;
-
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
-import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public class CSVInputSplit extends FileInputSplit<byte[]> {
 
@@ -127,7 +123,8 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   public void configure(Config parameters) {
     this.config = parameters;
-    int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    //int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    int datasize = 1000;
     int recordLen = datasize * Double.BYTES;
     if (recordLen > 0) {
       setRecordLength(recordLen);
@@ -173,12 +170,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     if (this.splitStart != 0) {
       this.stream.seek(this.offset);
     }
-    CSVReader csvReader = new CSVReader(new InputStreamReader(this.stream));
-    try {
-      LOG.info("Read all csv values:" + csvReader.readAll());
-    } catch (CsvException e) {
-      e.printStackTrace();
-    }
     fillBuffer(0);
   }
 
@@ -203,26 +194,10 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
       this.stream.seek(offset);
     }
 
-//    // skip the first line, if we are at the beginning of a file and have the option set
-//    if (this.skipFirstLineAsHeader && this.splitStart == 0) {
-//      readLine(); // read and ignore
-//    }
-
-//    //TODO: Checking the integration of CSV
-//    CSVParser csvParser = new CSVParserBuilder()
-//        .withSeparator(',')
-//        .withIgnoreQuotations(true)
-//        .build();
-//    LOG.info("stream reader:" + this.stream.getReader());
-//    CSVReader csvReader = new CSVReaderBuilder(this.stream.getReader())
-//        .withSkipLines(1) //if we put '1' it will skip the header
-//        .withCSVParser(csvParser)
-//        .build();
-//    try {
-//      LOG.info("csv reader contents:" + Arrays.toString(csvReader.readNext()));
-//    } catch (CsvException e) {
-//      e.printStackTrace();
-//    }
+    // skip the first line, if we are at the beginning of a file and have the option set
+    /*if (this.skipFirstLineAsHeader && this.splitStart == 0) {
+     readLine(); // read and ignore
+    }*/
     fillBuffer(0);
   }
 

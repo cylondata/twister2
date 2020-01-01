@@ -58,7 +58,7 @@ java_tests(
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
-#        "edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",
     ],
     runtime_deps = [
         ":examples-tests",
