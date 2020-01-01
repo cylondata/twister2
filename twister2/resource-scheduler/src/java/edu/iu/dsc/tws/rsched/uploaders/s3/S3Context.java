@@ -30,6 +30,10 @@ public final class S3Context {
     return Context.twister2Home(config) + "/conf/scripts/s3Uploader.sh";
   }
 
+  public static String urlGenScript(Config config) {
+    return Context.twister2Home(config) + "/conf/scripts/s3UrlGen.sh";
+  }
+
   public static String s3BucketName(Config config) {
     return config.getStringValue(S3_BUCKET_NAME);
   }
