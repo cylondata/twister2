@@ -160,8 +160,44 @@ public class S3Uploader extends Thread implements IUploader {
   }
 
   @Override
-  public boolean undo() {
-    return false;
+  public boolean undo(Config cnfg, String jobID) {
+
+    s3File = S3Context.s3BucketName(cnfg) + "/" + JobUtils.createJobPackageFileName(jobID);
+    String removerScript = S3Context.removerScript(cnfg);
+
+    String cmd = removerScript + " " + s3File;
+    LOG.fine("cmd for s3 Remover: " + cmd);
+    String[] fullCmd = {"bash", "-c", cmd};
+
+    Process p = null;
+    try {
+      p = Runtime.getRuntime().exec(fullCmd);
+      p.waitFor();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when executing the script: " + removerScript, e);
+      return false;
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Exception when waiting the script to complete: "
+          + removerScript, e);
+      return false;
+    }
+
+    int exitCode = p.exitValue();
+
+    if (exitCode == 0) {
+      LOG.info("Job Package removed successfully: " + s3File);
+      return true;
+    } else if (exitCode == 13) {
+      String failMsg = String.format("the job package: %s can not be removed.", s3File);
+      LOG.severe(failMsg);
+      return false;
+    } else {
+      String failMsg = String.format("Some error occurred when removing the job package %s",
+          s3File);
+      LOG.severe(failMsg);
+      return false;
+    }
+
   }
 
   @Override

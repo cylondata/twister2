@@ -335,7 +335,7 @@ public class ResourceAllocator {
         state.setRequestGranted(false);
       }
     } else {
-      uploader.undo();
+      uploader.undo(updatedConfig, job.getJobId());
     }
 
     if (SchedulerContext.clusterType(updatedConfig).equals("kubernetes")
@@ -402,6 +402,24 @@ public class ResourceAllocator {
     }
 
     launcher.close();
+
+    String uploaderClass = SchedulerContext.uploaderClass(config);
+    if (uploaderClass == null) {
+      throw new RuntimeException("The uploader class must be specified");
+    }
+
+    IUploader uploader;
+    // create an instance of uploader
+    try {
+      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          uploaderClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new UploaderException(
+          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
+    }
+
+    uploader.undo(config, jobID);
+    uploader.close();
   }
 
 }

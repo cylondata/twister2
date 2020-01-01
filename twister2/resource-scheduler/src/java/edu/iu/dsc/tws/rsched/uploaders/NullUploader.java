@@ -45,8 +45,10 @@ public class NullUploader implements IUploader {
   /**
    * If subsequent stages fail, undo will be called to free resources used by
    * uploading package. Ideally, this should try to remove the uploaded package.
+   * @param cnfg
+   * @param jobID
    */
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jobID) {
     return true;
   }
 

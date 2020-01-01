@@ -1,5 +1,10 @@
 #! /bin/bash
 
+####################################################
+# Get a presigned URL for a file in s3
+# Save the generated URL to a local file
+####################################################
+
 # check supplied parameters
 if [[ "$#" -ne 2 ]]; then
   echo "$# arguments supplied. Two parameters required: s3File expirationSec"

@@ -99,7 +99,7 @@ public class ScpUploader implements IUploader {
   }
 
   @Override
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jobID) {
     LOG.info("Clean uploaded jar");
     File file = new File(destinationDirectory);
     return file.delete();

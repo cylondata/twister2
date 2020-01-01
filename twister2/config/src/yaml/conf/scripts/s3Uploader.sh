@@ -1,5 +1,9 @@
 #! /bin/bash
 
+####################################################
+# Upload the given local file to s3 bucket
+####################################################
+
 # check supplied parameters
 if [[ "$#" -ne 2 ]]; then
   echo "$# arguments supplied. Two parameters required: localFile s3File"

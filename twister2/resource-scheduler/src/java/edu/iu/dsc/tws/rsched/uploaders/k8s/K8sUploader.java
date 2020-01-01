@@ -399,7 +399,7 @@ public class K8sUploader extends Thread implements IUploader {
   }
 
   @Override
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jbID) {
     stopUploader();
     return false;
   }
