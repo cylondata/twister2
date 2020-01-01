@@ -52,7 +52,7 @@ public class S3Uploader extends Thread implements IUploader {
     String uploaderScript = S3Context.uploaderScript(config);
 
     String cmd = String.format(uploaderScript + " %s %s", localJobPackFile, s3File);
-    LOG.info("cmd for s3 Uploader: " + cmd);
+    LOG.fine("cmd for s3 Uploader: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
     Process p = null;
@@ -96,7 +96,7 @@ public class S3Uploader extends Thread implements IUploader {
     String urlGenScript = S3Context.urlGenScript(config);
 
     String cmd = String.format(urlGenScript + " %s %s", s3File, linkExpDur);
-    LOG.info("cmd for s3 URL Generation: " + cmd);
+    LOG.fine("cmd for s3 URL Generation: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
     Process p = null;
@@ -114,7 +114,7 @@ public class S3Uploader extends Thread implements IUploader {
 
     if (exitCode == 0) {
       String url = readUrlFile();
-      LOG.info("Job Package Download URL: " + url);
+      LOG.fine("Job Package Download URL: " + url);
       try {
         URI uri = new URI(url);
 
@@ -156,7 +156,6 @@ public class S3Uploader extends Thread implements IUploader {
       LOG.log(Level.WARNING, e.getMessage(), e);
     }
 
-    LOG.info("Uploader complete returns: " + uploaded);
     return uploaded;
   }
 

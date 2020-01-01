@@ -296,7 +296,7 @@ public class ResourceAllocator {
     long start = System.currentTimeMillis();
     URI packageURI = uploader.uploadPackage(jobDirectory);
     long delay = System.currentTimeMillis() - start;
-    LOG.info("Job package uploaded. It took: " + delay + "ms");
+    LOG.info("Job package upload started. It took: " + delay + "ms");
 
     // add scp address as a prefix to returned URI: user@ip
     String scpServerAdress = ScpContext.scpConnection(updatedConfig);
