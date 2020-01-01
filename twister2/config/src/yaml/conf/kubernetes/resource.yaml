@@ -148,6 +148,10 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUpload
 #########################################################################
 # S3Uploader Settings
 #########################################################################
+# To use S3Uploader:
+#   Uncomment uploader class below.
+#   Specify bucket name
+#   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
 
 # twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
