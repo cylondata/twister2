@@ -108,70 +108,60 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # twister2.zookeeper.root.node.path: "/twister2"
 
 #########################################################################
-# Uploader Settings in Kubernetes
+# K8sUploader Settings
 #########################################################################
+
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
 
 # When a job is submitted, the job package needs to be transferred to worker pods
-# Two upload methods are provided:
-#   a) Job Package Transfer Using kubectl file copy (default)
-#   b) Job Package Transfer Through a Web Server
+# K8sUploader provides two upload methods:
+#   a) Transferring job package to job pods from submitting client directly
+#   b) Transferring job package to web server pods.
+#      Job pods download the job package from web server pods.
+#      You need to deploy twister2 uploader pods for this to work.
+#      Please deploy: deployment/twister2-uploader-wo-ps.yaml
 #
-# Following two configuration parameters control the uploading with the first method
-# when the submitting client uploads the job package directly to pods using kubectl copy
+# We first check whether there is any uploader web server running,
+# if there is, we upload the job package to the uploader web server pods.
+# Otherwise, we upload the job package to job pods directly from submitting client.
 
-# if the value of this parameter is true,
-# the job package is transferred from submitting client to pods directly
-# if it is false, the job package will be transferred to pods through the upload web server
-# default value is true
-twister2.resource.kubernetes.client.to.pods.uploading: true
+# uploader web server address
+# it is by default: "http://twister2-uploader.default.svc.cluster.local"
+# if you are using, twister2-uploader-wo-ps.yaml
+# no need to set this parameter, default one is ok
+# twister2.kubernetes.uploader.web.server: "http://twister2-uploader.default.svc.cluster.local"
 
-# When the job package is transferred from submitting client to pods directly,
-# upload attempts can either start after watching pods or immediately when StatefulSets are created
-# watching pods before starting file upload attempts is more accurate
-# it may be slightly slower to transfer the job package by watching pods though
-# default value is true
-twister2.resource.kubernetes.uploader.watch.pods.starting: true
+# uploader web server directory
+# job package will be uploaded to this directory
+# it is by default: "/usr/share/nginx/html"
+# if you are using, twister2-uploader-wo-ps.yaml
+# no need to set this parameter, default one is ok
+# twister2.kubernetes.uploader.web.server.directory: "/usr/share/nginx/html"
+
+# uploader web server label
+# job package will be uploaded to the pods that have this label
+# it is by default: "app=twister2-uploader"
+# if you are using, twister2-uploader-wo-ps.yaml
+# no need to set this parameter, default one is ok
+# twister2.kubernetes.uploader.web.server.label: "app=twister2-uploader"
 
 #########################################################################
-# Following configuration parameters sets up the upload web server,
-# when the job package is transferred through a webserver
-# Workers download the job package from this web server
+# S3Uploader Settings
 #########################################################################
+# To use S3Uploader:
+#   Uncomment uploader class below.
+#   Specify bucket name
+#   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
 
-# the directory where the job package file will be uploaded,
-# make sure the user has the necessary permissions to upload the file there.
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
-# full directory path to upload the job package with scp
-twister2.resource.uploader.directory: "/absolute/path/to/uploder/directory/"
+# s3 bucket name to upload the job package
+# workers will download the job package from this location
+twister2.s3.bucket.name: "s3://<bucket-name>"
 
-# twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
-
-# web server link of the job package download directory
-# this is the same directory as the uploader directory
-twister2.resource.download.directory: "http://webserver.address:port/download/dir/path"
-
-# This is the scp command options that will be used by the uploader, this can be used to
-# specify custom options such as the location of ssh keys.
-twister2.resource.uploader.scp.command.options: "--chmod=+rwx"
-
-# The scp connection string sets the remote user name and host used by the uploader.
-twister2.resource.uploader.scp.command.connection: "user@uploadserver.address"
-
-# The ssh command options that will be used when connecting to the uploading host to execute
-# command such as delete files, make directories.
-twister2.resource.uploader.ssh.command.options: ""
-
-# The ssh connection string sets the remote user name and host used by the uploader.
-twister2.resource.uploader.ssh.command.connection: "user@uploadserver.address"
-
-# the uploader class
-twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-
-# this is the method that workers use to download the core and job packages
-# it could be  HTTP, HDFS, ..
-twister2.resource.uploader.download.method: "HTTP"
+# job package link will be available this much time
+# by default, it is 2 hours
+# twister2.s3.link.expiration.duration.sec: 7200
 
 ########################################################################
 # Node locations related settings

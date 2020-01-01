@@ -37,6 +37,7 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
 
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
+  private boolean useDisk = false;
 
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
@@ -108,8 +109,13 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.setTargetEdge(groupName);
     e.addProperty(CommunicationContext.JOIN_TYPE, joinType);
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
-    e.addProperty(CommunicationContext.USE_DISK, false);
+    e.addProperty(CommunicationContext.USE_DISK, useDisk);
 
     graphBuilder.connect(s.getId(), t.getId(), e);
+  }
+
+  public JoinTLink<K, VL, VR> useDisk() {
+    this.useDisk = true;
+    return this;
   }
 }

@@ -124,7 +124,7 @@ public class MPILauncher implements ILauncher {
       coreFilePath = coreFile.getAbsolutePath();
     }
 
-    Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobName(), "");
+    Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobId(), "");
     int np = this.createOneSlotPerNodeFile(tempHotsFile);
 
     String mpiRunFile = MPIContext.mpiRunFile(config);
@@ -136,7 +136,7 @@ public class MPILauncher implements ILauncher {
             "conf/standalone/bootstrap.sh",
             Integer.toString(np),
             tempHotsFile.toAbsolutePath().toString(),
-            job.getJobName(),
+            job.getJobId(),
             this.jobWorkingDirectory,
             jobFilePath,
             jobFileMD5,
@@ -203,7 +203,7 @@ public class MPILauncher implements ILauncher {
     } else {
       LOG.info("Configured as SHARED file system. "
           + "Skipping bootstrap procedure & setting up working directory");
-      if (!setupWorkingDirectory(job.getJobName())) {
+      if (!setupWorkingDirectory(job.getJobId())) {
         throw new RuntimeException("Failed to setup the directory");
       }
     }
@@ -290,7 +290,7 @@ public class MPILauncher implements ILauncher {
    *
    * @return false if setup fails
    */
-  protected boolean setupWorkingDirectory(String jobName) {
+  protected boolean setupWorkingDirectory(String jobId) {
     // get the path of core release URI
     String corePackage = MPIContext.corePackageFileName(config);
 
@@ -299,7 +299,7 @@ public class MPILauncher implements ILauncher {
 
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
-        jobName,
+        jobId,
         jobWorkingDirectory,
         corePackage,
         jobPackageURI,

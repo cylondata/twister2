@@ -8,6 +8,7 @@ t2_java_lib(
     artifact_name = "Twsiter2 Communication",
     deps = [
         "//third_party:ompi_javabinding_java",
+        "//third_party:ucx_javabinding_java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
@@ -22,8 +23,8 @@ t2_java_lib(
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
-        "@org_apache_commons_commons_lang3//jar",
         "@org_apache_commons_commons_collections4//jar",
+        "@org_apache_commons_commons_lang3//jar",
     ],
 )
 

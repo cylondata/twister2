@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
-import static edu.iu.dsc.tws.api.config.Context.JOB_NAME;
+import static edu.iu.dsc.tws.api.config.Context.JOB_ID;
 
 public final class CheckpointingWorkerEnv {
   private static final Logger LOG = Logger.getLogger(CheckpointingWorkerEnv.class.getName());
@@ -115,7 +115,7 @@ public final class CheckpointingWorkerEnv {
 
       StateStore localCheckpointStore = CheckpointUtils.getStateStore(config);
       // one snapshot store for worker. Each node may have snapshots of multiple  workers
-      localCheckpointStore.init(config, WORKER_CHECKPOINT_DIR, config.getStringValue(JOB_NAME),
+      localCheckpointStore.init(config, WORKER_CHECKPOINT_DIR, config.getStringValue(JOB_ID),
           Integer.toString(workerId));
 
       Set<Integer> workerIDs = Collections.emptySet();
