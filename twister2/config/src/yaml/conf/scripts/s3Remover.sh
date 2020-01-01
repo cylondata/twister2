@@ -10,7 +10,7 @@ if [[ "$#" -ne 1 ]]; then
   exit 10
 fi
 
-s3File=$2
+s3File=$1
 
 echo "s3File: $s3File"
 
