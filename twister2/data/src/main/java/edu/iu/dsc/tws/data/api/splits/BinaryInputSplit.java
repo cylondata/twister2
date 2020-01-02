@@ -233,7 +233,6 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
    */
   public byte[] readRecord(byte[] reusable, byte[] bytes, int readOffset, int numBytes)
       throws IOException {
-    //If the reusable array is avilable use it
     //TODO L2: check for faster methods to perform this
     if (reusable != null && reusable.length == this.recordLength) {
       System.arraycopy(bytes, readOffset, reusable, 0, numBytes);

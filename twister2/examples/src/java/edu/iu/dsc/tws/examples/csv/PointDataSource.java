@@ -31,8 +31,6 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
-//import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
-
 public class PointDataSource extends BaseSource implements Collector {
   private static final Logger LOG = Logger.getLogger(PointDataSource.class.getName());
 
@@ -63,6 +61,7 @@ public class PointDataSource extends BaseSource implements Collector {
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     List<double[]> points = new ArrayList<>();
     while (inputSplit != null) {
+      LOG.info("input split value:" + inputSplit);
       try {
         while (!inputSplit.reachedEnd()) {
           Object value = inputSplit.nextRecord(null);
@@ -95,10 +94,8 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    /*this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-        new Path(dataDirectory), context.getParallelism(), cfg));*/
     this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-       new Path(dataDirectory), context.getParallelism()));
+        new Path(dataDirectory), context.getParallelism(), cfg));
   }
 
   @Override

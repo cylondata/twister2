@@ -16,8 +16,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
+//import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
+//import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner {
@@ -38,14 +40,15 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
   }
 
   public LocalCSVInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
-    super(filePath, recordLen, nTasks);
+    super(filePath, recordLen, nTasks, cfg);
     this.numberOfTasks = nTasks;
     this.recordLength = recordLen;
     this.config = cfg;
   }
 
-  public LocalCSVInputPartitioner(Path path, int parallelism, Config cfg) {
-    super(path, parallelism);
+  public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
+    super(filePath, config);
+    this.numberOfTasks = numTasks;
   }
 
   protected CSVInputSplit createSplit(int num, Path file, long start,

@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+//import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -48,27 +49,29 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
 
   public CSVInputPartitioner(Path filepath) {
     super(filepath);
+    this.filePath = filepath;
   }
 
-  public CSVInputPartitioner(Path filepath, int recordLen) {
+  public CSVInputPartitioner(Path filepath, int numberOfTasks) {
     super(filepath);
-    this.recordLength = recordLen;
-  }
-
-  public CSVInputPartitioner(Path filePath, int recordLen, Config cfg) {
-    super(filePath);
-    this.recordLength = recordLen;
-    this.configure(cfg);
-  }
-
-  public CSVInputPartitioner(Path filePath, int recordLen, int numberOfTasks) {
-    super(filePath);
     this.numSplits = numberOfTasks;
-    this.recordLength = recordLen;
   }
 
-  public CSVInputPartitioner(Path filePath, int recordLen, int numberOfTasks, Config config) {
-    super(filePath, config);
+  public CSVInputPartitioner(Path filepath, int numberOfTasks, Config cfg) {
+    super(filepath, cfg);
+    this.numSplits = numberOfTasks;
+  }
+
+  public CSVInputPartitioner(Path filepath, Config cfg) {
+    super(filepath, cfg);
+    this.filePath = filepath;
+    this.config = cfg;
+  }
+
+  public CSVInputPartitioner(Path filepath, int recordLen, int numberOfTasks, Config cfg) {
+    super(filepath, cfg);
+    this.filePath = filepath;
+    this.config = cfg;
     this.numSplits = numberOfTasks;
     this.recordLength = recordLen;
   }
@@ -92,6 +95,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
 
+    LOG.info("number of splits:" + minNumSplits);
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);
     long totalLength = 0;
 
@@ -108,14 +112,59 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
       totalLength += pathFile.getLen();
     }
 
+    //Generate the splits
     int splitNum = 0;
+    for (final FileStatus file : files) {
+      final long len = file.getLen();
+      final long blockSize = file.getBlockSize();
+      final long localminSplitSize;
+      if (this.minSplitSize <= blockSize) {
+        localminSplitSize = this.minSplitSize;
+      } else {
+        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
+            + " is larger than the block size of " + blockSize
+            + ". Decreasing minimal split size to block size.");
+        localminSplitSize = blockSize;
+      }
+
+      final long maxSplitSize = totalLength;
+      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
+      if (len > 0) {
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
+        Arrays.sort(blocks);
+        long position = 0;
+        int blockIndex = 0;
+        for (int i = 0; i < curminNumSplits; i++) {
+          blockIndex = getBlockIndexForPosition(blocks, position, splitSize, blockIndex);
+          FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
+              blocks[blockIndex].getHosts());
+          inputSplits.add(fis);
+        }
+      } else {
+        // special case with a file of zero bytes size
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
+        String[] hosts;
+        if (blocks.length > 0) {
+          hosts = blocks[0].getHosts();
+        } else {
+          hosts = new String[0];
+        }
+        for (int i = 0; i < curminNumSplits; i++) {
+          final FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
+          inputSplits.add(fis);
+        }
+      }
+    }
+
+    /*int splitNum = 0;
     final long maxSplitSize = totalLength;
     for (final FileStatus file : files) {
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
       final long localminSplitSize;
 
-      //final int numberOfLines = (int) file.getLen();
+      final int numberOfLines = (int) file.getLen();
+      LOG.info("number of lines:" + numberOfLines);
       if (this.minSplitSize <= blockSize) {
         localminSplitSize = this.minSplitSize;
       } else {
@@ -138,6 +187,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           inputSplits.add(fis);
         }
       } else {
+        LOG.info("I am coming inside the else block");
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
         String[] hosts;
         if (blocks.length > 0) {
@@ -150,7 +200,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           inputSplits.add(fis);
         }
       }
-    }
+    }*/
     LOG.info("input splits value:" + inputSplits.size() + "\t"
         + Arrays.toString(inputSplits.toArray()));
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);

@@ -15,9 +15,9 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 //import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public class CSVInputSplit extends FileInputSplit<byte[]> {
@@ -26,8 +26,8 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   private static final long serialVersionUID = 1L;
 
-  public static final String DEFAULT_LINE_DELIMITER = "\n";
-  public static final String DEFAULT_FIELD_DELIMITER = ",";
+  //public static final String DEFAULT_LINE_DELIMITER = "\n";
+  //public static final String DEFAULT_FIELD_DELIMITER = ",";
 
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
@@ -36,62 +36,33 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
 
   protected boolean lineDelimiterIsLinebreak = false;
 
-  private final Path file;
+  //private final Path file;
   private Config config;
-  protected FSDataInputStream stream;
 
   private long offset = -1;
-  private long start;
-  private long length;
+  //private long start;
+  //private long length;
   protected long splitStart;
   protected long splitLength;
-  protected long openTimeout;
 
   private transient byte[] wrapBuffer;
   private transient byte[] readBuffer;
-
   private transient boolean end;
 
   protected int numSplits = -1;
   private int bufferSize = -1;
+
   private transient int readPos;
   private transient int limit;
   private transient int recordLength;
   private transient int currOffset;
   private transient int currLen;
+
   private transient int commentCount;
   private transient int invalidLineCount;
 
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
-    this.file = file;
-    this.start = start;
-    this.length = length;
-  }
-
-  public Path getPath() {
-    return file;
-  }
-
-  public long getStart() {
-    return start;
-  }
-
-  public void setStart(long start) {
-    this.start = start;
-  }
-
-  public long getLength() {
-    return length;
-  }
-
-  public void setLength(long length) {
-    this.length = length;
-  }
-
-  @Override
-  public int hashCode() {
-    return getSplitNumber() ^ (file == null ? 0 : file.hashCode());
   }
 
   public byte[] getDelimiter() {
@@ -106,25 +77,10 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     this.delimiterString = null;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    } else if (obj instanceof CSVInputSplit && super.equals(obj)) {
-      CSVInputSplit other = (CSVInputSplit) obj;
-      return this.start == other.start
-          && this.length == other.length
-          && (this.file == null ? other.file == null : (other.file != null
-          && this.file.equals(other.file)));
-    } else {
-      return false;
-    }
-  }
-
   public void configure(Config parameters) {
     this.config = parameters;
-    //int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
-    int datasize = 1000;
+    int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    //int datasize = 1000;
     int recordLen = datasize * Double.BYTES;
     if (recordLen > 0) {
       setRecordLength(recordLen);
@@ -178,8 +134,10 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     super.open(cfg);
     this.configure(cfg);
     initBuffers();
+
     this.commentCount = 0;
     this.invalidLineCount = 0;
+
     long recordMod = this.splitStart % this.recordLength;
     if (recordMod != 0) {
       this.offset = this.splitStart + this.recordLength - recordMod;
@@ -193,11 +151,6 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     if (this.splitStart != 0) {
       this.stream.seek(offset);
     }
-
-    // skip the first line, if we are at the beginning of a file and have the option set
-    /*if (this.skipFirstLineAsHeader && this.splitStart == 0) {
-     readLine(); // read and ignore
-    }*/
     fillBuffer(0);
   }
 
@@ -289,6 +242,7 @@ public class CSVInputSplit extends FileInputSplit<byte[]> {
     }
 
     int read = this.stream.read(this.readBuffer, fillOffset, toRead);
+    LOG.info("input read values:" + read);
     if (read == -1) {
       this.stream.close();
       this.stream = null;
