@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BJoinCompute;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 
 public class BTJoinExample extends BenchTaskWorker {
@@ -128,7 +129,7 @@ public class BTJoinExample extends BenchTaskWorker {
           }
         }
 
-        List objects = JoinUtils.innerJoin(onLeftEdge, onRightEdge,
+        List objects = SortJoinUtils.innerJoin(onLeftEdge, onRightEdge,
             new KeyComparatorWrapper(Comparator.naturalOrder()));
 
         return (Iterator<JoinedTuple>) objects.iterator();

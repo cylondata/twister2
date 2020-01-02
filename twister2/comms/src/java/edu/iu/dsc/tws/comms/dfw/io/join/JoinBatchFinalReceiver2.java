@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
 public class JoinBatchFinalReceiver2 implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(JoinBatchFinalReceiver2.class.getName());
@@ -149,7 +149,7 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
         leftValues.put(target, (List<Tuple>) it);
 
         if (rightValues.containsKey(target)) {
-          List<Object> results = JoinUtils.join(leftValues.get(target),
+          List<Object> results = SortJoinUtils.join(leftValues.get(target),
               rightValues.get(target), comparator, joinType);
           bulkReceiver.receive(target, results.iterator());
         }
@@ -157,7 +157,7 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
         rightValues.put(target, (List<Tuple>) it);
 
         if (leftValues.containsKey(target)) {
-          List<Object> results = JoinUtils.join(leftValues.get(target),
+          List<Object> results = SortJoinUtils.join(leftValues.get(target),
               rightValues.get(target), comparator, joinType);
           bulkReceiver.receive(target, results.iterator());
         }
