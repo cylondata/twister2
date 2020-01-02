@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
@@ -116,26 +117,30 @@ public final class HashJoinUtils {
   }
 
   public static Iterator<JoinedTuple> innerJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.INNER);
+                                                ResettableIterator<Tuple<?, ?>> rightIt,
+                                                MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.INNER, keyType);
   }
 
   public static Iterator<JoinedTuple> leftJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                               ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.LEFT);
+                                               ResettableIterator<Tuple<?, ?>> rightIt,
+                                               MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.LEFT, keyType);
   }
 
   public static Iterator<JoinedTuple> rightJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.RIGHT);
+                                                ResettableIterator<Tuple<?, ?>> rightIt,
+                                                MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.RIGHT, keyType);
   }
 
   /**
    * Disk based inner join
    */
-  private static Iterator<JoinedTuple> diskJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt,
-                                                CommunicationContext.JoinType joinType) {
+  public static Iterator<JoinedTuple> join(ResettableIterator<Tuple<?, ?>> leftIt,
+                                           ResettableIterator<Tuple<?, ?>> rightIt,
+                                           CommunicationContext.JoinType joinType,
+                                           MessageType keyType) {
     // choosing hashing and probing relations
     // if inner join:
     //    hashing = left
@@ -157,7 +162,7 @@ public final class HashJoinUtils {
     return new Iterator<JoinedTuple>() {
 
       private boolean hashingDone;
-      private Map<Object, List> keyHash = new HashMap<>();
+      private Map<Object, List> keyHash = new THashMap<>(keyType);
 
       // always keep the nextJoinTuple in memory. hasNext() will use this field
       private JoinedTuple nextJoinTuple;
