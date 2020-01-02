@@ -48,7 +48,6 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
-import edu.iu.dsc.tws.task.dataobjects.DataObjectCSVSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
@@ -88,12 +87,12 @@ public class KMeansComputeJob implements IWorker {
     int csize = config.getIntegerValue(DataObjectConstants.CSIZE);
     int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
-    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
-    String centroidDirectory = config.getStringValue(
-        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
+    //String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    //String centroidDirectory = config.getStringValue(
+    //    DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
-    //String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
-    //String centroidDirectory = config.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+    String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+    String centroidDirectory = config.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
 
     KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
@@ -142,11 +141,11 @@ public class KMeansComputeJob implements IWorker {
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
                                                int parallelismValue, int dimension,
                                                Config conf) {
-    //PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
-    //    dataDirectory, "points", dimension);
+    PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory, "points", dimension);
 
-    DataObjectCSVSource ps = new DataObjectCSVSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
+    /*DataObjectCSVSource ps = new DataObjectCSVSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory);*/
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     // Add source, compute, and sink tasks to the task graph builder for the first task graph

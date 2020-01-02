@@ -35,8 +35,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
   private static final long serialVersionUID = -1L;
-
-  private boolean enumerateNestedFiles = false;
+  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
 
   protected transient int numSplits;
 
@@ -45,21 +44,9 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
 
   private long minSplitSize = 0;
 
-  private transient int recordLength;
-
   public CSVInputPartitioner(Path filepath) {
     super(filepath);
     this.filePath = filepath;
-  }
-
-  public CSVInputPartitioner(Path filepath, int numberOfTasks) {
-    super(filepath);
-    this.numSplits = numberOfTasks;
-  }
-
-  public CSVInputPartitioner(Path filepath, int numberOfTasks, Config cfg) {
-    super(filepath, cfg);
-    this.numSplits = numberOfTasks;
   }
 
   public CSVInputPartitioner(Path filepath, Config cfg) {
@@ -68,21 +55,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
     this.config = cfg;
   }
 
-  public CSVInputPartitioner(Path filepath, int recordLen, int numberOfTasks, Config cfg) {
-    super(filepath, cfg);
-    this.filePath = filepath;
-    this.config = cfg;
-    this.numSplits = numberOfTasks;
-    this.recordLength = recordLen;
-  }
-
-
   @Override
   public void configure(Config parameters) {
     this.config = parameters;
   }
-
-  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
 
   /**
    * It create the number of splits based on the task parallelism value.
@@ -98,8 +74,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
     final Path path = this.filePath;
-    final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
-    List<FileStatus> files = new ArrayList<FileStatus>();
+    final List<FileInputSplit> inputSplits = new ArrayList<>(curminNumSplits);
+    List<FileStatus> files = new ArrayList<>();
     long totalLength = 0;
 
     final FileSystem fs = FileSystemUtils.get(path, config);
@@ -133,12 +109,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
 
       final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
       final long halfSplit = splitSize >>> 1;
-
       final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
       if (len > 0) {
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
         Arrays.sort(blocks);
-
         long bytesUnassigned = len;
         long position = 0;
 
@@ -147,6 +121,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
+          /*FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
+              blocks[blockIndex].getHosts());*/
           inputSplits.add(fis);
           position += splitSize;
           bytesUnassigned -= splitSize;
@@ -156,6 +132,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position,
               bytesUnassigned, blocks[blockIndex].getHosts());
+           /*FileInputSplit fis = new CSVInputSplit((splitNum++, file.getPath(), position,
+              bytesUnassigned, blocks[blockIndex].getHosts());*/
           inputSplits.add(fis);
         }
 
@@ -187,4 +165,10 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
                                        String[] hosts) {
     return null;
   }
+
+//  @Override
+//  protected CSVInputSplit createSplit(int num, Path file, long start, long length,
+//                                                     String[] hosts) {
+//    return null;
+//  }
 }

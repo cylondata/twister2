@@ -96,6 +96,8 @@ public class PointDataSource extends BaseSource implements Collector {
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
         new Path(dataDirectory), context.getParallelism(), cfg));
+    /*this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+        new Path(dataDirectory), context.getParallelism(), cfg));*/
   }
 
   @Override

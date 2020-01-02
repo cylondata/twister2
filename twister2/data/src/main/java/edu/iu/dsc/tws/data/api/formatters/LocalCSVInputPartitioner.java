@@ -16,10 +16,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
-//import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-//import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
+import edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner {
@@ -28,7 +26,6 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
 
   private static final Logger LOG = Logger.getLogger(LocalCSVInputPartitioner.class.getName());
 
-  private Config config;
   private int numberOfTasks;
   private int recordLength;
 
@@ -39,21 +36,14 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
     this.recordLength = recordLen;
   }
 
-  public LocalCSVInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
-    super(filePath, recordLen, nTasks, cfg);
-    this.numberOfTasks = nTasks;
-    this.recordLength = recordLen;
-    this.config = cfg;
-  }
-
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
     super(filePath, config);
     this.numberOfTasks = numTasks;
   }
 
-  protected CSVInputSplit createSplit(int num, Path file, long start,
-                                      long length, String[] hosts) {
-    return new CSVInputSplit(num, file, start, length, hosts);
+  protected GenericCSVInputSplit createSplit(int num, Path file, long start,
+                                             long length, String[] hosts) {
+    return new GenericCSVInputSplit(num, file, start, length, hosts);
   }
 
   public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {

@@ -32,6 +32,11 @@ public class GenericCSVInputSplit extends DelimitedInputSplit<String> {
   private static final byte NEW_LINE = (byte) '\n';
 
   /**
+   * The name of the charset to use for decoding.
+   */
+  private String charsetName = "UTF-8";
+
+  /**
    * Constructs a split with host information.
    *
    * @param num the number of this input split
@@ -43,8 +48,6 @@ public class GenericCSVInputSplit extends DelimitedInputSplit<String> {
   public GenericCSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
   }
-
-
 
   @Override
   public String getCharsetName() {
@@ -58,11 +61,6 @@ public class GenericCSVInputSplit extends DelimitedInputSplit<String> {
     }
     this.charsetName = charsetName;
   }
-
-  /**
-   * The name of the charset to use for decoding.
-   */
-  private String charsetName = "UTF-8";
 
   @Override
   public void configure(Config parameters) {

@@ -305,7 +305,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
       try {
         final FileSystem fs = FileSystemUtils.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
-        LOG.info("FILE INPUT STREAM:" + this.fdis.getReader().toString());
         // check for canceling and close the stream in that case, because no one will obtain it
         if (this.aborted) {
           final FSDataInputStream f = this.fdis;
