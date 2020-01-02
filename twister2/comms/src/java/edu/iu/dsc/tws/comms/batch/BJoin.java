@@ -85,6 +85,7 @@ public class BJoin extends BaseOperation {
                DestinationSelector destSelector, boolean shuffle,
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
                CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm,
                MessageSchema leftSchema, MessageSchema rightSchema) {
     super(comm, false, CommunicationContext.JOIN);
 
@@ -99,9 +100,11 @@ public class BJoin extends BaseOperation {
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator, joinType);
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator,
+          joinType, joinAlgorithm, keyType);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType,
+          joinAlgorithm, keyType);
     }
 
 
@@ -122,31 +125,37 @@ public class BJoin extends BaseOperation {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType,
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm,
                MessageSchema leftSchema, MessageSchema rightSchema) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, leftSchema, rightSchema);
+        joinType, joinAlgorithm, leftSchema, rightSchema);
   }
 
   public BJoin(Communicator comm, LogicalPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
   }
 
   public BJoin(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
     this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
         logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
   }
 
   /**

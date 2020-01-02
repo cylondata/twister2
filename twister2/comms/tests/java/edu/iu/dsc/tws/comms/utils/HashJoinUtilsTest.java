@@ -48,12 +48,10 @@ public class HashJoinUtilsTest {
     List<Tuple> departments = JoinTestUtils.getDepartments();
     List<Tuple> employees = JoinTestUtils.getEmployees();
 
-    KeyComparatorWrapper employeeDepComparator = JoinTestUtils.getEmployeeDepComparator();
-
     List<Object> joined = HashJoinUtils.innerJoin(
         employees,
         departments,
-        employeeDepComparator
+        MessageTypes.INTEGER
     );
 
     List<Object> innerJoined = JoinTestUtils.getInnerJoined();
@@ -104,7 +102,7 @@ public class HashJoinUtilsTest {
     ResettableIterator it1 = fsMerger1.readIterator();
     ResettableIterator it2 = fsMerger2.readIterator();
 
-    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2);
+    Iterator<JoinedTuple> iterator = HashJoinUtils.innerJoin(it1, it2, MessageTypes.INTEGER);
 
     Set<Integer> keysReceived = new HashSet<>();
 
@@ -164,7 +162,7 @@ public class HashJoinUtilsTest {
     ResettableIterator it1 = fsMerger1.readIterator();
     ResettableIterator it2 = fsMerger2.readIterator();
 
-    Iterator<JoinedTuple> iterator = HashJoinUtils.leftJoin(it1, it2);
+    Iterator<JoinedTuple> iterator = HashJoinUtils.leftJoin(it1, it2, MessageTypes.INTEGER);
 
     Set<Integer> keysReceived = new HashSet<>();
 
@@ -231,7 +229,7 @@ public class HashJoinUtilsTest {
     ResettableIterator it1 = fsMerger1.readIterator();
     ResettableIterator it2 = fsMerger2.readIterator();
 
-    Iterator<JoinedTuple> iterator = HashJoinUtils.rightJoin(it1, it2);
+    Iterator<JoinedTuple> iterator = HashJoinUtils.rightJoin(it1, it2, MessageTypes.INTEGER);
 
     Set<Integer> keysReceived = new HashSet<>();
 

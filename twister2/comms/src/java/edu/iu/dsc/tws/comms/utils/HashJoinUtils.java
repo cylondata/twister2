@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.comms.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
@@ -33,8 +33,8 @@ public final class HashJoinUtils {
 
   public static List<Object> rightOuterJoin(List<Tuple> leftRelation,
                                             List<Tuple> rightRelation,
-                                            KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> leftHash = new HashMap<>();
+                                            MessageType messageType) {
+    Map<Object, List<Tuple>> leftHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -45,16 +45,12 @@ public final class HashJoinUtils {
 
     for (Tuple rightTuple : rightRelation) {
       List<Tuple> leftTuples = leftHash.getOrDefault(rightTuple.getKey(), Collections.emptyList());
-      boolean matched = false;
       for (Tuple leftTuple : leftTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-          matched = true;
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
 
-      if (!matched) {
+      if (leftTuples.isEmpty()) {
         joinedTuples.add(JoinedTuple.of(rightTuple.getKey(), null, rightTuple.getValue()));
       }
     }
@@ -63,8 +59,8 @@ public final class HashJoinUtils {
 
   public static List<Object> leftOuterJoin(List<Tuple> leftRelation,
                                            List<Tuple> rightRelation,
-                                           KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> rightHash = new HashMap<>();
+                                           MessageType messageType) {
+    Map<Object, List<Tuple>> rightHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -75,16 +71,12 @@ public final class HashJoinUtils {
 
     for (Tuple leftTuple : leftRelation) {
       List<Tuple> rightTuples = rightHash.getOrDefault(leftTuple.getKey(), Collections.emptyList());
-      boolean matched = false;
       for (Tuple rightTuple : rightTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-          matched = true;
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
 
-      if (!matched) {
+      if (rightTuples.isEmpty()) {
         joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(), null));
       }
     }
@@ -93,8 +85,8 @@ public final class HashJoinUtils {
 
   public static List<Object> innerJoin(List<Tuple> leftRelation,
                                        List<Tuple> rightRelation,
-                                       KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> leftHash = new HashMap<>();
+                                       MessageType messageType) {
+    Map<Object, List<Tuple>> leftHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -106,36 +98,79 @@ public final class HashJoinUtils {
     for (Tuple rightTuple : rightRelation) {
       List<Tuple> leftTuples = leftHash.getOrDefault(rightTuple.getKey(), Collections.emptyList());
       for (Tuple leftTuple : leftTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
     }
     return joinedTuples;
   }
 
   public static Iterator<JoinedTuple> innerJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.INNER);
+                                                ResettableIterator<Tuple<?, ?>> rightIt,
+                                                MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.INNER, keyType);
   }
 
   public static Iterator<JoinedTuple> leftJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                               ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.LEFT);
+                                               ResettableIterator<Tuple<?, ?>> rightIt,
+                                               MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.LEFT, keyType);
   }
 
   public static Iterator<JoinedTuple> rightJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt) {
-    return diskJoin(leftIt, rightIt, CommunicationContext.JoinType.RIGHT);
+                                                ResettableIterator<Tuple<?, ?>> rightIt,
+                                                MessageType keyType) {
+    return join(leftIt, rightIt, CommunicationContext.JoinType.RIGHT, keyType);
+  }
+
+  static class ListBasedResettableIterator implements ResettableIterator {
+
+    private List list;
+    private Iterator iterator;
+
+    ListBasedResettableIterator(List list) {
+      this.list = list;
+      this.iterator = list.iterator();
+    }
+
+    @Override
+    public void reset() {
+      this.iterator = this.list.iterator();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return this.iterator.hasNext();
+    }
+
+    @Override
+    public Object next() {
+      return this.iterator.next();
+    }
+  }
+
+  public static List<JoinedTuple> join(List<Tuple> leftRelation,
+                                       List<Tuple> rightRelation,
+                                       CommunicationContext.JoinType joinType,
+                                       MessageType messageType) {
+    Iterator<JoinedTuple> joinIterator = join(new ListBasedResettableIterator(leftRelation),
+        new ListBasedResettableIterator(rightRelation), joinType, messageType);
+
+    List<JoinedTuple> joinedTuples = new ArrayList<>();
+    while (joinIterator.hasNext()) {
+      joinedTuples.add(joinIterator.next());
+    }
+
+    return joinedTuples;
   }
 
   /**
    * Disk based inner join
    */
-  private static Iterator<JoinedTuple> diskJoin(ResettableIterator<Tuple<?, ?>> leftIt,
-                                                ResettableIterator<Tuple<?, ?>> rightIt,
-                                                CommunicationContext.JoinType joinType) {
+  public static Iterator<JoinedTuple> join(ResettableIterator<Tuple<?, ?>> leftIt,
+                                           ResettableIterator<Tuple<?, ?>> rightIt,
+                                           CommunicationContext.JoinType joinType,
+                                           MessageType keyType) {
     // choosing hashing and probing relations
     // if inner join:
     //    hashing = left
@@ -157,7 +192,7 @@ public final class HashJoinUtils {
     return new Iterator<JoinedTuple>() {
 
       private boolean hashingDone;
-      private Map<Object, List> keyHash = new HashMap<>();
+      private Map<Object, List> keyHash = new THashMap<>(keyType);
 
       // always keep the nextJoinTuple in memory. hasNext() will use this field
       private JoinedTuple nextJoinTuple;
