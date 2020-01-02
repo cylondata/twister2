@@ -123,6 +123,47 @@ public final class HashJoinUtils {
     return join(leftIt, rightIt, CommunicationContext.JoinType.RIGHT, keyType);
   }
 
+  static class ListBasedResettableIterator implements ResettableIterator {
+
+    private List list;
+    private Iterator iterator;
+
+    ListBasedResettableIterator(List list) {
+      this.list = list;
+      this.iterator = list.iterator();
+    }
+
+    @Override
+    public void reset() {
+      this.iterator = this.list.iterator();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return this.iterator.hasNext();
+    }
+
+    @Override
+    public Object next() {
+      return this.iterator.next();
+    }
+  }
+
+  public static List<JoinedTuple> join(List<Tuple> leftRelation,
+                                       List<Tuple> rightRelation,
+                                       CommunicationContext.JoinType joinType,
+                                       MessageType messageType) {
+    Iterator<JoinedTuple> joinIterator = join(new ListBasedResettableIterator(leftRelation),
+        new ListBasedResettableIterator(rightRelation), joinType, messageType);
+
+    List<JoinedTuple> joinedTuples = new ArrayList<>();
+    while (joinIterator.hasNext()) {
+      joinedTuples.add(joinIterator.next());
+    }
+
+    return joinedTuples;
+  }
+
   /**
    * Disk based inner join
    */
