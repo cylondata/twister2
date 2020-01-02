@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -145,6 +146,7 @@ public class K8sUploader extends Thread implements IUploader {
         return new URI(uri);
       } catch (URISyntaxException e) {
         LOG.log(Level.SEVERE, "Can not generate URI for uploader web server: " + uri, e);
+        throw new UploaderException("Can not generate URI for download link: " + uri, e);
       }
     }
     return null;
@@ -158,6 +160,8 @@ public class K8sUploader extends Thread implements IUploader {
       startUploadersToWebServers();
     } else {
       watchPodsStartUploaders();
+      // set upload method in RequestObjectBuilder
+      RequestObjectBuilder.setUploadMethod("client-to-pods");
     }
   }
 
@@ -175,14 +179,6 @@ public class K8sUploader extends Thread implements IUploader {
     apiClient.setHttpClient(httpClient);
     Configuration.setDefaultApiClient(apiClient);
     coreApi = new CoreV1Api(apiClient);
-  }
-
-  public static String getUploadMethod() {
-    if (uploadToWebServers) {
-      return "webserver";
-    } else {
-      return "client-to-pods";
-    }
   }
 
   private void startUploadersToWebServers() {
@@ -403,7 +399,7 @@ public class K8sUploader extends Thread implements IUploader {
   }
 
   @Override
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jbID) {
     stopUploader();
     return false;
   }

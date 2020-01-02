@@ -108,7 +108,7 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # twister2.zookeeper.root.node.path: "/twister2"
 
 #########################################################################
-# Uploader Settings in Kubernetes
+# K8sUploader Settings
 #########################################################################
 
 twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
@@ -144,6 +144,24 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUpload
 # if you are using, twister2-uploader-wo-ps.yaml
 # no need to set this parameter, default one is ok
 # twister2.kubernetes.uploader.web.server.label: "app=twister2-uploader"
+
+#########################################################################
+# S3Uploader Settings
+#########################################################################
+# To use S3Uploader:
+#   Uncomment uploader class below.
+#   Specify bucket name
+#   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
+
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
+
+# s3 bucket name to upload the job package
+# workers will download the job package from this location
+twister2.s3.bucket.name: "s3://<bucket-name>"
+
+# job package link will be available this much time
+# by default, it is 2 hours
+# twister2.s3.link.expiration.duration.sec: 7200
 
 ########################################################################
 # Node locations related settings

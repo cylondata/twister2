@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
-import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.custom.IntOrString;
@@ -271,11 +270,16 @@ public final class JobMasterRequestObject {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(K8sUploader.getUploadMethod()));
+        .value(RequestObjectBuilder.uploadMethod));
+
+    String uri = null;
+    if (SchedulerContext.jobPackageUri(config) != null) {
+      uri = SchedulerContext.jobPackageUri(config).toString();
+    }
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.UPLOADER_WEB_SERVER + "")
-        .value(KubernetesContext.uploaderWebServer(config)));
+        .name(K8sEnvVariables.JOB_PACKAGE_URI + "")
+        .value(uri));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
