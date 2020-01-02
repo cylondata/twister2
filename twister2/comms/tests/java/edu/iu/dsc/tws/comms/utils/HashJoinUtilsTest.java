@@ -48,12 +48,10 @@ public class HashJoinUtilsTest {
     List<Tuple> departments = JoinTestUtils.getDepartments();
     List<Tuple> employees = JoinTestUtils.getEmployees();
 
-    KeyComparatorWrapper employeeDepComparator = JoinTestUtils.getEmployeeDepComparator();
-
     List<Object> joined = HashJoinUtils.innerJoin(
         employees,
         departments,
-        employeeDepComparator
+        MessageTypes.INTEGER
     );
 
     List<Object> innerJoined = JoinTestUtils.getInnerJoined();

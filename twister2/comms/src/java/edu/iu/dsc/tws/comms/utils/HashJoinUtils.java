@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +33,8 @@ public final class HashJoinUtils {
 
   public static List<Object> rightOuterJoin(List<Tuple> leftRelation,
                                             List<Tuple> rightRelation,
-                                            KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> leftHash = new HashMap<>();
+                                            MessageType messageType) {
+    Map<Object, List<Tuple>> leftHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -46,16 +45,12 @@ public final class HashJoinUtils {
 
     for (Tuple rightTuple : rightRelation) {
       List<Tuple> leftTuples = leftHash.getOrDefault(rightTuple.getKey(), Collections.emptyList());
-      boolean matched = false;
       for (Tuple leftTuple : leftTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-          matched = true;
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
 
-      if (!matched) {
+      if (leftTuples.isEmpty()) {
         joinedTuples.add(JoinedTuple.of(rightTuple.getKey(), null, rightTuple.getValue()));
       }
     }
@@ -64,8 +59,8 @@ public final class HashJoinUtils {
 
   public static List<Object> leftOuterJoin(List<Tuple> leftRelation,
                                            List<Tuple> rightRelation,
-                                           KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> rightHash = new HashMap<>();
+                                           MessageType messageType) {
+    Map<Object, List<Tuple>> rightHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -76,16 +71,12 @@ public final class HashJoinUtils {
 
     for (Tuple leftTuple : leftRelation) {
       List<Tuple> rightTuples = rightHash.getOrDefault(leftTuple.getKey(), Collections.emptyList());
-      boolean matched = false;
       for (Tuple rightTuple : rightTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-          matched = true;
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
 
-      if (!matched) {
+      if (rightTuples.isEmpty()) {
         joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(), null));
       }
     }
@@ -94,8 +85,8 @@ public final class HashJoinUtils {
 
   public static List<Object> innerJoin(List<Tuple> leftRelation,
                                        List<Tuple> rightRelation,
-                                       KeyComparatorWrapper comparator) {
-    Map<Object, List<Tuple>> leftHash = new HashMap<>();
+                                       MessageType messageType) {
+    Map<Object, List<Tuple>> leftHash = new THashMap<>(messageType);
 
     List<Object> joinedTuples = new ArrayList<>();
 
@@ -107,10 +98,8 @@ public final class HashJoinUtils {
     for (Tuple rightTuple : rightRelation) {
       List<Tuple> leftTuples = leftHash.getOrDefault(rightTuple.getKey(), Collections.emptyList());
       for (Tuple leftTuple : leftTuples) {
-        if (comparator.compare(leftTuple, rightTuple) == 0) {
-          joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
-              rightTuple.getValue()));
-        }
+        joinedTuples.add(JoinedTuple.of(leftTuple.getKey(), leftTuple.getValue(),
+            rightTuple.getValue()));
       }
     }
     return joinedTuples;
