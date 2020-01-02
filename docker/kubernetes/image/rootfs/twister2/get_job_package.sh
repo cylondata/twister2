@@ -77,13 +77,13 @@ get_job_package_with_wget(){
   SLEEP_INTERVAL=0.5
 
   for i in {1..20}; do
-    wget ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME} -P $POD_MEMORY_VOLUME
+    wget -O ${JOB_PACKAGE_FILE} ${JOB_PACKAGE_URI}
     # check whether job package downloaded successfully
     if [ $? -ne 0 ]; then
-      echo "$i Job package can not be retrieved from: ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME}"
+      echo "$i Job package can not be retrieved from: ${JOB_PACKAGE_URI}"
       sleep $SLEEP_INTERVAL
     else
-      echo "Job package downloaded successfully into the pod from: ${UPLOADER_WEB_SERVER}/${JOB_PACKAGE_FILENAME}"
+      echo "Job package downloaded successfully to the pod from: ${JOB_PACKAGE_URI}"
 
       # unpack the job package
       tar -xf $JOB_PACKAGE_FILE -C $POD_MEMORY_VOLUME

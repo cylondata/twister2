@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -288,12 +288,15 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    LOG.log(Level.INFO, "Initialize uploader");
+    LOG.fine("Initialize uploader");
     // now upload the content of the package
     uploader.initialize(updatedConfig, updatedJob);
     // gives the url of the file to be uploaded
-    LOG.log(Level.INFO, "Calling uploader to upload the package content");
+    LOG.fine("Calling uploader to upload the job package");
+    long start = System.currentTimeMillis();
     URI packageURI = uploader.uploadPackage(jobDirectory);
+    long delay = System.currentTimeMillis() - start;
+    LOG.info("Job package upload started. It took: " + delay + "ms");
 
     // add scp address as a prefix to returned URI: user@ip
     String scpServerAdress = ScpContext.scpConnection(updatedConfig);
@@ -332,16 +335,16 @@ public class ResourceAllocator {
         state.setRequestGranted(false);
       }
     } else {
-      uploader.undo();
+      uploader.undo(updatedConfig, job.getJobId());
     }
 
     if (SchedulerContext.clusterType(updatedConfig).equals("kubernetes")
         && SchedulerContext.uploaderClass(updatedConfig)
         .equals("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader")
-        && K8sUploader.getUploadMethod().equals("client-to-pods")
+        && RequestObjectBuilder.uploadMethod.equals("client-to-pods")
         && JobUtils.isJobScalable(updatedConfig, updatedJob)) {
 
-      // job package may be uploaded to newly scaled workers
+      // job package may need to be uploaded to newly scaled workers
       // so, we do not delete the job package
 
     } else {
@@ -399,6 +402,24 @@ public class ResourceAllocator {
     }
 
     launcher.close();
+
+    String uploaderClass = SchedulerContext.uploaderClass(config);
+    if (uploaderClass == null) {
+      throw new RuntimeException("The uploader class must be specified");
+    }
+
+    IUploader uploader;
+    // create an instance of uploader
+    try {
+      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          uploaderClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new UploaderException(
+          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
+    }
+
+    uploader.undo(config, jobID);
+    uploader.close();
   }
 
 }
