@@ -69,12 +69,12 @@ You may also check <a href="/docs/developers/devenv">developer document</a> for 
 </ul>
 <p>Here are the list of optional installations/settings:</p>
 <ul>
+<li><a href="#job-package-uploader-settings"><strong>Job Package Uploader Settings</strong></a>: This is recommended to upload the job package through a web server.</li>
 <li><a href="#deploying-twister2-dashboard"><strong>Deploying Twister2 Dashboard</strong></a>: This is a recommended step to monitor Twister2 jobs on Kubernetes clusters.</li>
 <li><a href="#persistent-storage-settings"><strong>Persistent Storage Settings</strong></a>: You can set up persistent storage only if you want to use.</li>
 <li><a href="#fault-tolerant-jobs"><strong>Fault Tolerant Jobs</strong></a>: A ZooKeeper server is required, if you want to run fault-tolerant Twister2 jobs.</li>
 <li><a href="#generating-secret-object-for-openmpi-jobs"><strong>Generating Secret Object for OpenMPI Jobs</strong></a>: This is required only if you are going to run OpenMPI jobs.</li>
 <li><a href="#providing-rack-and-datacenter-information-to-twister2"><strong>Providing Rack and Datacenter Information</strong></a>: This is required only if you want Twister2 to perform rack and data center aware scheduling.</li>
-<li><a href="#job-package-uploader-settings"><strong>Job Package Uploader Settings</strong></a>: This is required only if you want to upload the job package through a web server.</li>
 </ul>
 <p>Twister2 runs jobs in Docker containers in Kubernetes clusters.
 Developers need to rebuild Twister2 Docker image if they want to modify twister2 source codes:</p>
@@ -147,6 +147,36 @@ Therefore job names must follow Kubernetes naming rules: <a href="https://kubern
 <p>Job names should consist of lower case alphanumeric characters and dash(-) only. Their length can be 50 chars at most.
 If job names do not conform to these rules, we automatically change them to accommodate those rules.
 We use the changed names as job names.</p>
+<h2><a class="anchor" aria-hidden="true" id="job-package-uploader-settings"></a><a href="#job-package-uploader-settings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Job Package Uploader Settings</h2>
+<p>When users submit a Twister2 job in Kubernetes cluster,
+submitting client needs to transfer the job package to workers and the job master.
+The submitting client first packs all job related files into a tar package file.
+This archive file needs to be transferred to each worker pod that will be started.</p>
+<p>We provide <a href="/docs/architecture/resource-schedulers/kubernetes/twister2-on-kubernetes">two methods</a>:</p>
+<ul>
+<li>Job package file transfer from submitting client to job pods directly</li>
+<li>Job package file transfer through uploader web server pods</li>
+</ul>
+<p>We first check whether there is any uploader web server running in the cluster.
+If there is, we upload the job package to the uploader web server pods.
+Job pods download the job package from uploader web server pods.
+Otherwise, submitting client uploads the job package to all pods in the job directly.
+Both methods transfer the job package from client to pods by using kubectl copy method.</p>
+<p>If you are running many Twister2 jobs with many workers,
+it would be more efficient and faster to run uploader web server pods.
+We designed a StatefulSet that runs an nginx web server.
+You can deploy it with following command:</p>
+<pre><code class="hljs css language-bash">$ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-uploader-wo-ps.yaml
+</code></pre>
+<p>You can modify the number of replicas in uploader web server yaml file above or
+the compute resources used.</p>
+<p>If you choose to use your own web server pods,
+then you need to specify following configuration parameters in resource.yaml file:</p>
+<pre><code class="hljs css language-text">    twister2.kubernetes.uploader.web.server
+    twister2.kubernetes.uploader.web.server.directory
+    twister2.kubernetes.uploader.web.server.label
+</code></pre>
+<p>Please check conf/kubernetes/resource.yaml file for more explanation about these parameters.</p>
 <h2><a class="anchor" aria-hidden="true" id="deploying-twister2-dashboard"></a><a href="#deploying-twister2-dashboard" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Deploying Twister2 Dashboard</h2>
 <p>Twister2 Dashboard enables users to monitor their jobs through a web browser.
 Although installing this dashboard is not mandatory for running Twister2 jobs, it is highly recommended.
@@ -266,37 +296,6 @@ These configuration parameters are:</p>
 the value of the following configuration parameter has to be specified as false in client.yaml file:</p>
 <pre><code class="hljs css language-text">    kubernetes.node.locations.from.config
 </code></pre>
-<h2><a class="anchor" aria-hidden="true" id="job-package-uploader-settings"></a><a href="#job-package-uploader-settings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Job Package Uploader Settings</h2>
-<p>When users submit a Twister2 job in Kubernetes cluster,
-submitting client needs to transfer the job package to workers and the job master.
-The submitting client first packs all job related files into a tar package file.
-This archived file needs to be transferred to each worker that will be started.</p>
-<p>We provide <a href="/docs/architecture/resource-schedulers/kubernetes/twister2-on-kubernetes">two methods</a>:</p>
-<ul>
-<li>Job Package Transfer Using kubectl file copy</li>
-<li>Job Package Transfer Through a Web Server</li>
-</ul>
-<p>By default, we use the first method to transfer the job package. This method does not require any installations.
-It transfers the job package from client to workers directly by using kubectl copy method.
-Just make sure that the value of following configuration parameter in resource.yaml file is true:</p>
-<pre><code class="hljs css language-text">   twister2.resource.kubernetes.client.to.pods.uploading
-</code></pre>
-<p>Second method transfers the job package once to a web server running in the cluster.
-Workers download the job package from this web server.
-This method is more efficient since it transfers the job package only once from client machine to a web server.
-If the submitting clients are running on the cluster machines, this may not be important.
-However, if the submitting client is running on a machine outside the cluster with limited bandwidth,
-then this can be important.</p>
-<p>First, the client to pods uploading parameter has to be disabled by assigning false in resource.yaml file:</p>
-<pre><code class="hljs css language-text">   twister2.resource.kubernetes.client.to.pods.uploading
-</code></pre>
-<p>For the transfer through a web server to work, a web server must exist in the cluster and
-the submitting client must have write permission to that directory.
-Then, you need to specify the web server directory and address information for the following configuration parameters in uploader.yaml file:</p>
-<pre><code class="hljs css language-text">   twister2.resource.uploader.scp.command.connection: user@host
-   twister2.resource.uploader.directory: "/path/to/web-server/directory/"
-   twister2.resource.download.directory: "http://host:port/web-server-directory"
-</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="building-twister2-docker-image-for-kubernetes"></a><a href="#building-twister2-docker-image-for-kubernetes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Building Twister2 Docker Image for Kubernetes</h2>
 <p>First, build Twister2 project.</p>
 <p>This will generate the twister2 package file:</p>
@@ -324,4 +323,4 @@ file:</p>
 <p>With this, docker will pull the twister2 image from Docker Hub at each run.<br>
 This may slow down startup times for the jobs.
 However, if you repeatedly build the docker image, this may be convenient.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/deployment/docker/docker"><span class="arrow-prev">← </span><span>Docker</span></a><a class="docs-next button" href="/docs/deployment/minikube/Minikube"><span>Minikube</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#authorization-of-pods">Authorization of Pods</a></li><li><a href="#running-jobs-in-kubernetes">Running Jobs in Kubernetes</a><ul class="toc-headings"><li><a href="#job-logs">Job Logs</a></li><li><a href="#logs-for-mpi-enabled-jobs">Logs for MPI Enabled Jobs</a></li><li><a href="#configuration-settings">Configuration Settings</a></li><li><a href="#job-names">Job Names</a></li></ul></li><li><a href="#deploying-twister2-dashboard">Deploying Twister2 Dashboard</a><ul class="toc-headings"><li><a href="#accessing-dashboard">Accessing Dashboard</a></li><li><a href="#running-dashboard-as-a-standalone-web-server">Running Dashboard as a standalone web server</a></li></ul></li><li><a href="#persistent-storage-settings">Persistent Storage Settings</a></li><li><a href="#fault-tolerant-jobs">Fault Tolerant Jobs</a></li><li><a href="#generating-secret-object-for-openmpi-jobs">Generating Secret Object for OpenMPI Jobs</a></li><li><a href="#providing-rack-and-datacenter-information-to-twister2">Providing Rack and Datacenter Information to Twister2</a></li><li><a href="#job-package-uploader-settings">Job Package Uploader Settings</a></li><li><a href="#building-twister2-docker-image-for-kubernetes">Building Twister2 Docker Image for Kubernetes</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/deployment/docker/docker"><span class="arrow-prev">← </span><span>Docker</span></a><a class="docs-next button" href="/docs/deployment/minikube/Minikube"><span>Minikube</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#authorization-of-pods">Authorization of Pods</a></li><li><a href="#running-jobs-in-kubernetes">Running Jobs in Kubernetes</a><ul class="toc-headings"><li><a href="#job-logs">Job Logs</a></li><li><a href="#logs-for-mpi-enabled-jobs">Logs for MPI Enabled Jobs</a></li><li><a href="#configuration-settings">Configuration Settings</a></li><li><a href="#job-names">Job Names</a></li></ul></li><li><a href="#job-package-uploader-settings">Job Package Uploader Settings</a></li><li><a href="#deploying-twister2-dashboard">Deploying Twister2 Dashboard</a><ul class="toc-headings"><li><a href="#accessing-dashboard">Accessing Dashboard</a></li><li><a href="#running-dashboard-as-a-standalone-web-server">Running Dashboard as a standalone web server</a></li></ul></li><li><a href="#persistent-storage-settings">Persistent Storage Settings</a></li><li><a href="#fault-tolerant-jobs">Fault Tolerant Jobs</a></li><li><a href="#generating-secret-object-for-openmpi-jobs">Generating Secret Object for OpenMPI Jobs</a></li><li><a href="#providing-rack-and-datacenter-information-to-twister2">Providing Rack and Datacenter Information to Twister2</a></li><li><a href="#building-twister2-docker-image-for-kubernetes">Building Twister2 Docker Image for Kubernetes</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Indiana University</section></footer></div></body></html>
