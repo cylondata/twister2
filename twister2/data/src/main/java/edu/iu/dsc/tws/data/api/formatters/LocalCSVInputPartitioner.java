@@ -20,20 +20,18 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class LocalCSVInputPartitioner extends CSVInputPartitioner {
+public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
 
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger(LocalCSVInputPartitioner.class.getName());
 
   private int numberOfTasks;
-  private int recordLength;
 
   private OrderedInputSplitAssigner<String> assigner;
 
-  public LocalCSVInputPartitioner(Path filePath, int recordLen) {
+  public LocalCSVInputPartitioner(Path filePath) {
     super(filePath);
-    this.recordLength = recordLen;
   }
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
@@ -42,7 +40,7 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner {
   }
 
   protected GenericCSVInputSplit createSplit(int num, Path file, long start,
-                                             long length, String[] hosts) {
+                                                                long length, String[] hosts) {
     return new GenericCSVInputSplit(num, file, start, length, hosts);
   }
 

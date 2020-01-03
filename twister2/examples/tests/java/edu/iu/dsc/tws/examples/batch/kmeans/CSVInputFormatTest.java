@@ -19,9 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -68,13 +65,12 @@ public class CSVInputFormatTest {
     }
 
     Path path = new Path("/tmp/example.csv");
-    //Path path = new Path("/tmp/example.txt");
-    String[] arr = new String[] {"localhost"};
-
-    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 2);
+    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path);
     csvInputPartitioner.configure(config);
+
     FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
     LOG.info("input split values are:" + Arrays.toString(inputSplits));
+
     LocalTextInputPartitioner localTextInputPartitioner = new LocalTextInputPartitioner(path, 2);
     localTextInputPartitioner.configure(config);
     InputSplitAssigner inputSplitAssigner =
@@ -91,67 +87,6 @@ public class CSVInputFormatTest {
         e.printStackTrace();
       }
     }
-
-
-    /*public void execute() {
-    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-    List<double[]> points = new ArrayList<>();
-    while (inputSplit != null) {
-      try {
-        while (!inputSplit.reachedEnd()) {
-          Object value = inputSplit.nextRecord(null);
-          LOG.fine("%%%%%%%%% object value:%%%%%%%%%%%%" + value);
-          if (value != null) {
-            double[] row = new double[dimension];
-            String[] data = value.toString().split(",");
-            for (int j = 0; j < dimension; j++) {
-              row[j] = Double.parseDouble(data[j].trim());
-            }
-            points.add(row);
-          }
-        }
-        LOG.info("context task index:" + context.taskIndex() + "\t" + points.size());
-        inputSplit = source.getNextSplit(context.taskIndex());
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to read the input", e);
-      }
-    }
-    dataPointsLocal = new double[points.size()][];
-    int i = 0;
-    for (double[] d : points) {
-      dataPointsLocal[i++] = d;
-    }
-    context.end(edgeName);
-  }*/
-
-    //TODO:Call the CSV Parser latter.
-    CSVParser csvParser = new CSVParserBuilder()
-        .withSeparator(',')
-        .withIgnoreQuotations(true)
-        .build();
-
-/*    int minSplits = 2;
-    int recordCounter = 0;
-    try {
-      FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(minSplits);
-      LOG.info("input split values are:" + Arrays.toString(inputSplits));
-      InputSplitAssigner inputSplitAssigner =
-          csvInputPartitioner.getInputSplitAssigner(inputSplits);
-      InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
-      inputSplit.open(config);
-      while (inputSplit != null) {
-        try {
-          while (!inputSplit.reachedEnd()) {
-            Object value = inputSplit.nextRecord(null);
-            LOG.info("input values are:" + value);
-          }
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }*/
   }
 
   private ComputeGraph createBatchGraph(int parallel) {

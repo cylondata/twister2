@@ -23,14 +23,12 @@ import edu.iu.dsc.tws.api.data.BlockLocation;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-//import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-
-public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
+public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputPartitioner.class.getName());
 
@@ -43,15 +41,14 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
   protected Config config;
 
   private long minSplitSize = 0;
+  private boolean enumerateNestedFiles = false;
 
-  public CSVInputPartitioner(Path filepath) {
-    super(filepath);
-    this.filePath = filepath;
+  public CSVInputPartitioner(Path filePath) {
+    this.filePath = filePath;
   }
 
-  public CSVInputPartitioner(Path filepath, Config cfg) {
-    super(filepath, cfg);
-    this.filePath = filepath;
+  public CSVInputPartitioner(Path filePath, Config cfg) {
+    this.filePath = filePath;
     this.config = cfg;
   }
 
@@ -66,7 +63,7 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
    * @param minNumSplits Number of minimal input splits, as a hint.
    */
   @Override
-  public FileInputSplit[] createInputSplits(int minNumSplits) throws IOException {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
@@ -134,7 +131,6 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
         }
 
       } else {
-        // special case with a file of zero bytes size
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
         String[] hosts;
         if (blocks.length > 0) {
@@ -151,14 +147,62 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  @Override
-  public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
-    return new LocatableInputSplitAssigner(inputSplits);
-  }
+  protected abstract FileInputSplit createSplit(int num, Path file, long start,
+                                                long length, String[] hosts);
 
   @Override
-  protected FileInputSplit createSplit(int num, Path file, long start, long length,
-                                       String[] hosts) {
+  public InputSplitAssigner<OT> getInputSplitAssigner(FileInputSplit<OT>[] inputSplits) {
     return null;
+  }
+
+  long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
+      throws IOException {
+    final FileSystem fs = FileSystemUtils.get(path);
+    long length = 0;
+    for (FileStatus file : fs.listFiles(path)) {
+      if (file.isDir()) {
+        if (acceptFile(file) && enumerateNestedFiles) {
+          length += sumFilesInDir(file.getPath(), files, logExcludedFiles);
+        } else {
+          if (logExcludedFiles) {
+            LOG.log(Level.INFO, "Directory " + file.getPath().toString() + " did not pass the "
+                + "file-filter and is excluded.");
+          }
+        }
+      } else {
+        if (acceptFile(file)) {
+          files.add(file);
+          length += file.getLen();
+        } else {
+          if (logExcludedFiles) {
+            LOG.log(Level.INFO, "Directory " + file.getPath().toString()
+                + " did not pass the file-filter and is excluded.");
+          }
+        }
+      }
+    }
+    return length;
+  }
+
+  private boolean acceptFile(FileStatus fileStatus) {
+    final String name = fileStatus.getPath().getName();
+    return !name.startsWith("_")
+        && !name.startsWith(".");
+  }
+
+  int getBlockIndexForPosition(BlockLocation[] blocks, long offset,
+                               long halfSplitSize, int startIndex) {
+    for (int i = startIndex; i < blocks.length; i++) {
+      long blockStart = blocks[i].getOffset();
+      long blockEnd = blockStart + blocks[i].getLength();
+      if (offset >= blockStart && offset < blockEnd) {
+        if (i < blocks.length - 1 && blockEnd - offset < halfSplitSize) {
+          return i + 1;
+        } else {
+          return i;
+        }
+      }
+    }
+    throw new IllegalArgumentException("The given offset is not contained in the any block.");
   }
 }

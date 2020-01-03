@@ -263,11 +263,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       toRead = maxReadLength;
       this.overLimit = true;
     }
-
-    //LineNumberReader numberReader = new LineNumberReader(new InputStreamReader(this.stream));
-    //numberReader.skip(Long.MAX_VALUE);
-    //int noOfLines = numberReader.getLineNumber();
-
     int read = this.stream.read(this.readBuffer, fillOffset, toRead);
     if (read == -1) {
       this.stream.close();

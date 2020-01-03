@@ -65,7 +65,7 @@ public class PointDataSource extends BaseSource implements Collector {
       try {
         while (!inputSplit.reachedEnd()) {
           Object value = inputSplit.nextRecord(null);
-          //LOG.info("%%%%%%%%% object value:%%%%%%%%%%%%" + value);
+          LOG.info("%%%%%%%%% object value:%%%%%%%%%%%%" + value);
           if (value != null) {
             double[] row = new double[dimension];
             String[] data = value.toString().split(",");
