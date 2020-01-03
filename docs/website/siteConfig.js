@@ -67,6 +67,10 @@ const siteConfig = {
         secondaryColor: '#625f76',
     },
 
+    separateCss: [
+        `javadocs`
+    ],
+
     /* Custom fonts for website */
     /*
     fonts: {
