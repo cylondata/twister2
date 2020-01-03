@@ -119,10 +119,8 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
         int blockIndex = 0;
         while (bytesUnassigned > maxBytesForLastSplit) {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
-          FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
+          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
-          /*FileInputSplit fis = new CSVInputSplit(splitNum++, file.getPath(), position, splitSize,
-              blocks[blockIndex].getHosts());*/
           inputSplits.add(fis);
           position += splitSize;
           bytesUnassigned -= splitSize;
@@ -132,8 +130,6 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position,
               bytesUnassigned, blocks[blockIndex].getHosts());
-           /*FileInputSplit fis = new CSVInputSplit((splitNum++, file.getPath(), position,
-              bytesUnassigned, blocks[blockIndex].getHosts());*/
           inputSplits.add(fis);
         }
 
@@ -165,10 +161,4 @@ public class CSVInputPartitioner extends FileInputPartitioner<byte[]> {
                                        String[] hosts) {
     return null;
   }
-
-//  @Override
-//  protected CSVInputSplit createSplit(int num, Path file, long start, long length,
-//                                                     String[] hosts) {
-//    return null;
-//  }
 }
