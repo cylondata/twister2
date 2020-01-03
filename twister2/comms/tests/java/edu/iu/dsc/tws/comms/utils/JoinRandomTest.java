@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 /**
@@ -66,7 +67,8 @@ public class JoinRandomTest {
     KeyComparatorWrapper intComparator = intComparator();
 
     long t1 = System.currentTimeMillis();
-    List<Object> hashResult = HashJoinUtils.innerJoin(leftRelation, rightRelation, intComparator);
+    List<Object> hashResult = HashJoinUtils.innerJoin(leftRelation, rightRelation,
+        MessageTypes.INTEGER);
     LOG.info("Time for hash join : " + (System.currentTimeMillis() - t1));
 
     t1 = System.currentTimeMillis();
@@ -92,7 +94,7 @@ public class JoinRandomTest {
 
     long t1 = System.currentTimeMillis();
     List<Object> hashResult = HashJoinUtils.leftOuterJoin(leftRelation, rightRelation,
-        intComparator);
+        MessageTypes.INTEGER);
     LOG.info("Time for hash join : " + (System.currentTimeMillis() - t1));
 
     t1 = System.currentTimeMillis();
@@ -119,7 +121,7 @@ public class JoinRandomTest {
 
     long t1 = System.currentTimeMillis();
     List<Object> hashResult = HashJoinUtils.rightOuterJoin(leftRelation, rightRelation,
-        intComparator);
+        MessageTypes.INTEGER);
     LOG.info("Time for hash join : " + (System.currentTimeMillis() - t1));
 
     t1 = System.currentTimeMillis();

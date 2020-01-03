@@ -156,9 +156,10 @@ public class ComputeConnection {
    * @param rightSource the right source to connection
    * @return the {@link JoinConfig}
    */
-  public JoinConfig innerJoin(String leftSource, String rightSource) {
+  public JoinConfig innerJoin(String leftSource, String rightSource,
+                              CommunicationContext.JoinAlgorithm joinAlgorithm) {
     JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
-        this, CommunicationContext.JoinType.INNER);
+        this, CommunicationContext.JoinType.INNER, joinAlgorithm);
     this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }
@@ -172,7 +173,8 @@ public class ComputeConnection {
    */
   public JoinConfig fullOuterJoin(String leftSource, String rightSource) {
     JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
-        this, CommunicationContext.JoinType.FULL_OUTER);
+        this, CommunicationContext.JoinType.FULL_OUTER,
+        CommunicationContext.JoinAlgorithm.SORT);
     this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }
@@ -184,9 +186,10 @@ public class ComputeConnection {
    * @param rightSource the right source to connection
    * @return the {@link JoinConfig}
    */
-  public JoinConfig leftOuterJoin(String leftSource, String rightSource) {
+  public JoinConfig leftOuterJoin(String leftSource, String rightSource,
+                                  CommunicationContext.JoinAlgorithm joinAlgorithm) {
     JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
-        this, CommunicationContext.JoinType.LEFT);
+        this, CommunicationContext.JoinType.LEFT, joinAlgorithm);
     this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }
@@ -198,9 +201,10 @@ public class ComputeConnection {
    * @param rightSource the right source to connection
    * @return the {@link JoinConfig}
    */
-  public JoinConfig rightOuterJoin(String leftSource, String rightSource) {
+  public JoinConfig rightOuterJoin(String leftSource, String rightSource,
+                                   CommunicationContext.JoinAlgorithm joinAlgorithm) {
     JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
-        this, CommunicationContext.JoinType.RIGHT);
+        this, CommunicationContext.JoinType.RIGHT, joinAlgorithm);
     this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }
