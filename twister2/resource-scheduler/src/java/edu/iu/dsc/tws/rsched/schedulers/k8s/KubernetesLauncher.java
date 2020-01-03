@@ -502,7 +502,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private boolean configParametersOK(JobAPI.Job job) {
 
     // check whether the uploader is supported
-    List<String> uploaders = Arrays.asList("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader");
+    List<String> uploaders = Arrays.asList(
+        "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader",
+        "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader");
+
     if (!uploaders.contains(SchedulerContext.uploaderClass(config))) {
       LOG.log(Level.SEVERE, String.format("Provided uploader is not supported: "
           + SchedulerContext.uploaderClass(config)

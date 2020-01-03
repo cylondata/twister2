@@ -23,10 +23,12 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
+import edu.iu.dsc.tws.comms.utils.HashJoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
 public class JoinBatchFinalReceiver2 implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(JoinBatchFinalReceiver2.class.getName());
@@ -46,6 +48,8 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
    */
   private BulkReceiver bulkReceiver;
   private CommunicationContext.JoinType joinType;
+  private CommunicationContext.JoinAlgorithm joinAlgorithm;
+  private MessageType keyType;
 
   /**
    * The iterators returned by left
@@ -74,9 +78,13 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
 
   public JoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
                                  Comparator<Object> com,
-                                 CommunicationContext.JoinType joinType) {
+                                 CommunicationContext.JoinType joinType,
+                                 CommunicationContext.JoinAlgorithm joinAlgorithm,
+                                 MessageType keyType) {
     this.bulkReceiver = bulkReceiver;
     this.joinType = joinType;
+    this.joinAlgorithm = joinAlgorithm;
+    this.keyType = keyType;
     this.leftReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(0), 0);
     this.rightReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(1), 1);
     this.leftValues = new HashMap<>();
@@ -143,22 +151,35 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
     public void init(Config cfg, Set<Integer> targets) {
     }
 
+    private List doJoin(int target) {
+      if (joinAlgorithm.equals(CommunicationContext.JoinAlgorithm.SORT)) {
+        return SortJoinUtils.join(
+            leftValues.get(target),
+            rightValues.get(target), comparator, joinType);
+      } else {
+        return HashJoinUtils.join(
+            leftValues.get(target),
+            rightValues.get(target),
+            joinType,
+            keyType
+        );
+      }
+    }
+
     @Override
     public boolean receive(int target, Object it) {
       if (tag == 0) {
         leftValues.put(target, (List<Tuple>) it);
 
         if (rightValues.containsKey(target)) {
-          List<Object> results = JoinUtils.join(leftValues.get(target),
-              rightValues.get(target), comparator, joinType);
+          List<Object> results = doJoin(target);
           bulkReceiver.receive(target, results.iterator());
         }
       } else {
         rightValues.put(target, (List<Tuple>) it);
 
         if (leftValues.containsKey(target)) {
-          List<Object> results = JoinUtils.join(leftValues.get(target),
-              rightValues.get(target), comparator, joinType);
+          List<Object> results = doJoin(target);
           bulkReceiver.receive(target, results.iterator());
         }
       }

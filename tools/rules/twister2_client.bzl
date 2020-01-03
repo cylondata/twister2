@@ -17,11 +17,17 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
         "//twister2/config/src/yaml:conf-mesos-yaml",
         "//twister2/config/src/yaml:conf-dashboard",
+        "//twister2/config/src/yaml:conf-scripts",
     ]
 
 def twister2_client_dashboard_files():
     return [
         "//twister2/config/src/yaml:conf-dashboard",
+    ]
+
+def twister2_client_scripts_files():
+    return [
+        "//twister2/config/src/yaml:conf-scripts",
     ]
 
 def twister2_client_common_files():
@@ -207,8 +213,10 @@ def twister2_client_lib_communication_files():
         "@com_esotericsoftware_reflectasm//jar",
         "@org_ow2_asm_asm//jar",
         "//third_party:ompi_javabinding_java",
-        "//third_party:ucx_javabinding_java",
-    ]
+    ] + select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["//third_party:ucx_javabinding_java"],
+    })
 
 def twister2_client_lib_common_files():
     return [

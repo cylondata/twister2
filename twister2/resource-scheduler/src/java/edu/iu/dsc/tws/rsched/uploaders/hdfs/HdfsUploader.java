@@ -106,12 +106,7 @@ public class HdfsUploader implements IUploader {
   }
 
   @Override
-  public boolean complete() {
-    return true;
-  }
-
-  @Override
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jobID) {
 
     return controller.delete(packageURI.toString());
   }
