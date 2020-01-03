@@ -38,8 +38,8 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
 public class JoinBatchFinalReceiver implements MessageReceiver {
 
@@ -198,7 +198,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       lock.lock();
       try {
         if (checkIfFinished(target)) {
-          List<Object> results = JoinUtils.innerJoin(targetMessagesLeft.get(target),
+          List<Object> results = SortJoinUtils.innerJoin(targetMessagesLeft.get(target),
               targetMessagesRight.get(target), comparator);
           receiver.receive(target, results.iterator());
           targetDone.put(target, true);
