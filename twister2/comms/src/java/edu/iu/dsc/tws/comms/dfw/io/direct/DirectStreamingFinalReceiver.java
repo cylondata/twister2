@@ -90,7 +90,7 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
     Queue<Object> values = readyToSend.get(target);
 
     if (values == null || values.isEmpty()) {
-      return isFilledToSend(target);
+      return false;
     }
 
     // if we send this list successfully
