@@ -33,12 +33,14 @@ public final class BasicKubernetesJob {
   public static void main(String[] args) {
 
     //    LoggingHelper.setupLogging(null, "logs", "client");
-    LOG.info("Job submission time: " + System.currentTimeMillis());
+    long ts = System.currentTimeMillis();
+    LOG.info("Job submission time: " + ts);
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     LOG.fine("read config values: " + config.size() + "\n" + config);
 
+    config = Config.newBuilder().putAll(config).put("JOB_SUBMIT_TIME", ts + "").build();
     submitJob(config);
   }
 
