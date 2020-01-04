@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.worker.WorkerManager;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -194,7 +193,7 @@ public final class K8sWorkerStarter {
 
       // get job master service ip from job master service name and use it as Job master IP
     } else {
-      jobMasterIP = KubernetesUtils.createJobMasterServiceName(jobID);
+      jobMasterIP = K8sWorkerUtils.getJobMasterServiceIP(jobID);
 //      jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
 //          KubernetesContext.namespace(config), jobID, 100);
       if (jobMasterIP == null) {
