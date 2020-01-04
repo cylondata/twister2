@@ -16,6 +16,10 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
 
+  public static final String DEFAULT_LINE_DELIMITER = "\n";
+
+  public static final String DEFAULT_FIELD_DELIMITER = ",";
+
   // Charset is not serializable
   private transient Charset charset;
 

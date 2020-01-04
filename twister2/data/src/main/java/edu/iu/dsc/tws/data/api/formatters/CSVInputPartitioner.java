@@ -107,12 +107,12 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
       final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
       final long halfSplit = splitSize >>> 1;
       final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
+
       if (len > 0) {
         final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, len);
         Arrays.sort(blocks);
         long bytesUnassigned = len;
         long position = 0;
-
         int blockIndex = 0;
         while (bytesUnassigned > maxBytesForLastSplit) {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);

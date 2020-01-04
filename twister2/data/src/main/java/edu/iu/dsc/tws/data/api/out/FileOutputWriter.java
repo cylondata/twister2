@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.out;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ import edu.iu.dsc.tws.data.utils.FileSystemUtils;
  * @param <T> the type of data to write
  */
 public abstract class FileOutputWriter<T> implements OutputWriter<T> {
-  private static final Logger LOG = Logger.getLogger(FileOutputStream.class.getName());
+  private static final Logger LOG = Logger.getLogger(FileOutputWriter.class.getName());
 
   /**
    * File system object
@@ -56,7 +55,6 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
   public FileOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
     this.writeMode = writeMode;
     this.outPath = outPath;
-
     try {
       this.fs = FileSystemUtils.get(outPath.toUri());
     } catch (IOException e) {
@@ -100,7 +98,6 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
 
   @Override
   public void configure(Config config) {
-
   }
 
   @Override
