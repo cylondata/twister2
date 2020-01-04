@@ -30,9 +30,9 @@ import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
 
-public class JoinUtilsTest {
+public class SortJoinUtilsTest {
 
-  private static final Logger LOG = Logger.getLogger(JoinUtilsTest.class.getName());
+  private static final Logger LOG = Logger.getLogger(SortJoinUtilsTest.class.getName());
 
   /**
    * Example values from https://en.wikipedia.org/wiki/Join_(SQL)
@@ -189,14 +189,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.innerJoin(
+    Iterator iterator = SortJoinUtils.innerJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.innerJoin(left, right,
+    List<Object> objects = SortJoinUtils.innerJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -273,14 +273,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.fullOuterJoin(
+    Iterator iterator = SortJoinUtils.fullOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.fullOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.fullOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -357,14 +357,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.leftOuterJoin(
+    Iterator iterator = SortJoinUtils.leftOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.leftOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.leftOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -441,14 +441,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.rightOuterJoin(
+    Iterator iterator = SortJoinUtils.rightOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.rightOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.rightOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -474,7 +474,7 @@ public class JoinUtilsTest {
   public void innerJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.innerJoin(
+    List<Object> joined = SortJoinUtils.innerJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -500,7 +500,7 @@ public class JoinUtilsTest {
   public void fullOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.fullOuterJoin(
+    List<Object> joined = SortJoinUtils.fullOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -526,7 +526,7 @@ public class JoinUtilsTest {
   public void leftOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.leftOuterJoin(
+    List<Object> joined = SortJoinUtils.leftOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -552,7 +552,7 @@ public class JoinUtilsTest {
   public void rightOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.rightOuterJoin(
+    List<Object> joined = SortJoinUtils.rightOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
