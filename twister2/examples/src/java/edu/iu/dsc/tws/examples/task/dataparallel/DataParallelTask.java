@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
 import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSink;
@@ -86,5 +87,8 @@ public class DataParallelTask extends BaseSource {
     }
     this.sink = new DataSink<String>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
+
+    this.sink = new DataSink<String>(cfg,
+        new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 }

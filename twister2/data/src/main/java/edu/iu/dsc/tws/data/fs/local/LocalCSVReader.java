@@ -67,18 +67,18 @@ public class LocalCSVReader {
     return this;
   }
 
-  public LocalCSVReader parseQuotedStrings(char quoteCharacter) {
+  public LocalCSVReader parseQuotedStrings(char quotecharacter) {
     this.parseQuotedStrings = true;
-    this.quoteCharacter = quoteCharacter;
+    this.quoteCharacter = quotecharacter;
     return this;
   }
 
-  public LocalCSVReader ignoreComments(String commentPrefix) {
-    if (commentPrefix == null || commentPrefix.length() == 0) {
+  public LocalCSVReader ignoreComments(String commentprefix) {
+    if (commentPrefix == null || commentprefix.length() == 0) {
       throw new IllegalArgumentException("The comment prefix must not be null or an empty string");
     }
 
-    this.commentPrefix = commentPrefix;
+    this.commentPrefix = commentprefix;
     return this;
   }
 

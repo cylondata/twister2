@@ -31,6 +31,7 @@ java_tests(
     test_classes = [
         "edu.iu.dsc.tws.data.DiskBackedCollectionPartitionTest",
         #"edu.iu.dsc.tws.data.HDFSBackedCollectionPartitionTest",
+        "edu.iu.dsc.tws.data.OutputCSVWriterTest",
     ],
     runtime_deps = [
         ":data-tests",
