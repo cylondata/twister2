@@ -227,11 +227,12 @@ public final class K8sWorkerUtils {
    * get job master service IP from job master service name
    * poll repeatedly until getting it or times out
    */
-  public static String getJobMasterServiceIPByPolling(String namespace, String jobID) {
+  public static String getJobMasterServiceIPByPolling(String namespace,
+                                                      String jobID,
+                                                      long timeLimitMS) {
     String jmServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
     jmServiceName = jmServiceName + "." + namespace + ".svc.cluster.local";
 
-    long timeLimit = 100000; // 100sec
     long sleepInterval = 100;
 
     long startTime = System.currentTimeMillis();
@@ -241,14 +242,14 @@ public final class K8sWorkerUtils {
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
-    while (duration < timeLimit) {
+    while (duration < timeLimitMS) {
 
       // try getting job master IP address
       try {
         InetAddress jmAddress = InetAddress.getByName(jmServiceName);
         return jmAddress.getHostAddress();
       } catch (UnknownHostException e) {
-        LOG.warning("Cannot get Job master IP from service name.");
+        LOG.fine("Cannot get Job master IP from service name.");
       }
 
       try {
