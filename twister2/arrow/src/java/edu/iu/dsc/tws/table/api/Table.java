@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.table.api;
 
-public class Table {
+public final class Table {
   /**
    * Table is a final class
    */
