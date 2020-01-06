@@ -72,7 +72,7 @@ public class Fields implements Iterable<String>, Serializable {
    * Gets the field at position index in the collection.
    *
    * @param fieldIndex index of the field to return
-   * @throws IndexOutOfBoundsException - if the index is out of range (index < 0 || index >= size())
+   * @throws IndexOutOfBoundsException - if the index is out of range {@literal (index < 0 || index >= size())}
    */
   public String get(int fieldIndex) {
     return fields.get(fieldIndex);

@@ -21,9 +21,9 @@ public class WindowParameter implements Serializable {
 
   /**
    * Window Type Description
-   * Window Length == Sliding Length => Tumbling Window
+   * {@literal Window Length == Sliding Length => Tumbling Window
    * Window Length  > Sliding Length => Sliding Window
-   * Window Length  < Sliding Length => Invalid Window
+   * Window Length  < Sliding Length => Invalid Window}
    */
 
   private WindowConfig.Count windowCountSize;
