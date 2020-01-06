@@ -77,4 +77,3 @@ java_tests(
 #    ],
 #)
 
-# "edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",

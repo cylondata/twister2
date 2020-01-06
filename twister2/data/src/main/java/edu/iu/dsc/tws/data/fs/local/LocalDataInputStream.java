@@ -69,10 +69,6 @@ public class LocalDataInputStream extends FSDataInputStream {
     return new FileReader(fileN);
   }
 
-//  public Reader getReader(File fileN) throws IOException {
-//    return this.getReader(fileN);
-//  }
-
   @Override
   public int read(byte[] buffer, int offset, int length) throws IOException {
     return this.fis.read(buffer, offset, length);
@@ -80,7 +76,6 @@ public class LocalDataInputStream extends FSDataInputStream {
 
   @Override
   public void close() throws IOException {
-    // Accoring to javadoc, this also closes the channel
     this.fis.close();
   }
 

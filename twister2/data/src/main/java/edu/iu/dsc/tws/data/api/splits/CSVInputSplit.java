@@ -9,7 +9,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 
-public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
+public class CSVInputSplit extends FileInputSplit<Object> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputSplit.class.getName());
 
@@ -20,7 +20,10 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
 
   public static final String DEFAULT_FIELD_DELIMITER = ",";
 
-  // Charset is not serializable
+  private static final byte CARRIAGE_RETURN = (byte) '\r';
+
+  private static final byte NEW_LINE = (byte) '\n';
+
   private transient Charset charset;
 
   /**
@@ -43,11 +46,10 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
 
   private transient byte[] readBuffer;
   private transient byte[] wrapBuffer;
+  private transient byte[] currBuffer;
 
   private transient int readPos;
   private transient int limit;
-
-  private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
   private transient int currOffset;      // offset in above buffer
   private transient int currLen;        // length of current byte sequence
 
@@ -58,16 +60,14 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
 
   private Config config;
 
-  protected transient Object[] parsedValues;
-
   /**
    * Constructs a split with host information.
    *
-   * @param num    the number of this input split
-   * @param file   the file name
-   * @param start  the position of the first byte in the file to process
+   * @param num the number of this input split
+   * @param file the file name
+   * @param start the position of the first byte in the file to process
    * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
-   * @param hosts  the list of hosts containing the block, possibly <code>null</code>
+   * @param hosts the list of hosts containing the block, possibly <code>null</code>
    */
   public CSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
@@ -164,11 +164,9 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
     super.open(cfg);
     initBuffers();
     this.offset = splitStart;
-    this.parsedValues = new Object[2];
-    for (int i = 0; i < 2; i++) {
-      this.parsedValues[i] = createValue();
-    }
+    LOG.info("Offset Value:" + this.offset);
 
+    //FileReader fileReader = new CSVReader(this.stream.getReader());
     if (this.splitStart != 0) {
       this.stream.seek(offset);
       if (this.overLimit) {
@@ -179,36 +177,116 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
     }
   }
 
-  private Double createValue() {
-    return new Double(0.0);
+
+  @Override
+  public String nextRecord(Object record) throws IOException {
+    if (readLine()) {
+      return readRecord(record, this.readBuffer, this.currOffset, this.currLen);
+    } else {
+      this.end = true;
+      return null;
+    }
   }
 
-//  /**
-//   * This function parses the given byte array which represents a serialized record.
-//   * The function returns a valid record or throws an IOException.
-//   *
-//   * @param reuse      An optionally reusable object.
-//   * @param bytes      Binary data of serialized records.
-//   * @param readOffset The offset where to start to read the record data.
-//   * @param numBytes   The number of bytes that can be read starting at the offset position.
-//   * @return Returns the read record if it was successfully deserialized.
-//   * @throws IOException if the record could not be read.
-//   */
-//  public abstract OT readRecord(OT reuse, byte[] bytes, int readOffset, int numBytes)
-//      throws IOException;
+  public String readRecord(Object reusable, byte[] bytes, int readOffset, int numBytes)
+      throws IOException {
+    int curNumBytes = numBytes;
+    if (this.getDelimiter() != null && this.getDelimiter().length == 1
+        && this.getDelimiter()[0] == NEW_LINE && readOffset + curNumBytes >= 1
+        && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
+      curNumBytes -= 1;
+    }
+    return new String(bytes, readOffset, curNumBytes, this.charsetName);
+  }
 
-//  @Override
-//  public OT nextRecord(OT record) throws IOException {
-//    LOG.info("I am reading the record:" + record.toString());
-//    if (readLine()) {
-//      return readRecord(record, this.currBuffer, this.currOffset, this.currLen);
-//    } else {
-//      this.end = true;
-//      return null;
-//    }
-//  }
+  protected final boolean readLine() throws IOException {
+    if (this.stream == null || this.overLimit) {
+      return false;
+    }
 
-  protected abstract OT fillRecord(OT reuse, Object[] parseValues);
+    int countInWrapBuffer = 0;
+    int delimPos = 0;
+    while (true) {
+      if (this.readPos >= this.limit) {
+        if (!fillBuffer(delimPos)) {
+          int countInReadBuffer = delimPos;
+          if (countInWrapBuffer + countInReadBuffer > 0) {
+            if (countInReadBuffer > 0) {
+              if (this.wrapBuffer.length - countInWrapBuffer < countInReadBuffer) {
+                byte[] tmp = new byte[countInWrapBuffer + countInReadBuffer];
+                System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
+                this.wrapBuffer = tmp;
+              }
+              System.arraycopy(this.readBuffer, 0, this.wrapBuffer,
+                  countInWrapBuffer, countInReadBuffer);
+              countInWrapBuffer += countInReadBuffer;
+            }
+
+            this.offset += countInWrapBuffer;
+            setResult(this.wrapBuffer, 0, countInWrapBuffer);
+            return true;
+          } else {
+            return true;
+          }
+        }
+      }
+
+      int startPos = this.readPos - delimPos;
+      int count;
+      // Search for next occurence of delimiter in read buffer.
+      while (this.readPos < this.limit && delimPos < this.delimiter.length) {
+        if ((this.readBuffer[this.readPos]) == this.delimiter[delimPos]) {
+          delimPos++;
+        } else {
+          readPos -= delimPos;
+          delimPos = 0;
+        }
+        readPos++;
+      }
+      if (readPos == limit) {
+        this.end = true;
+      }
+      if (delimPos == this.delimiter.length) {
+        int readBufferBytesRead = this.readPos - startPos;
+        this.offset += countInWrapBuffer + readBufferBytesRead;
+        count = readBufferBytesRead - this.delimiter.length;
+
+        if (countInWrapBuffer > 0) {
+          if (this.wrapBuffer.length < countInWrapBuffer + count) {
+            final byte[] nb = new byte[countInWrapBuffer + count];
+            System.arraycopy(this.wrapBuffer, 0, nb, 0, countInWrapBuffer);
+            this.wrapBuffer = nb;
+          }
+          if (count >= 0) {
+            System.arraycopy(this.readBuffer, 0, this.wrapBuffer, countInWrapBuffer, count);
+          }
+          setResult(this.wrapBuffer, 0, countInWrapBuffer + count);
+          return true;
+        } else {
+          setResult(this.readBuffer, startPos, count);
+          return true;
+        }
+      } else {
+        count = this.limit - startPos;
+        if (((long) countInWrapBuffer) + count > this.lineLengthLimit) {
+          throw new IOException("The record length exceeded the maximum record length ("
+              + this.lineLengthLimit + ").");
+        }
+        int bytesToMove = count - delimPos;
+        if (this.wrapBuffer.length - countInWrapBuffer < bytesToMove) {
+          byte[] tmp = new byte[Math.max(this.wrapBuffer.length * 2,
+              countInWrapBuffer + bytesToMove)];
+          System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
+          this.wrapBuffer = tmp;
+        }
+
+        System.arraycopy(this.readBuffer, startPos, this.wrapBuffer,
+            countInWrapBuffer, bytesToMove);
+        countInWrapBuffer += bytesToMove;
+        System.arraycopy(this.readBuffer, this.readPos - delimPos, this.readBuffer, 0, delimPos);
+      }
+    }
+  }
 
   private void initBuffers() {
     this.bufferSize = this.bufferSize <= 0 ? DEFAULT_READ_BUFFER_SIZE : this.bufferSize;
@@ -223,7 +301,6 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
     if (this.wrapBuffer == null || this.wrapBuffer.length < 256) {
       this.wrapBuffer = new byte[256];
     }
-
     this.readPos = 0;
     this.limit = 0;
     this.overLimit = false;
@@ -250,7 +327,6 @@ public abstract class CSVInputSplit<OT> extends GenericCSVInputSplit {
 
     int toRead;
     if (this.splitLength > 0) {
-      // if we have more data, read that
       toRead = this.splitLength > maxReadLength ? maxReadLength : (int) this.splitLength;
     } else {
       toRead = maxReadLength;

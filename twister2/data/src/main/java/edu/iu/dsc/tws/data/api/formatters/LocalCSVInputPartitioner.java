@@ -16,9 +16,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
 
@@ -35,13 +36,16 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
   }
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config);
+    super(filePath, config, 100);
+    //TODO: we have to use the user-specified data size
+    int datasize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    LOG.info("data size:" + datasize);
     this.numberOfTasks = numTasks;
   }
 
-  protected GenericCSVInputSplit createSplit(int num, Path file, long start,
-                                                                long length, String[] hosts) {
-    return new GenericCSVInputSplit(num, file, start, length, hosts);
+  protected CSVInputSplit createSplit(int num, Path file, long start,
+                                      long length, String[] hosts) {
+    return new CSVInputSplit(num, file, start, length, hosts);
   }
 
   public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
@@ -51,3 +55,4 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
     return assigner;
   }
 }
+

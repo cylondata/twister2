@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +35,6 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -55,26 +52,12 @@ public class CSVInputFormatTest {
   @Test
   public void testUniqueSchedules() throws IOException {
     Config config = getConfig();
-    final String fileContent = "this is|1|2.0|\n" + "a test|3|4.0|\n"
-        + "#next|5|6.0|\n" + "asdadas|5|30.0|\n";
-    final File tempFile = File.createTempFile("/tmp/input-stream", "tmp");
-    tempFile.deleteOnExit();
-    try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-      LOG.info("get bytes:" + Arrays.toString(fileContent.getBytes(defaultCharset)));
-      fileOutputStream.write(fileContent.getBytes(defaultCharset));
-    }
-
-    Path path = new Path("/tmp/example.csv");
-    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path);
+    Path path = new Path("/tmp/dinput/dbYlbLKWFI.csv");
+    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 2, config);
     csvInputPartitioner.configure(config);
-
     FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
     LOG.info("input split values are:" + Arrays.toString(inputSplits));
-
-    LocalTextInputPartitioner localTextInputPartitioner = new LocalTextInputPartitioner(path, 2);
-    localTextInputPartitioner.configure(config);
-    InputSplitAssigner inputSplitAssigner =
-        csvInputPartitioner.getInputSplitAssigner(inputSplits);
+    InputSplitAssigner inputSplitAssigner = csvInputPartitioner.getInputSplitAssigner(inputSplits);
     InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
     inputSplit.open(config);
     while (inputSplit != null) {

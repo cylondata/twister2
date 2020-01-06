@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.fs.local;
 
-import com.google.common.base.Preconditions;
-
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.utils.PreConditions;
@@ -87,7 +85,7 @@ public class LocalCSVReader {
   }
 
   public void setCharset(String charset) {
-    this.charset = Preconditions.checkNotNull(charset);
+    this.charset = PreConditions.checkNotNull(charset, "Not null");
   }
 
   public LocalCSVReader ignoreFirstLine() {
@@ -100,11 +98,11 @@ public class LocalCSVReader {
     return this;
   }
 
-  private void configureInputSplit(CSVInputSplit<?> inputSplit) {
-    inputSplit.setBufferSize(2000);
-    inputSplit.setCharsetName(this.charset);
-    //inputSplit.setDelimiter(this.lineDelimiter);
-    //inputSplit.setSkipFirstLineAsHeader(skipFirstLineAsHeader);
-    //inputSplit.setLenient(ignoreInvalidLines);
-  }
+//  private void configureInputSplit(CSVInputSplit<?> inputSplit) {
+//    inputSplit.setBufferSize(2000);
+//    inputSplit.setCharsetName(this.charset);
+//    //inputSplit.setDelimiter(this.lineDelimiter);
+//    //inputSplit.setSkipFirstLineAsHeader(skipFirstLineAsHeader);
+//    //inputSplit.setLenient(ignoreInvalidLines);
+//  }
 }
