@@ -194,8 +194,8 @@ public final class K8sWorkerStarter {
 
       // get job master service ip from job master service name and use it as Job master IP
     } else {
-      jobMasterIP = K8sWorkerUtils.getJobMasterServiceIPByPolling(
-          KubernetesContext.namespace(config), jobID, 500);
+      jobMasterIP = K8sWorkerUtils.getJobMasterServiceIP(
+          KubernetesContext.namespace(config), jobID);
 
       // if it can not get jm ip by using service name
       // get it by watching jm pod
