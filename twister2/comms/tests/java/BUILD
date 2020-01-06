@@ -1,8 +1,15 @@
 load("//tools/rules:java_tests.bzl", "java_tests")
 
+srcs_without_ucx = glob(["**/*.java"])
+
+srcs_without_ucx.remove("edu/iu/dsc/tws/comms/ucx/TWSUCXChannelTest.java")
+
 java_library(
     name = "comms-tests",
-    srcs = glob(["**/*.java"]),
+    srcs = select({
+        "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
+        "//conditions:default": glob(["**/*.java"]),
+    }),
     deps = [
         "//third_party:ompi_javabinding_java",
         "//third_party/java:junit4",
@@ -35,8 +42,11 @@ java_tests(
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.RestorableIteratorTest",
+        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
         "edu.iu.dsc.tws.comms.utils.HeapTest",
-        "edu.iu.dsc.tws.comms.utils.JoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.SortJoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.JoinRandomTest",
         "edu.iu.dsc.tws.comms.dfw.io.DataSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",
@@ -55,8 +65,10 @@ java_tests(
 #        "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
 #        "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
 #        "edu.iu.dsc.tws.comms.shuffle.RestorableIteratorTest",
+#        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
 #        "edu.iu.dsc.tws.comms.utils.HeapTest",
 #        "edu.iu.dsc.tws.comms.utils.JoinUtilsTest",
+#        "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.DataSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",

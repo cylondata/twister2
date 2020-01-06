@@ -29,7 +29,7 @@ public class JobTerminator implements IJobTerminator {
   }
   @Override
   //mesos needs frameworkd Id to kill it
-  public boolean terminateJob(String jobName) {
+  public boolean terminateJob(String jobID) {
 
 //    MesosController.schedulerDriver.killTask(Protos.TaskID.newBuilder()
 //        .setValue(Integer.toString(2)).build());

@@ -19,11 +19,11 @@ import static org.apache.storm.spout.CheckPointState.State.PREPARING;
 /**
  * Captures the current state of the transaction in {@link CheckpointSpout}. The state transitions
  * are as follows.
- * <pre>
+ * <pre>{@literal
  *                  ROLLBACK(tx2)
  *               <-------------                  PREPARE(tx2)                     COMMIT(tx2)
  * COMMITTED(tx1)-------------> PREPARING(tx2) --------------> COMMITTING(tx2)
- * -----------------> COMMITTED (tx2)
+ * -----------------> COMMITTED (tx2)}
  *
  * </pre>
  * <p>

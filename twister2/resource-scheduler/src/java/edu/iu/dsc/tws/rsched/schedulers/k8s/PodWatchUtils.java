@@ -21,14 +21,15 @@ import java.util.logging.Logger;
 
 import com.google.gson.reflect.TypeToken;
 
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Configuration;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1Event;
-import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodList;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Event;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.Watch;
+import okhttp3.OkHttpClient;
 
 /**
  * this class is used to provide methods related to watching pods in a job
@@ -36,24 +37,42 @@ import io.kubernetes.client.util.Watch;
 public final class PodWatchUtils {
   private static final Logger LOG = Logger.getLogger(PodWatchUtils.class.getName());
 
-  public static CoreV1Api coreApi;
-  public static ApiClient apiClient;
+  private static CoreV1Api coreApi;
+  private static ApiClient apiClient;
 
   private PodWatchUtils() {
   }
 
-  public static void createApiInstances() {
+  private static void createApiInstances() {
 
     try {
       apiClient = io.kubernetes.client.util.Config.defaultClient();
-      apiClient.getHttpClient().setReadTimeout(0, TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
     }
-    Configuration.setDefaultApiClient(apiClient);
 
+    OkHttpClient httpClient =
+        apiClient.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    apiClient.setHttpClient(httpClient);
+    Configuration.setDefaultApiClient(apiClient);
     coreApi = new CoreV1Api(apiClient);
+  }
+
+  public static CoreV1Api getCoreApi() {
+    if (coreApi == null) {
+      createApiInstances();
+    }
+
+    return coreApi;
+  }
+
+  public static ApiClient getApiClient() {
+    if (apiClient == null) {
+      createApiInstances();
+    }
+
+    return apiClient;
   }
 
   /**
@@ -81,8 +100,8 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, labelSelector,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, labelSelector,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -134,7 +153,7 @@ public final class PodWatchUtils {
    * mark each pod that reached to Running state in the given map
    */
   public static boolean watchPodsToRunning(String namespace,
-                                           String jobName,
+                                           String jobID,
                                            HashMap<String, Boolean> pods,
                                            int timeout) {
 
@@ -146,20 +165,20 @@ public final class PodWatchUtils {
     }
 
     String phase = "Running";
-    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
+    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobID);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, serviceLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, serviceLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
     } catch (ApiException e) {
-      String logMessage = "Exception when watching the pods for the job: " + jobName + "\n"
+      String logMessage = "Exception when watching the pods for the job: " + jobID + "\n"
           + "exCode: " + e.getCode() + "\n"
           + "responseBody: " + e.getResponseBody();
       LOG.log(Level.SEVERE, logMessage, e);
@@ -211,7 +230,7 @@ public final class PodWatchUtils {
    * flag the pods with a true value in the given HashMap
    */
   public static boolean watchPodsToStarting(String namespace,
-                                            String jobName,
+                                            String jobID,
                                             HashMap<String, Boolean> pods,
                                             int timeout) {
 
@@ -222,7 +241,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
     String reason = "Started";
     Integer timeoutSeconds = timeout;
     Watch<V1Event> watch = null;
@@ -230,8 +249,8 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedEventCall(namespace, null, null, null, null,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedEventCall(namespace, null, null, null, null, null,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Event>>() {
           }.getType());
 
@@ -270,10 +289,8 @@ public final class PodWatchUtils {
 
   /**
    * get the IP of the node where the pod with that name is running
-   * @param namespace
-   * @return
    */
-  public static String getNodeIP(String namespace, String jobName, String podIP) {
+  public static String getNodeIP(String namespace, String jobID, String podIP) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
@@ -281,12 +298,12 @@ public final class PodWatchUtils {
 
     // this is better but it does not work with another installation
 //    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, workerRoleLabel, null, null, null, null);
+          namespace, null, null, null, null, workerRoleLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
       throw new RuntimeException(e);
@@ -314,7 +331,7 @@ public final class PodWatchUtils {
     V1PodList list = null;
     try {
       list = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       String logMessage = "Exception when getting the pod list: \n"
           + "exCode: " + e.getCode() + "\n"
@@ -332,22 +349,22 @@ public final class PodWatchUtils {
   /**
    * test watch pods method in the worker pod
    */
-  public static void testWatchPods(String namespace, String jobName, int timeout) {
+  public static void testWatchPods(String namespace, String jobID, int timeout) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
-    LOG.info("Starting the watcher for: " + namespace + ", " + jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobID);
+    LOG.info("Starting the watcher for: " + namespace + ", " + jobID);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, jobPodsLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobPodsLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -408,8 +425,8 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, podNameLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, podNameLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -456,17 +473,17 @@ public final class PodWatchUtils {
    * we assume that the job master has the unique twister2-role label and value pair
    */
   public static String getJobMasterIpByWatchingPodToRunning(String namespace,
-                                                            String jobName,
+                                                            String jobID,
                                                             int timeout) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobName);
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobID);
     String podPhase = "Running";
 
-    LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobName
+    LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobID
         + ", " + jobMasterRoleLabel);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
@@ -474,8 +491,8 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, jobMasterRoleLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobMasterRoleLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -521,25 +538,25 @@ public final class PodWatchUtils {
    * watch the worker pods until they are Running and get their IP addresses
    * we assume that workers have the unique twister2-role label and value pair
    * we get the ip addresses of all workers including the worker pod calling this method
-   *
+   * <p>
    * getting IP addresses by list method does not work,
    * since uninitialized pod IPs are not returned by list method
-   *
+   * <p>
    * return null, if it can not get the full list
    */
   public static ArrayList<String> getWorkerIPsByWatchingPodsToRunning(String namespace,
-                                                            String jobName,
-                                                            int numberOfPods,
-                                                            int timeout) {
+                                                                      String jobID,
+                                                                      int numberOfPods,
+                                                                      int timeout) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
     String podPhase = "Running";
 
-    LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobName
+    LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobID
         + ", " + workerRoleLabel);
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
@@ -547,8 +564,8 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, workerRoleLabel,
-              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, workerRoleLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
 
@@ -590,7 +607,7 @@ public final class PodWatchUtils {
       return ipList;
     } else {
       StringBuffer ips = new StringBuffer();
-      for (String ip: ipList) {
+      for (String ip : ipList) {
         ips.append(ip).append(", ");
       }
 

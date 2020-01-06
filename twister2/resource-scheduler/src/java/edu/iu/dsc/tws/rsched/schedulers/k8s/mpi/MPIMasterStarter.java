@@ -52,7 +52,7 @@ public final class MPIMasterStarter {
 
   private static final String HOSTFILE_NAME = "hostfile";
   private static Config config = null;
-  private static String jobName = null;
+  private static String jobID = null;
 
   private MPIMasterStarter() {
   }
@@ -66,9 +66,9 @@ public final class MPIMasterStarter {
     String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
 
-    jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
-    if (jobName == null) {
-      throw new RuntimeException("JobName is null");
+    jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
+    if (jobID == null) {
+      throw new RuntimeException("JobID is null");
     }
 
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
@@ -79,7 +79,7 @@ public final class MPIMasterStarter {
     K8sWorkerUtils.initLogger(config, "mpiMaster");
 
     // read job description file
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
@@ -108,7 +108,7 @@ public final class MPIMasterStarter {
     LOG.info("MPIMaster information summary: \n"
         + "podName: " + podName + "\n"
         + "podIP: " + podIP + "\n"
-        + "jobName: " + jobName + "\n"
+        + "jobID: " + jobID + "\n"
         + "namespace: " + namespace + "\n"
         + "numberOfWorkers: " + job.getNumberOfWorkers() + "\n"
         + "numberOfPods: " + numberOfPods
@@ -119,7 +119,7 @@ public final class MPIMasterStarter {
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
-          namespace, jobName, timeoutSeconds);
+          namespace, jobID, timeoutSeconds);
 
       if (jobMasterIP == null) {
         LOG.severe("Could not get job master IP by wathing job master pod to running. Aborting. "
@@ -130,7 +130,7 @@ public final class MPIMasterStarter {
     LOG.info("Job Master IP address: " + jobMasterIP);
 
     ArrayList<String> podIPs = PodWatchUtils.getWorkerIPsByWatchingPodsToRunning(
-        namespace, jobName, numberOfPods, timeoutSeconds);
+        namespace, jobID, numberOfPods, timeoutSeconds);
 
     if (podIPs == null) {
       LOG.severe("Could not get IPs of all pods running. Aborting. "
@@ -232,7 +232,7 @@ public final class MPIMasterStarter {
             "-cp", System.getenv("CLASSPATH"),
             className,
             jobMasterCLArgument,
-            jobName,
+            jobID,
             "'" + encodedNodeInfoList + "'"
         };
   }

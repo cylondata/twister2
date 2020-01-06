@@ -33,7 +33,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
-   * and source, Map<target, Queue<messages>>
+   * and source, {@literal Map<target, Queue<messages>>}
    */
   protected Int2ObjectOpenHashMap<List<Object>> messages = new Int2ObjectOpenHashMap<>();
 

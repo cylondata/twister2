@@ -20,9 +20,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.IDriverMessenger;
-import edu.iu.dsc.tws.common.driver.IScaler;
+import edu.iu.dsc.tws.api.driver.IDriver;
+import edu.iu.dsc.tws.api.driver.IDriverMessenger;
+import edu.iu.dsc.tws.api.driver.IScaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
@@ -41,7 +41,7 @@ public class  DriverExample implements IDriver {
 //    scalingExampleCLI(scaler);
     scalingExample(scaler, messenger);
     broadcastExample(messenger);
-    sendCompleteMessage(messenger);
+//    sendCompleteMessage(messenger);
 
     LOG.info("Driver has finished execution.");
   }

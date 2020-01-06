@@ -99,7 +99,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private int numberOfWorkers;
 
   // name of this job
-  private String jobName;
+  private String jobID;
 
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
@@ -176,11 +176,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * Construct ZKWorkerController but do not initialize yet
    */
   public ZKWorkerController(Config config,
-                            String jobName,
+                            String jobID,
                             int numberOfWorkers,
                             WorkerInfo workerInfo) {
     this.config = config;
-    this.jobName = jobName;
+    this.jobID = jobID;
     this.numberOfWorkers = numberOfWorkers;
     this.workerInfo = workerInfo;
 
@@ -218,30 +218,30 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       // if this worker is started with scaling up, or
       // if it is coming from failure
       // we need to handle past events
-      numberOfPastEvents = ZKEventsManager.getNumberOfPastEvents(client, rootPath, jobName);
+      numberOfPastEvents = ZKEventsManager.getNumberOfPastEvents(client, rootPath, jobID);
       pastEvents = new TreeMap<>(Collections.reverseOrder());
 
       int wID = workerInfo.getWorkerID();
 
       if (isRestarted()) {
         // delete ephemeral worker znode from previous run, if there is any
-        ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, wID);
+        ZKEphemStateManager.removeEphemZNode(client, rootPath, jobID, wID);
 
         // if the worker barrier znode exist from the previous run, delete it
         // worker may have crashed during barrier operation
-        if (ZKBarrierManager.existWorkerZNode(client, rootPath, jobName, wID)) {
-          ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, wID);
+        if (ZKBarrierManager.existWorkerZNode(client, rootPath, jobID, wID)) {
+          ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, wID);
         }
       }
 
-      String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+      String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
       eventsChildrenCache = new PathChildrenCache(client, eventsDir, true);
       addEventsChildrenCacheListener(eventsChildrenCache);
       eventsChildrenCache.start();
 
       // We cache job znode data
       // So we will listen job scaling up/down
-      String persDir = ZKUtils.persDir(rootPath, jobName);
+      String persDir = ZKUtils.persDir(rootPath, jobID);
       jobZnodeCache = new NodeCache(client, persDir);
       addJobZnodeCacheListener();
       // start the cache and wait for it to get current data from zk server
@@ -269,11 +269,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * create the znode for this worker
    */
   private void createWorkerZnode() throws Exception {
-    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(workersEphemDir, workerInfo.getWorkerID());
 
     workerEphemZNode =
-        ZKEphemStateManager.createWorkerZnode(client, rootPath, jobName, workerInfo.getWorkerID());
+        ZKEphemStateManager.createWorkerZnode(client, rootPath, jobID, workerInfo.getWorkerID());
     workerEphemZNode.start();
     try {
       workerEphemZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
@@ -304,7 +304,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     try {
       return ZKPersStateManager.updateWorkerStatus(
-          client, rootPath, jobName, workerInfo, newStatus);
+          client, rootPath, jobID, workerInfo, newStatus);
 
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -316,7 +316,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   public WorkerState getWorkerStatusForID(int id) {
     WorkerWithState workerWS = null;
     try {
-      workerWS = ZKPersStateManager.getWorkerWithState(client, rootPath, jobName, id);
+      workerWS = ZKPersStateManager.getWorkerWithState(client, rootPath, jobID, id);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -345,7 +345,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     try {
       WorkerWithState workerWS =
-          ZKPersStateManager.getWorkerWithState(client, rootPath, jobName, id);
+          ZKPersStateManager.getWorkerWithState(client, rootPath, jobID, id);
       if (workerWS != null) {
         return workerWS.getInfo();
       }
@@ -367,7 +367,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     List<WorkerWithState> workersWithState = null;
     try {
-      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobID);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return null;
@@ -556,7 +556,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     List<WorkerWithState> workersWithState = null;
     try {
-      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+      workersWithState = ZKPersStateManager.getWorkers(client, rootPath, jobID);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return null;
@@ -574,7 +574,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    */
   public int getNumberOfCurrentWorkers() throws Exception {
 
-    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobID);
     int size = -1;
     try {
       size = client.getChildren().forPath(workersEphemDir).size();
@@ -799,7 +799,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     barrierProceeded = false;
 
     try {
-      ZKBarrierManager.createWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+      ZKBarrierManager.createWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return;
@@ -826,7 +826,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // delete barrier znode in any case
     try {
-      ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+      ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

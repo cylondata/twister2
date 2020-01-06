@@ -28,10 +28,10 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -115,10 +115,10 @@ public final class NomadJobMasterStarter {
         .build();
 
     Option jobID = Option.builder("j")
-        .desc("Job name")
-        .longOpt("job_name")
+        .desc("Job Id")
+        .longOpt("job_id")
         .hasArgs()
-        .argName("job name")
+        .argName("job id")
         .required()
         .build();
     Option jobId = Option.builder("i")
@@ -144,7 +144,6 @@ public final class NomadJobMasterStarter {
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
-    String jobID = cmd.getOptionValue("job_name");
     String jobId = cmd.getOptionValue("job_id");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
@@ -160,7 +159,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.JOB_ID, jobId).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
+    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
     job = JobUtils.readJobFile(null, jobDescFile);
     job.getNumberOfWorkers();
 
@@ -170,8 +169,8 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(SchedulerContext.JOB_ID, jobID).
-        put(SchedulerContext.JOB_NAME, job.getJobId()).build();
+        put(SchedulerContext.JOB_ID, jobId).
+        put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
 
@@ -234,7 +233,7 @@ public final class NomadJobMasterStarter {
     }
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          hostAddress, port);
+          hostAddress, port, job.getJobId());
       LOG.info("JobMaster REGISTERED..:" + hostAddress);
     } catch (Exception e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");

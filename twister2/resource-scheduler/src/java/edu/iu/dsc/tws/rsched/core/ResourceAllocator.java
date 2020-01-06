@@ -27,12 +27,12 @@ import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.LauncherException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -44,10 +44,12 @@ import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
  * <p>
  * These are the steps for submitting a job
  * <p>
- * 1. Figure out the environment from the place where this is executed
- * We will take properties from java system < environment < job
- * 1. Create the job information file and save it
- * 2. Create a job package with jars and job information file to be uploaded to the cluster
+ * <ol>
+ * <li>Figure out the environment from the place where this is executed</li>
+ * <li>We will take properties from java {@literal system < environment < job}</li>
+ * <li>Create the job information file and save it</li>
+ * <li>Create a job package with jars and job information file to be uploaded to the cluster</li>
+ * </ol>
  */
 public class ResourceAllocator {
   public static final Logger LOG = Logger.getLogger(ResourceAllocator.class.getName());
@@ -106,27 +108,12 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, String.format("Loaded configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
 
-    // if this is a Kubernetes cluster and Kubernetes upload method is set as client-to-pods
-    // do not use a regular uploader
-    // Kubernetes client will directly upload the job package to the pods
-    String uploaderClass = SchedulerContext.uploaderClass(config);
-    String nullUploader = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
-    if (clusterType.equalsIgnoreCase(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)
-        && KubernetesContext.clientToPodsUploading(config)
-        && !uploaderClass.equalsIgnoreCase(nullUploader)) {
-
-      uploaderClass = nullUploader;
-      LOG.info("Since this is a Kubernetes cluster and the upload method is set as client-to-pods,"
-          + " uploader class is set to " + uploaderClass);
-    }
-
     return Config.newBuilder().
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.USER_JOB_FILE, jobJar).
         put(SchedulerContext.USER_JOB_TYPE, jobType).
-        put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
         put(SchedulerContext.DEBUG, debug).
         putAll(environmentProperties).
         putAll(cfg).
@@ -217,7 +204,7 @@ public class ResourceAllocator {
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
     // add job description file to the archive
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobId());
     boolean added = packer.addFileToArchive(jobDescFileName, updatedJob.toByteArray());
     if (!added) {
       throw new RuntimeException("Failed to add the job description file to the archive: "
@@ -266,7 +253,7 @@ public class ResourceAllocator {
    *
    * @param job the actual job description
    */
-  public void submitJob(JobAPI.Job job, Config config) {
+  public Twister2JobState submitJob(JobAPI.Job job, Config config) {
     // lets prepare the job files
     String jobDirectory = prepareJobFiles(config, job);
 
@@ -301,17 +288,23 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    LOG.log(Level.INFO, "Initialize uploader");
+    LOG.fine("Initialize uploader");
     // now upload the content of the package
-    uploader.initialize(config);
+    uploader.initialize(updatedConfig, updatedJob);
     // gives the url of the file to be uploaded
-    LOG.log(Level.INFO, "Calling uploader to upload the package content");
+    LOG.fine("Calling uploader to upload the job package");
+    long start = System.currentTimeMillis();
     URI packageURI = uploader.uploadPackage(jobDirectory);
+    long delay = System.currentTimeMillis() - start;
+    LOG.info("Job package upload started. It took: " + delay + "ms");
 
     // add scp address as a prefix to returned URI: user@ip
     String scpServerAdress = ScpContext.scpConnection(updatedConfig);
-    String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
-    LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
+    String scpPath = scpServerAdress;
+    if (packageURI != null) {
+      scpPath += ":" + packageURI.toString() + "/";
+    }
+    LOG.fine("SCP PATH to copy files from: " + scpPath);
 
     // now launch the launcher
     // Update the runtime config with the packageURI
@@ -325,11 +318,40 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
-    launcher.launch(updatedJob);
+    Twister2JobState state = launcher.launch(updatedJob);
 
     launcher.close();
 
-    clearTemporaryFiles(jobDirectory);
+    // when the job initialized successfully
+    // complete uploading if it is threaded
+    // otherwise, undo uploading
+    if (state.isRequestGranted()) {
+      boolean transferred = uploader.complete();
+
+      if (!transferred) {
+        LOG.log(Level.SEVERE, "Transferring the job package failed."
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        launcher.terminateJob(job.getJobId());
+        state.setRequestGranted(false);
+      }
+    } else {
+      uploader.undo(updatedConfig, job.getJobId());
+    }
+
+    if (SchedulerContext.clusterType(updatedConfig).equals("kubernetes")
+        && SchedulerContext.uploaderClass(updatedConfig)
+        .equals("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader")
+        && RequestObjectBuilder.uploadMethod.equals("client-to-pods")
+        && JobUtils.isJobScalable(updatedConfig, updatedJob)) {
+
+      // job package may need to be uploaded to newly scaled workers
+      // so, we do not delete the job package
+
+    } else {
+      clearTemporaryFiles(jobDirectory);
+    }
+
+    return state;
   }
 
   /**
@@ -352,9 +374,9 @@ public class ResourceAllocator {
   /**
    * Terminate a job
    *
-   * @param jobName the name of the job to terminate
+   * @param jobID the name of the job to terminate
    */
-  public void terminateJob(String jobName, Config config) {
+  public void terminateJob(String jobID, Config config) {
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
@@ -374,12 +396,30 @@ public class ResourceAllocator {
 
     // initialize the launcher and terminate the job
     launcher.initialize(config);
-    boolean terminated = launcher.terminateJob(jobName);
+    boolean terminated = launcher.terminateJob(jobID);
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
     }
 
     launcher.close();
+
+    String uploaderClass = SchedulerContext.uploaderClass(config);
+    if (uploaderClass == null) {
+      throw new RuntimeException("The uploader class must be specified");
+    }
+
+    IUploader uploader;
+    // create an instance of uploader
+    try {
+      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
+          uploaderClass);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      throw new UploaderException(
+          String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
+    }
+
+    uploader.undo(config, jobID);
+    uploader.close();
   }
 
 }

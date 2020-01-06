@@ -13,6 +13,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/driver:driver-api-java",
         "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/common/src/java:common-java",
         "//twister2/proto:proto-java",

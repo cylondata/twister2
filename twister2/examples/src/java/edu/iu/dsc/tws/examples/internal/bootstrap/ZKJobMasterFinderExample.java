@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 
@@ -52,10 +51,10 @@ public final class ZKJobMasterFinderExample {
     }
 
     String zkAddress = args[0];
-    String jobName = "test-job";
-    Config cnfg = buildTestConfig(zkAddress, jobName);
+    String jobID = "test-job";
+    Config cnfg = buildTestConfig(zkAddress);
 
-    ZKJobMasterFinder finder = new ZKJobMasterFinder(cnfg);
+    ZKJobMasterFinder finder = new ZKJobMasterFinder(cnfg, jobID);
     finder.initialize();
 
     String jobMasterIPandPort = finder.getJobMasterIPandPort();
@@ -74,10 +73,9 @@ public final class ZKJobMasterFinderExample {
   /**
    * construct a test Config object
    */
-  public static Config buildTestConfig(String zkAddress, String jobName) {
+  public static Config buildTestConfig(String zkAddress) {
     return Config.newBuilder()
         .put(ZKContext.SERVER_ADDRESSES, zkAddress)
-        .put(Context.JOB_NAME, jobName)
         .build();
   }
 

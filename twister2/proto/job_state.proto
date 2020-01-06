@@ -17,3 +17,12 @@ message JobState {
     // the cluster under which job was submitted
     string cluster = 5;
 }
+
+message WorkerJobState {
+    string job_name = 1;
+    //If the worker terminated with an error
+    bool failure = 2;
+    string worker_message = 3;
+    //If the worker failed with an exception the full stack trace is set here
+    string stack_trace = 4;
+}
