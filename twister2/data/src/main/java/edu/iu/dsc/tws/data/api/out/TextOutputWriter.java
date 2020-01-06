@@ -30,6 +30,15 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   }
 
   @Override
+  protected void createOutput(FSDataOutputStream out) {
+    new PrintWriter(out);
+  }
+
+  @Override
+  protected void writeRecord(String data) {
+  }
+
+  @Override
   public void createOutput(int partition, FSDataOutputStream out) {
     if (!writerMap.containsKey(partition)) {
       writerMap.put(partition, new PrintWriter(out));

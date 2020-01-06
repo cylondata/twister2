@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
@@ -110,14 +111,25 @@ public final class KMeansDataGenerator {
     if (fs.exists(directory)) {
       fs.delete(directory, true);
     }
+
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".csv"));
       PrintWriter pw = new PrintWriter(outputStream);
+      CSVOutputWriter csvOutputWriter
+          = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory);
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      pw.print(points);
-      outputStream.sync();
-      pw.close();
+      csvOutputWriter.write(points);
+      csvOutputWriter.close();
+
+      //pw.print(points);
+      //outputStream.sync();
+      //pw.close();
+      /*FileOutputWriter fileOutputWriter
+          = new CSVOutputWriter(FileSystem.WriteMode.NO_OVERWRITE, directory);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      fileOutputWriter.write(points);
+      fileOutputWriter.close();*/
     }
   }
 

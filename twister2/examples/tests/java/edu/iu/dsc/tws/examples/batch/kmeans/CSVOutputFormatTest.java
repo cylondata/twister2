@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data;
+package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -23,9 +23,9 @@ import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
 
-public class OutputCSVWriterTest {
+public class CSVOutputFormatTest {
 
-  private static final Logger LOG = Logger.getLogger(OutputCSVWriterTest.class.getName());
+  private static final Logger LOG = Logger.getLogger(CSVOutputFormatTest.class.getName());
 
   private final Charset defaultCharset = StandardCharsets.UTF_8;
 
@@ -33,15 +33,16 @@ public class OutputCSVWriterTest {
 
   @Before
   public void createFile() throws Exception {
-    path = File.createTempFile("OutputFile", ".csv").getAbsolutePath();
+    path = File.createTempFile("/home/kannan/OutputFile", ".csv").getAbsolutePath();
   }
 
   @Test
   public void test() throws Exception {
     final CSVOutputWriter csvOutputWriter
         = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(path));
-    csvOutputWriter.writeRecord(0, "hello");
-    csvOutputWriter.writeRecord(0, "1");
-    csvOutputWriter.writeRecord(0, "8");
+    csvOutputWriter.writeRecord("2");
+    csvOutputWriter.writeRecord("1");
+    csvOutputWriter.writeRecord("8");
   }
 }
+

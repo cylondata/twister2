@@ -80,18 +80,21 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     // get all the files that are involved in the splits
     List<FileStatus> files = new ArrayList<>();
 
-    //long totalLength = 0;
+    long totalLength = 0;
     final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
-   /* if (pathFile.isDir()) {
+    if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
       files.add(pathFile);
       totalLength += pathFile.getLen();
-    }*/
+    }
 
     //Generate the splits
+    final long maxSplitSize = totalLength / curminNumSplits
+        + (totalLength % curminNumSplits == 0 ? 0 : 1);
+
     if (files.size() > 1) {
       throw new IllegalStateException("FixedInputPartitioner does not support multiple files"
           + "currently");
@@ -101,7 +104,18 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
       int splSize = (int) (lineCount / curminNumSplits);
 
       final long len = file.getLen();
-      long[] splitSizes = getSplitSizes(file.getPath(), curminNumSplits, splSize);
+      final long blockSize = file.getBlockSize();
+      final long localminSplitSize;
+
+      if (this.minSplitSize <= blockSize) {
+        localminSplitSize = minSplitSize;
+      } else {
+        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
+            + " is larger than the block size of " + blockSize
+            + ". Decreasing minimal split size to block size.");
+        localminSplitSize = blockSize;
+      }
+      long[] splitSizes = getSplitSizes(fs, file.getPath(), curminNumSplits, splSize);
       LOG.info("split sizes length:" + splitSizes.length);
 
       int position = 0;
@@ -128,16 +142,17 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  private long[] getSplitSizes(Path filename, int numberOfSplits, int splitSize)
+  private long[] getSplitSizes(FileSystem fs, Path filename, int numberOfSplits, int splitSize)
       throws IOException {
     long[] splits = new long[numberOfSplits];
     long currentSplitBytes = 0L;
     int currLineCount = 0;
     int completeSplitCount = 0;
+    String line;
     BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename.getPath()));
-    boolean skipLf = true;
+    byte[] b;
+    boolean skipLf = false;
     int overflow = -1;
-    LOG.info("number of splits and split size:" + numberOfSplits + "\t" + splitSize);
     outerfor:
     for (int i = 0; i < numberOfSplits; i++) {
       currLineCount = 0;

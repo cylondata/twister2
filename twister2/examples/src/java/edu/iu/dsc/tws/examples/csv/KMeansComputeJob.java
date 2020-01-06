@@ -94,8 +94,8 @@ public class KMeansComputeJob implements IWorker {
     String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
     String centroidDirectory = config.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
 
-//    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
-//        centroidDirectory);
+    KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     long startTime = System.currentTimeMillis();
 

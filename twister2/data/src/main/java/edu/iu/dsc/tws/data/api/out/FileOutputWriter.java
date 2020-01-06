@@ -68,10 +68,8 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
       Path path = new Path(outPath, "part-" + partition);
       try {
         fsOut = fs.create(path);
-
         // lets ask user to create its own output method
         createOutput(partition, fsOut);
-
         openStreams.put(partition, fsOut);
       } catch (IOException e) {
         throw new RuntimeException("Failed to create output stream for file: " + path, e);
@@ -80,11 +78,28 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     writeRecord(partition, out);
   }
 
+  public void write(T out) {
+    FSDataOutputStream fsOut;
+    Path path = new Path(String.valueOf(outPath));
+    try {
+      fsOut = fs.create(path);
+      createOutput(fsOut);
+      //openStreams.put(0, fsOut);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create output stream for file: " + path, e);
+    }
+    writeRecord(out);
+  }
+
+  protected abstract void createOutput(FSDataOutputStream out);
+
+  protected abstract void writeRecord(T data);
+
   /**
    * Create a suitable output
    *
    * @param partition partition id
-   * @param out the out stream
+   * @param out       the out stream
    */
   protected abstract void createOutput(int partition, FSDataOutputStream out);
 
@@ -92,7 +107,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
    * Write the record to output
    *
    * @param partition partition id
-   * @param data data
+   * @param data      data
    */
   protected abstract void writeRecord(int partition, T data);
 
