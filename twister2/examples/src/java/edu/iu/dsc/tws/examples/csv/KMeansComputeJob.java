@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -100,8 +99,8 @@ public class KMeansComputeJob implements IWorker {
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-        parallelismValue, dimension, config);
+    /*ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+        parallelismValue, dimension, config);*/
 
     /* Second Graph to read the centroids **/
     ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
@@ -111,10 +110,10 @@ public class KMeansComputeJob implements IWorker {
     ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    //ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    //taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 
     //Get the execution plan for the second task graph
     //ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);

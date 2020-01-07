@@ -25,17 +25,10 @@ import edu.iu.dsc.tws.api.data.Path;
 public class TextOutputWriter extends FileOutputWriter<String> {
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
+  private PrintWriter pw;
+
   public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
     super(writeMode, outPath);
-  }
-
-  @Override
-  protected void createOutput(FSDataOutputStream out) {
-    new PrintWriter(out);
-  }
-
-  @Override
-  protected void writeRecord(String data) {
   }
 
   @Override
@@ -53,11 +46,25 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   }
 
   @Override
+  protected void writeRecord(FSDataOutputStream out, String data) {
+    pw = new PrintWriter(out);
+    pw.write(data);
+  }
+
+  @Override
+  public void write(String out) {
+  }
+
+  @Override
   public void close() {
-    for (PrintWriter pw : writerMap.values()) {
+    if (!writerMap.isEmpty()) {
+      for (PrintWriter pw1 : writerMap.values()) {
+        pw1.close();
+      }
+      writerMap.clear();
+    } else {
       pw.close();
     }
-    writerMap.clear();
     super.close();
   }
 }

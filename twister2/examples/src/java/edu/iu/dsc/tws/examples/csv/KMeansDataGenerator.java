@@ -111,28 +111,21 @@ public final class KMeansDataGenerator {
     if (fs.exists(directory)) {
       fs.delete(directory, true);
     }
-
     for (int i = 0; i < numOfFiles; i++) {
-      FSDataOutputStream outputStream = fs.create(new Path(directory,
-          generateRandom(10) + ".csv"));
-      PrintWriter pw = new PrintWriter(outputStream);
       CSVOutputWriter csvOutputWriter
-          = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory);
-      //csvOutputWriter.createOutput(0, outputStream);
-
+          = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory, config);
+      csvOutputWriter.createOutput();
+      csvOutputWriter.setHeaders(new String[] {"value1", "value2"});
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      csvOutputWriter.createOutput(outputStream);
-      //csvOutputWriter.write(points);
+      csvOutputWriter.write(points);
       csvOutputWriter.close();
 
+      //FSDataOutputStream outputStream = fs.create(new Path(directory,
+      //          generateRandom(10) + ".csv"));
+      //PrintWriter pw = new PrintWriter(outputStream);
       //pw.print(points);
       //outputStream.sync();
       //pw.close();
-      /*FileOutputWriter fileOutputWriter
-          = new CSVOutputWriter(FileSystem.WriteMode.NO_OVERWRITE, directory);
-      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      fileOutputWriter.write(points);
-      fileOutputWriter.close();*/
     }
   }
 

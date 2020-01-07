@@ -19,10 +19,6 @@ import java.util.logging.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.data.FileSystem;
-import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
-
 public class CSVOutputFormatTest {
 
   private static final Logger LOG = Logger.getLogger(CSVOutputFormatTest.class.getName());
@@ -38,11 +34,11 @@ public class CSVOutputFormatTest {
 
   @Test
   public void test() throws Exception {
-    final CSVOutputWriter csvOutputWriter
-        = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(path));
-    csvOutputWriter.writeRecord("2");
-    csvOutputWriter.writeRecord("1");
-    csvOutputWriter.writeRecord("8");
+//    final CSVOutputWriter csvOutputWriter
+//        = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(path));
+//    csvOutputWriter.writeRecord("2");
+//    csvOutputWriter.writeRecord("1");
+//    csvOutputWriter.writeRecord("8");
   }
 }
 

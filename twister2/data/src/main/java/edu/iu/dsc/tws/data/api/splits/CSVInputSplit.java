@@ -20,6 +20,8 @@ public class CSVInputSplit extends FileInputSplit<Object> {
 
   public static final String DEFAULT_FIELD_DELIMITER = ",";
 
+  public static final String DEFAULT_TAB_DELIMITER = "\t";
+
   private static final byte CARRIAGE_RETURN = (byte) '\r';
 
   private static final byte NEW_LINE = (byte) '\n';

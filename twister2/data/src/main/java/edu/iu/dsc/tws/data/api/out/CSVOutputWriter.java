@@ -18,12 +18,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-import edu.iu.dsc.tws.data.utils.FileSystemUtils;
+//import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class CSVOutputWriter extends FileOutputWriter<String> {
 
@@ -31,6 +34,7 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   protected static String lineDelimiter = CSVInputSplit.DEFAULT_LINE_DELIMITER;
   protected static String fieldDelimiter = CSVInputSplit.DEFAULT_FIELD_DELIMITER;
+  protected static String tabDelimiter = CSVInputSplit.DEFAULT_TAB_DELIMITER;
 
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
@@ -42,12 +46,23 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   private transient Charset charset;
 
-  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
-    this(writeMode, outPath, lineDelimiter, fieldDelimiter, "UTF-8");
+  private String[] headers;
+
+  private PrintWriter pw;
+
+  private Path path;
+
+  private FSDataOutputStream outputStream;
+
+  private FileSystem fileSystem;
+
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config config) {
+    this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, config, "UTF-8");
   }
 
-  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath,
-                         String linedelimiter, String fielddelimiter, String charset) {
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, String linedelimiter,
+                         String fielddelimiter, String tabdelimiter, Config config,
+                         String charset) {
     super(writeMode, outPath);
 
     if (linedelimiter == null) {
@@ -60,8 +75,10 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
     this.fieldDelimiter = fielddelimiter;
     this.lineDelimiter = linedelimiter;
-    //this.charset = Charset.forName(charsetName);
+    this.tabDelimiter = tabdelimiter;
+    /*this.charset = Charset.forName(charsetName);*/
     this.allowedNullValues = false;
+    this.path = outPath;
   }
 
   public boolean isAllowedNullValues() {
@@ -91,6 +108,10 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
   }
 
+  public void setHeaders(String[] headerNames) {
+    this.headers = headerNames;
+  }
+
   @Override
   public void writeRecord(int partition, String data) {
     if (writerMap.containsKey(partition)) {
@@ -98,64 +119,61 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
   }
 
-
-  @Override
-  protected void createOutput(FSDataOutputStream out) {
+  public void createOutput() {
     try {
-      this.fs = FileSystemUtils.get(outPath.toUri());
+      if (fs.exists(path)) {
+        fs.delete(path, true);
+      }
+      outputStream = fs.create(new Path(path, generateRandom(10) + ".csv"));
     } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private String[] headers;
-
-  public void setHeaders(String[] headerNames) {
-    this.headers = headerNames;
-  }
-
-  @Override
-  public void writeRecord(String data) {
-    FSDataOutputStream fsOut;
-    Path path = new Path(outPath.toString());
-    try {
-      fsOut = fs.create(path);
-      LOG.info("received input data:" + fsOut);
-      //printWriter = new PrintWriter(String.valueOf(path));
-      //fsOut.write(Integer.parseInt(data));
-      //printWriter.write(data);
-    } catch (IOException ioe) {
       throw new RuntimeException("IOException Occured");
     }
   }
 
+  public static String generateRandom(int length) {
+    boolean useLetters = true;
+    boolean useNumbers = false;
+    return RandomStringUtils.random(length, useLetters, useNumbers);
+  }
 
-  public void writeRecord(int partition, String[] data) {
-    int numberOfFields = data.length;
-    for (int i = 0; i < numberOfFields; i++) {
-      Object object = data[i];
-      if (object != null) {
-        if (i != 0) {
-          if (writerMap.containsKey(partition)) {
-            writerMap.get(partition).println(data);
-          }
-        }
-
-        if (quoteStrings) {
-          if (object instanceof String) {
-            LOG.info("string instance is:" + object);
-          }
-        }
+  public void writeRecord(FSDataOutputStream out, String data) {
+    pw = new PrintWriter(out);
+    for (int i = 0; i < headers.length; i++) {
+      pw.write(headers[i]);
+      if (i < headers.length - 1) {
+        pw.write(fieldDelimiter);
+        pw.write(tabDelimiter);
       }
     }
+    pw.write(lineDelimiter);
+    pw.write(data);
+  }
+
+  @Override
+  public void write(String data) {
+    pw = new PrintWriter(outputStream);
+    for (int i = 0; i < headers.length; i++) {
+      pw.write(headers[i]);
+      if (i < headers.length - 1) {
+        pw.write(fieldDelimiter);
+        pw.write(tabDelimiter);
+      }
+    }
+    pw.write(lineDelimiter);
+    pw.write(data);
   }
 
   @Override
   public void close() {
-    for (PrintWriter pw : writerMap.values()) {
+    if (!writerMap.isEmpty()) {
+      for (PrintWriter pw1 : writerMap.values()) {
+        pw1.close();
+      }
+      writerMap.clear();
+    } else {
       pw.close();
     }
-    writerMap.clear();
     super.close();
   }
 }
+
