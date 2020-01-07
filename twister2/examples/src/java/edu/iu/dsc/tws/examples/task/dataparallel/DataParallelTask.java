@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.dataparallel;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,7 +91,11 @@ public class DataParallelTask extends BaseSource {
    /*this.sink = new DataSink<String>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));*/
 
-    this.sink = new DataSink<String>(cfg,
-        new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
+    try {
+      this.sink = new DataSink<String>(cfg,
+          new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
   }
 }

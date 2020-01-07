@@ -79,6 +79,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
   }
 
   public void write(T out) {
+    LOG.info("points data:" + out);
     FSDataOutputStream fsOut;
     Path path = new Path(String.valueOf(outPath));
     try {

@@ -118,8 +118,11 @@ public final class KMeansDataGenerator {
       PrintWriter pw = new PrintWriter(outputStream);
       CSVOutputWriter csvOutputWriter
           = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory);
+      //csvOutputWriter.createOutput(0, outputStream);
+
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      csvOutputWriter.write(points);
+      csvOutputWriter.createOutput(outputStream);
+      //csvOutputWriter.write(points);
       csvOutputWriter.close();
 
       //pw.print(points);
