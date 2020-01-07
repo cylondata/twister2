@@ -112,11 +112,6 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
   }
 
-  @Override
-  protected void writeRecord(FSDataOutputStream out, String data) {
-
-  }
-
   public void createOutput() {
     try {
       if (fs.exists(path)) {

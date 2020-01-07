@@ -114,7 +114,7 @@ public class KMeansComputeJob implements IWorker {
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 
     //Actual execution for the first taskgraph
-    //taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 
     //Get the execution plan for the second task graph
     //ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);

@@ -115,7 +115,6 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     return RandomStringUtils.random(length, useLetters, useNumbers);
   }
 
-
   /**
    * Create a suitable output
    *
@@ -132,7 +131,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
    */
   protected abstract void writeRecord(int partition, T data);
 
-  protected abstract void writeRecord(FSDataOutputStream out, T data);
+  //protected abstract void writeRecord(FSDataOutputStream out, T data);
 
   protected abstract void writeRecord(T data);
 

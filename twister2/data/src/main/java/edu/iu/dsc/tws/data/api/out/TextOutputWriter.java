@@ -46,12 +46,6 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   }
 
   @Override
-  protected void writeRecord(FSDataOutputStream out, String data) {
-    pw = new PrintWriter(out);
-    pw.write(data);
-  }
-
-  @Override
   protected void writeRecord(String data) {
   }
 
