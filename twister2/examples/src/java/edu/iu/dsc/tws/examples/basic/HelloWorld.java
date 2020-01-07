@@ -13,83 +13,93 @@ package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 /**
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */
-public class HelloWorld implements IWorker {
+public class HelloWorld implements IWorker, IAllJoinedListener {
 
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
+
+  private List<JobMasterAPI.WorkerInfo> workerList;
+  private Object waitObject = new Object();
 
   @Override
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+                      IPersistentVolume persistentVolume,
+                      IVolatileVolume volatileVolume) {
+
     LOG.info("timestamp workerStart: " + System.currentTimeMillis());
 
-    // lets retrieve the configuration set in the job config
-    String helloKeyValue = config.getStringValue("hello-key");
-
-    // lets do a log to indicate we are running
-    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
-            + "and I got a message: %s", workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
+    boolean added = WorkerRuntime.addAllJoinedListener(this);
+    if (!added) {
+      LOG.warning("Can not register IAllJoinedListener.");
+      waitAndComplete();
+    }
 
     // lets wait for all workers to join the job
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
+    if (workerList == null) {
+      waitAllWorkersToJoin();
     }
 
-    LOG.info("timestamp allWorkersJoined: " + System.currentTimeMillis());
     LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
-
-    // lets sync with all workers
-    LOG.info("Waiting on a barrier ........................ ");
-    try {
-      long start = System.currentTimeMillis();
-      workerController.waitOnBarrier();
-      long delay = System.currentTimeMillis() - start;
-      LOG.info("Barrier wait time: " + delay + " ms for worker: " + workerID);
-    } catch (TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return;
-    }
-
-    LOG.info("Proceeded through the barrier ........................ ");
 
     waitAndComplete();
   }
 
-  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
-    return workerList.stream()
+  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workers) {
+    return workers.stream()
         .map(wi -> wi.getWorkerID())
         .sorted()
         .collect(Collectors.toList());
   }
 
+  /**
+   * wait for all workers to join the job
+   * this can be used for waiting initial worker joins or joins after scaling up the job
+   */
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workers) {
+    workerList = workers;
+    LOG.info("timestamp allWorkersJoined: " + System.currentTimeMillis());
+
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
+  }
+
   private void waitAndComplete() {
 
-    long duration = 600;
+    long duration = 6000;
     try {
       LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
       Thread.sleep(duration * 1000);
@@ -121,4 +131,5 @@ public class HelloWorld implements IWorker {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
+
 }
