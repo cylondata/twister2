@@ -118,7 +118,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     this.maxRetries = SchedulerContext.failureRetries(config, 3);
 
     WorkerRuntime.addWorkerFailureListener(this);
-    WorkerRuntime.addAllJoinedListener(this);
+//    WorkerRuntime.addAllJoinedListener(this);
     this.workerStatus = WorkerStatus.RUNNING;
   }
 
