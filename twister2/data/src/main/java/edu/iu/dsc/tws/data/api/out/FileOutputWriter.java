@@ -12,10 +12,13 @@
 package edu.iu.dsc.tws.data.api.out;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.RandomStringUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
@@ -36,6 +39,8 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
    * File system object
    */
   protected FileSystem fs;
+
+  protected PrintWriter pw;
 
   /**
    * Opened streams
@@ -90,6 +95,27 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     writeRecord(partition, out);
   }
 
+  public void write(T out) {
+    FSDataOutputStream fsOut;
+    try {
+      if (fs.exists(outPath)) {
+        fs.delete(outPath, true);
+      }
+      fsOut = fs.create(new Path(outPath, generateRandom(10) + ".csv"));
+      pw = new PrintWriter(fsOut);
+    } catch (IOException e) {
+      throw new RuntimeException("IOException Occured");
+    }
+    writeRecord(out);
+  }
+
+  public static String generateRandom(int length) {
+    boolean useLetters = true;
+    boolean useNumbers = false;
+    return RandomStringUtils.random(length, useLetters, useNumbers);
+  }
+
+
   /**
    * Create a suitable output
    *
@@ -108,6 +134,8 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
 
   protected abstract void writeRecord(FSDataOutputStream out, T data);
 
+  protected abstract void writeRecord(T data);
+
   @Override
   public void configure(Config config) {
   }
@@ -124,3 +152,4 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     openStreams.clear();
   }
 }
+

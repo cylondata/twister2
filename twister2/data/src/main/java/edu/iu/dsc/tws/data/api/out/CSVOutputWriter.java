@@ -18,15 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-//import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class CSVOutputWriter extends FileOutputWriter<String> {
 
@@ -48,13 +45,9 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   private String[] headers;
 
-  private PrintWriter pw;
-
   private Path path;
 
   private FSDataOutputStream outputStream;
-
-  private FileSystem fileSystem;
 
   public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config config) {
     this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, config, "UTF-8");
@@ -119,24 +112,24 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
   }
 
+  @Override
+  protected void writeRecord(FSDataOutputStream out, String data) {
+
+  }
+
   public void createOutput() {
     try {
       if (fs.exists(path)) {
         fs.delete(path, true);
       }
       outputStream = fs.create(new Path(path, generateRandom(10) + ".csv"));
+      pw = new PrintWriter(outputStream);
     } catch (IOException e) {
       throw new RuntimeException("IOException Occured");
     }
   }
 
-  public static String generateRandom(int length) {
-    boolean useLetters = true;
-    boolean useNumbers = false;
-    return RandomStringUtils.random(length, useLetters, useNumbers);
-  }
-
-  public void writeRecord(FSDataOutputStream out, String data) {
+  public void write(FSDataOutputStream out, String data) {
     pw = new PrintWriter(out);
     for (int i = 0; i < headers.length; i++) {
       pw.write(headers[i]);
@@ -151,7 +144,17 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   @Override
   public void write(String data) {
-    pw = new PrintWriter(outputStream);
+    for (int i = 0; i < headers.length; i++) {
+      pw.write(headers[i]);
+      if (i < headers.length - 1) {
+        pw.write(fieldDelimiter);
+        pw.write(tabDelimiter);
+      }
+    }
+    pw.write(lineDelimiter);
+  }
+
+  public void writeRecord(String data) {
     for (int i = 0; i < headers.length; i++) {
       pw.write(headers[i]);
       if (i < headers.length - 1) {

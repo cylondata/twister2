@@ -52,7 +52,7 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   }
 
   @Override
-  public void write(String out) {
+  protected void writeRecord(String data) {
   }
 
   @Override

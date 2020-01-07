@@ -117,7 +117,7 @@ public final class KMeansDataGenerator {
       csvOutputWriter.createOutput();
       csvOutputWriter.setHeaders(new String[] {"value1", "value2"});
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      csvOutputWriter.write(points);
+      csvOutputWriter.writeRecord(points);
       csvOutputWriter.close();
 
       //FSDataOutputStream outputStream = fs.create(new Path(directory,

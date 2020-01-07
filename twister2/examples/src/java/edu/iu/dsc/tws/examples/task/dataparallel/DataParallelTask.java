@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -78,19 +78,13 @@ public class DataParallelTask extends BaseSource {
 
     boolean shared = cfg.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
-      /*this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));*/
       this.source = runtime.createInput(cfg, context,
-          new LocalCSVInputPartitioner(new Path(directory), context.getParallelism(), cfg));
+          new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
     } else {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(directory)));
     }
-
-   /*this.sink = new DataSink<String>(cfg,
-        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));*/
-
     this.sink = new DataSink<String>(cfg,
-        new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir), cfg));
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 }
