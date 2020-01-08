@@ -43,6 +43,9 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
   private Set<Integer> finishedSources = new HashSet<>();
 
+  /**
+   * Creates an instance of {@link JoinBatchOperation}
+   */
   public JoinBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                             Set<Integer> sources, Set<Integer> dests,
                             Edge leftEdge, Edge rightEdge) {
@@ -71,6 +74,15 @@ public class JoinBatchOperation extends AbstractParallelOperation {
         CommunicationContext.JOIN_TYPE
     );
 
+    CommunicationContext.JoinAlgorithm joinAlgorithm =
+        (CommunicationContext.JoinAlgorithm) leftEdge.getProperty(
+            CommunicationContext.JOIN_ALGORITHM
+        );
+
+    if (joinAlgorithm == null) {
+      joinAlgorithm = CommunicationContext.JoinAlgorithm.SORT;
+    }
+
     Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
     op = new BJoin(newComm, logicalPlan, sources, dests,
         leftEdge.getKeyType(),
@@ -78,7 +90,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
         rightEdge.getDataType(),
         new JoinRecvrImpl(), destSelector, useDisk,
         keyComparator, leftEdge.getEdgeID().nextId(), rightEdge.getEdgeID().nextId(),
-        joinType, leftEdge.getMessageSchema(), rightEdge.getMessageSchema());
+        joinType, joinAlgorithm, leftEdge.getMessageSchema(), rightEdge.getMessageSchema());
   }
 
   @Override

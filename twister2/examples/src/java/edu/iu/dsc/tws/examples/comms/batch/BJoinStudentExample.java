@@ -61,7 +61,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
             return ((String) o1).compareTo((String) o2);
           }
           return 0;
-        }, CommunicationContext.JoinType.INNER);
+        }, CommunicationContext.JoinType.INNER, CommunicationContext.JoinAlgorithm.SORT);
 
     Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
 

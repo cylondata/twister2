@@ -18,6 +18,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
@@ -35,8 +37,12 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   private TaskPartitioner<K> partitioner;
   private Comparator<K> keyComparator;
 
+  private CommunicationContext.JoinAlgorithm algorithm = CommunicationContext.JoinAlgorithm.SORT;
+  private MessageType keyType = MessageTypes.OBJECT;
+
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
+  private boolean useDisk = false;
 
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
@@ -107,9 +113,22 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.setNumberOfEdges(2);
     e.setTargetEdge(groupName);
     e.addProperty(CommunicationContext.JOIN_TYPE, joinType);
+    e.addProperty(CommunicationContext.JOIN_ALGORITHM, algorithm);
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
-    e.addProperty(CommunicationContext.USE_DISK, false);
+    e.addProperty(CommunicationContext.USE_DISK, useDisk);
+    e.setKeyType(keyType);
 
     graphBuilder.connect(s.getId(), t.getId(), e);
+  }
+
+  public JoinTLink<K, VL, VR> useHashAlgorithm(MessageType kType) {
+    this.algorithm = CommunicationContext.JoinAlgorithm.HASH;
+    this.keyType = kType;
+    return this;
+  }
+
+  public JoinTLink<K, VL, VR> useDisk() {
+    this.useDisk = true;
+    return this;
   }
 }

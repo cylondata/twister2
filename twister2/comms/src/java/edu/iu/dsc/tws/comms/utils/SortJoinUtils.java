@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
 
-public final class JoinUtils {
-  private JoinUtils() {
+public final class SortJoinUtils {
+  private SortJoinUtils() {
   }
 
   public static List<Object> join(List<Tuple> leftRelation,

@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.scheduler;
 import java.net.URI;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * Uploads job package to a shared location. This location must be
@@ -35,7 +36,7 @@ public interface IUploader extends AutoCloseable {
   /**
    * Initialize the uploader with the incoming context.
    */
-  void initialize(Config config);
+  void initialize(Config config, JobAPI.Job job);
 
   /**
    * UploadPackage will upload the topology package to the given location.
@@ -47,10 +48,21 @@ public interface IUploader extends AutoCloseable {
   URI uploadPackage(String sourceLocation) throws UploaderException;
 
   /**
+   * if uploader is threaded,
+   * this method will wait for the threaded uploading to finish
+   * @return
+   */
+  default boolean complete() {
+    return true;
+  }
+
+  /**
    * If subsequent stages fail, undo will be called to free resources used by
    * uploading package. Ideally, this should try to remove the uploaded package.
+   * @param cnfg
+   * @param jobID
    */
-  boolean undo();
+  boolean undo(Config cnfg, String jobID);
 
   /**
    * This is to for disposing or cleaning up any internal state accumulated by

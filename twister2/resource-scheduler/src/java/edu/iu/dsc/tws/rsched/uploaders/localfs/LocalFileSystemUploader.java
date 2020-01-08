@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public class LocalFileSystemUploader implements IUploader {
@@ -32,7 +33,7 @@ public class LocalFileSystemUploader implements IUploader {
   private String destinationDirectory;
 
   @Override
-  public void initialize(Config config) {
+  public void initialize(Config config, JobAPI.Job job) {
     this.destinationDirectory = FsContext.uploaderJobDirectory(config);
   }
 
@@ -86,7 +87,7 @@ public class LocalFileSystemUploader implements IUploader {
   }
 
   @Override
-  public boolean undo() {
+  public boolean undo(Config cnfg, String jobID) {
     LOG.info("Clean uploaded jar");
     File file = new File(destinationDirectory);
     return file.delete();

@@ -17,11 +17,17 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
         "//twister2/config/src/yaml:conf-mesos-yaml",
         "//twister2/config/src/yaml:conf-dashboard",
+        "//twister2/config/src/yaml:conf-scripts",
     ]
 
 def twister2_client_dashboard_files():
     return [
         "//twister2/config/src/yaml:conf-dashboard",
+    ]
+
+def twister2_client_scripts_files():
+    return [
+        "//twister2/config/src/yaml:conf-scripts",
     ]
 
 def twister2_client_common_files():
@@ -84,7 +90,6 @@ def twister2_client_lib_resource_scheduler_files():
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
         "@io_swagger_swagger_annotations//jar",
-        "@com_google_code_gson_gson//jar",
         "@commons_codec_commons_codec//jar",
         "@com_hashicorp_nomad_nomad_sdk//jar",
         "@com_fasterxml_jackson_core_jackson_annotations//jar",
@@ -104,10 +109,11 @@ def twister2_kubernetes_lib_files():
         "@maven//:io_kubernetes_client_java",
         "@maven//:io_kubernetes_client_java_api",
         "@maven//:io_kubernetes_client_java_proto",
-        "@com_squareup_okhttp_okhttp//jar",
-        "@com_squareup_okhttp_logging_interceptor//jar",
-        "@com_squareup_okhttp_okhttp_ws//jar",
-        "@com_squareup_okio_okio//jar",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_okhttp3_logging_interceptor",
+        "@maven//:com_squareup_okio_okio",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:io_gsonfire_gson_fire",
         "@joda_time_joda_time//jar",
     ]
 
@@ -207,7 +213,10 @@ def twister2_client_lib_communication_files():
         "@com_esotericsoftware_reflectasm//jar",
         "@org_ow2_asm_asm//jar",
         "//third_party:ompi_javabinding_java",
-    ]
+    ] + select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["//third_party:ucx_javabinding_java"],
+    })
 
 def twister2_client_lib_common_files():
     return [

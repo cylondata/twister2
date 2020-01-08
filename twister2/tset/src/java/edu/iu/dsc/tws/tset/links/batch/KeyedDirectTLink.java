@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -19,6 +20,8 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
+  private boolean useDisk = false;
+
   public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "kdirect", sourceParallelism);
   }
@@ -35,7 +38,14 @@ public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    return e;
+  }
+
+  public KeyedDirectTLink<K, V> useDisk() {
+    this.useDisk = true;
+    return this;
   }
 
 //  @Override

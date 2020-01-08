@@ -69,7 +69,8 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
         MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), false,
-        Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER);
+        Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER,
+        CommunicationContext.JoinAlgorithm.SORT);
 
     Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
