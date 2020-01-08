@@ -1,7 +1,7 @@
 twister2.resource.worker.compute.resources:
   - instances: 2 # number of compute resource instances with this specification
     cpu: 1.0  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-    ram: 1024 # ram for each worker as Mega bytes
+    ram: 256 # ram for each worker as Mega bytes
     disk: 0.0 # volatile disk for each worker as Giga bytes
     scalable: false # only one ComputeResource can be scalable in a job
     workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
@@ -112,7 +112,7 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # K8sUploader Settings
 #########################################################################
 
-twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
+#twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
 
 # When a job is submitted, the job package needs to be transferred to worker pods
 # K8sUploader provides two upload methods:
@@ -154,11 +154,11 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUpload
 #   Specify bucket name
 #   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
 
-# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
 # s3 bucket name to upload the job package
 # workers will download the job package from this location
-twister2.s3.bucket.name: "s3://<bucket-name>"
+twister2.s3.bucket.name: "s3://twister2-scalability-tests"
 
 # job package link will be available this much time
 # by default, it is 2 hours

@@ -320,8 +320,16 @@ public class ResourceAllocator {
 
     start = System.currentTimeMillis();
     Twister2JobState state = launcher.launch(updatedJob);
-    delay = System.currentTimeMillis() - start;
-    LOG.info("Job launching took took: " + delay + "ms");
+    long end =  System.currentTimeMillis();
+    delay = end - start;
+    LOG.info("Job launching took: " + delay + "ms");
+
+    String dir = System.getProperty("user.home") + "/.twister2";
+    String delayFile = dir + "/launch-delay.txt";
+    String ts = (String) updatedConfig.get("JOB_SUBMIT_TIME");
+    long jsDelay = end - Long.parseLong(ts);
+    FileUtils.writeToFile(delayFile, (jsDelay + "").getBytes(), true);
+    LOG.info("Job launch delay: " + jsDelay + " ms");
 
     launcher.close();
 
