@@ -167,8 +167,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     initBuffers();
     this.offset = splitStart;
     LOG.info("Offset Value:" + this.offset);
-
-    //FileReader fileReader = new CSVReader(this.stream.getReader());
     if (this.splitStart != 0) {
       this.stream.seek(offset);
       if (this.overLimit) {

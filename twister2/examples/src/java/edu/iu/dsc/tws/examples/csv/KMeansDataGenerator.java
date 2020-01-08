@@ -115,7 +115,7 @@ public final class KMeansDataGenerator {
       CSVOutputWriter csvOutputWriter
           = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory, config);
       csvOutputWriter.createOutput();
-      csvOutputWriter.setHeaders(new String[] {"value1", "value2"});
+      //csvOutputWriter.setHeaders(new String[] {"value1", "value2"});
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       csvOutputWriter.writeRecord(points);
       csvOutputWriter.close();

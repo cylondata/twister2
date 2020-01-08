@@ -126,14 +126,16 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   public void write(FSDataOutputStream out, String data) {
     pw = new PrintWriter(out);
-    for (int i = 0; i < headers.length; i++) {
-      pw.write(headers[i]);
-      if (i < headers.length - 1) {
-        pw.write(fieldDelimiter);
-        pw.write(tabDelimiter);
+    if (headers.length != 0) {
+      for (int i = 0; i < headers.length; i++) {
+        pw.write(headers[i]);
+        if (i < headers.length - 1) {
+          pw.write(fieldDelimiter);
+          pw.write(tabDelimiter);
+        }
       }
+      pw.write(lineDelimiter);
     }
-    pw.write(lineDelimiter);
     pw.write(data);
   }
 
@@ -150,14 +152,16 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
   }
 
   public void writeRecord(String data) {
-    for (int i = 0; i < headers.length; i++) {
-      pw.write(headers[i]);
-      if (i < headers.length - 1) {
-        pw.write(fieldDelimiter);
-        pw.write(tabDelimiter);
+    /*if (headers.length != 0) {
+      for (int i = 0; i < headers.length; i++) {
+        pw.write(headers[i]);
+        if (i < headers.length - 1) {
+          pw.write(fieldDelimiter);
+          pw.write(tabDelimiter);
+        }
       }
-    }
-    pw.write(lineDelimiter);
+      pw.write(lineDelimiter);
+    }*/
     pw.write(data);
   }
 
@@ -174,4 +178,5 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     super.close();
   }
 }
+
 
