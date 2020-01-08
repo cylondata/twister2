@@ -94,11 +94,6 @@ def twister2_dashboard_files():
         "//dashboard/server:twister2-dash-server",
     ]
 
-def twister2_deeplearning_files():
-    return [
-        "//deeplearning/pytorch:twister2-deeplearning",
-    ]
-
 def twister2_core_checkpointing_files():
     return [
         "//twister2/checkpointing/src/java:checkpointing-java",
