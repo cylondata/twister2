@@ -102,6 +102,7 @@ def twister2_core_checkpointing_files():
 def twister2_core_tset_files():
     return [
         "//twister2/tset/src/java:tset-java",
+        "@maven//:com_google_re2j_re2j"
     ]
 
 def twister2_core_restarter_files():
