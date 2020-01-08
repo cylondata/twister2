@@ -175,10 +175,7 @@ message ListWorkersRequest {
 
 // Job master returns the list of workers in a job to a worker
 message ListWorkersResponse {
-
-    oneof required {
-        int32 workerID = 1;
-    }
+    int32 numberOfWorkers = 1;
     repeated WorkerInfo worker = 2;
 }
 
