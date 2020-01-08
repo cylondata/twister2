@@ -131,6 +131,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return sinkTSet;
   }
 
+  @Deprecated
   public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(
       long windowLen, ComputeFunc<P, Iterator<T1>> computeFunction) {
     this.windowParameter = new WindowParameter();
@@ -144,6 +145,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return window("w-count-tumbling-compute-prev");
   }
 
+  @Deprecated
   public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(int windowLen,
                                                             MapFunc<P, Iterator<T1>> reduceFn) {
     this.windowParameter = new WindowParameter();
@@ -151,6 +153,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return windowReduce("reduce-partition", new MapCompute<>(reduceFn));
   }
 
+  @Deprecated
   public <P> SComputeTSet<P, T1> countWindow(int windowLen, int slidingLen,
                                              ComputeCollectorFunc<P, T1> computeFunction) {
     this.windowParameter = new WindowParameter();
@@ -158,6 +161,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return compute("w-count-tumbling-compute", computeFunction);
   }
 
+  @Deprecated
   public <P> SComputeTSet<P, T1> timeWindow(Time windowLen,
                                             ComputeCollectorFunc<P, T1> computeFunction) {
 
@@ -166,6 +170,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return compute("w-time-tumbling-compute", computeFunction);
   }
 
+  @Deprecated
   public <P> SComputeTSet<P, T1> timeWindow(Time windowLen, Time slidingLen,
                                             ComputeCollectorFunc<P, T1> computeFunction) {
     this.windowParameter = new WindowParameter();
