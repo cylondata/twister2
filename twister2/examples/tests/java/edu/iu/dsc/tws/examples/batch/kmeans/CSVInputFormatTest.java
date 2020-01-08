@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.examples.csv.KMeansDataGenerator;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public class CSVInputFormatTest {
@@ -52,7 +53,8 @@ public class CSVInputFormatTest {
   @Test
   public void testUniqueSchedules() throws IOException {
     Config config = getConfig();
-    Path path = new Path("/tmp/dinput/dbYlbLKWFI.csv");
+    Path path = new Path("/tmp/dinput/");
+    createTempFile(path, config);
     LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 2, config);
     csvInputPartitioner.configure(config);
     FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
@@ -70,6 +72,10 @@ public class CSVInputFormatTest {
         e.printStackTrace();
       }
     }
+  }
+
+  private void createTempFile(Path path, Config config) throws IOException {
+    KMeansDataGenerator.generateData("csv", path, 1, 100, 100, 2, config);
   }
 
   private ComputeGraph createBatchGraph(int parallel) {
@@ -168,3 +174,4 @@ public class CSVInputFormatTest {
     }
   }
 }
+

@@ -124,44 +124,19 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
   }
 
-  public void write(FSDataOutputStream out, String data) {
-    pw = new PrintWriter(out);
-    if (headers.length != 0) {
-      for (int i = 0; i < headers.length; i++) {
-        pw.write(headers[i]);
-        if (i < headers.length - 1) {
-          pw.write(fieldDelimiter);
-          pw.write(tabDelimiter);
-        }
-      }
-      pw.write(lineDelimiter);
-    }
-    pw.write(data);
-  }
-
-  @Override
-  public void write(String data) {
-    for (int i = 0; i < headers.length; i++) {
-      pw.write(headers[i]);
-      if (i < headers.length - 1) {
-        pw.write(fieldDelimiter);
-        pw.write(tabDelimiter);
-      }
-    }
-    pw.write(lineDelimiter);
-  }
-
   public void writeRecord(String data) {
-    /*if (headers.length != 0) {
-      for (int i = 0; i < headers.length; i++) {
-        pw.write(headers[i]);
-        if (i < headers.length - 1) {
-          pw.write(fieldDelimiter);
-          pw.write(tabDelimiter);
+    if (headers != null) {
+      if (headers.length != 0) {
+        for (int i = 0; i < headers.length; i++) {
+          pw.write(headers[i]);
+          if (i < headers.length - 1) {
+            pw.write(fieldDelimiter);
+            pw.write(tabDelimiter);
+          }
         }
+        pw.write(lineDelimiter);
       }
-      pw.write(lineDelimiter);
-    }*/
+    }
     pw.write(data);
   }
 

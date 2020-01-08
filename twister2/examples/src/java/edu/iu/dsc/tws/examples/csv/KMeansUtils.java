@@ -41,11 +41,12 @@ public final class KMeansUtils {
    */
   public static void generateDataPoints(Config config, int dim, int numFiles, int datasize,
                                         int centroidsize, String dinputDirectory,
-                                        String cinputDirectory) {
+                                        String cinputDirectory, String type) {
     try {
-      KMeansDataGenerator.generateData("csv", new Path(dinputDirectory),
+      System.out.println("type of file to be generated:" + type);
+      KMeansDataGenerator.generateData(type, new Path(dinputDirectory),
           numFiles, datasize, 100, dim, config);
-      KMeansDataGenerator.generateData("csv", new Path(cinputDirectory),
+      KMeansDataGenerator.generateData(type, new Path(cinputDirectory),
           numFiles, centroidsize, 100, dim, config);
     } catch (IOException ioe) {
       throw new RuntimeException("Failed to create input data:", ioe);
