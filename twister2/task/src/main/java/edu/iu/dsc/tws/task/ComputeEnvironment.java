@@ -156,6 +156,8 @@ public final class ComputeEnvironment {
     }
     // close the task executor
     taskExecutor.close();
+    // close the worker environment
+    workerEnvironment.close();
   }
 
   public Map<String, ExecutionPlan> build(ComputeGraph ...computeGraphs) {

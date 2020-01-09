@@ -212,6 +212,7 @@ public class TeraSort implements IWorker {
     ComputeGraph computeGraph = teraSortTaskGraph.build();
     ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
     cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
+    cEnv.close();
     LOG.info("Stopping execution...");
   }
 
