@@ -54,15 +54,21 @@ public class CSVInputFormatTest {
   public void testUniqueSchedules() throws IOException {
     Config config = getConfig();
     Path path = new Path("/tmp/dinput/");
-    createTempFile(path, config);
-    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 2, config);
+    createOutputFile(path, config);
+    LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 4, config);
     csvInputPartitioner.configure(config);
     FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
     LOG.info("input split values are:" + Arrays.toString(inputSplits));
     InputSplitAssigner inputSplitAssigner = csvInputPartitioner.getInputSplitAssigner(inputSplits);
     InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
     inputSplit.open(config);
-    while (inputSplit != null) {
+    Object value;
+    LOG.info("input split size:" + inputSplit.reachedEnd());
+    do {
+      value = inputSplit.nextRecord(null);
+    } while (!inputSplit.reachedEnd());
+    LOG.info("input values are:" + value);
+    /*while (inputSplit != null) {
       try {
         while (!inputSplit.reachedEnd()) {
           Object value = inputSplit.nextRecord(null);
@@ -71,10 +77,10 @@ public class CSVInputFormatTest {
       } catch (Exception e) {
         e.printStackTrace();
       }
-    }
+    }*/
   }
 
-  private void createTempFile(Path path, Config config) throws IOException {
+  private void createOutputFile(Path path, Config config) throws IOException {
     KMeansDataGenerator.generateData("csv", path, 1, 100, 100, 2, config);
   }
 

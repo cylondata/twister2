@@ -69,7 +69,6 @@ public final class KMeansDataGenerator {
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       TextOutputWriter textOutputWriter
           = new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, directory, config);
-      //textOutputWriter.setHeaders(new String[]{"value1", "value2"});
       textOutputWriter.createOutput();
       textOutputWriter.writeRecord(points);
       textOutputWriter.close();

@@ -93,7 +93,5 @@ public class DataObjectCSVSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
         new Path(getDataDirectory()), context.getParallelism(), cfg));
-//    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-//        new Path(getDataDirectory()), context.getParallelism(), cfg));
   }
 }

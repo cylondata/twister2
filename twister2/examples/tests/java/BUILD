@@ -66,15 +66,16 @@ java_tests(
     ],
 )
 
-#java_tests_debug(
-#    classpath_resources = twister2_client_common_files(),
-#    test_classes = [
+java_tests_debug(
+    classpath_resources = twister2_client_common_files(),
+    test_classes = [
 #        "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
 #        "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
 #        "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
-#    ],
-#    runtime_deps = [
-#        ":examples-tests",
-#    ],
-#)
+"edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",
+    ],
+    runtime_deps = [
+        ":examples-tests",
+    ],
+)
 
