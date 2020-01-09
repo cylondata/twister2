@@ -190,7 +190,7 @@ public final class HashJoinUtils {
         CommunicationContext.JoinType.LEFT) ? leftIt : rightIt;
 
     // set the memory limits based on the heap allocation
-    final double lowerMemoryBound = Runtime.getRuntime().maxMemory() * 0.1;
+    final double lowerMemoryBound = Runtime.getRuntime().totalMemory() * 0.1;
 
     return new Iterator<JoinedTuple>() {
 
@@ -220,9 +220,11 @@ public final class HashJoinUtils {
         // determine whether hashRelation is fully consumed
         hashingDone = !hashingRelation.hasNext();
 
-        if (!hashingDone && this.keyHash.isEmpty() && hashingRelation.hasNext()) {
+        if (!hashingDone && this.keyHash.isEmpty()) {
           // problem!. We have cleared the old hash, yet there's no free memory available to proceed
-          throw new Twister2RuntimeException("Couldn't progress due to memory limitations");
+          throw new Twister2RuntimeException("Couldn't progress due to memory limitations."
+              + "Available free memory : " + Runtime.getRuntime().freeMemory()
+              + ", Expected free memory : " + lowerMemoryBound);
         }
       }
 
