@@ -69,7 +69,7 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 # the number of http connections from job master to Twister2 Dashboard
 # default value is 3
 # for jobs with large number of workers, this can be set to higher number
-# twister2.job.master.to.dashboard.connections: 3
+twister2.job.master.to.dashboard.connections: 10
 
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
