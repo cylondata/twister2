@@ -248,7 +248,7 @@ public final class K8sWorkerUtils {
         InetAddress jmAddress = InetAddress.getByName(jmServiceName);
         return jmAddress.getHostAddress();
       } catch (UnknownHostException e) {
-        LOG.info("Cannot get Job master IP from service name.");
+        LOG.fine("Cannot get Job master IP from service name.");
       }
 
       try {
