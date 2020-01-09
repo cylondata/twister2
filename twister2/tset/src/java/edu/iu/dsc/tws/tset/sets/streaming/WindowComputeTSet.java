@@ -28,8 +28,6 @@ import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
-  private ReduceFunc reduceFunc;
-
   private WindowParameter windowParameter;
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
@@ -86,10 +84,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
           Collections.emptyMap());
     }
-
-
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);
-
   }
 
   public WindowComputeTSet<O, I> process(WindowCompute<O, I> processFunction) {
