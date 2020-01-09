@@ -11,9 +11,21 @@ derived from the industry standards maintained by Apache Storm and Apache Flink 
 The windowing categorization can be found in the following figure. In streaming engines like 
 Apache Flink, the key based and non-key based support is discussed for windowing, but in Twister2
 we have inbuilt communication functions built for keyed and non-keyed operations. So when user is 
-creating a workflow, it can be created using keyed or non-keyed streaming pipelines. 
+creating a workflow, it can be created using keyed or non-keyed streaming pipelines.
 
-![The Tree of Windowing](assets/windowing-flow.png "Title")  
+Twister2 currently supports two modes of writing windowing applications. First one is the Task API. 
+In the Task API the programming abstraction includes building custom task graphs, writing custom 
+execution logics. This API is a flexible API where you can extend our API to design any other custom
+APIs on your specific programming logics. 
+
+The second API is the TSet API based windowing API. This is a higher abstraction where the 
+programming logic only focuses on the data transformation. This API abstraction allow users to write
+code in a streamlined manner. 
+
+The following documentation contains a basic outline on windowing and descriptions on writing 
+windowing oriented streaming applications. 
+
+![The Tree of Windowing](assets/windowing-flow.png "Tree of Windowing")  
 
 ---
 **NOTE**
@@ -33,22 +45,43 @@ also known as fixed windows.
 For example, you can say you need to collect 4 elements per window and this can be a window
 based on the number of elements per window.  
 
-![Count Based Tumbling Window](assets/tumbling-count-window-1.png)   
+![Count Based Tumbling Window](assets/tumbling-count-window-1.png "Tumbling Count Window")   
+
+#### Task API
 
 ```java
-    BaseWindowedSink dw = new DirectWindowedReceivingTask()
-        .withTumblingCountWindow(4);
+BaseWindowedSink dw = new DirectWindowedReceivingTask().withTumblingCountWindow(4);
+```
+
+#### TSet API
+
+```java
+SSourceTSet<Integer> src = dummySource(env, ELEMENTS_IN_STREAM, PARALLELISM);
+SDirectTLink<Integer> link = src.direct();
+WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> winTSet = link.countWindow(2);
 ```
 
 The other way is that you can say, you need to collect some elements per every 2 minutes.
 
 ![Duration Based Tumbling Window](assets/tumbling-duration-window-1.png)
 
+#### Task API
+
 ```java
-    BaseWindowedSink dwDuration = new DirectWindowedReceivingTask()
-        .withTumblingDurationWindow(2, TimeUnit.MINUTES);
+    BaseWindowedSink dwDuration = new DirectWindowedReceivingTask().withTumblingDurationWindow(2, TimeUnit.MINUTES);
 
 ```
+
+#### TSet API
+
+```java
+SSourceTSet<Integer> src = dummySource(env, ELEMENTS_IN_STREAM, PARALLELISM);
+SDirectTLink<Integer> link = src.direct();
+WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> winTSet = link.timeWindow(2, TimeUnit.MILLISECONDS);
+
+```
+
+
 
 These are the ways that you can create a tumbling window, based on time and based on the count. 
 
@@ -62,20 +95,33 @@ based on the number of elements per window.
 
 ![Count Based Tumbling Window](assets/sliding-count-window.png)   
 
-```java
-BaseWindowedSink sdw = new DirectWindowedReceivingTask()
-        .withSlidingCountWindow(4, 2);
+#### Task API
 
+```java
+BaseWindowedSink sdw = new DirectWindowedReceivingTask().withSlidingCountWindow(4, 2);
+
+```
+
+#### TSet API
+
+```java
+WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.timeWindow(4, 2);
 ```
 
 The other way is that you can say, you need to collect some elements per every 2 minutes.
 
 ![Duration Based Tumbling Window](assets/sliding-duration-window.png)
 
+#### Task API
+
 ```java
-    BaseWindowedSink sdwDuration = new DirectWindowedReceivingTask()
-        .withSlidingDurationWindow(4, TimeUnit.MINUTES,
-            2, TimeUnit.MINUTES);
+BaseWindowedSink sdwDuration = new DirectWindowedReceivingTask().withSlidingDurationWindow(4, TimeUnit.MINUTES, 2, TimeUnit.MINUTES);
+```
+
+#### TSet API
+
+```java
+WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.timeWindow(4, TimeUnit.MILLISECONDS, 2, TimeUnit.MILLISECONDS);
 ```
 
 
@@ -147,10 +193,18 @@ Windowing functionality is a function provided for the user to design their prog
 which has to be executed on the window. We followed the standards defined in Apache Flink to provide
 similar functionalities. 
 
+```text
+Note: The windowing functions for TSet examples assumes the usage of the WindowComputeTSet as the source
+for writing the windowing function. 
+```
+
 ### Reduce Function
 
 User can design a custom reduce function on top of the window and the logic defined in the reduce
 function will be applied on the elements inside the window. 
+
+
+#### TASK API
 
 ```java
 protected static class DirectReduceWindowedTask extends ReduceWindow<int[]> {
@@ -198,10 +252,20 @@ BaseWindowedSink sdwCountTumblingReduce = new DirectReduceWindowedTask(new Reduc
         .withTumblingCountWindow(5);
 ```
 
+#### TSET API
+
+```java
+WindowComputeTSet<Integer, Iterator<Integer>> winTSet
+            = link.timeWindow(2, TimeUnit.MILLISECONDS);
+WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
+            .localReduce((ReduceFunc<Integer>) (t1, t2) -> t1 + t2);
+```
 
 ### Aggregation Function
 
 Aggregation of windowed values is another functionality user needs when processing the window. 
+
+#### TASK API
 
 ```java
  protected static class DirectAggregateWindowedTask extends AggregateWindow<int[]> {
@@ -255,11 +319,26 @@ BaseWindowedSink sdwCountTumblingAggregate
         .withTumblingCountWindow(5);
 ```
 
+#### TSET API
+
+```java
+WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
+            .aggregate((WindowCompute<Integer, Iterator<Integer>>) input -> {
+              Integer sum = 0;
+              while (input.hasNext()) {
+                sum += input.next() * 3;
+              }
+              return sum;
+});
+```
+
 ### Fold Function
 
 Fold function provides the user the ability to get a different data typed or same data typed
 output from the data type in the window. This is more likely to help in creating summaries or
 creating and output to support a different function or API which needs a different data type. 
+
+#### TASK API
 
 ```java
 protected static class DirectFoldWindowedTask extends FoldWindow<int[], String> {
@@ -310,11 +389,28 @@ BaseWindowedSink sdwCountTumblingFold = new DirectFoldWindowedTask(new FoldFunct
 
 ```
 
+
+#### TSET API
+
+```java
+WindowComputeTSet<String, Iterator<Integer>> processedTSet = winTSet
+            .fold((WindowCompute<String, Iterator<Integer>>) input -> {
+              String sum = "";
+              while (input.hasNext()) {
+                sum += input.next() * 3 + ", ";
+              }
+              return sum;
+});
+```
+
+
 ### Window Process Function
 
 Process function provides you the ability to get the same elements of the window, but you can 
 apply a custom function on each element. This is also a different use case that use may need when
 providing data to different APIs. 
+
+#### TASK API
 
 ```java
 protected static class DirectProcessWindowedTask extends ProcessWindow<int[]> {
@@ -398,11 +494,26 @@ BaseWindowedSink sdwCountTumblingProcess
             TimeUnit.MILLISECONDS);
 ```
 
+#### TSET API
+
+```java
+WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> processedTSet = winTSet
+            .process((WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
+              List<Integer> list = new ArrayList<>();
+              while (input.hasNext()) {
+                list.add(input.next());
+              }
+              return list.iterator();
+});
+```
+
 ## Late Stream Processing
 
 For the late elements which are coming in the stream, Twister2 currently provides a separate function
 call which is being called once a late element is coming via the stream. For all the functions defined
 in the previous section a late message call is provided. 
+
+#### TASK API
 
 ```java
 @Override
@@ -411,6 +522,12 @@ in the previous section a late message call is provided.
           lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
       return true;
     }
+```
+
+#### TSET API
+
+```text
+Not Yet Supported. 
 ```
 
 Here  you can design your logic to process a late arriving element. 
