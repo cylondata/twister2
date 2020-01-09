@@ -16,7 +16,7 @@ import java.util.Set;
 
 /**
  * This is the main interface for the task graph structure. A task graph 'TG' consists of set of
- * Task Vertices 'TV' and Task Edges (TE) which is mathematically denoted as Task Graph (TG) -> (TV, TE).
+ * Task Vertices 'TV' and Task Edges (TE) which is mathematically denoted as Task Graph {@literal (TG) -> (TV, TE).}
  */
 public interface ITaskGraph<TV, TE> {
 
@@ -40,7 +40,7 @@ public interface ITaskGraph<TV, TE> {
    * This method receives the source and target task vertex and create the task edge between the
    * source and target task vertex.
    * <p>
-   * SourceTaskVertex --->TaskEdge---->TargetTaskVertex
+   * {@literal SourceTaskVertex --->TaskEdge---->TargetTaskVertex}
    */
   TE addTaskEdge(TV sourceTaskVertex, TV targetTaskVertex);
 

@@ -253,7 +253,7 @@ public abstract class TSetEnvironment {
    * Returns the map of inputs of a particular {@link edu.iu.dsc.tws.api.tset.sets.TSet}
    *
    * @param tSetID TSet ID
-   * @return map of inputs that maps inputTSetDD --> inputKey
+   * @return map of inputs that maps inputTSetDD {@literal -->} inputKey
    */
   public Map<String, String> getInputs(String tSetID) {
     return tSetInputMap.getOrDefault(tSetID, new HashMap<>());
@@ -329,5 +329,12 @@ public abstract class TSetEnvironment {
     }
 
     return thisTSetEnv;
+  }
+
+  /**
+   * Close the environment
+   */
+  public void close() {
+    workerEnv.close();
   }
 }

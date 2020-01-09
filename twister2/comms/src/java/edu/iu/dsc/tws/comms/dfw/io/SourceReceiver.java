@@ -33,7 +33,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
-   * and source, Map<target, map<source, Queue<messages>>
+   * and source, {@literal Map<target, map<source, Queue<messages>>}
    */
   protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
 

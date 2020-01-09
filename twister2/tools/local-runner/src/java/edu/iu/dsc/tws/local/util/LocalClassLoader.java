@@ -26,11 +26,13 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 /**
  * This class loader will be used to virtually create isolated contexts for Worker instances.
  * This will,
+ * <ul>
  * <li>Exclude all classes in java. or sun. packages</li>
  * <li>Exclude {@link Twister2Job}, {@link Config} and {@link Config.Builder},
  * since they should be passed from parent loader to this loader</li>
  * <li>Exclude edu.iu.dsc.tws.proto package, since it has lot of inner classes and not much
  * useful for the local runner</li>
+ * </ul>
  */
 public class LocalClassLoader extends SecureClassLoader {
 
