@@ -20,15 +20,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.curator.framework.CuratorFramework;
-
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
-import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -522,26 +518,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   /**
-   * delete job znodes on ZooKeeper server
-   * @param jobID
-   * @return
-   */
-  public boolean deleteJobZnode(String jobID) {
-
-    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String rootPath = ZKContext.rootNode(config);
-    return ZKUtils.deleteJobZNodes(client, rootPath, jobID);
-  }
-
-  /**
    * Close up any resources
    */
   @Override
   public void close() {
-
-    // if ZK Client is initialized close that
-    // if not, it does nothing
-    ZKUtils.closeClient();
   }
 
   /**
@@ -606,17 +586,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
-
-    // delete job znode from ZooWorker server if fault tolerant
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      // if zk is running as a service,
-      // do not try to delete job znodes from zk
-      String serverAddresses = ZKContext.serverAddresses(config);
-      String sName = serverAddresses.substring(0, serverAddresses.indexOf("."));
-      if (controller.existServices(Arrays.asList(sName)) == null) {
-        deleteJobZnode(jobID);
-      }
-    }
 
     return true;
   }
