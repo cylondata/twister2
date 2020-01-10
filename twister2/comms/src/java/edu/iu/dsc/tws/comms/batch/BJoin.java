@@ -23,14 +23,17 @@ import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.MToNChain;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
@@ -45,12 +48,12 @@ public class BJoin extends BaseOperation {
   /**
    * Left partition of the join
    */
-  private MToNSimple partitionLeft;
+  private DataFlowOperation partitionLeft;
 
   /**
    * Right partition of the join
    */
-  private MToNSimple partitionRight;
+  private DataFlowOperation partitionRight;
 
   /**
    * Destination selector
@@ -82,7 +85,7 @@ public class BJoin extends BaseOperation {
   public BJoin(Communicator comm, LogicalPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle,
+               DestinationSelector destSelector, boolean useDisk,
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
                CommunicationContext.JoinType joinType,
                CommunicationContext.JoinAlgorithm joinAlgorithm,
@@ -99,25 +102,38 @@ public class BJoin extends BaseOperation {
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
-    if (shuffle) {
+    MessageType leftRecvDataType = leftDataType;
+    MessageType rightRecvDataType = rightDataType;
+    if (useDisk) {
       finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator,
           joinType, joinAlgorithm, keyType);
+      leftRecvDataType = MessageTypes.BYTE_ARRAY;
+      rightRecvDataType = MessageTypes.BYTE_ARRAY;
     } else {
       finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType,
           joinAlgorithm, keyType);
     }
 
-
-    this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
-        new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        leftDataType, keyType, leftSchema);
-
-    this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
-        new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        rightDataType, keyType, rightSchema);
-
-    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
-    this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+      this.partitionLeft = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
+          sources, targets, new JoinBatchPartialReceiver(0, finalRcvr),
+          new PartitionPartialReceiver(), leftDataType, leftRecvDataType,
+          keyType, keyType, leftEdgeId, leftSchema);
+      this.partitionRight = new MToNSimple(comm.getConfig(),
+          comm.getChannel(), plan, sources, targets,
+          new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
+          rightDataType, rightRecvDataType, keyType, keyType, rightEdgeId, rightSchema);
+    } else {
+      this.partitionLeft = new MToNChain(comm.getConfig(), comm.getChannel(), plan,
+          sources, targets,
+          new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
+          leftDataType, leftRecvDataType, keyType, keyType, leftEdgeId, leftSchema);
+      this.partitionRight = new MToNChain(comm.getConfig(), comm.getChannel(), plan,
+          sources, targets,
+          new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
+          rightDataType, rightRecvDataType, keyType, keyType, rightEdgeId, rightSchema);
+    }
     this.destinationSelector.prepare(comm, sources, targets, keyType, null);
   }
 
