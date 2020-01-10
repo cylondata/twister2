@@ -101,6 +101,9 @@ twister2.zookeeper.based.group.management: false
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+# when conf/kubernetes/deployment/zookeeper-wo-persistence.yaml is used
+# following service name can be used as zk address
+# twister2.resource.zookeeper.server.addresses: "twister2-zookeeper.default.svc.cluster.local:2181"
 twister2.resource.zookeeper.server.addresses: "ip:port"
 
 # the root node path of this job on ZooKeeper

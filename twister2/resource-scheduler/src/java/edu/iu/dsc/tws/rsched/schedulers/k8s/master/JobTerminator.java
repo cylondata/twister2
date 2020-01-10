@@ -13,11 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.util.ArrayList;
 
-import org.apache.curator.framework.CuratorFramework;
-
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
@@ -54,14 +50,6 @@ public class JobTerminator implements IJobTerminator {
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
 
-    boolean zkCleared = true;
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-      String rootPath = ZKContext.rootNode(config);
-      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobID);
-      ZKUtils.closeClient();
-    }
-
     // delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
     boolean ssForJobMasterDeleted =
@@ -75,7 +63,6 @@ public class JobTerminator implements IJobTerminator {
         && serviceForWorkersDeleted
         && serviceForJobMasterDeleted
         && pvcDeleted
-        && ssForJobMasterDeleted
-        && zkCleared;
+        && ssForJobMasterDeleted;
   }
 }

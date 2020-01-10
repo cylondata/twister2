@@ -18,6 +18,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.driver.DefaultDriver;
@@ -34,6 +36,7 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -406,6 +409,7 @@ public class JobMaster {
 
     if (zkMasterController != null) {
       zkMasterController.close();
+      deleteZKNodes();
     }
 
     if (jobTerminator != null) {
@@ -560,6 +564,7 @@ public class JobMaster {
 
         if (zkMasterController != null) {
           zkMasterController.close();
+          deleteZKNodes();
         }
 
         if (clearResourcesWhenKilled) {
@@ -575,6 +580,17 @@ public class JobMaster {
     };
 
     Runtime.getRuntime().addShutdownHook(hookThread);
+  }
+
+  private boolean deleteZKNodes() {
+    boolean zkCleared = true;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+      String rootPath = ZKContext.rootNode(config);
+      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, job.getJobId());
+      ZKUtils.closeClient();
+    }
+    return zkCleared;
   }
 
   public IDriver getDriver() {
