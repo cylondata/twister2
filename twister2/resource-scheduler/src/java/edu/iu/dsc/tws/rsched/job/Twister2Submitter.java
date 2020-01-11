@@ -85,15 +85,16 @@ public final class Twister2Submitter {
     if (!FileUtils.isDirectoryExists(dir)) {
       FileUtils.createDirectory(dir);
     }
-    String filename = dir + "/last-job-id.txt";
-    FileUtils.writeToFile(filename, (jobId + "").getBytes(), true);
+//    String filename = dir + "/last-job-id.txt";
+//    String filename = dir + "/" + jobId + "-job-id.txt";
+//    FileUtils.writeToFile(filename, (jobId + "").getBytes(), true);
 
-    String tsfile = dir + "/time-stamp.txt";
+    String tsfile = dir + "/" + jobId + "-time-stamp.txt";
     String ts = (String) config.get("JOB_SUBMIT_TIME");
     FileUtils.writeToFile(tsfile, ts.getBytes(), true);
 
-    String workersFile = dir + "/number-of-workers.txt";
-    FileUtils.writeToFile(workersFile, (job.getNumberOfWorkers() + "").getBytes(), true);
+//    String workersFile = dir + "/" + jobId + "-number-of-workers.txt";
+//    FileUtils.writeToFile(workersFile, (job.getNumberOfWorkers() + "").getBytes(), true);
 
     //print ascii
     LOG.info("\n\n _____           _     _           ____  \n"

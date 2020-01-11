@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -32,6 +33,14 @@ public final class BasicKubernetesJob {
   @SuppressWarnings("unchecked")
   public static void main(String[] args) {
 
+    if (args.length != 2) {
+      LOG.severe("You must provide jobID and numberOfWorkers as parameters.");
+      return;
+    }
+
+    String jID = args[0];
+    int numberOfWorkers = Integer.parseInt(args[1]);
+
     //    LoggingHelper.setupLogging(null, "logs", "client");
     long ts = System.currentTimeMillis();
     LOG.info("Job submission time: " + ts);
@@ -40,8 +49,25 @@ public final class BasicKubernetesJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     LOG.fine("read config values: " + config.size() + "\n" + config);
 
-    config = Config.newBuilder().putAll(config).put("JOB_SUBMIT_TIME", ts + "").build();
-    submitJob(config);
+    config = Config.newBuilder().putAll(config)
+        .put("JOB_SUBMIT_TIME", ts + "")
+        .put(SchedulerContext.JOB_ID, jID)
+        .build();
+
+    // lets put a configuration here
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.put("hello-key", "Twister2-Hello");
+
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName("t2j")
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(1.0, 256, numberOfWorkers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
+
+//    submitJob(config);
   }
 
   private static String convertToString(List<Map<String, List<String>>> outerList) {
