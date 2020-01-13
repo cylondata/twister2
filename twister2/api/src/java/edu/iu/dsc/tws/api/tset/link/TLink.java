@@ -75,8 +75,8 @@ public interface TLink<T1, T0> extends TBase {
   /**
    * Performs flat map operation based on the {@link FlatMapFunc} provided
    *
-   * @param mapFn map function which can produce multiple elements for a single <T0> element
-   * @param <O>   map function to T0 to multiple elements of <O>
+   * @param mapFn map function which can produce multiple elements for a single {@literal <T0>} element
+   * @param <O>   map function to T0 to multiple elements of {@literal <O>}
    * @return Compute TSet
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
@@ -103,7 +103,7 @@ public interface TLink<T1, T0> extends TBase {
   /**
    * Creates a Sink TSet based on the {@link SinkFunc}.
    *
-   * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
+   * @param sinkFunction sink function which takes in {@literal <T1>}. Similar to a compute, but would not
    *                     return any TSet
    * @return Sink tset. This would would be a terminal TSet with no transformation capabilities.
    */

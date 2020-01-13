@@ -18,12 +18,12 @@ Here are the steps to run jobs in Kubernetes clusters:
 * [**Running Jobs in Kubernetes**](#running-jobs-in-kubernetes)
 
 Here are the list of optional installations/settings: 
+* [**Job Package Uploader Settings**](#job-package-uploader-settings): This is recommended to upload the job package through a web server. 
 * [**Deploying Twister2 Dashboard**](#deploying-twister2-dashboard): This is a recommended step to monitor Twister2 jobs on Kubernetes clusters. 
 * [**Persistent Storage Settings**](#persistent-storage-settings): You can set up persistent storage only if you want to use. 
 * [**Fault Tolerant Jobs**](#fault-tolerant-jobs): A ZooKeeper server is required, if you want to run fault-tolerant Twister2 jobs. 
 * [**Generating Secret Object for OpenMPI Jobs**](#generating-secret-object-for-openmpi-jobs): This is required only if you are going to run OpenMPI jobs. 
 * [**Providing Rack and Datacenter Information**](#providing-rack-and-datacenter-information-to-twister2): This is required only if you want Twister2 to perform rack and data center aware scheduling. 
-* [**Job Package Uploader Settings**](#job-package-uploader-settings): This is required only if you want to upload the job package through a web server. 
 
 Twister2 runs jobs in Docker containers in Kubernetes clusters. 
 Developers need to rebuild Twister2 Docker image if they want to modify twister2 source codes: 
@@ -121,6 +121,47 @@ Therefore job names must follow Kubernetes naming rules: [Kubernetes resource na
 Job names should consist of lower case alphanumeric characters and dash\(-\) only. Their length can be 50 chars at most. 
 If job names do not conform to these rules, we automatically change them to accommodate those rules. 
 We use the changed names as job names.  
+
+## Job Package Uploader Settings
+
+When users submit a Twister2 job in Kubernetes cluster, 
+submitting client needs to transfer the job package to workers and the job master. 
+The submitting client first packs all job related files into a tar package file. 
+This archive file needs to be transferred to each worker pod that will be started.
+
+We provide [two methods](../../architecture/resource-schedulers/kubernetes/twister2-on-kubernetes.md):
+
+* Job package file transfer from submitting client to job pods directly
+* Job package file transfer through uploader web server pods
+
+We first check whether there is any uploader web server running in the cluster.
+If there is, we upload the job package to the uploader web server pods. 
+Job pods download the job package from uploader web server pods. 
+Otherwise, submitting client uploads the job package to all pods in the job directly. 
+Both methods transfer the job package from client to pods by using kubectl copy method.
+
+If you are running many Twister2 jobs with many workers, 
+it would be more efficient and faster to run uploader web server pods. 
+We designed a StatefulSet that runs an nginx web server. 
+You can deploy it with following command: 
+
+```bash
+$ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-uploader-wo-ps.yaml
+```
+
+You can modify the number of replicas in uploader web server yaml file above or 
+the compute resources used. 
+
+If you choose to use your own web server pods, 
+then you need to specify following configuration parameters in resource.yaml file: 
+
+```text
+    twister2.kubernetes.uploader.web.server
+    twister2.kubernetes.uploader.web.server.directory
+    twister2.kubernetes.uploader.web.server.label
+```
+
+Please check conf/kubernetes/resource.yaml file for more explanation about these parameters. 
 
 ## Deploying Twister2 Dashboard
 
@@ -320,49 +361,6 @@ the value of the following configuration parameter has to be specified as false 
 
 ```text
     kubernetes.node.locations.from.config
-```
-
-## Job Package Uploader Settings
-
-When users submit a Twister2 job in Kubernetes cluster, 
-submitting client needs to transfer the job package to workers and the job master. 
-The submitting client first packs all job related files into a tar package file. 
-This archived file needs to be transferred to each worker that will be started.
-
-We provide [two methods](../../architecture/resource-schedulers/kubernetes/twister2-on-kubernetes.md):
-
-* Job Package Transfer Using kubectl file copy
-* Job Package Transfer Through a Web Server
-
-By default, we use the first method to transfer the job package. This method does not require any installations. 
-It transfers the job package from client to workers directly by using kubectl copy method.
-Just make sure that the value of following configuration parameter in resource.yaml file is true: 
-
-```text
-   twister2.resource.kubernetes.client.to.pods.uploading
-```
-
-Second method transfers the job package once to a web server running in the cluster. 
-Workers download the job package from this web server. 
-This method is more efficient since it transfers the job package only once from client machine to a web server. 
-If the submitting clients are running on the cluster machines, this may not be important. 
-However, if the submitting client is running on a machine outside the cluster with limited bandwidth, 
-then this can be important.
-
-First, the client to pods uploading parameter has to be disabled by assigning false in resource.yaml file:
-
-```text
-   twister2.resource.kubernetes.client.to.pods.uploading
-```
-
-For the transfer through a web server to work, a web server must exist in the cluster and 
-the submitting client must have write permission to that directory. 
-Then, you need to specify the web server directory and address information for the following configuration parameters in uploader.yaml file: 
-
-```text
-   twister2.resource.uploader.scp.command.connection: user@host
-   twister2.resource.uploader.directory: "/path/to/web-server/directory/"
-   twister2.resource.download.directory: "http://host:port/web-server-directory"
 ```
 
 ## Building Twister2 Docker Image for Kubernetes

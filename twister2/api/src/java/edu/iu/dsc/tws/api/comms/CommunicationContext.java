@@ -93,6 +93,7 @@ public class CommunicationContext extends Context {
    * Type of the join algorithm to apply with join operation
    */
   public static final String JOIN_TYPE = "join-type";
+  public static final String JOIN_ALGORITHM = "join-algorithm";
 
   public enum JoinType {
     INNER, FULL_OUTER, LEFT, RIGHT;
@@ -104,6 +105,10 @@ public class CommunicationContext extends Context {
     public boolean includeRight() {
       return this == FULL_OUTER || this == RIGHT || this == INNER;
     }
+  }
+
+  public enum JoinAlgorithm {
+    SORT, HASH
   }
 
   /**

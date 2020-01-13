@@ -20,10 +20,13 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -44,7 +47,8 @@ public final class JobMasterStarter {
 
   public static JobAPI.Job job;
 
-  private JobMasterStarter() { }
+  private JobMasterStarter() {
+  }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
@@ -95,7 +99,12 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    JobMasterAPI.JobMasterState initialState = initialStateAndUpdate(config, jobID, podIP);
+    // TODO: If ZooKeeper is not used,
+    // currently we just return JM_STARTED. We do not determine real initial status.
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      initialState = initializeZooKeeper(config, jobID, podIP);
+    }
 
     JobTerminator jobTerminator = new JobTerminator(config);
     KubernetesController controller = new KubernetesController();
@@ -117,42 +126,52 @@ public final class JobMasterStarter {
   }
 
   /**
+   * Initialize zk directories if
+   * <p>
    * Job Master is either starting for the first time, or it is coming from failure
-   * We return either JobMasterState.JM_STARTED or JobMasterState.JM_RESTARTED
-   *
-   * We also update the job object if it is restarting
-   * We initialize event counter
-   *
-   * TODO: If ZooKeeper is not used,
-   *   currently we just return JM_STARTED. We do not determine real initial status.
-   * @return
+   * if it is coming from failure, update jm pers state, initialize eventCounter, read job object,
+   * return JobMasterState.JM_RESTARTED
+   * <p>
+   * if it is starting for the first time,
+   * create job directories at zk, create pers state znode for jm, return JobMasterState.JM_STARTED
    */
-  public static JobMasterAPI.JobMasterState initialStateAndUpdate(Config config,
-                                                                  String jobID,
-                                                                  String jmAddress) {
+  public static JobMasterAPI.JobMasterState initializeZooKeeper(Config config,
+                                                                String jobID,
+                                                                String jmAddress) {
 
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      String zkServerAddresses = ZKContext.serverAddresses(config);
-      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
-      CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
-      String rootPath = ZKContext.rootNode(config);
+    String zkServerAddresses = ZKContext.serverAddresses(config);
+    int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
+    CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+    String rootPath = ZKContext.rootNode(config);
 
-      try {
-        if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobID, jmAddress)) {
-          ZKEventsManager.initEventCounter(client, rootPath, jobID);
-          job = ZKPersStateManager.readJobZNode(client, rootPath, jobID);
-          return JobMasterAPI.JobMasterState.JM_RESTARTED;
-        }
-
-        return JobMasterAPI.JobMasterState.JM_STARTED;
-
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Can not determine Job Master initial state. Assuming JM_STARTED", e);
-        return JobMasterAPI.JobMasterState.JM_STARTED;
+    try {
+      if (ZKPersStateManager.isJobMasterRestarting(client, rootPath, jobID, jmAddress)) {
+        ZKEventsManager.initEventCounter(client, rootPath, jobID);
+        job = ZKPersStateManager.readJobZNode(client, rootPath, jobID);
+        return JobMasterAPI.JobMasterState.JM_RESTARTED;
       }
-    }
 
-    return JobMasterAPI.JobMasterState.JM_STARTED;
+      // check if there is a job directory,
+      // if so, that is a problem
+      if (ZKUtils.isThereJobZNodes(client, rootPath, jobID)) {
+        throw new Twister2RuntimeException("There is already a job znode at zookeeper for this job."
+            + "Can not run this job.");
+      }
+
+      // if jm is not restarting, create job directories
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
+      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
+      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
+      ZKPersStateManager.createPersStateDir(client, rootPath, job);
+
+      // create pers znode for jm
+      ZKPersStateManager.createJobMasterPersState(client, rootPath, jobID, jmAddress);
+
+      return JobMasterAPI.JobMasterState.JM_STARTED;
+
+    } catch (Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
   }
 
 }

@@ -94,8 +94,12 @@ public final class ZKEventsManager {
           .withMode(CreateMode.PERSISTENT)
           .forPath(eventPath, jobEvent.toByteArray());
 
-      LOG.info("JobEvent published: " + jobEvent);
-
+      if (jobEvent.hasAllJoined()) {
+        LOG.info("AllJoined JobEvent published. Number of workers: "
+            + jobEvent.getAllJoined().getNumberOfWorkers());
+      } else {
+        LOG.info("JobEvent published: " + jobEvent);
+      }
     } catch (Exception e) {
       throw new Twister2Exception("JobEvent can not be created for the path: "
           + eventPath, e);

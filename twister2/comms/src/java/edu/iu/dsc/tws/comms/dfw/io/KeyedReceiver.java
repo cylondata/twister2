@@ -64,7 +64,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   /**
    * Map that keeps track of which sources have sent an finished signal. The finish signal may
    * either be a SYNC_EMPTY message or a SYNC_MESSAGE message in the message flags.
-   * Structure - <target, <source, true/false>>
+   * Structure - {@literal <target, <source, true/false>>}
    */
   protected Map<Integer, Map<Integer, Boolean>> finishedSources = new ConcurrentHashMap<>();
 
@@ -72,7 +72,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   /**
    * Map that keeps all the incoming messages to this receiver. A separate map is kept for each
    * target and witin each target values are mapped according to their key value
-   * Structure - <target, <key, List<value>>>
+   * Structure - {@literal <target, <key, List<value>>>}
    */
   protected Map<Integer, Map<Object, Queue<Object>>> messages = new HashMap<>();
 

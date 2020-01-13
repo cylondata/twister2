@@ -75,4 +75,10 @@ public final class CommonThreadPool {
     return commonThreadPool != null && commonThreadPool.executorService != null
         && commonThreadPool.threads > 0;
   }
+
+  public static void close() {
+    if (commonThreadPool != null && commonThreadPool.executorService != null) {
+      commonThreadPool.executorService.shutdown();
+    }
+  }
 }
