@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.s3;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -95,13 +97,20 @@ public class S3Uploader extends Thread implements IUploader {
     long linkExpDur = S3Context.linkExpirationDuration(config);
     String urlGenScript = S3Context.urlGenScript(config);
 
-    String cmd = String.format(urlGenScript + " %s %s", s3File, linkExpDur);
-    LOG.fine("cmd for s3 URL Generation: " + cmd);
+    String cmd = String.format("aws s3 presign %s --expires-in %s", s3File, linkExpDur);
+//    String cmd = String.format(urlGenScript + " %s %s", s3File, linkExpDur);
+    LOG.info("cmd for s3 URL Generation: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
+    String url;
     Process p = null;
     try {
       p = Runtime.getRuntime().exec(fullCmd);
+
+      BufferedReader reader = new BufferedReader(
+          new InputStreamReader(p.getInputStream()));
+
+      url = reader.readLine();
       p.waitFor();
     } catch (IOException e) {
       throw new UploaderException("Exception when executing the script: " + urlGenScript, e);
@@ -113,8 +122,8 @@ public class S3Uploader extends Thread implements IUploader {
     int exitCode = p.exitValue();
 
     if (exitCode == 0) {
-      String url = readUrlFile();
-      LOG.fine("Job Package Download URL: " + url);
+//      String url = readUrlFile();
+      LOG.info("Job Package Download URL: " + url);
       try {
         URI uri = new URI(url);
 
