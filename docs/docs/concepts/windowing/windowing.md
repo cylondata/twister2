@@ -201,7 +201,8 @@ for writing the windowing function.
 ### Reduce Function
 
 User can design a custom reduce function on top of the window and the logic defined in the reduce
-function will be applied on the elements inside the window. 
+function will be applied on the elements inside the window. This function is known as aggregate 
+in TSet API. 
 
 
 #### TASK API
@@ -258,7 +259,7 @@ BaseWindowedSink sdwCountTumblingReduce = new DirectReduceWindowedTask(new Reduc
 WindowComputeTSet<Integer, Iterator<Integer>> winTSet
             = link.timeWindow(2, TimeUnit.MILLISECONDS);
 WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
-            .localReduce((ReduceFunc<Integer>) (t1, t2) -> t1 + t2);
+            .aggregate((AggregateFunction<Integer>) (t1, t2) -> t1 + t2);
 ```
 
 ### Aggregation Function
@@ -321,16 +322,7 @@ BaseWindowedSink sdwCountTumblingAggregate
 
 #### TSET API
 
-```java
-WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
-            .aggregate((WindowCompute<Integer, Iterator<Integer>>) input -> {
-              Integer sum = 0;
-              while (input.hasNext()) {
-                sum += input.next() * 3;
-              }
-              return sum;
-});
-```
+We don't support this function in TSet API. The process function can be used to do the same task. 
 
 ### Fold Function
 
@@ -392,16 +384,7 @@ BaseWindowedSink sdwCountTumblingFold = new DirectFoldWindowedTask(new FoldFunct
 
 #### TSET API
 
-```java
-WindowComputeTSet<String, Iterator<Integer>> processedTSet = winTSet
-            .fold((WindowCompute<String, Iterator<Integer>>) input -> {
-              String sum = "";
-              while (input.hasNext()) {
-                sum += input.next() * 3 + ", ";
-              }
-              return sum;
-});
-```
+We don't support this function in TSet API. The process function can be used to do the same task. 
 
 
 ### Window Process Function

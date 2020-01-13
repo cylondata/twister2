@@ -17,10 +17,10 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.AggregateFunction;
 import edu.iu.dsc.tws.tset.fn.WindowCompute;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
@@ -114,10 +114,10 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   /**
    * This method reduces the values inside a window
    *
-   * @param reduceFn reduce function definition
+   * @param aggregateFunction reduce function definition
    * @return reduced value of type O
    */
-  public WindowComputeTSet<O, I> localReduce(ReduceFunc<O> reduceFn) {
+  public WindowComputeTSet<O, I> aggregate(AggregateFunction<O> aggregateFunction) {
 
     this.process(new WindowCompute<O, I>() {
       @Override
@@ -130,7 +130,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
               initial = itr.next();
             }
             O next = itr.next();
-            initial = reduceFn.reduce(initial, next);
+            initial = aggregateFunction.reduce(initial, next);
           }
         } else {
           throw new IllegalArgumentException("Invalid Data Type or Reduce Function Type");
@@ -142,15 +142,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-  public WindowComputeTSet<O, I> aggregate(WindowCompute<O, I> processFunction) {
-    this.computeFunc = processFunction;
-    return this;
-  }
 
-  public WindowComputeTSet<O, I> fold(WindowCompute<O, I> processFunction) {
-    this.computeFunc = processFunction;
-    return this;
-  }
 
 
 }

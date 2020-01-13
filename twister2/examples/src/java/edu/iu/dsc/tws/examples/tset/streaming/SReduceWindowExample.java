@@ -21,10 +21,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.AggregateFunction;
 import edu.iu.dsc.tws.tset.fn.WindowCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
@@ -43,8 +43,6 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
   private static final boolean REDUCE_WINDOW = false;
   private static final boolean PROCESS_WINDOW = false;
-  private static final boolean AGGREGATE_WINDOW = false;
-  private static final boolean FOLD_WINDOW = true;
 
 
   @Override
@@ -84,45 +82,9 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.countWindow(2);
 
         WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
-            .localReduce((ReduceFunc<Integer>) (t1, t2) -> t1 + t2);
+            .aggregate((AggregateFunction<Integer>) (t1, t2) -> t1 + t2);
 
         localReducedTSet.direct().forEach(d -> System.out.println(d));
-
-        //link.countWindow().reduce(a,b-> a + b)
-      }
-
-      if (AGGREGATE_WINDOW) {
-
-        WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link.countWindow(2);
-
-        WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
-            .aggregate((WindowCompute<Integer, Iterator<Integer>>) input -> {
-              Integer sum = 0;
-              while (input.hasNext()) {
-                sum += input.next() * 3;
-              }
-              return sum;
-            });
-
-        processedTSet.direct().forEach(d -> System.out.println(d));
-
-      }
-
-      if (FOLD_WINDOW) {
-
-        WindowComputeTSet<String, Iterator<Integer>> winTSet = link.countWindow(2);
-
-        WindowComputeTSet<String, Iterator<Integer>> processedTSet = winTSet
-            .fold((WindowCompute<String, Iterator<Integer>>) input -> {
-              String sum = "";
-              while (input.hasNext()) {
-                sum += input.next() * 3 + ", ";
-              }
-              return sum;
-            });
-
-        processedTSet.direct().forEach(d -> System.out.println(d));
-
       }
     }
 
@@ -158,51 +120,13 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.timeWindow(2, TimeUnit.MILLISECONDS);
 
         WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
-            .localReduce((ReduceFunc<Integer>) (t1, t2) -> t1 + t2);
+            .aggregate((AggregateFunction<Integer>) (t1, t2) -> t1 + t2);
 
         localReducedTSet.direct().forEach(d -> System.out.println(d));
 
         //link.countWindow().reduce(a,b-> a + b)
       }
-
-      if (AGGREGATE_WINDOW) {
-
-        WindowComputeTSet<Integer, Iterator<Integer>> winTSet = link
-            .timeWindow(2, TimeUnit.MILLISECONDS);
-
-        WindowComputeTSet<Integer, Iterator<Integer>> processedTSet = winTSet
-            .aggregate((WindowCompute<Integer, Iterator<Integer>>) input -> {
-              Integer sum = 0;
-              while (input.hasNext()) {
-                sum += input.next() * 3;
-              }
-              return sum;
-            });
-
-        processedTSet.direct().forEach(d -> System.out.println(d));
-
-      }
-
-      if (FOLD_WINDOW) {
-
-        WindowComputeTSet<String, Iterator<Integer>> winTSet = link
-            .timeWindow(2, TimeUnit.MILLISECONDS);
-
-        WindowComputeTSet<String, Iterator<Integer>> processedTSet = winTSet
-            .fold((WindowCompute<String, Iterator<Integer>>) input -> {
-              String sum = "";
-              while (input.hasNext()) {
-                sum += input.next() * 3 + ", ";
-              }
-              return sum;
-            });
-
-        processedTSet.direct().forEach(d -> System.out.println(d));
-
-      }
     }
-
-
   }
 
 
