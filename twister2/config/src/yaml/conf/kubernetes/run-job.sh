@@ -1,5 +1,7 @@
 #!/bin/bash
 
+extra=1
+
 if [ $# -ne "3" ]; then
   echo "Please provide following parameters: jobName numberOfWorkers numberOfJobs"
   exit 1
@@ -8,7 +10,6 @@ fi
 jobName=$1
 workers=$2
 jobs=$3
-extra=6
 echo "jobName: $jobName, workers: $workers, jobs: $jobs"
 
 # generate jobID
@@ -29,7 +30,7 @@ runningPods=$(kubectl get pods -l $label | grep Running | wc -l)
 while [ $runningPods -ne $jobPods ]; do
 
   # sleep
-  sleep 2
+  sleep 10
 
   # get number of Running pods
   runningPods=$(kubectl get pods -l $label | grep Running | wc -l)
@@ -81,7 +82,7 @@ runningPods=$(kubectl get pods | grep Running | wc -l)
 while [ $runningPods -ne $allPods ]; do
 
   # sleep
-  sleep 5
+  sleep 10
 
   # get number of Running pods
   runningPods=$(kubectl get pods | grep Running | wc -l)
@@ -108,7 +109,7 @@ runningPods=$(kubectl get pods | grep Running | wc -l)
 while [ $runningPods -ne $extra ]; do
 
   # sleep
-  sleep 3
+  sleep 10
 
   # get number of Running pods
   runningPods=$(kubectl get pods | grep Running | wc -l)

@@ -44,11 +44,11 @@ twister2.job.master.persistent.volume.size: 0.0
 
 # twister2 job master cpu request
 # default value is 0.2 percentage
-twister2.job.master.cpu: 2.0
+twister2.job.master.cpu: 0.5
 
 # twister2 job master RAM request in MB
 # default value is 1024 MB
-twister2.job.master.ram: 1024
+twister2.job.master.ram: 256
 
 ###################################################################################
 # WorkerController related config parameters
@@ -69,10 +69,10 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 # the number of http connections from job master to Twister2 Dashboard
 # default value is 3
 # for jobs with large number of workers, this can be set to higher number
-twister2.job.master.to.dashboard.connections: 10
+twister2.job.master.to.dashboard.connections: 3
 
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
 # twister2.dashboard.host: "http://<ip-or-host>:<port>"
 # if dashboard is running as a statefulset in the cluster
-twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"
+# twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"

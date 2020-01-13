@@ -1,11 +1,11 @@
 #! /bin/bash
 
 ####################################################
-# Rrun many jobs
+# Run many jobs
 ####################################################
 
-jobs=3
-workersPerJob=4
+jobs=64
+workersPerJob=16
 
 for ((i=0; i<jobs ;i++)); do
   jobName="j${i}"
