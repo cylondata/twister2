@@ -25,6 +25,20 @@ import edu.iu.dsc.tws.tset.fn.WindowCompute;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
+/**
+ * WindowComputeTSet is the TSet abstraction designed for windowing. This class contains windowing
+ * functions.
+ *  1. Process Function (calls the compute function and process the TSet elements on user the
+ *  defined function)
+ *  2. LocalReduce Function (calls the compute and reduce the TSet elements on the user defined
+ *  function)
+ *  3. Fold Function (calls the compute and converts the input TSet data into a TSet with
+ *  user-defined type
+ *  4. Aggregate Function (calls the compute and do the TSet element aggregation on user-defined
+ *  logic.
+ * @param <O> Output type of TSet
+ * @param <I> Input Type of TSet
+ */
 public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
@@ -94,7 +108,6 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   public WindowComputeTSet<O, I> reduce(WindowCompute<O, I> processFunction) {
     this.computeFunc = processFunction;
-
     return this;
   }
 
@@ -105,7 +118,6 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
    * @return reduced value of type O
    */
   public WindowComputeTSet<O, I> localReduce(ReduceFunc<O> reduceFn) {
-    //this.reduceFunc = reduceFn;
 
     this.process(new WindowCompute<O, I>() {
       @Override
@@ -127,24 +139,6 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
       }
     });
 
-
-//
-//
-//    process(new WindowCompute<I, Iterator<I>>() {
-//      @Override
-//      public I compute(Iterator<I> input) {
-//        I agg = null;
-//        while (input.hasNext()) {
-//          if (agg == null) {
-//            input.next();
-//          } else {
-//            agg = reduceFn.reduce(agg, input.next());
-//          }
-//        }
-//
-//        return agg;
-//      }
-//    });
     return this;
   }
 
