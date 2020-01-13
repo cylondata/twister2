@@ -62,12 +62,9 @@ public class CSVInputFormatTest {
     InputSplitAssigner inputSplitAssigner = csvInputPartitioner.getInputSplitAssigner(inputSplits);
     InputSplit inputSplit = inputSplitAssigner.getNextInputSplit("localhost", 0);
     inputSplit.open(config);
-    Object value;
-    LOG.info("input split size:" + inputSplit.reachedEnd());
     do {
-      value = inputSplit.nextRecord(null);
+      inputSplit.nextRecord(null);
     } while (!inputSplit.reachedEnd());
-    LOG.info("input values are:" + value);
   }
 
   private void createOutputFile(Path path, Config config) throws IOException {
