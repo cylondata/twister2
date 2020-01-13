@@ -194,8 +194,16 @@ public final class K8sWorkerStarter {
 
       // get job master service ip from job master service name and use it as Job master IP
     } else {
-      jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
+      jobMasterIP = K8sWorkerUtils.getJobMasterServiceIP(
+          KubernetesContext.namespace(config), jobID);
+
+      // if it can not get jm ip by using service name
+      // get it by watching jm pod
+      if (jobMasterIP == null) {
+        jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
           KubernetesContext.namespace(config), jobID, 100);
+      }
+
       if (jobMasterIP == null) {
         throw new RuntimeException("Job master is running in a separate pod, but "
             + "this worker can not get the job master IP address from Kubernetes master.\n"

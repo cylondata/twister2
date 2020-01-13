@@ -22,11 +22,14 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.shuffle.ResettableIterator;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
-import edu.iu.dsc.tws.comms.utils.JoinUtils;
+import edu.iu.dsc.tws.comms.utils.HashJoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
+import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
 public class DJoinBatchFinalReceiver2 implements MessageReceiver {
 
@@ -46,6 +49,8 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
    */
   private BulkReceiver bulkReceiver;
   private CommunicationContext.JoinType joinType;
+  private CommunicationContext.JoinAlgorithm joinAlgorithm;
+  private MessageType keyType;
 
   /**
    * The iterators returned by left
@@ -60,9 +65,13 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
   public DJoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
                                   List<String> shuffleDirs,
                                   Comparator<Object> com,
-                                  CommunicationContext.JoinType joinType) {
+                                  CommunicationContext.JoinType joinType,
+                                  CommunicationContext.JoinAlgorithm joinAlgorithm,
+                                  MessageType keyType) {
     this.bulkReceiver = bulkReceiver;
     this.joinType = joinType;
+    this.joinAlgorithm = joinAlgorithm;
+    this.keyType = keyType;
     this.leftReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(0),
         shuffleDirs, com, false);
     this.rightReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(1),
@@ -134,27 +143,35 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     public void init(Config cfg, Set<Integer> targets) {
     }
 
+    private Iterator doJoin(Iterator<Object> left, Iterator<Object> right) {
+      if (joinAlgorithm.equals(CommunicationContext.JoinAlgorithm.SORT)) {
+        return SortJoinUtils.join(
+            (RestorableIterator) left,
+            (RestorableIterator) right,
+            comparator, joinType);
+      } else {
+        return HashJoinUtils.join(
+            (ResettableIterator) left,
+            (ResettableIterator) right,
+            joinType,
+            keyType
+        );
+      }
+    }
+
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       if (tag == 0) {
         leftValues.put(target, it);
 
         if (rightValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.join(
-              (RestorableIterator) it,
-              (RestorableIterator) rightValues.get(target),
-              comparator, joinType)
-          );
+          bulkReceiver.receive(target, doJoin(it, rightValues.get(target)));
         }
       } else {
         rightValues.put(target, it);
 
         if (leftValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.join(
-              (RestorableIterator) leftValues.get(target),
-              (RestorableIterator) it,
-              comparator, joinType)
-          );
+          bulkReceiver.receive(target, doJoin(leftValues.get(target), it));
         }
       }
       return true;

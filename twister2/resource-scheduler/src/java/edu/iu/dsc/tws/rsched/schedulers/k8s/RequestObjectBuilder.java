@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
-import edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
@@ -73,6 +72,7 @@ public final class RequestObjectBuilder {
   private static String jobID;
   private static long jobPackageFileSize;
   private static String jobMasterIP = null;
+  public static String uploadMethod = "webserver";
 
   private RequestObjectBuilder() {
   }
@@ -92,6 +92,10 @@ public final class RequestObjectBuilder {
         throw new RuntimeException("Can not get local host address. ");
       }
     }
+  }
+
+  public static void setUploadMethod(String uploadType) {
+    uploadMethod = uploadType;
   }
 
   public static String getJobMasterIP() {
@@ -450,11 +454,16 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(K8sUploader.getUploadMethod()));
+        .value(uploadMethod));
+
+    String uri = null;
+    if (SchedulerContext.jobPackageUri(config) != null) {
+      uri = SchedulerContext.jobPackageUri(config).toString();
+    }
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.UPLOADER_WEB_SERVER + "")
-        .value(KubernetesContext.uploaderWebServer(config)));
+        .name(K8sEnvVariables.JOB_PACKAGE_URI + "")
+        .value(uri));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
