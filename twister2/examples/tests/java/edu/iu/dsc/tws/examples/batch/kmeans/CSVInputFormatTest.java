@@ -68,16 +68,6 @@ public class CSVInputFormatTest {
       value = inputSplit.nextRecord(null);
     } while (!inputSplit.reachedEnd());
     LOG.info("input values are:" + value);
-    /*while (inputSplit != null) {
-      try {
-        while (!inputSplit.reachedEnd()) {
-          Object value = inputSplit.nextRecord(null);
-          LOG.info("input values are:" + value);
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }*/
   }
 
   private void createOutputFile(Path path, Config config) throws IOException {

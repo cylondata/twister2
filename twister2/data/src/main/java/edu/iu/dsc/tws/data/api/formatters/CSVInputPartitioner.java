@@ -116,8 +116,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
         localminSplitSize = blockSize;
       }
       long[] splitSizes = getSplitSizes(fs, file.getPath(), curminNumSplits, splSize);
-      LOG.info("split sizes length:" + splitSizes.length);
-
       int position = 0;
       if (len > 0) {
         for (int i = 0; i < splitSizes.length; i++) {

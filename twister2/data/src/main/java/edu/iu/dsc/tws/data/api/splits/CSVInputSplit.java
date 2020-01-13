@@ -166,7 +166,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
     super.open(cfg);
     initBuffers();
     this.offset = splitStart;
-    LOG.info("Offset Value:" + this.offset);
     if (this.splitStart != 0) {
       this.stream.seek(offset);
       if (this.overLimit) {

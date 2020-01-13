@@ -40,6 +40,12 @@ public class PointDataSource extends BaseSource implements Collector {
   private String dataDirectory;
   private String inputKey;
   private int dimension;
+
+  public int getDatasize() {
+    return datasize;
+  }
+
+  private int datasize;
   private double[][] dataPointsLocal;
 
   PointDataSource() {
@@ -52,6 +58,14 @@ public class PointDataSource extends BaseSource implements Collector {
     this.dimension = dim;
   }
 
+  PointDataSource(String edgename, String dataDirectory, String inputKey, int dim, int dsize) {
+    this.edgeName = edgename;
+    this.dataDirectory = dataDirectory;
+    this.inputKey = inputKey;
+    this.dimension = dim;
+    this.datasize = dsize;
+  }
+
   /**
    * This method get the partitioned datapoints using the task index and write those values using
    * the respective edge name.
@@ -61,7 +75,7 @@ public class PointDataSource extends BaseSource implements Collector {
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     List<double[]> points = new ArrayList<>();
     while (inputSplit != null) {
-      LOG.info("input split value:" + inputSplit);
+      LOG.fine("input split value:" + inputSplit);
       try {
         while (!inputSplit.reachedEnd()) {
           Object value = inputSplit.nextRecord(null);
@@ -74,7 +88,7 @@ public class PointDataSource extends BaseSource implements Collector {
             points.add(row);
           }
         }
-        LOG.info("context task index:" + context.taskIndex() + "\t" + points.size());
+        LOG.info("context task index:" + context.taskIndex());
         inputSplit = source.getNextSplit(context.taskIndex());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -94,7 +108,7 @@ public class PointDataSource extends BaseSource implements Collector {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-        new Path(dataDirectory), context.getParallelism(), cfg));
+        new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
   }
 
   @Override

@@ -35,9 +35,12 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
   }
 
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config, 100);
-    //TODO: we have to use the user-specified data size
-    //int datasize = config.getIntegerValue(DataObjectConstants.DSIZE);
+    super(filePath, config);
+    this.numberOfTasks = numTasks;
+  }
+
+  public LocalCSVInputPartitioner(Path filePath, int numTasks, int datasize, Config config) {
+    super(filePath, config, datasize);
     this.numberOfTasks = numTasks;
   }
 

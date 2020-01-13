@@ -83,10 +83,8 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
       Path path = new Path(outPath, "part-" + partition);
       try {
         fsOut = fs.create(path);
-
         // lets ask user to create its own output method
         createOutput(partition, fsOut);
-
         openStreams.put(partition, fsOut);
       } catch (IOException e) {
         throw new RuntimeException("Failed to create output stream for file: " + path, e);

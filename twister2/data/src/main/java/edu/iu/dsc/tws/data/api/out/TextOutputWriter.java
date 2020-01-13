@@ -34,7 +34,6 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   private String[] headers;
   private Path path;
   private FSDataOutputStream outputStream;
-
   private Config config;
 
   public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {

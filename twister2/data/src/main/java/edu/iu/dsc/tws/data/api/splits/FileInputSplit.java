@@ -222,7 +222,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.splitStart = getStart();
     this.splitLength = getLength();
 
-    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+    LOG.log(Level.FINE, "Opening input split " + getPath() + " ["
         + splitStart + "," + splitLength + "]");
 
     // open the split in an asynchronous thread
@@ -247,7 +247,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.splitLength = getLength();
     this.config = cfg;
 
-    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+    LOG.log(Level.FINE, "Opening input split " + getPath() + " ["
         + splitStart + "," + splitLength + "]");
 
     // open the split in an asynchronous thread
