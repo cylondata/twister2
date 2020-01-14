@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
@@ -36,9 +37,12 @@ public class PointDataSource extends BaseSource implements Collector {
 
   private static final long serialVersionUID = -1L;
   private DataSource<?, ?> source;
+
   private String edgeName;
   private String dataDirectory;
   private String inputKey;
+  private String fileType;
+
   private int dimension;
 
   public int getDatasize() {
@@ -58,12 +62,14 @@ public class PointDataSource extends BaseSource implements Collector {
     this.dimension = dim;
   }
 
-  PointDataSource(String edgename, String dataDirectory, String inputKey, int dim, int dsize) {
+  PointDataSource(String edgename, String dataDirectory, String inputKey, int dim, int dsize,
+                  String filetype) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
     this.inputKey = inputKey;
     this.dimension = dim;
     this.datasize = dsize;
+    this.fileType = filetype;
   }
 
   /**
@@ -107,8 +113,13 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-        new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+    if ("csv".equalsIgnoreCase(fileType)) {
+      this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
+          new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+    } else {
+      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+          new Path(dataDirectory), context.getParallelism(), cfg));
+    }
   }
 
   @Override

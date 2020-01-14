@@ -55,7 +55,7 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, String linedelimiter,
                          String fielddelimiter, String tabdelimiter, Config config,
-                         String charset) {
+                         String charsetName) {
     super(writeMode, outPath);
 
     if (linedelimiter == null) {
@@ -69,7 +69,9 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     this.fieldDelimiter = fielddelimiter;
     this.lineDelimiter = linedelimiter;
     this.tabDelimiter = tabdelimiter;
-    /*this.charset = Charset.forName(charsetName);*/
+    if (this.charset == null) {
+      this.charset = Charset.forName(charsetName);
+    }
     this.allowedNullValues = false;
     this.path = outPath;
   }

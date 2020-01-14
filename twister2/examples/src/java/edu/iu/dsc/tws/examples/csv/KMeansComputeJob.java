@@ -100,11 +100,11 @@ public class KMeansComputeJob implements IWorker {
 
     /* First Graph to partition and read the partitioned data points **/
     ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-        parallelismValue, dimension, config);
+        parallelismValue, dimension, config, type);
 
     /* Second Graph to read the centroids **/
     ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
-        parallelismValue, dimension, config);
+        parallelismValue, dimension, config, type);
 
     /* Third Graph to do the actual calculation **/
     ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
@@ -138,9 +138,9 @@ public class KMeansComputeJob implements IWorker {
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
                                                int parallelismValue, int dimension,
-                                               Config conf) {
+                                               Config conf, String filetype) {
     PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory, "points", dimension, dsize);
+        dataDirectory, "points", dimension, dsize, filetype);
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     // Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -152,9 +152,9 @@ public class KMeansComputeJob implements IWorker {
 
   public static ComputeGraph buildCentroidsTG(String centroidDirectory, int csize,
                                               int parallelismValue, int dimension,
-                                              Config conf) {
+                                              Config conf, String filetype) {
     PointDataSource cs = new PointDataSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory,
-        "centroids", dimension, csize);
+        "centroids", dimension, csize, filetype);
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     centroidsComputeGraphBuilder.addSource("centroidsource", cs,

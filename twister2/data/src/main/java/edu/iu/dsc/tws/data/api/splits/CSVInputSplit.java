@@ -180,14 +180,14 @@ public class CSVInputSplit extends FileInputSplit<Object> {
   @Override
   public String nextRecord(Object record) throws IOException {
     if (readLine()) {
-      return readRecord(record, this.readBuffer, this.currOffset, this.currLen);
+      return readRecord(this.readBuffer, this.currOffset, this.currLen);
     } else {
       this.end = true;
       return null;
     }
   }
 
-  public String readRecord(Object reusable, byte[] bytes, int readOffset, int numBytes)
+  public String readRecord(byte[] bytes, int readOffset, int numBytes)
       throws IOException {
     int curNumBytes = numBytes;
     if (this.getDelimiter() != null && this.getDelimiter().length == 1

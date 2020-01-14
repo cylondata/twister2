@@ -43,7 +43,6 @@ public final class KMeansUtils {
                                         int centroidsize, String dinputDirectory,
                                         String cinputDirectory, String type) {
     try {
-      System.out.println("type of file to be generated:" + type);
       KMeansDataGenerator.generateData(type, new Path(dinputDirectory),
           numFiles, datasize, 100, dim, config);
       KMeansDataGenerator.generateData(type, new Path(cinputDirectory),

@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
 import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
-import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * Generate a data set
@@ -57,14 +56,7 @@ public final class KMeansDataGenerator {
   }
 
   private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
-                                   int sizeMargin, int dimension, Config config)
-      throws IOException {
-    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
-    if (fs.exists(directory)) {
-      if (!fs.delete(directory, true)) {
-        throw new IOException("Failed to delete the directory: " + directory.getPath());
-      }
-    }
+                                   int sizeMargin, int dimension, Config config) {
     for (int i = 0; i < numOfFiles; i++) {
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       TextOutputWriter textOutputWriter
@@ -81,12 +73,7 @@ public final class KMeansDataGenerator {
    * @param directory the path of the directory
    */
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
-                                  int sizeMargin, int dimension, Config config)
-                                  throws IOException {
-    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
-    if (fs.exists(directory)) {
-      fs.delete(directory, true);
-    }
+                                  int sizeMargin, int dimension, Config config) {
     for (int i = 0; i < numOfFiles; i++) {
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       CSVOutputWriter csvOutputWriter

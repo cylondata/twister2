@@ -67,7 +67,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     this.config = parameters;
   }
 
-
   @Override
   public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
 
@@ -91,10 +90,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
       totalLength += pathFile.getLen();
     }
 
-    //Generate the splits
-    final long maxSplitSize = totalLength / curminNumSplits
-        + (totalLength % curminNumSplits == 0 ? 0 : 1);
-
     if (files.size() > 1) {
       throw new IllegalStateException("FixedInputPartitioner does not support multiple files"
           + "currently");
@@ -102,19 +97,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     for (final FileStatus file : files) {
       final long lineCount = dataSize;
       int splSize = (int) (lineCount / curminNumSplits);
-
       final long len = file.getLen();
-      final long blockSize = file.getBlockSize();
-      final long localminSplitSize;
-
-      if (this.minSplitSize <= blockSize) {
-        localminSplitSize = minSplitSize;
-      } else {
-        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
-            + " is larger than the block size of " + blockSize
-            + ". Decreasing minimal split size to block size.");
-        localminSplitSize = blockSize;
-      }
       long[] splitSizes = getSplitSizes(fs, file.getPath(), curminNumSplits, splSize);
       int position = 0;
       if (len > 0) {

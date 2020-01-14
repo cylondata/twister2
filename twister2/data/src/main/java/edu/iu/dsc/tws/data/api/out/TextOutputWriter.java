@@ -69,7 +69,7 @@ public class TextOutputWriter extends FileOutputWriter<String> {
       if (fs.exists(path)) {
         fs.delete(path, true);
       }
-      outputStream = fs.create(new Path(path, generateRandom(10) + ".csv"));
+      outputStream = fs.create(new Path(path, generateRandom(10) + ".txt"));
       pw = new PrintWriter(outputStream);
     } catch (IOException e) {
       throw new RuntimeException("IOException Occured");
