@@ -27,12 +27,14 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.csv.KMeansComputeJob;
+import edu.iu.dsc.tws.examples.csv.KMeansTsetJob;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class KMeansMain {
 
-  private static final Logger LOG = Logger.getLogger(KMeansMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.examples.csv.KMeansMain.class.getName());
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
@@ -59,6 +61,8 @@ public class KMeansMain {
         true, "Output directory", true));
     options.addOption(Utils.createOption(DataObjectConstants.FILE_SYSTEM,
         true, "file system", true));
+    options.addOption(Utils.createOption(DataObjectConstants.FILE_TYPE,
+        true, "file type", true));
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -79,6 +83,7 @@ public class KMeansMain {
     String centroidDirectory = cmd.getOptionValue(DataObjectConstants.CINPUT_DIRECTORY);
     String outputDirectory = cmd.getOptionValue(DataObjectConstants.OUTPUT_DIRECTORY);
     String fileSystem = cmd.getOptionValue(DataObjectConstants.FILE_SYSTEM);
+    String fileType = cmd.getOptionValue(DataObjectConstants.FILE_TYPE);
 
     boolean shared =
         Boolean.parseBoolean(cmd.getOptionValue(DataObjectConstants.SHARED_FILE_SYSTEM));
@@ -99,6 +104,7 @@ public class KMeansMain {
     jobConfig.put(DataObjectConstants.SHARED_FILE_SYSTEM, shared);
     jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, iterations);
     jobConfig.put(DataObjectConstants.JOB_TYPE, jobType);
+    jobConfig.put(DataObjectConstants.FILE_TYPE, fileType);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");

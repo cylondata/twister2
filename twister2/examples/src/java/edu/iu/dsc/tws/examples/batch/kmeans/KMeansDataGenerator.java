@@ -12,17 +12,14 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.utils.FileSystemUtils;
+import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
 
 /**
  * Generate a data set
@@ -40,8 +37,8 @@ public final class KMeansDataGenerator {
   /**
    * Generate a data set
    *
-   * @param type type of file, i.e. csv, text, binary
-   * @param directory the directory to generate
+   * @param type       type of file, i.e. csv, text, binary
+   * @param directory  the directory to generate
    * @param numOfFiles number of files to create
    * @param sizeOfFile size of each file, different types have a different meaning
    * @param sizeMargin size will be varied about this much
@@ -59,23 +56,32 @@ public final class KMeansDataGenerator {
   }
 
   private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
-                                   int sizeMargin, int dimension, Config config)
-      throws IOException {
-    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
-    if (fs.exists(directory)) {
-      if (!fs.delete(directory, true)) {
-        throw new IOException("Failed to delete the directory: " + directory.getPath());
-      }
-    }
+                                   int sizeMargin, int dimension, Config config) {
     for (int i = 0; i < numOfFiles; i++) {
-      FSDataOutputStream outputStream = fs.create(new Path(directory,
-          generateRandom(10) + ".txt"));
-      PrintWriter pw = new PrintWriter(outputStream);
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      pw.print(points);
-      outputStream.sync();
-      pw.close();
-      outputStream.close();
+      TextOutputWriter textOutputWriter
+          = new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, directory, config);
+      textOutputWriter.createOutput();
+      textOutputWriter.writeRecord(points);
+      textOutputWriter.close();
+    }
+  }
+
+  /**
+   * Generate a random csv file, we generate a csv with 10 attributes
+   *
+   * @param directory the path of the directory
+   */
+  private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
+                                  int sizeMargin, int dimension, Config config) {
+    for (int i = 0; i < numOfFiles; i++) {
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      CSVOutputWriter csvOutputWriter
+          = new CSVOutputWriter(FileSystem.WriteMode.OVERWRITE, directory, config);
+      csvOutputWriter.createOutput();
+      //csvOutputWriter.setHeaders(new String[]{"value1", "value2"});
+      csvOutputWriter.writeRecord(points);
+      csvOutputWriter.close();
     }
   }
 
@@ -95,44 +101,5 @@ public final class KMeansDataGenerator {
       datapoints.append("\n");
     }
     return datapoints.toString();
-  }
-
-
-  /**
-   * Generate a random csv file, we generate a csv with 10 attributes
-   *
-   * @param directory the path of the directory
-   */
-  private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
-                                  int sizeMargin, int dimension, Config config) throws IOException {
-
-    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
-    if (fs.exists(directory)) {
-      fs.delete(directory, true);
-    }
-    for (int i = 0; i < numOfFiles; i++) {
-      FSDataOutputStream outputStream = fs.create(new Path(directory,
-          generateRandom(10) + ".csv"));
-      PrintWriter pw = new PrintWriter(outputStream);
-      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
-      pw.print(points);
-      outputStream.sync();
-      pw.close();
-    }
-  }
-
-  private static String generateCSVLine(int fields) {
-    StringBuilder row = new StringBuilder();
-    for (int i = 0; i < fields - 1; i++) {
-      row.append(generateRandom(4)).append(", ");
-    }
-    row.append(generateRandom(4));
-    return row.toString();
-  }
-
-  private static String generateRandom(int length) {
-    boolean useLetters = true;
-    boolean useNumbers = false;
-    return RandomStringUtils.random(length, useLetters, useNumbers);
   }
 }

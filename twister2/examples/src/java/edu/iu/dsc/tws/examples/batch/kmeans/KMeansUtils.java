@@ -15,6 +15,7 @@ import java.io.IOException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.examples.csv.KMeansDataGenerator;
 
 /**
  * This class has the utility methods to generate the datapoints and centroids. Also, it has the
@@ -29,11 +30,11 @@ public final class KMeansUtils {
    */
   public static void generateDataPoints(Config config, int dim, int numFiles, int datasize,
                                         int centroidsize, String dinputDirectory,
-                                        String cinputDirectory) {
+                                        String cinputDirectory, String type) {
     try {
-      KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+      edu.iu.dsc.tws.examples.csv.KMeansDataGenerator.generateData(type, new Path(dinputDirectory),
           numFiles, datasize, 100, dim, config);
-      KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+      KMeansDataGenerator.generateData(type, new Path(cinputDirectory),
           numFiles, centroidsize, 100, dim, config);
     } catch (IOException ioe) {
       throw new RuntimeException("Failed to create input data:", ioe);

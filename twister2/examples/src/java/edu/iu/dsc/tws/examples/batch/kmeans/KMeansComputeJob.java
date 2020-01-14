@@ -77,21 +77,22 @@ public class KMeansComputeJob implements IWorker {
     int iterations = config.getIntegerValue(DataObjectConstants.ARGS_ITERATIONS);
 
     String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
-    String centroidDirectory = config.getStringValue(
-        DataObjectConstants.CINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = config.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
+        + workerId;
+    String type = config.getStringValue(DataObjectConstants.FILE_TYPE);
 
     KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+        centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
     ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-        parallelismValue, dimension, config);
+        parallelismValue, dimension, config, type);
 
     /* Second Graph to read the centroids **/
     ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
-        parallelismValue, dimension, config);
+        parallelismValue, dimension, config, type);
 
     /* Third Graph to do the actual calculation **/
     ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
@@ -117,7 +118,6 @@ public class KMeansComputeJob implements IWorker {
       ex.execute(i == iterations - 1);
     }
     cEnv.close();
-
     long endTime = System.currentTimeMillis();
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
@@ -126,9 +126,9 @@ public class KMeansComputeJob implements IWorker {
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
                                                int parallelismValue, int dimension,
-                                               Config conf) {
+                                               Config conf, String filetype) {
     PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory, "points", dimension);
+        dataDirectory, "points", dimension, dsize, filetype);
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     // Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -140,9 +140,9 @@ public class KMeansComputeJob implements IWorker {
 
   public static ComputeGraph buildCentroidsTG(String centroidDirectory, int csize,
                                               int parallelismValue, int dimension,
-                                              Config conf) {
+                                              Config conf, String filetype) {
     PointDataSource cs = new PointDataSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory,
-        "centroids", dimension);
+        "centroids", dimension, csize, filetype);
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     centroidsComputeGraphBuilder.addSource("centroidsource", cs,
@@ -281,4 +281,3 @@ public class KMeansComputeJob implements IWorker {
     }
   }
 }
-
