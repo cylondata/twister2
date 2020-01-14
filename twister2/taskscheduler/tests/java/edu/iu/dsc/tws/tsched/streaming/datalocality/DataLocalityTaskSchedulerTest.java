@@ -55,7 +55,7 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
     WorkerPlan workerPlan2 = createWorkPlan2(workers);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
       Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
@@ -70,7 +70,7 @@ public class DataLocalityTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 1000;
+    int parallel = 10;
     int workers = 2;
 
     ComputeGraph graph = createGraphWithConstraints(parallel);
@@ -96,7 +96,7 @@ public class DataLocalityTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules3() {
-    int parallel = 1000;
+    int parallel = 10;
     int workers = 3;
 
     ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
@@ -193,7 +193,7 @@ public class DataLocalityTaskSchedulerTest {
         .viaEdge("direct-edge")
         .withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.STREAMING);
-    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "10");
     ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
@@ -224,7 +224,7 @@ public class DataLocalityTaskSchedulerTest {
 
     computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "10");
     ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
