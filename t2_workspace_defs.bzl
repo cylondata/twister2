@@ -76,6 +76,7 @@ def load_modules():
             "com.squareup.okio:okio:1.17.2",
             "com.google.code.gson:gson:2.8.0",
             "io.gsonfire:gson-fire:1.8.3",
+            "com.google.re2j:re2j:1.3",
         ],
         repositories = [
             "https://maven.google.com",

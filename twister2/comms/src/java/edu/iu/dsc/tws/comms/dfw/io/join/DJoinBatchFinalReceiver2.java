@@ -143,16 +143,16 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     public void init(Config cfg, Set<Integer> targets) {
     }
 
-    private Iterator doJoin(Iterator<Object> it, int target) {
+    private Iterator doJoin(Iterator<Object> left, Iterator<Object> right) {
       if (joinAlgorithm.equals(CommunicationContext.JoinAlgorithm.SORT)) {
         return SortJoinUtils.join(
-            (RestorableIterator) it,
-            (RestorableIterator) rightValues.get(target),
+            (RestorableIterator) left,
+            (RestorableIterator) right,
             comparator, joinType);
       } else {
         return HashJoinUtils.join(
-            (ResettableIterator) it,
-            (ResettableIterator) rightValues.get(target),
+            (ResettableIterator) left,
+            (ResettableIterator) right,
             joinType,
             keyType
         );
@@ -165,13 +165,13 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
         leftValues.put(target, it);
 
         if (rightValues.containsKey(target)) {
-          bulkReceiver.receive(target, doJoin(it, target));
+          bulkReceiver.receive(target, doJoin(it, rightValues.get(target)));
         }
       } else {
         rightValues.put(target, it);
 
         if (leftValues.containsKey(target)) {
-          bulkReceiver.receive(target, doJoin(it, target));
+          bulkReceiver.receive(target, doJoin(leftValues.get(target), it));
         }
       }
       return true;
