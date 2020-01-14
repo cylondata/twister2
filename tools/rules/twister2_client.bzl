@@ -244,9 +244,9 @@ def twister2_client_lib_master_files():
         "//twister2/connectors/src/java:master-java",
     ]
 
-def twister2_client_lib_arrow_files():
+def twister2_client_lib_table_files():
     return [
-            "//twister2/arrow/src/java:arrow-java",
+            "//twister2/table/src/java:table-java",
             "@org_apache_arrow_arrow_vector",
             "@org_apache_arrow_arrow_memory",
             "@io_netty_netty_buffer",
