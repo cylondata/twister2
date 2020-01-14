@@ -95,6 +95,8 @@ public class DataLocalityBatchTaskSchedulerTest {
     for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
       WorkerSchedulePlan workerSchedulePlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+      LOG.info("container plan instances and parallel:"
+          + containerPlanTaskInstances.size() + "\t" + parallel);
       Assert.assertEquals(containerPlanTaskInstances.size(), parallel);
     }
   }
@@ -122,6 +124,8 @@ public class DataLocalityBatchTaskSchedulerTest {
     for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
       WorkerSchedulePlan workerSchedulePlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+      LOG.info("container plan instances and parallel:"
+          + containerPlanTaskInstances.size() + "\t" +  workers * graph.getTaskVertexSet().size());
       Assert.assertEquals(containerPlanTaskInstances.size(),
           workers * graph.getTaskVertexSet().size());
     }
