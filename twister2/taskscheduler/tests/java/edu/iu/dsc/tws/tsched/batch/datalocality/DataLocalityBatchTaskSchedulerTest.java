@@ -109,7 +109,7 @@ public class DataLocalityBatchTaskSchedulerTest {
       Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
       LOG.info("container plan instances and parallel:"
           + containerPlanTaskInstances.size() + "\t" + parallel);
-      //Assert.assertEquals(containerPlanTaskInstances.size(), parallel);
+      Assert.assertEquals(containerPlanTaskInstances.size(), parallel);
     }
   }
 
