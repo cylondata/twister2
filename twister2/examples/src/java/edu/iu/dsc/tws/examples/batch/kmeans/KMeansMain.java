@@ -27,8 +27,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.csv.KMeansComputeJob;
-import edu.iu.dsc.tws.examples.csv.KMeansTsetJob;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 

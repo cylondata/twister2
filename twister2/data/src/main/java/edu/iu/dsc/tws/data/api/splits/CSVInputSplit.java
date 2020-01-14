@@ -9,6 +9,10 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 
+/**
+ * This class is primarily responsible for reading the split of a CSV file. It receive the input as
+ * start and length of the file to be read for each split.
+ */
 public class CSVInputSplit extends FileInputSplit<Object> {
 
   private static final Logger LOG = Logger.getLogger(CSVInputSplit.class.getName());
@@ -175,7 +179,6 @@ public class CSVInputSplit extends FileInputSplit<Object> {
       fillBuffer(0);
     }
   }
-
 
   @Override
   public String nextRecord(Object record) throws IOException {

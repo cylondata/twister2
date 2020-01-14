@@ -30,10 +30,6 @@ public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
 
   private OrderedInputSplitAssigner<String> assigner;
 
-  public LocalCSVInputPartitioner(Path filePath) {
-    super(filePath);
-  }
-
   public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
     super(filePath, config);
     this.numberOfTasks = numTasks;

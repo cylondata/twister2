@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.data.api.formatters;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,10 +46,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
   private boolean enumerateNestedFiles = false;
 
-  public CSVInputPartitioner(Path filePath) {
-    this.filePath = filePath;
-  }
-
   public CSVInputPartitioner(Path filePath, Config cfg) {
     this.filePath = filePath;
     this.config = cfg;
@@ -78,11 +73,10 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
     // get all the files that are involved in the splits
     List<FileStatus> files = new ArrayList<>();
-
-    long totalLength = 0;
     final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
+    long totalLength = 0;
     if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
@@ -129,10 +123,8 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
     long currentSplitBytes = 0L;
     int currLineCount = 0;
     int completeSplitCount = 0;
-    String line;
-    BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename.getPath()));
-    byte[] b;
-    boolean skipLf = false;
+    BufferedInputStream bis = new BufferedInputStream(fs.open(filename));
+    boolean skipLf = true;
     int overflow = -1;
     outerfor:
     for (int i = 0; i < numberOfSplits; i++) {
@@ -155,7 +147,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
         } else {
           currentSplitBytes++;
           ch = (char) c;
-
           if (skipLf) {
             skipLf = false;
             if (ch == '\n') {
@@ -185,7 +176,6 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
               }
             }
           }
-
         }
       }
       splits[i] = currentSplitBytes;
