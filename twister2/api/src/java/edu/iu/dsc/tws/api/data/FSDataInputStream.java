@@ -12,8 +12,10 @@
 
 package edu.iu.dsc.tws.api.data;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
 
 /**
@@ -42,4 +44,6 @@ public abstract class FSDataInputStream extends InputStream {
    * implementation while accessing the stream's position.
    */
   public abstract long getPos() throws IOException;
+
+  public abstract Reader getReader() throws FileNotFoundException;
 }

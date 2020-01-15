@@ -33,6 +33,7 @@ java_library(
         "@commons_io_commons_io//jar",
         "@commons_lang_commons_lang//jar",
         "@log4j_log4j//jar",
+        "@maven//:com_opencsv_opencsv",
         "@org_apache_commons_commons_lang3//jar",
         "@org_apache_hadoop_hadoop_annotations//jar",
         "@org_apache_hadoop_hadoop_auth//jar",
@@ -57,6 +58,7 @@ java_tests(
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",
     ],
     runtime_deps = [
         ":examples-tests",
@@ -69,8 +71,10 @@ java_tests(
 #        "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
 #        "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
 #        "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
+#        "edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest",
 #    ],
 #    runtime_deps = [
 #        ":examples-tests",
 #    ],
 #)
+
