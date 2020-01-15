@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class KMeansMain {
 
-  private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.examples.csv.KMeansMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansMain.class.getName());
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");

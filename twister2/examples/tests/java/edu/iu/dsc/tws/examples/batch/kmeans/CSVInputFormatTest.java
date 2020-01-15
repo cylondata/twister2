@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
-import edu.iu.dsc.tws.examples.csv.KMeansDataGenerator;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public class CSVInputFormatTest {
@@ -55,8 +54,10 @@ public class CSVInputFormatTest {
     Config config = getConfig();
     Path path = new Path("/tmp/dinput/");
     createOutputFile(path, config);
+
     LocalCSVInputPartitioner csvInputPartitioner = new LocalCSVInputPartitioner(path, 4, config);
     csvInputPartitioner.configure(config);
+
     FileInputSplit[] inputSplits = csvInputPartitioner.createInputSplits(2);
     LOG.info("input split values are:" + Arrays.toString(inputSplits));
     InputSplitAssigner inputSplitAssigner = csvInputPartitioner.getInputSplitAssigner(inputSplits);
