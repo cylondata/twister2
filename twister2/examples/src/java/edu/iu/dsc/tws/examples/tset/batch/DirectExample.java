@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -49,7 +50,7 @@ public class DirectExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
-    DirectTLink<Integer> direct = src.direct().setName("direct");
+    DirectTLink<Integer> direct = src.direct().setName("direct").withDataType(MessageTypes.INTEGER);
 
     LOG.info("test foreach");
     direct.forEach(i -> LOG.info("foreach: " + i));

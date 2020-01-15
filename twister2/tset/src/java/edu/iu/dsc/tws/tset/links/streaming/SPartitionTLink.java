@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -39,17 +40,22 @@ public class SPartitionTLink<T> extends StreamingSingleLink<T> {
   }
 
   @Override
+  public SPartitionTLink<T> setName(String n) {
+    rename(n);
+    return this;
+  }
+
+  @Override
+  public SPartitionTLink<T> withDataType(MessageType dataType) {
+    return (SPartitionTLink<T>) super.withDataType(dataType);
+  }
+
+  @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.PARTITION, getDataType());
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }
     return e;
-  }
-
-  @Override
-  public SPartitionTLink<T> setName(String n) {
-    rename(n);
-    return this;
   }
 }

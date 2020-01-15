@@ -12,9 +12,12 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -28,6 +31,8 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
+
+  private MessageType dType = MessageTypes.OBJECT;
 
   BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
@@ -129,6 +134,16 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
       }
     }
     return doPersist();
+  }
+
+  @Override
+  public TLink<T1, T0> withDataType(MessageType dataType) {
+    this.dType = dataType;
+    return this;
+  }
+
+  protected MessageType getDataType() {
+    return this.dType;
   }
 
   private StorableTBase<T0> doPersist() {

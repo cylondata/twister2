@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
@@ -108,4 +109,12 @@ public interface TLink<T1, T0> extends TBase {
    * @return Sink tset. This would would be a terminal TSet with no transformation capabilities.
    */
   TBase sink(SinkFunc<T1> sinkFunction);
+
+  /**
+   * Sets the data type of the TLink. This will be used in the packers for efficient SER-DE operations
+   *
+   * @param dataType data type as a {@link MessageType}
+   * @return this {@link TLink}
+   */
+  TLink<T1, T0> withDataType(MessageType dataType);
 }

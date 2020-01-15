@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -24,13 +25,18 @@ public class SDirectTLink<T> extends StreamingSingleLink<T> {
   }
 
   @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
-  }
-
-  @Override
   public SDirectTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public SDirectTLink<T> withDataType(MessageType dataType) {
+    return (SDirectTLink<T>) super.withDataType(dataType);
+  }
+
+  @Override
+  public Edge getEdge() {
+    return new Edge(getId(), OperationNames.DIRECT, getDataType());
   }
 }

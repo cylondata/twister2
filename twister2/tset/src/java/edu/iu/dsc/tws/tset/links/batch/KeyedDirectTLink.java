@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -37,8 +38,13 @@ public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
   }
 
   @Override
+  public KeyedDirectTLink<K, V> withDataType(MessageType dataType) {
+    return (KeyedDirectTLink<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }

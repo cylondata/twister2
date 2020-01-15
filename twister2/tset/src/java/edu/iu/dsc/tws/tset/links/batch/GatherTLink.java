@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -42,7 +43,7 @@ public class GatherTLink<T> extends BatchGatherLink<T> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }
@@ -51,6 +52,11 @@ public class GatherTLink<T> extends BatchGatherLink<T> {
   public GatherTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public GatherTLink<T> withDataType(MessageType dataType) {
+    return (GatherTLink<T>) super.withDataType(dataType);
   }
 
   public GatherTLink<T> useDisk() {

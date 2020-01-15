@@ -14,6 +14,7 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -26,16 +27,21 @@ public class ReplicateTLink<T> extends BatchIteratorLinkWrapper<T> {
   }
 
   @Override
-  public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.BROADCAST, getMessageType());
-    e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
-    return e;
-  }
-
-  @Override
   public ReplicateTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public ReplicateTLink<T> withDataType(MessageType dataType) {
+    return (ReplicateTLink<T>) super.withDataType(dataType);
+  }
+
+  @Override
+  public Edge getEdge() {
+    Edge e = new Edge(getId(), OperationNames.BROADCAST, getDataType());
+    e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    return e;
   }
 
   public ReplicateTLink<T> useDisk() {
