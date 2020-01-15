@@ -13,17 +13,25 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
+
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
+import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
 public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
+
+  private WindowParameter windowParameter;
+
 
   StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
@@ -40,6 +48,20 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
       set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+    }
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  private <P> WindowComputeTSet<P, Iterator<T1>> window(String n) {
+    WindowComputeTSet<P, Iterator<T1>> set;
+    if (n != null && !n.isEmpty()) {
+      set = new WindowComputeTSet<>(getTSetEnv(), n, getTargetParallelism(),
+          this.windowParameter);
+    } else {
+      set = new WindowComputeTSet<>(getTSetEnv(), getTargetParallelism(),
+          this.windowParameter);
     }
     addChildToGraph(set);
 
@@ -68,12 +90,40 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     return compute(null, computeFunction);
   }
 
-
   @Override
   public SSinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
     SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
-
     return sinkTSet;
   }
+
+  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(windowLen);
+    return window("w-count-tumbling-compute-prev");
+  }
+
+  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen, long slidingLen) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingingCountWindow(windowLen, slidingLen);
+    return window("w-count-sliding-compute-prev");
+  }
+
+  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
+                                                           TimeUnit windowLenTimeUnit) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingDurationWindow(windowLen, windowLenTimeUnit);
+    return window("w-duration-tumbling-compute-prev");
+  }
+
+  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
+                                                           TimeUnit windowLenTimeUnit,
+                                                           long slidingLen,
+                                                           TimeUnit slidingWindowTimeUnit) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingDurationWindow(windowLen, windowLenTimeUnit, slidingLen,
+        slidingWindowTimeUnit);
+    return window("w-duration-sliding-compute-prev");
+  }
+
 }

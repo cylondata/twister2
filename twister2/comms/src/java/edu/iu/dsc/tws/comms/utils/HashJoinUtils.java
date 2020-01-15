@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -26,6 +27,8 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.comms.shuffle.ResettableIterator;
 
 public final class HashJoinUtils {
+
+  private static final Logger LOG = Logger.getLogger(HashJoinUtils.class.getName());
 
   private HashJoinUtils() {
 
@@ -187,7 +190,7 @@ public final class HashJoinUtils {
         CommunicationContext.JoinType.LEFT) ? leftIt : rightIt;
 
     // set the memory limits based on the heap allocation
-    final double amountToKeepFree = Runtime.getRuntime().maxMemory() * 0.75;
+    final double lowerMemoryBound = Runtime.getRuntime().totalMemory() * 0.1;
 
     return new Iterator<JoinedTuple>() {
 
@@ -209,7 +212,7 @@ public final class HashJoinUtils {
       private void doHashing() {
         this.keyHash.clear();
         // building the hash, as long as memory permits
-        while (Runtime.getRuntime().freeMemory() < amountToKeepFree && hashingRelation.hasNext()) {
+        while (Runtime.getRuntime().freeMemory() > lowerMemoryBound && hashingRelation.hasNext()) {
           Tuple<?, ?> nextLeft = hashingRelation.next();
           keyHash.computeIfAbsent(nextLeft.getKey(), k -> new ArrayList()).add(nextLeft.getValue());
         }
@@ -219,7 +222,9 @@ public final class HashJoinUtils {
 
         if (!hashingDone && this.keyHash.isEmpty()) {
           // problem!. We have cleared the old hash, yet there's no free memory available to proceed
-          throw new Twister2RuntimeException("Couldn't progress due to memory limitations");
+          throw new Twister2RuntimeException("Couldn't progress due to memory limitations."
+              + "Available free memory : " + Runtime.getRuntime().freeMemory()
+              + ", Expected free memory : " + lowerMemoryBound);
         }
       }
 

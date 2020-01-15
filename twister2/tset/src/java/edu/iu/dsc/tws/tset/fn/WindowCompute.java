@@ -9,19 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.deeplearning.process;
+package edu.iu.dsc.tws.tset.fn;
 
-import mpi.Info;
-import mpi.Intercomm;
-import mpi.MPI;
-import mpi.MPIException;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 
-public class ProcessManager implements IManager {
-  @Override
-  public Intercomm spawn(String executableName, String[] spawnArgs, int maxProcs, Info info,
-                         int i1, int[] errorCode) throws MPIException {
-    Intercomm intercomm = MPI.COMM_WORLD.spawn(executableName, spawnArgs, maxProcs,
-        MPI.INFO_NULL, 0, errorCode);
-    return intercomm;
-  }
+/**
+ * WindowCompute is the TSet ComputeFunction extension for Windowing oriented computations
+ * @param <O> TSet Window Output
+ * @param <I> TSet Window Input
+ */
+public interface WindowCompute<O, I> extends ComputeFunc<O, I> {
+
+
 }

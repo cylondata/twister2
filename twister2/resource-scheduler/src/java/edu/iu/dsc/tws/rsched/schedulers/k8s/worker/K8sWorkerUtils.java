@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -249,7 +248,7 @@ public final class K8sWorkerUtils {
         InetAddress jmAddress = InetAddress.getByName(jmServiceName);
         return jmAddress.getHostAddress();
       } catch (UnknownHostException e) {
-        LOG.info("Cannot get Job master IP from service name.");
+        LOG.fine("Cannot get Job master IP from service name.");
       }
 
       try {
@@ -328,8 +327,12 @@ public final class K8sWorkerUtils {
       String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbID, wInfo)) {
+        if (ZKPersStateManager.isWorkerRestarting(client, rootPath, jbID, wInfo)) {
           return JobMasterAPI.WorkerState.RESTARTED;
+        }
+
+        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
+          ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
         }
 
         return JobMasterAPI.WorkerState.STARTED;

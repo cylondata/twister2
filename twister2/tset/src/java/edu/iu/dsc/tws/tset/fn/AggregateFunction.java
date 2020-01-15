@@ -9,14 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.deeplearning.process;
+package edu.iu.dsc.tws.tset.fn;
 
-import mpi.Info;
-import mpi.Intercomm;
-import mpi.MPIException;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 
-public interface IManager {
-
-  Intercomm spawn(String executableName, String[] spawnArgs, int maxProcs, Info info,
-                         int i1, int[] errorCode) throws MPIException;
+public interface AggregateFunction<T> extends ReduceFunc<T> {
 }
