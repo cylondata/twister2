@@ -85,9 +85,8 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
-    //TODO L2: The current implementaion only handles a snigle binary file not a set of files
-    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
+    int curminNumSplits = Math.max(minNumSplits, this.numSplits);
     final Path path = this.filePath;
     final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
 

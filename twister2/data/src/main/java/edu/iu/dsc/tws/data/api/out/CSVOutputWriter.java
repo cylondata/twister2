@@ -13,37 +13,87 @@ package edu.iu.dsc.tws.data.api.out;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 
-/**
- * Write a text file, every record is written to a new line
- */
-public class TextOutputWriter extends FileOutputWriter<String> {
+public class CSVOutputWriter extends FileOutputWriter<String> {
+
+  private static final Logger LOG = Logger.getLogger(CSVOutputWriter.class.getName());
+
+  protected static String lineDelimiter = CSVInputSplit.DEFAULT_LINE_DELIMITER;
+  protected static String fieldDelimiter = CSVInputSplit.DEFAULT_FIELD_DELIMITER;
+  protected static String tabDelimiter = CSVInputSplit.DEFAULT_TAB_DELIMITER;
+
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
-  protected static String lineDelimiter = "\n";
-  protected static String fieldDelimiter = ",";
-  protected static String tabDelimiter = "\t";
+  private boolean allowedNullValues = true;
+
+  private boolean quoteStrings = false;
+
+  private String charsetName;
+
+  private transient Charset charset;
 
   private String[] headers;
-  private Path path;
-  private FSDataOutputStream outputStream;
-  private Config config;
 
-  public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
-    super(writeMode, outPath);
+  private Path path;
+
+  private FSDataOutputStream outputStream;
+
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config config) {
+    this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, config, "UTF-8");
   }
 
-  public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config cfg) {
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, String linedelimiter,
+                         String fielddelimiter, String tabdelimiter, Config config,
+                         String charsetName) {
     super(writeMode, outPath);
-    this.config = cfg;
+
+    if (linedelimiter == null) {
+      throw new Twister2RuntimeException("line delimiter shouldn't be null");
+    }
+
+    if (fielddelimiter == null) {
+      throw new Twister2RuntimeException("field delimiter should'nt be null");
+    }
+
+    this.fieldDelimiter = fielddelimiter;
+    this.lineDelimiter = linedelimiter;
+    this.tabDelimiter = tabdelimiter;
+    if (this.charset == null) {
+      this.charset = Charset.forName(charsetName);
+    }
+    this.allowedNullValues = false;
     this.path = outPath;
+  }
+
+  public boolean isAllowedNullValues() {
+    return allowedNullValues;
+  }
+
+  public void setAllowedNullValues(boolean allowedNullValues) {
+    this.allowedNullValues = allowedNullValues;
+  }
+
+  public boolean isQuoteStrings() {
+    return quoteStrings;
+  }
+
+  public void setQuoteStrings(boolean quoteStrings) {
+    this.quoteStrings = quoteStrings;
+  }
+
+  public void setCharsetName(String charsetName) {
+    this.charsetName = charsetName;
   }
 
   @Override
@@ -53,6 +103,10 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     }
   }
 
+  public void setHeaders(String[] headerNames) {
+    this.headers = headerNames;
+  }
+
   @Override
   public void writeRecord(int partition, String data) {
     if (writerMap.containsKey(partition)) {
@@ -60,16 +114,12 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     }
   }
 
-  public void setHeaders(String[] headerNames) {
-    this.headers = headerNames;
-  }
-
   public void createOutput() {
     try {
       if (fs.exists(path)) {
         fs.delete(path, true);
       }
-      outputStream = fs.create(new Path(path, generateRandom(10) + ".txt"));
+      outputStream = fs.create(new Path(path, generateRandom(10) + ".csv"));
       pw = new PrintWriter(outputStream);
     } catch (IOException e) {
       throw new RuntimeException("IOException Occured");
@@ -92,7 +142,6 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     pw.write(data);
   }
 
-
   @Override
   public void close() {
     if (!writerMap.isEmpty()) {
@@ -106,3 +155,5 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     super.close();
   }
 }
+
+

@@ -16,40 +16,40 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class LocalFixedInputPartitioner<T> extends FixedInputPartitioner<T> {
+public class LocalCSVInputPartitioner extends CSVInputPartitioner<String> {
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
+  private static final Logger LOG = Logger.getLogger(LocalCSVInputPartitioner.class.getName());
 
-  private int nTasks;
+  private int numberOfTasks;
 
-  private OrderedInputSplitAssigner<T> assigner;
+  private OrderedInputSplitAssigner<String> assigner;
 
-  public LocalFixedInputPartitioner(Path filePath, int numTasks) {
-    super(filePath);
-    this.nTasks = numTasks;
+  public LocalCSVInputPartitioner(Path filePath, int numTasks, Config config) {
+    super(filePath, config);
+    this.numberOfTasks = numTasks;
   }
 
-  public LocalFixedInputPartitioner(Path filePath, int numTasks, Config config, int datasize) {
+  public LocalCSVInputPartitioner(Path filePath, int numTasks, int datasize, Config config) {
     super(filePath, config, datasize);
-    this.nTasks = numTasks;
+    this.numberOfTasks = numTasks;
   }
 
-  @Override
-  protected TextInputSplit createSplit(int num, Path file, long start, long length,
-                                       String[] hosts) {
-    return new TextInputSplit(num, file, start, length, hosts);
+  protected CSVInputSplit createSplit(int num, Path file, long start,
+                                      long length, String[] hosts) {
+    return new CSVInputSplit(num, file, start, length, hosts);
   }
 
-  @Override
-  public OrderedInputSplitAssigner<T> getInputSplitAssigner(FileInputSplit<T>[] inputSplits) {
+  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner<T>(inputSplits, nTasks);
+      assigner = new OrderedInputSplitAssigner<>(inputSplits, numberOfTasks);
     }
     return assigner;
   }
 }
+

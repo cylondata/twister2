@@ -11,5 +11,75 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.splits;
 
-public class GenericCSVInputSplit {
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
+
+public class GenericCSVInputSplit extends DelimitedInputSplit<String> {
+
+  private static final Logger LOG = Logger.getLogger(TextInputSplit.class.getName());
+  /**
+   * Code of \r, used to remove \r from a line when the line ends with \r\n.
+   */
+  private static final byte CARRIAGE_RETURN = (byte) '\r';
+
+  /**
+   * Code of \n, used to identify if \n is used as delimiter.
+   */
+  private static final byte NEW_LINE = (byte) '\n';
+
+  /**
+   * The name of the charset to use for decoding.
+   */
+  private String charsetName = "UTF-8";
+
+  /**
+   * Constructs a split with host information.
+   *
+   * @param num the number of this input split
+   * @param file the file name
+   * @param start the position of the first byte in the file to process
+   * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
+   * @param hosts the list of hosts containing the block, possibly <code>null</code>
+   */
+  public GenericCSVInputSplit(int num, Path file, long start, long length, String[] hosts) {
+    super(num, file, start, length, hosts);
+  }
+
+  @Override
+  public String getCharsetName() {
+    return charsetName;
+  }
+
+  @Override
+  public void setCharsetName(String charsetName) {
+    if (charsetName == null) {
+      throw new IllegalArgumentException("Charset must not be null.");
+    }
+    this.charsetName = charsetName;
+  }
+
+  @Override
+  public void configure(Config parameters) {
+    super.configure(parameters);
+
+    if (charsetName == null || !Charset.isSupported(charsetName)) {
+      throw new RuntimeException("Unsupported charset: " + charsetName);
+    }
+  }
+
+  @Override
+  public String readRecord(String reusable, byte[] bytes, int readOffset, int numBytes)
+      throws IOException {
+    int curNumBytes = numBytes;
+    if (this.getDelimiter() != null && this.getDelimiter().length == 1
+        && this.getDelimiter()[0] == NEW_LINE && readOffset + curNumBytes >= 1
+        && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
+      curNumBytes -= 1;
+    }
+    return new String(bytes, readOffset, curNumBytes, this.charsetName);
+  }
 }

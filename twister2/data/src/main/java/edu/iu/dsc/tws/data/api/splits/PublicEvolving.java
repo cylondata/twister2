@@ -9,32 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api;
+package edu.iu.dsc.tws.data.api.splits;
 
-import java.io.Serializable;
-
-import edu.iu.dsc.tws.api.config.Config;
-
-/**
- * Output writer to write a output
- */
-public interface OutputWriter<T> extends Serializable {
-  /**
-   * Configure the output writer
-   *
-   * @param config configuration
-   */
-  void configure(Config config);
-
-  /**
-   * Add value to output
-   */
-  void write(int partition, T out);
-
-  void write(T out);
-
-  /**
-   * Close the writer, flush everything
-   */
-  void close();
+public @interface PublicEvolving {
 }

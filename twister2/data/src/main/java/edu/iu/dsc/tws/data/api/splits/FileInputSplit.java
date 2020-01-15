@@ -68,11 +68,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
   protected long minSplitSize = 0;
 
   /**
-   * Current split that is used
-   */
-  protected FileInputSplit currentSplit;
-
-  /**
    * Start point of the current split
    */
   protected long splitStart;
@@ -105,13 +100,10 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
    */
   public FileInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, hosts);
-
     this.file = file;
     this.start = start;
     this.length = length;
   }
-
-  private int recordLength;
 
   public FileInputSplit(int num,  Path file,  String[] hosts) {
     super(num, hosts);
@@ -230,7 +222,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.splitStart = getStart();
     this.splitLength = getLength();
 
-    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+    LOG.log(Level.FINE, "Opening input split " + getPath() + " ["
         + splitStart + "," + splitLength + "]");
 
     // open the split in an asynchronous thread
@@ -239,9 +231,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
 
     try {
       this.stream = isot.waitForCompletion();
-      //TODO L3: Check the need to input stream wrapper ( ex for decoding ).
-      // This is not an initial requirement
-      //this.stream = decorateInputStream(this.stream, fileSplit);
     } catch (Throwable t) {
       throw new IOException("Error opening the Input Split " + getPath()
           + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
@@ -262,21 +251,16 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
         + splitStart + "," + splitLength + "]");
 
     // open the split in an asynchronous thread
-    //final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout);
     final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout, config);
     isot.start();
 
     try {
       this.stream = isot.waitForCompletion();
-      //TODO L3: Check the need to input stream wrapper ( ex for decoding ).
-      // This is not an initial requirement
-      //this.stream = decorateInputStream(this.stream, fileSplit);
     } catch (Throwable t) {
       throw new IOException("Error opening the Input Split " + getPath()
           + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
     }
 
-    // get FSDataInputStream
     if (this.splitStart != 0) {
       this.stream.seek(this.splitStart);
     }
@@ -319,7 +303,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     @Override
     public void run() {
       try {
-        //final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
         final FileSystem fs = FileSystemUtils.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
         // check for canceling and close the stream in that case, because no one will obtain it
