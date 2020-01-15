@@ -9,12 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.row;
+package edu.iu.dsc.tws.column.file;
 
-/**
- * A row is a view of the data, different implementations of rows can exist
- */
-public interface Row {
-  int getInt32Value(int index);
-  int getInt32Value(String name);
+import java.util.logging.Logger;
+
+public class ArrowWriter {
+  private static final Logger LOG = Logger.getLogger(ArrowWriter.class.getName());
+
+  /**
+   * File name to write to
+   */
+  private String file;
+
+  public ArrowWriter() {
+
+  }
 }
