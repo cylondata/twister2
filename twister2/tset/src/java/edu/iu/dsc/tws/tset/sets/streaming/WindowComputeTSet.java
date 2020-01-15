@@ -96,7 +96,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   }
 
   public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
-    if (this.computeFunc != null) {
+    if (this.computeFunc == null) {
       this.computeFunc = processFunction;
       return this;
     } else {
