@@ -71,7 +71,6 @@ public class PytorchSampleJob implements IWorker {
     ProcessManager processManager = new ProcessManager();
     Intercomm workerComm = processManager.spawn(scriptPath, spawnArgv, maxprocs,
         MPI.INFO_NULL, 0, errcode);
-
   }
 
 
