@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.tset.worker.StreamingTSetIWorker;
 
 public abstract class StreamingTsetExample implements StreamingTSetIWorker, Serializable {
-  static final int COUNT = 5;
+  static final int COUNT = 6;
   static final int PARALLELISM = 2;
 
   SSourceTSet<Integer> dummySource(StreamingTSetEnvironment env, int count,
