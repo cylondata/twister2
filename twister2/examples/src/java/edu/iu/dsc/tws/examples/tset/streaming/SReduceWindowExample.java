@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.AggregateFunction;
-import edu.iu.dsc.tws.tset.fn.WindowCompute;
+import edu.iu.dsc.tws.tset.fn.AggregateFunc;
+import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
@@ -59,7 +59,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.countWindow(2);
 
         WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> processedTSet = winTSet
-            .process((WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
+            .process((WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
               List<Integer> list = new ArrayList<>();
               while (input.hasNext()) {
                 list.add(input.next());
@@ -82,9 +82,9 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.countWindow(2);
 
         WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
-            .aggregate((AggregateFunction<Integer>) (t1, t2) -> t1 + t2);
+            .aggregate((AggregateFunc<Integer>) Integer::sum);
 
-        localReducedTSet.direct().forEach(d -> System.out.println(d));
+        localReducedTSet.direct().forEach(System.out::println);
       }
     }
 
@@ -97,7 +97,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.timeWindow(2, TimeUnit.MILLISECONDS);
 
         WindowComputeTSet<Iterator<Integer>, Iterator<Integer>> processedTSet = winTSet
-            .process((WindowCompute<Iterator<Integer>, Iterator<Integer>>) input -> {
+            .process((WindowComputeFunc<Iterator<Integer>, Iterator<Integer>>) input -> {
               List<Integer> list = new ArrayList<>();
               while (input.hasNext()) {
                 list.add(input.next());
@@ -120,9 +120,9 @@ public class SReduceWindowExample extends StreamingTsetExample {
             = link.timeWindow(2, TimeUnit.MILLISECONDS);
 
         WindowComputeTSet<Integer, Iterator<Integer>> localReducedTSet = winTSet
-            .aggregate((AggregateFunction<Integer>) (t1, t2) -> t1 + t2);
+            .aggregate((AggregateFunc<Integer>) Integer::sum);
 
-        localReducedTSet.direct().forEach(d -> System.out.println(d));
+        localReducedTSet.direct().forEach(System.out::println);
 
         //link.countWindow().reduce(a,b-> a + b)
       }

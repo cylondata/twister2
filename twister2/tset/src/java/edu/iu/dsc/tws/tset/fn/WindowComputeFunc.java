@@ -11,7 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 
-public interface AggregateFunction<T> extends ReduceFunc<T> {
+/**
+ * WindowCompute is the TSet ComputeFunction extension for Windowing oriented computations
+ *
+ * @param <O> TSet Window Output
+ * @param <I> TSet Window Input
+ */
+public interface WindowComputeFunc<O, I> extends ComputeFunc<O, I> {
+
+
 }

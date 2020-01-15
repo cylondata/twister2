@@ -16,7 +16,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class ProcessWindowCompute<O, I> implements WindowCompute<O, Iterator<I>> {
+public class ProcessWindowCompute<O, I> implements WindowComputeFunc<O, Iterator<I>> {
 
   private MapFunc<O, Iterator<I>> processFn;
 
