@@ -147,9 +147,6 @@ public class BJoin extends BaseOperation {
       );
     }
 
-    LOG.info("Sources L: " + leftSources);
-    LOG.info("Sources R: " + rightSources);
-
     Set<Integer> allSources = new HashSet<>(leftSources);
     allSources.addAll(rightSources);
 
