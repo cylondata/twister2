@@ -31,7 +31,7 @@ before_install:
     - sudo xcodebuild -license accept
     - brew install pyenv
     - brew install pyenv-virtualenv
-    - brew install dpkg
+#    - brew install dpkg
     - echo "Downloading bazel"
     - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-darwin-x86_64.sha256
     - shasum -c tools/bazel-1.1.0-darwin-x86_64.sha256
