@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -42,7 +43,8 @@ public class ComputeExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src")
+        .withDataType(MessageTypes.INTEGER);
 
     ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
         (ComputeFunc<Integer, Iterator<Integer>>) input -> {
@@ -51,7 +53,7 @@ public class ComputeExample extends BatchTsetExample {
             s += input.next();
           }
           return s;
-        }).setName("sum");
+        }).withDataType(MessageTypes.INTEGER).setName("sum");
 
 
     sum.direct().forEach(data -> System.out.println("val: " + data));

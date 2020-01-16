@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -60,6 +61,10 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   @Override
   public ComputeTSet<O, I> addInput(String key, StorableTBase<?> input) {
     return (ComputeTSet<O, I>) super.addInput(key, input);
+  }
+
+  public ComputeTSet<O, I> withDataType(MessageType dataType) {
+    return (ComputeTSet<O, I>) super.withDataType(dataType);
   }
 
   @Override

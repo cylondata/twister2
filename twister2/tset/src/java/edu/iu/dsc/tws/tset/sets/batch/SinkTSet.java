@@ -13,6 +13,8 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
@@ -23,6 +25,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
   private SinkFunc<T> sinkFunc;
+  private MessageType dType = MessageTypes.OBJECT;
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
@@ -62,6 +65,11 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
   @Override
   public SinkTSet<T> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
+  }
+
+  public SinkTSet<T> withDataType(MessageType dataType) {
+    this.dType = dataType;
     return this;
   }
 }

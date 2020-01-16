@@ -37,6 +37,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import java.util.Collection;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -162,4 +163,13 @@ public interface TSet<T> extends TBase {
    * @return Union TSet
    */
   TSet<T> union(Collection<TSet<T>> tSets);
+
+  /**
+   * Sets the data type of the {@link TSet} output. This will be used in the packers for efficient
+   * SER-DE operations in the following {@link TLink}s
+   *
+   * @param dataType data type as a {@link MessageType}
+   * @return this {@link TSet}
+   */
+  TSet<T> withDataType(MessageType dataType);
 }

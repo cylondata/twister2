@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -46,13 +47,17 @@ public class SSinkTSet<T> extends StreamingTSetImpl<T> {
   }
 
   @Override
-  public ICompute getINode() {
-    return new SinkOp<>(sink, this, Collections.emptyMap());
-  }
-
-  @Override
   public SSinkTSet<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  public SSinkTSet<T> withDataType(MessageType dataType) {
+    return (SSinkTSet<T>) super.withDataType(dataType);
+  }
+
+  @Override
+  public ICompute getINode() {
+    return new SinkOp<>(sink, this, Collections.emptyMap());
   }
 }

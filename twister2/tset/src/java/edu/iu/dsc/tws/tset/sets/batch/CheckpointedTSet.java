@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
@@ -43,6 +44,11 @@ public class CheckpointedTSet<T> extends PersistedTSet<T> {
       storedSource = getTSetEnv().createSource(sourceFunc, getParallelism());
     }
     return storedSource;
+  }
+
+  @Override
+  public CheckpointedTSet<T> withDataType(MessageType dataType) {
+    return (CheckpointedTSet<T>) super.withDataType(dataType);
   }
 
   @Override

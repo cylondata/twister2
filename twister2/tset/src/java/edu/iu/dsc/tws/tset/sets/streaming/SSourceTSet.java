@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -38,6 +39,10 @@ public class SSourceTSet<T> extends StreamingTSetImpl<T> {
   public SSourceTSet<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  public SSourceTSet<T> withDataType(MessageType dataType) {
+    return (SSourceTSet<T>) super.withDataType(dataType);
   }
 
   @Override

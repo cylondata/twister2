@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -60,5 +61,10 @@ public class CachedTSet<T> extends StoredTSet<T> {
   @Override
   public CachedTSet<T> addInput(String key, StorableTBase<?> input) {
     return (CachedTSet<T>) super.addInput(key, input);
+  }
+
+  @Override
+  public CachedTSet<T> withDataType(MessageType dataType) {
+    return (CachedTSet<T>) super.withDataType(dataType);
   }
 }

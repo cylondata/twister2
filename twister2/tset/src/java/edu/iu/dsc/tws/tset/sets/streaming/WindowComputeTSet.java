@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import java.util.Collections;
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -136,5 +137,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-
+  public WindowComputeTSet<O, I> withDataType(MessageType dataType) {
+    return (WindowComputeTSet<O, I>) super.withDataType(dataType);
+  }
 }

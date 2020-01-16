@@ -15,6 +15,8 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -35,6 +37,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.functions.IdentityFunction;
 
 public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<T> {
+  private MessageType dType = MessageTypes.OBJECT;
 
   public BatchTSetImpl() {
     //non arg constructor needed for kryo
@@ -186,5 +189,15 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
   public BatchTSetImpl<T> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
+  }
+
+  @Override
+  public BatchTSetImpl<T> withDataType(MessageType dataType) {
+    this.dType = dataType;
+    return this;
+  }
+
+  protected MessageType getDataType() {
+    return this.dType;
   }
 }

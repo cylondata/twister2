@@ -25,6 +25,7 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
@@ -53,13 +54,18 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
   }
 
   @Override
-  public INode getINode() {
-    return new SourceOp<>(source, this, getInputs());
-  }
-
-  @Override
   public SourceTSet<T> setName(String name) {
     rename(name);
     return this;
+  }
+
+  @Override
+  public SourceTSet<T> withDataType(MessageType dataType) {
+    return (SourceTSet<T>) super.withDataType(dataType);
+  }
+
+  @Override
+  public INode getINode() {
+    return new SourceOp<>(source, this, getInputs());
   }
 }

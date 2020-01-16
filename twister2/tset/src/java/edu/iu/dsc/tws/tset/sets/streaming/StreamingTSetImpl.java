@@ -27,6 +27,8 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collection;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -45,6 +47,7 @@ import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements StreamingTSet<T> {
+  private MessageType dType = MessageTypes.OBJECT;
 
   public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
@@ -164,5 +167,15 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
         replications);
     addChildToGraph(cloneTSet);
     return cloneTSet;
+  }
+
+  @Override
+  public StreamingTSetImpl<T> withDataType(MessageType dataType) {
+    this.dType = dataType;
+    return this;
+  }
+
+  protected MessageType getDataType() {
+    return this.dType;
   }
 }

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -53,6 +54,10 @@ public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
+  @Override
+  public SComputeTSet<O, I> withDataType(MessageType dataType) {
+    return (SComputeTSet<O, I>) super.withDataType(dataType);
+  }
 
   @Override
   public ICompute<I> getINode() {
