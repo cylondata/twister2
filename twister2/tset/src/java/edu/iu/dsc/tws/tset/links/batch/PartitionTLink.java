@@ -14,6 +14,7 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -25,25 +26,25 @@ public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
 
   private PartitionFunc<T> partitionFunction;
 
-  public PartitionTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism);
+  public PartitionTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, MessageType dataType) {
+    this(tSetEnv, null, sourceParallelism, dataType);
   }
 
   public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
-                        int sourceParallelism) {
-    this(tSetEnv, parFn, sourceParallelism, sourceParallelism);
+                        int sourceParallelism, MessageType dataType) {
+    this(tSetEnv, parFn, sourceParallelism, sourceParallelism, dataType);
   }
 
   public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
-                        int sourceParallelism, int targetParallelism) {
-    super(tSetEnv, "partition", sourceParallelism, targetParallelism);
+                        int sourceParallelism, int targetParallelism, MessageType dataType) {
+    super(tSetEnv, "partition", sourceParallelism, targetParallelism, dataType);
     this.partitionFunction = parFn;
   }
 
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.PARTITION, this.getDataType());
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }

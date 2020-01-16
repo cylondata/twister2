@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
@@ -23,12 +24,19 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
 
-  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP);
+  // keyed links have an additional type for keys
+  private MessageType kType;
+
+  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP,
+                                MessageType keyType, MessageType dataType) {
+    super(env, n, sourceP, dataType);
+    this.kType = keyType;
   }
 
-  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                                MessageType keyType, MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
+    this.kType = keyType;
   }
 
   protected KeyedBatchIteratorLinkWrapper() {
@@ -91,6 +99,10 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
       }
     }
     return doPersist();
+  }
+
+  protected MessageType getKeyType() {
+    return kType;
   }
 
   private KeyedPersistedTSet<K, V> doPersist() {

@@ -54,14 +54,15 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
 
   @Override
   public DirectTLink<T> direct() {
-    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(direct);
     return direct;
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    ReduceTLink<T> reduce = new ReduceTLink<>(getTSetEnv(), reduceFn, getParallelism(),
+        getDataType());
     addChildToGraph(reduce);
     return reduce;
   }
@@ -69,7 +70,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
   @Override
   public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     PartitionTLink<T> partition = new PartitionTLink<>(getTSetEnv(), partitionFn, getParallelism(),
-        targetParallelism);
+        targetParallelism, getDataType());
     addChildToGraph(partition);
     return partition;
   }
@@ -81,21 +82,22 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
 
   @Override
   public GatherTLink<T> gather() {
-    GatherTLink<T> gather = new GatherTLink<>(getTSetEnv(), getParallelism());
+    GatherTLink<T> gather = new GatherTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(gather);
     return gather;
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
-    AllReduceTLink<T> reduce = new AllReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    AllReduceTLink<T> reduce = new AllReduceTLink<>(getTSetEnv(), reduceFn, getParallelism(),
+        getDataType());
     addChildToGraph(reduce);
     return reduce;
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    AllGatherTLink<T> gather = new AllGatherTLink<>(getTSetEnv(), getParallelism());
+    AllGatherTLink<T> gather = new AllGatherTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(gather);
     return gather;
   }
@@ -119,7 +121,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
-    DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
+    DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(other, directOther);
     addChildToGraph(directOther, unionTSet);
     // now the following relationship is created
@@ -142,7 +144,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
-      DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
+      DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism(), getDataType());
       addChildToGraph(tSet, directOther);
       addChildToGraph(directOther, unionTSet);
       // now the following relationship is created
@@ -159,7 +161,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
       throw new RuntimeException("Replication can not be done on tsets with parallelism != 1");
     }
 
-    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(getTSetEnv(), replications);
+    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(getTSetEnv(), replications, getDataType());
     addChildToGraph(cloneTSet);
     return cloneTSet;
   }

@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
@@ -25,18 +26,20 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
     //non arg constructor for kryo
   }
 
-  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism, null);
+  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, MessageType keyType,
+                          MessageType dataType) {
+    this(tSetEnv, null, sourceParallelism, null, keyType, dataType);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                          int sourceParallelism) {
-    this(tSetEnv, partitionFn, sourceParallelism, null);
+                          int sourceParallelism, MessageType keyType, MessageType dataType) {
+    this(tSetEnv, partitionFn, sourceParallelism, null, keyType, dataType);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                          int sourceParallelism, Comparator<K> keyCompartor) {
-    super(tSetEnv, partitionFn, sourceParallelism, keyCompartor);
+                          int sourceParallelism, Comparator<K> keyCompartor, MessageType keyType,
+                          MessageType dataType) {
+    super(tSetEnv, partitionFn, sourceParallelism, keyCompartor, keyType, dataType);
     this.enableGroupByKey();
   }
 

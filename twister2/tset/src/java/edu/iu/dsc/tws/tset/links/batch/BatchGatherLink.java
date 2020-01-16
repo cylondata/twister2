@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -40,12 +41,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherSink;
  */
 public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP) {
-    this(env, n, sourceP, sourceP);
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    this(env, n, sourceP, sourceP, dataType);
   }
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                  MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 
   protected BatchGatherLink() {

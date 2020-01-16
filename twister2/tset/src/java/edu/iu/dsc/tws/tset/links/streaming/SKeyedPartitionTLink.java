@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -21,17 +22,20 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
 public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
+  private MessageType kType;
 
   public SKeyedPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
-                              int sourceParallelism) {
-    super(tSetEnv, "skpartition", sourceParallelism);
+                              int sourceParallelism, MessageType keyType, MessageType dataType) {
+    super(tSetEnv, "skpartition", sourceParallelism, dataType);
     this.partitionFunction = parFn;
+    this.kType = keyType;
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getDataType());
     e.setKeyed(true);
+    e.setKeyType(kType);
     e.setPartitioner(partitionFunction);
     return e;
   }

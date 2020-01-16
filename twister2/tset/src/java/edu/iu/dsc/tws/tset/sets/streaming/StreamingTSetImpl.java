@@ -60,14 +60,15 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
 
   @Override
   public SDirectTLink<T> direct() {
-    SDirectTLink<T> direct = new SDirectTLink<>(getTSetEnv(), getParallelism());
+    SDirectTLink<T> direct = new SDirectTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(direct);
     return direct;
   }
 
   @Override
   public SReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    SReduceTLink<T> reduce = new SReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    SReduceTLink<T> reduce = new SReduceTLink<>(getTSetEnv(), reduceFn, getParallelism(),
+        getDataType());
     addChildToGraph(reduce);
     return reduce;
   }
@@ -75,7 +76,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
   @Override
   public SPartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     SPartitionTLink<T> partition = new SPartitionTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), targetParallelism);
+        partitionFn, getParallelism(), targetParallelism, getDataType());
     addChildToGraph(partition);
     return partition;
   }
@@ -87,7 +88,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
 
   @Override
   public SGatherTLink<T> gather() {
-    SGatherTLink<T> gather = new SGatherTLink<>(getTSetEnv(), getParallelism());
+    SGatherTLink<T> gather = new SGatherTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(gather);
     return gather;
   }
@@ -95,15 +96,15 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
   @Override
   public SAllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     SAllReduceTLink<T> allreduce = new SAllReduceTLink<>(getTSetEnv(), reduceFn,
-        getParallelism());
+        getParallelism(), getDataType());
     addChildToGraph(allreduce);
     return allreduce;
   }
 
   @Override
   public SAllGatherTLink<T> allGather() {
-    SAllGatherTLink<T> allgather = new SAllGatherTLink<>(getTSetEnv(),
-        getParallelism());
+    SAllGatherTLink<T> allgather = new SAllGatherTLink<>(getTSetEnv(), getParallelism(),
+        getDataType());
     addChildToGraph(allgather);
     return allgather;
   }
@@ -121,7 +122,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
-    SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
+    SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism(), getDataType());
     addChildToGraph(other, directOther);
     addChildToGraph(directOther, union);
     // now the following relationship is created
@@ -143,7 +144,8 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
-      SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
+      SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism(),
+          getDataType());
       addChildToGraph(other, directOther);
       addChildToGraph(directOther, union);
     }
@@ -163,8 +165,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
           + getParallelism());
     }
 
-    SReplicateTLink<T> cloneTSet = new SReplicateTLink<>(getTSetEnv(),
-        replications);
+    SReplicateTLink<T> cloneTSet = new SReplicateTLink<>(getTSetEnv(), replications, getDataType());
     addChildToGraph(cloneTSet);
     return cloneTSet;
   }

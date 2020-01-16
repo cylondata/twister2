@@ -12,7 +12,10 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedDirectTLink;
@@ -27,6 +30,8 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  */
 public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implements
     StreamingTupleTSet<K, V> {
+  private MessageType kType = MessageTypes.OBJECT;
+  private MessageType dType = MessageTypes.OBJECT;
 
   StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
@@ -40,15 +45,36 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
   @Override
   public SKeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     SKeyedPartitionTLink<K, V> partition = new SKeyedPartitionTLink<>(getTSetEnv(), partitionFn,
-        getParallelism());
+        getParallelism(), getKeyType(), getDataType());
     addChildToGraph(partition);
     return partition;
   }
 
   @Override
   public SKeyedDirectTLink<K, V> keyedDirect() {
-    SKeyedDirectTLink<K, V> direct = new SKeyedDirectTLink<>(getTSetEnv(), getParallelism());
+    SKeyedDirectTLink<K, V> direct = new SKeyedDirectTLink<>(getTSetEnv(), getParallelism(),
+        getKeyType(), getDataType());
     addChildToGraph(direct);
     return direct;
+  }
+
+  @Override
+  public TupleTSet<K, V> withDataType(MessageType dataType) {
+    this.dType = dataType;
+    return this;
+  }
+
+  protected MessageType getDataType() {
+    return this.dType;
+  }
+
+  @Override
+  public TupleTSet<K, V> withKeyType(MessageType keyType) {
+    this.kType = keyType;
+    return this;
+  }
+
+  protected MessageType getKeyType() {
+    return this.kType;
   }
 }

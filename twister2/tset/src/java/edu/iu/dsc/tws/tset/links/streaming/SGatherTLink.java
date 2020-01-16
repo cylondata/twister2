@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -24,13 +25,14 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
  */
 public class SGatherTLink<T> extends StreamingGatherLink<T> {
 
-  public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "sgather", sourceParallelism, 1);
+  public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
+                      MessageType dataType) {
+    super(tSetEnv, "sgather", sourceParallelism, 1, dataType);
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.GATHER, getMessageType());
+    return new Edge(getId(), OperationNames.GATHER, getDataType());
   }
 
   @Override

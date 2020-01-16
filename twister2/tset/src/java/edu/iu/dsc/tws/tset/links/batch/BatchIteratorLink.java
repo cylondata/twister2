@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -28,12 +29,13 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
-    this(env, n, sourceP, sourceP);
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    this(env, n, sourceP, sourceP, dataType);
   }
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                    MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 
   protected BatchIteratorLink() {

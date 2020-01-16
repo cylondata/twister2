@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -26,12 +27,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
  * @param <T> type
  */
 public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP);
+  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    super(env, n, sourceP, dataType);
   }
 
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                           MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 
   protected BatchIteratorLinkWrapper() {

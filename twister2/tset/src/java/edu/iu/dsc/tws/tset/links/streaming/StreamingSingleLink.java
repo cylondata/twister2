@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -26,12 +27,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
 
-  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP, sourceP);
+  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    super(env, n, sourceP, sourceP, dataType);
   }
 
-  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+                      MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 
   @Override

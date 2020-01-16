@@ -26,6 +26,7 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -43,12 +44,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistSingleSink;
 
 public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP, sourceP);
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    super(env, n, sourceP, sourceP, dataType);
   }
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                  MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 
   @Override

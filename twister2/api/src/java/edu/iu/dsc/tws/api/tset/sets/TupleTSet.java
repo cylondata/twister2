@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
@@ -54,4 +55,22 @@ public interface TupleTSet<K, V> extends TBase {
    * @return Keyed Direct TLink
    */
   TLink<?, ?> keyedDirect();
+
+  /**
+   * Sets the data type of the {@link TupleTSet} output. This will be used in the packers for efficient
+   * SER-DE operations in the following {@link TLink}s
+   *
+   * @param dataType data type as a {@link MessageType}
+   * @return this {@link TupleTSet}
+   */
+  TupleTSet<K, V> withDataType(MessageType dataType);
+
+  /**
+   * Sets the data type of the {@link TupleTSet} output. This will be used in the packers for efficient
+   * SER-DE operations in the following {@link TLink}s
+   *
+   * @param keyType data type as a {@link MessageType}
+   * @return this {@link TupleTSet}
+   */
+  TupleTSet<K, V> withKeyType(MessageType keyType);
 }

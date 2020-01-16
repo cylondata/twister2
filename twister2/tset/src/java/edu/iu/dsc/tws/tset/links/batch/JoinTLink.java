@@ -38,23 +38,29 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   private Comparator<K> keyComparator;
 
   private CommunicationContext.JoinAlgorithm algorithm = CommunicationContext.JoinAlgorithm.SORT;
-  private MessageType keyType = MessageTypes.OBJECT;
 
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
   private boolean useDisk = false;
 
+  private MessageType kType = MessageTypes.OBJECT;
+  private MessageType dTypeL;
+  private MessageType dTypeR;
+
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
-                   Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT) {
-    this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT);
+                   Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT,
+                   MessageType keyType, MessageType leftDataType, MessageType rightDataType) {
+    this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT, keyType, leftDataType,
+        rightDataType);
   }
 
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
                    Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
-                   TupleTSet rightT) {
-    super(env, "join", ((BuildableTSet) leftT).getParallelism());
+                   TupleTSet rightT, MessageType keyType, MessageType leftDataType,
+                   MessageType rightDataType) {
+    super(env, "join", ((BuildableTSet) leftT).getParallelism(), null);
     this.joinType = type;
     this.leftTSet = leftT;
     this.rightTSet = rightT;
@@ -70,9 +76,22 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.JOIN, getMessageType());
+    // this method will not be used as build method is overridden!
+    return null;
   }
 
+  @Override
+  protected MessageType getDataType() {
+    // this method will not be used as build method is overridden!
+    return null;
+  }
+
+  /**
+   * Uses a different build pattern than the usual {@link edu.iu.dsc.tws.api.tset.link.TLink}s
+   *
+   * @param graphBuilder  graph builder
+   * @param buildSequence build seq
+   */
   @Override
   public void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
 
@@ -95,15 +114,16 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
           + target.getId();
 
       // build left
-      buildJoin(graphBuilder, leftTSet, target, 0, groupName);
+      buildJoin(graphBuilder, leftTSet, target, 0, groupName, dTypeL);
 
       // build right
-      buildJoin(graphBuilder, rightTSet, target, 1, groupName);
+      buildJoin(graphBuilder, rightTSet, target, 1, groupName, dTypeR);
     }
   }
 
-  private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName) {
-    Edge e = getEdge();
+  private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName,
+                         MessageType dType) {
+    Edge e = new Edge(getId(), OperationNames.JOIN, dType);
     // override edge name with join_source_target
     e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
     e.setKeyed(true);
@@ -116,14 +136,14 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.addProperty(CommunicationContext.JOIN_ALGORITHM, algorithm);
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, useDisk);
-    e.setKeyType(keyType);
+    e.setKeyType(kType);
 
     graphBuilder.connect(s.getId(), t.getId(), e);
   }
 
-  public JoinTLink<K, VL, VR> useHashAlgorithm(MessageType kType) {
+  public JoinTLink<K, VL, VR> useHashAlgorithm(MessageType keyType) {
     this.algorithm = CommunicationContext.JoinAlgorithm.HASH;
-    this.keyType = kType;
+    this.kType = keyType;
     return this;
   }
 

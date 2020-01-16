@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -28,9 +29,12 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
+  private MessageType dType;
 
-  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                 MessageType dataType) {
     super(env, n, sourceP, targetP);
+    this.dType = dataType;
   }
 
   protected BatchTLinkImpl() {
@@ -135,5 +139,9 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     StorableTBase<T0> lazyPersist = lazyPersist();
     getTSetEnv().run((BaseTSet) lazyPersist);
     return lazyPersist;
+  }
+
+  protected MessageType getDataType() {
+    return dType;
   }
 }

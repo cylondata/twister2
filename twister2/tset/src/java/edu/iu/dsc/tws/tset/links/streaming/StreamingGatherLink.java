@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -37,12 +38,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 public abstract class StreamingGatherLink<T>
     extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP) {
-    this(env, n, sourceP, sourceP);
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, MessageType dataType) {
+    this(env, n, sourceP, sourceP, dataType);
   }
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+                      MessageType dataType) {
+    super(env, n, sourceP, targetP, dataType);
   }
 /*  public <P> StreamingComputeTSet<P, Iterator<T>>
 computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
