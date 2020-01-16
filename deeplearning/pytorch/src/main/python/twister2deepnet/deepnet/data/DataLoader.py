@@ -38,14 +38,17 @@
 import numpy as np
 import torch
 
-from twister2deepnet.deepnet.data.DataPartitioner import  DataPartitioner
+from twister2deepnet.deepnet.data.DataPartitioner import DataPartitioner
 
 
 class DataLoader:
 
     def __init__(self):
+        """
+        TODO: Need to replace this with a remote data repository
+        """
         self.__TRAIN_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_data.npy"
-        self.__TEST_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_data.npy"
+        self.__TRAIN_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_target.npy"
 
     def partition_numpy_dataset(self, world_size=4, world_rank=0):
         """
@@ -57,7 +60,7 @@ class DataLoader:
         """
         # print("Data Loading")
         dataset = np.load(self.__TRAIN_DATA_FILE_PATH)
-        targets = np.load(self.__TEST_DATA_FILE_PATH)
+        targets = np.load(self.__TRAIN_TARGET_FILE_PATH)
         bsz = int(128 / float(world_size))
         partition_sizes = [1.0 / world_size for _ in range(world_size)]
         # print("Partition Sizes {}".format(partition_sizes))
