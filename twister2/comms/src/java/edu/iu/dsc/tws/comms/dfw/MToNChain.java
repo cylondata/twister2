@@ -1213,7 +1213,7 @@ public class MToNChain implements DataFlowOperation, ChannelReceiver {
   public void finish(int source) {
     // add to finished sources
     mergeFinishSources.add(source);
-
+    LOG.info("Finishing source " + source);
     Set<Integer> tOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
     for (int dest : targets) {
       // first we need to call finish on the partial receivers
