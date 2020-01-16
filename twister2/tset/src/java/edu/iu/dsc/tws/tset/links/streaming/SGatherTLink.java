@@ -13,7 +13,6 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -30,18 +29,13 @@ public class SGatherTLink<T> extends StreamingGatherLink<T> {
   }
 
   @Override
+  public Edge getEdge() {
+    return new Edge(getId(), OperationNames.GATHER, getMessageType());
+  }
+
+  @Override
   public SGatherTLink<T> setName(String n) {
     rename(n);
     return this;
-  }
-
-  @Override
-  public SGatherTLink<T> withDataType(MessageType dataType) {
-    return (SGatherTLink<T>) super.withDataType(dataType);
-  }
-
-  @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.GATHER, getDataType());
   }
 }

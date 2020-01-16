@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -49,7 +48,7 @@ public class ReduceExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    ReduceTLink<Integer> reduce = src.reduce(Integer::sum).withDataType(MessageTypes.INTEGER);
+    ReduceTLink<Integer> reduce = src.reduce(Integer::sum);
 
     LOG.info("test foreach");
     reduce.forEach(i -> LOG.info("foreach: " + i));

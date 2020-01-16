@@ -15,6 +15,8 @@ package edu.iu.dsc.tws.tset;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.TBase;
 
 public final class TSetUtils {
@@ -32,5 +34,41 @@ public final class TSetUtils {
 
   public static String generateBuildId(TBase root) {
     return "build_" + root.getId();
+  }
+
+  public static MessageType getDataType(Class type) {
+    if (type == int[].class) {
+      return MessageTypes.INTEGER_ARRAY;
+    } else if (type == double[].class) {
+      return MessageTypes.DOUBLE_ARRAY;
+    } else if (type == short[].class) {
+      return MessageTypes.SHORT_ARRAY;
+    } else if (type == byte[].class) {
+      return MessageTypes.BYTE_ARRAY;
+    } else if (type == long[].class) {
+      return MessageTypes.LONG_ARRAY;
+    } else if (type == char[].class) {
+      return MessageTypes.CHAR_ARRAY;
+    } else {
+      return MessageTypes.OBJECT;
+    }
+  }
+
+  public static MessageType getKeyType(Class type) {
+    if (type == Integer.class) {
+      return MessageTypes.INTEGER_ARRAY;
+    } else if (type == Double.class) {
+      return MessageTypes.DOUBLE_ARRAY;
+    } else if (type == Short.class) {
+      return MessageTypes.SHORT_ARRAY;
+    } else if (type == Byte.class) {
+      return MessageTypes.BYTE_ARRAY;
+    } else if (type == Long.class) {
+      return MessageTypes.LONG_ARRAY;
+    } else if (type == Character.class) {
+      return MessageTypes.CHAR_ARRAY;
+    } else {
+      return MessageTypes.OBJECT;
+    }
   }
 }

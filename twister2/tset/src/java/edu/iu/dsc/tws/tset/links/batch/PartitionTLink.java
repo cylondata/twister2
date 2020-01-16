@@ -10,10 +10,10 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -40,14 +40,10 @@ public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
     this.partitionFunction = parFn;
   }
 
-  @Override
-  public PartitionTLink<T> withDataType(MessageType dataType) {
-    return (PartitionTLink<T>) super.withDataType(dataType);
-  }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.PARTITION, getDataType());
+    Edge e = new Edge(getId(), OperationNames.PARTITION, getMessageType());
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }

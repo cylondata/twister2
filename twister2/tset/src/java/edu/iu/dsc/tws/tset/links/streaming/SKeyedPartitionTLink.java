@@ -13,7 +13,6 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -30,21 +29,16 @@ public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>>
   }
 
   @Override
-  public SKeyedPartitionTLink<K, V> setName(String n) {
-    rename(n);
-    return this;
-  }
-
-  @Override
-  public SKeyedPartitionTLink<K, V> withDataType(MessageType dataType) {
-    return (SKeyedPartitionTLink<K, V>) super.withDataType(dataType);
-  }
-
-  @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getDataType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getMessageType());
     e.setKeyed(true);
     e.setPartitioner(partitionFunction);
     return e;
+  }
+
+  @Override
+  public SKeyedPartitionTLink<K, V> setName(String n) {
+    rename(n);
+    return this;
   }
 }

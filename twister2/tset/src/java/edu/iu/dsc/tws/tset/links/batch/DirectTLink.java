@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -41,13 +40,8 @@ public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
   }
 
   @Override
-  public DirectTLink<T> withDataType(MessageType dataType) {
-    return (DirectTLink<T>) super.withDataType(dataType);
-  }
-
-  @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getDataType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }

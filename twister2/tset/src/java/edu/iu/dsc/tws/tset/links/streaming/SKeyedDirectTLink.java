@@ -12,7 +12,6 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -31,18 +30,13 @@ public class SKeyedDirectTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
   }
 
   @Override
+  public Edge getEdge() {
+    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+  }
+
+  @Override
   public SKeyedDirectTLink<K, V> setName(String n) {
     rename(n);
     return this;
-  }
-
-  @Override
-  public SKeyedDirectTLink<K, V> withDataType(MessageType dataType) {
-    return (SKeyedDirectTLink<K, V>) super.withDataType(dataType);
-  }
-
-  @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getDataType());
   }
 }

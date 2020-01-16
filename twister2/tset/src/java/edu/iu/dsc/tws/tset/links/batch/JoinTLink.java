@@ -69,13 +69,8 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   }
 
   @Override
-  public JoinTLink<K, VL, VR> withDataType(MessageType dataType) {
-    return (JoinTLink<K, VL, VR>) super.withDataType(dataType);
-  }
-
-  @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.JOIN, getDataType());
+    return new Edge(getId(), OperationNames.JOIN, getMessageType());
   }
 
   @Override

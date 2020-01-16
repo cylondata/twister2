@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -48,7 +47,7 @@ public class GatherExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    GatherTLink<Integer> gather = src.gather().withDataType(MessageTypes.INTEGER);
+    GatherTLink<Integer> gather = src.gather();
 
     LOG.info("test foreach");
     gather.forEach(i -> LOG.info("foreach: " + i));

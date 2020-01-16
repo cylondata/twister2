@@ -16,12 +16,9 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -34,7 +31,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
 
   private WindowParameter windowParameter;
-  private MessageType dType = MessageTypes.OBJECT;
+
 
   StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
@@ -127,17 +124,6 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     this.windowParameter.withSlidingDurationWindow(windowLen, windowLenTimeUnit, slidingLen,
         slidingWindowTimeUnit);
     return window("w-duration-sliding-compute-prev");
-  }
-
-
-  @Override
-  public TLink<T1, T0> withDataType(MessageType dataType) {
-    this.dType = dataType;
-    return this;
-  }
-
-  protected MessageType getDataType() {
-    return this.dType;
   }
 
 }

@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -54,13 +53,8 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
   }
 
   @Override
-  public KeyedGatherUngroupedTLink<K, V> withDataType(MessageType dataType) {
-    return (KeyedGatherUngroupedTLink<K, V>) super.withDataType(dataType);
-  }
-
-  @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getDataType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());
     e.setKeyed(true);
     e.setPartitioner(partitionFunction);
     e.addProperty(CommunicationContext.SORT_BY_KEY, this.keyCompartor != null);
