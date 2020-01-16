@@ -43,7 +43,7 @@ public class GatherTLink<T> extends BatchGatherLink<T> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getDataType());
+    Edge e = new Edge(getId(), OperationNames.GATHER, getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }
