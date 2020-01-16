@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -113,7 +112,6 @@ public class BJoin extends BaseOperation {
 
     this.destinationSelector = destSelector;
     this.channel = comm.getChannel();
-    List<String> shuffleDirs = comm.getPersistentDirectories();
 
     JoinBatchCombinedReceiver commonReceiver = new JoinBatchCombinedReceiver(rcvr,
         joinAlgorithm,
@@ -148,6 +146,9 @@ public class BJoin extends BaseOperation {
           commonReceiver, JoinRelation.RIGHT
       );
     }
+
+    LOG.info("Sources L: " + leftSources);
+    LOG.info("Sources R: " + rightSources);
 
     Set<Integer> allSources = new HashSet<>(leftSources);
     allSources.addAll(rightSources);
@@ -209,7 +210,22 @@ public class BJoin extends BaseOperation {
                CommunicationContext.JoinType joinType,
                CommunicationContext.JoinAlgorithm joinAlgorithm) {
     this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
-        null,
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
+  }
+
+  public BJoin(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+               Set<Integer> leftSources, Set<Integer> rightSource,
+               MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
+    this(comm, logicalPlanBuilder.build(), leftSources,
+        rightSource,
         logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
         joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
