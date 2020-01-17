@@ -11,34 +11,35 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
-import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.JoinRelation;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
-public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
-  private static final Logger LOG = Logger.getLogger(JoinPartitionBatchReceiver.class.getName());
+public class JoinPartitionBatchFinalReceiver extends TargetFinalReceiver {
+
   /**
    * The receiver to be used to deliver the message
    */
-  protected SingularReceiver receiver;
+  private JoinBatchCombinedReceiver receiver;
+  private JoinRelation joinRelation;
 
   /**
    * Keep the list of tuples for each target
    */
-  protected Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
+  private Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
 
-  public JoinPartitionBatchReceiver(SingularReceiver receiver, int tag) {
+  public JoinPartitionBatchFinalReceiver(JoinBatchCombinedReceiver receiver,
+                                         JoinRelation joinRelation) {
     this.receiver = receiver;
+    this.joinRelation = joinRelation;
   }
 
   @Override
@@ -63,10 +64,10 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
     List<Object> values = readyToSend.get(target);
 
     if (values == null || values.isEmpty()) {
-      values = new ArrayList<>();
+      return false;
     }
 
-    if (receiver.receive(target, values)) {
+    if (receiver.receive(target, values, joinRelation)) {
       readyToSend.remove(target);
     } else {
       return false;
@@ -79,7 +80,9 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
   protected boolean isAllEmpty(int target) {
     if (readyToSend.containsKey(target)) {
       List<Object> queue = readyToSend.get(target);
-      return queue.size() <= 0;
+      if (queue.size() > 0) {
+        return false;
+      }
     }
     return true;
   }
@@ -90,8 +93,7 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
         && readyToSend.get(target) != null && !readyToSend.get(target).isEmpty();
   }
 
-  @Override
-  public boolean onSyncEvent(int target, byte[] value) {
-    return receiver.sync(target, value);
+  protected boolean onSyncEvent(int target, byte[] value) {
+    return receiver.sync(target, value, joinRelation);
   }
 }

@@ -313,7 +313,9 @@ public class FSKeyedMerger implements Shuffle {
   public void clean() {
     File file = new File(getSaveFolderName());
     try {
-      FileUtils.cleanDirectory(file);
+      if (file.exists()) {
+        FileUtils.cleanDirectory(file);
+      }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
     }
