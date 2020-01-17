@@ -63,7 +63,8 @@ class DataLoader:
         targets = np.load(self.__TRAIN_TARGET_FILE_PATH)
         bsz = int(128 / float(world_size))
         partition_sizes = [1.0 / world_size for _ in range(world_size)]
-        # print("Partition Sizes {}".format(partition_sizes))
+        print("World Info {}/{}".format(world_rank, world_size))
+        print("Partition Sizes {}".format(partition_sizes))
         partition_data = DataPartitioner(dataset, partition_sizes)
         partition_data = partition_data.use(world_rank)
         train_set_data = torch.utils.data.DataLoader(partition_data,

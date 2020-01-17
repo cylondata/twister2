@@ -22,3 +22,4 @@ class Partition(object):
     def __getitem__(self, index):
         data_idx = self.index[index]
         return self.data[data_idx]
+
