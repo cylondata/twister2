@@ -1,7 +1,5 @@
-dist: trusty
-
 os:
-  - linux
+  - linux dist: trusty
   - osx
 
 osx_image: xcode10
@@ -29,13 +27,11 @@ before_install:
     - echo "s:======================================"
     - /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     - sudo xcodebuild -license accept
-    - brew install pyenv
-    - brew install pyenv-virtualenv
-#    - brew install dpkg
     - echo "Downloading bazel"
-    - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-darwin-x86_64.sha256
-    - shasum -c tools/bazel-1.1.0-darwin-x86_64.sha256
-#   - sudo dpkg -i bazel-1.1.0-darwin-x86_64.sha256
+    - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-darwin-x86_64.sh
+    - sha256sum tools/bazel-1.1.0-installer-darwin-x86_64.sh
+    - chmod +x bazel-1.1.0-installer-darwin-x86_64.sh
+    - /bin/sh bazel-1.1.0-installer-darwin-x86_64.sh
     - |
       exist() {
          [ -e "$1" ]
@@ -49,7 +45,7 @@ before_install:
     - brew update
     - brew install maven python3
 #   - sudo apt-get update && sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven libnuma-dev libc-dev
-    - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
+#   - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
   else
     - echo "s:======================================"
     - echo "Downloading bazel"
