@@ -13,6 +13,7 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -44,6 +45,16 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   @Override
   public KeyedTSet<K, V> setName(String n) {
     return (KeyedTSet<K, V>) super.setName(n);
+  }
+
+  @Override
+  public KeyedTSet<K, V> withDataType(MessageType dataType) {
+    return (KeyedTSet<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
+  public KeyedTSet<K, V> withKeyType(MessageType keyType) {
+    return (KeyedTSet<K, V>) super.withKeyType(keyType);
   }
 
   @Override

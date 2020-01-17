@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -27,6 +28,16 @@ public class KeyedCachedTSet<K, V> extends KeyedStoredTSet<K, V> {
   @Override
   public KeyedCachedTSet<K, V> setName(String n) {
     return (KeyedCachedTSet<K, V>) super.setName(n);
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> withDataType(MessageType dataType) {
+    return (KeyedCachedTSet<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> withKeyType(MessageType keyType) {
+    return (KeyedCachedTSet<K, V>) super.withKeyType(keyType);
   }
 
   @Override

@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
@@ -63,7 +64,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       public String next() {
         return dataList[c++ % dataList.length];
       }
-    }, parallel);
+    }, parallel).withDataType(MessageTypes.STRING);
   }
 
   KeyedSourceTSet<String, Integer> dummyKeyedSource(BatchTSetEnvironment env, int count,
@@ -81,7 +82,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
         c++;
         return new Tuple<>(Integer.toString(c), c);
       }
-    }, parallel);
+    }, parallel).withKeyType(MessageTypes.STRING).withDataType(MessageTypes.INTEGER);
   }
 
   SourceTSet<Integer> dummyReplayableSource(BatchTSetEnvironment env, int count, int parallel) {
@@ -118,7 +119,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       public Integer next() {
         return c++;
       }
-    }, parallel);
+    }, parallel).withDataType(MessageTypes.INTEGER);
   }
 
   KeyedSourceTSet<String, Integer> dummyKeyedSourceOther(BatchTSetEnvironment env, int count,
@@ -136,7 +137,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
         c++;
         return new Tuple<>(Integer.toString(c), c + 25);
       }
-    }, parallel);
+    }, parallel).withKeyType(MessageTypes.STRING).withDataType(MessageTypes.INTEGER);
   }
 
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {

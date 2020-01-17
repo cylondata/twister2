@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
@@ -33,6 +34,16 @@ public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
   @Override
   public KeyedPersistedTSet<K, V> addInput(String key, StorableTBase<?> input) {
     return (KeyedPersistedTSet<K, V>) super.addInput(key, input);
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> withDataType(MessageType dataType) {
+    return (KeyedPersistedTSet<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
+  public KeyedPersistedTSet<K, V> withKeyType(MessageType keyType) {
+    return (KeyedPersistedTSet<K, V>) super.withKeyType(keyType);
   }
 
   @Override

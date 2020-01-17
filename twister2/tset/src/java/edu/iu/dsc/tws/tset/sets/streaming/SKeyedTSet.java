@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
@@ -41,6 +42,23 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   }
 
   @Override
+  public SKeyedTSet<K, V> setName(String name) {
+    rename(name);
+    return this;
+  }
+
+  @Override
+  public SKeyedTSet<K, V> withDataType(MessageType dataType) {
+    return (SKeyedTSet<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
+  public SKeyedTSet<K, V> withKeyType(MessageType keyType) {
+    return (SKeyedTSet<K, V>) super.withKeyType(keyType);
+  }
+
+
+  @Override
   public ICompute getINode() {
 
     if (mapToTupleFunc instanceof MapCompute) {
@@ -55,11 +73,5 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
     }
 
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);
-  }
-
-  @Override
-  public SKeyedTSet<K, V> setName(String name) {
-    rename(name);
-    return this;
   }
 }

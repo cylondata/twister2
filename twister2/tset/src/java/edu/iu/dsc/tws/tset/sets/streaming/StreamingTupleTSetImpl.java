@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedDirectTLink;
@@ -59,7 +58,7 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
   }
 
   @Override
-  public TupleTSet<K, V> withDataType(MessageType dataType) {
+  public StreamingTupleTSetImpl<K, V> withDataType(MessageType dataType) {
     this.dType = dataType;
     return this;
   }
@@ -69,7 +68,7 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
   }
 
   @Override
-  public TupleTSet<K, V> withKeyType(MessageType keyType) {
+  public StreamingTupleTSetImpl<K, V> withKeyType(MessageType keyType) {
     this.kType = keyType;
     return this;
   }

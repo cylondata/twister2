@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
@@ -39,6 +40,16 @@ public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   public SKeyedSourceTSet<K, V> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public SKeyedSourceTSet<K, V> withDataType(MessageType dataType) {
+    return (SKeyedSourceTSet<K, V>) super.withDataType(dataType);
+  }
+
+  @Override
+  public SKeyedSourceTSet<K, V> withKeyType(MessageType keyType) {
+    return (SKeyedSourceTSet<K, V>) super.withKeyType(keyType);
   }
 
   @Override

@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
@@ -192,7 +191,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
-  public TupleTSet<K, V> withDataType(MessageType dataType) {
+  public BatchTupleTSetImpl<K, V> withDataType(MessageType dataType) {
     this.dType = dataType;
     return this;
   }
@@ -202,7 +201,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
-  public TupleTSet<K, V> withKeyType(MessageType keyType) {
+  public BatchTupleTSetImpl<K, V> withKeyType(MessageType keyType) {
     this.kType = keyType;
     return this;
   }
