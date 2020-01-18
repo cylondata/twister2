@@ -7,7 +7,7 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 _MAVEN_MIRRORS = [
     "https://repo1.maven.org/maven2/",
     "https://repo.maven.apache.org/maven2/",
-    "https://maven.google.com"
+    "https://maven.google.com",
 ]
 
 deps = []

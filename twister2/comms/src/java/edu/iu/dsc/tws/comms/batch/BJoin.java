@@ -158,7 +158,7 @@ public class BJoin extends BaseOperation {
           keyType, keyType, leftEdgeId, leftSchema);
       this.partitionRight = new MToNSimple(comm.getConfig(),
           comm.getChannel(), plan, rightSources, targets,
-          leftFinalReceiver, new PartitionPartialReceiver(),
+          rightFinalReceiver, new PartitionPartialReceiver(),
           rightDataType, rightRecvDataType, keyType, keyType, rightEdgeId, rightSchema);
     } else {
       this.partitionLeft = new MToNChain(comm.getConfig(), comm.getChannel(), plan,
