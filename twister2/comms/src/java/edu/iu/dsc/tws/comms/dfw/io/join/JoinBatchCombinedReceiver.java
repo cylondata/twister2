@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
@@ -39,6 +40,8 @@ import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
  * support more than two relations in future.
  */
 public class JoinBatchCombinedReceiver {
+
+  private static final Logger LOG = Logger.getLogger(JoinBatchCombinedReceiver.class.getName());
 
   private Map<Integer, boolean[]> syncCounts = new HashMap<>();
   private Map<Integer, Object[]> joinRelations = new HashMap<>();
@@ -115,8 +118,11 @@ public class JoinBatchCombinedReceiver {
 
     if (count == JoinRelation.values().length) {
       // ready to do join
+      long t1 = System.currentTimeMillis();
       this.rcvr.receive(target, doJoin(values[JoinRelation.LEFT.ordinal()],
           values[JoinRelation.RIGHT.ordinal()]));
+      LOG.info("Join time : " + (System.currentTimeMillis() - t1));
+
       Arrays.fill(values, null);
     }
     return true;
