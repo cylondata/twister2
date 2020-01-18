@@ -139,7 +139,6 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     return datanodesList;
   }
 
-
   /**
    * This method retrieve the datanode name of the file in the hdfs cluster
    */

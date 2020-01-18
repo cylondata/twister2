@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
@@ -44,7 +45,8 @@ public class HdfsUtils {
   public HadoopFileSystem createHDFSFileSystem() {
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-    conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsDataDirectory(config)));
+    conf.set("fs.defaultFS", getHdfsURL());
     HadoopFileSystem hadoopFileSystem;
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -54,8 +56,17 @@ public class HdfsUtils {
     return hadoopFileSystem;
   }
 
+  private String directoryString;
+
+  private String getHdfsURL() {
+    directoryString = Context.TWISTER2_HDFS_FILESYSTEM
+        + ":/" + HdfsDataContext.getHdfsNamenodeDefault(this.config)
+        + HdfsDataContext.getHdfsNamenodeDefault(this.config)
+        + "/" + this.fileName;
+    return directoryString;
+  }
+
   public Path getPath() {
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + "/" + this.fileName;
     Path path = new Path(directoryString);
     return path;
   }

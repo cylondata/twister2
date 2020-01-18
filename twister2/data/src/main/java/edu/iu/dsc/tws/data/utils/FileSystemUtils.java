@@ -270,11 +270,11 @@ public final class FileSystemUtils {
     Object newInstance;
     try {
       Configuration conf = new Configuration(true);
-      conf.addResource(
-          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-      conf.addResource(
-          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsDataDirectory(config)));
-      conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
+      conf.addResource(new org.apache.hadoop.fs.Path(
+          HdfsDataContext.getHdfsConfigDirectory(config)));
+      conf.addResource(new org.apache.hadoop.fs.Path(
+          HdfsDataContext.getHdfsDataDirectory(config)));
+      conf.set("fs.defaultFS", getHdfsURL(config));
       fileSystemClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Constructor<?> classConstructor = fileSystemClass.getConstructor(Configuration.class,
           org.apache.hadoop.fs.FileSystem.class);
@@ -288,6 +288,15 @@ public final class FileSystemUtils {
       throw new IOException("Illegal access exception: " + e.getMessage(), e);
     }
     return (FileSystem) newInstance;
+  }
+
+  private static String directoryString;
+
+  private static String getHdfsURL(Config config) {
+    directoryString = Context.TWISTER2_HDFS_FILESYSTEM + "://"
+        + HdfsDataContext.getHdfsNamenodeDefault(config) + ":"
+        + HdfsDataContext.getHdfsNamenodePortDefault(config);
+    return directoryString;
   }
 
   /**

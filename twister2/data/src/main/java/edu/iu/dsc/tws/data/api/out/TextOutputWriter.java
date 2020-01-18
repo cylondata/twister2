@@ -41,7 +41,7 @@ public class TextOutputWriter extends FileOutputWriter<String> {
   }
 
   public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config cfg) {
-    super(writeMode, outPath);
+    super(writeMode, outPath, cfg);
     this.config = cfg;
     this.path = outPath;
   }
