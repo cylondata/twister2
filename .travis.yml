@@ -1,8 +1,4 @@
-os:
-  - linux dist: trusty
-  - osx
-
-osx_image: xcode10
+dist: trusty
 
 addons:
   apt:
@@ -11,9 +7,6 @@ addons:
     packages:
       - wget
       - pkg-config
-  homebrew:
-    packages:
-      - wget
 
 jdk: oraclejdk8
 
@@ -23,67 +16,33 @@ cache:
     - $HOME/.cache/apt
 
 before_install:
-  if [ $TRAVIS_OS_NAME = 'osx' ]; then
-    - echo "s:======================================"
-    - /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    - sudo xcodebuild -license accept
-    - echo "Downloading bazel"
-    - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-darwin-x86_64.sh
-    - sha256sum tools/bazel-1.1.0-installer-darwin-x86_64.sh
-    - chmod +x bazel-1.1.0-installer-darwin-x86_64.sh
-    - /bin/sh bazel-1.1.0-installer-darwin-x86_64.sh
-    - |
-      exist() {
-         [ -e "$1" ]
-      }
-    - |
-      if exist $HOME/.cache/apt/*.deb
-      then
-         sudo mv $HOME/.cache/apt/*.deb /var/cache/apt/archives/
-      fi
-    - echo "Installing maven and Python"
-    - brew update
-    - brew install maven python3
-#   - sudo apt-get update && sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven libnuma-dev libc-dev
-#   - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
-  else
-    - echo "s:======================================"
-    - echo "Downloading bazel"
-    - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
-    - sha256sum -c tools/bazel_1.1.0-linux-x86_64.deb.sha256
-    - sudo dpkg -i bazel_1.1.0-linux-x86_64.deb
-    - |
-      exist() {
-         [ -e "$1" ]
-      }
-    - |
-      if exist $HOME/.cache/apt/*.deb
-      then
-         sudo mv $HOME/.cache/apt/*.deb /var/cache/apt/archives/
-      fi
-    - echo "Installing C++ and Python"
-    - sudo apt-get update && sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven libnuma-dev libc-dev
-    - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
-  fi
+  - echo "s:======================================"
+  - echo "Downloading bazel"
+  - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
+  - sha256sum -c tools/bazel_1.1.0-linux-x86_64.deb.sha256
+  - sudo dpkg -i bazel_1.1.0-linux-x86_64.deb
+  - |
+    exist() {
+        [ -e "$1" ]
+    }
+  - |
+    if exist $HOME/.cache/apt/*.deb
+    then
+        sudo mv $HOME/.cache/apt/*.deb /var/cache/apt/archives/
+    fi
+  - echo "Installing C++ and Python"
+  - sudo apt-get update && sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven libnuma-dev libc-dev
+  - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
 
 jobs:
   include:
     - stage: "Build Stages"
       script:
-      if [ $TRAVIS_OS_NAME = 'osx' ]; then
-        - bazel build --config=darwin twister2/... --action_env=JAVA_HOME
-        - bazel test --config=darwin twister2/... --action_env=JAVA_HOME
-      else
         - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
         - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
-      fi
       name: "Build & Test"
     - script:
-      if [ $TRAVIS_OS_NAME = 'osx' ]; then
-        - bazel build --config=darwin //scripts/package:tarpkgs --action_env=JAVA_HOME
-      else
         - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
-      fi
       name: "Tar Package"
     - script:
         - sh util/mvn/install-local-snapshot.sh
