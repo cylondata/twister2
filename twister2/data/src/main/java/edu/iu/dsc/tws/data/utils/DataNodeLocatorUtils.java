@@ -29,7 +29,6 @@ import org.apache.hadoop.hdfs.tools.DFSck;
 import org.apache.hadoop.util.ToolRunner;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -63,14 +62,15 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         Path path = new Path(anInputFileList);
         fileSystem = FileSystemUtils.get(path.toUri(), config);
         this.datasetName = anInputFileList;
-        if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
+        if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+            DataContext.TWISTER2_HDFS_FILESYSTEM)) {
           FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
           if (!fileStatus.getPath().isNullOrEmpty()) {
             //dataNodes = getDataNodes(new String[]{this.datasetName});
             dataNodes = getDataNodes();
           }
         } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
-            Context.TWISTER2_LOCAL_FILESYSTEM)) {
+            DataContext.TWISTER2_LOCAL_FILESYSTEM)) {
           FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
           if (!fileStatus.getPath().isNullOrEmpty()) {
             String datanodeName = InetAddress.getLocalHost().getHostName();
@@ -98,13 +98,13 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
       Path path = new Path(inputFileName);
       fileSystem = FileSystemUtils.get(path.toUri(), config);
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
-          Context.TWISTER2_HDFS_FILESYSTEM)) {
+          DataContext.TWISTER2_HDFS_FILESYSTEM)) {
         FileStatus fileStatus = fileSystem.getFileStatus(path);
         if (!fileStatus.getPath().isNullOrEmpty()) {
           dataNodes = getDataNodes();
         }
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
-          Context.TWISTER2_LOCAL_FILESYSTEM)) {
+          DataContext.TWISTER2_LOCAL_FILESYSTEM)) {
         FileStatus fileStatus = fileSystem.getFileStatus(path);
         if (!fileStatus.getPath().isNullOrEmpty()) {
           String datanodeName = InetAddress.getLocalHost().getHostName();

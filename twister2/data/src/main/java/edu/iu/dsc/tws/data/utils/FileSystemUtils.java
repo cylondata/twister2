@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.DataConstants;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -115,7 +114,7 @@ public final class FileSystemUtils {
         //TODO: handle when the system is not supported
       } else {
         String fsClass = SUPPORTEDFS.get(curUri.getScheme());
-        if (Context.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
+        if (DataContext.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
           try {
             fs = instantiateFileSystem(fsClass, config);
           } catch (NoSuchMethodException e) {
@@ -293,7 +292,7 @@ public final class FileSystemUtils {
   private static String directoryString;
 
   private static String getHdfsURL(Config config) {
-    directoryString = Context.TWISTER2_HDFS_FILESYSTEM + "://"
+    directoryString = DataContext.TWISTER2_HDFS_FILESYSTEM + "://"
         + HdfsDataContext.getHdfsNamenodeDefault(config) + ":"
         + HdfsDataContext.getHdfsNamenodePortDefault(config);
     return directoryString;

@@ -17,7 +17,6 @@ import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
@@ -51,7 +50,7 @@ public class DataFileReader {
     final FileStatus pathFile;
     try {
       final FileSystem fs = FileSystemUtils.get(path, config);
-      if (Context.TWISTER2_HDFS_FILESYSTEM.equals(fileSystem)) {
+      if (DataContext.TWISTER2_HDFS_FILESYSTEM.equals(fileSystem)) {
         pathFile = fs.getFileStatus(path);
         this.fdis = fs.open(pathFile.getPath());
       } else {

@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
@@ -59,7 +58,7 @@ public class HdfsUtils {
   private String directoryString;
 
   private String getHdfsURL() {
-    directoryString = Context.TWISTER2_HDFS_FILESYSTEM
+    directoryString = DataContext.TWISTER2_HDFS_FILESYSTEM
         + ":/" + HdfsDataContext.getHdfsNamenodeDefault(this.config)
         + HdfsDataContext.getHdfsNamenodeDefault(this.config)
         + "/" + this.fileName;
