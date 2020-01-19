@@ -66,8 +66,6 @@ public class Context {
   public static final ConfigEntry DATA_YAML = new ConfigEntry(
       "twister2.config.file.data.yaml", "${TWISTER2_CONF}/data.yaml");
 
-  public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
-      "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
 
   public static final String JOB_NAME = "twister2.resource.job.name";
   public static final String JOB_OBJECT = "twister2.job.object";
@@ -85,12 +83,6 @@ public class Context {
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.resource.worker.instances";
   public static final String TWISTER2_DIRECT_EDGE = "direct";
-
-  public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"
-
-  public static final String TWISTER2_LOCAL_FILESYSTEM = "local";
-
-  public static final String TWISTER2_HDFS_FILESYSTEM = "hdfs";
 
   public static final String TWISTER2_BANDWIDTH = "bandwidth";
 
@@ -127,7 +119,6 @@ public class Context {
     substitutions.put("JAVA_HOME", JAVA_HOME);
     substitutions.put("JOB", JOB);
     substitutions.put("CLUSTER", CLUSTER);
-    substitutions.put("HADOOP_HOME", HADOOP_HOME);
   }
 
   static {

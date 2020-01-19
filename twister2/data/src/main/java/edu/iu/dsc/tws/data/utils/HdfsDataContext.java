@@ -17,20 +17,8 @@ import edu.iu.dsc.tws.api.config.TokenSub;
 
 public final class HdfsDataContext extends Context {
 
-  private static final String TWISTER2_DATA_HDFS_URL = "twister2.data.hdfs.url";
-  private static final String TWISTER2_DATA_HDFS_URL_DEFAULT
-      = "hdfs://hostname.domain.name:9000";
-
-  public static final String TWISTER2_DATA_HADOOP_HOME = "twister2.data.hadoop.home";
-  public static final String TWISTER2_DATA_HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
-
-  private static final String TWISTER2_DATA_HDFS_CLASS = "twister2.data.hdfs.class";
-  private static final String TWISTER2_DATA_HDFS_CLASS_DEFAULT
-      = "org.apache.hadoop.hdfs.DistributedFileSystem";
-
-  private static final String TWISTER2_DATA_HDFS_IMPLEMENTATION_KEY
-      = "twister2.data.hdfs.implementation.key";
-  private static final String TWISTER2_DATA_HDFS_IMPLEMENTATION_KEY_DEFAULT = "fs.hdfs.impl";
+  private static final String TWISTER2_DATA_HADOOP_HOME = "twister2.data.hadoop.home";
+  private static final String TWISTER2_DATA_HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
 
   private static final String TWISTER2_DATA_HDFS_CONFIG_DIRECTORY
       = "twister2.data.hdfs.config.directory";
@@ -43,7 +31,8 @@ public final class HdfsDataContext extends Context {
        = "$HADOOP_HOME/etc/hadoop/hdfs-site.xml";
 
   private static final String TWISTER2_DATA_HDFS_NAMENODE = "twister2.data.hdfs.namenode";
-  private static final String TWISTER2_DATA_HDFS_NAMENODE_DEFAULT = "hostname.domain.name";
+  private static final String TWISTER2_DATA_HDFS_NAMENODE_DEFAULT
+      = "hostname.domain.name";
 
   private static final String TWISTER2_DATA_HDFS_NAMENODE_PORT = "twister2.data.hdfs.namenode.port";
   private static final Integer TWISTER2_DATA_NAMENODE_PORT_DEFAULT = 9000;
@@ -58,19 +47,6 @@ public final class HdfsDataContext extends Context {
   public static Integer getHdfsNamenodePortDefault(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_DATA_HDFS_NAMENODE_PORT,
         TWISTER2_DATA_NAMENODE_PORT_DEFAULT);
-  }
-
-  public static String getHdfsUrlDefault(Config cfg) {
-    return cfg.getStringValue(TWISTER2_DATA_HDFS_URL, TWISTER2_DATA_HDFS_URL_DEFAULT);
-  }
-
-  public static String getHdfsClassDefault(Config cfg) {
-    return cfg.getStringValue(TWISTER2_DATA_HDFS_CLASS, TWISTER2_DATA_HDFS_CLASS_DEFAULT);
-  }
-
-  public static String getHdfsImplementationKey(Config cfg) {
-    return cfg.getStringValue(TWISTER2_DATA_HDFS_IMPLEMENTATION_KEY,
-        TWISTER2_DATA_HDFS_IMPLEMENTATION_KEY_DEFAULT);
   }
 
   public static String getHdfsConfigDirectory(Config config) {

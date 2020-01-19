@@ -129,8 +129,6 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
    */
   protected abstract void writeRecord(int partition, T data);
 
-  //protected abstract void writeRecord(FSDataOutputStream out, T data);
-
   protected abstract void writeRecord(T data);
 
   @Override
