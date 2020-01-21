@@ -33,13 +33,14 @@ from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 # MPI.Init()
 comm = MPI.COMM_WORLD
 # device = torch.device("cpu")
-print("CommWorld : ", comm)
 
 ###############################################
 ########## Twister2 Data Processing ##########
 ##############################################
 
 env = Twister2Environment(resources=[{"cpu": 1, "ram": 512, "instances": 4}])
+
+# TODO: replace this with WorkerConfig
 
 world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
 world_rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
@@ -58,6 +59,7 @@ if world_rank == 0:
 
 
 def save_to_disk(data_set=None, save_path=None, save_file=None):
+    # TODO use os.path.join and refactor
     if data_set is None or save_path is None or save_file is None:
         raise Exception("Input Cannot be None")
     elif not os.path.exists(save_path):
@@ -72,8 +74,6 @@ def save_to_disk(data_set=None, save_path=None, save_file=None):
 
 
 mniste = MnistDistributed(parallelism=world_size, rank=world_rank)
-
-utilPanda = UtilPanda()
 
 train_set_data, train_set_target, bsz = mniste.load_train_data()
 test_set_data, test_set_target, bsz = mniste.load_test_data()

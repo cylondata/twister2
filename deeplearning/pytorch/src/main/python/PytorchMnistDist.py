@@ -23,6 +23,7 @@ from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
 from twister2deepnet.deepnet.io.FileUtils import FileUtils
 from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 
+import torch.nn as nn
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -51,18 +52,72 @@ class Net(nn.Module):
         output = F.log_softmax(x, dim=1)
         return output
 
-train_data_save_path = "/tmp/parquet/train/0"
+
+def format_data(input_data=None):
+    """
+    Specific For MNIST and 3 dimensional data
+    This function is generated for MNIST only cannot be used in general for all data shapes
+    :param input_data: data in numpy format with (N,M) format Here N number of samples
+            M is the tensor length
+    :return: For numpy we reshape this and return a tensor of the shape, (N, sqrt(M), sqrt(M))
+    """
+    data_shape = input_data.shape
+    data = np.reshape(input_data, (data_shape[0], int(sqrt(data_shape[1])), int(sqrt(data_shape[1]))))
+    return data
+
+
+def read_from_disk(source_file=None, source_path=None):
+    """
+    A helper function to load the data from the disk
+    This function is useful for in-memory oriented data reads, doesn't support very large data reads
+    Reads the data from disk (using PyArrow Parquet)
+    :param source_file: file name
+    :param source_path: path to reading file
+    :return: returns a numpy array of the saved data
+    """
+    data = None
+    if source_file is None and source_path is None:
+        raise Exception("Input cannot be None")
+    elif not os.path.exists(source_path + source_file):
+        raise Exception("Data source doesn't exist")
+    else:
+        dataframe = ArrowUtils.read_from_table(source_path + source_file)
+        data = dataframe.to_numpy()
+    return data
+
+world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+world_rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
+
+train_data_save_path = "/tmp/parquet/train/"
 test_data_save_path = "/tmp/parquet/test/"
 
-# LOAD DATA FROM PARQUET
-train_dataframe = ArrowUtils.read_from_table(train_data_save_path)
+train_data_file = str(world_rank) + ".data"
+test_data_file = str(world_rank) + ".data"
+train_target_file = str(world_rank) + ".target"
+test_target_file = str(world_rank) + ".target"
 
-# CONVERT TO NUMPY
-train_data = train_dataframe.to_numpy()
-print(train_data.shape)
-train_data_shape = train_data.shape
-train_data = np.reshape(train_data, (train_data_shape[0], int(sqrt(train_data_shape[1])), int(sqrt(train_data_shape[1]))))
-print(train_data.shape)
+
+# LOAD DATA FROM DISK
+
+## load train data
+train_data = read_from_disk(source_file=train_data_file, source_path=train_data_save_path)
+train_data = format_data(input_data=train_data)
+## load test data
+test_data = read_from_disk(source_file=test_data_file, source_path=test_data_save_path)
+test_data = format_data(input_data=test_data)
+## load train target
+train_target = read_from_disk(source_file=train_target_file, source_path=train_data_save_path)
+train_target = format_data(input_data=train_target)
+## load test target
+test_target = read_from_disk(source_file=test_target_file, source_path=test_data_save_path)
+test_target = format_data(input_data=test_target)
+
+
+
+# train_data_shape = train_data.shape
+# train_data = np.reshape(train_data, (train_data_shape[0], int(sqrt(train_data_shape[1])), int(sqrt(train_data_shape[1]))))
+
+print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
 
 
