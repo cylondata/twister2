@@ -10,16 +10,15 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-from twister2.Twister2Environment import Twister2Environment
-from twister2.tset.fn.SourceFunc import SourceFunc
+import os
 
 
+class FileUtils:
 
-class Twister2Mnist:
-
-    def __init__(self):
-        self.data_train_path = ""
-        self.data_test_path = ""
-        self.target_train_path = ""
-        self.target_test_path = ""
-
+    @staticmethod
+    def mkdir(dir_path=None):
+        if not os.path.isdir(dir_path):
+            os.mkdir(dir_path, 0o777)
+            print("Directory Created")
+        else:
+            print("Director Exists")

@@ -14,4 +14,4 @@ from twister2deepnet.examples.MnistDistributedExample import MnistDistributedExa
 
 mniste = MnistDistributedExample()
 
-mniste.load_data()
+mniste.load_train_data()

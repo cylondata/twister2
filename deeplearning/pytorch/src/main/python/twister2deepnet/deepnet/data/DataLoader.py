@@ -46,12 +46,22 @@ class DataLoader:
     def __init__(self):
         """
         TODO: Need to replace this with a remote data repository
+         'MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
+         'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
+         'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
+         'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
+         'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
         """
+
         self.__TRAIN_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_data.npy"
         self.__TRAIN_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_target.npy"
 
+        self.__TEST_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_data.npy"
+        self.__TEST_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_target.npy"
+
     def partition_numpy_dataset(self, world_size=4, world_rank=0):
         """
+        TODO: Re-write these logics in a dynamic way
 
         :rtype:
                 train_set_data (training x parameters)
@@ -63,6 +73,36 @@ class DataLoader:
         targets = np.load(self.__TRAIN_TARGET_FILE_PATH)
         bsz = int(128 / float(world_size))
         partition_sizes = [1.0 / world_size for _ in range(world_size)]
+        #print("World Info {}/{}".format(world_rank, world_size))
+        #print("Partition Sizes {}".format(partition_sizes))
+        partition_data = DataPartitioner(dataset, partition_sizes)
+        partition_data = partition_data.use(world_rank)
+        train_set_data = torch.utils.data.DataLoader(partition_data,
+                                                     batch_size=bsz,
+                                                     shuffle=False)
+        partition_target = DataPartitioner(targets, partition_sizes)
+        partition_target = partition_target.use(world_rank)
+        train_set_target = torch.utils.data.DataLoader(partition_target,
+                                                       batch_size=bsz,
+                                                       shuffle=False)
+        return train_set_data, train_set_target, bsz
+
+    def partition_numpy_dataset_test(self, world_size=0, world_rank=4):
+        """
+        TODO: Make this a dynamic implementation
+        :param world_size:
+        :return:
+        """
+        # print("Data Loading")
+
+        dataset = np.load(self.__TEST_DATA_FILE_PATH)
+        targets = np.load(self.__TEST_TARGET_FILE_PATH)
+        # print("Data Size For Test {} {}".format(dataset.shape, targets.shape))
+
+
+        bsz = int(16 / float(world_size))
+        partition_sizes = [1.0 / world_size for _ in range(world_size)]
+        # print("Partition Sizes {}".format(partition_sizes))
         print("World Info {}/{}".format(world_rank, world_size))
         print("Partition Sizes {}".format(partition_sizes))
         partition_data = DataPartitioner(dataset, partition_sizes)

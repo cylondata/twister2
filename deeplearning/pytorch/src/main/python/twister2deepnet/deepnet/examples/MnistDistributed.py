@@ -48,7 +48,7 @@ class MnistDistributed:
         self.parallelism = parallelism
         self.rank = rank
 
-    def load_data(self):
+    def load_train_data(self):
         """
         Here we assume the training data has features and labels
         TODO: Generalize this for unsupervised learning
@@ -60,6 +60,19 @@ class MnistDistributed:
         dl = DataLoader()
         train_x, train_y, batch_size = dl.partition_numpy_dataset(self.parallelism, self.rank)
         return train_x, train_y, batch_size
+
+    def load_test_data(self):
+        """
+        Here we assume the training data has features and labels
+        TODO: Generalize this for unsupervised learning
+        :return:
+                train_x: features of the training data
+                train_y: label of training data
+                batch_size: number of elements per batch
+        """
+        dl = DataLoader()
+        test_x, test_y, batch_size = dl.partition_numpy_dataset_test(self.parallelism, self.rank)
+        return test_x, test_y, batch_size
 
 
 

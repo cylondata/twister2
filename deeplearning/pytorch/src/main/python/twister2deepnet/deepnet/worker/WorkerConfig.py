@@ -10,16 +10,14 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-from twister2.Twister2Environment import Twister2Environment
-from twister2.tset.fn.SourceFunc import SourceFunc
+import os
 
+class WorkerConfig:
 
+    @staticmethod
+    def get_workers():
+        return int(os.environ['OMPI_COMM_WORLD_SIZE'])
 
-class Twister2Mnist:
-
-    def __init__(self):
-        self.data_train_path = ""
-        self.data_test_path = ""
-        self.target_train_path = ""
-        self.target_test_path = ""
-
+    @staticmethod
+    def get_worker_id():
+        return world_rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
