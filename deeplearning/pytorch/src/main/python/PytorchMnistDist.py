@@ -10,23 +10,16 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-import os
-import time
 # NUMPY IMPORTS
 import numpy as np
-import pandas as pd
-from math import ceil
+import os
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from math import sqrt
-from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
-from twister2deepnet.deepnet.network.MnistNet import  MnistNet
-from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
-from twister2deepnet.deepnet.io.FileUtils import FileUtils
+
 from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 
-import torch.nn as nn
-import torch
-import torch.optim as optim
-import torch.nn.functional as F
 
 class Net(nn.Module):
     def __init__(self):

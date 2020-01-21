@@ -10,20 +10,15 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-import os
-import time
-# TWISTER2 IMPORTS
-from twister2.Twister2Environment import Twister2Environment
-from twister2.tset.fn.SourceFunc import SourceFunc
 # MPI IMPORTS
 import mpi4py
+import os
+# TWISTER2 IMPORTS
+from twister2.Twister2Environment import Twister2Environment
 
 mpi4py.rc(initialize=False, finalize=False)
 from mpi4py import MPI
 # NUMPY IMPORTS
-import numpy as np
-import pandas as pd
-from math import ceil
 
 from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
 from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
