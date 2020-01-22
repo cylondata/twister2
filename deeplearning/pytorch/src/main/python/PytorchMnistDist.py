@@ -13,23 +13,16 @@
 # NUMPY IMPORTS
 import numpy as np
 import os
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import time
-from math import sqrt
-from math import ceil
-
+import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from math import sqrt
 
-import os
-import torch
-import torch.distributed as dist
-
-from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 from twister2deepnet.deepnet.data.DataUtil import DataUtil
+from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 
 
 class Net(nn.Module):
@@ -61,6 +54,10 @@ class Net(nn.Module):
 
 
 def average_gradients(model):
+    """
+    calculating the average models in the distributed training
+    :param model: averaged model over allreduce operation
+    """
     size = float(dist.get_world_size())
     for param in model.parameters():
         dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
@@ -68,6 +65,11 @@ def average_gradients(model):
 
 
 def average_accuracy(local_accuracy):
+    """
+    calculating the average accuracy in the distributed testing
+    :param local_accuracy: accuracy calculated in a processes
+    :return: average accuracy all over all processes
+    """
     size = float(dist.get_world_size())
     dist.all_reduce(local_accuracy, op=dist.ReduceOp.SUM)
     global_accuracy = local_accuracy / size
@@ -75,6 +77,10 @@ def average_accuracy(local_accuracy):
 
 
 def save_log(file_path=None, stat=""):
+    """
+    saving the program timing stats
+    :rtype: None
+    """
     fp = open(file_path, mode="a+")
     fp.write(stat + "\n")
     fp.close()
@@ -84,7 +90,17 @@ def launch(rank, size, fn, backend='tcp',
            train_data=None, train_target=None,
            test_data=None, test_target=None,
            do_log=False):
-    """ Initialize the distributed environment. """
+    """ Initialize the distributed environment.
+    :param rank: process id (MPI world rank)
+    :param size: number of processes (MPI world size)
+    :param fn: training function
+    :param backend: Pytorch Backend
+    :param train_data: training data
+    :param train_target: training targets
+    :param test_data: testing data
+    :param test_target: testing targets
+    :param do_log: boolean status to log
+    """
     dist.init_process_group(backend, rank=rank, world_size=size)
     # Setting CUDA FOR TRAINING
     #use_cuda = torch.cuda.is_available()
@@ -105,7 +121,7 @@ def launch(rank, size, fn, backend='tcp',
     if (rank == 0):
         local_testing_time = time.time()
 
-    test(rank=rank, model=model, device=device, test_data=test_data, test_target=test_target, do_log=do_log)
+    predict(rank=rank, model=model, device=device, test_data=test_data, test_target=test_target, do_log=do_log)
 
     if (rank == 0):
         local_testing_time = time.time() - local_testing_time
@@ -115,7 +131,11 @@ def launch(rank, size, fn, backend='tcp',
                  stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
 
 
-def test(rank, model, device, test_data=None, test_target=None, do_log=False):
+def predict(rank, model, device, test_data=None, test_target=None, do_log=False):
+    """
+    testing the trained model
+    :rtype: None return
+    """
     model.eval()
     test_loss = 0
     correct = 0
@@ -148,8 +168,16 @@ def test(rank, model, device, test_data=None, test_target=None, do_log=False):
             global_accuracy.numpy()))
 
 
-def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=False):
-
+def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=False):
+    """
+    training the MNIST model
+    :param int world_rank: current processor rank (MPI rank)
+    :param int world_size: number of processes (MPI world size)
+    :param tensor train_data: training data as pytorch tensor
+    :param tensor train_target: training target as pytorch tensor
+    :param boolean do_log: set logging
+    :return:
+    """
     torch.manual_seed(1234)
     model = Net()
     optimizer = optim.SGD(model.parameters(),
@@ -157,7 +185,7 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
 
     num_batches = train_data.shape[1]
 
-    if (world_rank == 0):
+    if (world_rank == 0 and do_log):
         print("Started Training")
     total_data = len(train_data)
     epochs = 10
@@ -195,6 +223,10 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
 
 
 def format_mnist_data(data=None):
+    """
+    This method re-shapes the data to fit into the Network Input Shape
+    :rtype: data re-formatted to fit to the network designed
+    """
     data_shape = data.shape
     img_size = int(sqrt(data_shape[2]))
     data = np.reshape(data, (data_shape[0], data_shape[1], img_size, img_size))
@@ -202,6 +234,11 @@ def format_mnist_data(data=None):
 
 
 def format_mnist_target(data=None):
+    """
+    Reshaping the mnist target values to fit into model
+    :param data:
+    :return:
+    """
     data_shape = data.shape
     data = np.reshape(data, (data_shape[0], data_shape[1]))
     return data
@@ -278,7 +315,7 @@ test_target = format_mnist_target(data=test_target)
 do_log = True
 
 # initialize training
-launch(rank=world_rank, size=world_size, fn=run, backend=__BACKEND,
+launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,
        train_data=train_data, train_target=train_target,
        test_data=test_data, test_target=test_target,
        do_log=do_log)
