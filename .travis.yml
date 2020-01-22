@@ -1,8 +1,4 @@
-os:
-  - linux dist: trusty
-  - osx
-
-osx_image: xcode10
+dist: trusty
 
 addons:
   apt:
@@ -11,9 +7,6 @@ addons:
     packages:
       - wget
       - pkg-config
-  homebrew:
-    packages:
-      - wget
 
 jdk: oraclejdk8
 
@@ -45,21 +38,12 @@ jobs:
   include:
     - stage: "Build Stages"
       script:
-        if [ $TRAVIS_OS_NAME = 'osx' ]; then
-          - bazel build --config=darwin twister2/... --action_env=JAVA_HOME
-          - bazel test --config=darwin twister2/... --action_env=JAVA_HOME
-        then
-          - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
-          - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
-        fi
-        name: "Build & Test"
+        - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
+        - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
+      name: "Build & Test"
     - script:
-        if [ $TRAVIS_OS_NAME = 'osx' ]; then
-          - bazel build --config=darwin //scripts/package:tarpkgs --action_env=JAVA_HOME
-        then
-          - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
-        fi
-        name: "Tar Package"
+        - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
+      name: "Tar Package"
     - script:
         - sh util/mvn/install-local-snapshot.sh
       name: "Maven Package"
