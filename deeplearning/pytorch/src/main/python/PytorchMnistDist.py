@@ -74,47 +74,77 @@ def average_accuracy(local_accuracy):
     return global_accuracy
 
 
-def init_processes(rank, size, fn, backend='tcp',
-                   train_data=None, train_target=None,
-                   test_data=None, test_target=None,
-                   do_log=False):
+def launch(rank, size, fn, backend='tcp',
+           train_data=None, train_target=None,
+           test_data=None, test_target=None,
+           do_log=False):
     """ Initialize the distributed environment. """
     dist.init_process_group(backend, rank=rank, world_size=size)
-    use_cuda = torch.cuda.is_available()
+    # Setting CUDA FOR TRAINING
+    #use_cuda = torch.cuda.is_available()
     # device = torch.device("cuda" if use_cuda else "cpu")
+
     device = torch.device("cpu")
-    print(rank, size)
-    fn(world_rank=rank, world_size=size, train_data=train_data,
-       train_target=train_target, do_log=False)
-    # model1 = Net()
-    # test(rank, model1, device)
+
     total_communication_time = 0
-    # local_training_time = 0
-    # local_testing_time = 0
-    # if (rank == 0):
-    #     local_training_time = time.time()
-    # model, total_communication_time = fn(rank, size)
-    # if (rank == 0):
-    #     local_training_time = time.time() - local_training_time
-    # if (rank == 0):
-    #     local_testing_time = time.time()
-    # test(rank, model, device, do_log=do_log)
-    # if (rank == 0):
-    #     local_testing_time = time.time() - local_testing_time
-    #     print("Total Training Time : {}".format(local_training_time))
-    #     print("Total Testing Time : {}".format(local_testing_time))
-    #     save_log("stats.csv",
-    #              stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
+    local_training_time = 0
+    local_testing_time = 0
+    if (rank == 0):
+        local_training_time = time.time()
+
+    model, total_communication_time = fn(world_rank=rank, world_size=size, train_data=train_data,
+                                         train_target=train_target, do_log=False)
+    if (rank == 0):
+        local_training_time = time.time() - local_training_time
+    if (rank == 0):
+        local_testing_time = time.time()
+
+    test(rank=rank, model=model, device=device, test_data=test_data, test_target=test_target, do_log=do_log)
+
+    if (rank == 0):
+        local_testing_time = time.time() - local_testing_time
+        print("Total Training Time : {}".format(local_training_time))
+        print("Total Testing Time : {}".format(local_testing_time))
+        # save_log("stats.csv",
+        #          stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
+
+
+def test(rank, model, device, test_data=None, test_target=None, do_log=False):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    total_samples = 0
+    val1 = 0
+    val2 = 0
+    count = 0
+    with torch.no_grad():
+        for data, target in zip(test_data, test_target):
+            # total_samples = total_samples + 1
+            count = count + 1
+            val1 = len(data)
+            val2 = len(test_data)
+            total_samples = (val1 * val2)
+            data, target = data.to(device), target.to(device)
+            data = np.reshape(data, (data.shape[0], 1, data.shape[1], data.shape[2])) / 128.0
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            correct += pred.eq(target.view_as(pred)).sum().item()
+            if (rank == 0 and do_log):
+                print(rank, count, len(data), len(test_data), data.shape, output.shape, correct, total_samples)
+
+    test_loss /= (total_samples)
+    local_accuracy = 100.0 * correct / total_samples
+    global_accuracy = average_accuracy(torch.tensor(local_accuracy))
+    if (rank == 0):
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            test_loss, correct, total_samples,
+            global_accuracy.numpy()))
 
 
 def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=False):
-    if (world_rank == 0):
-        print("Run Fn")
 
     torch.manual_seed(1234)
-    bsz = int(128 / float(world_size))
-    #train_set_data, train_set_target, bsz = partition_numpy_dataset()
-
     model = Net()
     optimizer = optim.SGD(model.parameters(),
                           lr=0.01, momentum=0.5)
@@ -134,16 +164,7 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
         epoch_loss = 0.0
         count = 0
         for data, target in zip(train_data, train_target):
-            # print("Before: {} {} {} {} {} {}".format( data.shape, num_batches,
-            #                                           len(train_data),
-            #                                           len(train_data[0]), len(train_target),
-            #                                           target.shape))
             data = np.reshape(data, (data.shape[0], 1, data.shape[1], data.shape[2])) / 128.0
-            # print("After: {} {} {} {} {} {}".format( data.shape, num_batches,
-            #                                           len(train_data),
-            #                                           len(train_data[0]), len(train_target),
-            #                                           target.shape))
-
             count = count + 1
             result = '{0:.4g}'.format((count / float(total_steps)) * 100.0)
             if (world_rank == 0):
@@ -244,13 +265,13 @@ test_target = read_from_disk(source_file=test_target_file, source_path=test_data
 test_target = format_data(input_data=test_target, world_size=world_size, init_batch_size=16)
 test_target = format_mnist_target(data=test_target)
 
-print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
+#print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
 do_log = True
 
 # initialize training
-init_processes(rank=world_rank, size=world_size, fn=run, backend='mpi',
-               train_data=train_data, train_target=train_target,
-               test_data=test_data, test_target=test_target,
-               do_log=do_log)
+launch(rank=world_rank, size=world_size, fn=run, backend='mpi',
+       train_data=train_data, train_target=train_target,
+       test_data=test_data, test_target=test_target,
+       do_log=do_log)
 
