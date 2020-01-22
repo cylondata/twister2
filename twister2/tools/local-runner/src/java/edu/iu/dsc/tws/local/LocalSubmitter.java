@@ -15,6 +15,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -29,24 +33,30 @@ public final class LocalSubmitter {
 
   private static final Logger LOG = Logger.getLogger(LocalSubmitter.class.getName());
 
+  private static boolean prepared = false;
+
+  private static final String[] FILES_LIST = new String[]{
+      "core.yaml",
+      "network.yaml",
+      "data.yaml",
+      "resource.yaml",
+      "task.yaml",
+  };
+
+  private LocalSubmitter() {
+
+  }
+
   /**
-   * This method should be called in main method before calling any other twister2 api method
+   * This method sets the necessary initial configurations to execute the twister2 core classes
    */
-  public static LocalSubmitter prepare(String configDir) {
+  private static LocalSubmitter prepare(String configDir) {
     System.setProperty("cluster_type", "standalone");
 
     // do a simple config dir validation
     File cDir = new File(configDir, "standalone");
 
-    String[] filesList = new String[]{
-        "core.yaml",
-        "network.yaml",
-        "data.yaml",
-        "resource.yaml",
-        "task.yaml",
-    };
-
-    for (String file : filesList) {
+    for (String file : FILES_LIST) {
       File toCheck = new File(cDir, file);
       if (!toCheck.exists()) {
         throw new Twister2RuntimeException("Couldn't find " + file
@@ -55,7 +65,7 @@ public final class LocalSubmitter {
     }
 
     System.setProperty("config_dir", configDir);
-    System.setProperty("twister2_home", "/tmp");
+    System.setProperty("twister2_home", System.getProperty("java.io.tmpdir"));
 
     // setup logging
     try {
@@ -66,15 +76,79 @@ public final class LocalSubmitter {
       LOG.warning("Couldn't load logging configuration");
     }
 
+    prepared = true;
+
     return new LocalSubmitter();
   }
 
-  public LocalSubmitter withTwsHome(String twsHome) {
-    System.setProperty("twister2_home", twsHome);
-    return this;
+  /**
+   * This method will create a mock config dir and call {@link LocalSubmitter#prepare(String)}
+   */
+  private static LocalSubmitter prepare() {
+    try {
+      File tempDir = Files.createTempDirectory(UUID.randomUUID().toString()).toFile();
+
+      //create standalone and common directory
+      File commonConfig = new File(tempDir, "common");
+      File standaloneConfig = new File(tempDir, "standalone");
+
+      List<File> directories = new ArrayList<>();
+      directories.add(commonConfig);
+      directories.add(standaloneConfig);
+
+      List<File> files = new ArrayList<>();
+      for (String f : FILES_LIST) {
+        files.add(new File(commonConfig, f));
+        files.add(new File(standaloneConfig, f));
+      }
+      files.add(new File(commonConfig, "logger.properties"));
+
+      directories.forEach(File::mkdir);
+      for (File file : files) {
+        file.createNewFile();
+      }
+      return prepare(tempDir.getAbsolutePath());
+    } catch (IOException e) {
+      throw new Twister2RuntimeException("Failed to create a mock config directory");
+    }
   }
 
-  public void submitJob(Twister2Job twister2Job, Config config) {
+  /**
+   * This method can be used to run a {@link Twister2Job} with default configurations
+   */
+  public static void submitJob(Twister2Job twister2Job) {
+    submitJob(twister2Job, Config.newBuilder().build());
+  }
+
+  /**
+   * This method can be used to submit a {@link Twister2Job}.
+   * Additional configurations can be loaded by specifying the root of a twister2 configuration
+   * directory. Configurations loaded from the files can be overridden in {@link Config} object.
+   */
+  public static void submitJob(Twister2Job twister2Job, String configDir, Config config) {
+    prepare(configDir);
+    submitJob(twister2Job, config);
+  }
+
+  /**
+   * This method can be used to submit a {@link Twister2Job}.
+   * Additional configurations can be loaded by specifying the root of a twister2 configuration
+   * directory.
+   */
+  public static void submitJob(Twister2Job twister2Job, String configDir) {
+    prepare(configDir);
+    submitJob(twister2Job);
+  }
+
+  /**
+   * This method can be used to run a {@link Twister2Job} with default configurations.
+   * Additional configurations can be defined/overridden by passing the {@link Config} object.
+   */
+  public static void submitJob(Twister2Job twister2Job, Config config) {
+    if (!prepared) {
+      prepare();
+    }
+
     Config newConfig = overrideConfigs(config);
 
     CyclicBarrier cyclicBarrier = new CyclicBarrier(twister2Job.getNumberOfWorkers());
@@ -87,7 +161,7 @@ public final class LocalSubmitter {
   /**
    * This methods override some configs to suite a local running environment
    */
-  private Config overrideConfigs(Config config) {
+  private static Config overrideConfigs(Config config) {
     return Config.newBuilder()
         .putAll(config)
         .put("twister2.network.channel.class", "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel")
@@ -99,8 +173,8 @@ public final class LocalSubmitter {
   /**
    * This method starts a new worker instance on a separate thread.
    */
-  private void startWorker(Twister2Job twister2Job,
-                           Config config, int workerId, CyclicBarrier cyclicBarrier) {
+  private static void startWorker(Twister2Job twister2Job,
+                                  Config config, int workerId, CyclicBarrier cyclicBarrier) {
     LocalClassLoader localClassLoader = new LocalClassLoader(LocalSubmitter.class.getClassLoader());
     localClassLoader.addJobClass(twister2Job.getWorkerClass());
     try {
