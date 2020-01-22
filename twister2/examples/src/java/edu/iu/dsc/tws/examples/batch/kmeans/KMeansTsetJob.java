@@ -26,8 +26,8 @@ import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -64,10 +64,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache();
+        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();
 
     CachedTSet<double[][]> centers =
-        tc.createSource(new CenterSource(), parallelismValue).cache();
+        tc.createSource(new CenterSource(type), parallelismValue).cache();
 
     long endTimeData = System.currentTimeMillis();
 
@@ -104,7 +104,6 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           + "Compute Time : " + (endTime - endTimeData));
 
       LOG.info("Final Centroids After\t" + iterations + "\titerations\t");
-
       centers.direct().forEach(i -> LOG.info(Arrays.toString(i)));
     }
   }
@@ -156,6 +155,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     private int dimension;
     private double[][] localPoints;
     private boolean read = false;
+    private String fileType = null;
+
+    protected PointsSource(String filetype) {
+      this.fileType = filetype;
+    }
 
     @Override
     public void prepare(TSetContext context) {
@@ -167,11 +171,19 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       this.dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
           + context.getWorkerId();
-      //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
-      this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
+
+      /*this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
           Path(datainputDirectory), context.getParallelism(), cfg, dataSize),
-          context.getParallelism());
+          context.getParallelism());*/
+
+      if ("csv".equalsIgnoreCase(fileType)) {
+        this.source = new DataSource(cfg, new LocalCSVInputPartitioner(
+            new Path(datainputDirectory), context.getParallelism(), cfg), dataSize);
+      } else {
+        this.source = new DataSource(cfg, new LocalTextInputPartitioner(
+            new Path(datainputDirectory), context.getParallelism(), cfg), dataSize);
+      }
     }
 
     @Override
@@ -214,6 +226,12 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     private int dimension;
     private double[][] centers;
 
+    private String fileType = null;
+
+    protected CenterSource(String filetype) {
+      this.fileType = filetype;
+    }
+
     @Override
     public void prepare(TSetContext context) {
       super.prepare(context);
@@ -225,9 +243,18 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       int csize = cfg.getIntegerValue(DataObjectConstants.CSIZE, 4);
 
       this.centers = new double[csize][dimension];
-      this.source = new DataSource(cfg, new LocalCompleteTextInputPartitioner(new
+
+      /*this.source = new DataSource(cfg, new LocalCompleteTextInputPartitioner(new
           Path(datainputDirectory), context.getParallelism(), cfg),
-          context.getParallelism());
+          context.getParallelism());*/
+
+      if ("csv".equalsIgnoreCase(fileType)) {
+        this.source = new DataSource(cfg, new LocalCSVInputPartitioner(
+            new Path(datainputDirectory), context.getParallelism(), cfg), csize);
+      } else {
+        this.source = new DataSource(cfg, new LocalTextInputPartitioner(
+            new Path(datainputDirectory), context.getParallelism(), cfg), csize);
+      }
     }
 
     @Override
