@@ -74,6 +74,12 @@ def average_accuracy(local_accuracy):
     return global_accuracy
 
 
+def save_log(file_path=None, stat=""):
+    fp = open(file_path, mode="a+")
+    fp.write(stat + "\n")
+    fp.close()
+
+
 def launch(rank, size, fn, backend='tcp',
            train_data=None, train_target=None,
            test_data=None, test_target=None,
@@ -105,8 +111,8 @@ def launch(rank, size, fn, backend='tcp',
         local_testing_time = time.time() - local_testing_time
         print("Total Training Time : {}".format(local_training_time))
         print("Total Testing Time : {}".format(local_testing_time))
-        # save_log("stats.csv",
-        #          stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
+        save_log("stats.csv",
+                 stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
 
 
 def test(rank, model, device, test_data=None, test_target=None, do_log=False):
@@ -245,6 +251,8 @@ test_data_file = str(world_rank) + ".data"
 train_target_file = str(world_rank) + ".target"
 test_target_file = str(world_rank) + ".target"
 
+__BACKEND = 'mpi'
+
 
 # LOAD DATA FROM DISK
 
@@ -270,7 +278,7 @@ test_target = format_mnist_target(data=test_target)
 do_log = True
 
 # initialize training
-launch(rank=world_rank, size=world_size, fn=run, backend='mpi',
+launch(rank=world_rank, size=world_size, fn=run, backend=__BACKEND,
        train_data=train_data, train_target=train_target,
        test_data=test_data, test_target=test_target,
        do_log=do_log)

@@ -40,13 +40,13 @@ class DataUtil:
         num_batches = ceil(data_shape[0] / float(minibatch_size))
         remainder = data_shape[0] % minibatch_size
         is_remainder = False
-        init_additional_idx = np.random.randint(10, size=5)
+        init_additional_idx = np.arange(5)
         additional_records = data[init_additional_idx,:]
         records = None
         if remainder > 0:
             is_remainder = True
-            additional_idx = np.random.randint(data_shape[0], size=minibatch_size)
-            record_idx = np.random.randint(data_shape[0], size=(num_batches - 1) * minibatch_size)
+            additional_idx = np.arange(minibatch_size)
+            record_idx = np.arange((num_batches - 1) * minibatch_size)
             additional_records = data[additional_idx, :]
             additional_records_shape = additional_records.shape
             additional_records = np.reshape(additional_records, (1, additional_records_shape[0],
