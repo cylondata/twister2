@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
@@ -28,12 +29,14 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.out.CSVOutputWriter;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.FileTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 // TODO: this needs to checked for correctness!!!
@@ -66,6 +69,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     CachedTSet<double[][]> points =
         tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();
 
+
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
@@ -94,6 +98,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     for (int i = 0; i < iterations; i++) {
       tc.evalAndUpdate(cached, centers);
     }
+
+    FileTSet<double[][]> fileTSet = new FileTSet<>(new CSVOutputWriter(
+        FileSystem.WriteMode.OVERWRITE, new Path(dataDirectory), config));
+    fileTSet.writeAsCSV(centers);
 
     tc.finishEval(cached);
 
