@@ -26,9 +26,9 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 /**
@@ -43,13 +43,13 @@ public class AllGatherTLink<T> extends BatchGatherLink<T> {
     //non arg constructor for kryo
   }
 
-  public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, MessageType dataType) {
-    super(tSetEnv, "allgather", sourceParallelism, dataType);
+  public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+    super(tSetEnv, "allgather", sourceParallelism, schema);
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.ALLGATHER, this.getDataType());
+    Edge e = new Edge(getId(), OperationNames.ALLGATHER, this.getSchema().getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }

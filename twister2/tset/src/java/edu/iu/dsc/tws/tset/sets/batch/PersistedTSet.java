@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class PersistedTSet<T> extends StoredTSet<T> {
 
-  public PersistedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
-    super(tSetEnv, "persisted", sinkFunc, parallelism);
+  public PersistedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism,
+                       Schema inputSchema) {
+    super(tSetEnv, "persisted", sinkFunc, parallelism, inputSchema);
   }
 
   @Override
@@ -53,7 +54,7 @@ public class PersistedTSet<T> extends StoredTSet<T> {
     return (PersistedTSet<T>) super.addInput(key, input);
   }
 
-  public PersistedTSet<T> withDataType(MessageType dataType) {
-    return (PersistedTSet<T>) super.withDataType(dataType);
+  public PersistedTSet<T> withSchema(Schema schema) {
+    return (PersistedTSet<T>) super.withSchema(schema);
   }
 }

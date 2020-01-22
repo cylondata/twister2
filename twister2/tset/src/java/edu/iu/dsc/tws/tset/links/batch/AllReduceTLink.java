@@ -25,10 +25,10 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 /**
@@ -40,14 +40,14 @@ public class AllReduceTLink<T> extends BatchSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
   public AllReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism,
-                        MessageType dataType) {
-    super(tSetEnv, "allreduce", sourceParallelism, dataType);
+                        Schema schema) {
+    super(tSetEnv, "allreduce", sourceParallelism, schema);
     this.reduceFn = rFn;
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.ALLREDUCE, this.getDataType(), reduceFn);
+    return new Edge(getId(), OperationNames.ALLREDUCE, this.getSchema().getDataType(), reduceFn);
   }
 
   @Override

@@ -14,11 +14,10 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import java.util.Collections;
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.AggregateFunc;
@@ -41,42 +40,42 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   private WindowParameter windowParameter;
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+//                           int parallelism, WindowParameter winParam) {
+//    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
+//  }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcompute", parallelism, winParam);
+                           int parallelism, WindowParameter winParam, Schema inputSchema) {
+    this(tSetEnv, "wcompute", parallelism, winParam, inputSchema);
   }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcomputec", compOp, parallelism, winParam);
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
+//                           int parallelism, WindowParameter winParam) {
+//    this(tSetEnv, "wcomputec", compOp, parallelism, winParam);
+//  }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                           ComputeFunc<O, I> computeFunction, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
-    this.computeFunc = computeFunction;
-    this.windowParameter = winParam;
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+//                           ComputeFunc<O, I> computeFunction, int parallelism,
+//                           WindowParameter winParam) {
+//    super(tSetEnv, name, parallelism);
+//    this.computeFunc = computeFunction;
+//    this.windowParameter = winParam;
+//  }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
+                           WindowParameter winParam, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.windowParameter = winParam;
   }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                           ComputeCollectorFunc<O, I> compOp, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
-    this.computeFunc = compOp;
-    this.windowParameter = winParam;
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+//                           ComputeCollectorFunc<O, I> compOp, int parallelism,
+//                           WindowParameter winParam) {
+//    super(tSetEnv, name, parallelism);
+//    this.computeFunc = compOp;
+//    this.windowParameter = winParam;
+//  }
 
   @Override
   public WindowComputeTSet<O, I> setName(String name) {
@@ -137,7 +136,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-  public WindowComputeTSet<O, I> withDataType(MessageType dataType) {
-    return (WindowComputeTSet<O, I>) super.withDataType(dataType);
+  public WindowComputeTSet<O, I> withSchema(Schema schema) {
+    return (WindowComputeTSet<O, I>) super.withSchema(schema);
   }
 }

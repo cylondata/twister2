@@ -44,6 +44,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 
 /**
  * Twister data set. A {@link TSet} would abstract a Task level computation (Source/ Compute or
@@ -171,5 +172,5 @@ public interface TSet<T> extends TBase {
    * @param dataType data type as a {@link MessageType}
    * @return this {@link TSet}
    */
-  TSet<T> withDataType(MessageType dataType);
+  TSet<T> withSchema(Schema dataType);
 }

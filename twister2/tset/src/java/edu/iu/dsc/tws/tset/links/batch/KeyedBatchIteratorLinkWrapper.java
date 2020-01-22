@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
@@ -23,20 +23,14 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
-
-  // keyed links have an additional type for keys
-  private MessageType kType;
-
   KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP,
-                                MessageType keyType, MessageType dataType) {
-    super(env, n, sourceP, dataType);
-    this.kType = keyType;
+                                KeyedSchema schema) {
+    super(env, n, sourceP, schema);
   }
 
   KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
-                                MessageType keyType, MessageType dataType) {
-    super(env, n, sourceP, targetP, dataType);
-    this.kType = keyType;
+                                KeyedSchema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected KeyedBatchIteratorLinkWrapper() {
@@ -45,7 +39,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
   @Override
   public KeyedCachedTSet<K, V> lazyCache() {
     KeyedCachedTSet<K, V> cacheTSet = new KeyedCachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
     addChildToGraph(cacheTSet);
 
     return cacheTSet;
@@ -59,7 +53,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
   @Override
   public KeyedPersistedTSet<K, V> lazyPersist() {
     KeyedPersistedTSet<K, V> persistedTSet = new KeyedPersistedTSet<>(getTSetEnv(),
-        new DiskPersistIterSink<>(this.getId()), getTargetParallelism());
+        new DiskPersistIterSink<>(this.getId()), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
 
     return persistedTSet;
@@ -82,7 +76,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
         // source function, the same way as a persisted tset. This preserves the order of tsets
         // that are being created in the checkpointed env)
         KeyedCheckpointedTSet<K, V> checkTSet = new KeyedCheckpointedTSet<>(getTSetEnv(), sourceFn,
-            this.getTargetParallelism());
+            this.getTargetParallelism(), getSchema());
 
         // adding checkpointed tset to the graph, so that the IDs would not change
         addChildToGraph(checkTSet);
@@ -101,8 +95,9 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
     return doPersist();
   }
 
-  protected MessageType getKeyType() {
-    return kType;
+  @Override
+  protected KeyedSchema getSchema() {
+    return (KeyedSchema) super.getSchema();
   }
 
   private KeyedPersistedTSet<K, V> doPersist() {

@@ -14,11 +14,11 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
@@ -27,24 +27,24 @@ public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
-                      int parallelism) {
-    this(tSetEnv, "scompute", computeFunction, parallelism);
+                      int parallelism, Schema inputSchema) {
+    this(tSetEnv, "scompute", computeFunction, parallelism, inputSchema);
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
-                      int parallelism) {
-    this(tSetEnv, "scomputec", compOp, parallelism);
+                      int parallelism, Schema inputSchema) {
+    this(tSetEnv, "scomputec", compOp, parallelism, inputSchema);
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeFunc<O, I> computeFunction, int parallelism) {
-    super(tSetEnv, name, parallelism);
+                      ComputeFunc<O, I> computeFunction, int parallelism, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFunction;
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeCollectorFunc<O, I> compOp, int parallelism) {
-    super(tSetEnv, name, parallelism);
+                      ComputeCollectorFunc<O, I> compOp, int parallelism, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = compOp;
   }
 
@@ -55,15 +55,15 @@ public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   }
 
   @Override
-  public SComputeTSet<O, I> withDataType(MessageType dataType) {
-    return (SComputeTSet<O, I>) super.withDataType(dataType);
+  public SComputeTSet<O, I> withSchema(Schema schema) {
+    return (SComputeTSet<O, I>) super.withSchema(schema);
   }
 
   @Override
   public ICompute<I> getINode() {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<O, I>((ComputeFunc<O, I>) computeFunc, this,
+      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this,
           Collections.emptyMap());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,

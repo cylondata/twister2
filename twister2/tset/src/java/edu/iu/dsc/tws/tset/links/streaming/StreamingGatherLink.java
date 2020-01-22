@@ -15,11 +15,11 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
@@ -38,13 +38,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 public abstract class StreamingGatherLink<T>
     extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, MessageType dataType) {
-    this(env, n, sourceP, sourceP, dataType);
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+    this(env, n, sourceP, sourceP, schema);
   }
 
   StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
-                      MessageType dataType) {
-    super(env, n, sourceP, targetP, dataType);
+                      Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 /*  public <P> StreamingComputeTSet<P, Iterator<T>>
 computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
@@ -74,7 +74,7 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   @Override
   public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
     SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
     addChildToGraph(set);
     return set;
   }

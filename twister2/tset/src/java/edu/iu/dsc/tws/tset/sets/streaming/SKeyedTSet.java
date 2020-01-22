@@ -15,10 +15,11 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
@@ -36,8 +37,8 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFn,
-                    int parallelism) {
-    super(tSetEnv, "skeyed", parallelism);
+                    int parallelism, Schema inputSchema) {
+    super(tSetEnv, "skeyed", parallelism, inputSchema);
     this.mapToTupleFunc = mapFn;
   }
 
@@ -48,15 +49,9 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   }
 
   @Override
-  public SKeyedTSet<K, V> withDataType(MessageType dataType) {
-    return (SKeyedTSet<K, V>) super.withDataType(dataType);
+  public SKeyedTSet<K, V> withSchema(TupleSchema schema) {
+    return (SKeyedTSet<K, V>) super.withSchema(schema);
   }
-
-  @Override
-  public SKeyedTSet<K, V> withKeyType(MessageType keyType) {
-    return (SKeyedTSet<K, V>) super.withKeyType(keyType);
-  }
-
 
   @Override
   public ICompute getINode() {

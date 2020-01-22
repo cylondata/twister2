@@ -12,11 +12,11 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
@@ -31,24 +31,24 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFn,
-                     int parallelism) {
-    this(tSetEnv, "compute", computeFn, parallelism);
+                     int parallelism, Schema inputSchema) {
+    this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> computeFn,
-                     int parallelism) {
-    this(tSetEnv, "computec", computeFn, parallelism);
+                     int parallelism, Schema inputSchema) {
+    this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeFunc<O, I> computeFn,
-                     int parallelism) {
-    super(tSetEnv, name, parallelism);
+                     int parallelism, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, String name,
-                     ComputeCollectorFunc<O, I> computeFn, int parallelism) {
-    super(tSetEnv, name, parallelism);
+                     ComputeCollectorFunc<O, I> computeFn, int parallelism, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
@@ -63,8 +63,9 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
     return (ComputeTSet<O, I>) super.addInput(key, input);
   }
 
-  public ComputeTSet<O, I> withDataType(MessageType dataType) {
-    return (ComputeTSet<O, I>) super.withDataType(dataType);
+  @Override
+  public ComputeTSet<O, I> withSchema(Schema schema) {
+    return (ComputeTSet<O, I>) super.withSchema(schema);
   }
 
   @Override

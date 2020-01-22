@@ -14,10 +14,11 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
 
@@ -26,13 +27,13 @@ public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
 
   public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<Tuple<K, V>> src,
                           int parallelism) {
-    super(tSetEnv, "sksource", parallelism);
+    super(tSetEnv, "sksource", parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;
   }
 
   public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, String name,
                           SourceFunc<Tuple<K, V>> src, int parallelism) {
-    super(tSetEnv, name, parallelism);
+    super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;
   }
 
@@ -43,13 +44,8 @@ public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   }
 
   @Override
-  public SKeyedSourceTSet<K, V> withDataType(MessageType dataType) {
-    return (SKeyedSourceTSet<K, V>) super.withDataType(dataType);
-  }
-
-  @Override
-  public SKeyedSourceTSet<K, V> withKeyType(MessageType keyType) {
-    return (SKeyedSourceTSet<K, V>) super.withKeyType(keyType);
+  public SKeyedSourceTSet<K, V> withSchema(TupleSchema schema) {
+    return (SKeyedSourceTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

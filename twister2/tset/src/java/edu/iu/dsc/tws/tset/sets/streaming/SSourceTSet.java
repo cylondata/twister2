@@ -15,9 +15,10 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
@@ -25,13 +26,13 @@ public class SSourceTSet<T> extends StreamingTSetImpl<T> {
   private SourceFunc<T> source;
 
   public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, "ssource", parallelism);
+    super(tSetEnv, "ssource", parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }
 
   public SSourceTSet(StreamingTSetEnvironment tSetEnv, String name, SourceFunc<T> src,
                      int parallelism) {
-    super(tSetEnv, name, parallelism);
+    super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }
 
@@ -41,8 +42,8 @@ public class SSourceTSet<T> extends StreamingTSetImpl<T> {
     return this;
   }
 
-  public SSourceTSet<T> withDataType(MessageType dataType) {
-    return (SSourceTSet<T>) super.withDataType(dataType);
+  public SSourceTSet<T> withSchema(Schema schema) {
+    return (SSourceTSet<T>) super.withSchema(schema);
   }
 
   @Override

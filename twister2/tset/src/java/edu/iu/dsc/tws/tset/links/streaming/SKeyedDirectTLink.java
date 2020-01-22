@@ -12,21 +12,21 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public class SKeyedDirectTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
 
   public SKeyedDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
-                           MessageType keyType, MessageType dataType) {
+                           KeyedSchema schema) {
     // NOTE: key type is omitted. Check getEdge() method
-    super(tSetEnv, "skdirect", sourceParallelism, dataType);
+    super(tSetEnv, "skdirect", sourceParallelism, schema);
   }
 
   public SKeyedTSet<K, V> mapToTuple() {

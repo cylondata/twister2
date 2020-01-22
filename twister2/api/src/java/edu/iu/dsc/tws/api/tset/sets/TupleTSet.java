@@ -15,6 +15,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 
 /**
  * Twister data set for keyed data. This would abstract the Task level keyed computations in a
@@ -60,17 +61,8 @@ public interface TupleTSet<K, V> extends TBase {
    * Sets the data type of the {@link TupleTSet} output. This will be used in the packers for efficient
    * SER-DE operations in the following {@link TLink}s
    *
-   * @param dataType data type as a {@link MessageType}
+   * @param schema data type as a {@link MessageType}
    * @return this {@link TupleTSet}
    */
-  TupleTSet<K, V> withDataType(MessageType dataType);
-
-  /**
-   * Sets the data type of the {@link TupleTSet} output. This will be used in the packers for efficient
-   * SER-DE operations in the following {@link TLink}s
-   *
-   * @param keyType data type as a {@link MessageType}
-   * @return this {@link TupleTSet}
-   */
-  TupleTSet<K, V> withKeyType(MessageType keyType);
+  TupleTSet<K, V> withSchema(TupleSchema schema);
 }

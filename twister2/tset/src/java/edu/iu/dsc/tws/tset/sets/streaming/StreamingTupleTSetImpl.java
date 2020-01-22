@@ -12,14 +12,16 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
-import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 /**
  * Attaches a key to the oncoming data.
@@ -27,13 +29,12 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implements
+public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> implements
     StreamingTupleTSet<K, V> {
-  private MessageType kType = MessageTypes.OBJECT;
-  private MessageType dType = MessageTypes.OBJECT;
 
-  StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
-    super(tSetEnv, name, parallelism);
+  StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+                         Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema, PrimitiveSchemas.OBJECT_TUPLE2);
   }
 
   @Override
@@ -44,7 +45,7 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
   @Override
   public SKeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     SKeyedPartitionTLink<K, V> partition = new SKeyedPartitionTLink<>(getTSetEnv(), partitionFn,
-        getParallelism(), getKeyType(), getDataType());
+        getParallelism(), getOutputSchema());
     addChildToGraph(partition);
     return partition;
   }
@@ -52,28 +53,19 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
   @Override
   public SKeyedDirectTLink<K, V> keyedDirect() {
     SKeyedDirectTLink<K, V> direct = new SKeyedDirectTLink<>(getTSetEnv(), getParallelism(),
-        getKeyType(), getDataType());
+        getOutputSchema());
     addChildToGraph(direct);
     return direct;
   }
 
   @Override
-  public StreamingTupleTSetImpl<K, V> withDataType(MessageType dataType) {
-    this.dType = dataType;
+  public StreamingTupleTSetImpl<K, V> withSchema(TupleSchema schema) {
+    this.setOutputSchema(schema);
     return this;
-  }
-
-  protected MessageType getDataType() {
-    return this.dType;
   }
 
   @Override
-  public StreamingTupleTSetImpl<K, V> withKeyType(MessageType keyType) {
-    this.kType = keyType;
-    return this;
-  }
-
-  protected MessageType getKeyType() {
-    return this.kType;
+  protected KeyedSchema getOutputSchema() {
+    return (KeyedSchema) super.getOutputSchema();
   }
 }

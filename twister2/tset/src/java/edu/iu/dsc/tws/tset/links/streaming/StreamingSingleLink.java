@@ -13,11 +13,11 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
@@ -27,13 +27,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
 
-  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, MessageType dataType) {
-    super(env, n, sourceP, sourceP, dataType);
+  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+    super(env, n, sourceP, sourceP, schema);
   }
 
   StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
-                      MessageType dataType) {
-    super(env, n, sourceP, targetP, dataType);
+                      Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   @Override
@@ -54,7 +54,7 @@ public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
   @Override
   public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
     SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 

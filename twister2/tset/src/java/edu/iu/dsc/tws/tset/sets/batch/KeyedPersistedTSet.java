@@ -13,17 +13,19 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
 
   public KeyedPersistedTSet(BatchTSetEnvironment tSetEnv,
-                            SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism) {
-    super(tSetEnv, "kpersisted", storingSinkFn, parallelism);
+                            SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism,
+                            KeyedSchema inputSchema) {
+    super(tSetEnv, "kpersisted", storingSinkFn, parallelism, inputSchema);
   }
 
   @Override
@@ -37,13 +39,8 @@ public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
   }
 
   @Override
-  public KeyedPersistedTSet<K, V> withDataType(MessageType dataType) {
-    return (KeyedPersistedTSet<K, V>) super.withDataType(dataType);
-  }
-
-  @Override
-  public KeyedPersistedTSet<K, V> withKeyType(MessageType keyType) {
-    return (KeyedPersistedTSet<K, V>) super.withKeyType(keyType);
+  public KeyedPersistedTSet<K, V> withSchema(TupleSchema schema) {
+    return (KeyedPersistedTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

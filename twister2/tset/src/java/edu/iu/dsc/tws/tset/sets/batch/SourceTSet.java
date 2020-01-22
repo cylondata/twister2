@@ -25,9 +25,10 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
@@ -44,7 +45,7 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
   }
 
   public SourceTSet(BatchTSetEnvironment tSetEnv, String name, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, name, parallelism);
+    super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }
 
@@ -60,8 +61,8 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
   }
 
   @Override
-  public SourceTSet<T> withDataType(MessageType dataType) {
-    return (SourceTSet<T>) super.withDataType(dataType);
+  public SourceTSet<T> withSchema(Schema schema) {
+    return (SourceTSet<T>) super.withSchema(schema);
   }
 
   @Override

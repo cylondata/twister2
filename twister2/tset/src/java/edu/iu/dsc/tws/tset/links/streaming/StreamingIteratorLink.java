@@ -15,11 +15,11 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -29,13 +29,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterator<T>, T> {
 
-  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, MessageType dataType) {
-    this(env, n, sourceP, sourceP, dataType);
+  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+    this(env, n, sourceP, sourceP, schema);
   }
 
   StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
-                        MessageType dataType) {
-    super(env, n, sourceP, targetP, dataType);
+                        Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   @Override
@@ -58,7 +58,7 @@ public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterat
   @Override
   public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
     SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 

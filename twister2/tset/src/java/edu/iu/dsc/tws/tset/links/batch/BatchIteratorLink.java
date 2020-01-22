@@ -15,11 +15,11 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -29,13 +29,13 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, MessageType dataType) {
-    this(env, n, sourceP, sourceP, dataType);
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+    this(env, n, sourceP, sourceP, schema);
   }
 
   BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
-                    MessageType dataType) {
-    super(env, n, sourceP, targetP, dataType);
+                    Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected BatchIteratorLink() {
@@ -54,7 +54,7 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 

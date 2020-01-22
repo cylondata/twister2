@@ -15,9 +15,9 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 
@@ -30,8 +30,8 @@ public class SSinkTSet<T> extends StreamingTSetImpl<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s       The Sink function to be used
    */
-  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s) {
-    this(tSetEnv, s, 1);
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s, Schema inputSchema) {
+    this(tSetEnv, s, 1, inputSchema);
   }
 
   /**
@@ -41,8 +41,9 @@ public class SSinkTSet<T> extends StreamingTSetImpl<T> {
    * @param s           The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s, int parallelism) {
-    super(tSetEnv, "ssink", parallelism);
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s, int parallelism,
+                   Schema inputSchema) {
+    super(tSetEnv, "ssink", parallelism, inputSchema);
     this.sink = s;
   }
 
@@ -52,8 +53,8 @@ public class SSinkTSet<T> extends StreamingTSetImpl<T> {
     return this;
   }
 
-  public SSinkTSet<T> withDataType(MessageType dataType) {
-    return (SSinkTSet<T>) super.withDataType(dataType);
+  public SSinkTSet<T> withSchema(Schema schema) {
+    return (SSinkTSet<T>) super.withSchema(schema);
   }
 
   @Override
