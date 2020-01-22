@@ -29,6 +29,7 @@ import torch
 import torch.distributed as dist
 
 from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
+from twister2deepnet.deepnet.data.DataUtil import DataUtil
 
 
 class Net(nn.Module):
@@ -72,6 +73,7 @@ def average_accuracy(local_accuracy):
     global_accuracy = local_accuracy / size
     return global_accuracy
 
+
 def init_processes(rank, size, fn, backend='tcp',
                    train_data=None, train_target=None,
                    test_data=None, test_target=None,
@@ -83,7 +85,7 @@ def init_processes(rank, size, fn, backend='tcp',
     device = torch.device("cpu")
     print(rank, size)
     fn(world_rank=rank, world_size=size, train_data=train_data,
-       train_target=test_data, do_log=False)
+       train_target=train_target, do_log=False)
     # model1 = Net()
     # test(rank, model1, device)
     total_communication_time = 0
@@ -117,7 +119,7 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
     optimizer = optim.SGD(model.parameters(),
                           lr=0.01, momentum=0.5)
 
-    num_batches = ceil(len(train_data) / float(bsz))
+    num_batches = train_data.shape[1]
 
     if (world_rank == 0):
         print("Started Training")
@@ -126,17 +128,22 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
     total_steps = epochs * total_data
     local_time_communication = 0
     local_total_time_communication = 0
+    epochs = 1
 
-    for epoch in range(20):
+    for epoch in range(epochs):
         epoch_loss = 0.0
         count = 0
         for data, target in zip(train_data, train_target):
-            print("batch_size {}, data shape {} ".format(bsz, data.shape))
+            # print("Before: {} {} {} {} {} {}".format( data.shape, num_batches,
+            #                                           len(train_data),
+            #                                           len(train_data[0]), len(train_target),
+            #                                           target.shape))
             data = np.reshape(data, (data.shape[0], 1, data.shape[1], data.shape[2])) / 128.0
-            # print(
-            #     "Data Size {}({},{}) of Rank {} : target {}, {}".format(data.shape, (data[0].numpy().dtype), type(data),
-            #                                                             rank, target, len(target)))
-            # print(data[0], target[0])
+            # print("After: {} {} {} {} {} {}".format( data.shape, num_batches,
+            #                                           len(train_data),
+            #                                           len(train_data[0]), len(train_target),
+            #                                           target.shape))
+
             count = count + 1
             result = '{0:.4g}'.format((count / float(total_steps)) * 100.0)
             if (world_rank == 0):
@@ -160,6 +167,19 @@ def run(world_rank=0, world_size=4, train_data=None, train_target=None, do_log=F
     return model, local_total_time_communication
 
 
+def format_mnist_data(data=None):
+    data_shape = data.shape
+    img_size = int(sqrt(data_shape[2]))
+    data = np.reshape(data, (data_shape[0], data_shape[1], img_size, img_size))
+    return data
+
+
+def format_mnist_target(data=None):
+    data_shape = data.shape
+    data = np.reshape(data, (data_shape[0], data_shape[1]))
+    return data
+
+
 def format_data(input_data=None, world_size=4, init_batch_size=128):
     """
     Specific For MNIST and 3 dimensional data
@@ -169,25 +189,7 @@ def format_data(input_data=None, world_size=4, init_batch_size=128):
     :return: For numpy we reshape this and return a tensor of the shape, (N, sqrt(M), sqrt(M))
     """
     bsz = int(init_batch_size / float(world_size))
-    data_shape = input_data.shape
-    num_batches = ceil(data_shape[0] / float(bsz))
-    """
-        TODO: NOW write a custom class or method to do the following:
-            Look total data and create mini-batches
-            Each mini-batch has a user-defined batch size
-            For instance 15,000 data divided for batch size 32
-            There can 469 partitions. 
-            But we cannot use re-shape
-            create 468 * 32 = 14976 ( 468 batches)
-            and create the 469 batch with re-using already used values 
-            with the remaining values 15000-14976=24
-            So adding 8 extra values from existing data 
-            do this randomly
-            take a look at the code of Pytorch how they do it.  
-    """
-
-    data = np.reshape(input_data, (data_shape[0], int(sqrt(data_shape[1])), int(sqrt(data_shape[1]))))
-    print("format : ",data_shape, num_batches, data.shape, bsz)
+    data = DataUtil.generate_minibatches(data=input_data, minibatch_size=bsz)
     return data
 
 
@@ -228,23 +230,27 @@ test_target_file = str(world_rank) + ".target"
 ## load train data
 train_data = read_from_disk(source_file=train_data_file, source_path=train_data_save_path)
 train_data = format_data(input_data=train_data, world_size=world_size, init_batch_size=128)
+train_data = format_mnist_data(data=train_data)
 ## load test data
 test_data = read_from_disk(source_file=test_data_file, source_path=test_data_save_path)
-test_data = format_data(input_data=test_data, world_size=world_size, init_batch_size=16 )
+test_data = format_data(input_data=test_data, world_size=world_size, init_batch_size=16)
+test_data = format_mnist_data(data=test_data)
 ## load train target
 train_target = read_from_disk(source_file=train_target_file, source_path=train_data_save_path)
 train_target = format_data(input_data=train_target, world_size=world_size, init_batch_size=128)
+train_target = format_mnist_target(data=train_target)
 ## load test target
 test_target = read_from_disk(source_file=test_target_file, source_path=test_data_save_path)
 test_target = format_data(input_data=test_target, world_size=world_size, init_batch_size=16)
+test_target = format_mnist_target(data=test_target)
 
-#print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
+print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
 do_log = True
 
 # initialize training
-# init_processes(rank=world_rank, size=world_size, fn=run, backend='mpi',
-#                train_data=train_data, train_target=train_target,
-#                test_data=test_data, test_target=test_target,
-#                do_log=do_log)
+init_processes(rank=world_rank, size=world_size, fn=run, backend='mpi',
+               train_data=train_data, train_target=train_target,
+               test_data=test_data, test_target=test_target,
+               do_log=do_log)
 
