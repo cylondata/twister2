@@ -11,26 +11,17 @@
 #  // limitations under the License.
 
 import os
+import requests
 
 
-class FileUtils:
+class Downloader:
 
-    """
-    TODO: refactor directory definitions
-    """
+    def __init__(self, url=None, save_path=None, file_name=None):
+        self.url = url
+        self.save_path = save_path
+        self.file_name = file_name
 
-    @staticmethod
-    def mkdir(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
-
-    @staticmethod
-    def mkdir_with_access(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
+    def download(self):
+        print("Downloading from {}".format(self.url))
+        file = requests.get(self.url)
+        open(os.path.join(self.save_path, self.file_name), 'wb').write(file.content)

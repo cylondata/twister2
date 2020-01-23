@@ -92,6 +92,3 @@ save_to_disk(data_set=test_targetset, save_path=test_data_save_path, save_file=t
 # print(type(train_dataset), len(train_dataset), dataframe.shape, world_rank, world_size, type(table))
 print(type(train_dataset), type(test_dataset), type(train_targetset), type(test_targetset))
 
-###############################################
-########## Pytorch Data Processing ###########
-##############################################

@@ -17,7 +17,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="twister2-deepnet-test", # Replace with your own username
-    version="0.0.2",
+    version="0.0.4",
     author="Vibhatha Abeykoon",
     author_email="vibhatha@gmail.com",
     description="Test Twister2 DeepNet",

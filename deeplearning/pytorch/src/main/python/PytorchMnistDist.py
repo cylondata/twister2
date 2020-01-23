@@ -312,7 +312,7 @@ test_target = format_mnist_target(data=test_target)
 
 #print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
-do_log = True
+do_log = False
 
 # initialize training
 launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,

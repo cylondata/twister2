@@ -10,27 +10,10 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-import os
+from twister2deepnet.deepnet.exception.internal import NotImplemented
 
 
-class FileUtils:
+class Dataset(object):
 
-    """
-    TODO: refactor directory definitions
-    """
-
-    @staticmethod
-    def mkdir(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
-
-    @staticmethod
-    def mkdir_with_access(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
+    def __getitem__(self, index):
+        raise NotImplemented

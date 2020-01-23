@@ -10,27 +10,15 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-import os
+
+class RuntimeError(Exception):
+    """ Unspecified run-time error. """
+    def __init__(self, *args, **kwargs): # real signature unknown
+        pass
 
 
-class FileUtils:
+class NotImplemented(RuntimeError):
+    """ Unspecified not-implemented error. """
+    def __init__(self, *args, **kwargs): # real signature unknown
+        pass
 
-    """
-    TODO: refactor directory definitions
-    """
-
-    @staticmethod
-    def mkdir(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
-
-    @staticmethod
-    def mkdir_with_access(dir_path=None):
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path, 0o777)
-            print("Directory Created")
-        else:
-            print("Director Exists")
