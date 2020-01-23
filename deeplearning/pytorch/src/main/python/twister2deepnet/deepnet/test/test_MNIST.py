@@ -10,21 +10,10 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
+from twister2deepnet.deepnet.datasets.MNIST import MNIST
 
-class RuntimeError(Exception):
-    """ Runtime error. """
-    def __init__(self, *args, **kwargs):
-        pass
+mnist = MNIST(dir='/tmp/twister2deepnet/mnist/', train=True, transform=None)
 
+mnist.download()
 
-class ParameterError(Exception):
-    """ Incompatible and Mismatching related errors"""
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-class NotImplemented(RuntimeError):
-    """ NotImplemented error. """
-    def __init__(self, *args, **kwargs):
-        pass
 

@@ -10,8 +10,13 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-from twister2deepnet.examples.MnistDistributedExample import MnistDistributedExample
+from twister2deepnet.deepnet.datasets.MNIST import MNIST
 
-mniste = MnistDistributedExample()
+mnist_train = MNIST(source_dir='/tmp/twister2deepnet/mnist/train/', train=True, transform=None)
 
-mniste.load_train_data()
+mnist_train.download()
+
+
+mnist_test = MNIST(source_dir='/tmp/twister2deepnet/mnist/test/', train=False, transform=None)
+
+mnist_test.download()

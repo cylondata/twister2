@@ -10,21 +10,3 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-
-class RuntimeError(Exception):
-    """ Runtime error. """
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-class ParameterError(Exception):
-    """ Incompatible and Mismatching related errors"""
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-class NotImplemented(RuntimeError):
-    """ NotImplemented error. """
-    def __init__(self, *args, **kwargs):
-        pass
-

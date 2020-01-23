@@ -16,12 +16,8 @@ import requests
 
 class Downloader:
 
-    def __init__(self, url=None, save_path=None, file_name=None):
-        self.url = url
-        self.save_path = save_path
-        self.file_name = file_name
-
-    def download(self):
-        print("Downloading from {}".format(self.url))
-        file = requests.get(self.url)
-        open(os.path.join(self.save_path, self.file_name), 'wb').write(file.content)
+    @staticmethod
+    def download(url, save_path, file_name):
+        print("Downloading from {}".format(url))
+        file = requests.get(url)
+        open(os.path.join(save_path, file_name), 'wb').write(file.content)
