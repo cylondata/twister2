@@ -53,10 +53,12 @@ public class ComputeExample extends BatchTsetExample {
             s += input.next();
           }
           return s;
-        }).withSchema(PrimitiveSchemas.STRING).setName("sum");
+        }).withSchema(PrimitiveSchemas.INTEGER).setName("sum");
 
 
     sum.direct().forEach(data -> System.out.println("val: " + data));
+
+    sum.reduce(Integer::sum).forEach(i -> System.out.println("red: " + i));
   }
 
 
