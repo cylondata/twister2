@@ -55,6 +55,7 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
                    Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
                    TupleTSet rightT, JoinSchema joinSchema) {
     super(env, "join", ((BuildableTSet) leftT).getParallelism(), joinSchema);
+    this.joinType = type;
     this.leftTSet = leftT;
     this.rightTSet = rightT;
     this.keyComparator = kComparator;
