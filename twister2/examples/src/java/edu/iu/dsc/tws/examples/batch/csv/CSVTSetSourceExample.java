@@ -50,18 +50,17 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     /*SourceTSet<String> lines = env.createSource("hello", new CSVSource("/tmp/dinput0"), 2);*/
-    SourceTSet<Object> lines = env.createSource(new CSVBasedSourceFunction(
+    SourceTSet<String> lines = env.createSource(new CSVBasedSourceFunction(
         "/tmp/dinput0", 100), 2);
     LOG.info("retrieved input lines are:" + lines);
-    lines.direct().map((MapFunc<Integer[], Object>) i -> null).direct().forEach(
-        i -> LOG.info("out" + Arrays.deepToString(i)));
-
-    /*lines.direct().map((MapFunc<Integer[], String[]>) i -> null).direct().forEach(i -> LOG.info(
-        "out" + Arrays.toString(i)));*/
+    lines.direct().map((MapFunc<Integer[], String>) i -> null).direct().forEach(
+        i -> LOG.info("out" + Arrays.toString(i)));
+    /*lines.direct().map((MapFunc<Integer[], String[]>) i -> null).direct().forEach(
+        i -> LOG.info("out" + Arrays.toString(i)));*/
   }
 
   public static void main(String[] args) throws Exception {
-    LOG.log(Level.INFO, "Starting wordcount Job");
+    LOG.log(Level.INFO, "Starting CSV Source Job");
 
     Options options = new Options();
     options.addOption("parallelism", true, "Parallelism");

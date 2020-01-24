@@ -114,6 +114,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
         inputSplits.add(fis);
       }
     }
+    LOG.info("%%%%%%% input splits size: %%%%%%%%%" + inputSplits.size());
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 

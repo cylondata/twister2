@@ -46,41 +46,27 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
         new Path(datainputDirectory), context.getParallelism(), dataSize, context.getConfig()),
         context.getParallelism());
     this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
-    LOG.info("%%%% task index value:"
-        + context.getIndex() + "\t" + this.dataSource + "\t" + this.dataSplit);
+    LOG.info("%%%% task index value:" + context.getIndex() + "\t" + this.dataSource);
   }
 
   @Override
   public boolean hasNext() {
-    /*try {
+    try {
       if (dataSplit == null || dataSplit.reachedEnd()) {
         dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
       }
       return dataSplit != null && !dataSplit.reachedEnd();
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
-    }*/
-    try {
-      if (dataSplit == null) {
-        return false;
-      }
-      if (dataSplit.reachedEnd()) {
-       //dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
-        dataSplit = dataSource.getNextSplit(this.ctx.getIndex());
-        LOG.info("%%%% DataSplit Values: %%%%" + dataSplit);
-        if (dataSplit == null) {
-          return false;
-        }
-      }
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to use the input split", e);
     }
-    return true;
   }
 
   @Override
   public T next() {
     try {
+//      Object object = dataSplit.nextRecord(null);
+//      LOG.info("next object is:" + object);
+//      return (T) object;
       return dataSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
