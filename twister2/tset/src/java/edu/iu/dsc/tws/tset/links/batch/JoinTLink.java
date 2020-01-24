@@ -137,11 +137,10 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     graphBuilder.connect(s.getId(), t.getId(), e);
   }
 
-//  public JoinTLink<K, VL, VR> useHashAlgorithm(MessageType keyType) {
-//    this.algorithm = CommunicationContext.JoinAlgorithm.HASH;
-//    this.kType = keyType;
-//    return this;
-//  }
+  public JoinTLink<K, VL, VR> useHashAlgorithm() {
+    this.algorithm = CommunicationContext.JoinAlgorithm.HASH;
+    return this;
+  }
 
   public JoinTLink<K, VL, VR> useDisk() {
     this.useDisk = true;
