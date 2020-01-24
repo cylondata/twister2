@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
@@ -31,18 +32,20 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
 
   private boolean useDisk = false;
 
-  public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism, null);
+  public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism,
+                                   KeyedSchema schema) {
+    this(tSetEnv, null, sourceParallelism, null, schema);
   }
 
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                                   int sourceParallelism) {
-    this(tSetEnv, partitionFn, sourceParallelism, null);
+                                   int sourceParallelism, KeyedSchema schema) {
+    this(tSetEnv, partitionFn, sourceParallelism, null, schema);
   }
 
   public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                                   int sourceParallelism, Comparator<K> keyCompartor) {
-    super(tSetEnv, "kgather", sourceParallelism);
+                                   int sourceParallelism, Comparator<K> keyCompartor,
+                                   KeyedSchema schema) {
+    super(tSetEnv, "kgather", sourceParallelism, schema);
     this.partitionFunction = partitionFn;
     this.keyCompartor = keyCompartor;
   }
@@ -54,8 +57,9 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, this.getSchema().getDataType());
     e.setKeyed(true);
+    e.setKeyType(this.getSchema().getKeyType());
     e.setPartitioner(partitionFunction);
     e.addProperty(CommunicationContext.SORT_BY_KEY, this.keyCompartor != null);
     e.addProperty(CommunicationContext.GROUP_BY_KEY, this.groupByKey);

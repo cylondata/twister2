@@ -15,17 +15,19 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
 public class SDirectTLink<T> extends StreamingSingleLink<T> {
 
-  public SDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "sdirect", sourceParallelism);
+  public SDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
+                      Schema schema) {
+    super(tSetEnv, "sdirect", sourceParallelism, schema);
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    return new Edge(getId(), OperationNames.DIRECT, this.getSchema().getDataType());
   }
 
   @Override

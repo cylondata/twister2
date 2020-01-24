@@ -14,11 +14,7 @@ package edu.iu.dsc.tws.tset.links;
 
 import java.util.Objects;
 
-import com.google.common.reflect.TypeToken;
-
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 /**
@@ -80,17 +76,6 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   protected void rename(String n) {
     this.name = n;
-  }
-
-  protected Class getType() {
-    TypeToken<T1> typeToken = new TypeToken<T1>(getClass()) {
-    };
-    return typeToken.getRawType();
-  }
-
-  //todo: this always return Object type!!!
-  protected MessageType getMessageType() {
-    return TSetUtils.getDataType(getType());
   }
 
   protected void addChildToGraph(TBase child) {
