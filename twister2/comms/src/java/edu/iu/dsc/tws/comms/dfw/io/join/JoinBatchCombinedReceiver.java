@@ -85,7 +85,7 @@ public class JoinBatchCombinedReceiver {
         return SortJoinUtils.join(
             (List<Tuple>) left,
             (List<Tuple>) right,
-            keyComparator, joinType).iterator();
+            keyComparator, joinType);
       } else {
         throw new Twister2RuntimeException("Unsupported data formats received from sources : "
             + left.getClass());
@@ -104,7 +104,7 @@ public class JoinBatchCombinedReceiver {
             (List<Tuple>) right,
             joinType,
             keyType
-        ).iterator();
+        );
       } else {
         throw new Twister2RuntimeException("Unsupported data formats received from sources");
       }
