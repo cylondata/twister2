@@ -18,6 +18,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 
 /**
  * This is the runtime context for a {@link edu.iu.dsc.tws.api.tset.sets.TSet}. This
@@ -70,6 +71,10 @@ public class TSetContext implements Serializable {
    * Configuration
    */
   private Config config;
+
+  private transient Schema inSchema;
+
+  private transient Schema outSchema;
 
   /**
    * Creates and empty TSet Context
@@ -192,6 +197,24 @@ public class TSetContext implements Serializable {
   }
 
   /**
+   * Returns the input schema of the {@link edu.iu.dsc.tws.api.tset.sets.TSet}
+   *
+   * @return input schema
+   */
+  public Schema getInputSchema() {
+    return inSchema;
+  }
+
+  /**
+   * Returns the output schema of the {@link edu.iu.dsc.tws.api.tset.sets.TSet}
+   *
+   * @return output schema
+   */
+  public Schema getOutputSchema() {
+    return outSchema;
+  }
+
+  /**
    * Adds a input object into the map
    *
    * @param key  the key to be associated with the input object
@@ -256,6 +279,8 @@ public class TSetContext implements Serializable {
     setConfig(conf);
     settSetIndex(taskCtx.taskIndex());
     setWorkerId(taskCtx.getWorkerId());
+    setInSchema((Schema) taskCtx.getConfig(TSetConstants.INPUT_SCHEMA_KEY));
+    setOutputSchema((Schema) taskCtx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY));
   }
 
   private void setWorkerId(int workerId) {
@@ -268,5 +293,13 @@ public class TSetContext implements Serializable {
 
   private void settSetIndex(int tSetIndex) {
     this.tSetIndex = tSetIndex;
+  }
+
+  private void setInSchema(Schema inputSchema) {
+    this.inSchema = inputSchema;
+  }
+
+  private void setOutputSchema(Schema ouputSchema) {
+    this.outSchema = ouputSchema;
   }
 }

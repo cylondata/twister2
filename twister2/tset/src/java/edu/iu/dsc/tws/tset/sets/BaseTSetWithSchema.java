@@ -54,11 +54,11 @@ public abstract class BaseTSetWithSchema<T> extends BaseTSet<T> {
     this.outSchema = outputSchema;
   }
 
-  protected Schema getOutputSchema() {
+  public Schema getOutputSchema() {
     return this.outSchema;
   }
 
-  protected Schema getInputSchema() {
+  public Schema getInputSchema() {
     return this.inSchema;
   }
 }

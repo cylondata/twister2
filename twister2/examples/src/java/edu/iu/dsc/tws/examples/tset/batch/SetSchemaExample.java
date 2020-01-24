@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
@@ -42,6 +43,12 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
       private int i = 0;
 
       @Override
+      public void prepare(TSetContext ctx) {
+        super.prepare(ctx);
+        LOG.info("schemas0: " + ctx.getInputSchema() + " -> " + ctx.getOutputSchema());
+      }
+
+      @Override
       public boolean hasNext() {
         return i == 0;
       }
@@ -59,6 +66,12 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
     ComputeTSet<String, Integer> map = src.allReduce(Integer::sum).map(
         new BaseMapFunc<String, Integer>() {
           @Override
+          public void prepare(TSetContext ctx) {
+            super.prepare(ctx);
+            LOG.info("schemas1: " + ctx.getInputSchema() + " -> " + ctx.getOutputSchema());
+          }
+
+          @Override
           public String map(Integer input) {
             return input.toString();
           }
@@ -71,6 +84,12 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
 
     KeyedTSet<String, Integer> keyed = map.mapToTuple(
         new BaseMapFunc<Tuple<String, Integer>, String>() {
+          @Override
+          public void prepare(TSetContext ctx) {
+            super.prepare(ctx);
+            LOG.info("schemas2: " + ctx.getInputSchema() + " -> " + ctx.getOutputSchema());
+          }
+
           @Override
           public Tuple<String, Integer> map(String input) {
             return new Tuple<>(input, Integer.parseInt(input));

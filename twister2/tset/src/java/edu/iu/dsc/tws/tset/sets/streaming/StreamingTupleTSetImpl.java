@@ -65,7 +65,7 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSetWithSchema<V>
   }
 
   @Override
-  protected KeyedSchema getOutputSchema() {
+  public KeyedSchema getOutputSchema() {
     return (KeyedSchema) super.getOutputSchema();
   }
 }

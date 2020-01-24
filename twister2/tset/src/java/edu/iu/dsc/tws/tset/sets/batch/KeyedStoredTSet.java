@@ -154,7 +154,7 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
   }
 
   @Override
-  protected KeyedSchema getInputSchema() {
+  public KeyedSchema getInputSchema() {
     return (KeyedSchema) super.getInputSchema();
   }
 }
