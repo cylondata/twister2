@@ -166,6 +166,7 @@ class MNIST(Dataset):
         :param label_save_path: MNIST label save path as npy
         """
         images, labels = loadlocal_mnist(images_path=image_path, labels_path=label_path)
+
         self._image_data = images
         self._label_data = labels
         self._image_data_path = image_save_path

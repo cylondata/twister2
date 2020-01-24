@@ -40,6 +40,8 @@ env = Twister2Environment(resources=[{"cpu": 1, "ram": 512, "instances": 4}])
 world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
 world_rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
 
+__data_folder = '/tmp/twister2deepnet/mnist/'
+
 train_data_save_path = "/tmp/parquet/train/"
 test_data_save_path = "/tmp/parquet/test/"
 
@@ -49,8 +51,8 @@ train_target_file = str(world_rank) + ".target"
 test_target_file = str(world_rank) + ".target"
 
 if world_rank == 0:
-    FileUtils.mkdir(train_data_save_path)
-    FileUtils.mkdir(test_data_save_path)
+    FileUtils.mkdir_branch_with_access(train_data_save_path)
+    FileUtils.mkdir_branch_with_access(test_data_save_path)
 
 
 def save_to_disk(data_set=None, save_path=None, save_file=None):
@@ -68,7 +70,7 @@ def save_to_disk(data_set=None, save_path=None, save_file=None):
         ArrowUtils.write_to_table(table=table, save_path=save_path + save_file)
 
 
-mniste = MnistDistributed(parallelism=world_size, rank=world_rank)
+mniste = MnistDistributed(source_dir=__data_folder, parallelism=world_size, world_rank=world_rank)
 
 train_set_data, train_set_target, bsz = mniste.load_train_data()
 test_set_data, test_set_target, bsz = mniste.load_test_data()
@@ -78,6 +80,7 @@ train_dataset = train_set_data.dataset
 test_dataset = test_set_data.dataset
 train_targetset = train_set_target.dataset
 test_targetset = test_set_target.dataset
+
 
 # Creating Pandas Data Frame and write to disk with Arrow in Parquet Format
 ## save train data
@@ -89,6 +92,4 @@ save_to_disk(data_set=test_dataset, save_path=test_data_save_path, save_file=tes
 ## save test labels
 save_to_disk(data_set=test_targetset, save_path=test_data_save_path, save_file=test_target_file)
 
-# print(type(train_dataset), len(train_dataset), dataframe.shape, world_rank, world_size, type(table))
-print(type(train_dataset), type(test_dataset), type(train_targetset), type(test_targetset))
-
+#print(type(train_dataset), len(train_dataset), world_rank, world_size)

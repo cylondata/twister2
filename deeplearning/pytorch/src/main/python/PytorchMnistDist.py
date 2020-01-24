@@ -205,6 +205,9 @@ def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log
                 print("Progress {}% \r".format(result), end='\r')
             optimizer.zero_grad()
             output = model(data)
+            # this comes with data loading mechanism use target or target.long()
+            # depending on network specifications.
+            target = target.long()
             loss = F.nll_loss(output, target)
             epoch_loss += loss.item()
             # print(epoch_loss)
@@ -312,7 +315,12 @@ test_target = format_mnist_target(data=test_target)
 
 #print(train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
+#print(train_data.shape, train_data[0][0][0:5][0:5])
+
+
 do_log = False
+
+#print("worker {} , data {} ".format(world_rank, train_target[0]))
 
 # initialize training
 launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,
