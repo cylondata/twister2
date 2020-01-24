@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.DataContext;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
@@ -329,11 +330,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     final FileSystem fileSystem;
     try {
       fileSystem = FileSystemUtils.get(path);
-      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
+      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+          DataContext.TWISTER2_HDFS_FILESYSTEM)) {
         final FileStatus pathFile = fileSystem.getFileStatus(path);
         inputDataList.add(String.valueOf(pathFile.getPath()));
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
-          Context.TWISTER2_LOCAL_FILESYSTEM)) {
+          DataContext.TWISTER2_LOCAL_FILESYSTEM)) {
         for (FileStatus file : fileSystem.listFiles(path)) {
           String filename = String.valueOf(file.getPath());
           if (filename != null) {

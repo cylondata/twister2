@@ -49,14 +49,16 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   private FSDataOutputStream outputStream;
 
-  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config config) {
-    this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, config, "UTF-8");
+  private Config config;
+
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config cfg) {
+    this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, cfg, "UTF-8");
   }
 
   public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, String linedelimiter,
-                         String fielddelimiter, String tabdelimiter, Config config,
+                         String fielddelimiter, String tabdelimiter, Config cfg,
                          String charsetName) {
-    super(writeMode, outPath);
+    super(writeMode, outPath, cfg);
 
     if (linedelimiter == null) {
       throw new Twister2RuntimeException("line delimiter shouldn't be null");
@@ -74,6 +76,7 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
     }
     this.allowedNullValues = false;
     this.path = outPath;
+    this.config = cfg;
   }
 
   public boolean isAllowedNullValues() {

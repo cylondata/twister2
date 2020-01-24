@@ -2,6 +2,14 @@ package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib")
 
+# when local runner is imported, it need some of the core dependencies
+
+other_deps = [
+    "//twister2/common/src/java:common-java",
+    "//twister2/comms/src/java:comms-java",
+    "//twister2/proto/utils:proto-utils-java",
+]
+
 t2_java_lib(
     name = "local-runner-java",
     srcs = glob(["**/*.java"]),
@@ -15,5 +23,5 @@ t2_java_lib(
         "//twister2/executor/src/java:executor-java",
         "//twister2/proto:proto-java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
-    ],
+    ] + other_deps,
 )

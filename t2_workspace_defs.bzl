@@ -5,10 +5,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 _MAVEN_MIRRORS = [
-    "http://repo1.maven.org/maven2/",
-    "http://maven.ibiblio.org/maven2/",
-    "http://repo.exist.com/maven2/",
-    "http://www.ibiblio.net/pub/packages/maven2/",
+    "https://repo1.maven.org/maven2/",
+    "https://repo.maven.apache.org/maven2/",
+    "https://maven.google.com",
 ]
 
 deps = []

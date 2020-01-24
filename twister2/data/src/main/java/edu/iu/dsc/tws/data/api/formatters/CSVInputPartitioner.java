@@ -73,7 +73,7 @@ public abstract class CSVInputPartitioner<OT> implements InputPartitioner<OT, Fi
 
     // get all the files that are involved in the splits
     List<FileStatus> files = new ArrayList<>();
-    final FileSystem fs = FileSystemUtils.get(path);
+    final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     long totalLength = 0;

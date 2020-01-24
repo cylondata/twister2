@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.rsched.uploaders.s3;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 
 public final class S3Context {
 
@@ -25,18 +24,6 @@ public final class S3Context {
       = "twister2.s3.link.expiration.duration.sec";
 
   private S3Context() { }
-
-  public static String uploaderScript(Config config) {
-    return Context.twister2Home(config) + "/conf/scripts/s3Uploader.sh";
-  }
-
-  public static String urlGenScript(Config config) {
-    return Context.twister2Home(config) + "/conf/scripts/s3UrlGen.sh";
-  }
-
-  public static String removerScript(Config config) {
-    return Context.twister2Home(config) + "/conf/scripts/s3Remover.sh";
-  }
 
   public static String s3BucketName(Config config) {
     return config.getStringValue(S3_BUCKET_NAME);
