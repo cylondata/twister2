@@ -78,6 +78,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   public <T> SourceTSet<T> createCSVSource(String name, SourceFunc<T> source, int parallelism) {
     SourceTSet<T> sourceT = new SourceTSet<>(this, name, source, parallelism);
     getGraph().addSourceTSet(sourceT);
+
     return sourceT;
   }
 

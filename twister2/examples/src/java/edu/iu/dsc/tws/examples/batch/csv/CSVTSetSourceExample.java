@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.examples.batch.csv;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,11 +35,12 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.sources.CSVSource;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
@@ -47,9 +49,15 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput0",
-        new CSVSource<>("/tmp/dinput0"), 2);
-    LOG.info("%%%% Lines are:%%%%" + lines.getName());
+    /*SourceTSet<String> lines = env.createSource("hello", new CSVSource("/tmp/dinput0"), 2);*/
+    SourceTSet<Object> lines = env.createSource(new CSVBasedSourceFunction(
+        "/tmp/dinput0", 100), 2);
+    LOG.info("retrieved input lines are:" + lines);
+    lines.direct().map((MapFunc<Integer[], Object>) i -> null).direct().forEach(
+        i -> LOG.info("out" + Arrays.deepToString(i)));
+
+    /*lines.direct().map((MapFunc<Integer[], String[]>) i -> null).direct().forEach(i -> LOG.info(
+        "out" + Arrays.toString(i)));*/
   }
 
   public static void main(String[] args) throws Exception {
