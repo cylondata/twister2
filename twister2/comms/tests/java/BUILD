@@ -17,6 +17,8 @@ java_library(
         "//third_party/java:powermock",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
