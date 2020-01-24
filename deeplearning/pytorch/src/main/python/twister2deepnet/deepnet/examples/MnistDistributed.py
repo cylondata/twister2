@@ -35,18 +35,22 @@
 #  // limitations under the License.
 
 from twister2deepnet.deepnet.data.DataLoader import DataLoader
+from twister2deepnet.deepnet.exception.internal import ParameterError
 
 
 class MnistDistributed:
 
-    def __init__(self, parallelism, rank):
+    def __init__(self, source_dir=None, parallelism=4, world_rank=0):
         """
-
         :param parallelism: total process parallelism in data loading
-        :param rank: current process id or MPI RANK
+        :param world_rank: current process id or MPI RANK
         """
+        if source_dir is None:
+            raise ParameterError("Source directory must be specified")
+
+        self.source_dir = source_dir
         self.parallelism = parallelism
-        self.rank = rank
+        self.rank = world_rank
 
     def load_train_data(self):
         """
@@ -57,7 +61,8 @@ class MnistDistributed:
                 train_y: label of training data
                 batch_size: number of elements per batch
         """
-        dl = DataLoader()
+        dl = DataLoader(dataset="mnist", source_dir=self.source_dir, destination_dir=None,
+                        transform=None)
         train_x, train_y, batch_size = dl.partition_numpy_dataset(self.parallelism, self.rank)
         return train_x, train_y, batch_size
 
@@ -70,14 +75,10 @@ class MnistDistributed:
                 train_y: label of training data
                 batch_size: number of elements per batch
         """
-        dl = DataLoader()
+        dl = DataLoader(dataset="mnist", source_dir=self.source_dir, destination_dir=None,
+                        transform=None)
         test_x, test_y, batch_size = dl.partition_numpy_dataset_test(self.parallelism, self.rank)
         return test_x, test_y, batch_size
-
-
-
-
-
 
 #
 # if __name__ == "__main__":

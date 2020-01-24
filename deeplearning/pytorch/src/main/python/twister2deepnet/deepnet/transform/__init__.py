@@ -10,16 +10,3 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 
-from twister2.Twister2Environment import Twister2Environment
-from twister2.tset.fn.SourceFunc import SourceFunc
-
-
-
-class Twister2Mnist:
-
-    def __init__(self):
-        self.data_train_path = ""
-        self.data_test_path = ""
-        self.target_train_path = ""
-        self.target_test_path = ""
-

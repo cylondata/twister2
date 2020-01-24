@@ -35,29 +35,45 @@
 #  // limitations under the License.
 
 """ Dataset partitioning helper """
+
+import os
 import numpy as np
 import torch
 
 from twister2deepnet.deepnet.data.DataPartitioner import DataPartitioner
+from twister2deepnet.deepnet.datasets.MNIST import MNIST
+from twister2deepnet.deepnet.exception.internal import ParameterError
 
 
 class DataLoader:
 
-    def __init__(self):
-        """
-        TODO: Need to replace this with a remote data repository
-         'MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
-         'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
-         'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
-         'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
-         'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
+    def __init__(self, dataset="mnist", source_dir=None, destination_dir=None,
+                 transform=None):
         """
 
-        self.__TRAIN_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_data.npy"
-        self.__TRAIN_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_target.npy"
+        """
+        if source_dir is None:
+            raise ParameterError("Source directory must be specified")
+        else:
+            self.source_dir = source_dir
+        if destination_dir is None:
+            self.destination_dir = self.source_dir
+        else:
+            self.destination_dir = destination_dir
+        self.log = False
+        self.dataset = dataset
+        self.transform = transform
 
-        self.__TEST_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_data.npy"
-        self.__TEST_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_target.npy"
+        self.train_save_files = None
+        self.test_save_files = None
+
+        self.__set_file_paths()
+
+        # self.__TRAIN_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_data.npy"
+        # self.__TRAIN_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/train_target.npy"
+        #
+        # self.__TEST_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_data.npy"
+        # self.__TEST_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_target.npy"
 
     def partition_numpy_dataset(self, world_size=4, world_rank=0):
         """
@@ -73,8 +89,8 @@ class DataLoader:
         targets = np.load(self.__TRAIN_TARGET_FILE_PATH)
         bsz = int(128 / float(world_size))
         partition_sizes = [1.0 / world_size for _ in range(world_size)]
-        #print("World Info {}/{}".format(world_rank, world_size))
-        #print("Partition Sizes {}".format(partition_sizes))
+        # print("World Info {}/{}".format(world_rank, world_size))
+        # print("Partition Sizes {}".format(partition_sizes))
         partition_data = DataPartitioner(dataset, partition_sizes)
         partition_data = partition_data.use(world_rank)
         train_set_data = torch.utils.data.DataLoader(partition_data,
@@ -87,7 +103,7 @@ class DataLoader:
                                                        shuffle=False)
         return train_set_data, train_set_target, bsz
 
-    def partition_numpy_dataset_test(self, world_size=0, world_rank=4):
+    def partition_numpy_dataset_test(self, world_size=4, world_rank=0):
         """
         TODO: Make this a dynamic implementation
         :param world_size:
@@ -98,7 +114,6 @@ class DataLoader:
         dataset = np.load(self.__TEST_DATA_FILE_PATH)
         targets = np.load(self.__TEST_TARGET_FILE_PATH)
         # print("Data Size For Test {} {}".format(dataset.shape, targets.shape))
-
 
         bsz = int(16 / float(world_size))
         partition_sizes = [1.0 / world_size for _ in range(world_size)]
@@ -116,3 +131,19 @@ class DataLoader:
                                                        batch_size=bsz,
                                                        shuffle=False)
         return train_set_data, train_set_target, bsz
+
+    def __set_file_paths(self):
+        if self.dataset == 'mnist':
+            self.train_save_files = MNIST.train_save_files()
+            self.test_save_files = MNIST.test_save_files()
+            self.__TRAIN_DATA_FILE_PATH = os.path.join(self.source_dir, "train",
+                                                       self.train_save_files[0])
+            self.__TRAIN_TARGET_FILE_PATH = os.path.join(self.source_dir, "train",
+                                                         self.train_save_files[1])
+
+            self.__TEST_DATA_FILE_PATH = os.path.join(self.source_dir, "test",
+                                                      self.test_save_files[0])
+            self.__TEST_TARGET_FILE_PATH = os.path.join(self.source_dir, "test",
+                                                        self.test_save_files[1])
+
+
