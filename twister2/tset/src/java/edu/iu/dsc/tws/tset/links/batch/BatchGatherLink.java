@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
@@ -40,12 +41,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherSink;
  */
 public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP) {
-    this(env, n, sourceP, sourceP);
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+    this(env, n, sourceP, sourceP, schema);
   }
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                  Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected BatchGatherLink() {
@@ -66,7 +68,7 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 
@@ -88,7 +90,7 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   @Override
   public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheGatherSink<T>(),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
     addChildToGraph(cacheTSet);
     return cacheTSet;
   }
@@ -103,7 +105,7 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   @Override
   public PersistedTSet<T> lazyPersist() {
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        new DiskPersistGatherSink<>(), getTargetParallelism());
+        new DiskPersistGatherSink<>(), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
     return persistedTSet;
   }

@@ -15,13 +15,14 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
-import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
-public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
+public class SinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingData<T> {
   private SinkFunc<T> sinkFunc;
 
   /**
@@ -30,8 +31,8 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s       The Sink function to be used
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s) {
-    this(tSetEnv, s, 1);
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s, Schema inputSchema) {
+    this(tSetEnv, s, 1, inputSchema);
   }
 
   /**
@@ -41,8 +42,9 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
    * @param sinkFn      The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism) {
-    super(tSetEnv, "sink", parallelism);
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism,
+                  Schema inputSchema) {
+    super(tSetEnv, "sink", parallelism, inputSchema);
     this.sinkFunc = sinkFn;
   }
 
@@ -62,6 +64,11 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
   @Override
   public SinkTSet<T> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
+  }
+
+  public SinkTSet<T> withSchema(Schema schema) {
+    this.setOutputSchema(schema);
     return this;
   }
 }

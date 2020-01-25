@@ -24,21 +24,23 @@ public final class SortJoinUtils {
   private SortJoinUtils() {
   }
 
-  public static List<Object> join(List<Tuple> leftRelation,
-                                  List<Tuple> rightRelation,
-                                  KeyComparatorWrapper comparator,
-                                  CommunicationContext.JoinType joinType) {
+  public static Iterator<JoinedTuple> join(List<Tuple> leftRelation,
+                                           List<Tuple> rightRelation,
+                                           KeyComparatorWrapper comparator,
+                                           CommunicationContext.JoinType joinType) {
+    RestorableIterator leftRstIt = new ListBasedRestorableIterator(leftRelation);
+    RestorableIterator rightRstIt = new ListBasedRestorableIterator(rightRelation);
     if (joinType == CommunicationContext.JoinType.INNER) {
-      return innerJoin(leftRelation, rightRelation, comparator);
+      return innerJoin(leftRstIt, rightRstIt, comparator);
     } else {
-      return outerJoin(leftRelation, rightRelation, comparator, joinType);
+      return outerJoin(leftRstIt, rightRstIt, comparator, joinType);
     }
   }
 
   public static Iterator<JoinedTuple> join(RestorableIterator<Tuple<?, ?>> leftIt,
-                                                RestorableIterator<Tuple<?, ?>> rightIt,
-                                                KeyComparatorWrapper comparator,
-                                                CommunicationContext.JoinType joinType) {
+                                           RestorableIterator<Tuple<?, ?>> rightIt,
+                                           KeyComparatorWrapper comparator,
+                                           CommunicationContext.JoinType joinType) {
     if (joinType == CommunicationContext.JoinType.INNER) {
       return innerJoin(leftIt, rightIt, comparator);
     } else {
@@ -531,5 +533,47 @@ public final class SortJoinUtils {
                                             List<Tuple> rightRelation,
                                             KeyComparatorWrapper comparator) {
     return outerJoin(leftRelation, rightRelation, comparator, CommunicationContext.JoinType.RIGHT);
+  }
+
+
+  public static class ListBasedRestorableIterator implements RestorableIterator {
+
+    private List list;
+    private int currentIndex = 0;
+    private int backedUpIndex = -1;
+
+    ListBasedRestorableIterator(List list) {
+      this.list = list;
+    }
+
+    @Override
+    public void createRestorePoint() {
+      this.backedUpIndex = this.currentIndex;
+    }
+
+    @Override
+    public void restore() {
+      this.currentIndex = this.backedUpIndex;
+    }
+
+    @Override
+    public boolean hasRestorePoint() {
+      return this.backedUpIndex != -1;
+    }
+
+    @Override
+    public void clearRestorePoint() {
+      this.backedUpIndex = -1;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return this.currentIndex < this.list.size();
+    }
+
+    @Override
+    public Object next() {
+      return this.list.get(this.currentIndex++);
+    }
   }
 }

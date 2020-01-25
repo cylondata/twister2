@@ -16,21 +16,22 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
-import edu.iu.dsc.tws.tset.links.BaseTLink;
+import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
-public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
+public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP, Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected BatchTLinkImpl() {
@@ -44,9 +45,10 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          getSchema());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
     }
     addChildToGraph(set);
 
@@ -56,9 +58,10 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          getSchema());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
     }
     addChildToGraph(set);
 
@@ -77,7 +80,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
   @Override
   public SinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
-    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
+    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism(),
+        getSchema());
     addChildToGraph(sinkTSet);
 
     return sinkTSet;
@@ -112,7 +116,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
         // source function, the same way as a persisted tset. This preserves the order of tsets
         // that are being created in the checkpointed env)
         CheckpointedTSet<T0> checkTSet = new CheckpointedTSet<>(getTSetEnv(), sourceFn,
-            this.getTargetParallelism());
+            this.getTargetParallelism(), getSchema());
 
         // adding checkpointed tset to the graph, so that the IDs would not change
         addChildToGraph(checkTSet);

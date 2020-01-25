@@ -152,19 +152,12 @@ public final class HashJoinUtils {
     }
   }
 
-  public static List<JoinedTuple> join(List<Tuple> leftRelation,
-                                       List<Tuple> rightRelation,
-                                       CommunicationContext.JoinType joinType,
-                                       MessageType messageType) {
-    Iterator<JoinedTuple> joinIterator = join(new ListBasedResettableIterator(leftRelation),
+  public static Iterator<JoinedTuple> join(List<Tuple> leftRelation,
+                                           List<Tuple> rightRelation,
+                                           CommunicationContext.JoinType joinType,
+                                           MessageType messageType) {
+    return join(new ListBasedResettableIterator(leftRelation),
         new ListBasedResettableIterator(rightRelation), joinType, messageType);
-
-    List<JoinedTuple> joinedTuples = new ArrayList<>();
-    while (joinIterator.hasNext()) {
-      joinedTuples.add(joinIterator.next());
-    }
-
-    return joinedTuples;
   }
 
   /**

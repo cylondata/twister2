@@ -54,8 +54,3 @@ filegroup(
     name = "conf-dashboard",
     srcs = glob(["conf/dashboard/*"]),
 )
-
-filegroup(
-    name = "conf-scripts",
-    srcs = glob(["conf/scripts/*"]),
-)
