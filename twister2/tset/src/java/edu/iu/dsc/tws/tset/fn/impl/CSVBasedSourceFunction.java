@@ -64,10 +64,10 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
   @Override
   public T next() {
     try {
-//      Object object = dataSplit.nextRecord(null);
-//      LOG.info("next object is:" + object);
-//      return (T) object;
-      return dataSplit.nextRecord(null);
+      T object = dataSplit.nextRecord(null);
+      LOG.info("next object is:" + object);
+      return object;
+      //return dataSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
     }

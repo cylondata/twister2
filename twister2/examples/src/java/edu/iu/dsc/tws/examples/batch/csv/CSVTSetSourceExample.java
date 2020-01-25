@@ -49,7 +49,6 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    /*SourceTSet<String> lines = env.createSource("hello", new CSVSource("/tmp/dinput0"), 2);*/
     SourceTSet<String> lines = env.createSource(new CSVBasedSourceFunction(
         "/tmp/dinput0", 100), 2);
     LOG.info("retrieved input lines are:" + lines);
