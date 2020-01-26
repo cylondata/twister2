@@ -11,19 +11,15 @@
 #  // limitations under the License.
 
 import os
-
-import numpy as np
 # CORE PYTWISTER2 IMPORTS
 from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
-
 # TWISTER2 DEEPNET IMPORTS
-from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
 from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
-from twister2deepnet.deepnet.io.FileUtils import FileUtils
+from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
 from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
-from twister2deepnet.deepnet.data.Partition import Partition
+from twister2deepnet.deepnet.io.FileUtils import FileUtils
 
 DATA_FOLDER = '/tmp/twister2deepnet/mnist/'
 
