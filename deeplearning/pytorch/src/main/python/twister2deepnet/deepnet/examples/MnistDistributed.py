@@ -52,6 +52,20 @@ class MnistDistributed:
         self.parallelism = parallelism
         self.rank = world_rank
 
+    @property
+    def train_data(self):
+        dl = DataLoader(dataset="mnist", source_dir=self.source_dir, destination_dir=None,
+                        transform=None)
+        partition_data, partition_target, bsz = dl.train_dataset
+        return partition_data, partition_target, bsz
+
+    @property
+    def test_data(self):
+        dl = DataLoader(dataset="mnist", source_dir=self.source_dir, destination_dir=None,
+                        transform=None)
+        partition_data, partition_target, bsz = dl.test_dataset
+        return partition_data, partition_target, bsz
+
     def load_train_data(self):
         """
         Here we assume the training data has features and labels

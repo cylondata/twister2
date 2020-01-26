@@ -188,11 +188,10 @@ def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log
     if (world_rank == 0 and do_log):
         print("Started Training")
     total_data = len(train_data)
-    epochs = 10
+    epochs = 1
     total_steps = epochs * total_data
     local_time_communication = 0
     local_total_time_communication = 0
-    epochs = 1
 
     for epoch in range(epochs):
         epoch_loss = 0.0

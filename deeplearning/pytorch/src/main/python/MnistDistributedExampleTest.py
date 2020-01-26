@@ -11,13 +11,14 @@
 #  // limitations under the License.
 
 # MPI IMPORTS
-import mpi4py
+
 import os
 # TWISTER2 IMPORTS
 from twister2.Twister2Environment import Twister2Environment
 
-mpi4py.rc(initialize=False, finalize=False)
-from mpi4py import MPI
+## FOR LINKING MPI PROCESSES: NOT NEEDED FOR THE BASIC EXAMPLE
+#import mpi4py
+#mpi4py.rc(initialize=False, finalize=False)
 # NUMPY IMPORTS
 
 from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
@@ -26,7 +27,6 @@ from twister2deepnet.deepnet.io.FileUtils import FileUtils
 from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 
 # MPI.Init()
-comm = MPI.COMM_WORLD
 # device = torch.device("cpu")
 
 ###############################################
@@ -65,7 +65,7 @@ def save_to_disk(data_set=None, save_path=None, save_file=None):
         pass
     else:
         utilPanda = UtilPanda()
-        dataframe = utilPanda.convert_to_pandas(data_set)
+        dataframe = utilPanda.convert_partition_to_pandas(data_set)
         table = ArrowUtils.create_to_table(dataFrame=dataframe)
         ArrowUtils.write_to_table(table=table, save_path=save_path + save_file)
 
@@ -80,6 +80,7 @@ train_dataset = train_set_data.dataset
 test_dataset = test_set_data.dataset
 train_targetset = train_set_target.dataset
 test_targetset = test_set_target.dataset
+
 
 
 # Creating Pandas Data Frame and write to disk with Arrow in Parquet Format

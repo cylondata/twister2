@@ -34,7 +34,7 @@
 #  // See the License for the specific language governing permissions and
 #  // limitations under the License.
 from random import Random
-from twister2deepnet.deepnet.data.Partition import  Partition
+from twister2deepnet.deepnet.data.Partition import Partition
 
 
 class DataPartitioner(object):

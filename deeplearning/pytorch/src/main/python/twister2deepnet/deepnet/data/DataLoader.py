@@ -43,6 +43,7 @@ import torch
 from twister2deepnet.deepnet.data.DataPartitioner import DataPartitioner
 from twister2deepnet.deepnet.datasets.MNIST import MNIST
 from twister2deepnet.deepnet.exception.internal import ParameterError
+from twister2deepnet.deepnet.data.Partition import Partition
 
 
 class DataLoader:
@@ -74,6 +75,53 @@ class DataLoader:
         #
         # self.__TEST_DATA_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_data.npy"
         # self.__TEST_TARGET_FILE_PATH = "/home/vibhatha/github/PytorchExamples/datasets/test_target.npy"
+
+    def __wrap_to_numpy(self, partition_set=None):
+        array = []
+        if isinstance(partition_set,Partition):
+            for datapoint in partition_set:
+                array.append(datapoint)
+        else:
+            raise ParameterError("Invalid Input type {}, Expected {}".format(type(partition_set,
+                                                                                  type(Partition))))
+
+        return np.array(array)
+
+    def __get_dataset(self, world_size=4, world_rank=0, dataset_path=None, target_path=None,
+                      init_batch_size=128):
+        dataset = np.load(dataset_path)
+        targets = np.load(target_path)
+        bsz = int(init_batch_size / float(world_size))
+        partition_sizes = [1.0 / world_size for _ in range(world_size)]
+        # print("World Info {}/{}".format(world_rank, world_size))
+        # print("Partition Sizes {}".format(partition_sizes))
+
+        partition_data = DataPartitioner(dataset, partition_sizes)
+        partition_data = partition_data.use(world_rank)
+
+        partition_target = DataPartitioner(targets, partition_sizes)
+        partition_target = partition_target.use(world_rank)
+
+        partition_data = self.__wrap_to_numpy(partition_data)
+        partition_target = self.__wrap_to_numpy(partition_target)
+
+        return partition_data, partition_target, bsz
+
+
+    @property
+    def train_dataset(self, world_size=4, world_rank=0, init_batch_size=128):
+        return self.__get_dataset(world_size=world_size, world_rank=world_rank,
+                                  dataset_path=self.__TRAIN_DATA_FILE_PATH,
+                                  target_path=self.__TRAIN_TARGET_FILE_PATH,
+                                  init_batch_size=init_batch_size)
+
+    @property
+    def test_dataset(self, world_size=4, world_rank=0, init_batch_size=16):
+        return self.__get_dataset(world_size=world_size, world_rank=world_rank,
+                                  dataset_path=self.__TEST_DATA_FILE_PATH,
+                                  target_path=self.__TEST_TARGET_FILE_PATH,
+                                  init_batch_size=init_batch_size)
+
 
     def partition_numpy_dataset(self, world_size=4, world_rank=0):
         """

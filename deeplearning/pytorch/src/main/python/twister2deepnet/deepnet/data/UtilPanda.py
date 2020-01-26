@@ -12,12 +12,24 @@
 
 import pandas as pd
 import numpy as np
+from twister2deepnet.deepnet.exception.internal import ParameterError
 
 
 class UtilPanda:
 
     @staticmethod
-    def convert_to_pandas(partition=None):
+    def convert_numpy_to_pandas(ndarray=None):
+        dataframe = None
+        if not isinstance(ndarray, np.ndarray):
+            raise ParameterError("Input is {}, but expected {}".format(type(ndarray),
+                                                                       type(np.ndarray)))
+        else:
+            dataframe = pd.DataFrame(ndarray)
+
+        return dataframe
+
+    @staticmethod
+    def convert_partition_to_pandas(partition=None):
         """
         Here we convert a Parition data type into a Pandas DataFrame
         The content in each segment of a partition is made flatten to support 2-D nature of a
