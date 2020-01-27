@@ -65,7 +65,6 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
   public T next() {
     try {
       T object = dataSplit.nextRecord(null);
-      LOG.info("next object is:" + object);
       return object;
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {

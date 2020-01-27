@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -50,12 +49,12 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<String> lines = env.createSource(new CSVBasedSourceFunction(
-        "/tmp/dinput0", 100), 2);
+    /*SourceTSet<String> lines
+    = env.createSource(new CSVBasedSourceFunction("/tmp/dinput0", 100), 2);*/
+    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput0", 100, 2);
     //lines.direct().forEach(i -> LOG.info("out: " + i));
     lines.direct().map((MapFunc<Double[], String>) input -> {
       Pattern pattern = Pattern.compile(",");
-
       return pattern.splitAsStream(input)
           .map(Double::parseDouble)
           .toArray(Double[]::new);
