@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -74,12 +75,9 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
-  //TODO: Pass the object to CSV Source class
-  public <T> SourceTSet<T> createCSVSource(String name, SourceFunc<T> source, int parallelism) {
-    SourceTSet<T> sourceT = new SourceTSet<>(this, name, source, parallelism);
-    getGraph().addSourceTSet(sourceT);
-
-    return sourceT;
+  //TODO: Replace the datasize
+  public <T> SourceTSet<T> createCSVSource(String filePath, int dataSize, int parallelism) {
+    return createSource(new CSVBasedSourceFunction(filePath, dataSize), parallelism);
   }
 
   @Override

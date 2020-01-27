@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,11 +52,15 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<String> lines = env.createSource(new CSVBasedSourceFunction(
         "/tmp/dinput0", 100), 2);
-    LOG.info("retrieved input lines are:" + lines);
-    lines.direct().map((MapFunc<Integer[], String>) i -> null).direct().forEach(
+    //lines.direct().forEach(i -> LOG.info("out: " + i));
+    lines.direct().map((MapFunc<Double[], String>) input -> {
+      Pattern pattern = Pattern.compile(",");
+
+      return pattern.splitAsStream(input)
+          .map(Double::parseDouble)
+          .toArray(Double[]::new);
+    }).direct().forEach(
         i -> LOG.info("out" + Arrays.toString(i)));
-    /*lines.direct().map((MapFunc<Integer[], String[]>) i -> null).direct().forEach(
-        i -> LOG.info("out" + Arrays.toString(i)));*/
   }
 
   public static void main(String[] args) throws Exception {
