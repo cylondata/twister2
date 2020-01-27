@@ -154,6 +154,8 @@ public final class SortJoinUtils {
           this.oldLists.add(this.rightList);
         }
 
+        long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(config) / 2;
+
         // previous lists are now garbage collectible
         this.leftList = new DiskBasedList(config, MessageTypes.OBJECT);
         this.rightList = new DiskBasedList(config, MessageTypes.OBJECT);
@@ -168,6 +170,10 @@ public final class SortJoinUtils {
             currentTuple = nextLeft;
           }
           if (comparator.compare(currentTuple, nextLeft) == 0) {
+            this.leftList.add(nextLeft);
+          } else if (comparator.compare(currentTuple, nextLeft) < 0
+              && this.leftList.size() < maxRecordsInMemory) {
+            currentTuple = nextLeft;
             this.leftList.add(nextLeft);
           } else {
             this.leftBackup = nextLeft;
