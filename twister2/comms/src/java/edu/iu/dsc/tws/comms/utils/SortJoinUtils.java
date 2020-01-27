@@ -124,6 +124,7 @@ public final class SortJoinUtils {
                                                     KeyComparatorWrapper comparator,
                                                     CommunicationContext.JoinType joinType,
                                                     Config config) {
+    LOG.info("Performing join with cache....");
     return new Iterator<JoinedTuple>() {
 
       private final List<DiskBasedList> oldLists = new ArrayList<>();
