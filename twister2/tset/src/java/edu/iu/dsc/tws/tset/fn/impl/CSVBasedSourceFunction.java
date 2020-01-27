@@ -55,7 +55,7 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(new Path(datainputDirectory),
         parallelism, dataSize, cfg), parallelism);
     this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
-    LOG.info("%%%% Task Index Value:" + context.getIndex() + "\tDataSource" + this.dataSource);
+    LOG.info("%%%% Task Index Value:" + context.getIndex() + "\tDataSource:\t" + this.dataSource);
   }
 
   @Override

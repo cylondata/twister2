@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
@@ -34,6 +35,7 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 // TODO: this needs to checked for correctness!!!
@@ -69,10 +71,24 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
+    SourceTSet<String> processLines = tc.createCSVSource(dataDirectory, dsize, parallelismValue);
+    processLines.direct().map((MapFunc<Double[], String>) inp -> {
+      final Pattern pn = Pattern.compile(",");
+      long count = pn.splitAsStream(inp).count();
+      LOG.info("count value:" + count);
+      return new Double[0];
+    });
+
+    SourceTSet<String> lines = tc.createCSVSource(dataDirectory, parallelismValue);
+    lines.direct().map((MapFunc<Double[], String>) input -> {
+      Pattern pattern = Pattern.compile(",");
+      return pattern.splitAsStream(input)
+          .map(Double::parseDouble)
+          .toArray(Double[]::new);
+    }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
     long endTimeData = System.currentTimeMillis();
 
-    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
-        points.direct().map(new KMeansMap());
+    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet = points.direct().map(new KMeansMap());
 
     ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
         (t1, t2) -> {
@@ -94,11 +110,6 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     for (int i = 0; i < iterations; i++) {
       tc.evalAndUpdate(cached, centers);
     }
-
-    //FileTSet<double[][]> fileTSet = new FileTSet<>(new CSVOutputWriter(
-    //    FileSystem.WriteMode.OVERWRITE, new Path(dataDirectory), config));
-    //fileTSet.writeAsCSV(centers);
-
     tc.finishEval(cached);
 
     long endTime = System.currentTimeMillis();
@@ -111,7 +122,6 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       centers.direct().forEach(i -> LOG.info(Arrays.toString(i)));
     }
   }
-
 
   private class KMeansMap extends BaseMapFunc<double[][], double[][]> {
     private int dimension;
