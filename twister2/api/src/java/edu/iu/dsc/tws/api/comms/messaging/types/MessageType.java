@@ -12,8 +12,6 @@
 
 package edu.iu.dsc.tws.api.comms.messaging.types;
 
-import java.util.Comparator;
-
 import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 
 public interface MessageType<T, W> {
@@ -39,12 +37,4 @@ public interface MessageType<T, W> {
   DataPacker<T, W> getDataPacker();
 
   boolean isArray();
-
-  default T cast(Object data) {
-    return this.getClazz().cast(data);
-  }
-
-  default Comparator<T> getDefaultComparator() {
-    throw new RuntimeException("Comparator is not defined for this type");
-  }
 }

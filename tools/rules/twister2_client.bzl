@@ -239,6 +239,16 @@ def twister2_client_lib_master_files():
         "//twister2/connectors/src/java:master-java",
     ]
 
+def twister2_client_lib_table_files():
+    return [
+            "//twister2/table/src/java:table-java",
+            "@org_apache_arrow_arrow_vector",
+            "@org_apache_arrow_arrow_memory",
+            "@io_netty_netty_buffer",
+            "@io_netty_netty_common",
+            "@com_google_flatbuffers_flatbuffers_java",
+        ]
+
 #def twister2_client_lib_connector_files():
 #    return [
 #        "//twister2/connectors/src/java:connector-java",
