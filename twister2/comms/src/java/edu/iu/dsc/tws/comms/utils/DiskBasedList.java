@@ -101,6 +101,10 @@ public class DiskBasedList implements List {
     this.collectionPartition.clear();
   }
 
+  public void dispose() {
+    this.collectionPartition.dispose();
+  }
+
   @Override
   public Object get(int i) {
     DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
