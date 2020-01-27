@@ -199,9 +199,9 @@ public final class SortJoinUtils {
 
         // if current local iterators doesn't has join tuples and if we have more data on
         // data iterators, let's advance() again
-        return (!this.localJoinIterator.hasNext()
+        return !this.localJoinIterator.hasNext()
             && (leftBackup != null || rightBackup != null
-            || leftIt.hasNext() || rightIt.hasNext()));
+            || leftIt.hasNext() || rightIt.hasNext());
       }
 
       private void callAdvanceIt() {
