@@ -14,13 +14,21 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
 
 public final class SortJoinUtils {
+
+  private static final Logger LOG = Logger.getLogger(SortJoinUtils.class.getName());
+
+  public static final String CONFIG_USE_SORT_JOIN_CACHE = "twister2.join.sort.cache";
+
   private SortJoinUtils() {
   }
 
@@ -105,6 +113,120 @@ public final class SortJoinUtils {
     }
 
     return outPut;
+  }
+
+  /**
+   * This method avoid having to scan back and forth of the files by reading data iterators once
+   * and backup them into a {@link DiskBasedList}, which has a memory buffer
+   */
+  public static Iterator<JoinedTuple> joinWithCache(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                    RestorableIterator<Tuple<?, ?>> rightIt,
+                                                    KeyComparatorWrapper comparator,
+                                                    CommunicationContext.JoinType joinType,
+                                                    Config config) {
+    return new Iterator<JoinedTuple>() {
+
+      private final List<DiskBasedList> oldLists = new ArrayList<>();
+
+      private DiskBasedList leftList;
+      private DiskBasedList rightList;
+
+      // if we had to keep next() to check the next tuple, these variables can be used to keep them
+      private Tuple leftBackup;
+      private Tuple rightBackup;
+
+      private Iterator<JoinedTuple> localJoinIterator;
+
+      private void advance() {
+        if (this.leftBackup != null) {
+          this.leftList.dispose();
+          this.oldLists.add(this.leftList);
+        }
+
+        if (this.rightList != null) {
+          this.rightList.dispose();
+          this.oldLists.add(this.rightList);
+        }
+
+        // previous lists are now garbage collectible
+        this.leftList = new DiskBasedList(config, MessageTypes.OBJECT);
+        this.rightList = new DiskBasedList(config, MessageTypes.OBJECT);
+
+        Tuple currentTuple = null;
+
+        // read from left iterator
+        while (leftIt.hasNext() || this.leftBackup != null) {
+          Tuple<?, ?> nextLeft = this.leftBackup != null ? this.leftBackup : leftIt.next();
+          this.leftBackup = null; // we used the backup
+          if (currentTuple == null) {
+            currentTuple = nextLeft;
+          }
+          if (comparator.compare(currentTuple, nextLeft) == 0) {
+            this.leftList.add(nextLeft);
+          } else {
+            this.leftBackup = nextLeft;
+            break;
+          }
+        }
+
+        // read from right iterator
+        while (rightIt.hasNext() || this.rightBackup != null) {
+          Tuple<?, ?> nextRight = this.rightBackup != null ? this.rightBackup : rightIt.next();
+          this.rightBackup = null;
+          if (currentTuple == null) {
+            currentTuple = nextRight;
+          }
+          if (comparator.compare(currentTuple, nextRight) == 0) {
+            this.rightList.add(nextRight);
+          } else {
+            this.rightBackup = nextRight;
+            break;
+          }
+        }
+
+        this.localJoinIterator = join(
+            new ListBasedRestorableIterator(this.leftList),
+            new ListBasedRestorableIterator(this.rightList),
+            comparator,
+            joinType
+        );
+
+        // if current local iterators doesn't has join tuples and if we have more data on
+        // data iterators, let's advance() again
+        if (!this.localJoinIterator.hasNext() && (leftIt.hasNext() || rightIt.hasNext())) {
+          this.advance();
+        }
+      }
+
+      {
+        this.advance();
+
+        // add a shutdown hook to cleanup
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+          @Override
+          public synchronized void start() {
+            LOG.info("Cleaning up disk based caches used for join...");
+            for (DiskBasedList oldList : oldLists) {
+              oldList.clear();
+            }
+          }
+        });
+      }
+
+      @Override
+      public boolean hasNext() {
+        return this.localJoinIterator != null && this.localJoinIterator.hasNext();
+      }
+
+      @Override
+      public JoinedTuple next() {
+        JoinedTuple next = this.localJoinIterator.next();
+        if (!this.localJoinIterator.hasNext()) {
+          this.advance();
+        }
+        return next;
+      }
+    };
   }
 
   /**
