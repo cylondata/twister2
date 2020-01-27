@@ -144,7 +144,7 @@ public final class SortJoinUtils {
        * @return true if advance() should be called again
        */
       private boolean advance() {
-        if (this.leftBackup != null) {
+        if (this.leftList != null) {
           this.leftList.dispose();
           this.oldLists.add(this.leftList);
         }
@@ -182,7 +182,7 @@ public final class SortJoinUtils {
           if (currentTuple == null) {
             currentTuple = nextRight;
           }
-          if (comparator.compare(currentTuple, nextRight) == 0) {
+          if (comparator.compare(currentTuple, nextRight) >= 0) {
             this.rightList.add(nextRight);
           } else {
             this.rightBackup = nextRight;
