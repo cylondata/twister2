@@ -1,7 +1,7 @@
 ---
 id: machinelearning
-title: Overview
-sidebar_label: Overview
+title: Machine Learning
+sidebar_label: Overview on Machine Learning
 ---
 
 # Machine Learning

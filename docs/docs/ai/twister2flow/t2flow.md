@@ -1,7 +1,7 @@
 ---
 id: twister2flow
-title: Overview
-sidebar_label: Overview
+title: Twister2Flow
+sidebar_label: Overview on Twister2Flow
 ---
 
 # Twister2Flow

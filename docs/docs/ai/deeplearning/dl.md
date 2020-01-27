@@ -1,7 +1,7 @@
 ---
 id: deeplearning
-title: Overview
-sidebar_label: Overview
+title: Deep Learning
+sidebar_label: Overview on Deep Learning
 ---
 
 # Twister2:DeepNet

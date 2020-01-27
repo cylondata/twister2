@@ -1,7 +1,7 @@
 ---
 id: reinforcementlearning
-title: Overview
-sidebar_label: Overview
+title: Reinforcement Learning
+sidebar_label: Overview on Reinforcement Learning
 ---
 
 # Reinforcement Learning
