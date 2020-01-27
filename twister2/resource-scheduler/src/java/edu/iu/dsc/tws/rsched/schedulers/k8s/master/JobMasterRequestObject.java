@@ -28,28 +28,28 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
-import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.models.V1Container;
-import io.kubernetes.client.models.V1ContainerPort;
-import io.kubernetes.client.models.V1EmptyDirVolumeSource;
-import io.kubernetes.client.models.V1EnvVar;
-import io.kubernetes.client.models.V1EnvVarSource;
-import io.kubernetes.client.models.V1LabelSelector;
-import io.kubernetes.client.models.V1ObjectFieldSelector;
-import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1PodSpec;
-import io.kubernetes.client.models.V1PodTemplateSpec;
-import io.kubernetes.client.models.V1ResourceRequirements;
-import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1ServicePort;
-import io.kubernetes.client.models.V1ServiceSpec;
-import io.kubernetes.client.models.V1StatefulSet;
-import io.kubernetes.client.models.V1StatefulSetSpec;
-import io.kubernetes.client.models.V1Volume;
-import io.kubernetes.client.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1ContainerPort;
+import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
+import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1EnvVarSource;
+import io.kubernetes.client.openapi.models.V1LabelSelector;
+import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PodSpec;
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
+import io.kubernetes.client.openapi.models.V1StatefulSetSpec;
+import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeMount;
 
 public final class JobMasterRequestObject {
   private static final Logger LOG = Logger.getLogger(JobMasterRequestObject.class.getName());
@@ -59,7 +59,8 @@ public final class JobMasterRequestObject {
   private static String encodedNodeInfoList;
   private static long jobPackageFileSize;
 
-  private JobMasterRequestObject() { }
+  private JobMasterRequestObject() {
+  }
 
   public static void init(Config cnfg, String jID, long jpFileSize) {
     config = cnfg;
@@ -69,7 +70,6 @@ public final class JobMasterRequestObject {
 
   /**
    * create StatefulSet object for a job
-   * @return
    */
   public static V1StatefulSet createStatefulSetObject(String nodeInfoListStr) {
 
@@ -108,7 +108,6 @@ public final class JobMasterRequestObject {
 
   /**
    * construct pod template
-   * @return
    */
   public static V1PodTemplateSpec constructPodTemplate() {
 
@@ -164,7 +163,6 @@ public final class JobMasterRequestObject {
 
   /**
    * construct a container
-   * @return
    */
   public static V1Container constructContainer() {
     // construct container and add it to podSpec
@@ -268,17 +266,20 @@ public final class JobMasterRequestObject {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
-        .value(SchedulerContext.jobPackageFileName(config)));
+        .value(JobUtils.createJobPackageFileName(jobID)));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(KubernetesContext.uploadMethod(config)));
+        .value(RequestObjectBuilder.uploadMethod));
 
-    if (!KubernetesContext.clientToPodsUploading(config)) {
-      envVars.add(new V1EnvVar()
-          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
-          .value(ScpContext.downloadDirectory(config)));
+    String uri = null;
+    if (SchedulerContext.jobPackageUri(config) != null) {
+      uri = SchedulerContext.jobPackageUri(config).toString();
     }
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_PACKAGE_URI + "")
+        .value(uri));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
@@ -289,7 +290,6 @@ public final class JobMasterRequestObject {
 
   /**
    * create regular service for job master
-   * @return
    */
   public static V1Service createJobMasterServiceObject() {
 
@@ -326,7 +326,6 @@ public final class JobMasterRequestObject {
 
   /**
    * create headless service for job master
-   * @return
    */
   public static V1Service createJobMasterHeadlessServiceObject() {
 

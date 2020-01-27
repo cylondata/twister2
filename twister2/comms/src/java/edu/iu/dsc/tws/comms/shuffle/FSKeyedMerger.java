@@ -29,8 +29,8 @@ import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 /**
  * Un sorted merger
- *
- * This merger can't output data in the expected format {@literal Iterator<Tuple<Key,Iterator>>}
+ * <p>
+ * This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedMerger implements Shuffle {
@@ -123,6 +123,24 @@ public class FSKeyedMerger implements Shuffle {
     this.kryoSerializer = new KryoSerializer();
   }
 
+  @Override
+  public void add(Tuple tuple) {
+    if (status == FSStatus.READING) {
+      throw new RuntimeException("Cannot add after switching to reading");
+    }
+
+    lock.lock();
+    try {
+      recordsInMemory.add(tuple);
+      int length = ((byte[]) tuple.getValue()).length;
+      bytesLength.add(length);
+
+      numOfBytesInMemory += length;
+    } finally {
+      lock.unlock();
+    }
+  }
+
   /**
    * Add the data to the file
    */
@@ -188,12 +206,12 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * This method gives the values
    */
-  public Iterator<Object> readIterator() {
+  public ResettableIterator<Object> readIterator() {
     // lets start with first file
     return new FSIterator();
   }
 
-  private class FSIterator implements Iterator<Object> {
+  private class FSIterator implements ResettableIterator<Object> {
     // the current file index
     private int currentFileIndex = -1;
     // Index of the current file
@@ -203,12 +221,14 @@ public class FSKeyedMerger implements Shuffle {
     // the current values
     private List<Tuple> openValue;
 
+    private Tuple nextTuple;
+
     FSIterator() {
       it = objectsInMemory.iterator();
+      this.createNextTuple();
     }
 
-    @Override
-    public boolean hasNext() {
+    private boolean nextTupleAvailable() {
       // we are reading from in memory
       boolean next;
       if (currentFileIndex == -1) {
@@ -242,6 +262,25 @@ public class FSKeyedMerger implements Shuffle {
       return false;
     }
 
+    private void createNextTuple() {
+      nextTuple = null;
+      if (nextTupleAvailable()) {
+        if (currentFileIndex == -1) {
+          nextTuple = it.next();
+        }
+
+        if (currentFileIndex >= 0) {
+          nextTuple = openValue.get(currentIndex);
+          currentIndex++;
+        }
+      }
+    }
+
+    @Override
+    public boolean hasNext() {
+      return nextTuple != null;
+    }
+
 
     private void openFilePart() {
       // lets read the bytes from the file
@@ -253,18 +292,18 @@ public class FSKeyedMerger implements Shuffle {
 
     @Override
     public Tuple next() {
-      // we are reading from in memory
-      if (currentFileIndex == -1) {
-        return it.next();
-      }
+      Tuple next = nextTuple;
+      createNextTuple();
+      return next;
+    }
 
-      if (currentFileIndex >= 0) {
-        Tuple kv = openValue.get(currentIndex);
-        currentIndex++;
-        return kv;
-      }
-
-      return null;
+    @Override
+    public void reset() {
+      it = objectsInMemory.iterator();
+      currentFileIndex = -1;
+      currentIndex = 0;
+      openValue = null;
+      this.createNextTuple();
     }
   }
 
@@ -274,7 +313,9 @@ public class FSKeyedMerger implements Shuffle {
   public void clean() {
     File file = new File(getSaveFolderName());
     try {
-      FileUtils.cleanDirectory(file);
+      if (file.exists()) {
+        FileUtils.cleanDirectory(file);
+      }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
     }

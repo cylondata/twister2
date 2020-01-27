@@ -92,20 +92,7 @@ public final class JobUtils {
     } else {
       // now get the files
       File jobLib = Paths.get(wd, job.getJobId(), "lib").toFile();
-      File[] listOfFiles = jobLib.listFiles();
-      if (listOfFiles != null) {
-        for (int i = 0; i < listOfFiles.length; i++) {
-          if (listOfFiles[i].isFile()) {
-            if (classPathBuilder.length() != 0) {
-              classPathBuilder.append(":").append(
-                  Paths.get(jobLib.getPath(), listOfFiles[i].getName()).toString());
-            } else {
-              classPathBuilder.append(Paths.get(
-                  jobLib.getPath(), listOfFiles[i].getName()).toString());
-            }
-          }
-        }
-      }
+      classPathBuilder.append(jobLib.getPath() + "/*");
     }
     return classPathBuilder.toString();
   }
@@ -113,23 +100,7 @@ public final class JobUtils {
   public static String systemClassPath(Config cfg) {
     String libDirectory = SchedulerContext.libDirectory(cfg);
     String libFile = Paths.get(libDirectory).toString();
-    String classPath = "";
-    File folder = new File(libFile);
-    String libName = folder.getName();
-    File[] listOfFiles = folder.listFiles();
-
-    if (listOfFiles != null) {
-      for (int i = 0; i < listOfFiles.length; i++) {
-        if (listOfFiles[i].isFile()) {
-          if (!"".equals(classPath)) {
-            classPath += ":" + Paths.get(libDirectory, listOfFiles[i].getName()).toString();
-          } else {
-            classPath += Paths.get(libDirectory, listOfFiles[i].getName()).toString();
-          }
-        }
-      }
-    }
-    return classPath;
+    return libFile + "/*";
   }
 
   /**
@@ -198,13 +169,45 @@ public final class JobUtils {
   public static String toString(JobAPI.Job job) {
     String jobStr =
         String.format("[jobName=%s], [jobID=%s], \n[numberOfWorkers=%s], [workerClass=%s]",
-        job.getJobName(), job.getJobId(), job.getNumberOfWorkers(), job.getWorkerClassName());
+            job.getJobName(), job.getJobId(), job.getNumberOfWorkers(), job.getWorkerClassName());
 
     for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
       jobStr += "\n" + ComputeResourceUtils.toString(cr);
     }
 
     return jobStr;
+  }
+
+  public static String createJobPackageFileName(String jobID) {
+    return jobID + ".tar.gz";
+  }
+
+  /**
+   * For the job to be scalable:
+   * Driver class shall be specified
+   * a scalable compute resource shall be given
+   * itshould not be an openMPI job
+   */
+  public static boolean isJobScalable(Config config, JobAPI.Job job) {
+
+    // if Driver is not set, it means there is nothing to scale the job
+    if (job.getDriverClassName().isEmpty()) {
+      return false;
+    }
+
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    // if it is an OpenMPI job, it is not scalable
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+
+    return true;
   }
 
 }

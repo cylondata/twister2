@@ -57,35 +57,35 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   public abstract boolean getLateMessages(IMessage<T> lateMessages);
 
-  private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
+  protected static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
 
-  private static final long DEFAULT_MAX_LAG = 0; // 0s
+  protected static final long DEFAULT_MAX_LAG = 0; // 0s
 
-  private long maxLagMs = 0;
+  protected long maxLagMs = 0;
 
-  private WindowConfig.Duration watermarkInterval = null;
+  protected WindowConfig.Duration watermarkInterval = null;
 
-  private WindowConfig.Duration allowedLateness = null;
+  protected WindowConfig.Duration allowedLateness = null;
 
-  private WindowManager<T> windowManager;
+  protected WindowManager<T> windowManager;
 
-  private IWindowingPolicy<T> windowingPolicy;
+  protected IWindowingPolicy<T> windowingPolicy;
 
-  private WindowParameter windowParameter;
+  protected WindowParameter windowParameter;
 
-  private WindowLifeCycleListener<T> windowLifeCycleListener;
+  protected WindowLifeCycleListener<T> windowLifeCycleListener;
 
-  private IEvictionPolicy<T> evictionPolicy;
+  protected IEvictionPolicy<T> evictionPolicy;
 
-  private IWindow iWindow;
+  protected IWindow iWindow;
 
-  private T collectiveOutput;
+  protected T collectiveOutput;
 
-  private IWindowMessage<T> collectiveEvents;
+  protected IWindowMessage<T> collectiveEvents;
 
-  private ITimestampExtractor<T> iTimestampExtractor;
+  protected ITimestampExtractor<T> iTimestampExtractor;
 
-  private WatermarkEventGenerator<T> watermarkEventGenerator;
+  protected WatermarkEventGenerator<T> watermarkEventGenerator;
 
 
   protected BaseWindowedSink() {
@@ -152,7 +152,6 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     } else {
       this.windowManager.add(message);
     }
-
     return true;
   }
 
@@ -310,9 +309,11 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   }
 
-  private boolean isTimestamped() {
+  protected boolean isTimestamped() {
     return iTimestampExtractor != null;
   }
+
+
 
   private static class WindowedLateOutputCollector<T> {
     private final List<IMessage<T>> messageList;

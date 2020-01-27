@@ -150,6 +150,7 @@ public final class WorkerEnvironment {
   public void close() {
     this.communicator.close();
     this.channel.close();
+    CommonThreadPool.close();
     this.workerEnv = null;
   }
 

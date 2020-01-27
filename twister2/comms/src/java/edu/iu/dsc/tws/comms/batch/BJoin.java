@@ -15,42 +15,52 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.MToNChain;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
-import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
-import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
-import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.BulkReceiverWrapper;
+import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchCombinedReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.JoinPartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.JoinRelation;
+import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch Join operation
  */
 public class BJoin extends BaseOperation {
+
+  private static final Logger LOG = Logger.getLogger(BJoin.class.getName());
+
   /**
    * Left partition of the join
    */
-  private MToNSimple partitionLeft;
+  private DataFlowOperation partitionLeft;
 
   /**
    * Right partition of the join
    */
-  private MToNSimple partitionRight;
+  private DataFlowOperation partitionRight;
 
   /**
    * Destination selector
@@ -68,23 +78,27 @@ public class BJoin extends BaseOperation {
   private boolean rightBarrierSent;
   /*END OF BARRIER RELATED FLAGS*/
 
+  private Set<Integer> leftSources;
+  private Set<Integer> rightSources;
+
   /**
    * Construct a Batch partition operation
    *
    * @param comm the communicator
    * @param plan task plan
-   * @param sources source tasks
    * @param targets target tasks
    * @param rcvr receiver
    * @param leftDataType data type
    * @param destSelector destination selector
    */
   public BJoin(Communicator comm, LogicalPlan plan,
-               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               Set<Integer> leftSources, Set<Integer> rightSources, Set<Integer> targets,
+               MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle,
+               DestinationSelector destSelector, boolean useDisk,
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
                CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm,
                MessageSchema leftSchema, MessageSchema rightSchema) {
     super(comm, false, CommunicationContext.JOIN);
 
@@ -93,60 +107,125 @@ public class BJoin extends BaseOperation {
     newConfigs.put(CommunicationContext.OPERATION_NAME, CommunicationContext.JOIN);
     comm.updateConfig(newConfigs);
 
+    this.leftSources = leftSources;
+    this.rightSources = rightSources;
+
     this.destinationSelector = destSelector;
     this.channel = comm.getChannel();
-    List<String> shuffleDirs = comm.getPersistentDirectories();
 
-    MessageReceiver finalRcvr;
-    if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator, joinType);
+    JoinBatchCombinedReceiver commonReceiver = new JoinBatchCombinedReceiver(rcvr,
+        joinAlgorithm,
+        joinType,
+        new KeyComparatorWrapper(comparator),
+        keyType);
+
+    MessageReceiver leftFinalReceiver;
+    MessageReceiver rightFinalReceiver;
+    MessageType leftRecvDataType = leftDataType;
+    MessageType rightRecvDataType = rightDataType;
+    if (useDisk) {
+      leftFinalReceiver = new DPartitionBatchFinalReceiver(
+          BulkReceiverWrapper.wrap(commonReceiver, JoinRelation.LEFT),
+          comm.getPersistentDirectories(),
+          joinAlgorithm.equals(CommunicationContext.JoinAlgorithm.SORT) ? comparator : null,
+          false
+      );
+      rightFinalReceiver = new DPartitionBatchFinalReceiver(
+          BulkReceiverWrapper.wrap(commonReceiver, JoinRelation.RIGHT),
+          comm.getPersistentDirectories(),
+          joinAlgorithm.equals(CommunicationContext.JoinAlgorithm.SORT) ? comparator : null,
+          false
+      );
+      leftRecvDataType = MessageTypes.BYTE_ARRAY;
+      rightRecvDataType = MessageTypes.BYTE_ARRAY;
     } else {
-      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType);
+      leftFinalReceiver = new JoinPartitionBatchFinalReceiver(
+          commonReceiver, JoinRelation.LEFT
+      );
+      rightFinalReceiver = new JoinPartitionBatchFinalReceiver(
+          commonReceiver, JoinRelation.RIGHT
+      );
     }
 
+    Set<Integer> allSources = new HashSet<>(leftSources);
+    allSources.addAll(rightSources);
 
-    this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
-        new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        leftDataType, keyType, leftSchema);
-
-    this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
-        new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        rightDataType, keyType, rightSchema);
-
-    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
-    this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
-    this.destinationSelector.prepare(comm, sources, targets, keyType, null);
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+      this.partitionLeft = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
+          leftSources, targets, leftFinalReceiver,
+          new PartitionPartialReceiver(), leftDataType, leftRecvDataType,
+          keyType, keyType, leftEdgeId, leftSchema);
+      this.partitionRight = new MToNSimple(comm.getConfig(),
+          comm.getChannel(), plan, rightSources, targets,
+          rightFinalReceiver, new PartitionPartialReceiver(),
+          rightDataType, rightRecvDataType, keyType, keyType, rightEdgeId, rightSchema);
+    } else {
+      this.partitionLeft = new MToNChain(comm.getConfig(), comm.getChannel(), plan,
+          leftSources, targets,
+          leftFinalReceiver, new PartitionPartialReceiver(),
+          leftDataType, leftRecvDataType, keyType, keyType, leftEdgeId, leftSchema);
+      this.partitionRight = new MToNChain(comm.getConfig(), comm.getChannel(), plan,
+          rightSources, targets,
+          rightFinalReceiver, new PartitionPartialReceiver(),
+          rightDataType, rightRecvDataType, keyType, keyType, rightEdgeId, rightSchema);
+    }
+    this.destinationSelector.prepare(comm, allSources, targets, keyType, null);
   }
 
   public BJoin(Communicator comm, LogicalPlan plan,
-               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               Set<Integer> leftSources, Set<Integer> rightSources, Set<Integer> targets,
+               MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType,
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm,
                MessageSchema leftSchema, MessageSchema rightSchema) {
-    this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+    this(comm, plan, leftSources, rightSources, targets, keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, leftSchema, rightSchema);
+        joinType, joinAlgorithm, leftSchema, rightSchema);
   }
 
   public BJoin(Communicator comm, LogicalPlan plan,
-               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               Set<Integer> leftSources, Set<Integer> rightSources, Set<Integer> targets,
+               MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
-    this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
+    this(comm, plan, leftSources, rightSources, targets, keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
   }
 
   public BJoin(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
     this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getSources(),
         logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
-        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
+  }
+
+  public BJoin(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+               Set<Integer> leftSources, Set<Integer> rightSource,
+               MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator,
+               CommunicationContext.JoinType joinType,
+               CommunicationContext.JoinAlgorithm joinAlgorithm) {
+    this(comm, logicalPlanBuilder.build(), leftSources,
+        rightSource,
+        logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
+        joinType, joinAlgorithm, MessageSchema.noSchema(), MessageSchema.noSchema());
   }
 
   /**
@@ -195,8 +274,11 @@ public class BJoin extends BaseOperation {
    */
   @Override
   public void finish(int source) {
-    partitionLeft.finish(source);
-    partitionRight.finish(source);
+    if (leftSources.contains(source)) {
+      partitionLeft.finish(source);
+    } else {
+      partitionRight.finish(source);
+    }
   }
 
   /**

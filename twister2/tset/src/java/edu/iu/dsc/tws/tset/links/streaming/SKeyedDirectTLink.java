@@ -12,17 +12,21 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public class SKeyedDirectTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
 
-  public SKeyedDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "skdirect", sourceParallelism);
+  public SKeyedDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
+                           KeyedSchema schema) {
+    // NOTE: key type is omitted. Check getEdge() method
+    super(tSetEnv, "skdirect", sourceParallelism, schema);
   }
 
   public SKeyedTSet<K, V> mapToTuple() {
@@ -31,7 +35,11 @@ public class SKeyedDirectTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    // NOTE: There is no keyed direct in the communication layer!!! Hence this is an keyed direct
+    // emulation. Therefore, we can not use user provided data types here because we will be using
+    // Tuple<K, V> object through a DirectLink here.
+    // todo fix this ambiguity!
+    return new Edge(getId(), OperationNames.DIRECT, MessageTypes.OBJECT);
   }
 
   @Override

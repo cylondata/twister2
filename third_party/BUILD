@@ -3,9 +3,15 @@ package(default_visibility = ["//visibility:public"])
 java_import(
     name = "ompi_javabinding_java",
     jars = select({
-                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-jar-files"],
-                   "//conditions:default": ["@ompi3//:ompi-jar-files"],
-               }),
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-jar-files"],
+        "//conditions:default": ["@ompi3//:ompi-jar-files"],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "ucx_javabinding_java",
+    jars = ["@ucx//:ucx-jar-file"],
     visibility = ["//visibility:public"],
 )
 
@@ -20,7 +26,6 @@ java_import(
     jars = ["jnr/jffi-native-1.2.16.jar"],
     visibility = ["//visibility:public"],
 )
-
 
 java_import(
     name = "vendored_guava_26_0_jre",

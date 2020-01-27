@@ -53,7 +53,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient byte[] wrapBuffer;
 
   private transient int readPos;
-
   private transient int limit;
 
   private transient byte[] currBuffer;    // buffer in which current record byte sequence is found
@@ -61,7 +60,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient int currLen;        // length of current byte sequence
 
   private transient boolean overLimit;
-
   private transient boolean end;
 
   private long offset = -1;
@@ -265,11 +263,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       toRead = maxReadLength;
       this.overLimit = true;
     }
-
-    //LineNumberReader numberReader = new LineNumberReader(new InputStreamReader(this.stream));
-    //numberReader.skip(Long.MAX_VALUE);
-    //int noOfLines = numberReader.getLineNumber();
-
     int read = this.stream.read(this.readBuffer, fillOffset, toRead);
     if (read == -1) {
       this.stream.close();
@@ -284,7 +277,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   }
 
   protected final boolean readLine() throws IOException {
-
     if (this.stream == null || this.overLimit) {
       return false;
     }

@@ -57,9 +57,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     String dataDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
     String centroidDirectory = config.getStringValue(
         DataObjectConstants.CINPUT_DIRECTORY) + workerId;
+    String type = config.getStringValue(DataObjectConstants.FILE_TYPE);
 
     KMeansUtils.generateDataPoints(tc.getConfig(), dimension, numFiles,
-        dsize, csize, dataDirectory, centroidDirectory);
+        dsize, csize, dataDirectory, centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =

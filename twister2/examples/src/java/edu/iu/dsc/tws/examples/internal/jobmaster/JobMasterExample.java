@@ -29,19 +29,10 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.curator.framework.CuratorFramework;
-
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
-import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
-import edu.iu.dsc.tws.common.zk.ZKEventsManager;
-import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
-import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -85,8 +76,10 @@ public final class JobMasterExample {
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
-    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
+    twister2Job.setUserName(System.getProperty("user.name"));
+
     JobAPI.Job job = twister2Job.serialize();
+    LOG.info("JobID: " + job.getJobId());
 
     String host = "localhost";
 
@@ -95,12 +88,11 @@ public final class JobMasterExample {
 
     if ("start".equalsIgnoreCase(args[0])) {
 
-      createJobZnodes(config, job);
-      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobId(), host);
+      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
 
     } else if ("restart".equalsIgnoreCase(args[0])) {
 
-      initialState = JobMasterStarter.initialStateAndUpdate(config, job.getJobId(), host);
+      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
       job = JobMasterStarter.job;
 
       if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
@@ -148,32 +140,5 @@ public final class JobMasterExample {
     LOG.info("Usage:\n"
         + "java JobMasterExample");
   }
-
-  public static void createJobZnodes(Config conf, JobAPI.Job job) {
-
-    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
-    String rootPath = ZKContext.rootNode(conf);
-
-    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobId())) {
-      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobId());
-    }
-
-    try {
-      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
-      ZKPersStateManager.createPersStateDir(client, rootPath, job);
-      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
-      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
-
-      // test job znode content reading
-      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobId());
-      LOG.info("JobZNode content: " + readJob);
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-//    ZKUtils.closeClient();
-  }
-
 
 }

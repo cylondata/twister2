@@ -31,4 +31,3 @@ t2_java_lib(
     artifact_name = "Twister2 DeepLearning",
     deps = common_deps_files,
 )
-

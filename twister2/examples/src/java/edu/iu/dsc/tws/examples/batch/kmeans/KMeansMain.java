@@ -59,6 +59,8 @@ public class KMeansMain {
         true, "Output directory", true));
     options.addOption(Utils.createOption(DataObjectConstants.FILE_SYSTEM,
         true, "file system", true));
+    options.addOption(Utils.createOption(DataObjectConstants.FILE_TYPE,
+        true, "file type", true));
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -79,6 +81,7 @@ public class KMeansMain {
     String centroidDirectory = cmd.getOptionValue(DataObjectConstants.CINPUT_DIRECTORY);
     String outputDirectory = cmd.getOptionValue(DataObjectConstants.OUTPUT_DIRECTORY);
     String fileSystem = cmd.getOptionValue(DataObjectConstants.FILE_SYSTEM);
+    String fileType = cmd.getOptionValue(DataObjectConstants.FILE_TYPE);
 
     boolean shared =
         Boolean.parseBoolean(cmd.getOptionValue(DataObjectConstants.SHARED_FILE_SYSTEM));
@@ -99,6 +102,7 @@ public class KMeansMain {
     jobConfig.put(DataObjectConstants.SHARED_FILE_SYSTEM, shared);
     jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, iterations);
     jobConfig.put(DataObjectConstants.JOB_TYPE, jobType);
+    jobConfig.put(DataObjectConstants.FILE_TYPE, fileType);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");

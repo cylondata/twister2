@@ -49,7 +49,7 @@ const siteConfig = {
         {doc: 'developers/debugging', label: 'Contribute'},
         {doc: 'download', label: 'Download'},
         {page: 'configs', label: 'Configurations'},
-        {page: 'javadoc/index.html', label: "Java Docs"},
+        {page: 'javadocs/index.html', label: "Java Docs"},
         {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub", external: true},
         {blog: true, label: 'Blog'},
     ],
@@ -67,6 +67,10 @@ const siteConfig = {
         primaryColor: '#1c1b8b',
         secondaryColor: '#625f76',
     },
+
+    separateCss: [
+        `javadocs`
+    ],
 
     /* Custom fonts for website */
     /*

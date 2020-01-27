@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -28,12 +29,13 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
-    this(env, n, sourceP, sourceP);
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+    this(env, n, sourceP, sourceP, schema);
   }
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                    Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected BatchIteratorLink() {
@@ -52,7 +54,7 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 

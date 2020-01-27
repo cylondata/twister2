@@ -146,8 +146,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.concurrentIOs = new Semaphore(parallelIOAllowance);
 
     this.target = tar;
-    LOG.fine("Disk merger configured. Folder : " + folder
-        + ", Bytes in memory :" + maxBytesInMemory);
+    LOG.info("Disk merger configured. Folder : " + folder
+        + ", Bytes in memory :" + maxBytesInMemory + ", File size: " + maxBytesFile);
   }
 
   /**
@@ -187,6 +187,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
       // we switch to disk
       if (numOfBytesInMemory >= maxBytesToKeepInMemory) {
+        LOG.info(String.format("Switching to write to disk memory %d >= maxMemory %d",
+            numOfBytesInMemory, maxBytesToKeepInMemory));
         status = FSStatus.WRITING_DISK;
         this.numOfBytesInMemory = 0;
       }
@@ -355,6 +357,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     @Override
     public void run() {
+      LOG.info(String.format("Shuffle saving to temporary file bytes %d, file %s",
+          bytesInMemory, fileName));
       // do the sort
       referenceToRecordsInMemory.sort(comparatorWrapper);
 

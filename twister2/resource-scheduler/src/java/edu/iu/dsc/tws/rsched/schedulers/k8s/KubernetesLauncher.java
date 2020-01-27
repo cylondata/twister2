@@ -15,23 +15,16 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
-import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
-import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
-import edu.iu.dsc.tws.common.zk.ZKEventsManager;
-import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
-import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -40,12 +33,11 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForJob;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-import io.kubernetes.client.models.V1PersistentVolumeClaim;
-import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1StatefulSet;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
 
 public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
@@ -55,7 +47,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private KubernetesController controller;
   private String namespace;
   private JobSubmissionStatus jobSubmissionStatus;
-  private UploaderForJob uploader;
 
   public KubernetesLauncher() {
     controller = new KubernetesController();
@@ -76,12 +67,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   @Override
   public Twister2JobState launch(JobAPI.Job job) {
+
     Twister2JobState state = new Twister2JobState(false);
 
     if (!configParametersOK(job)) {
       return state;
     }
-
 
     String jobID = job.getJobId();
 
@@ -97,29 +88,14 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     long jobFileSize = jobFile.length();
 
-    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize);
-    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize);
-
     // check all relevant entities on Kubernetes master
     boolean allEntitiesOK = checkEntitiesForJob(job);
     if (!allEntitiesOK) {
       return state;
     }
 
-    // create znodes at ZooKeeper server if ZK server is used
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      boolean jobZnodeCreated = createJobZnodes(job);
-      if (!jobZnodeCreated) {
-        // nothing to clear at this point, if the job znode is not created
-        return state;
-      }
-    }
-
-    // start job package transfer threads to watch pods to starting
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      uploader = new UploaderForJob(config, job, jobPackageFile);
-      uploader.start();
-    }
+    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize);
+    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize);
 
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobID);
@@ -144,25 +120,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return state;
     }
 
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      // transfer the job package to pods, measure the transfer time
-      long start = System.currentTimeMillis();
-      boolean transferred = uploader.completeFileTransfers();
-
-      if (transferred) {
-        long duration = System.currentTimeMillis() - start;
-        LOG.info("Transferring all files took: " + duration + " ms.");
-      } else {
-        LOG.log(Level.SEVERE, "Transferring the job package to some pods failed."
-            + "\nPlease run terminate job to clear up any artifacts from previous jobs, "
-            + "or submit the job with a different name."
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-
-        clearupWhenSubmissionFails(jobID);
-        return state;
-      }
-    }
-
     // start the Job Master locally if requested
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       boolean jobMasterCompleted = startJobMasterOnClient(job);
@@ -174,46 +131,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
-    // If clientToPodsUploading is used, wait uploader thread to finish
-    // When dynamic IDriver is used, this thread never finishes
-    // It waits in case a new worker is added by IDriver
-    // User should finish this process with control-C
-    // TODO: may be we can watch the job somehow and exit it when the job completes
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      try {
-        uploader.join();
-      } catch (InterruptedException e) {
-        LOG.warning("Thread Interrupted when waiting for uploader to join.");
-      }
-    }
     state.setRequestGranted(true);
     return state;
   }
-
-  /**
-   * create znodes on ZooKeeper server for this job
-   */
-  public boolean createJobZnodes(JobAPI.Job job) {
-
-    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String rootPath = ZKContext.rootNode(config);
-
-    try {
-      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
-      ZKPersStateManager.createPersStateDir(client, rootPath, job);
-      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
-      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
-
-      jobSubmissionStatus.setJobZNodesCreated(true);
-      return true;
-
-    } catch (Exception e) {
-      LOG.severe(e.getMessage()
-          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-      return false;
-    }
-  }
-
 
   private String getJobMasterIP(JobAPI.Job job) {
     if (JobMasterContext.jobMasterRunsInClient(config)) {
@@ -330,9 +250,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       serviceNames.add(jobMasterServiceName);
     }
 
-    boolean serviceExists = controller.existServices(serviceNames);
-    if (serviceExists) {
-      LOG.severe("Another job might be running. "
+    String existingService = controller.existServices(serviceNames);
+    if (existingService != null) {
+      LOG.severe("There is already a service with the name: " + existingService
+          + "\nAnother job might be running. "
           + "\nFirst terminate that job or create a job with a different name."
           + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
       return false;
@@ -379,22 +300,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       if (!secretExists) {
         LOG.severe("No Secret object is available in the cluster with the name: " + secretName
             + "\nFirst create this object or make that object created by your cluster admin."
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-        return false;
-      }
-    }
-
-    // when fault tolerance is used, we check whether the znodes that will be created for this job
-    // is available at ZooKeeper server
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      CuratorFramework zkClient = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-      String rootPath = ZKContext.rootNode(config);
-      boolean jobZNodesExist = ZKUtils.isThereJobZNodes(zkClient, rootPath, jobID);
-
-      if (jobZNodesExist) {
-        LOG.severe("Some znodes already exist in ZooKeeper that will be used for this job. "
-            + "\nFirst terminate the previously running job with the same name or "
-            + "submit the job with a different job name. "
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
         return false;
       }
@@ -539,6 +444,19 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   private boolean configParametersOK(JobAPI.Job job) {
 
+    // check whether the uploader is supported
+    List<String> uploaders = Arrays.asList(
+        "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader",
+        "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader");
+
+    if (!uploaders.contains(SchedulerContext.uploaderClass(config))) {
+      LOG.log(Level.SEVERE, String.format("Provided uploader is not supported: "
+          + SchedulerContext.uploaderClass(config)
+          + ". \nSupporter uploaders: " + uploaders
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++"));
+      return false;
+    }
+
     // when OpenMPI is enabled, all pods need to have equal numbers workers
     // we check whether all workersPerPod values are equal to first ComputeResource workersPerPod
     if (SchedulerContext.useOpenMPI(config)) {
@@ -600,26 +518,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   /**
-   * delete job znodes on ZooKeeper server
-   * @param jobID
-   * @return
-   */
-  public boolean deleteJobZnode(String jobID) {
-
-    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String rootPath = ZKContext.rootNode(config);
-    return ZKUtils.deleteJobZNodes(client, rootPath, jobID);
-  }
-
-  /**
    * Close up any resources
    */
   @Override
   public void close() {
-
-    // if ZK Client is initialized close that
-    // if not, it does nothing
-    ZKUtils.closeClient();
   }
 
   /**
@@ -630,10 +532,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private void clearupWhenSubmissionFails(String jobID) {
 
     LOG.info("Will clear up any resources created during the job submission process.");
-
-    if (KubernetesContext.clientToPodsUploading(config) && uploader != null) {
-      uploader.stopUploader();
-    }
 
     // first delete the service objects
     // delete the job service
@@ -658,10 +556,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (jobSubmissionStatus.isPvcCreated()) {
       String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
       boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
-    }
-
-    if (jobSubmissionStatus.isJobZNodesCreated()) {
-      deleteJobZnode(jobID);
     }
   }
 
@@ -692,11 +586,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
-
-    // delete job znode from ZooWorker server if fault tolerant
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      deleteJobZnode(jobID);
-    }
 
     return true;
   }

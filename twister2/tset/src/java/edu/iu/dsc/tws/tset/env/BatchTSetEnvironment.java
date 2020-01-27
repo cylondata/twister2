@@ -119,6 +119,17 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
+  public <K, V,
+      F extends InputFormat<K, V>, K2, V2> KeyedSourceTSet<K2, V2> createKeyedHadoopSource(
+      Configuration configuration, Class<F> inputFormat, int parallel,
+      MapFunc<Tuple<K2, V2>, Tuple<K, V>> mapFunc) {
+    KeyedSourceTSet<K2, V2> sourceT = new KeyedSourceTSet<>(this,
+        new HadoopSourceWithMap<>(configuration, inputFormat, mapFunc), parallel);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
   // get data from a tset and update the another
   private <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(ST tSet, ST updateTSet) {
     // get the data from the evaluation

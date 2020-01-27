@@ -38,11 +38,13 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
 
   public JoinConfig(String leftParent, String rightParent,
                     ComputeConnection computeConnection,
-                    CommunicationContext.JoinType joinType) {
+                    CommunicationContext.JoinType joinType,
+                    CommunicationContext.JoinAlgorithm joinAlgorithm) {
     super(leftParent, OperationNames.JOIN, computeConnection);
     this.rightSource = rightParent;
     this.withProperty(CommunicationContext.USE_DISK, false);
     this.withProperty(CommunicationContext.JOIN_TYPE, joinType);
+    this.withProperty(CommunicationContext.JOIN_ALGORITHM, joinAlgorithm);
   }
 
   public JoinConfig useDisk(boolean useDisk) {
