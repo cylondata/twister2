@@ -44,6 +44,7 @@ const siteConfig = {
         {doc: 'introduction', label: 'Getting Started'},
         {doc: 'compiling/compile_overview', label: 'Docs'},
         {doc: 'examples/tset/hello_world', label: 'Tutorial'},
+        {doc: 'ai/artificial_intelligence', label: 'AI'},
         {doc: 'examples/examples', label: 'Examples'},
         {doc: 'developers/debugging', label: 'Contribute'},
         {doc: 'download', label: 'Download'},
