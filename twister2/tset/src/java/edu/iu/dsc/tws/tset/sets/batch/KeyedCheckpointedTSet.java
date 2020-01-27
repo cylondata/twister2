@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
@@ -34,8 +35,9 @@ public class KeyedCheckpointedTSet<K, V> extends KeyedPersistedTSet<K, V> {
   private DiskPartitionBackedSource<Tuple<K, V>> sourceFunc;
 
   public KeyedCheckpointedTSet(BatchTSetEnvironment tSetEnv,
-                               DiskPartitionBackedSource<Tuple<K, V>> sourceFn, int parallelism) {
-    super(tSetEnv, null, parallelism);
+                               DiskPartitionBackedSource<Tuple<K, V>> sourceFn, int parallelism,
+                               KeyedSchema inputSchema) {
+    super(tSetEnv, null, parallelism, inputSchema);
     this.sourceFunc = sourceFn;
   }
 

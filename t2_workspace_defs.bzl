@@ -5,10 +5,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 _MAVEN_MIRRORS = [
-    "http://repo1.maven.org/maven2/",
-    "http://maven.ibiblio.org/maven2/",
-    "http://repo.exist.com/maven2/",
-    "http://www.ibiblio.net/pub/packages/maven2/",
+    "https://repo1.maven.org/maven2/",
+    "https://repo.maven.apache.org/maven2/",
+    "https://maven.google.com",
 ]
 
 deps = []
@@ -62,6 +61,7 @@ def load_modules():
     maven_install(
         name = "maven",
         artifacts = [
+            "com.opencsv:opencsv:5.0",
             "org.powermock:powermock-module-junit4-common:1.6.2",
             "org.apache.curator:curator-client:4.2.0",
             "org.apache.curator:curator-framework:4.2.0",
@@ -107,6 +107,9 @@ def load_modules():
     _maven_import(artifact = "org.apache.httpcomponents:httpmime:4.4", licenses = ["notice"], sha256 = "91d9abfebb3a404090106e10bc6bb0fd33072375c9df27f0f91a4c613289bd4b")
     _maven_import(artifact = "com.github.jnr:jffi:1.2.16", licenses = ["notice"], sha256 = "7a616bb7dc6e10531a28a098078f8184df9b008d5231bdc5f1c131839385335f")
     _maven_import(artifact = "org.lz4:lz4-java:1.6.0", licenses = ["notice"], sha256 = "d229545aa2b1d5203c876614bdbcffcacc303697f4f8f26f764e1d6c1ed2e416")
+    _maven_import(artifact = "org.apache.hadoop:hadoop-auth:3.2.1", licenses = ["notice"], sha256 = "81645fff08e0b8bd464e033b1b2e10f70b4f7f81a82e057fcb2be88be29a94d5")
+
+    #    _maven_import(artifact = "org.lz4:lz4-java:1.4", licenses = ["notice"], sha256 = "9ed51eb236340cab58780ed7d20741ff812bcb3875beb974fa7cf9ddea272358")
     _maven_import(artifact = "org.apache.hadoop:hadoop-auth:3.2.1", licenses = ["notice"], sha256 = "81645fff08e0b8bd464e033b1b2e10f70b4f7f81a82e057fcb2be88be29a94d5")
     _maven_import(artifact = "org.lmdbjava:lmdbjava-native-linux-x86_64:0.9.21-1", licenses = ["notice"], sha256 = "d0905caca075b5b63e598398514253dabc1ee7604fd5e12050513aeb6435ac0d")
     _maven_import(artifact = "net.openhft:chronicle-queue:4.6.55", licenses = ["notice"], sha256 = "cc37d54a902b2e125389de06d7e273c6ed366e92d520e5782eb109d933070e6c")

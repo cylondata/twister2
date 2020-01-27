@@ -9,9 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.fn;
+package edu.iu.dsc.tws.api.tset.schema;
 
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
-public interface AggregateFunction<T> extends ReduceFunc<T> {
+public class KeyedSchema implements TupleSchema {
+  private final MessageType dType;
+  private final MessageType kType;
+
+  public KeyedSchema(MessageType keyType, MessageType dataType) {
+    this.dType = dataType;
+    this.kType = keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dType;
+  }
+
+  public MessageType getKeyType() {
+    return kType;
+  }
 }

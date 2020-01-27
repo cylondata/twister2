@@ -18,6 +18,9 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
 import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
@@ -35,15 +38,25 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
     //non arg constructor for kryo
   }
 
+  /**
+   * NOTE: KeyedTSets input usually comes from a non keyed
+   * {@link edu.iu.dsc.tws.api.tset.link.TLink}. Hence the input schema is a not a
+   * {@link KeyedSchema}
+   */
   public KeyedTSet(BatchTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFunc,
-                   int parallelism) {
-    super(tSetEnv, "keyed", parallelism);
+                   int parallelism, Schema inputSchema) {
+    super(tSetEnv, "keyed", parallelism, inputSchema);
     this.mapToTupleFunc = mapFunc;
   }
 
   @Override
   public KeyedTSet<K, V> setName(String n) {
     return (KeyedTSet<K, V>) super.setName(n);
+  }
+
+  @Override
+  public KeyedTSet<K, V> withSchema(TupleSchema schema) {
+    return (KeyedTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

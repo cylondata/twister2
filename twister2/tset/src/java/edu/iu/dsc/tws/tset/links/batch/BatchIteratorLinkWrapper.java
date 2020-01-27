@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -26,12 +27,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
  * @param <T> type
  */
 public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP);
+  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+    super(env, n, sourceP, schema);
   }
 
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                           Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   protected BatchIteratorLinkWrapper() {
@@ -40,7 +42,7 @@ public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
   @Override
   public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
     addChildToGraph(cacheTSet);
 
     return cacheTSet;
@@ -54,7 +56,7 @@ public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
   @Override
   public PersistedTSet<T> lazyPersist() {
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        new DiskPersistIterSink<>(this.getId()), getTargetParallelism());
+        new DiskPersistIterSink<>(this.getId()), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
 
     return persistedTSet;

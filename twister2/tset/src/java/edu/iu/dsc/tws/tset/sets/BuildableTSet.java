@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.Buildable;
 
@@ -36,6 +37,11 @@ public interface BuildableTSet extends TBase, Buildable {
     } else {
       throw new RuntimeException("Unknown INode " + getINode());
     }
+
+    graphBuilder.addConfiguration(getId(), TSetConstants.INPUT_SCHEMA_KEY,
+        ((BaseTSetWithSchema) this).getInputSchema());
+    graphBuilder.addConfiguration(getId(), TSetConstants.OUTPUT_SCHEMA_KEY,
+        ((BaseTSetWithSchema) this).getOutputSchema());
   }
 
 }

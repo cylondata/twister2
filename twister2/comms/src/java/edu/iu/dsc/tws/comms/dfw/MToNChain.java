@@ -973,7 +973,7 @@ public class MToNChain implements DataFlowOperation, ChannelReceiver {
         int target = workerTargets.get(i);
         Queue<AggregatedObjects<Object>> queue = merged.get(target);
 
-        AggregatedObjects<Object> data = queue.poll();
+        AggregatedObjects<Object> data = queue.peek();
         if (data == null) {
           data = empty;
         }
@@ -982,6 +982,7 @@ public class MToNChain implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
+          queue.poll();
           sent = true;
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
@@ -1213,7 +1214,7 @@ public class MToNChain implements DataFlowOperation, ChannelReceiver {
   public void finish(int source) {
     // add to finished sources
     mergeFinishSources.add(source);
-
+    LOG.info("Finishing source " + source);
     Set<Integer> tOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
     for (int dest : targets) {
       // first we need to call finish on the partial receivers

@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -42,12 +43,14 @@ import edu.iu.dsc.tws.tset.links.streaming.SGatherTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SPartitionTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
-import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
-public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements StreamingTSet<T> {
+public abstract class StreamingTSetImpl<T> extends BaseTSetWithSchema<T> implements
+    StreamingTSet<T> {
 
-  public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
-    super(tSetEnv, name, parallelism);
+  public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+                           Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
   }
 
   @Override
@@ -57,14 +60,16 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
 
   @Override
   public SDirectTLink<T> direct() {
-    SDirectTLink<T> direct = new SDirectTLink<>(getTSetEnv(), getParallelism());
+    SDirectTLink<T> direct = new SDirectTLink<>(getTSetEnv(), getParallelism(),
+        this.getOutputSchema());
     addChildToGraph(direct);
     return direct;
   }
 
   @Override
   public SReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    SReduceTLink<T> reduce = new SReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    SReduceTLink<T> reduce = new SReduceTLink<>(getTSetEnv(), reduceFn, getParallelism(),
+        this.getOutputSchema());
     addChildToGraph(reduce);
     return reduce;
   }
@@ -72,7 +77,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
   @Override
   public SPartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     SPartitionTLink<T> partition = new SPartitionTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), targetParallelism);
+        partitionFn, getParallelism(), targetParallelism, this.getOutputSchema());
     addChildToGraph(partition);
     return partition;
   }
@@ -84,7 +89,8 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
 
   @Override
   public SGatherTLink<T> gather() {
-    SGatherTLink<T> gather = new SGatherTLink<>(getTSetEnv(), getParallelism());
+    SGatherTLink<T> gather = new SGatherTLink<>(getTSetEnv(), getParallelism(),
+        this.getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -92,15 +98,15 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
   @Override
   public SAllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     SAllReduceTLink<T> allreduce = new SAllReduceTLink<>(getTSetEnv(), reduceFn,
-        getParallelism());
+        getParallelism(), this.getOutputSchema());
     addChildToGraph(allreduce);
     return allreduce;
   }
 
   @Override
   public SAllGatherTLink<T> allGather() {
-    SAllGatherTLink<T> allgather = new SAllGatherTLink<>(getTSetEnv(),
-        getParallelism());
+    SAllGatherTLink<T> allgather = new SAllGatherTLink<>(getTSetEnv(), getParallelism(),
+        this.getOutputSchema());
     addChildToGraph(allgather);
     return allgather;
   }
@@ -118,7 +124,8 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
-    SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
+    SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism(),
+        this.getOutputSchema());
     addChildToGraph(other, directOther);
     addChildToGraph(directOther, union);
     // now the following relationship is created
@@ -140,7 +147,8 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
-      SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
+      SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism(),
+          this.getOutputSchema());
       addChildToGraph(other, directOther);
       addChildToGraph(directOther, union);
     }
@@ -160,9 +168,15 @@ public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements Stream
           + getParallelism());
     }
 
-    SReplicateTLink<T> cloneTSet = new SReplicateTLink<>(getTSetEnv(),
-        replications);
+    SReplicateTLink<T> cloneTSet = new SReplicateTLink<>(getTSetEnv(), replications,
+        this.getOutputSchema());
     addChildToGraph(cloneTSet);
     return cloneTSet;
+  }
+
+  @Override
+  public StreamingTSetImpl<T> withSchema(Schema schema) {
+    this.setOutputSchema(schema);
+    return this;
   }
 }

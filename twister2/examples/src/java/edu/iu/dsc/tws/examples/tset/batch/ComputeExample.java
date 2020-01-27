@@ -31,6 +31,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
@@ -42,7 +43,8 @@ public class ComputeExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src")
+        .withSchema(PrimitiveSchemas.INTEGER);
 
     ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
         (ComputeFunc<Integer, Iterator<Integer>>) input -> {
@@ -51,10 +53,12 @@ public class ComputeExample extends BatchTsetExample {
             s += input.next();
           }
           return s;
-        }).setName("sum");
+        }).withSchema(PrimitiveSchemas.INTEGER).setName("sum");
 
 
     sum.direct().forEach(data -> System.out.println("val: " + data));
+
+    sum.reduce(Integer::sum).forEach(i -> System.out.println("red: " + i));
   }
 
 

@@ -9,16 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.fn;
+package edu.iu.dsc.tws.api.tset.schema;
 
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
-/**
- * WindowCompute is the TSet ComputeFunction extension for Windowing oriented computations
- * @param <O> TSet Window Output
- * @param <I> TSet Window Input
- */
-public interface WindowCompute<O, I> extends ComputeFunc<O, I> {
+public interface Schema {
 
-
+  MessageType getDataType();
 }
+

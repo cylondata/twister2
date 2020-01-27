@@ -47,7 +47,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
    * Creates an instance of {@link JoinBatchOperation}
    */
   public JoinBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                            Set<Integer> sources, Set<Integer> dests,
+                            Set<Integer> sources1, Set<Integer> sources2, Set<Integer> dests,
                             Edge leftEdge, Edge rightEdge) {
     super(config, network, tPlan, leftEdge.getTargetEdge());
     this.leftEdge = leftEdge;
@@ -84,7 +84,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
-    op = new BJoin(newComm, logicalPlan, sources, dests,
+    op = new BJoin(newComm, logicalPlan, sources1, sources2, dests,
         leftEdge.getKeyType(),
         leftEdge.getDataType(),
         rightEdge.getDataType(),

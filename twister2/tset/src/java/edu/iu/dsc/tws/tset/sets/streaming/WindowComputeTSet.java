@@ -15,27 +15,23 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.AggregateFunction;
-import edu.iu.dsc.tws.tset.fn.WindowCompute;
-import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
+import edu.iu.dsc.tws.tset.fn.AggregateFunc;
+import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
 
 /**
  * WindowComputeTSet is the TSet abstraction designed for windowing. This class contains windowing
  * functions.
- *  1. Process Function (calls the compute function and process the TSet elements on user the
- *  defined function)
- *  2. LocalReduce Function (calls the compute and reduce the TSet elements on the user defined
- *  function)
- *  3. Fold Function (calls the compute and converts the input TSet data into a TSet with
- *  user-defined type
- *  4. Aggregate Function (calls the compute and do the TSet element aggregation on user-defined
- *  logic.
+ * 1. Process Function (calls the compute function and process the TSet elements on user the
+ * defined function)
+ * 2. Aggregate Function (calls the compute and do the TSet element aggregation on user-defined
+ * logic.
+ *
  * @param <O> Output type of TSet
  * @param <I> Input Type of TSet
  */
@@ -44,42 +40,42 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   private WindowParameter windowParameter;
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+//                           int parallelism, WindowParameter winParam) {
+//    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
+//  }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcompute", parallelism, winParam);
+                           int parallelism, WindowParameter winParam, Schema inputSchema) {
+    this(tSetEnv, "wcompute", parallelism, winParam, inputSchema);
   }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
-                           int parallelism, WindowParameter winParam) {
-    this(tSetEnv, "wcomputec", compOp, parallelism, winParam);
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
+//                           int parallelism, WindowParameter winParam) {
+//    this(tSetEnv, "wcomputec", compOp, parallelism, winParam);
+//  }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                           ComputeFunc<O, I> computeFunction, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
-    this.computeFunc = computeFunction;
-    this.windowParameter = winParam;
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+//                           ComputeFunc<O, I> computeFunction, int parallelism,
+//                           WindowParameter winParam) {
+//    super(tSetEnv, name, parallelism);
+//    this.computeFunc = computeFunction;
+//    this.windowParameter = winParam;
+//  }
 
   public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
+                           WindowParameter winParam, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.windowParameter = winParam;
   }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                           ComputeCollectorFunc<O, I> compOp, int parallelism,
-                           WindowParameter winParam) {
-    super(tSetEnv, name, parallelism);
-    this.computeFunc = compOp;
-    this.windowParameter = winParam;
-  }
+//  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+//                           ComputeCollectorFunc<O, I> compOp, int parallelism,
+//                           WindowParameter winParam) {
+//    super(tSetEnv, name, parallelism);
+//    this.computeFunc = compOp;
+//    this.windowParameter = winParam;
+//  }
 
   @Override
   public WindowComputeTSet<O, I> setName(String name) {
@@ -90,25 +86,23 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 
   @Override
   public ICompute<I> getINode() {
-    // todo: fix empty map
+    // todo: fix empty map (will have to handle inputs to window functions)
     if (computeFunc instanceof ComputeFunc) {
-      return new WindowComputeOp<O, I>((ComputeFunc<O, Iterator<I>>) computeFunc, this,
+      return new WindowComputeOp<>((ComputeFunc<O, Iterator<I>>) computeFunc, this,
           Collections.emptyMap(), windowParameter);
-    } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
-          Collections.emptyMap());
+    } else {
+      throw new RuntimeException("Unknown function type for window compute: " + computeFunc);
     }
-    throw new RuntimeException("Unknown function type for compute: " + computeFunc);
   }
 
-  public WindowComputeTSet<O, I> process(WindowCompute<O, I> processFunction) {
-    this.computeFunc = processFunction;
-    return this;
-  }
-
-  public WindowComputeTSet<O, I> reduce(WindowCompute<O, I> processFunction) {
-    this.computeFunc = processFunction;
-    return this;
+  public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
+    if (this.computeFunc == null) {
+      this.computeFunc = processFunction;
+      return this;
+    } else {
+      throw new RuntimeException("process/aggregate can only be called once on a WindowComputeTSet "
+          + getName());
+    }
   }
 
   /**
@@ -117,9 +111,9 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
    * @param aggregateFunction reduce function definition
    * @return reduced value of type O
    */
-  public WindowComputeTSet<O, I> aggregate(AggregateFunction<O> aggregateFunction) {
+  public WindowComputeTSet<O, I> aggregate(AggregateFunc<O> aggregateFunction) {
 
-    this.process(new WindowCompute<O, I>() {
+    this.process(new WindowComputeFunc<O, I>() {
       @Override
       public O compute(I input) {
         O initial = null;
@@ -142,7 +136,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-
-
-
+  public WindowComputeTSet<O, I> withSchema(Schema schema) {
+    return (WindowComputeTSet<O, I>) super.withSchema(schema);
+  }
 }

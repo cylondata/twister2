@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.utils.JoinRelation;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -49,6 +50,7 @@ public class BTJoinExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTJoinExample.class.getName());
   private static final String RIGHT_EDGE = "right";
   private static final String LEFT_EDGE = "left";
+  private static final String SOURCE2 = "source-2";
 
   @Override
   public ComputeGraphBuilder buildTaskGraph() {
@@ -59,12 +61,14 @@ public class BTJoinExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
 
 
-    BaseSource g = new JoinSource();
+    BaseSource source1 = new JoinSource(JoinRelation.LEFT);
+    BaseSource source2 = new JoinSource(JoinRelation.RIGHT);
     ICompute r = new JoinSinkTask();
 
-    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeGraphBuilder.addSource(SOURCE, source1, sourceParallelism);
+    computeGraphBuilder.addSource(SOURCE2, source2, sourceParallelism);
     computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
-    computeConnection.innerJoin(SOURCE, SOURCE, CommunicationContext.JoinAlgorithm.SORT)
+    computeConnection.innerJoin(SOURCE, SOURCE2, CommunicationContext.JoinAlgorithm.SORT)
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
         .withKeyType(keyType)
@@ -130,10 +134,11 @@ public class BTJoinExample extends BenchTaskWorker {
           }
         }
 
-        List objects = SortJoinUtils.innerJoin(onLeftEdge, onRightEdge,
-            new KeyComparatorWrapper(Comparator.naturalOrder()));
+        Iterator<JoinedTuple> objects = SortJoinUtils.join(onLeftEdge, onRightEdge,
+            new KeyComparatorWrapper(Comparator.naturalOrder()),
+            CommunicationContext.JoinType.INNER);
 
-        return (Iterator<JoinedTuple>) objects.iterator();
+        return objects;
       }, new IteratorComparator<>(
           (d1, d2) -> d1.getKey().equals(d2.getKey())
       ));
@@ -157,12 +162,18 @@ public class BTJoinExample extends BenchTaskWorker {
 
     private boolean timingCondition;
     private boolean endNotified;
+    private JoinRelation joinRelation;
+
+    public JoinSource(JoinRelation joinRelation) {
+      this.joinRelation = joinRelation;
+    }
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
-      this.timingCondition = getTimingCondition(SOURCE, ctx);
+      this.timingCondition = getTimingCondition(SOURCE, ctx)
+          && this.joinRelation == JoinRelation.LEFT;
       sendersInProgress.incrementAndGet();
     }
 
@@ -181,12 +192,18 @@ public class BTJoinExample extends BenchTaskWorker {
         if (count == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
-        context.write(LEFT_EDGE, count, inputDataArray);
-        context.write(RIGHT_EDGE, count / 2, inputDataArray);
+        if (joinRelation == JoinRelation.LEFT) {
+          context.write(LEFT_EDGE, count, inputDataArray);
+        } else {
+          context.write(RIGHT_EDGE, count / 2, inputDataArray);
+        }
         count++;
       } else if (!this.endNotified) {
-        context.end(LEFT_EDGE);
-        context.end(RIGHT_EDGE);
+        if (joinRelation == JoinRelation.LEFT) {
+          context.end(LEFT_EDGE);
+        } else {
+          context.end(RIGHT_EDGE);
+        }
         this.notifyEnd();
       }
     }

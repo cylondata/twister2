@@ -12,7 +12,6 @@ load("//tools/rules:twister2_client.bzl", "twister2_client_mesos_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_common_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_nomad_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_dashboard_files")
-load("//tools/rules:twister2_client.bzl", "twister2_client_scripts_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_third_party_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_task_scheduler_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_resource_scheduler_files")
@@ -303,7 +302,6 @@ pack_tw2(
         ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
         ":twister2-conf-nomad",
-        ":twister2-conf-scripts",
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
@@ -350,7 +348,6 @@ pack_tw2(
         ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
         ":twister2-conf-nomad",
-        ":twister2-conf-scripts",
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
@@ -453,13 +450,6 @@ pack_tw2(
     name = "twister2-conf-dashboard",
     srcs = twister2_client_dashboard_files(),
     package_dir = "conf/dashboard",
-    version = T2_VERSION,
-)
-
-pack_tw2(
-    name = "twister2-conf-scripts",
-    srcs = twister2_client_scripts_files(),
-    package_dir = "conf/scripts",
     version = T2_VERSION,
 )
 
