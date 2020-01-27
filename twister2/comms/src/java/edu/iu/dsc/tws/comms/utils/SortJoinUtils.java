@@ -145,13 +145,13 @@ public final class SortJoinUtils {
        */
       private boolean advance() {
         if (this.leftList != null) {
-          this.leftList.dispose();
-          this.oldLists.add(this.leftList);
+          this.leftList.clear();
+          //this.oldLists.add(this.leftList);
         }
 
         if (this.rightList != null) {
-          this.rightList.dispose();
-          this.oldLists.add(this.rightList);
+          this.rightList.clear();
+          //this.oldLists.add(this.rightList);
         }
 
         long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(config) / 2;
