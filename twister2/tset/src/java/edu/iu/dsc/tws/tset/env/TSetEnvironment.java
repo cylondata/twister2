@@ -100,6 +100,8 @@ public abstract class TSetEnvironment {
 
   public abstract <T> BaseTSet<T> createCSVSource(String filePath, int dataSize, int parallelism);
 
+  public abstract <T> BaseTSet<T> createCSVSource(String filePath, int parallelism);
+
   /**
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.

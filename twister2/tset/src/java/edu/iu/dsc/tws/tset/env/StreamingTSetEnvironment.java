@@ -63,6 +63,11 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
   }
 
   @Override
+  public <T> BaseTSet<T> createCSVSource(String filePath, int parallelism) {
+    return createSource(new CSVBasedSourceFunction(filePath), parallelism);
+  }
+
+  @Override
   public <K, V> SKeyedSourceTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
                                                          int parallelism) {
     SKeyedSourceTSet<K, V> sourceT = new SKeyedSourceTSet<>(this, source, parallelism);

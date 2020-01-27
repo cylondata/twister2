@@ -14,12 +14,14 @@ package edu.iu.dsc.tws.tset.fn.impl;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 
 public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
@@ -32,7 +34,11 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
 
   private String datainputDirectory;
   private int dataSize;
+  private int parallelism;
 
+  public CSVBasedSourceFunction(String dataInputdirectory) {
+    this.datainputDirectory = dataInputdirectory;
+  }
   public CSVBasedSourceFunction(String dataInputdirectory, int datasize) {
     this.datainputDirectory = dataInputdirectory;
     this.dataSize = datasize;
@@ -42,11 +48,14 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
   public void prepare(TSetContext context) {
     super.prepare(context);
     this.ctx = context;
-    this.dataSource = new DataSource(context.getConfig(), new LocalCSVInputPartitioner(
-        new Path(datainputDirectory), context.getParallelism(), dataSize, context.getConfig()),
-        context.getParallelism());
+    Config cfg = ctx.getConfig();
+
+    this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 100);
+    this.parallelism = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 2);
+    this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(new Path(datainputDirectory),
+        parallelism, dataSize, cfg), parallelism);
     this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
-    LOG.info("%%%% task index value:" + context.getIndex() + "\t" + this.dataSource);
+    LOG.info("%%%% Task Index Value:" + context.getIndex() + "\tDataSource" + this.dataSource);
   }
 
   @Override
