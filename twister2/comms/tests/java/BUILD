@@ -1,8 +1,15 @@
 load("//tools/rules:java_tests.bzl", "java_tests")
 
+srcs_without_ucx = glob(["**/*.java"])
+
+srcs_without_ucx.remove("edu/iu/dsc/tws/comms/ucx/TWSUCXChannelTest.java")
+
 java_library(
     name = "comms-tests",
-    srcs = glob(["**/*.java"]),
+    srcs = select({
+        "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
+        "//conditions:default": glob(["**/*.java"]),
+    }),
     deps = [
         "//third_party:ompi_javabinding_java",
         "//third_party/java:junit4",
@@ -10,6 +17,8 @@ java_library(
         "//third_party/java:powermock",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
@@ -37,7 +46,9 @@ java_tests(
         "edu.iu.dsc.tws.comms.shuffle.RestorableIteratorTest",
         "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
         "edu.iu.dsc.tws.comms.utils.HeapTest",
-        "edu.iu.dsc.tws.comms.utils.JoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.SortJoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
+        "edu.iu.dsc.tws.comms.utils.JoinRandomTest",
         "edu.iu.dsc.tws.comms.dfw.io.DataSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",
@@ -59,6 +70,7 @@ java_tests(
 #        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
 #        "edu.iu.dsc.tws.comms.utils.HeapTest",
 #        "edu.iu.dsc.tws.comms.utils.JoinUtilsTest",
+#        "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.DataSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerTest",
 #        "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",

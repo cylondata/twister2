@@ -16,6 +16,7 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
 /**
@@ -26,15 +27,15 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 public class SAllReduceTLink<T> extends StreamingSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
-  public SAllReduceTLink(StreamingTSetEnvironment tSetEnv, ReduceFunc<T> rFn,
-                         int sourceParallelism) {
-    super(tSetEnv, "sallreduce", sourceParallelism);
+  public SAllReduceTLink(StreamingTSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism,
+                         Schema schema) {
+    super(tSetEnv, "sallreduce", sourceParallelism, schema);
     this.reduceFn = rFn;
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.ALLREDUCE, getMessageType(), reduceFn);
+    return new Edge(getId(), OperationNames.ALLREDUCE, this.getSchema().getDataType(), reduceFn);
   }
 
   @Override

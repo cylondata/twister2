@@ -21,6 +21,7 @@ java_tests(
     test_classes = [
         "edu.iu.dsc.tws.common.net.tcp.request.TwoChannelTest",
         "edu.iu.dsc.tws.common.util.IterativeLinkedListTest",
+        "edu.iu.dsc.tws.common.pojo.TimeTest",
     ],
     runtime_deps = [
         ":common-tests",

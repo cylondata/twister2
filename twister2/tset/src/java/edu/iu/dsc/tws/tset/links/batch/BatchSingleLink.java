@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
@@ -43,12 +44,13 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistSingleSink;
 
 public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP, sourceP);
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+    super(env, n, sourceP, sourceP, schema);
   }
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+                  Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   @Override
@@ -76,7 +78,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   @Override
   public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
     KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
 
     addChildToGraph(set);
 
@@ -86,7 +88,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   @Override
   public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
-        getTargetParallelism());
+        getTargetParallelism(), getSchema());
     addChildToGraph(cacheTSet);
     return cacheTSet;
   }
@@ -102,7 +104,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
         this.getId()
     );
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        diskPersistSingleSink, getTargetParallelism());
+        diskPersistSingleSink, getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
     return persistedTSet;
   }

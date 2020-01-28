@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 /**
- * When instantiating the comms, we need to assign and id for the edge.
+ * When instantiating the comms, we need to assign an id for the edge.
  * <p>
  * This class will be used to handle the following issue.
  * https://github.com/DSC-SPIDAL/twister2/issues/519

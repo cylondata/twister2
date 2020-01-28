@@ -233,8 +233,29 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       if (c.getEdge().size() == 1) {
         op = opFactory.build(c.getEdge(0), c.getSourceTasks(), c.getTargetTasks(),
             operationMode);
-      } else if (c.getEdge().size() > 1) {
-        op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(), operationMode);
+      } else if (c.getEdge().size() > 1) { // just join op for now. Could change in the future
+        // here the sources should be separated out for left and right edge
+        Set<Integer> sourceTasks = c.getSourceTasks();
+        Set<Integer> leftSources = new HashSet<>();
+        Set<Integer> rightSources = new HashSet<>();
+        if (!sourceTasks.isEmpty()) { // just to safely do .get() calls without isPresent()
+          int minBin = (sourceTasks.stream().min(Integer::compareTo).get()
+              / TaskIdGenerator.TASK_OFFSET) * TaskIdGenerator.TASK_OFFSET;
+          for (Integer source : sourceTasks) {
+            if ((source / TaskIdGenerator.TASK_OFFSET) * TaskIdGenerator.TASK_OFFSET == minBin) {
+              leftSources.add(source);
+            } else {
+              rightSources.add(source);
+            }
+          }
+        }
+
+        // now determine, which task is connected to which edge
+        Edge leftEdge = c.getEdge(0);
+        Edge rightEdge = c.getEdge(1);
+
+        op = opFactory.build(leftEdge, rightEdge, leftSources, rightSources, c.getTargetTasks(),
+            operationMode);
       } else {
         throw new RuntimeException("Cannot have communication with 0 edges");
       }
@@ -288,7 +309,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             op.register(i, taskStreamingInstance.getInQueue());
             taskStreamingInstance.registerInParallelOperation(targetEdge, op);
             op.registerSync(i, taskStreamingInstance);
-          }  else {
+          } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
         }

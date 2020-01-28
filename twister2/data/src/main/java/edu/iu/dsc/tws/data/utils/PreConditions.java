@@ -24,4 +24,11 @@ public final class PreConditions {
     }
     return reference;
   }
+
+  public static String checkNotNull(String charset, @Nullable String errorMessage) {
+    if (charset == null) {
+      throw new NullPointerException(String.valueOf(errorMessage));
+    }
+    return charset;
+  }
 }

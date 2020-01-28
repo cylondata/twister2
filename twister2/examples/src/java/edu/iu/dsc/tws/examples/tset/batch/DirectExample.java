@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
@@ -55,12 +56,13 @@ public class DirectExample extends BatchTsetExample {
     direct.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    direct.map(i -> i.toString() + "$$").setName("map")
+    direct.map(i -> i.toString() + "$$").setName("map").withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
     direct.flatmap((i, c) -> c.collect(i.toString() + "##")).setName("flatmap")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
@@ -71,7 +73,7 @@ public class DirectExample extends BatchTsetExample {
         sum += input.next();
       }
       return "sum" + sum;
-    }).setName("compute")
+    }).setName("compute").withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
@@ -84,6 +86,7 @@ public class DirectExample extends BatchTsetExample {
           }
           output.collect("sum" + sum);
         }).setName("ccompute")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 

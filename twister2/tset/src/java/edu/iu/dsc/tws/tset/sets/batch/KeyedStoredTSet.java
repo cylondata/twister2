@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -47,8 +48,9 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
   protected KeyedSourceTSet<K, V> storedSource;
 
   KeyedStoredTSet(BatchTSetEnvironment tSetEnv, String name,
-                  SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism) {
-    super(tSetEnv, name, parallelism);
+                  SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism,
+                  KeyedSchema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = storingSinkFn;
     this.storedSourcePrefix = "kstored(" + getId() + ")";
   }
@@ -151,4 +153,8 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
     return new SinkOp<>(storingSinkFunc, this, getInputs());
   }
 
+  @Override
+  public KeyedSchema getInputSchema() {
+    return (KeyedSchema) super.getInputSchema();
+  }
 }

@@ -164,6 +164,7 @@ def twister2_client_lib_data_files():
         "@log4j_log4j//jar",
         "@org_apache_htrace_htrace_core4//jar",
         "@org_apache_hadoop_hadoop_hdfs_client//jar",
+        "@maven//:com_opencsv_opencsv",
         "@org_apache_commons_commons_configuration2//jar",
     ]
 
@@ -207,8 +208,10 @@ def twister2_client_lib_communication_files():
         "@com_esotericsoftware_reflectasm//jar",
         "@org_ow2_asm_asm//jar",
         "//third_party:ompi_javabinding_java",
-        "//third_party:ucx_javabinding_java",
-    ]
+    ] + select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["//third_party:ucx_javabinding_java"],
+    })
 
 def twister2_client_lib_common_files():
     return [

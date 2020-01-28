@@ -50,7 +50,7 @@ public class DataFileReader {
     final FileStatus pathFile;
     try {
       final FileSystem fs = FileSystemUtils.get(path, config);
-      if ("hdfs".equals(fileSystem)) {
+      if (DataContext.TWISTER2_HDFS_FILESYSTEM.equals(fileSystem)) {
         pathFile = fs.getFileStatus(path);
         this.fdis = fs.open(pathFile.getPath());
       } else {

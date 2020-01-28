@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
@@ -55,13 +56,13 @@ public class ReduceExample extends BatchTsetExample {
 
     LOG.info("test map");
     reduce
-        .map(i -> i.toString() + "$$")
+        .map(i -> i.toString() + "$$").withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
     reduce
-        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .flatmap((i, c) -> c.collect(i.toString() + "##")).withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
@@ -69,6 +70,7 @@ public class ReduceExample extends BatchTsetExample {
     reduce
         .compute((ComputeFunc<String, Integer>)
             input -> "sum=" + input)
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
@@ -76,6 +78,7 @@ public class ReduceExample extends BatchTsetExample {
     reduce
         .compute((ComputeCollectorFunc<String, Integer>)
             (input, output) -> output.collect("sum=" + input))
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 

@@ -104,14 +104,16 @@ public class KMeansCheckpointingWorker implements IWorker {
     String centroidDirectory = config.getStringValue(
         DataObjectConstants.CINPUT_DIRECTORY) + workerId;
 
+    String type = config.getStringValue(DataObjectConstants.FILE_TYPE);
+
     KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+        centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
     ComputeGraph datapointsTaskGraph = KMeansComputeJob.buildDataPointsTG(dataDirectory, dsize,
-        parallelismValue, dimension, config);
+        parallelismValue, dimension, config, type);
     //Get the execution plan for the first task graph
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
@@ -124,7 +126,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
       ComputeGraph centroidsTaskGraph = KMeansComputeJob.buildCentroidsTG(centroidDirectory, csize,
-          parallelismValue, dimension, config);
+          parallelismValue, dimension, config, type);
       //Get the execution plan for the second task graph
       ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
       //Actual execution for the second taskgraph
@@ -240,6 +242,6 @@ public class KMeansCheckpointingWorker implements IWorker {
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
-
 }
+
 

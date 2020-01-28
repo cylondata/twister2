@@ -91,11 +91,12 @@ public class MultiComputeTasksGraphExample extends TaskWorker {
 
     int dsize = Integer.parseInt((String) config.get(DataObjectConstants.DSIZE));
     int csize = Integer.parseInt((String) config.get(DataObjectConstants.CSIZE));
+    String type = config.getStringValue(DataObjectConstants.FILE_TYPE);
 
     LOG.info("Input Values:" + dataDirectory + centroidDirectory + dimension + numFiles);
 
     KMeansUtils.generateDataPoints(config, dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+        centroidDirectory, type);
 
     //Adding the user-defined constraints to the graph
     Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
@@ -335,3 +336,4 @@ public class MultiComputeTasksGraphExample extends TaskWorker {
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
+

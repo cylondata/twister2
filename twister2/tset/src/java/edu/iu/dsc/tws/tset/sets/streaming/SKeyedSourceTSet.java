@@ -17,6 +17,8 @@ import java.util.Collections;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
 
@@ -25,13 +27,13 @@ public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
 
   public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<Tuple<K, V>> src,
                           int parallelism) {
-    super(tSetEnv, "sksource", parallelism);
+    super(tSetEnv, "sksource", parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;
   }
 
   public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, String name,
                           SourceFunc<Tuple<K, V>> src, int parallelism) {
-    super(tSetEnv, name, parallelism);
+    super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;
   }
 
@@ -39,6 +41,11 @@ public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   public SKeyedSourceTSet<K, V> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public SKeyedSourceTSet<K, V> withSchema(TupleSchema schema) {
+    return (SKeyedSourceTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

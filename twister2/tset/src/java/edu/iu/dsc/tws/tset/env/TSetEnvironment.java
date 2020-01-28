@@ -330,4 +330,11 @@ public abstract class TSetEnvironment {
 
     return thisTSetEnv;
   }
+
+  /**
+   * Close the environment
+   */
+  public void close() {
+    workerEnv.close();
+  }
 }

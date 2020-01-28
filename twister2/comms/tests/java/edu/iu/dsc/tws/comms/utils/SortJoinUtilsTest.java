@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -30,9 +31,9 @@ import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
 
-public class JoinUtilsTest {
+public class SortJoinUtilsTest {
 
-  private static final Logger LOG = Logger.getLogger(JoinUtilsTest.class.getName());
+  private static final Logger LOG = Logger.getLogger(SortJoinUtilsTest.class.getName());
 
   /**
    * Example values from https://en.wikipedia.org/wiki/Join_(SQL)
@@ -135,6 +136,92 @@ public class JoinUtilsTest {
    * Purpose is to verify the accuracy of disk based inner join
    */
   @Test
+  public void innerJoinWithDiskBasedListComparision() {
+    List<Tuple> left = new ArrayList<>();
+    List<Tuple> right = new ArrayList<>();
+    Random random = new Random();
+    for (int i = 0; i < 100; i++) {
+      left.add(Tuple.of(random.nextInt(10), random.nextInt()));
+      right.add(Tuple.of(random.nextInt(10), random.nextInt()));
+    }
+
+    FSKeyedSortedMerger2 fsk1 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-1-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : left) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk1.add(tuple.getKey(), data, data.length);
+      fsk1.run();
+    }
+
+    FSKeyedSortedMerger2 fsk2 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-2-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : right) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk2.add(tuple.getKey(), data, data.length);
+      fsk2.run();
+    }
+
+    CommonThreadPool.init(Config.newBuilder().build());
+
+    fsk1.switchToReading();
+    fsk2.switchToReading();
+
+    Iterator iterator = SortJoinUtils.joinWithCache(
+        (RestorableIterator) fsk1.readIterator(),
+        (RestorableIterator) fsk2.readIterator(),
+        new KeyComparatorWrapper((Comparator<Integer>) Integer::compare),
+        CommunicationContext.JoinType.INNER,
+        Config.newBuilder().build()
+    );
+
+
+    List<Object> objects = SortJoinUtils.innerJoin(left, right,
+        new KeyComparatorWrapper(Comparator.naturalOrder()));
+
+    objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
+
+
+    int i = 0;
+    while (iterator.hasNext()) {
+      JoinedTuple nextFromIt = (JoinedTuple) iterator.next();
+      JoinedTuple nextFromList = (JoinedTuple) objects.get(i++);
+
+      Assert.assertEquals(nextFromIt.getKey(), nextFromList.getKey());
+    }
+
+
+    Assert.assertEquals(i, objects.size());
+  }
+
+  /**
+   * This test compares the results of in memory and disk based inner joins.
+   * Purpose is to verify the accuracy of disk based inner join
+   */
+  @Test
   public void innerJoinComparision() {
     List<Tuple> left = new ArrayList<>();
     List<Tuple> right = new ArrayList<>();
@@ -189,14 +276,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.innerJoin(
+    Iterator iterator = SortJoinUtils.innerJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.innerJoin(left, right,
+    List<Object> objects = SortJoinUtils.innerJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -273,14 +360,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.fullOuterJoin(
+    Iterator iterator = SortJoinUtils.fullOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.fullOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.fullOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -357,14 +444,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.leftOuterJoin(
+    Iterator iterator = SortJoinUtils.leftOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.leftOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.leftOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -441,14 +528,14 @@ public class JoinUtilsTest {
     fsk1.switchToReading();
     fsk2.switchToReading();
 
-    Iterator iterator = JoinUtils.rightOuterJoin(
+    Iterator iterator = SortJoinUtils.rightOuterJoin(
         (RestorableIterator) fsk1.readIterator(),
         (RestorableIterator) fsk2.readIterator(),
         new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
     );
 
 
-    List<Object> objects = JoinUtils.rightOuterJoin(left, right,
+    List<Object> objects = SortJoinUtils.rightOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
@@ -474,7 +561,7 @@ public class JoinUtilsTest {
   public void innerJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.innerJoin(
+    List<Object> joined = SortJoinUtils.innerJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -500,7 +587,7 @@ public class JoinUtilsTest {
   public void fullOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.fullOuterJoin(
+    List<Object> joined = SortJoinUtils.fullOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -526,7 +613,7 @@ public class JoinUtilsTest {
   public void leftOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.leftOuterJoin(
+    List<Object> joined = SortJoinUtils.leftOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
@@ -552,7 +639,7 @@ public class JoinUtilsTest {
   public void rightOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
-    List<Object> joined = JoinUtils.rightOuterJoin(
+    List<Object> joined = SortJoinUtils.rightOuterJoin(
         employees,
         departments,
         this.getEmployeeDepComparator()
