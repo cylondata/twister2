@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.data;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class DiskBackedCollectionPartitionTest {
         ConfigLoader.loadTestConfig())) {
 
 
-      for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
+      for (int i = 0; i < 10000 / Integer.BYTES; i++) {
         rawData.add(i);
         dbp.add(i);
       }
@@ -57,11 +58,24 @@ public class DiskBackedCollectionPartitionTest {
       Iterator<Integer> rawIterator = rawData.iterator();
       this.verify(consumer, rawIterator);
     }
+
+    //verify with index based random reads
+    try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
+        MessageTypes.INTEGER, 1000, ConfigLoader.loadTestConfig(), reference)) {
+      Random random = new Random(System.currentTimeMillis());
+      for (int i = 0; i < 10000; i++) {
+        int index = random.nextInt(rawData.size());
+        Assert.assertEquals(rawData.get(index), dbp.get(index));
+      }
+    }
   }
 
   private void verify(DataPartitionConsumer<Integer> consumer, Iterator<Integer> rawIterator) {
+    int i=0;
     while (rawIterator.hasNext()) {
-      Assert.assertEquals(consumer.next(), rawIterator.next());
+      i++;
+      System.out.println(i);
+      Assert.assertEquals(rawIterator.next(), consumer.next());
     }
   }
 }
