@@ -148,11 +148,8 @@ public final class SortJoinUtils {
        */
       private boolean advance() {
         if (this.leftList != null) {
-          long ld = System.currentTimeMillis();
           this.leftList.dispose();
           this.oldLists.add(this.leftList);
-          debug.computeIfAbsent("left_dispose", s -> new AtomicLong())
-              .addAndGet(System.currentTimeMillis() - ld);
         }
 
         if (this.rightList != null) {
@@ -230,8 +227,7 @@ public final class SortJoinUtils {
         Runtime.getRuntime().addShutdownHook(new Thread() {
           @Override
           public synchronized void start() {
-            LOG.info("Cleaning up disk based caches used for join...  : "
-                + oldLists.size() + " DiskBasedLists *** " + debug.toString());
+            LOG.info("Cleaning up disk based caches used for join...");
             for (DiskBasedList oldList : oldLists) {
               oldList.clear();
             }
@@ -246,11 +242,7 @@ public final class SortJoinUtils {
 
       @Override
       public JoinedTuple next() {
-        long t1 = System.currentTimeMillis();
         JoinedTuple next = this.localJoinIterator.next();
-        debug.computeIfAbsent("next_call", s -> new AtomicLong()).addAndGet(
-            System.currentTimeMillis() - t1
-        );
         if (!this.localJoinIterator.hasNext()) {
           this.callAdvanceIt();
         }
