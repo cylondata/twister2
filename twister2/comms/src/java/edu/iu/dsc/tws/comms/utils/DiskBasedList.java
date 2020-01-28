@@ -105,17 +105,7 @@ public class DiskBasedList implements List {
 
   @Override
   public Object get(int i) {
-    if (this.consumingIndex > i || this.currentConsumer == null) {
-      this.currentConsumer = this.collectionPartition.getConsumer();
-      this.consumingIndex = 0;
-    }
-    while (this.consumingIndex++ < i && currentConsumer.hasNext()) {
-      currentConsumer.next();
-    }
-    if (currentConsumer.hasNext()) {
-      return currentConsumer.next();
-    }
-    return null;
+    return this.collectionPartition.get(i);
   }
 
   @Override
