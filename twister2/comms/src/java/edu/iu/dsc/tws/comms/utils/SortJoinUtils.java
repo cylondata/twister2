@@ -141,8 +141,6 @@ public final class SortJoinUtils {
 
       private Iterator<JoinedTuple> localJoinIterator;
 
-      private Map<String, AtomicLong> debug = new ConcurrentHashMap<>();
-
       /**
        * Advances two iterators by reading onto memory
        *
@@ -158,11 +156,8 @@ public final class SortJoinUtils {
         }
 
         if (this.rightList != null) {
-          long rd = System.currentTimeMillis();
           this.rightList.dispose();
           this.oldLists.add(this.rightList);
-          debug.computeIfAbsent("right_dispose", s -> new AtomicLong())
-              .addAndGet(System.currentTimeMillis() - rd);
         }
 
         long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(config) / 2;
@@ -174,7 +169,6 @@ public final class SortJoinUtils {
         Tuple currentTuple = null;
 
         // read from left iterator
-        long lw = System.currentTimeMillis();
         while (leftIt.hasNext() || this.leftBackup != null) {
           Tuple<?, ?> nextLeft = this.leftBackup != null ? this.leftBackup : leftIt.next();
           this.leftBackup = null; // we used the backup
@@ -192,10 +186,7 @@ public final class SortJoinUtils {
             break;
           }
         }
-        debug.computeIfAbsent("left_while", s -> new AtomicLong())
-            .addAndGet(System.currentTimeMillis() - lw);
 
-        long rw = System.currentTimeMillis();
         // read from right iterator
         while (rightIt.hasNext() || this.rightBackup != null) {
           Tuple<?, ?> nextRight = this.rightBackup != null ? this.rightBackup : rightIt.next();
@@ -210,18 +201,13 @@ public final class SortJoinUtils {
             break;
           }
         }
-        debug.computeIfAbsent("right_while", s -> new AtomicLong())
-            .addAndGet(System.currentTimeMillis() - rw);
 
-        long j = System.currentTimeMillis();
         this.localJoinIterator = join(
             new ListBasedRestorableIterator(this.leftList),
             new ListBasedRestorableIterator(this.rightList),
             comparator,
             joinType
         );
-        debug.computeIfAbsent("join", s -> new AtomicLong())
-            .addAndGet(System.currentTimeMillis() - j);
 
         // if current local iterators doesn't has join tuples and if we have more data on
         // data iterators, let's advance() again
@@ -231,13 +217,10 @@ public final class SortJoinUtils {
       }
 
       private void callAdvanceIt() {
-        long ad = System.currentTimeMillis();
         boolean shouldCall = true;
         while (shouldCall) {
           shouldCall = this.advance();
         }
-        debug.computeIfAbsent("callAdvance", s -> new AtomicLong())
-            .addAndGet(System.currentTimeMillis() - ad);
       }
 
       {
