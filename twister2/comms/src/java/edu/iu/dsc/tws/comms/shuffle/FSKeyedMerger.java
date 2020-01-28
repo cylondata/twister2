@@ -123,6 +123,24 @@ public class FSKeyedMerger implements Shuffle {
     this.kryoSerializer = new KryoSerializer();
   }
 
+  @Override
+  public void add(Tuple tuple) {
+    if (status == FSStatus.READING) {
+      throw new RuntimeException("Cannot add after switching to reading");
+    }
+
+    lock.lock();
+    try {
+      recordsInMemory.add(tuple);
+      int length = ((byte[]) tuple.getValue()).length;
+      bytesLength.add(length);
+
+      numOfBytesInMemory += length;
+    } finally {
+      lock.unlock();
+    }
+  }
+
   /**
    * Add the data to the file
    */
@@ -295,7 +313,9 @@ public class FSKeyedMerger implements Shuffle {
   public void clean() {
     File file = new File(getSaveFolderName());
     try {
-      FileUtils.cleanDirectory(file);
+      if (file.exists()) {
+        FileUtils.cleanDirectory(file);
+      }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to clear directory: " + file, e);
     }

@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.DataConstants;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -115,7 +114,7 @@ public final class FileSystemUtils {
         //TODO: handle when the system is not supported
       } else {
         String fsClass = SUPPORTEDFS.get(curUri.getScheme());
-        if (Context.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
+        if (DataContext.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
           try {
             fs = instantiateFileSystem(fsClass, config);
           } catch (NoSuchMethodException e) {
@@ -270,11 +269,11 @@ public final class FileSystemUtils {
     Object newInstance;
     try {
       Configuration conf = new Configuration(true);
-      conf.addResource(
-          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-      conf.addResource(
-          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsDataDirectory(config)));
-      conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
+      conf.addResource(new org.apache.hadoop.fs.Path(
+          HdfsDataContext.getHdfsConfigDirectory(config)));
+      conf.addResource(new org.apache.hadoop.fs.Path(
+          HdfsDataContext.getHdfsDataDirectory(config)));
+      conf.set("fs.defaultFS", getHdfsURL(config));
       fileSystemClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Constructor<?> classConstructor = fileSystemClass.getConstructor(Configuration.class,
           org.apache.hadoop.fs.FileSystem.class);
@@ -288,6 +287,15 @@ public final class FileSystemUtils {
       throw new IOException("Illegal access exception: " + e.getMessage(), e);
     }
     return (FileSystem) newInstance;
+  }
+
+  private static String directoryString;
+
+  private static String getHdfsURL(Config config) {
+    directoryString = DataContext.TWISTER2_HDFS_FILESYSTEM + "://"
+        + HdfsDataContext.getHdfsNamenodeDefault(config) + ":"
+        + HdfsDataContext.getHdfsNamenodePortDefault(config);
+    return directoryString;
   }
 
   /**

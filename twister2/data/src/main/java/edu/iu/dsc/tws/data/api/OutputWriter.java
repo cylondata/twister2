@@ -31,6 +31,8 @@ public interface OutputWriter<T> extends Serializable {
    */
   void write(int partition, T out);
 
+  void write(T out);
+
   /**
    * Close the writer, flush everything
    */

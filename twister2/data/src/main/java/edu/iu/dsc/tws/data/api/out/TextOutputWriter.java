@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.out;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -25,8 +27,23 @@ import edu.iu.dsc.tws.api.data.Path;
 public class TextOutputWriter extends FileOutputWriter<String> {
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
+  protected static String lineDelimiter = "\n";
+  protected static String fieldDelimiter = ",";
+  protected static String tabDelimiter = "\t";
+
+  private String[] headers;
+  private Path path;
+  private FSDataOutputStream outputStream;
+  private Config config;
+
   public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
     super(writeMode, outPath);
+  }
+
+  public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config cfg) {
+    super(writeMode, outPath, cfg);
+    this.config = cfg;
+    this.path = outPath;
   }
 
   @Override
@@ -43,12 +60,49 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     }
   }
 
+  public void setHeaders(String[] headerNames) {
+    this.headers = headerNames;
+  }
+
+  public void createOutput() {
+    try {
+      if (fs.exists(path)) {
+        fs.delete(path, true);
+      }
+      outputStream = fs.create(new Path(path, generateRandom(10) + ".txt"));
+      pw = new PrintWriter(outputStream);
+    } catch (IOException e) {
+      throw new RuntimeException("IOException Occured");
+    }
+  }
+
+  public void writeRecord(String data) {
+    if (headers != null) {
+      if (headers.length != 0) {
+        for (int i = 0; i < headers.length; i++) {
+          pw.write(headers[i]);
+          if (i < headers.length - 1) {
+            pw.write(fieldDelimiter);
+            pw.write(tabDelimiter);
+          }
+        }
+        pw.write(lineDelimiter);
+      }
+    }
+    pw.write(data);
+  }
+
+
   @Override
   public void close() {
-    for (PrintWriter pw : writerMap.values()) {
+    if (!writerMap.isEmpty()) {
+      for (PrintWriter pw1 : writerMap.values()) {
+        pw1.close();
+      }
+      writerMap.clear();
+    } else {
       pw.close();
     }
-    writerMap.clear();
     super.close();
   }
 }

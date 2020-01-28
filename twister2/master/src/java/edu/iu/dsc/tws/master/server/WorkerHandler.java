@@ -12,9 +12,8 @@
 package edu.iu.dsc.tws.master.server;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,14 +50,14 @@ public class WorkerHandler implements MessageHandler {
   // it also becomes false after scale-up and it becomes true when new workers connected
   private boolean allConnected = false;
 
-  private HashMap<Integer, RequestID> waitList;
+  private List<RequestID> waitList;
 
   public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     this.zkUsed = zkUsed;
 
-    waitList = new HashMap<>();
+    waitList = new LinkedList<>();
   }
 
   public boolean isAllConnected() {
@@ -193,7 +192,7 @@ public class WorkerHandler implements MessageHandler {
     if (listMessage.getRequestType()
         == JobMasterAPI.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
-      sendListWorkersResponse(listMessage.getWorkerID(), id);
+      sendListWorkersResponse(id);
       LOG.fine(String.format("Expecting %d workers, %d joined",
           workerMonitor.getNumberOfWorkers(), workerMonitor.getWorkersListSize()));
 
@@ -202,11 +201,11 @@ public class WorkerHandler implements MessageHandler {
 
       // if all workers have already joined, send the current list
       if (workerMonitor.getWorkersListSize() == workerMonitor.getNumberOfWorkers()) {
-        sendListWorkersResponse(listMessage.getWorkerID(), id);
+        sendListWorkersResponse(id);
 
         // if some workers have not joined yet, put this worker into the wait list
       } else {
-        waitList.put(listMessage.getWorkerID(), id);
+        waitList.add(id);
       }
 
       LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
@@ -259,24 +258,27 @@ public class WorkerHandler implements MessageHandler {
 
   }
 
-  private void sendListWorkersResponse(int workerID, RequestID requestID) {
+  private void sendListWorkersResponse(RequestID requestID) {
 
-    JobMasterAPI.ListWorkersResponse.Builder responseBuilder =
-        JobMasterAPI.ListWorkersResponse.newBuilder()
-            .setWorkerID(workerID);
+    List<JobMasterAPI.WorkerInfo> workerList = workerMonitor.getWorkerInfoList();
+    JobMasterAPI.ListWorkersResponse response = JobMasterAPI.ListWorkersResponse.newBuilder()
+        .setNumberOfWorkers(workerList.size())
+        .addAllWorker(workerList)
+        .build();
 
-    for (WorkerWithState worker : workerMonitor.getWorkerList()) {
-      responseBuilder.addWorker(worker.getInfo());
-    }
-
-    JobMasterAPI.ListWorkersResponse response = responseBuilder.build();
     rrServer.sendResponse(requestID, response);
     LOG.fine("ListWorkersResponse sent:\n" + response);
   }
 
   private void sendListWorkersResponseToWaitList() {
-    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
-      sendListWorkersResponse(entry.getKey(), entry.getValue());
+    List<JobMasterAPI.WorkerInfo> workerList = workerMonitor.getWorkerInfoList();
+    JobMasterAPI.ListWorkersResponse response = JobMasterAPI.ListWorkersResponse.newBuilder()
+        .setNumberOfWorkers(workerList.size())
+        .addAllWorker(workerList)
+        .build();
+
+    for (RequestID requestID : waitList) {
+      rrServer.sendResponse(requestID, response);
     }
 
     waitList.clear();

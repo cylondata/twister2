@@ -18,7 +18,6 @@ public class JobSubmissionStatus {
   private boolean serviceForJobMasterCreated;
   private boolean pvcCreated;
   private ArrayList<String> createdStatefulSetNames = new ArrayList<>();
-  private boolean jobZNodesCreated;
 
   public JobSubmissionStatus() { }
 
@@ -32,10 +31,6 @@ public class JobSubmissionStatus {
 
   public boolean isPvcCreated() {
     return pvcCreated;
-  }
-
-  public boolean isJobZNodesCreated() {
-    return jobZNodesCreated;
   }
 
   public ArrayList<String> getCreatedStatefulSetNames() {
@@ -56,10 +51,6 @@ public class JobSubmissionStatus {
 
   public void setPvcCreated(boolean pvcCreated) {
     this.pvcCreated = pvcCreated;
-  }
-
-  public void setJobZNodesCreated(boolean jobZNodesCreated) {
-    this.jobZNodesCreated = jobZNodesCreated;
   }
 
 }

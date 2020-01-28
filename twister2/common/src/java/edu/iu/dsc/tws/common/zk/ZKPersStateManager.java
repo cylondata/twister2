@@ -81,10 +81,10 @@ public final class ZKPersStateManager {
    * A persistent znode is created/updated for this worker on ZooKeeper server
    * Each worker must call this method exactly once when they start
    */
-  public static boolean initWorkerPersState(CuratorFramework client,
-                                            String rootPath,
-                                            String jobID,
-                                            WorkerInfo workerInfo) throws Twister2Exception {
+  public static boolean isWorkerRestarting(CuratorFramework client,
+                                           String rootPath,
+                                           String jobID,
+                                           WorkerInfo workerInfo) throws Twister2Exception {
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobID);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
@@ -99,13 +99,6 @@ public final class ZKPersStateManager {
         return true;
       }
 
-      // if the worker znode does not exist,
-      // create worker znode
-      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED);
-      client
-          .create()
-          .withMode(CreateMode.PERSISTENT)
-          .forPath(workerPersPath, workerWithState.toByteArray());
     } catch (Exception e) {
       throw new Twister2Exception("Can not initialize pers state znode for the worker.", e);
     }
@@ -114,17 +107,94 @@ public final class ZKPersStateManager {
   }
 
   /**
-   * Initialize job master persistent state at ZooKeeper server
-   * If the job master is starting for the first time, return false
-   * If the job master is restarting, return true
+   * Initialize worker persistent state at ZooKeeper server
+   * If the worker is starting for the first time, returns false
+   * If the worker is restarting, returns true
    * <p>
-   * A persistent znode is created/updated for the job master on ZooKeeper server
+   * A persistent znode is created/updated for this worker on ZooKeeper server
+   * Each worker must call this method exactly once when they start
+   */
+  public static boolean checkPersDirWaitIfNeeded(CuratorFramework client,
+                                                 String rootPath,
+                                                 String jobID) throws Twister2Exception {
+
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
+
+    long timeLimit = 100000; // 100 seconds
+    long sleepInterval = 100;
+    long duration = 0;
+    long startTime = System.currentTimeMillis();
+
+    // log interval in milliseconds
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+    int checkCount = 1;
+
+    while (duration < timeLimit) {
+      try {
+        if (client.checkExists().forPath(workersPersDir) != null) {
+          LOG.info("Job persistent dir exist. Proceeding. checkCount: " + checkCount);
+          return true;
+        }
+      } catch (Exception e) {
+        throw new Twister2Exception("Can not initialize pers state znode for the worker.", e);
+      }
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleeping thread interrupted.");
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+      checkCount++;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still waiting for persistent job znode to be created: " + workersPersDir);
+        nextLogTime += logInterval;
+      }
+    }
+
+    throw new Twister2Exception("Persistent directory for the job is not created by job master "
+        + "on the time limit: " + timeLimit + " ms");
+  }
+
+
+  /**
+   * Initialize worker persistent state at ZooKeeper server
+   * This method must be called after making sure that
+   * there is no pers state znode for this worker at zk
+   */
+  public static void createWorkerPersState(CuratorFramework client,
+                                           String rootPath,
+                                           String jobID,
+                                           WorkerInfo workerInfo) throws Twister2Exception {
+
+    String workersPersDir = ZKUtils.persDir(rootPath, jobID);
+    String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
+
+    try {
+      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED);
+      client
+          .create()
+          .withMode(CreateMode.PERSISTENT)
+          .forPath(workerPersPath, workerWithState.toByteArray());
+    } catch (Exception e) {
+      throw new Twister2Exception("Can not initialize pers state znode for the worker.", e);
+    }
+  }
+
+  /**
+   * Check whether job master is restarting,
+   * if it is restarting, update jm pers state znode
+   * otherwise, return false, do not create jm pers znode
+   * <p>
    * Job master must call this method exactly once when it starts
    */
-  public static boolean initJobMasterPersState(CuratorFramework client,
-                                               String rootPath,
-                                               String jobID,
-                                               String jmAddress) throws Twister2Exception {
+  public static boolean isJobMasterRestarting(CuratorFramework client,
+                                              String rootPath,
+                                              String jobID,
+                                              String jmAddress) throws Twister2Exception {
 
     String jmPersPath = ZKUtils.jmPersPath(rootPath, jobID);
 
@@ -139,8 +209,25 @@ public final class ZKPersStateManager {
         return true;
       }
 
-      // if the worker znode does not exist,
-      // create worker znode
+    } catch (Exception e) {
+      throw new Twister2Exception("Can not initialize job master pers state znode.", e);
+    }
+
+    return false;
+  }
+
+  /**
+   * create job master persistent state at ZooKeeper server
+   * this method must be called if isJobMasterRestarting returns false
+   */
+  public static void createJobMasterPersState(CuratorFramework client,
+                                              String rootPath,
+                                              String jobID,
+                                              String jmAddress) throws Twister2Exception {
+
+    String jmPersPath = ZKUtils.jmPersPath(rootPath, jobID);
+
+    try {
       byte[] znodeBody =
           ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_STARTED.getNumber());
 
@@ -154,8 +241,6 @@ public final class ZKPersStateManager {
     } catch (Exception e) {
       throw new Twister2Exception("Can not initialize job master pers state znode.", e);
     }
-
-    return false;
   }
 
   /**

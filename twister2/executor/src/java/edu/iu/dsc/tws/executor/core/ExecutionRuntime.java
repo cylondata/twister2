@@ -81,7 +81,6 @@ public class ExecutionRuntime {
 
   public <T, O extends InputSplit<T>> DataSource<T, O> createInput(
       Config cfg, TaskContext context, InputPartitioner<T, O> input) {
-
     return new DataSource<T, O>(cfg, input, context.getParallelism());
   }
 }

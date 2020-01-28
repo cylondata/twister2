@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -218,8 +217,58 @@ public final class K8sWorkerUtils {
     try {
       return InetAddress.getByName(jobMasterServiceName).getHostAddress();
     } catch (UnknownHostException e) {
-      throw new RuntimeException("Cannot get Job master IP from service name.", e);
+      LOG.info("Cannot get Job master IP from service name: " + jobMasterServiceName);
+      return null;
     }
+  }
+
+  /**
+   * get job master service IP from job master service name
+   * poll repeatedly until getting it or times out
+   */
+  public static String getJobMasterServiceIPByPolling(String namespace,
+                                                      String jobID,
+                                                      long timeLimitMS) {
+    String jmServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
+    jmServiceName = jmServiceName + "." + namespace + ".svc.cluster.local";
+
+    long sleepInterval = 100;
+
+    long startTime = System.currentTimeMillis();
+    long duration = 0;
+
+    // log interval in milliseconds
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+
+    while (duration < timeLimitMS) {
+
+      // try getting job master IP address
+      try {
+        InetAddress jmAddress = InetAddress.getByName(jmServiceName);
+        return jmAddress.getHostAddress();
+      } catch (UnknownHostException e) {
+        LOG.fine("Cannot get Job master IP from service name.");
+      }
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted.");
+      }
+
+      // increase sleep interval by 10 in every iteration
+      sleepInterval += 10;
+
+      duration = System.currentTimeMillis() - startTime;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still trying to get Job Master IP address for the service:  " + jmServiceName);
+        nextLogTime += logInterval;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -278,8 +327,12 @@ public final class K8sWorkerUtils {
       String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbID, wInfo)) {
+        if (ZKPersStateManager.isWorkerRestarting(client, rootPath, jbID, wInfo)) {
           return JobMasterAPI.WorkerState.RESTARTED;
+        }
+
+        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
+          ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
         }
 
         return JobMasterAPI.WorkerState.STARTED;

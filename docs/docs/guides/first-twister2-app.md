@@ -200,17 +200,11 @@ Now change your main method as follows,
 
 ```java
 public static void main(String[] args) {
-
-        LocalSubmitter submitter = LocalSubmitter.prepare("twister2/config/src/yaml/conf");
-
         // lets take number of workers as an command line argument
         int numberOfWorkers = 4;
         if (args.length == 1) {
             numberOfWorkers = Integer.valueOf(args[0]);
         }
-
-        // first load the configurations from command line and config files
-        Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
         // lets put a configuration here
         JobConfig jobConfig = new JobConfig();
@@ -224,20 +218,14 @@ public static void main(String[] args) {
                 .build();
         // now submit the job
         //Twister2Submitter.submitJob(twister2Job, config);
-        submitter.submitJob(twister2Job, config);
+        submitter.submitJob(twister2Job);
     }
-```
-
-With below line, you should point to a valid config directory of twister2.
-
-```java
-LocalSubmitter submitter = LocalSubmitter.prepare("twister2/config/src/yaml/conf");
 ```
 
 With following two lines, we will submit the job to an emulated cluster on your local machine.
 
 ```java
-submitter.submitJob(twister2Job, config);
+submitter.submitJob(twister2Job);
 ```
 
 NOTE : Adjust the number of workers, based on the resources available in your local machine and your testing requirements. 

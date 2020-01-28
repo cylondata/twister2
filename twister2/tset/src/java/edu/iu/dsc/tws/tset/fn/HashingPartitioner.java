@@ -18,10 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 
 public class HashingPartitioner<T> implements PartitionFunc<T> {
+  private static final Logger LOG = Logger.getLogger(HashingPartitioner.class.getName());
+
   private Map<Integer, List<Integer>> destination = new HashMap<>();
 
   @Override
@@ -32,7 +35,7 @@ public class HashingPartitioner<T> implements PartitionFunc<T> {
   @Override
   public int partition(int sourceIndex, T val) {
     List<Integer> destinations = destination.get(sourceIndex);
-    int next = Math.abs(val.hashCode()) % destinations.size();
+    int next = (int) (Math.abs((long) val.hashCode()) % destinations.size());
     return destinations.get(next);
   }
 

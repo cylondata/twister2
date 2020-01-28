@@ -8,6 +8,6 @@ t2_java_lib(
     artifact_name = "Twister2 Proto Utils",
     deps = [
         "//twister2/proto:proto-java",
-        "@com_google_protobuf//:protobuf_java",
+        "@com_google_protobuf_protobuf_java//jar"
     ],
 )
