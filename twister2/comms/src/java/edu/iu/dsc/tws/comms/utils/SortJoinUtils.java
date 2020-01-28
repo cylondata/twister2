@@ -145,13 +145,13 @@ public final class SortJoinUtils {
        */
       private boolean advance() {
         if (this.leftList != null) {
-          this.leftList.clear();
-          //this.oldLists.add(this.leftList);
+          this.leftList.dispose();
+          this.oldLists.add(this.leftList);
         }
 
         if (this.rightList != null) {
-          this.rightList.clear();
-          //this.oldLists.add(this.rightList);
+          this.rightList.dispose();
+          this.oldLists.add(this.rightList);
         }
 
         long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(config) / 2;
@@ -224,7 +224,8 @@ public final class SortJoinUtils {
         Runtime.getRuntime().addShutdownHook(new Thread() {
           @Override
           public synchronized void start() {
-            LOG.info("Cleaning up disk based caches used for join...");
+            LOG.info("Cleaning up disk based caches used for join...  : "
+                + oldLists.size() + " DiskBasedLists");
             for (DiskBasedList oldList : oldLists) {
               oldList.clear();
             }
