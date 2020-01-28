@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
@@ -64,21 +65,45 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     KMeansUtils.generateDataPoints(tc.getConfig(), dimension, numFiles,
         dsize, csize, dataDirectory, centroidDirectory, type);
 
+    SourceTSet<String> csvSource = tc.createCSVSource(dataDirectory, 4);
+
+    //Pattern pattern = Pattern.compile(",");
+    ComputeTSet<double[][], Iterator<String>> points = csvSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String>>() {
+          private double[][] localPoints = new double[dsize / parallelismValue][dimension];
+          private Pattern pattern = Pattern.compile(",");
+
+          @Override
+          public double[][] compute(Iterator<String> input) {
+            for (int i = 0; i < dsize / parallelismValue && input.hasNext(); i++) {
+              String[] splits = pattern.split(input.next());
+              for (int j = 0; j < dimension; j++) {
+                localPoints[i][j] = Double.parseDouble(splits[j]);
+              }
+            }
+            LOG.fine("local points size:" + Arrays.deepToString(localPoints));
+            return localPoints;
+          }
+        });
+
+    tc.run(points);
+    points.setName("dataSource").cache();
     long startTime = System.currentTimeMillis();
-    CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();
+
+    /*CachedTSet<double[][]> points =
+        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
 
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
     //TODO: Incorporate Schema also
-    SourceTSet<String> lines = tc.createCSVSource(dataDirectory, parallelismValue);
+    /*SourceTSet<String> lines = tc.createCSVSource(dataDirectory, parallelismValue);
     lines.direct().map((MapFunc<Double[], String>) input -> {
-      Pattern pattern = Pattern.compile(",");
+      //Pattern pattern = Pattern.compile(",");
       return pattern.splitAsStream(input)
           .map(Double::parseDouble)
           .toArray(Double[]::new);
-    }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
+    }).direct().forEach(i -> LOG.fine("out" + Arrays.toString(i)));*/
 
     long endTimeData = System.currentTimeMillis();
 
