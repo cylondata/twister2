@@ -71,14 +71,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
-    SourceTSet<String> processLines = tc.createCSVSource(dataDirectory, dsize, parallelismValue);
-    processLines.direct().map((MapFunc<Double[], String>) inp -> {
-      final Pattern pn = Pattern.compile(",");
-      long count = pn.splitAsStream(inp).count();
-      LOG.info("count value:" + count);
-      return new Double[0];
-    });
-
+    //TODO: Incorporate Schema also
     SourceTSet<String> lines = tc.createCSVSource(dataDirectory, parallelismValue);
     lines.direct().map((MapFunc<Double[], String>) input -> {
       Pattern pattern = Pattern.compile(",");
@@ -86,6 +79,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           .map(Double::parseDouble)
           .toArray(Double[]::new);
     }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
+
     long endTimeData = System.currentTimeMillis();
 
     ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet = points.direct().map(new KMeansMap());

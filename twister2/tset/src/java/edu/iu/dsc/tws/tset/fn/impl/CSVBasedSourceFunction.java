@@ -34,11 +34,12 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
 
   private String datainputDirectory;
   private int dataSize;
-  private int parallelism;
+  private int parallel;
 
   public CSVBasedSourceFunction(String dataInputdirectory) {
     this.datainputDirectory = dataInputdirectory;
   }
+
   public CSVBasedSourceFunction(String dataInputdirectory, int datasize) {
     this.datainputDirectory = dataInputdirectory;
     this.dataSize = datasize;
@@ -51,9 +52,9 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     Config cfg = ctx.getConfig();
 
     this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 100);
-    this.parallelism = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 2);
+    this.parallel = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 4);
     this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(new Path(datainputDirectory),
-        parallelism, dataSize, cfg), parallelism);
+        parallel, dataSize, cfg), parallel);
     this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
     LOG.info("%%%% Task Index Value:" + context.getIndex() + "\tDataSource:\t" + this.dataSource);
   }
@@ -70,10 +71,13 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     }
   }
 
+  private int count = 0;
   @Override
   public T next() {
     try {
       T object = dataSplit.nextRecord(null);
+      count++;
+      LOG.fine("count value:" + count);
       return object;
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {

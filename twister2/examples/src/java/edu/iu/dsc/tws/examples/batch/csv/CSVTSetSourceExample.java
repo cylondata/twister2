@@ -34,14 +34,26 @@ import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(CSVTSetSourceExample.class.getName());
+  private int count;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput" + env.getWorkerID(), 2);
+    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput" + env.getWorkerID(), 4);
+    parseCSV(lines);
     lines.direct().map((MapFunc<Double[], String>) input -> {
       Pattern pattern = Pattern.compile(",");
       return pattern.splitAsStream(input).map(Double::parseDouble).toArray(Double[]::new);
+    }).direct().forEach(i -> LOG.fine("out" + Arrays.toString(i)));
+  }
+
+  private Double[][] parseCSV(SourceTSet<String> inputValues) {
+    inputValues.direct().map((MapFunc<Double[], String>) input -> {
+      Double[] value;
+      Pattern pattern = Pattern.compile(",");
+      value = pattern.splitAsStream(input).map(Double::parseDouble).toArray(Double[]::new);
+      return value;
     }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
+    return null;
   }
 
   public static void main(String[] args) throws Exception {
