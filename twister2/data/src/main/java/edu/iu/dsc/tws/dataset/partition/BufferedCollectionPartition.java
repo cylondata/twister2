@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -37,6 +38,8 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public abstract class BufferedCollectionPartition<T> extends CollectionPartition<T>
     implements Closeable {
+
+  private static final Logger LOG = Logger.getLogger(BufferedCollectionPartition.class.getName());
 
   private static final long DEFAULT_MAX_BUFFERED_BYTES = 10000000;
   private static final MessageType DEFAULT_DATA_TYPE = MessageTypes.OBJECT;
@@ -165,6 +168,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
+      LOG.info("Writing to disk...");
       // write to buffer
       byte[] bytes = dataType.getDataPacker().packToByteArray(val);
       this.buffers.add(bytes);
@@ -237,6 +241,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    */
   public void dispose() {
     this.buffers = null;
+    this.dataList = null;
   }
 
   @Override
@@ -251,6 +256,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
       }
     }
 
+    super.clear();
     this.filesList.clear();
     this.buffers.clear();
     this.bufferedBytes = 0;
