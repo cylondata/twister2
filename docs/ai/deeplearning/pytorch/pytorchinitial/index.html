@@ -1,0 +1,592 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Pytorch Integration · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="# Pytorch Initial Integration"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Pytorch Integration · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="# Pytorch Initial Integration"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class=""><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class="siteNavGroupActive"><a href="/docs/ai/artificial_intelligence" target="_self">AI</a></li><li class=""><a href="/docs/examples/examples" target="_self">Examples</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contribute</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/javadocs/index.html" target="_self">Java Docs</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Deep Learning</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">AI</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/artificial_intelligence">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Twister2Flow</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/twister2flow/twister2flow">Overview on Twister2Flow</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Machine Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/machinelearning/machinelearning">Overview on Machine Learning</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deep Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/deeplearning/deeplearning">Overview on Deep Learning</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/ai/deeplearning/pytorch/pytorchinitial">Pytorch Integration</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Reinforcement Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/reinforcementlearning/reinforcementlearning">Overview on Reinforcement Learning</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Pytorch Integration</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="pytorch-initial-integration"></a><a href="#pytorch-initial-integration" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Pytorch Initial Integration</h1>
+<p>In the initial Pytorch integration we use Twister2Flow with Apache Arrow, Pandas and Apache Parquet
+to link the data downloading, data pre-processing and deep learning workload. This is an
+experimental version of Twister2-Pytorch integration. In the experimental version we loads the data
+with Arrow-Parquet format with the support of Pandas. And we use a intermediate step in connecting
+different steps of the workflow. For instance the data downloading and data pre-processing steps are
+linked with Twister2Flow but a file pointer is used to show the system where to write and read from
+the disk. In the training processes the program will look up to these file pointers to load the data.</p>
+<h2><a class="anchor" aria-hidden="true" id="data-downloading"></a><a href="#data-downloading" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Downloading</h2>
+<p>For data downloading, Twister2:DeepNet API provides higher level APIs to load most prominent datasets.
+Currently we only support MNIST dataset and we are working on providing this support to other datasets.
+Twister2Flow can schedule this as the initial task of the AI workflow.</p>
+<h2><a class="anchor" aria-hidden="true" id="data-pre-processing"></a><a href="#data-pre-processing" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Pre-Processing</h2>
+<p>Twister2 with TSet interface on Python supports do the data pre-processing and data formatting before
+loading to the training programme. Our APIs support all the state of the art collective communications.
+With Pythonic TSet API you can use batch processing to process your data before passing to your deeplearning
+code.</p>
+<h2><a class="anchor" aria-hidden="true" id="training"></a><a href="#training" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Training</h2>
+<p>You can write the usual code that you write in Pytorch to train your algoirthm. In the current version,
+we support this with Apache Parquet, Pandas and Apache Arrow to load the data to the training programme.
+We are actively working on providing these capabilities with a in-memory data pipeline with Twister2.
+This capability will be added to Twister2Flow to provide a higher level API for the users.</p>
+<h2><a class="anchor" aria-hidden="true" id="testing"></a><a href="#testing" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Testing</h2>
+<p>Twister2 APIs has the ability to provide both batch and streaming inference. In an upcoming release
+we will be providing TSet API addons to support inference at scale with batch and streaming mode.</p>
+<h2><a class="anchor" aria-hidden="true" id="mnist-example"></a><a href="#mnist-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MNIST Example</h2>
+<h3><a class="anchor" aria-hidden="true" id="prerequisites"></a><a href="#prerequisites" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Prerequisites</h3>
+<ol>
+<li>Install Twister2 (Refer Getting Started Guide)</li>
+<li>Install Pytorch from the source (To support distributed training, this is a must from Pytorch End)</li>
+</ol>
+<h3><a class="anchor" aria-hidden="true" id="installing"></a><a href="#installing" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installing</h3>
+<p>First, install Twister2 Python API</p>
+<pre><code class="hljs css language-bash">pip3 install twister2
+</code></pre>
+<p>Then install the experimental version of Twister2:DeepNet.</p>
+<pre><code class="hljs css language-bash">python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps twister2-deepnet-test
+</code></pre>
+<p>Then install the experimental version of Twister2Flow</p>
+<pre><code class="hljs css language-bash">python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps twister2flow-test
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="downloading-data"></a><a href="#downloading-data" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Downloading Data</h3>
+<p>We use Twister2:DeepNet APIs to download the data. Create a file MnistDownload.py and place the following
+code.</p>
+<pre><code class="hljs css language-python"><span class="hljs-keyword">import</span> os
+
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.datasets.MNIST <span class="hljs-keyword">import</span> MNIST
+
+__data_dir = <span class="hljs-string">'/tmp/twister2deepnet/mnist'</span>
+
+mnist_train = MNIST(source_dir=os.path.join(__data_dir, <span class="hljs-string">'train'</span>), train=<span class="hljs-literal">True</span>, transform=<span class="hljs-literal">None</span>)
+mnist_train.download()
+
+mnist_test = MNIST(source_dir=os.path.join(__data_dir, <span class="hljs-string">'test'</span>), train=<span class="hljs-literal">False</span>, transform=<span class="hljs-literal">None</span>)
+mnist_test.download()
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="pre-processing-data"></a><a href="#pre-processing-data" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Pre-Processing Data</h3>
+<p>In this example we just show case how you can pre-process the data. For MNIST there is no heavy
+data processing logic involved. Create a file, Twister2PytorchMnist.py and place the following code.</p>
+<pre><code class="hljs css language-python"><span class="hljs-keyword">import</span> os
+<span class="hljs-comment"># CORE PYTWISTER2 IMPORTS</span>
+<span class="hljs-keyword">from</span> twister2 <span class="hljs-keyword">import</span> TSetContext
+<span class="hljs-keyword">from</span> twister2.Twister2Environment <span class="hljs-keyword">import</span> Twister2Environment
+<span class="hljs-keyword">from</span> twister2.tset.fn.SourceFunc <span class="hljs-keyword">import</span> SourceFunc
+<span class="hljs-comment"># TWISTER2 DEEPNET IMPORTS</span>
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.data.UtilPanda <span class="hljs-keyword">import</span> UtilPanda
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.examples.MnistDistributed <span class="hljs-keyword">import</span> MnistDistributed
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.io.ArrowUtils <span class="hljs-keyword">import</span> ArrowUtils
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.io.FileUtils <span class="hljs-keyword">import</span> FileUtils
+
+DATA_FOLDER = <span class="hljs-string">'/tmp/twister2deepnet/mnist/'</span>
+
+TRAIN_DATA_SAVE_PATH = <span class="hljs-string">"/tmp/parquet/train/"</span>
+TEST_DATA_SAVE_PATH = <span class="hljs-string">"/tmp/parquet/test/"</span>
+
+PARALLELISM = <span class="hljs-number">4</span>
+
+env = Twister2Environment(resources=[{<span class="hljs-string">"cpu"</span>: <span class="hljs-number">1</span>, <span class="hljs-string">"ram"</span>: <span class="hljs-number">512</span>, <span class="hljs-string">"instances"</span>: PARALLELISM}])
+world_size = PARALLELISM  <span class="hljs-comment"># int(os.environ['OMPI_COMM_WORLD_SIZE'])</span>
+world_rank = env.worker_id
+
+TRAIN_DATA_FILE = str(world_rank) + <span class="hljs-string">".data"</span>
+TRAIN_TARGET_FILE = str(world_rank) + <span class="hljs-string">".target"</span>
+TEST_DATA_FILE = str(world_rank) + <span class="hljs-string">".data"</span>
+TEST_TARGET_FILE = str(world_rank) + <span class="hljs-string">".target"</span>
+
+TRAIN_DATA_FILES = [TRAIN_DATA_FILE, TRAIN_TARGET_FILE]
+TEST_DATA_FILES = [TEST_DATA_FILE, TEST_TARGET_FILE]
+DATA_SAVE_PATHS = [TRAIN_DATA_SAVE_PATH, TEST_DATA_SAVE_PATH]
+
+<span class="hljs-keyword">if</span> env.worker_id == <span class="hljs-number">0</span>:
+    FileUtils.mkdir_branch_with_access(TRAIN_DATA_SAVE_PATH)
+    FileUtils.mkdir_branch_with_access(TEST_DATA_SAVE_PATH)
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DataSource</span><span class="hljs-params">(SourceFunc)</span>:</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, train=True)</span>:</span>
+        super().__init__()
+
+        self.is_preprocess = <span class="hljs-literal">True</span>
+        self.is_loaded = <span class="hljs-literal">False</span>
+        self.mniste = <span class="hljs-literal">None</span>
+        self.train_dataset = <span class="hljs-literal">None</span>
+        self.train_targetset = <span class="hljs-literal">None</span>
+        self.test_dataset = <span class="hljs-literal">None</span>
+        self.test_targetset = <span class="hljs-literal">None</span>
+        self.train_bsz = <span class="hljs-literal">None</span>
+        self.test_bsz = <span class="hljs-literal">None</span>
+        self.train_data_load = []
+        self.test_data_load = []
+        self.data_load = []
+        self.i = <span class="hljs-number">0</span>
+        self.train = train
+        self.message_size = <span class="hljs-number">10</span>
+        print(PARALLELISM, world_rank, DATA_FOLDER, TRAIN_DATA_SAVE_PATH, TEST_DATA_SAVE_PATH)
+        self.load_data()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">has_next</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> self.i &lt; len(self.data_load)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">next</span><span class="hljs-params">(self)</span>:</span>
+        res = self.data_load[self.i]
+        self.i = self.i + <span class="hljs-number">1</span>
+        <span class="hljs-comment"># <span class="hljs-doctag">TODO:</span> packaging a message with meta</span>
+        <span class="hljs-comment">#message = np.array([[self.i], [res]])</span>
+        <span class="hljs-keyword">return</span> res
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_data</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> self.is_loaded:
+            print(<span class="hljs-string">"Data Loading {}"</span>.format(self.i))
+            self.mniste = MnistDistributed(source_dir=DATA_FOLDER, parallelism=world_size,
+                                           world_rank=world_rank)
+            <span class="hljs-keyword">if</span> self.train:
+                self.train_dataset, self.train_targetset, self.train_bsz = self.mniste.train_data
+                self.data_load.append(self.train_dataset)
+                self.data_load.append(self.train_targetset)
+            <span class="hljs-keyword">else</span>:
+                self.test_dataset, self.test_targetset, self.test_bsz = self.mniste.test_data
+                self.data_load.append(self.test_dataset)
+                self.data_load.append(self.test_targetset)
+            self.is_loaded = <span class="hljs-literal">True</span>
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">pass</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">save_to_disk</span><span class="hljs-params">(dataset=None, save_path=None, save_file=None)</span>:</span>
+    <span class="hljs-comment"># TODO use os.path.join and refactor</span>
+    <span class="hljs-keyword">if</span> dataset <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">or</span> save_path <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">or</span> save_file <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">"Input Cannot be None"</span>)
+    <span class="hljs-keyword">elif</span> <span class="hljs-keyword">not</span> os.path.exists(save_path):
+        <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">"Save Path doesn't exist"</span>)
+    <span class="hljs-keyword">elif</span> os.path.exists(save_path + save_file):
+        <span class="hljs-keyword">pass</span>
+    <span class="hljs-keyword">else</span>:
+        dataframe = UtilPanda.convert_numpy_to_pandas(dataset)
+        table = ArrowUtils.create_to_table(dataFrame=dataframe)
+        ArrowUtils.write_to_table(table=table, save_path=os.path.join(save_path, save_file))
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">read_train_tuples</span><span class="hljs-params">(itr, collector, ctx: TSetContext)</span>:</span>
+    <span class="hljs-keyword">for</span> index, data <span class="hljs-keyword">in</span> enumerate(itr):
+        print(<span class="hljs-string">"TRAIN"</span>, index, DATA_SAVE_PATHS[<span class="hljs-number">0</span>], TRAIN_DATA_FILES[index], type(data), data.shape)
+        save_to_disk(dataset=data, save_path=DATA_SAVE_PATHS[<span class="hljs-number">0</span>], save_file=TRAIN_DATA_FILES[index])
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">read_test_tuples</span><span class="hljs-params">(itr, collector, ctx: TSetContext)</span>:</span>
+    <span class="hljs-keyword">for</span> index, data <span class="hljs-keyword">in</span> enumerate(itr):
+        print(<span class="hljs-string">"TEST"</span>, index, DATA_SAVE_PATHS[<span class="hljs-number">1</span>], TEST_DATA_FILES[index], type(data), data.shape)
+        save_to_disk(dataset=data, save_path=DATA_SAVE_PATHS[<span class="hljs-number">1</span>], save_file=TEST_DATA_FILES[index])
+
+
+source_train = env.create_source(DataSource(train=<span class="hljs-literal">True</span>), PARALLELISM)
+source_train.compute(read_train_tuples).cache()
+
+source_test = env.create_source(DataSource(train=<span class="hljs-literal">False</span>), PARALLELISM)
+source_test.compute(read_test_tuples).cache()
+
+<span class="hljs-keyword">if</span> world_rank == <span class="hljs-number">0</span>:
+    print(<span class="hljs-string">"Data SAVED to DISK"</span>)
+
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="training-and-testing"></a><a href="#training-and-testing" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Training and Testing</h3>
+<p>For this example we do both training and testing within the Pytorch Programme. This is an experimental
+version. We will be moving the data mini-batching section to the Twister2 Task to save more time
+on the Pytorch training process. Create a file, PytorchMnistDist.py and place the following code.</p>
+<pre><code class="hljs css language-python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> os
+<span class="hljs-keyword">import</span> time
+<span class="hljs-keyword">import</span> torch
+<span class="hljs-keyword">import</span> torch.distributed <span class="hljs-keyword">as</span> dist
+<span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn
+<span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F
+<span class="hljs-keyword">import</span> torch.optim <span class="hljs-keyword">as</span> optim
+<span class="hljs-keyword">from</span> math <span class="hljs-keyword">import</span> sqrt
+
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.data.DataUtil <span class="hljs-keyword">import</span> DataUtil
+<span class="hljs-keyword">from</span> twister2deepnet.deepnet.io.ArrowUtils <span class="hljs-keyword">import</span> ArrowUtils
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Net</span><span class="hljs-params">(nn.Module)</span>:</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(<span class="hljs-number">1</span>, <span class="hljs-number">32</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>)
+        self.conv2 = nn.Conv2d(<span class="hljs-number">32</span>, <span class="hljs-number">64</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>)
+        self.dropout1 = nn.Dropout2d(<span class="hljs-number">0.25</span>)
+        self.dropout2 = nn.Dropout2d(<span class="hljs-number">0.5</span>)
+        self.fc1 = nn.Linear(<span class="hljs-number">9216</span>, <span class="hljs-number">128</span>)
+        self.fc2 = nn.Linear(<span class="hljs-number">128</span>, <span class="hljs-number">10</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x)</span>:</span>
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.max_pool2d(x, <span class="hljs-number">2</span>)
+        x = self.dropout1(x)
+        x = torch.flatten(x, <span class="hljs-number">1</span>)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        output = F.log_softmax(x, dim=<span class="hljs-number">1</span>)
+        <span class="hljs-keyword">return</span> output
+
+<span class="hljs-string">""" Gradient averaging. """</span>
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">average_gradients</span><span class="hljs-params">(model)</span>:</span>
+    <span class="hljs-string">"""
+    calculating the average models in the distributed training
+    :param model: averaged model over allreduce operation
+    """</span>
+    size = float(dist.get_world_size())
+    <span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> model.parameters():
+        dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
+        param.grad.data /= size
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">average_accuracy</span><span class="hljs-params">(local_accuracy)</span>:</span>
+    <span class="hljs-string">"""
+    calculating the average accuracy in the distributed testing
+    :param local_accuracy: accuracy calculated in a processes
+    :return: average accuracy all over all processes
+    """</span>
+    size = float(dist.get_world_size())
+    dist.all_reduce(local_accuracy, op=dist.ReduceOp.SUM)
+    global_accuracy = local_accuracy / size
+    <span class="hljs-keyword">return</span> global_accuracy
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">save_log</span><span class="hljs-params">(file_path=None, stat=<span class="hljs-string">""</span>)</span>:</span>
+    <span class="hljs-string">"""
+    saving the program timing stats
+    :rtype: None
+    """</span>
+    fp = open(file_path, mode=<span class="hljs-string">"a+"</span>)
+    fp.write(stat + <span class="hljs-string">"\n"</span>)
+    fp.close()
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">launch</span><span class="hljs-params">(rank, size, fn, backend=<span class="hljs-string">'tcp'</span>,
+           train_data=None, train_target=None,
+           test_data=None, test_target=None,
+           do_log=False)</span>:</span>
+    <span class="hljs-string">""" Initialize the distributed environment.
+    :param rank: process id (MPI world rank)
+    :param size: number of processes (MPI world size)
+    :param fn: training function
+    :param backend: Pytorch Backend
+    :param train_data: training data
+    :param train_target: training targets
+    :param test_data: testing data
+    :param test_target: testing targets
+    :param do_log: boolean status to log
+    """</span>
+    dist.init_process_group(backend, rank=rank, world_size=size)
+    <span class="hljs-comment"># Setting CUDA FOR TRAINING</span>
+    <span class="hljs-comment">#use_cuda = torch.cuda.is_available()</span>
+    <span class="hljs-comment"># device = torch.device("cuda" if use_cuda else "cpu")</span>
+
+    device = torch.device(<span class="hljs-string">"cpu"</span>)
+
+    total_communication_time = <span class="hljs-number">0</span>
+    local_training_time = <span class="hljs-number">0</span>
+    local_testing_time = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>):
+        local_training_time = time.time()
+
+    model, total_communication_time = fn(world_rank=rank, world_size=size, train_data=train_data,
+                                         train_target=train_target, do_log=<span class="hljs-literal">False</span>)
+    <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>):
+        local_training_time = time.time() - local_training_time
+    <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>):
+        local_testing_time = time.time()
+
+    predict(rank=rank, model=model, device=device, test_data=test_data, test_target=test_target, do_log=do_log)
+
+    <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>):
+        local_testing_time = time.time() - local_testing_time
+        print(<span class="hljs-string">"Total Training Time : {}"</span>.format(local_training_time))
+        print(<span class="hljs-string">"Total Testing Time : {}"</span>.format(local_testing_time))
+        save_log(<span class="hljs-string">"stats.csv"</span>,
+                 stat=<span class="hljs-string">"{},{},{},{}"</span>.format(size, local_training_time, total_communication_time, local_testing_time))
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">predict</span><span class="hljs-params">(rank, model, device, test_data=None, test_target=None, do_log=False)</span>:</span>
+    <span class="hljs-string">"""
+    testing the trained model
+    :rtype: None return
+    """</span>
+    model.eval()
+    test_loss = <span class="hljs-number">0</span>
+    correct = <span class="hljs-number">0</span>
+    total_samples = <span class="hljs-number">0</span>
+    val1 = <span class="hljs-number">0</span>
+    val2 = <span class="hljs-number">0</span>
+    count = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">with</span> torch.no_grad():
+        <span class="hljs-keyword">for</span> data, target <span class="hljs-keyword">in</span> zip(test_data, test_target):
+            <span class="hljs-comment"># total_samples = total_samples + 1</span>
+            count = count + <span class="hljs-number">1</span>
+            val1 = len(data)
+            val2 = len(test_data)
+            total_samples = (val1 * val2)
+            data, target = data.to(device), target.to(device)
+            data = np.reshape(data, (data.shape[<span class="hljs-number">0</span>], <span class="hljs-number">1</span>, data.shape[<span class="hljs-number">1</span>], data.shape[<span class="hljs-number">2</span>])) / <span class="hljs-number">128.0</span>
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction=<span class="hljs-string">'sum'</span>).item()  <span class="hljs-comment"># sum up batch loss</span>
+            pred = output.argmax(dim=<span class="hljs-number">1</span>, keepdim=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># get the index of the max log-probability</span>
+            correct += pred.eq(target.view_as(pred)).sum().item()
+            <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> do_log):
+                print(rank, count, len(data), len(test_data), data.shape, output.shape, correct, total_samples)
+
+    test_loss /= (total_samples)
+    local_accuracy = <span class="hljs-number">100.0</span> * correct / total_samples
+    global_accuracy = average_accuracy(torch.tensor(local_accuracy))
+    <span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>):
+        print(<span class="hljs-string">'\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'</span>.format(
+            test_loss, correct, total_samples,
+            global_accuracy.numpy()))
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train</span><span class="hljs-params">(world_rank=<span class="hljs-number">0</span>, world_size=<span class="hljs-number">4</span>, train_data=None, train_target=None, do_log=False)</span>:</span>
+    <span class="hljs-string">"""
+    training the MNIST model
+    :param int world_rank: current processor rank (MPI rank)
+    :param int world_size: number of processes (MPI world size)
+    :param tensor train_data: training data as pytorch tensor
+    :param tensor train_target: training target as pytorch tensor
+    :param boolean do_log: set logging
+    :return:
+    """</span>
+    torch.manual_seed(<span class="hljs-number">1234</span>)
+    model = Net()
+    optimizer = optim.SGD(model.parameters(),
+                          lr=<span class="hljs-number">0.01</span>, momentum=<span class="hljs-number">0.5</span>)
+
+    num_batches = train_data.shape[<span class="hljs-number">1</span>]
+
+    <span class="hljs-keyword">if</span> (world_rank == <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> do_log):
+        print(<span class="hljs-string">"Started Training"</span>)
+    total_data = len(train_data)
+    epochs = <span class="hljs-number">1</span>
+    total_steps = epochs * total_data
+    local_time_communication = <span class="hljs-number">0</span>
+    local_total_time_communication = <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> range(epochs):
+        epoch_loss = <span class="hljs-number">0.0</span>
+        count = <span class="hljs-number">0</span>
+        <span class="hljs-keyword">for</span> data, target <span class="hljs-keyword">in</span> zip(train_data, train_target):
+            data = np.reshape(data, (data.shape[<span class="hljs-number">0</span>], <span class="hljs-number">1</span>, data.shape[<span class="hljs-number">1</span>], data.shape[<span class="hljs-number">2</span>])) / <span class="hljs-number">128.0</span>
+            count = count + <span class="hljs-number">1</span>
+            result = <span class="hljs-string">'{0:.4g}'</span>.format((count / float(total_steps)) * <span class="hljs-number">100.0</span>)
+            <span class="hljs-keyword">if</span> (world_rank == <span class="hljs-number">0</span>):
+                print(<span class="hljs-string">"Progress {}% \r"</span>.format(result), end=<span class="hljs-string">'\r'</span>)
+            optimizer.zero_grad()
+            output = model(data)
+            <span class="hljs-comment"># this comes with data loading mechanism use target or target.long()</span>
+            <span class="hljs-comment"># depending on network specifications.</span>
+            target = target.long()
+            loss = F.nll_loss(output, target)
+            epoch_loss += loss.item()
+            <span class="hljs-comment"># print(epoch_loss)</span>
+            loss.backward()
+            <span class="hljs-keyword">if</span> (world_rank == <span class="hljs-number">0</span>):
+                local_time_communication = time.time()
+            average_gradients(model)
+            <span class="hljs-keyword">if</span> (world_rank == <span class="hljs-number">0</span>):
+                local_time_communication = time.time() - local_time_communication
+                local_total_time_communication = local_total_time_communication + local_time_communication
+            optimizer.step()
+        <span class="hljs-keyword">if</span> (world_rank == <span class="hljs-number">0</span>):
+            print(<span class="hljs-string">'Rank '</span>, dist.get_rank(), <span class="hljs-string">', epoch '</span>,
+                  epoch, <span class="hljs-string">': '</span>, epoch_loss / num_batches)
+    <span class="hljs-keyword">return</span> model, local_total_time_communication
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">format_mnist_data</span><span class="hljs-params">(data=None)</span>:</span>
+    <span class="hljs-string">"""
+    This method re-shapes the data to fit into the Network Input Shape
+    :rtype: data re-formatted to fit to the network designed
+    """</span>
+    data_shape = data.shape
+    img_size = int(sqrt(data_shape[<span class="hljs-number">2</span>]))
+    data = np.reshape(data, (data_shape[<span class="hljs-number">0</span>], data_shape[<span class="hljs-number">1</span>], img_size, img_size))
+    <span class="hljs-keyword">return</span> data
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">format_mnist_target</span><span class="hljs-params">(data=None)</span>:</span>
+    <span class="hljs-string">"""
+    Reshaping the mnist target values to fit into model
+    :param data:
+    :return:
+    """</span>
+    data_shape = data.shape
+    data = np.reshape(data, (data_shape[<span class="hljs-number">0</span>], data_shape[<span class="hljs-number">1</span>]))
+    <span class="hljs-keyword">return</span> data
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">format_data</span><span class="hljs-params">(input_data=None, world_size=<span class="hljs-number">4</span>, init_batch_size=<span class="hljs-number">128</span>)</span>:</span>
+    <span class="hljs-string">"""
+    Specific For MNIST and 3 dimensional data
+    This function is generated for MNIST only cannot be used in general for all data shapes
+    :param input_data: data in numpy format with (N,M) format Here N number of samples
+            M is the tensor length
+    :return: For numpy we reshape this and return a tensor of the shape, (N, sqrt(M), sqrt(M))
+    """</span>
+    bsz = int(init_batch_size / float(world_size))
+    data = DataUtil.generate_minibatches(data=input_data, minibatch_size=bsz)
+    <span class="hljs-keyword">return</span> data
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">read_from_disk</span><span class="hljs-params">(source_file=None, source_path=None)</span>:</span>
+    <span class="hljs-string">"""
+    A helper function to load the data from the disk
+    This function is useful for in-memory oriented data reads, doesn't support very large data reads
+    Reads the data from disk (using PyArrow Parquet)
+    :param source_file: file name
+    :param source_path: path to reading file
+    :return: returns a numpy array of the saved data
+    """</span>
+    data = <span class="hljs-literal">None</span>
+    <span class="hljs-keyword">if</span> source_file <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> source_path <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">"Input cannot be None"</span>)
+    <span class="hljs-keyword">elif</span> <span class="hljs-keyword">not</span> os.path.exists(source_path + source_file):
+        <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">"Data source doesn't exist"</span>)
+    <span class="hljs-keyword">else</span>:
+        dataframe = ArrowUtils.read_from_table(source_path + source_file)
+        data = dataframe.to_numpy()
+    <span class="hljs-keyword">return</span> data
+
+
+world_size = int(os.environ[<span class="hljs-string">'OMPI_COMM_WORLD_SIZE'</span>])
+world_rank = int(os.environ[<span class="hljs-string">'OMPI_COMM_WORLD_RANK'</span>])
+
+train_data_save_path = <span class="hljs-string">"/tmp/parquet/train/"</span>
+test_data_save_path = <span class="hljs-string">"/tmp/parquet/test/"</span>
+
+train_data_file = str(world_rank) + <span class="hljs-string">".data"</span>
+test_data_file = str(world_rank) + <span class="hljs-string">".data"</span>
+train_target_file = str(world_rank) + <span class="hljs-string">".target"</span>
+test_target_file = str(world_rank) + <span class="hljs-string">".target"</span>
+
+__BACKEND = <span class="hljs-string">'mpi'</span>
+
+
+<span class="hljs-comment"># LOAD DATA FROM DISK</span>
+
+<span class="hljs-comment">## load train data</span>
+train_data = read_from_disk(source_file=train_data_file, source_path=train_data_save_path)
+train_data = format_data(input_data=train_data, world_size=world_size, init_batch_size=<span class="hljs-number">128</span>)
+train_data = format_mnist_data(data=train_data)
+<span class="hljs-comment">## load test data</span>
+test_data = read_from_disk(source_file=test_data_file, source_path=test_data_save_path)
+test_data = format_data(input_data=test_data, world_size=world_size, init_batch_size=<span class="hljs-number">16</span>)
+test_data = format_mnist_data(data=test_data)
+<span class="hljs-comment">## load train target</span>
+train_target = read_from_disk(source_file=train_target_file, source_path=train_data_save_path)
+train_target = format_data(input_data=train_target, world_size=world_size, init_batch_size=<span class="hljs-number">128</span>)
+train_target = format_mnist_target(data=train_target)
+<span class="hljs-comment">## load test target</span>
+test_target = read_from_disk(source_file=test_target_file, source_path=test_data_save_path)
+test_target = format_data(input_data=test_target, world_size=world_size, init_batch_size=<span class="hljs-number">16</span>)
+test_target = format_mnist_target(data=test_target)
+
+do_log = <span class="hljs-literal">False</span>
+
+<span class="hljs-comment"># initialize training</span>
+launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,
+       train_data=train_data, train_target=train_target,
+       test_data=test_data, test_target=test_target,
+       do_log=do_log)
+
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="connecting-dots"></a><a href="#connecting-dots" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Connecting Dots</h3>
+<p>In order to connect data downloading, data pre-processing, testing and training, we use Twister2Flow.
+Using Twister2Flow you can define the task graph as follows and schedule jobs. Twister2Flow initial
+version is an initial experimental version. Create a file, Twister2Flow.py and place the following code.</p>
+<pre><code class="hljs css language-python"><span class="hljs-keyword">from</span> twister2flow.twister2.pipeline <span class="hljs-keyword">import</span> PipelineGraph
+<span class="hljs-keyword">from</span> twister2flow.twister2.task.Twister2Task <span class="hljs-keyword">import</span> Twister2Task
+<span class="hljs-keyword">from</span> twister2flow.twister2.task.PytorchTask <span class="hljs-keyword">import</span> PytorchTask
+<span class="hljs-keyword">from</span> twister2flow.twister2.task.PythonTask <span class="hljs-keyword">import</span> PythonTask
+
+plg = PipelineGraph.PipelineGraph(name=<span class="hljs-string">"UNNAMED_TASK"</span>)
+
+download_task = PythonTask(name=<span class="hljs-string">"download_task"</span>)
+download_task.set_command(<span class="hljs-string">"python3"</span>)
+download_task.set_script_path(script_path=<span class="hljs-string">"MnistDownload.py"</span>)
+download_task.set_exec_path(exec_path=<span class="hljs-literal">None</span>)
+
+twister2_task = Twister2Task(name=<span class="hljs-string">"t2_task"</span>)
+twister2_task.set_command(<span class="hljs-string">"twister2 submit standalone python"</span>)
+twister2_task.set_script_path(script_path=<span class="hljs-string">"Twister2PytorchMnist.py"</span>)
+twister2_task.set_exec_path(exec_path=<span class="hljs-literal">None</span>)
+
+pytorch_task = PytorchTask(name=<span class="hljs-string">"pytorch_task"</span>)
+pytorch_task.set_command()
+pytorch_task.set_script_path(script_path=<span class="hljs-string">"PytorchMnistDist.py"</span>)
+pytorch_task.set_exec_path(exec_path=<span class="hljs-literal">None</span>)
+
+plg.add_task(download_task)
+plg.add_task(twister2_task)
+plg.add_task(pytorch_task)
+
+
+print(str(plg))
+
+plg.execute()
+
+</code></pre>
+<p>Then run the example</p>
+<pre><code class="hljs css language-bash">python3 Twister2Flow.py
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/ai/deeplearning/deeplearning"><span class="arrow-prev">← </span><span>Overview on Deep Learning</span></a><a class="docs-next button" href="/docs/ai/reinforcementlearning/reinforcementlearning"><span>Overview on Reinforcement Learning</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#data-downloading">Data Downloading</a></li><li><a href="#data-pre-processing">Data Pre-Processing</a></li><li><a href="#training">Training</a></li><li><a href="#testing">Testing</a></li><li><a href="#mnist-example">MNIST Example</a><ul class="toc-headings"><li><a href="#prerequisites">Prerequisites</a></li><li><a href="#installing">Installing</a></li><li><a href="#downloading-data">Downloading Data</a></li><li><a href="#pre-processing-data">Pre-Processing Data</a></li><li><a href="#training-and-testing">Training and Testing</a></li><li><a href="#connecting-dots">Connecting Dots</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Indiana University</section></footer></div></body></html>
