@@ -71,10 +71,7 @@ public class DiskBackedCollectionPartitionTest {
   }
 
   private void verify(DataPartitionConsumer<Integer> consumer, Iterator<Integer> rawIterator) {
-    int i=0;
     while (rawIterator.hasNext()) {
-      i++;
-      System.out.println(i);
       Assert.assertEquals(rawIterator.next(), consumer.next());
     }
   }
