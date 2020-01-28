@@ -263,7 +263,11 @@ public final class SortJoinUtils {
 
       @Override
       public JoinedTuple next() {
+        long t1 = System.currentTimeMillis();
         JoinedTuple next = this.localJoinIterator.next();
+        debug.computeIfAbsent("next_call", s -> new AtomicLong()).addAndGet(
+            System.currentTimeMillis() - t1
+        );
         if (!this.localJoinIterator.hasNext()) {
           this.callAdvanceIt();
         }
