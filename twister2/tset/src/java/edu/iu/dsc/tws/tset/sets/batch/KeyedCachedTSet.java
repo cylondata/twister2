@@ -15,18 +15,25 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedCachedTSet<K, V> extends KeyedStoredTSet<K, V> {
 
   public KeyedCachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Iterator<Tuple<K, V>>> sinkFunc,
-                         int parallelism) {
-    super(tSetEnv, "kcached", sinkFunc, parallelism);
+                         int parallelism, KeyedSchema inputSchema) {
+    super(tSetEnv, "kcached", sinkFunc, parallelism, inputSchema);
   }
 
   @Override
   public KeyedCachedTSet<K, V> setName(String n) {
     return (KeyedCachedTSet<K, V>) super.setName(n);
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> withSchema(TupleSchema schema) {
+    return (KeyedCachedTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

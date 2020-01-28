@@ -58,7 +58,7 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
 
   protected String getRootPathStr(Config config) {
     return FS_PROTO + String.join(File.separator,
-        config.getStringValue(CONFIG_FS_ROOT), String.join(File.separator,
+        config.getStringValue(CONFIG_FS_ROOT, "/tmp"), String.join(File.separator,
             this.getReference()));
   }
 

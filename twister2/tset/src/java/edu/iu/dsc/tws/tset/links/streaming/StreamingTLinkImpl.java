@@ -20,21 +20,22 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.BaseTLink;
+import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
-public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
+public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     implements StreamingTLink<T1, T0> {
 
   private WindowParameter windowParameter;
 
-
-  StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
-    super(env, n, sourceP, targetP);
+  StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+                     Schema schema) {
+    super(env, n, sourceP, targetP, schema);
   }
 
   @Override
@@ -45,9 +46,10 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          getSchema());
     } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
     }
     addChildToGraph(set);
 
@@ -58,10 +60,10 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     WindowComputeTSet<P, Iterator<T1>> set;
     if (n != null && !n.isEmpty()) {
       set = new WindowComputeTSet<>(getTSetEnv(), n, getTargetParallelism(),
-          this.windowParameter);
+          this.windowParameter, getSchema());
     } else {
       set = new WindowComputeTSet<>(getTSetEnv(), getTargetParallelism(),
-          this.windowParameter);
+          this.windowParameter, getSchema());
     }
     addChildToGraph(set);
 
@@ -71,9 +73,10 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
   public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
+      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          getSchema());
     } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
+      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
     }
     addChildToGraph(set);
 
@@ -92,7 +95,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
 
   @Override
   public SSinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
-    SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
+    SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism(),
+        getSchema());
     addChildToGraph(sinkTSet);
     return sinkTSet;
   }
@@ -125,5 +129,4 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
         slidingWindowTimeUnit);
     return window("w-duration-sliding-compute-prev");
   }
-
 }

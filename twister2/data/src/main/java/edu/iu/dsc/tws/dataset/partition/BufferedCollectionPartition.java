@@ -231,6 +231,14 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     };
   }
 
+  /**
+   * This method will clear the memory components of this partition by assigning buffer to null
+   * and making it garbage collectible. This partition shouldn't be used after disposing.
+   */
+  public void dispose() {
+    this.buffers = null;
+  }
+
   @Override
   public void clear() {
     // cleanup files
@@ -243,7 +251,6 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
       }
     }
 
-    //cleanup memory
     this.filesList.clear();
     this.buffers.clear();
     this.bufferedBytes = 0;

@@ -18,6 +18,11 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.schema.JoinSchema;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -27,7 +32,7 @@ import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 /**
  * Attaches a key to the oncoming data.
@@ -35,10 +40,22 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V> {
+public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> implements
+    BatchTupleTSet<K, V> {
 
-  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
-    super(tSetEnv, name, parallelism);
+  /**
+   * General constructor for batch {@link edu.iu.dsc.tws.api.tset.sets.TupleTSet}s
+   *
+   * @param tSetEnv     env
+   * @param name        name
+   * @param parallelism par
+   * @param inputSchema Schema from the preceding {@link edu.iu.dsc.tws.api.tset.link.TLink}
+   */
+  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism,
+                     Schema inputSchema) {
+    // since the output schema will be a KeyedSchema, it needs to be initialized by a KeyedSchema
+    // of OBJECT type
+    super(tSetEnv, name, parallelism, inputSchema, PrimitiveSchemas.OBJECT_TUPLE2);
   }
 
   protected BatchTupleTSetImpl() {
@@ -53,7 +70,8 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
 
   @Override
   public KeyedDirectTLink<K, V> keyedDirect() {
-    KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism());
+    KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism(),
+        getOutputSchema());
     addChildToGraph(kDirect);
     return kDirect;
   }
@@ -61,7 +79,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedReduceTLink<K, V> keyedReduce(ReduceFunc<V> reduceFn) {
     KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(getTSetEnv(), reduceFn,
-        getParallelism());
+        getParallelism(), getOutputSchema());
     addChildToGraph(reduce);
     return reduce;
   }
@@ -69,14 +87,15 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(getTSetEnv(), partitionFn,
-        getParallelism());
+        getParallelism(), getOutputSchema());
     addChildToGraph(partition);
     return partition;
   }
 
   @Override
   public KeyedGatherTLink<K, V> keyedGather() {
-    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(), getParallelism());
+    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(), getParallelism(),
+        getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -84,7 +103,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedGatherTLink<K, V> keyedGather(PartitionFunc<K> partitionFn) {
     KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(),
-        partitionFn, getParallelism());
+        partitionFn, getParallelism(), getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -92,8 +111,8 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedGatherTLink<K, V> keyedGather(PartitionFunc<K> partitionFn,
                                             Comparator<K> comparator) {
-    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), comparator);
+    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(), partitionFn,
+        getParallelism(), comparator, getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -101,7 +120,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped() {
     KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
-        getParallelism());
+        getParallelism(), getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -109,7 +128,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn) {
     KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
-        partitionFn, getParallelism());
+        partitionFn, getParallelism(), getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -118,7 +137,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn,
                                                               Comparator<K> comparator) {
     KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
-        partitionFn, getParallelism(), comparator);
+        partitionFn, getParallelism(), comparator, getOutputSchema());
     addChildToGraph(gather);
     return gather;
   }
@@ -129,10 +148,16 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
                                        Comparator<K> keyComparator,
                                        TaskPartitioner<K> partitioner) {
     JoinTLink<K, V, VR> join;
+
+    JoinSchema joinSchema = new JoinSchema(this.getOutputSchema(),
+        ((BatchTupleTSetImpl<K, VR>) rightTSet).getOutputSchema());
+
     if (partitioner != null) {
-      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, partitioner, this, rightTSet);
+      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, partitioner, this, rightTSet,
+          joinSchema);
     } else {
-      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, this, rightTSet);
+      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, this, rightTSet,
+          joinSchema);
     }
     addChildToGraph(join);
 
@@ -179,5 +204,20 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   public BatchTupleTSetImpl<K, V> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
+  }
+
+  @Override
+  public BatchTupleTSetImpl<K, V> withSchema(TupleSchema schema) {
+    this.setOutputSchema(schema);
+    return this;
+  }
+
+  /**
+   * Output schema of a BatchTupleTSet is definitely a {@link KeyedSchema}.
+   *
+   * @return keyed schema
+   */
+  public KeyedSchema getOutputSchema() {
+    return (KeyedSchema) super.getOutputSchema();
   }
 }

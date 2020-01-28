@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
@@ -37,15 +38,16 @@ public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, 
   private boolean useDisk = false;
 
   public KeyedPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
-                             int sourceParallelism) {
-    super(tSetEnv, "kpartition", sourceParallelism);
+                             int sourceParallelism, KeyedSchema schema) {
+    super(tSetEnv, "kpartition", sourceParallelism, schema);
     this.partitionFunction = parFn;
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, this.getSchema().getDataType());
     e.setKeyed(true);
+    e.setKeyType(this.getSchema().getKeyType());
     e.setPartitioner(partitionFunction);
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;

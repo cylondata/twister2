@@ -134,10 +134,11 @@ public class BTJoinExample extends BenchTaskWorker {
           }
         }
 
-        List objects = SortJoinUtils.innerJoin(onLeftEdge, onRightEdge,
-            new KeyComparatorWrapper(Comparator.naturalOrder()));
+        Iterator<JoinedTuple> objects = SortJoinUtils.join(onLeftEdge, onRightEdge,
+            new KeyComparatorWrapper(Comparator.naturalOrder()),
+            CommunicationContext.JoinType.INNER);
 
-        return (Iterator<JoinedTuple>) objects.iterator();
+        return objects;
       }, new IteratorComparator<>(
           (d1, d2) -> d1.getKey().equals(d2.getKey())
       ));

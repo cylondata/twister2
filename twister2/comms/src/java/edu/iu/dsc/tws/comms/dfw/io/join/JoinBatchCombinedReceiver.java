@@ -33,6 +33,8 @@ import edu.iu.dsc.tws.comms.utils.JoinRelation;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 import edu.iu.dsc.tws.comms.utils.SortJoinUtils;
 
+import static edu.iu.dsc.tws.comms.utils.SortJoinUtils.CONFIG_USE_SORT_JOIN_CACHE;
+
 /**
  * This class performs the join operation when all the relations are ready
  * <p>
@@ -50,6 +52,7 @@ public class JoinBatchCombinedReceiver {
   private final CommunicationContext.JoinType joinType;
   private KeyComparatorWrapper keyComparator;
   private MessageType keyType;
+  private Config config;
 
   public JoinBatchCombinedReceiver(BulkReceiver recvr,
                                    CommunicationContext.JoinAlgorithm algorithm,
@@ -63,6 +66,7 @@ public class JoinBatchCombinedReceiver {
   }
 
   public void init(Config cfg, Set<Integer> targets) {
+    this.config = cfg;
     for (Integer target : targets) {
       boolean[] syncs = new boolean[JoinRelation.values().length];
       Arrays.fill(syncs, false);
@@ -77,15 +81,22 @@ public class JoinBatchCombinedReceiver {
   private Iterator doJoin(Object left, Object right) {
     if (algorithm.equals(CommunicationContext.JoinAlgorithm.SORT)) {
       if (left instanceof RestorableIterator) {
-        return SortJoinUtils.join(
-            (RestorableIterator) left,
-            (RestorableIterator) right,
-            keyComparator, joinType);
+        if (config.getBooleanValue(CONFIG_USE_SORT_JOIN_CACHE, true)) {
+          return SortJoinUtils.joinWithCache(
+              (RestorableIterator) left,
+              (RestorableIterator) right,
+              keyComparator, joinType, config);
+        } else {
+          return SortJoinUtils.join(
+              (RestorableIterator) left,
+              (RestorableIterator) right,
+              keyComparator, joinType);
+        }
       } else if (left instanceof List) {
         return SortJoinUtils.join(
             (List<Tuple>) left,
             (List<Tuple>) right,
-            keyComparator, joinType).iterator();
+            keyComparator, joinType);
       } else {
         throw new Twister2RuntimeException("Unsupported data formats received from sources : "
             + left.getClass());
@@ -104,7 +115,7 @@ public class JoinBatchCombinedReceiver {
             (List<Tuple>) right,
             joinType,
             keyType
-        ).iterator();
+        );
       } else {
         throw new Twister2RuntimeException("Unsupported data formats received from sources");
       }

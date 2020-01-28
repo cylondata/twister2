@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 /**
@@ -36,13 +37,13 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 public class GatherTLink<T> extends BatchGatherLink<T> {
   private boolean useDisk = false;
 
-  public GatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "gather", sourceParallelism, 1);
+  public GatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+    super(tSetEnv, "gather", sourceParallelism, 1, schema);
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.GATHER, getSchema().getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     return e;
   }
