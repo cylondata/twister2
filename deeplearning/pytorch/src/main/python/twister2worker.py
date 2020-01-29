@@ -19,7 +19,5 @@ if world_rank == 1:
 print("From Slave: ", world_rank, world_size, parent, recv_data)
 #comm.Recv([recv_data, MPI.INT], source=0)
 
-
-
 # comm.free()
 MPI.Finalize()
