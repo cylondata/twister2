@@ -93,3 +93,6 @@ class Twister2Environment:
         )
         src_tset = KeyedTSet(java_src_ref, self)
         return src_tset
+
+    def get_mpi_intercom(self):
+        return self.__entrypoint.getMPIIntercom()
