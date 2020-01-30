@@ -4,9 +4,8 @@ title: Twister2Flow
 sidebar_label: Overview on Twister2Flow
 ---
 
-# Twister2Flow
-
-Designing a dataflow pipeline to support high performance deep learning in Twister2. This is an experimental version of the initial High Performance Deep Learning Connect of Twister2. 
+Designing a dataflow pipeline to support high performance deep learning in Twister2. This is an
+experimental version of the initial High Performance Deep Learning Connect of Twister2. 
 
 ## Supporting Dataflow Operations
 
@@ -18,6 +17,19 @@ Designing a dataflow pipeline to support high performance deep learning in Twist
 1. Twister2 (JVM Oriented Big Data Toolkit)
 2. Pytorch (Deep Learning Library)
 3. Python3
+
+## Pre-Requisites
+
+1. Twister2 Python Installation. [See more.](../../compatibility/python.md)
+2. Pytorch Installation from Source [See more.](https://github.com/pytorch/pytorch#from-source)
+3. Install PyArrow ```pip3 install pyarrow```
+4. Install requests ```pip3 install requests```
+5. Install mlxtend  ```pip3 install mlxtend```
+6. Add Twister2 to Path 
+``` bash
+export TWISTER2_HOME=<path-to-twister2-binaries>
+export PATH=$TWISTER2_HOME/bin:$PATH
+```
 
 ## Install
 
@@ -38,7 +50,7 @@ python3 bootstrap/PytorchJobSubmitter.py\
 ## Example Dataflow
 
 
-```python3
+```python
 from twister2flow.twister2.pipeline import PipelineGraph
 from twister2flow.twister2.task.Twister2Task import Twister2Task
 from twister2flow.twister2.task.PytorchTask import PytorchTask
@@ -71,9 +83,9 @@ print(str(plg))
 plg.execute()
 ```
 
-Running example
+## Running example
 
-```python
+```bash
 python3 examples/Twister2Flow.py
 ```
 

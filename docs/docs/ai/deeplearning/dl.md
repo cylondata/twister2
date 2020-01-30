@@ -4,6 +4,11 @@ title: Deep Learning
 sidebar_label: Overview on Deep Learning
 ---
 
+Twister2 Deep Learning is currently working on supporting Pytorch, Tensorflow and MXNet. 
+With our 0.5.0 release we have introduced an experimental version of a deep learning with
+ distributed data parallel Pytorch implementation. We use an MPI backend to support distributed
+  training and currently we are working on providing better performance with GPU.
+
 # Twister2:DeepNet
 
 Twister2:DeepNet is the distributed runtime for deep learning algorithm training and inference. 
@@ -13,7 +18,4 @@ the data training framework. We are actively working on transforming this proces
 in-memory computation model. 
 
 
-![NeuralNet-Brain: Reference: http://rpg.ifi.uzh.ch/research.html](assets/dl-brain-1.gif)
-
-Reference: http://rpg.ifi.uzh.ch/research.html
 
