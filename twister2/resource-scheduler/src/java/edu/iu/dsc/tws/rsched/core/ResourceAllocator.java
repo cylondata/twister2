@@ -324,12 +324,12 @@ public class ResourceAllocator {
     delay = end - start;
     LOG.info("Job launching took: " + delay + "ms");
 
-    String dir = System.getProperty("user.home") + "/.twister2";
-    String delayFile = dir + "/" + job.getJobId() + "-launch-delay.txt";
-    String ts = (String) updatedConfig.get("JOB_SUBMIT_TIME");
-    long jsDelay = end - Long.parseLong(ts);
-    FileUtils.writeToFile(delayFile, (jsDelay + "").getBytes(), true);
-    LOG.info("Job launch delay: " + jsDelay + " ms");
+//    String dir = System.getProperty("user.home") + "/.twister2";
+//    String delayFile = dir + "/" + job.getJobId() + "-launch-delay.txt";
+//    String ts = (String) updatedConfig.get("JOB_SUBMIT_TIME");
+//    long jsDelay = end - Long.parseLong(ts);
+//    FileUtils.writeToFile(delayFile, (jsDelay + "").getBytes(), true);
+//    LOG.info("Job launch delay: " + jsDelay + " ms");
 
     launcher.close();
 
