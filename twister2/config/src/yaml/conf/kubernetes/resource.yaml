@@ -115,7 +115,7 @@ twister2.resource.zookeeper.server.addresses: "twister2-zookeeper.default.svc.cl
 # K8sUploader Settings
 #########################################################################
 
-#twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader"
 
 # When a job is submitted, the job package needs to be transferred to worker pods
 # K8sUploader provides two upload methods:
@@ -157,7 +157,7 @@ twister2.resource.zookeeper.server.addresses: "twister2-zookeeper.default.svc.cl
 #   Specify bucket name
 #   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
 
-twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
+#twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
 # s3 bucket name to upload the job package
 # workers will download the job package from this location
