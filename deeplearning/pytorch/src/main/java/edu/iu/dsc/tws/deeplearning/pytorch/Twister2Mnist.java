@@ -11,111 +11,66 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.deeplearning.pytorch;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.deeplearning.common.ParameterTool;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.deeplearning.io.ReadCSV;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-import mpi.Intercomm;
-import mpi.MPI;
-import mpi.MPIException;
+public class Twister2Mnist implements IWorker {
 
-/**
- * This is a Hello World with MPI for Deep learning
- * ./bin/twister2 submit standalone jar lib/libtwister2-deeplearning.jar
- * edu.iu.dsc.tws.deeplearning.pytorch.HelloTwister2Pytorch
- * --scriptPath /home/vibhatha/sandbox/pytorch/twsrunner --workers 2
- */
-public class HelloTwister2Pytorch implements IWorker {
+  private static final String TRAIN_PATH = "/tmp/twister2deepnet/mnist/train/";
+  private static final String TEST_PATH = "/tmp/twister2deepnet/mnist/test/";
+
+  private static final String TRAIN_DATA_FILE = "train-images-idx3-ubyte.csv";
+  private static final String TRAIN_TARGET_FILE = "train-labels-idx1-ubyte.csv";
+
+  private static final String TEST_DATA_FILE = "t10k-images-idx3-ubyte.csv";
+  private static final String TEST_TARGET_FILE = "t10k-labels-idx1-ubyte.csv";
 
   private static String scriptPath = "";
-
   private static int workers = 2;
 
-
-  private static final Logger LOG = Logger.getLogger(HelloTwister2Pytorch.class.getName());
+  private static final Logger LOG = Logger.getLogger(Twister2Mnist.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
-                      IWorkerController workerController,
+  public void execute(Config config, int workerID, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+
+    initialize(config, workerID);
+    loadFileFromDisk(workerID, workers);
+  }
+
+  private void initialize(Config config, int workerID) {
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
     scriptPath = config.getStringValue("scriptPath");
     workers = config.getIntegerValue("workers", 2);
     System.out.println("Worker Id: " + workerID + "," + scriptPath + "," + workers);
-
-    try {
-      int workerId = MPI.COMM_WORLD.getRank();
-      System.out.println("Worker Id : " + workerId);
-      String[] spawnArgv = new String[1];
-      spawnArgv[0] = scriptPath;
-      int maxprocs = workers;
-      int[] errcode = new int[maxprocs];
-      Intercomm child = MPI.COMM_WORLD.spawn("bash", spawnArgv, maxprocs,
-          MPI.INFO_NULL, 0, errcode);
-      int[] data = new int[]{1, 2, 3, 4};
-      if (workerId == 0) {
-        child.send(data, data.length, MPI.INT, 1, 0);
-      }
-      executePythonScript(workerID);
-    } catch (MPIException exception) {
-      System.out.println("Exception " + exception.getMessage());
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
-    }
-
   }
 
-  public void executePythonScript(int workerId) throws IOException {
-    String pythonScriptPath = scriptPath;
-    String[] cmd = new String[2];
-    cmd[0] = "/home/vibhatha/venv/ENV3/bin/python3"; // check version of installed python: python -V
-    cmd[1] = pythonScriptPath;
+  private void loadFileFromDisk(int workerID, int parallelism) {
+    ReadCSV readTrainingData = new ReadCSV(TRAIN_PATH + TRAIN_DATA_FILE, 60000, 784, 0, workers);
+    ReadCSV readTrainingTarget = new ReadCSV(TRAIN_PATH + TRAIN_TARGET_FILE, 60000, 1, 0,
+        workers);
+    ReadCSV readTestingData = new ReadCSV(TEST_PATH + TEST_DATA_FILE, 10000, 784, 0, workers);
+    ReadCSV readTestingTarget = new ReadCSV(TEST_PATH + TEST_TARGET_FILE, 10000, 1, 0,
+        workers);
 
-    // create runtime to execute external command
-    Runtime rt = Runtime.getRuntime();
-    Process pr = rt.exec(cmd);
-
-    // retrieve output from python script
-    BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-    String line = "";
-    while ((line = bfr.readLine()) != null) {
-      // display each output line form python script
-      System.out.println("From Python => Tws WorkerId:" + workerId + "=" + line);
-    }
-  }
-
-
-  public void info(int workerID, IWorkerController workerController, String helloKeyValue) {
-
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
-    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
+    readTrainingData.read();
+    readTrainingTarget.read();
+    readTestingData.read();
+    readTestingTarget.read();
   }
 
   public static void main(String[] args) {
@@ -147,7 +102,7 @@ public class HelloTwister2Pytorch implements IWorker {
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("hello-world-job-spawn")
-        .setWorkerClass(HelloTwister2Pytorch.class)
+        .setWorkerClass(Twister2Mnist.class)
         .addComputeResource(2, 1024, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
