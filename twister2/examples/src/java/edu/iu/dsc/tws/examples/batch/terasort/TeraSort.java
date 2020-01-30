@@ -354,9 +354,6 @@ public class TeraSort implements IWorker {
 
     @Override
     public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
-      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
-      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
-      resultsRecorder.writeToCSV();
 
       byte[] previousKey = null;
       boolean allOrdered = true;
@@ -364,11 +361,11 @@ public class TeraSort implements IWorker {
       long readStart = System.currentTimeMillis();
       while (content.hasNext()) {
         Tuple<byte[], byte[]> nextTuple = content.next();
-        if (previousKey != null
-            && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
-          LOG.info("Unordered tuple found");
-          allOrdered = false;
-        }
+//        if (previousKey != null
+//            && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
+//          LOG.info("Unordered tuple found");
+//          allOrdered = false;
+//        }
         tupleCount++;
         previousKey = nextTuple.getKey();
 
@@ -381,6 +378,10 @@ public class TeraSort implements IWorker {
           }
         }
       }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+
       LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
           System.currentTimeMillis() - readStart));
       tasksCount.decrementAndGet();
@@ -542,8 +543,7 @@ public class TeraSort implements IWorker {
         false));
 
     //non-file based mode configurations
-    options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
-            + "A source will generate this much of data. Including size of both key and value.",
+    options.addOption(createOption(ARG_SIZE, true, "Total Data Size in GigaBytes for all workers.",
         false));
     options.addOption(createOption(ARG_KEY_SIZE, true,
         "Size of the key in bytes of a single Tuple", true));
@@ -639,7 +639,7 @@ public class TeraSort implements IWorker {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(TeraSort.class.getName())
+        .setJobName("terasort")
         .setWorkerClass(TeraSort.class.getName())
         .addComputeResource(
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
