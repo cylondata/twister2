@@ -82,9 +82,6 @@
     "Deep Learning": [
       "ai/deeplearning/deeplearning",
       "ai/deeplearning/pytorch/pytorchinitial"
-    ],
-    "Reinforcement Learning": [
-      "ai/reinforcementlearning/reinforcementlearning"
     ]
   },
   "examples": {
