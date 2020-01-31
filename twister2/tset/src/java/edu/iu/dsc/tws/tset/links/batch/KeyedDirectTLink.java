@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
@@ -25,7 +25,7 @@ public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
   private boolean useDisk = false;
 
   public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism,
-                          KeyedSchema schema) {
+                          TupleSchema schema) {
     super(tSetEnv, "kdirect", sourceParallelism, schema);
   }
 
