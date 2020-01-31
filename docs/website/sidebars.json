@@ -75,14 +75,13 @@
       "ai/twister2flow/twister2flow"
     ],
     "Machine Learning": [
-      "ai/machinelearning/machinelearning"
+      "ai/machinelearning/machinelearning",
+      "ai/machinelearning/kmeans/kmeans",
+      "ai/machinelearning/svm/svm"
     ],
     "Deep Learning": [
       "ai/deeplearning/deeplearning",
       "ai/deeplearning/pytorch/pytorchinitial"
-    ],
-    "Reinforcement Learning": [
-      "ai/reinforcementlearning/reinforcementlearning"
     ]
   },
   "examples": {
