@@ -96,3 +96,23 @@ class Twister2Environment:
 
     def get_mpi_intercom(self):
         return self.__entrypoint.getMPIIntercom()
+
+    def get_mpi_info_null(self):
+        return self.__entrypoint.getInfoNull()
+
+    def get_mpi_datatype_int(self):
+        return self.__entrypoint.getDataTypeInt()
+
+    def gen_java_int_array(self, size=1):
+        int_class = self.__gateway.jvm.int
+        int_array = self.__gateway.new_array(int_class,size)
+        for i in range(size):
+            int_array[i] = 0
+        return int_array
+
+    def gen_java_string_array(self, size=1):
+        string_class = self.__gateway.jvm.java.lang.String
+        string_array = self.__gateway.new_array(string_class,size)
+        for i in range(size):
+            string_array[i] = ""
+        return string_array

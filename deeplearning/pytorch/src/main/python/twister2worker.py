@@ -24,7 +24,7 @@ tensor1 = torch.from_numpy(recv_data)
 tensor2 = torch.from_numpy(np.ones(4))
 tensor3 = tensor1 + tensor2
 
-print(tensor3)
+print("Results : ", tensor3)
 
 # comm.free()
 MPI.Finalize()

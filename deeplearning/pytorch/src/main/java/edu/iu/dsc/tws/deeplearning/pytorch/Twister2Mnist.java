@@ -108,7 +108,5 @@ public class Twister2Mnist implements IWorker {
         .build();
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
-
-
   }
 }

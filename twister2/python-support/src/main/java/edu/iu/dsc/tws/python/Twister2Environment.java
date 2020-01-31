@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
+import mpi.Datatype;
+import mpi.Info;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
@@ -84,4 +86,13 @@ public class Twister2Environment {
       return null;
     }
   }
+
+  public Info getInfoNull() {
+    return MPI.INFO_NULL;
+  }
+
+  public Datatype getDataTypeInt() {
+    return MPI.INT;
+  }
+
 }
