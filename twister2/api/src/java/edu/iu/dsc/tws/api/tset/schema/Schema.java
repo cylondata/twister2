@@ -17,8 +17,16 @@ public interface Schema {
 
   MessageType getDataType();
 
-  default int getTotalSize() {
+  default int getDataSize() {
     return -1;
+  }
+
+  default int getTotalSize() {
+    return this.getDataSize();
+  }
+
+  default boolean isLengthsSpecified() {
+    return this.getDataSize() != -1;
   }
 }
 

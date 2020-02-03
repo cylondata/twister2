@@ -18,4 +18,17 @@ public interface TupleSchema extends Schema {
   MessageType getKeyType();
 
   int getKeySize();
+
+  @Override
+  default int getTotalSize() {
+    if (!this.isLengthsSpecified()) {
+      return -1;
+    }
+    return this.getKeySize() + this.getDataSize();
+  }
+
+  @Override
+  default boolean isLengthsSpecified() {
+    return this.getKeySize() != -1 && this.getDataSize() != -1;
+  }
 }

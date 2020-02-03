@@ -82,7 +82,7 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   /**
    * Uses a different build pattern than the usual {@link edu.iu.dsc.tws.api.tset.link.TLink}s
    *
-   * @param graphBuilder  graph builder
+   * @param graphBuilder graph builder
    * @param buildSequence build seq
    */
   @Override
@@ -110,6 +110,7 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
       String groupName = leftTSet.getId() + "_" + rightTSet.getId() + "_" + getId() + "_"
           + target.getId();
 
+
       // build left
       buildJoin(graphBuilder, leftTSet, target, 0, groupName, kType, dTypeL);
 
@@ -134,6 +135,8 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, useDisk);
     e.setKeyType(kType);
+
+    super.generateSchema(e);
 
     graphBuilder.connect(s.getId(), t.getId(), e);
   }

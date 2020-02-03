@@ -19,18 +19,18 @@ public class KeyedSchema implements TupleSchema {
   private final MessageType kType;
 
   private int keySize = -1;
-  private int totalSize = -1;
+  private int dataSize = -1;
 
   public KeyedSchema(MessageType keyType, MessageType dataType) {
     this.dType = dataType;
     this.kType = keyType;
   }
 
-  public KeyedSchema(MessageType dType, MessageType kType, int keySize, int totalSize) {
+  public KeyedSchema(MessageType dType, MessageType kType, int keySize, int dataSize) {
     this.dType = dType;
     this.kType = kType;
     this.keySize = keySize;
-    this.totalSize = totalSize;
+    this.dataSize = dataSize;
   }
 
   @Override
@@ -39,8 +39,8 @@ public class KeyedSchema implements TupleSchema {
   }
 
   @Override
-  public int getTotalSize() {
-    return this.totalSize;
+  public int getDataSize() {
+    return this.dataSize;
   }
 
   public MessageType getKeyType() {

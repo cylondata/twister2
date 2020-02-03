@@ -130,7 +130,6 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     Edge leftEdge = this.buildEdge();
     leftEdge.setEdgeIndex(0);
     leftEdge.setNumberOfEdges(2);
-    //leftEdge.setMessageSchema(this.leftMessageSchema);
 
     Edge rightEdge = this.buildRightEdge();
     rightEdge.setEdgeIndex(1);
