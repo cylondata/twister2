@@ -16,4 +16,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 public interface TupleSchema extends Schema {
 
   MessageType getKeyType();
+
+  int getKeySize();
 }
