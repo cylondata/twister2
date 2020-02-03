@@ -104,6 +104,7 @@ public class TeraSort implements IWorker {
   private static final String TASK_SAMPLER = "sample-source";
   private static final String TASK_SAMPLER_REDUCE = "sample-recv";
   private static final String EDGE = "edge";
+  private static final String VERIFY = "verify";
 
   private static BenchmarkResultsRecorder resultsRecorder;
 
@@ -213,7 +214,7 @@ public class TeraSort implements IWorker {
     ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
     cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
     cEnv.close();
-    LOG.info("Stopping execution...");
+    LOG.info("Finished Sorting...");
   }
 
   /**
@@ -354,17 +355,17 @@ public class TeraSort implements IWorker {
 
     @Override
     public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
-      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
-      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
-      resultsRecorder.writeToCSV();
 
       byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
+      boolean verify = config.getBooleanValue(VERIFY, false);
       long readStart = System.currentTimeMillis();
+
       while (content.hasNext()) {
         Tuple<byte[], byte[]> nextTuple = content.next();
-        if (previousKey != null
+        if (verify
+            && previousKey != null
             && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
           allOrdered = false;
@@ -381,6 +382,10 @@ public class TeraSort implements IWorker {
           }
         }
       }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+
       LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
           System.currentTimeMillis() - readStart));
       tasksCount.decrementAndGet();
@@ -542,8 +547,7 @@ public class TeraSort implements IWorker {
         false));
 
     //non-file based mode configurations
-    options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
-            + "A source will generate this much of data. Including size of both key and value.",
+    options.addOption(createOption(ARG_SIZE, true, "Total Data Size in GigaBytes for all workers.",
         false));
     options.addOption(createOption(ARG_KEY_SIZE, true,
         "Size of the key in bytes of a single Tuple", true));
@@ -594,6 +598,11 @@ public class TeraSort implements IWorker {
         ARG_FIXED_SCHEMA, false, "Use fixed schema feature", false
     ));
 
+    //verify option
+    options.addOption(createOption(
+        VERIFY, false, "Verify whether the results are sorted.", false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -637,12 +646,16 @@ public class TeraSort implements IWorker {
       jobConfig.put(ARG_FIXED_SCHEMA, true);
     }
 
+    if (cmd.hasOption(VERIFY)) {
+      jobConfig.put(VERIFY, true);
+    }
+
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(TeraSort.class.getName())
+        .setJobName("terasort")
         .setWorkerClass(TeraSort.class.getName())
         .addComputeResource(
-            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
+            Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
         )
