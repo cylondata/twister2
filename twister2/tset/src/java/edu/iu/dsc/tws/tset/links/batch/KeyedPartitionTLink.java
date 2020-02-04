@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private PartitionFunc<K> partitionFunction;
@@ -50,6 +51,7 @@ public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, 
     e.setKeyType(this.getSchema().getKeyType());
     e.setPartitioner(partitionFunction);
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

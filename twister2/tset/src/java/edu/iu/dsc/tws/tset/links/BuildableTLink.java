@@ -44,6 +44,8 @@ public interface BuildableTLink extends TBase, Buildable {
         Edge edge = getEdge();
         edge.setName(edge.getName() + "_" + s + "_" + t);
 
+        TLinkUtils.generateCommsSchema(edge);
+
         graphBuilder.connect(s, t, edge);
       }
     }
