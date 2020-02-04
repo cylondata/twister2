@@ -47,7 +47,6 @@ public class FixedSchemaKeyedDataDeSerializer extends KeyedDataDeSerializer {
    */
   @Override
   public void build(Object partialObject, int edge) {
-    LOG.info("Building message in FS Deserializer");
     InMessage currentMessage = (InMessage) partialObject;
     MessageType keyType = currentMessage.getKeyType();
     DataPacker keyPacker = keyType.getDataPacker();
