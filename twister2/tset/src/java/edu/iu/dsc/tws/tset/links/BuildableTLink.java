@@ -16,8 +16,6 @@ package edu.iu.dsc.tws.tset.links;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -26,24 +24,6 @@ import edu.iu.dsc.tws.tset.Buildable;
 public interface BuildableTLink extends TBase, Buildable {
 
   Edge getEdge();
-
-  default void generateSchema(Edge edge) {
-    if (!edge.getMessageSchema().isFixedSchema()) {
-      MessageType keyType = edge.getKeyType();
-      MessageType dataType = edge.getDataType();
-      if (edge.isKeyed()) {
-        if (keyType.isPrimitive() && dataType.isPrimitive()
-            && !keyType.isArray() && !dataType.isArray()) {
-          edge.setMessageSchema(MessageSchema.ofSize(
-              keyType.getUnitSizeInBytes() + dataType.getUnitSizeInBytes(),
-              keyType.getUnitSizeInBytes()
-          ));
-        }
-      } else if (dataType.isPrimitive() && !dataType.isArray()) {
-        edge.setMessageSchema(MessageSchema.ofSize(dataType.getUnitSizeInBytes()));
-      }
-    }
-  }
 
   @Override
   default void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
@@ -64,7 +44,7 @@ public interface BuildableTLink extends TBase, Buildable {
         Edge edge = getEdge();
         edge.setName(edge.getName() + "_" + s + "_" + t);
 
-        this.generateSchema(edge);
+        TLinkUtils.generateCommsSchema(edge);
 
         graphBuilder.connect(s, t, edge);
       }

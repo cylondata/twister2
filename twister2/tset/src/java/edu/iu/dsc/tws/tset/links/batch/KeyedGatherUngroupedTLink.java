@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherUngroupedTLink.class.getName());
@@ -68,6 +69,7 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
       e.addProperty(CommunicationContext.KEY_COMPARATOR, this.keyCompartor);
     }
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

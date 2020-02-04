@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedReduceTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private ReduceFunc<V> reduceFn;
@@ -46,6 +47,7 @@ public class KeyedReduceTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
         reduceFn);
     e.setKeyed(true);
     e.setKeyType(this.getSchema().getKeyType());
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 
