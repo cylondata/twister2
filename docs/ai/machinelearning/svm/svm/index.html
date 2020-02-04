@@ -1,0 +1,513 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Support Vector Machines · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Support Vector Machines (SVM) is a supervised learning algorithm which is mainly used for the"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Support Vector Machines · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="Support Vector Machines (SVM) is a supervised learning algorithm which is mainly used for the"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class=""><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class="siteNavGroupActive"><a href="/docs/ai/artificial_intelligence" target="_self">AI</a></li><li class=""><a href="/docs/examples/examples" target="_self">Examples</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contribute</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/javadocs/index.html" target="_self">Java Docs</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Machine Learning</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">AI</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/artificial_intelligence">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Twister2Flow</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/twister2flow/twister2flow">Overview on Twister2Flow</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Machine Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/machinelearning/machinelearning">Overview on Machine Learning</a></li><li class="navListItem"><a class="navItem" href="/docs/ai/machinelearning/kmeans/kmeans">K-Means</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/ai/machinelearning/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deep Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/deeplearning/deeplearning">Overview on Deep Learning</a></li><li class="navListItem"><a class="navItem" href="/docs/ai/deeplearning/pytorch/pytorchinitial">Pytorch Integration</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Support Vector Machines</h1></header><article><div><span><p>Support Vector Machines (SVM) is a supervised learning algorithm which is mainly used for the
+purpose of classifying data. SVM algorithm is a light-weight classifier compared to Deep Neural
+Networks. SVM is a highly used algorithm for classifying data. There are many varieties of SVMs
+which has been developed through out the years. The sequential minimal optimization (<a href="https://pdfs.semanticscholar.org/59ee/e096b49d66f39891eb88a6c84cc89acba12d.pdf">SMO</a>) based approach
+is one of the most famouos modes in the early days of SVM. Then the research progreeses towards
+matrix decomposition methods like <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/34638.pdf">PSVM</a>.
+Both these methods are high computational intensive algorithms. Then the current research has
+diverted towards using gradient descent based approaches to solve the problem. These researchs show
+that this method is highly efficient and accuracy is as high as the traditional SMO-based and
+matrix decomposition-based approaches.</p>
+<h2><a class="anchor" aria-hidden="true" id="background"></a><a href="#background" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Background</h2>
+<p>Currently Twister2 supports SGD-based SVM binary classifier with Linear Kernel. Our objective
+is to provide fully functional multi-class SVM classifier with multiple kernel support in a future
+release.</p>
+<p>Here S is a sample space where x<sub>i</sub> and y<sub>i</sub>,</p>
+<p>S with n samples,x<sub>i</sub> refers to a d-dimensional feature vector and y<sub>i</sub>
+is  the  label  of  the i<sup>th</sup> sample.</p>
+<p><img src="/docs/assets/eq1.gif" alt="Sample Space Definition"></p>
+<p>J<sup>t</sup> refers to the quadratic objective function which is minimized in the algorithm
+to obtain the convergence in the algorithm.</p>
+<p><img src="/docs/assets/eq2.gif" alt="Objective Function"></p>
+<p>This is the constraint of the objective function</p>
+<p><img src="/docs/assets/eq4.gif" alt="Constraint Definition In Objective Function"></p>
+<p>The weight vector updates takes as follows. Depending on the gradient of the objective function,</p>
+<p><img src="/docs/assets/eq3.gif" alt="Weight Update Equations"></p>
+<h2><a class="anchor" aria-hidden="true" id="svm-sgd-sequential-algorithm"></a><a href="#svm-sgd-sequential-algorithm" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>SVM-SGD Sequential Algorithm</h2>
+<p>Twister2:ML provides a basic Linear Kernel based SVM algorithm developed on top of stochastic
+gradient descent based approach. The sequential algorithm is shown in Figure</p>
+<p><img src="/docs/assets/seq_sgd_svm_algo.png" alt="Sequential Algorithm"></p>
+<p>In the distributed algorithm, we model a data-parallel algorithm where each model work on a separate
+data set (subset of full dataset). After each model is done with calculating the final weight
+vector we do a model synchronization. A preliminary research we did on this proves that this method
+is highly efficient and accuracy of the algorithm doesn't dilute with the model synchronization
+frequency.</p>
+<h2><a class="anchor" aria-hidden="true" id="distributed-svm-batch-model---task-example"></a><a href="#distributed-svm-batch-model---task-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Distributed SVM Batch Model - Task Example</h2>
+<p><img src="/docs/assets/twister2_ml_simple_model_svm.png" alt="Twister2 Distributed SVM Batch Model"></p>
+<h4><a class="anchor" aria-hidden="true" id="components"></a><a href="#components" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Components</h4>
+<ul>
+<li><strong>Training Data Source</strong> : This is an input from a text file (supported format csv) {label,features}</li>
+<li><strong>Testing Data Source</strong> : This is an input from a text file (supported format csv) {label,features}</li>
+<li><strong>Distributed SVM Compute Tasks</strong> : Set of Independent tasks running in parallel with the specified parallelism,
+(Note: In current implementation we recommend to use data parallelism = compute parallelism )</li>
+<li><strong>Input Data Streamer Task</strong> : Loads the data with the configured parallelism and send to the SVM Compute Task</li>
+<li><strong>SVM Reducer Task</strong> : Do a MPI-like model reduction to get the final model by averaging through the reduced value
+(Note: This is one way of doing this. If you want to do an ensemble-like reduction, we need a voting mechanism.
+Twister2 will support that in an upcoming release)</li>
+<li><strong>Trained Model</strong> : This contains the final weight vector and important log information that you need to save to disk
+In production or testing phase, you may only need to run the testing graph. Twister2 SVM can be customized
+to support that functionality as well.</li>
+<li><strong>Testing Data Streamer</strong> : Loads the testing data in parallel with the defined parallelism. This way
+we can do the testing process quite efficiently. You can increase this parallelism depending on your requirement
+and it is independent of the data parallelism used in the training process.</li>
+<li><strong>Distributed Tester</strong> : Runs the SVM prediction algorithm on the testing data and provide the accuracy for the
+tested batch.</li>
+<li><strong>Train Model Evaluator</strong> : The Distributed Tester provides the accuracy per testing data set and the
+evaluator does the MPI-like reduction over the response and provide the final accuracy. You can provide a custom
+averaging function using Twister2 IFunctions to give a weighted average or any specific average function
+depending on your expectation. Current algorithm supports a general MPI-like plain reduction and average it over
+the number of processes (=no of data partitions) used in the testing process.</li>
+<li><strong>Final Results</strong> : Final results can be saved to disk and currently, Twister2 SVM shows time breakdown for
+testing, training, accuracy and data set specific info.</li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="code"></a><a href="#code" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Code</h2>
+<h3><a class="anchor" aria-hidden="true" id="data-loading"></a><a href="#data-loading" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Loading</h3>
+<p>Here is how we load data for training.</p>
+<pre><code class="hljs css language-java">DataObject&lt;Object&gt; data = <span class="hljs-keyword">null</span>;
+   DataObjectSource sourceTask = <span class="hljs-keyword">new</span> DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+       <span class="hljs-keyword">this</span>.svmJobParameters.getTrainingDataDir());
+   DataObjectSink sinkTask = <span class="hljs-keyword">new</span> DataObjectSink();
+   trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
+       sourceTask, dataStreamerParallelism);
+   ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
+       Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
+   firstGraphComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
+       Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+   trainingBuilder.setMode(OperationMode.BATCH);
+
+   DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.build();
+   ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+   taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+   data = taskExecutor.getOutput(
+       datapointsTaskGraph, firstGraphExecutionPlan, Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="code-explained"></a><a href="#code-explained" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Code Explained</h4>
+<h6><a class="anchor" aria-hidden="true" id="note-task-names-edge-names-are-defined-using-constants"></a><a href="#note-task-names-edge-names-are-defined-using-constants" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note: Task Names, Edge Names are defined using constants</h6>
+<p>First you need to create a <strong>DataSourceObject</strong> which is an abstraction in Twister2 Data API.
+This way you can implicitly do the data loading in parallel and plug this in easily to the data
+streaming source task (this will be explained in a following section).</p>
+<pre><code class="hljs css language-java">DataObjectSource sourceTask = <span class="hljs-keyword">new</span> DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        <span class="hljs-keyword">this</span>.svmJobParameters.getTrainingDataDir());
+
+</code></pre>
+<p><strong>DataObjectSink</strong> in Twister2 supports to get the parallelism you expect.
+This sink task is connected to the data loading Source Task which helps to partition the
+data equal to the parallelism you provide. Read the source code to get a clear idea.</p>
+<pre><code class="hljs css language-java">DataObjectSink sinkTask = <span class="hljs-keyword">new</span> DataObjectSink();
+   trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
+       sourceTask, dataStreamerParallelism);
+
+</code></pre>
+<p>Now we need to create the data loading task graph. Source task can be added as follows.</p>
+<pre><code class="hljs css language-java">trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
+       sourceTask, dataStreamerParallelism);
+
+</code></pre>
+<p>Next, the sink task of data loading must be added to the task graph,</p>
+<pre><code class="hljs css language-java">ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
+       Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
+
+</code></pre>
+<p>The link between data loading source task and sink task is called a <strong>direct</strong> link.
+What we mean by a direct link is that the data is not undergoing any complex data flow, it is
+just direct flow of data from the given source to the sink using a direct communication. This
+is the simplest communication directive in Twister2.</p>
+<p>Then we need to set the type of the graph we built. Twister2 allows the user to set the computation model
+as a batch or streaming. We recommend to use Batch mode for the current SVM example as the
+current computation model is specific to a batch case.</p>
+<pre><code class="hljs css language-java">trainingBuilder.setMode(OperationMode.BATCH);
+</code></pre>
+<p>Now, the task graph has to be built and executed.</p>
+<pre><code class="hljs"> DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.<span class="hljs-keyword">build</span>();
+   ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+   taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+
+</code></pre>
+<p>Finally, we can get the partitioned data set as a data object which we call as a <strong>DataObject</strong>
+which can be defined as a generic type depending on the programming logic or your preference.</p>
+<pre><code class="hljs css language-java">data = taskExecutor.getOutput(
+       datapointsTaskGraph, firstGraphExecutionPlan, Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+
+</code></pre>
+<p>This data object has partitions equal to the amount of parallelism provided in the task definition.</p>
+<h6><a class="anchor" aria-hidden="true" id="note-testing-data-is-also-loaded-in-a-similar-way"></a><a href="#note-testing-data-is-also-loaded-in-a-similar-way" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note: Testing data is also loaded in a similar way.</h6>
+<h3><a class="anchor" aria-hidden="true" id="training"></a><a href="#training" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Training</h3>
+<p>Next step is to train the SVM algorithm using the loaded data. For that we create another
+task graph called training task graph which can be considered as the first major component in
+the distributed SVM algorithm.</p>
+<pre><code class="hljs css language-java">DataObject&lt;<span class="hljs-keyword">double</span>[]&gt; trainedWeight = <span class="hljs-keyword">null</span>;
+
+    dataStreamer = <span class="hljs-keyword">new</span> InputDataStreamer(<span class="hljs-keyword">this</span>.operationMode,
+        svmJobParameters.isDummy(), <span class="hljs-keyword">this</span>.binaryBatchModel);
+    svmCompute = <span class="hljs-keyword">new</span> SVMCompute(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.operationMode);
+    svmReduce = <span class="hljs-keyword">new</span> SVMReduce(<span class="hljs-keyword">this</span>.operationMode);
+
+    trainingBuilder.addSource(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE, dataStreamer,
+        dataStreamerParallelism);
+    ComputeConnection svmComputeConnection = trainingBuilder
+        .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, svmCompute, svmComputeParallelism);
+    ComputeConnection svmReduceConnection = trainingBuilder
+        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+
+    svmComputeConnection
+        .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+            Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
+    svmReduceConnection
+        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+            <span class="hljs-keyword">new</span> ReduceAggregator(), DataType.OBJECT);
+
+    trainingBuilder.setMode(operationMode);
+    DataFlowTaskGraph graph = trainingBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
+
+    taskExecutor.addInput(
+        graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+        Constants.SimpleGraphConfig.INPUT_DATA, trainingData);
+
+    taskExecutor.execute(graph, plan);
+
+    LOG.info(<span class="hljs-string">"Task Graph Executed !!! "</span>);
+
+    trainedWeight = retrieveWeightVectorFromTaskGraph(graph, plan);
+
+
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="code-explained-1"></a><a href="#code-explained-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Code Explained</h4>
+<p>First, we initialize the components in the graph. There are three basic components in the
+training graph. They are;</p>
+<ol>
+<li><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/streamer/InputDataStreamer.java">Input Data Streamer</a> : loads the data in parallel and do initialization of models and other
+used defined pre-processings.</li>
+<li><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/compute/SVMCompute.java">SVM Compute Task</a> : Runs the SVM algorithm on a partition of data.</li>
+<li><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/aggregate/SVMReduce.java">SVM Reduce Task</a>  : Generates the averaged model over all models trained in parallel</li>
+</ol>
+<p>Here is how we initialize each of these tasks.</p>
+<h6><a class="anchor" aria-hidden="true" id="note--dummy-data-based-training-option-is-there-just-to-test-the-application"></a><a href="#note--dummy-data-based-training-option-is-there-just-to-test-the-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note : Dummy data based training option is there just to test the application.</h6>
+<pre><code class="hljs css language-java">dataStreamer = <span class="hljs-keyword">new</span> InputDataStreamer(<span class="hljs-keyword">this</span>.operationMode,
+        svmJobParameters.isDummy(), <span class="hljs-keyword">this</span>.binaryBatchModel);
+    svmCompute = <span class="hljs-keyword">new</span> SVMCompute(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.operationMode);
+    svmReduce = <span class="hljs-keyword">new</span> SVMReduce(<span class="hljs-keyword">this</span>.operationMode);
+</code></pre>
+<p>In a similar way we used to create the task graph in data loading section, we use a similar approach
+to design the training task graph.</p>
+<p>A source task is always added by <strong>addingSource</strong> method</p>
+<p>Make sure to use task graph edges and task node names using constants. Reduction parallelism is
+always unity(=1) and the compute parallelism is recommended to be used as same as the data
+parallelism. The reasoning is that each compute node will work on the partitioned data.
+The link between input data stream and the compute node is direct and that's why we keep
+the parallelisms as stated. In the Reduction phase you can use a data aggregator of your own
+choice. In the <a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/aggregate/ReduceAggregator.java">current aggregator</a> logic, we just do a basic MPI-like reduction.</p>
+<pre><code class="hljs css language-java">trainingBuilder.addSource(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE, dataStreamer,
+        dataStreamerParallelism);
+    ComputeConnection svmComputeConnection = trainingBuilder
+        .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, svmCompute, svmComputeParallelism);
+    ComputeConnection svmReduceConnection = trainingBuilder
+        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+
+    svmComputeConnection
+        .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+            Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
+    svmReduceConnection
+        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+            <span class="hljs-keyword">new</span> ReduceAggregator(), DataType.OBJECT);
+</code></pre>
+<p>The graph can be initialized as follows,</p>
+<pre><code class="hljs css language-java">trainingBuilder.setMode(operationMode);
+    DataFlowTaskGraph graph = trainingBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
+
+</code></pre>
+<p>Next, the important thing is to add the input to the task graph. The input is the data object
+that we loaded in the training data loading stage. It can be done like this,</p>
+<pre><code class="hljs css language-java">taskExecutor.addInput(
+        graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+        Constants.SimpleGraphConfig.INPUT_DATA, trainingData);
+</code></pre>
+<p>Here, you need to specify to which task you're adding the data. Here our task is the streaming data
+source task. Then we just need to provide the reference of the loaded data object to the <strong>addInput</strong> function.
+Then you can execute the task graph.</p>
+<pre><code class="hljs css language-java">taskExecutor.execute(graph, plan);
+</code></pre>
+<p>You can use the <strong>getOutput</strong> method in task executor to obtain the final results of the graph.
+This final result will be the trained model. Here the trained model only refers to the final weight vector.</p>
+<h3><a class="anchor" aria-hidden="true" id="testing"></a><a href="#testing" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Testing</h3>
+<p>Testing is also done in parallel and a similar task graph like training task graph is created,
+but the tasks inside this graph a light weight. It is just straight forward model evaluation in
+O(Nd) (d is number of features, N number of samples) time. The major difference in testing task graph
+is we input both the trained model (weight vector) and the testing data set to the taskgraph as inputs.</p>
+<p>Finally a reduction operation is done to get the final accuracy of the testing model.</p>
+<p>You can find the code to our SVM Implementation
+<a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/job/SvmSgdAdvancedRunner.java">here</a>.</p>
+<h2><a class="anchor" aria-hidden="true" id="run-batch-svm"></a><a href="#run-batch-svm" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run Batch SVM</h2>
+<p>Sample Execution</p>
+<p>Note: Make sure your data in the file has same line length in all lines.
+Our inbuilt splitter currently assumes this. And we will release a more dyanmic
+Data API to handle this in a near future release.</p>
+<h3><a class="anchor" aria-hidden="true" id="data-format-"></a><a href="#data-format-" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Format :</h3>
+<pre><code class="hljs css language-csv"><span class="hljs-keyword">label</span><span class="bash">,feature_1,feature_2,...,feature_d</span>
+
+</code></pre>
+<p>Binary classification is only supported in the current release. Make sure labels are +1 and -1
+for the two classes. The data should be in CSV format with dense matrix representation.
+If you're using LibSVM format data, first use a <a href="https://github.com/zygmuntz/phraug/blob/master/libsvm2csv.py">LibSVM -&gt; CSV converter</a>
+to convert data to the dense format.</p>
+<h3><a class="anchor" aria-hidden="true" id="run-svm"></a><a href="#run-svm" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run SVM</h3>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances &lt;no of instances&gt; -alpha &lt;learning rate&gt;-C &lt;hyper-parameter-in-constraint-function&gt; -exp_name &lt;experiment-name&gt; -features &lt;features&gt; -samples &lt;total-samples&gt; -iterations &lt;iterations&gt; -training_data_dir &lt;training-csv-file&gt; -testing_data_dir &lt;testing-csv-file&gt; -parallelism &lt;overall-parallelism&gt; -workers &lt;no of workers&gt; -cpus &lt;no of cpus&gt; -threads &lt;threds to be used <span class="hljs-keyword">in</span> the scheduler&gt;
+
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="sample-run"></a><a href="#sample-run" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Run</h4>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name <span class="hljs-built_in">test</span>-svm -features 22 -samples 35000 -iterations 10 -training_data_dir &lt;path-to-training-csv&gt; -testing_data_dir &lt;path-to-testing-csv&gt; -parallelism 8 -workers 1 -cpus 1 -threads 4
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="sample-output"></a><a href="#sample-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h4>
+<pre><code class="hljs css language-bash">Training Dataset [/home/vibhatha/data/svm/w8a/training.csv] 
+Testing  Dataset [/home/vibhatha/data/svm/w8a/testing.csv] 
+Data Loading Time (Training + Testing)              = 1.943881115  s 
+Training Time                           = 7.978291269  s 
+Testing Time                            = 0.828260105  s 
+Total Time (Data Loading Time + Training Time + Testing Time)   = 10.750432489  s 
+Accuracy of the Trained Model                   = 88.904494382 %
+
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="distributed-svm-batch-model---tset-example"></a><a href="#distributed-svm-batch-model---tset-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Distributed SVM Batch Model - Tset Example</h2>
+<p>TSet is an abstraction for the Task API. The reason behind using TSet is to provide
+much easier coding environment for API users. For developer level using Task Example
+will be much easier when you want to write plug-ins for existing programmes. In TSet
+level most of the Task level APIs are abstracted to provide a readable interface.</p>
+<p>The design model used in here is as same as the task example. Let's go through the code.</p>
+<pre><code class="hljs css language-java">CachedTSet&lt;<span class="hljs-keyword">double</span>[][]&gt; trainingData = loadTrainingData();
+    CachedTSet&lt;<span class="hljs-keyword">double</span>[][]&gt; testingData = loadTestingData();
+    MapTSet&lt;<span class="hljs-keyword">double</span>[], <span class="hljs-keyword">double</span>[][]&gt; svmTrainTset = trainingData
+        .map(<span class="hljs-keyword">new</span> SvmTrainMap(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.svmJobParameters));
+    <span class="hljs-comment">//svmTset.addInput("trainingData", testingData);</span>
+    ReduceTLink&lt;<span class="hljs-keyword">double</span>[]&gt; reduceTLink = svmTrainTset.reduce((t1, t2) -&gt; {
+      <span class="hljs-keyword">double</span>[] w1 = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[t1.length];
+      <span class="hljs-keyword">try</span> {
+        w1 = Matrix.add(t1, t2);
+      } <span class="hljs-keyword">catch</span> (MatrixMultiplicationException e) {
+        e.printStackTrace();
+      }
+      <span class="hljs-keyword">return</span> w1;
+    });
+
+    CachedTSet&lt;<span class="hljs-keyword">double</span>[]&gt; finalW = reduceTLink
+        .map(<span class="hljs-keyword">new</span> ModelAverager(<span class="hljs-keyword">this</span>.svmJobParameters.getParallelism())).cache();
+    <span class="hljs-keyword">double</span>[] wFinal = finalW.getData().get(<span class="hljs-number">0</span>);
+    <span class="hljs-keyword">this</span>.binaryBatchModel.setW(wFinal);
+    LOG.info(String.format(<span class="hljs-string">"Data : %s"</span>,
+        Arrays.toString(wFinal)));
+
+    MapTSet&lt;Double, <span class="hljs-keyword">double</span>[][]&gt; svmTestTset = testingData
+        .map(<span class="hljs-keyword">new</span> SvmTestMap(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.svmJobParameters));
+    ReduceTLink&lt;Double&gt; reduceTestLink = svmTestTset.reduce((t1, t2) -&gt; {
+      <span class="hljs-keyword">double</span> t = t1 + t2;
+      <span class="hljs-keyword">return</span> t;
+    });
+    CachedTSet&lt;Double&gt; finalAcc = reduceTestLink
+        .map(<span class="hljs-keyword">new</span> AccuracyAverager(<span class="hljs-keyword">this</span>.svmJobParameters.getParallelism())).cache();
+    <span class="hljs-keyword">double</span> acc = finalAcc.getData().get(<span class="hljs-number">0</span>);
+    LOG.info(String.format(<span class="hljs-string">"Training Accuracy : %f "</span>, acc));
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="code-explained-2"></a><a href="#code-explained-2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Code Explained</h3>
+<p>First, we need to load the training data,</p>
+<pre><code class="hljs css language-java">CachedTSet&lt;<span class="hljs-keyword">double</span>[][]&gt; data = <span class="hljs-keyword">this</span>.twisterBatchContext.createSource(
+        <span class="hljs-keyword">new</span> DataLoadingTask(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.svmJobParameters, <span class="hljs-string">"train"</span>),
+        <span class="hljs-keyword">this</span>.dataStreamerParallelism).setName(<span class="hljs-string">"trainingDataSource"</span>).cache();
+</code></pre>
+<p>Here we need to create a data loading task.</p>
+<p>When using TSets, you need to load the data using the same Data API interfaces.
+But here, we provided less abstraction towards data loading, so that user can
+define their logics within <strong>DataLoadingTask</strong> (More details are below).</p>
+<p>In the DataLoading task, the data object must be defined with reference to the number
+of partitions considering the total data size.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">this</span>.config = context.getConfig();
+    <span class="hljs-keyword">this</span>.parallelism = context.getParallelism();
+    <span class="hljs-comment">// dimension is +1 features as the input data comes along with the label</span>
+    <span class="hljs-keyword">this</span>.dimension = <span class="hljs-keyword">this</span>.binaryBatchModel.getFeatures() + <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">if</span> (<span class="hljs-string">"train"</span>.equalsIgnoreCase(<span class="hljs-keyword">this</span>.dataType)) {
+      <span class="hljs-keyword">this</span>.dataSize = <span class="hljs-keyword">this</span>.binaryBatchModel.getSamples();
+      <span class="hljs-keyword">this</span>.localPoints = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[<span class="hljs-keyword">this</span>.dataSize / (<span class="hljs-keyword">this</span>.parallelism + <span class="hljs-number">1</span>)][<span class="hljs-keyword">this</span>.dimension];
+      <span class="hljs-keyword">this</span>.source = <span class="hljs-keyword">new</span> DataSource(config, <span class="hljs-keyword">new</span> LocalFixedInputPartitioner(<span class="hljs-keyword">new</span>
+          Path(<span class="hljs-keyword">this</span>.svmJobParameters.getTrainingDataDir()), <span class="hljs-keyword">this</span>.parallelism, config,
+          <span class="hljs-keyword">this</span>.dataSize), <span class="hljs-keyword">this</span>.parallelism);
+    }
+    <span class="hljs-keyword">if</span> (<span class="hljs-string">"test"</span>.equalsIgnoreCase(<span class="hljs-keyword">this</span>.dataType)) {
+      <span class="hljs-keyword">this</span>.dataSize = <span class="hljs-keyword">this</span>.svmJobParameters.getTestingSamples();
+      <span class="hljs-keyword">this</span>.localPoints = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[<span class="hljs-keyword">this</span>.dataSize / (<span class="hljs-keyword">this</span>.parallelism + <span class="hljs-number">1</span>)][<span class="hljs-keyword">this</span>.dimension];
+      <span class="hljs-keyword">this</span>.source = <span class="hljs-keyword">new</span> DataSource(config, <span class="hljs-keyword">new</span> LocalFixedInputPartitioner(<span class="hljs-keyword">new</span>
+          Path(<span class="hljs-keyword">this</span>.svmJobParameters.getTestingDataDir()), <span class="hljs-keyword">this</span>.parallelism, config,
+          <span class="hljs-keyword">this</span>.dataSize), <span class="hljs-keyword">this</span>.parallelism);
+    }
+  }
+</code></pre>
+<p>Here the data loader has to load the data considering training and testing data sizes.
+So the source path and data sizes are different. The data size means the number of
+lines in your file (it must be in csv format as mentioned in the task example section).
+Currently that field is not implicitly handled in the current release (0.2.2).</p>
+<p><strong>DataLoadingTask</strong> extends the <strong>BaseSource</strong>, so the expected data type can be defined.
+The overriden <strong>next()</strong> method uses the Twister2 Data API to load the data.</p>
+<pre><code class="hljs css language-java">  <span class="hljs-keyword">public</span> <span class="hljs-keyword">double</span>[][] next() {
+    LOG.fine(<span class="hljs-string">"Context Prepare Task Index:"</span> + context.getIndex());
+    InputSplit inputSplit = <span class="hljs-keyword">this</span>.source.getNextSplit(context.getIndex());
+    <span class="hljs-keyword">int</span> totalCount = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">while</span> (inputSplit != <span class="hljs-keyword">null</span>) {
+      <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">int</span> count = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">while</span> (!inputSplit.reachedEnd()) {
+          String value = (String) inputSplit.nextRecord(<span class="hljs-keyword">null</span>);
+          <span class="hljs-keyword">if</span> (value == <span class="hljs-keyword">null</span>) {
+            <span class="hljs-keyword">break</span>;
+          }
+          String[] splts = value.split(<span class="hljs-string">","</span>);
+          <span class="hljs-keyword">if</span> (debug) {
+            LOG.info(String.format(<span class="hljs-string">"Count %d , splits %d, dimensions %d"</span>, count, splts.length,
+                <span class="hljs-keyword">this</span>.dimension));
+          }
+
+          <span class="hljs-keyword">if</span> (count &gt;= <span class="hljs-keyword">this</span>.localPoints.length) {
+            <span class="hljs-keyword">break</span>; <span class="hljs-comment">// TODO : unbalance division temp fix</span>
+          }
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">this</span>.dimension; i++) {
+            <span class="hljs-keyword">this</span>.localPoints[count][i] = Double.valueOf(splts[i]);
+          }
+          <span class="hljs-keyword">if</span> (value != <span class="hljs-keyword">null</span>) {
+            count += <span class="hljs-number">1</span>;
+          }
+        }
+        inputSplit = <span class="hljs-keyword">this</span>.source.getNextSplit(context.getIndex());
+      } <span class="hljs-keyword">catch</span> (IOException e) {
+        LOG.log(Level.SEVERE, <span class="hljs-string">"Failed to read the input"</span>, e);
+      }
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.localPoints;
+  }
+</code></pre>
+<h6><a class="anchor" aria-hidden="true" id="note--loading-data-format-depends-on-the-data-processing-logics-that-you-have-aleady-defined-in-your-program-handl-the-data-loading-with-care-you-can-use-a-filter-function-to-process-them-in-the-expected-way"></a><a href="#note--loading-data-format-depends-on-the-data-processing-logics-that-you-have-aleady-defined-in-your-program-handl-the-data-loading-with-care-you-can-use-a-filter-function-to-process-them-in-the-expected-way" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note : Loading data format depends on the data processing logics that you have aleady defined in your program. Handl the data loading with care. You can use a filter function to process them in the expected way.</h6>
+<p>The loaded data has to be referenced via a <strong>Cacheable Tset =&gt; CashedTSet</strong> object.</p>
+<pre><code class="hljs css language-java">    CachedTSet&lt;<span class="hljs-keyword">double</span>[][]&gt; trainingData = loadTrainingData();
+    CachedTSet&lt;<span class="hljs-keyword">double</span>[][]&gt; testingData = loadTestingData();
+</code></pre>
+<p>Now, the training has to be done on the loaded data.</p>
+<pre><code class="hljs css language-java">  MapTSet&lt;<span class="hljs-keyword">double</span>[], <span class="hljs-keyword">double</span>[][]&gt; svmTrainTset = trainingData
+        .map(<span class="hljs-keyword">new</span> SvmTrainMap(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.svmJobParameters));
+</code></pre>
+<p>The Training logic must be programmed inside the a Map class which is extended from the
+<strong>BaseMapFunction&lt;T,O)&gt;</strong>. Here the input data format defines <strong>T</strong> and the expected
+output data format defines <strong>O</strong>.</p>
+<p>Then the reduce function has to be called to reduce the trained models to get a
+globally synchronized model. Here, the lambda functions has been used to do it quite
+effectively without creating a new class. Here a <strong>ReduceTLink</strong> a TLink specialized
+to perform reduction operation is used. This is another abstraction we use in TSet based
+application development.</p>
+<pre><code class="hljs css language-java">ReduceTLink&lt;<span class="hljs-keyword">double</span>[]&gt; reduceTLink = svmTrainTset.reduce((t1, t2) -&gt; {
+      <span class="hljs-keyword">double</span>[] w1 = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[t1.length];
+      <span class="hljs-keyword">try</span> {
+        w1 = Matrix.add(t1, t2);
+      } <span class="hljs-keyword">catch</span> (MatrixMultiplicationException e) {
+        e.printStackTrace();
+      }
+      <span class="hljs-keyword">return</span> w1;
+    });
+</code></pre>
+<p>Next step is to obtain the averaged model over the executed reduction.</p>
+<pre><code class="hljs css language-java">CachedTSet&lt;<span class="hljs-keyword">double</span>[]&gt; finalW = reduceTLink
+        .map(<span class="hljs-keyword">new</span> ModelAverager(<span class="hljs-keyword">this</span>.svmJobParameters.getParallelism())).cache();
+    <span class="hljs-keyword">double</span>[] wFinal = finalW.getData().get(<span class="hljs-number">0</span>);
+</code></pre>
+<p>TSetLinks provide a Map interface to write customizable mapping functions depending user requirment
+to get processed output. Here a simple average is performed over the globally synchronized data
+using the <strong>ModelAverager</strong> class. It is nothing but averaging to get the mean of the globally
+synchronied model with respect to the parallelism.</p>
+<p><strong>getData</strong> method returns the partitions and as this is a reduce example there
+will be a single partition.</p>
+<p>In the testing stage, we used the same model as used in the task example. The testing is also
+done in parallel.</p>
+<pre><code class="hljs css language-java">IterableMapTSet&lt;Double, <span class="hljs-keyword">double</span>[][]&gt; svmTestTset = testingData
+       .map(<span class="hljs-keyword">new</span> SvmTestMap(<span class="hljs-keyword">this</span>.binaryBatchModel, <span class="hljs-keyword">this</span>.svmJobParameters));
+   ReduceTLink&lt;Double&gt; reduceTestLink = svmTestTset.reduce((t1, t2) -&gt; {
+     <span class="hljs-keyword">double</span> t = t1 + t2;
+     <span class="hljs-keyword">return</span> t;
+   });
+</code></pre>
+<p>As same as a training Mapper task, a testing mapper task is defined to run the
+SVM prediction within the <strong>SVMTestMap</strong> interface. We abstract the computation logic
+inside this Map class. And finally, a reduction is performed on the accuracy calculated
+per test data set.</p>
+<pre><code class="hljs css language-java"> CachedTSet&lt;Double&gt; finalAcc = reduceTestLink
+        .map(<span class="hljs-keyword">new</span> AccuracyAverager(<span class="hljs-keyword">this</span>.svmJobParameters.getParallelism())).cache();
+    <span class="hljs-keyword">double</span> acc = finalAcc.getData().get(<span class="hljs-number">0</span>);
+    LOG.info(String.format(<span class="hljs-string">"Training Accuracy : %f "</span>, acc));
+</code></pre>
+<p>Final testing accuracy can be obtained by averaging through the globally synchronized value.
+For that a simple map function can be plugged into the TSetLink.</p>
+<h6><a class="anchor" aria-hidden="true" id="note-we-use-a-separate-tset-link-per-a-specific-task"></a><a href="#note-we-use-a-separate-tset-link-per-a-specific-task" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note we use a separate TSet Link per a specific task.</h6>
+<h3><a class="anchor" aria-hidden="true" id="running-tset-based-svm"></a><a href="#running-tset-based-svm" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running TSet Based SVM</h3>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb &lt;ram-size-MB&gt; -disk_gb &lt;disk-size-in-GB&gt; -instances &lt;no-of-instances&gt; -alpha &lt;learning rate&gt; -C &lt;training-constraint&gt; -exp_name &lt;experiment-name&gt; -features &lt;dimension of a data point&gt; -samples &lt;no-of-training-samples&gt; -iterations &lt;iterations&gt; -training_data_dir &lt;training-data-file&gt; -testing_data_dir &lt;testing-data-file&gt;-parallelism &lt;overall-parallelism&gt; -workers &lt;no-of-workers&gt; -cpus &lt;no-of-cpus&gt; -threads &lt;no-threads-for-scheduler&gt; -svm_run_type tset -testing_samples &lt;testing-samples&gt;
+
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="sample-run-1"></a><a href="#sample-run-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Run</h4>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name <span class="hljs-built_in">test</span>-svm -features 300 -samples 49749 -iterations 10 -training_data_dir &lt;training-data-csv-file&gt; -testing_data_dir &lt;testing-data-csv-file&gt; -parallelism 8 -workers 1 -cpus 1 -threads 4 -svm_run_type tset -testing_samples 14951
+
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="sample-output-1"></a><a href="#sample-output-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h4>
+<pre><code class="hljs css language-bash">[2019-03-28 16:40:31 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdTsetRunner: Training Accuracy : 88.049368
+
+</code></pre>
+<h6><a class="anchor" aria-hidden="true" id="note-make-sure-you-have-formatted-the-csv-files-as-instructed-in-the-svm-task-example"></a><a href="#note-make-sure-you-have-formatted-the-csv-files-as-instructed-in-the-svm-task-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Note make sure you have formatted the CSV files as instructed in the SVM Task Example.</h6>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/ai/machinelearning/kmeans/kmeans"><span class="arrow-prev">← </span><span>K-Means</span></a><a class="docs-next button" href="/docs/ai/deeplearning/deeplearning"><span>Overview on Deep Learning</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#background">Background</a></li><li><a href="#svm-sgd-sequential-algorithm">SVM-SGD Sequential Algorithm</a></li><li><a href="#distributed-svm-batch-model---task-example">Distributed SVM Batch Model - Task Example</a></li><li><a href="#code">Code</a><ul class="toc-headings"><li><a href="#data-loading">Data Loading</a></li><li><a href="#training">Training</a></li><li><a href="#testing">Testing</a></li></ul></li><li><a href="#run-batch-svm">Run Batch SVM</a><ul class="toc-headings"><li><a href="#data-format-">Data Format :</a></li><li><a href="#run-svm">Run SVM</a></li></ul></li><li><a href="#distributed-svm-batch-model---tset-example">Distributed SVM Batch Model - Tset Example</a><ul class="toc-headings"><li><a href="#code-explained-2">Code Explained</a></li><li><a href="#running-tset-based-svm">Running TSet Based SVM</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Indiana University</section></footer></div></body></html>

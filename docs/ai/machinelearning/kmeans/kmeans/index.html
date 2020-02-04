@@ -1,0 +1,294 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>K-Means · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The need to process large am​​ounts of continuously arriving information has led to the exploration and "/><meta name="docsearch:language" content="en"/><meta property="og:title" content="K-Means · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="The need to process large am​​ounts of continuously arriving information has led to the exploration and "/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Getting Started</a></li><li class=""><a href="/docs/compiling/compile_overview" target="_self">Docs</a></li><li class=""><a href="/docs/examples/tset/hello_world" target="_self">Tutorial</a></li><li class="siteNavGroupActive"><a href="/docs/ai/artificial_intelligence" target="_self">AI</a></li><li class=""><a href="/docs/examples/examples" target="_self">Examples</a></li><li class=""><a href="/docs/developers/debugging" target="_self">Contribute</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/javadocs/index.html" target="_self">Java Docs</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Machine Learning</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">AI</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/artificial_intelligence">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Twister2Flow</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/twister2flow/twister2flow">Overview on Twister2Flow</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Machine Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/machinelearning/machinelearning">Overview on Machine Learning</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/ai/machinelearning/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/docs/ai/machinelearning/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deep Learning</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/ai/deeplearning/deeplearning">Overview on Deep Learning</a></li><li class="navListItem"><a class="navItem" href="/docs/ai/deeplearning/pytorch/pytorchinitial">Pytorch Integration</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">K-Means</h1></header><article><div><span><p>The need to process large am​​ounts of continuously arriving information has led to the exploration and
+application of big data analytics techniques. Likewise, the painstaking process of clustering numerous
+datasets containing large numbers of records with high dimensions calls for innovative methods. Traditional
+sequential clustering algorithms are unable to handle it. They are not scalable in relation to larger sizes
+of data sets, and they are most often computationally expensive in memory space and time complexities. Yet,
+the parallelization of data clustering algorithms is paramount when dealing with big data. K-Means clustering
+is an iterative algorithm hence, it requires a large number of iterative steps to find an optimal solution,
+and this procedure increases the processing time of clustering. Twister2 provides a dataflow task graph
+approach to distribute the tasks in a parallel manner and aggregate the results which reduce the processing
+time of K-Means Clustering process.</p>
+<h2><a class="anchor" aria-hidden="true" id="k-means-clustering-implementation-details"></a><a href="#k-means-clustering-implementation-details" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>K-Means Clustering Implementation Details</h2>
+<p>The implementation details of k-means clustering in Twister2 is discussed below.</p>
+<h3><a class="anchor" aria-hidden="true" id="dataobjectconstants"></a><a href="#dataobjectconstants" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DataObjectConstants</h3>
+<p>The constants which are used by the k-means algorithm to specify the number of workers, parallelism,
+dimension, size of datapoints, size of centroids, file system, number of iterations, datapoints, and
+centroids directory.</p>
+<pre><code class="hljs css language-java">  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String WORKERS = <span class="hljs-string">"workers"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DIMENSIONS = <span class="hljs-string">"dim"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String PARALLELISM_VALUE = <span class="hljs-string">"parallelism"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String SHARED_FILE_SYSTEM = <span class="hljs-string">"fShared"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DSIZE = <span class="hljs-string">"dsize"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String CSIZE = <span class="hljs-string">"csize"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DINPUT_DIRECTORY = <span class="hljs-string">"dinput"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String CINPUT_DIRECTORY = <span class="hljs-string">"cinput"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String OUTPUT_DIRECTORY = <span class="hljs-string">"output"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String NUMBER_OF_FILES = <span class="hljs-string">"nFiles"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String FILE_SYSTEM = <span class="hljs-string">"filesys"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ITERATIONS = <span class="hljs-string">"iter"</span>;
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="kmeansmain"></a><a href="#kmeansmain" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansMain</h3>
+<p>The entry point for the K-Means clustering algorithm is implemented in KMeansMain class. It
+parses the command line parameters submitted by the user for running the K-Means clustering algorithm.
+It first set the submitted variables in the JobConfig object and put the JobConfig object into the
+Twister2Job Builder, set the worker class (KMeansComputeJob.java in this example) and submit the job.</p>
+<pre><code class="hljs css language-java">edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="kmeanscomputejob"></a><a href="#kmeanscomputejob" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansComputeJob</h3>
+<p>It is the main class for the K-Means clustering which consists of four main tasks namely generation
+of datapoints and centroids, partition and read the partitioned data points, partition and read the
+centroids, and perform the distance calculation between the datapoints and the centroids. It extends
+the IWorker class which has the execute() method that invokes the KMeansUtils class to generate the
+datapoints and the centroids in their respective filesystem and their directories. Then, the execute()
+method of KMeansComputeJob invokes &quot;datapointsTaskgraph&quot;, &quot;centroidsTaskGraph&quot;, and &quot;kmeansTaskGraph&quot;.
+We will briefly discuss the functionalities of each task graph defined in the KMeansComputeJob.</p>
+<h3><a class="anchor" aria-hidden="true" id="reading-and-partitioning-the-datapoints"></a><a href="#reading-and-partitioning-the-datapoints" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reading and partitioning the Datapoints</h3>
+<p>The main functionality of the first task graph is to partition the data points, convert the
+partitioned datapoints into two-dimensional array, and write the two-dimensional array into their
+respective task index values.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">/* First Graph to partition and read the partitioned data points **/</span>
+   PointDataSource ps = <span class="hljs-keyword">new</span> PointDataSource(Context.TWISTER2_DIRECT_EDGE,
+           dataDirectory, <span class="hljs-string">"points"</span>, dimension);
+</code></pre>
+<p>First, add point data source to the task graph builder for the first task graph. Then, set the
+operation mode and the task graph name.</p>
+<pre><code class="hljs css language-java">     datapointsComputeGraphBuilder.addSource(<span class="hljs-string">"datapointsource"</span>, ps, parallelismValue);
+     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
+     datapointsComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"datapointsTG"</span>);
+</code></pre>
+<p>Finally, invoke the computeGraphBuilder to build the first task graph, get the task schedule plan and
+execution plan for the first task graph, and call the execute() method to execute the datapoints task
+graph.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">//Build the first taskgraph</span>
+    DataFlowTaskGraph datapointsTaskGraph = computeGraphBuilder.build();
+    <span class="hljs-comment">//Get the execution plan for the first task graph</span>
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    <span class="hljs-comment">//Actual execution for the first taskgraph</span>
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan); 
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="pointdatasource"></a><a href="#pointdatasource" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>PointDataSource</h4>
+<p>This class partition the datapoints which is based on the task parallelism value. It may either use
+the &quot;LocalTextInputPartitioner&quot; or &quot;LocalFixedInputPartitioner&quot; to partition the datapoints.
+Finally, write the partitioned datapoints into their respective edges. The LocalTextInputPartitioner
+partition the datapoints based on the block whereas the LocalFixedInputPartitioner partition the
+datapoints based on the length of the file. For example, if the task parallelism is 4, if there are
+16 datapoints each task will get 4 datapoints to process. The partitioned datapoints are converted
+into two-dimensional array.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">(Config cfg, TaskContext context)</span> </span>{
+    <span class="hljs-keyword">super</span>.prepare(cfg, context);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    <span class="hljs-keyword">this</span>.source = runtime.createInput(cfg, context, <span class="hljs-keyword">new</span> LocalTextInputPartitioner(
+        <span class="hljs-keyword">new</span> Path(getDataDirectory()), context.getParallelism(), config));
+  }
+</code></pre>
+<p>Finally, write the appropriate datapoints into their respective task index values with the entity
+partition values.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-keyword">public</span> DataPartition&lt;<span class="hljs-keyword">double</span>[][]&gt; get() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> EntityPartition&lt;&gt;(context.taskIndex(), dataPointsLocal);
+  }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="reading-and-partitioning-the-centroids"></a><a href="#reading-and-partitioning-the-centroids" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reading and partitioning the Centroids</h3>
+<p>Similar to the datapoints, the second task graph perform three processes namely partitioning,
+converting the partitioned centroids into array, and writing into respective task index values
+but, with one major difference of read the complete file as one partition.</p>
+<pre><code class="hljs css language-java">      PointDataSource cs = <span class="hljs-keyword">new</span> PointDataSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory,
+            <span class="hljs-string">"centroids"</span>, dimension);
+      ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+</code></pre>
+<p>Similar to the first task graph, it add point data source to the task graph builder for the
+second graph and then it set the operation mode and the task graph name.</p>
+<pre><code class="hljs css language-java">   centroidsComputeGraphBuilder.addSource(<span class="hljs-string">"centroidsource"</span>, cs, parallelismValue);
+   centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
+   centroidsComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"centTG"</span>);
+</code></pre>
+<p>Finally, invoke the build() method to build the second task graph, get the task schedule plan and
+execution plan for the second task graph, and call the execute() method to execute the centroids
+task graph.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">//Build the second taskgraph</span>
+    DataFlowTaskGraph centroidsTaskGraph = computeGraphBuilder.build();
+    <span class="hljs-comment">//Get the execution plan for the second task graph</span>
+    ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+    <span class="hljs-comment">//Actual execution for the second taskgraph</span>
+    taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan); 
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="kmeans-clustering"></a><a href="#kmeans-clustering" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeans Clustering</h3>
+<p>The third task graph has the following classes namely KMeansSource, KMeansAllReduceTask, and
+CentroidAggregator.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">/* Third Graph to do the actual calculation **/</span>
+       KMeansSourceTask kMeansSourceTask = <span class="hljs-keyword">new</span> KMeansSourceTask();
+       KMeansAllReduceTask kMeansAllReduceTask = <span class="hljs-keyword">new</span> KMeansAllReduceTask();
+       ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+   
+       <span class="hljs-comment">//Add source, and sink tasks to the task graph builder for the third task graph</span>
+       kmeansComputeGraphBuilder.addSource(<span class="hljs-string">"kmeanssource"</span>, kMeansSourceTask, parallelismValue);
+       ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addCompute(
+           <span class="hljs-string">"kmeanssink"</span>, kMeansAllReduceTask, parallelismValue);
+   
+       <span class="hljs-comment">//Creating the communication edges between the tasks for the third task graph</span>
+       kMeanscomputeConnection.allreduce(<span class="hljs-string">"kmeanssource"</span>)
+           .viaEdge(<span class="hljs-string">"all-reduce"</span>)
+           .withReductionFunction(<span class="hljs-keyword">new</span> CentroidAggregator())
+           .withDataType(MessageTypes.OBJECT);
+       kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
+       kmeansComputeGraphBuilder.setTaskGraphName(<span class="hljs-string">"kmeansTG"</span>);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="assigning-datapoints-and-initial-centroids"></a><a href="#assigning-datapoints-and-initial-centroids" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Assigning datapoints and initial centroids</h4>
+<p>The datapoints and centroids are sent to the KMeansTaskGraph as &quot;points&quot; object and &quot;centroids&quot;
+object as an input for further processing through receivable name set. Finally, it invokes the
+execute() method of the task executor to do the clustering process.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">//Perform the iterations from 0 to 'n' number of iterations</span>
+   IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; iterations; i++) {
+         <span class="hljs-comment">//actual execution of the third task graph</span>
+         ex.execute(i == iterations - <span class="hljs-number">1</span>);
+    }
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="new-centroid-updation"></a><a href="#new-centroid-updation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>New Centroid Updation</h4>
+<p>This process repeats for ‘n’ number of iterations as specified by the user. For every iteration, the
+new centroid value is calculated and the calculated value is distributed across all the task instances.
+At the end of every iteration, the centroid value is updated and the iteration continues with the
+new centroid value.</p>
+<h3><a class="anchor" aria-hidden="true" id="kmeanssourcetask"></a><a href="#kmeanssourcetask" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansSourceTask</h3>
+<p>First, the execute method in KMeansSource retrieve the partitioned data points into their respective
+task index values and the complete centroid values into their respective task index values. The retrieved
+data points and centroids are sent to the KMeansUtils to find the nearest centers using the Euclidean
+distance.</p>
+<pre><code class="hljs css language-java">   <span class="hljs-meta">@Override</span>
+   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">int</span> dim = config.getIntegerValue(<span class="hljs-string">"dim"</span>, <span class="hljs-number">2</span>);
+      <span class="hljs-keyword">double</span>[][] datapoints = (<span class="hljs-keyword">double</span>[][]) dataPartition.first();
+      <span class="hljs-keyword">double</span>[][] centroid = (<span class="hljs-keyword">double</span>[][]) centroidPartition.first();
+      <span class="hljs-keyword">double</span>[][] kMeansCenters = KMeansUtils.findNearestCenter(dim, datapoints, centroid);
+      context.writeEnd(<span class="hljs-string">"all-reduce"</span>, kMeansCenters);
+   }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="kmeansallreducetask"></a><a href="#kmeansallreducetask" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansAllReduceTask</h3>
+<p>The KMeansAllReduceTask write the calculated centroid values of their partitioned datapoints into their respective task index values.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">execute</span><span class="hljs-params">(IMessage message)</span> </span>{
+      LOG.log(Level.FINE, <span class="hljs-string">"Received centroids: "</span> + context.getWorkerId()
+          + <span class="hljs-string">":"</span> + context.taskId());
+      centroids = (<span class="hljs-keyword">double</span>[][]) message.getContent();
+      newCentroids = <span class="hljs-keyword">new</span> <span class="hljs-keyword">double</span>[centroids.length][centroids[<span class="hljs-number">0</span>].length - <span class="hljs-number">1</span>];
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; centroids.length; i++) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> j = <span class="hljs-number">0</span>; j &lt; centroids[<span class="hljs-number">0</span>].length - <span class="hljs-number">1</span>; j++) {
+          <span class="hljs-keyword">double</span> newVal = centroids[i][j] / centroids[i][centroids[<span class="hljs-number">0</span>].length - <span class="hljs-number">1</span>];
+          newCentroids[i][j] = newVal;
+        }
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+    }
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-keyword">public</span> DataPartition&lt;<span class="hljs-keyword">double</span>[][]&gt; get() {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> EntityPartition&lt;&gt;(context.taskIndex(), newCentroids);
+    }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="centroidaggregator"></a><a href="#centroidaggregator" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>CentroidAggregator</h3>
+<p>The CentroidAggregator implements the IFunction and the function OnMessage which accepts two objects as an argument.</p>
+<pre><code class="hljs css language-java"><span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">onMessage</span><span class="hljs-params">(Object object1, Object object2)</span>
+</span></code></pre>
+<p>It sums the corresponding centroid values and return the same.</p>
+<pre><code class="hljs css language-java">ret.setCenters(newCentroids); 
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="to-run-k-means-clustering-using-task-graph"></a><a href="#to-run-k-means-clustering-using-task-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To Run K-Means Clustering using Task Graph</h2>
+<p>This command generate and write the datapoints and centroids in the local filesystem and run the
+K-Means clustering process. If the user wants to generate and do the processing with csv file, they
+have to specify the csv file type as &quot;-ftype csv&quot; or else if the user wants to do the processing
+with text file, they have to specify the file type as &quot;-ftype txt&quot;.</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared <span class="hljs-literal">false</span> -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys <span class="hljs-built_in">local</span> -dsize 1000 -csize 4 -iter 100 -<span class="hljs-built_in">type</span> graph -ftype txt
+</code></pre>
+<p>This command generate and write the datapoints and centroids in the HDFS and run the run the
+K-Means clustering process.</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared <span class="hljs-literal">false</span> -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -<span class="hljs-built_in">type</span> graph -ftype txt
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="to-run-k-means-clustering-using-tset"></a><a href="#to-run-k-means-clustering-using-tset" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To Run K-Means Clustering using TSet</h2>
+<p>This command generate and write the datapoints and centroids in the local filesystem and run the
+K-Means clustering process.</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput /tmp/dinput -cinput /tmp/cinput -fShared <span class="hljs-literal">false</span> -nFiles 1 -output /tmp/output -workers 2 -dim 2 -parallelism 4 -filesys <span class="hljs-built_in">local</span> -dsize 1000 -csize 4 -iter 100 -<span class="hljs-built_in">type</span> tset -ftype txt
+</code></pre>
+<p>This command generate and write the datapoints and centroids in the HDFS and run the run the
+K-Means clustering process.</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansMain -dinput hdfs://namenode:9000/tmp/dinput -cinput hdfs://namenode:9000/tmp/cinput -fShared <span class="hljs-literal">false</span> -nFiles 1 -output hdfs://namenode:9000/tmp/output -workers 2 -dim 2 -parallelism 4 -filesys hdfs -dsize 1000 -csize 4 -iter 100 -<span class="hljs-built_in">type</span> tset -ftype txt
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="sample-output"></a><a href="#sample-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h3>
+<pre><code class="hljs css language-bash">[2019-11-22 10:41:15 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher: Starting the job master: 127.0.1.1:44675  
+[2019-11-22 10:41:15 -0500] [WARNING] [-] [main] edu.iu.dsc.tws.master.server.JobMaster: Dashboard host address is null. Not connecting to Dashboard  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [main] edu.iu.dsc.tws.common.net.tcp.Server: Starting server on kannan-Precision-5820-Tower-X-Series:44675  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: JobMaster [127.0.1.1] started and waiting worker messages on port: 44675  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIController: Working directory: /home/kannan/.twister2/<span class="hljs-built_in">jobs</span>  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIController: Launching job <span class="hljs-keyword">in</span> standalone scheduler with no of containers = 2  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.MPICommand: Job class path: /home/kannan/.twister2/<span class="hljs-built_in">jobs</span>/KMeans-job/libexamples-java.jar  
+[2019-11-22 10:41:15 -0500] [INFO] [-] [Thread-4] edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneCommand: Java version : 8  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker: 1 joined the job.  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker: 0 joined the job.  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerHandler: All workers joined the job. Worker IDs: [0, 1]  
+[2019-11-22 10:41:16 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerHandler: Sending WorkersJoined messages ...  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Total K-Means Execution Time: 352   Data Load time : 109    Compute Time : 243  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:0 COMPLETED.  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob: Total K-Means Execution Time: 354   Data Load time : 130    Compute Time : 224  
+[2019-11-22 10:41:17 -0500] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Worker:1 COMPLETED.  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers COMPLETED. Terminating the job.  
+[2019-11-22 10:41:17 -0500] [INFO] [-] [main] edu.iu.dsc.tws.rsched.core.ResourceAllocator: CLEANED TEMPORARY DIRECTORY......:/tmp/twister2-KMeans-job-7364072149483599729  
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/ai/machinelearning/machinelearning"><span class="arrow-prev">← </span><span>Overview on Machine Learning</span></a><a class="docs-next button" href="/docs/ai/machinelearning/svm/svm"><span>SVM</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#k-means-clustering-implementation-details">K-Means Clustering Implementation Details</a><ul class="toc-headings"><li><a href="#dataobjectconstants">DataObjectConstants</a></li><li><a href="#kmeansmain">KMeansMain</a></li><li><a href="#kmeanscomputejob">KMeansComputeJob</a></li><li><a href="#reading-and-partitioning-the-datapoints">Reading and partitioning the Datapoints</a></li><li><a href="#reading-and-partitioning-the-centroids">Reading and partitioning the Centroids</a></li><li><a href="#kmeans-clustering">KMeans Clustering</a></li><li><a href="#kmeanssourcetask">KMeansSourceTask</a></li><li><a href="#kmeansallreducetask">KMeansAllReduceTask</a></li><li><a href="#centroidaggregator">CentroidAggregator</a></li></ul></li><li><a href="#to-run-k-means-clustering-using-task-graph">To Run K-Means Clustering using Task Graph</a></li><li><a href="#to-run-k-means-clustering-using-tset">To Run K-Means Clustering using TSet</a><ul class="toc-headings"><li><a href="#sample-output">Sample Output</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Indiana University</section></footer></div></body></html>
