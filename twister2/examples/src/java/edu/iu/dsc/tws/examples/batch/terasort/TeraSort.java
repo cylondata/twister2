@@ -104,6 +104,7 @@ public class TeraSort implements IWorker {
   private static final String TASK_SAMPLER = "sample-source";
   private static final String TASK_SAMPLER_REDUCE = "sample-recv";
   private static final String EDGE = "edge";
+  private static final String VERIFY = "verify";
 
   private static BenchmarkResultsRecorder resultsRecorder;
 
@@ -213,7 +214,7 @@ public class TeraSort implements IWorker {
     ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
     cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
     cEnv.close();
-    LOG.info("Finished execution...");
+    LOG.info("Finished Sorting...");
     waitAndComplete();
   }
 
@@ -370,14 +371,17 @@ public class TeraSort implements IWorker {
       byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
+      boolean verify = config.getBooleanValue(VERIFY, false);
       long readStart = System.currentTimeMillis();
+
       while (content.hasNext()) {
         Tuple<byte[], byte[]> nextTuple = content.next();
-//        if (previousKey != null
-//            && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
-//          LOG.info("Unordered tuple found");
-//          allOrdered = false;
-//        }
+        if (verify
+            && previousKey != null
+            && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
+          LOG.info("Unordered tuple found");
+          allOrdered = false;
+        }
         tupleCount++;
         previousKey = nextTuple.getKey();
 
@@ -606,6 +610,11 @@ public class TeraSort implements IWorker {
         ARG_FIXED_SCHEMA, false, "Use fixed schema feature", false
     ));
 
+    //verify option
+    options.addOption(createOption(
+        VERIFY, false, "Verify whether the results are sorted.", false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -649,12 +658,16 @@ public class TeraSort implements IWorker {
       jobConfig.put(ARG_FIXED_SCHEMA, true);
     }
 
+    if (cmd.hasOption(VERIFY)) {
+      jobConfig.put(VERIFY, true);
+    }
+
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
         .setJobName("terasort")
         .setWorkerClass(TeraSort.class.getName())
         .addComputeResource(
-            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
+            Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
         )
