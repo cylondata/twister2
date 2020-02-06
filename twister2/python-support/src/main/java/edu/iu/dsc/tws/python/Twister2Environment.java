@@ -14,8 +14,10 @@ package edu.iu.dsc.tws.python;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.python.tset.PyTSetKeyedSource;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
@@ -28,11 +30,13 @@ import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
 
-public class Twister2Environment {
+public class Twister2Environment extends EntryPoint {
 
   private static final Logger LOG = Logger.getLogger(Twister2Environment.class.getName());
 
   private TSetEnvironment tSetEnvironment;
+
+  private Semaphore semaphore = new Semaphore(0);
 
   Twister2Environment(TSetEnvironment tSetEnvironment) {
     this.tSetEnvironment = tSetEnvironment;
