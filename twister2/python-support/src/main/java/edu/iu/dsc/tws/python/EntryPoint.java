@@ -24,6 +24,9 @@ public abstract class EntryPoint implements Closable {
     wait.release();
   }
 
+  /**
+   * This wait should be released only when python process has disconnected
+   */
   public void waitForCompletion() throws InterruptedException {
     this.wait.acquire();
   }
