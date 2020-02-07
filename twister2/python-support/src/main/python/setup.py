@@ -26,7 +26,6 @@ setuptools.setup(
         'jep==3.9.0',
         'cloudpickle',
         'numpy',
-        'py4j',
-        'mpi4py'
+        'py4j'
     ],
 )
