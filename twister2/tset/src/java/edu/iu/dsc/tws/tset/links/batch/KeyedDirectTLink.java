@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
@@ -47,6 +48,7 @@ public class KeyedDirectTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> 
     // todo fix this ambiguity!
     Edge e = new Edge(getId(), OperationNames.DIRECT, MessageTypes.OBJECT);
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

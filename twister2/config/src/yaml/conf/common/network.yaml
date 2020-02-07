@@ -45,7 +45,7 @@ twister2.network.shuffle.file.bytes.max: 10000000
 twister2.network.shuffle.parallel.io: 2
 
 # the partitioning algorithm
-twister2.network.alltoall.algorithm.batch: "simple"
+twister2.network.alltoall.algorithm.batch: "ring"
 
 ##### streaming operations ###########
 ######################################
