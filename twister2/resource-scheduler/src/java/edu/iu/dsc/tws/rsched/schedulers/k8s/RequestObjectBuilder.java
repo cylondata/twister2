@@ -359,7 +359,7 @@ public final class RequestObjectBuilder {
 
     container.setEnv(
         constructEnvironmentVariables(
-            containerName, containerPort, encodedNodeInfoList, ramPerContainer));
+            containerName, containerPort, encodedNodeInfoList, computeResource.getRamMegaBytes()));
 
     return container;
   }
@@ -370,7 +370,7 @@ public final class RequestObjectBuilder {
   public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
                                                              int workerPort,
                                                              String encodedNodeInfoList,
-                                                             int ramPerContainer) {
+                                                             int jvmMem) {
 
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
@@ -476,7 +476,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JVM_MEMORY_MB + "")
-        .value(ramPerContainer + ""));
+        .value(jvmMem + ""));
 
     return envVars;
   }
