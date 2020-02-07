@@ -182,3 +182,8 @@ twister2.network.sendBuffer.count.batch.keyed_reduce: 4
 # number of receive buffers to be used
 twister2.network.receiveBuffer.count.batch.keyed_reduce: 4
 
+# port offset for python-java connection.
+# port+workerId will be used by each worker to communicate with python process
+# port-1 will be used by client process for the initial communication
+twister2.python.port: 5400
+
