@@ -90,6 +90,7 @@ public class TeraSort implements IWorker {
   private static final String ARG_RESOURCE_CPU = "instanceCPUs";
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
   private static final String ARG_RESOURCE_INSTANCES = "instances";
+  private static final String ARG_RESOURCE_VOLATILE_DISK = "volatileDisk";
 
   private static final String ARG_TASKS_SOURCES = "sources";
   private static final String ARG_TASKS_SINKS = "sinks";
@@ -560,7 +561,7 @@ public class TeraSort implements IWorker {
 
     //non-file based mode configurations
     options.addOption(createOption(ARG_SIZE, true, "Total Data Size in GigaBytes for all workers.",
-        false));
+        true));
     options.addOption(createOption(ARG_KEY_SIZE, true,
         "Size of the key in bytes of a single Tuple", true));
     options.addOption(createOption(ARG_KEY_SEED, true,
@@ -575,6 +576,8 @@ public class TeraSort implements IWorker {
         "Amount of Memory in mega bytes to allocate per instance", true));
     options.addOption(createOption(ARG_RESOURCE_INSTANCES, true,
         "No. of instances", true));
+    options.addOption(createOption(ARG_RESOURCE_VOLATILE_DISK, true,
+        "Volatile Disk for each worker at K8s", false));
 
     //tasks and sources counts
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
@@ -626,6 +629,12 @@ public class TeraSort implements IWorker {
       jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
     }
 
+    // in GB, default value is 4GB
+    double volatileDisk = 0.0;
+    if (cmd.hasOption(ARG_RESOURCE_VOLATILE_DISK)) {
+      volatileDisk = Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_VOLATILE_DISK));
+    }
+
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
     jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
@@ -669,6 +678,7 @@ public class TeraSort implements IWorker {
         .addComputeResource(
             Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
+            volatileDisk,
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
         )
         .setConfig(jobConfig)
