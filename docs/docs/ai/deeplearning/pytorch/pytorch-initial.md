@@ -4,8 +4,6 @@ title: Pytorch Integration
 sidebar_label: Pytorch Integration
 ---
 
-# Pytorch Initial Integration
-
 In the initial Pytorch integration we use Twister2Flow with Apache Arrow, Pandas and Apache Parquet 
 to link the data downloading, data pre-processing and deep learning workload. This is an 
 experimental version of Twister2-Pytorch integration. In the experimental version we loads the data

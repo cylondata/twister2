@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SDirectTLink<T> extends StreamingSingleLink<T> {
 
@@ -27,7 +28,9 @@ public class SDirectTLink<T> extends StreamingSingleLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, this.getSchema().getDataType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, this.getSchema().getDataType());
+    TLinkUtils.generateCommsSchema(getSchema(), e);
+    return e;
   }
 
   @Override

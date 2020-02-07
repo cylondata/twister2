@@ -8,7 +8,7 @@ print(setuptools.find_packages())
 
 setuptools.setup(
     name='twister2',
-    version='0.1.13',
+    version='0.1.16',
     author="Twister2 Developers",
     author_email="twister2@googlegroups.com",
     description="Twister2 is a composable big data environment supporting streaming, data pipelines and analytics. Our vision is to build robust, simple to use data analytics solutions that can leverage both clouds and high performance computing infrastructure.",

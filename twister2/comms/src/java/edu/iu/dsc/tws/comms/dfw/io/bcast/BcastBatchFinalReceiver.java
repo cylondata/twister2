@@ -96,7 +96,7 @@ public class BcastBatchFinalReceiver extends TargetFinalReceiver {
     Queue<Object> values = readyToSend.get(target);
 
     if (values == null || values.isEmpty()) {
-      return false;
+      return isFilledToSend(target);
     }
 
     // if we send this list successfully
