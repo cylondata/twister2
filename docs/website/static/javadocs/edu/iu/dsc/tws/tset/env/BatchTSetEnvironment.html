@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -180,13 +180,20 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
                   <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;I,<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;mapFunc)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>&lt;K,V,F extends &lt;any&gt;,K2,V2&gt;<br><a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedSourceTSet</a>&lt;K2,V2&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#createKeyedHadoopSource-Configuration-java.lang.Class-int-edu.iu.dsc.tws.api.tset.fn.MapFunc-">createKeyedHadoopSource</a></span>(Configuration&nbsp;configuration,
+                       java.lang.Class&lt;F&gt;&nbsp;inputFormat,
+                       int&nbsp;parallel,
+                       <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K2,V2&gt;,<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;mapFunc)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;K,V&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedSourceTSet</a>&lt;K,V&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#createKeyedSource-edu.iu.dsc.tws.api.tset.fn.SourceFunc-int-">createKeyedSource</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;source,
                  int&nbsp;parallelism)</code>
 <div class="block">Creates a Keyed Source TSet based on the <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn"><code>SourceFunc</code></a> that produces a <a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs"><code>Tuple</code></a></div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>&lt;K,V&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedSourceTSet</a>&lt;K,V&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#createKeyedSource-java.lang.String-edu.iu.dsc.tws.api.tset.fn.SourceFunc-int-">createKeyedSource</a></span>(java.lang.String&nbsp;name,
                  <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;source,
@@ -194,14 +201,14 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
 <div class="block">Same as above, but a source tset name can be provided at the instantiation</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;T&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#createSource-edu.iu.dsc.tws.api.tset.fn.SourceFunc-int-">createSource</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;T&gt;&nbsp;source,
             int&nbsp;parallelism)</code>
 <div class="block">Creates a source TSet based on the <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn"><code>SourceFunc</code></a></div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;T&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#createSource-java.lang.String-edu.iu.dsc.tws.api.tset.fn.SourceFunc-int-">createSource</a></span>(java.lang.String&nbsp;name,
             <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;T&gt;&nbsp;source,
@@ -209,13 +216,13 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
 <div class="block">Same as above, but a source tset name can be provided at the instantiation</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#eval-edu.iu.dsc.tws.tset.sets.BaseTSet-">eval</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;evalTSet)</code>
 <div class="block">Evaluates the TSet using iterative execution in the executor.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>&lt;T,ST extends <a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;T&gt; &amp; <a href="../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;T&gt;&gt;<br>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#evalAndUpdate-ST-ST-">evalAndUpdate</a></span>(ST&nbsp;evalTSet,
              ST&nbsp;updateTSet)</code>
@@ -223,36 +230,36 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
  updateTSet</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#finishEval-edu.iu.dsc.tws.tset.sets.BaseTSet-">finishEval</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;evalTset)</code>
 <div class="block">Completes iterative execution for evaluated TSet</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/dataset/DataObject.html" title="interface in edu.iu.dsc.tws.api.dataset">DataObject</a>&lt;T&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#getData-java.lang.String-">getData</a></span>(java.lang.String&nbsp;key)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph">OperationMode</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#getOperationMode--">getOperationMode</a></span>()</code>
 <div class="block">Returns the <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph"><code>OperationMode</code></a></div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#run-edu.iu.dsc.tws.tset.sets.BaseTSet-">run</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;leafTset)</code>
 <div class="block">Runs a subgraph of TSets from the specified TSet</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>&lt;T,ST extends <a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;T&gt; &amp; <a href="../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;T&gt;&gt;<br>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#runAndUpdate-ST-ST-">runAndUpdate</a></span>(ST&nbsp;runTSet,
             ST&nbsp;updateTSet)</code>
 <div class="block">Runs a subgraph of TSets from the specified TSet and output results as a tset</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html#runOne-edu.iu.dsc.tws.tset.sets.BaseTSet-">runOne</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;tSet)</code>
 <div class="block">Runs a single TSet (NO subgraph execution!)</div>
@@ -264,7 +271,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.env.<a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">TSetEnvironment</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#addInput-java.lang.String-java.lang.String-java.lang.String-">addInput</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#executeBuildContext-edu.iu.dsc.tws.tset.env.BuildContext-">executeBuildContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getConfig--">getConfig</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getDefaultParallelism--">getDefaultParallelism</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getGraph--">getGraph</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getInputs-java.lang.String-">getInputs</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getTaskExecutor--">getTaskExecutor</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getTSetGraph--">getTSetGraph</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getWorkerID--">getWorkerID</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#initBatch-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">initBatch</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#initStreaming-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">initStreaming</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#isCheckpointingEnabled--">isCheckpointingEnabled</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.List-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.Map-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.Map-int-java.util.Comparator-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.lang.String-java.util.List-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#setDefaultParallelism-int-">setDefaultParallelism</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#settBaseGraph-edu.iu.dsc.tws.tset.TBaseGraph-">settBaseGraph</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#addInput-java.lang.String-java.lang.String-java.lang.String-">addInput</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#close--">close</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#executeBuildContext-edu.iu.dsc.tws.tset.env.BuildContext-">executeBuildContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getConfig--">getConfig</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getDefaultParallelism--">getDefaultParallelism</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getGraph--">getGraph</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getInputs-java.lang.String-">getInputs</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getNoOfWorkers--">getNoOfWorkers</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getTaskExecutor--">getTaskExecutor</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getTSetGraph--">getTSetGraph</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#getWorkerID--">getWorkerID</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#initBatch-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">initBatch</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#initStreaming-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">initStreaming</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#isCheckpointingEnabled--">isCheckpointingEnabled</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.List-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.Map-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.util.Map-int-java.util.Comparator-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#parallelize-java.lang.String-java.util.List-int-">parallelize</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#setDefaultParallelism-int-">setDefaultParallelism</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html#settBaseGraph-edu.iu.dsc.tws.tset.TBaseGraph-">settBaseGraph</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -449,6 +456,18 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html"
                                                                 java.lang.Class&lt;F&gt;&nbsp;inputFormat,
                                                                 int&nbsp;parallel,
                                                                 <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;I,<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;mapFunc)</pre>
+</li>
+</ul>
+<a name="createKeyedHadoopSource-Configuration-java.lang.Class-int-edu.iu.dsc.tws.api.tset.fn.MapFunc-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createKeyedHadoopSource</h4>
+<pre>public&nbsp;&lt;K,V,F extends &lt;any&gt;,K2,V2&gt;&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedSourceTSet</a>&lt;K2,V2&gt;&nbsp;createKeyedHadoopSource(Configuration&nbsp;configuration,
+                                                                                  java.lang.Class&lt;F&gt;&nbsp;inputFormat,
+                                                                                  int&nbsp;parallel,
+                                                                                  <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K2,V2&gt;,<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;&gt;&nbsp;mapFunc)</pre>
 </li>
 </ul>
 <a name="getData-java.lang.String-">

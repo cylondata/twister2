@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLink</a>&lt;T1,T0&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a>&lt;T1,T0&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a>&lt;java.util.Iterator&lt;T&gt;,T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -111,6 +114,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.links.batch.PartitionTLink&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -155,19 +160,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-              int&nbsp;sourceParallelism)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.Schema-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+              int&nbsp;sourceParallelism,
+              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;parFn,
-              int&nbsp;sourceParallelism)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-int-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-int-edu.iu.dsc.tws.api.tset.schema.Schema-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
               <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;parFn,
               int&nbsp;sourceParallelism,
-              int&nbsp;targetParallelism)</code>&nbsp;</td>
+              int&nbsp;targetParallelism,
+              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">PartitionTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;parFn,
+              int&nbsp;sourceParallelism,
+              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -194,6 +202,10 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <div class="block">Name of the TSet and return the same tlink</div>
 </td>
 </tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PartitionTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html#useDisk--">useDisk</a></span>()</code>&nbsp;</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.batch.BatchIteratorLinkWrapper">
@@ -217,11 +229,18 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#getTSetEnv--">getTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#sink-edu.iu.dsc.tws.api.tset.fn.SinkFunc-">sink</a></code></li>
 </ul>
 <ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html#getSchema--">getSchema</a></code></li>
+</ul>
+<ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.BaseTLink">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -265,17 +284,18 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-">
+<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>PartitionTLink</h4>
 <pre>public&nbsp;PartitionTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-                      int&nbsp;sourceParallelism)</pre>
+                      int&nbsp;sourceParallelism,
+                      <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
 </li>
 </ul>
-<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">
+<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -283,10 +303,11 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <h4>PartitionTLink</h4>
 <pre>public&nbsp;PartitionTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                       <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;parFn,
-                      int&nbsp;sourceParallelism)</pre>
+                      int&nbsp;sourceParallelism,
+                      <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
 </li>
 </ul>
-<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-int-">
+<a name="PartitionTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -295,7 +316,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <pre>public&nbsp;PartitionTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                       <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;parFn,
                       int&nbsp;sourceParallelism,
-                      int&nbsp;targetParallelism)</pre>
+                      int&nbsp;targetParallelism,
+                      <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
 </li>
 </ul>
 </li>
@@ -318,7 +340,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <a name="setName-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setName</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PartitionTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;setName(java.lang.String&nbsp;n)</pre>
@@ -330,6 +352,15 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>this tlink</dd>
 </dl>
+</li>
+</ul>
+<a name="useDisk--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>useDisk</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PartitionTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="type parameter in PartitionTLink">T</a>&gt;&nbsp;useDisk()</pre>
 </li>
 </ul>
 </li>

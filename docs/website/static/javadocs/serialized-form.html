@@ -466,6 +466,31 @@
 </ul>
 </li>
 <li class="blockList">
+<h2 title="Package">Package&nbsp;edu.iu.dsc.tws.common.pojo</h2>
+<ul class="blockList">
+<li class="blockList"><a name="edu.iu.dsc.tws.common.pojo.Time">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/common/pojo/Time.html" title="class in edu.iu.dsc.tws.common.pojo">edu.iu.dsc.tws.common.pojo.Time</a> extends java.lang.Object implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>size</h4>
+<pre>long size</pre>
+</li>
+<li class="blockListLast">
+<h4>unit</h4>
+<pre>java.util.concurrent.TimeUnit unit</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList">
 <h2 title="Package">Package&nbsp;edu.iu.dsc.tws.comms.dfw.io</h2>
 <ul class="blockList">
 <li class="blockList"><a name="edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects">
@@ -750,6 +775,7 @@
 <li class="blockList">
 <h4>config</h4>
 <pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
+<div class="block">Config file required for Hdfs connection</div>
 </li>
 <li class="blockList">
 <h4>minSplitSize</h4>
@@ -760,6 +786,42 @@
 <h4>stream</h4>
 <pre><a href="edu/iu/dsc/tws/api/data/FSDataInputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataInputStream</a> stream</pre>
 <div class="block">The input data stream</div>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="edu.iu.dsc.tws.data.api.formatters.CSVInputPartitioner">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/data/api/formatters/CSVInputPartitioner.html" title="class in edu.iu.dsc.tws.data.api.formatters">edu.iu.dsc.tws.data.api.formatters.CSVInputPartitioner</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>filePath</h4>
+<pre><a href="edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a> filePath</pre>
+</li>
+<li class="blockList">
+<h4>config</h4>
+<pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
+</li>
+<li class="blockList">
+<h4>dataSize</h4>
+<pre>int dataSize</pre>
+</li>
+<li class="blockList">
+<h4>minSplitSize</h4>
+<pre>long minSplitSize</pre>
+</li>
+<li class="blockListLast">
+<h4>enumerateNestedFiles</h4>
+<pre>boolean enumerateNestedFiles</pre>
 </li>
 </ul>
 </li>
@@ -907,6 +969,30 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/data/api/formatters/LocalCSVInputPartitioner.html" title="class in edu.iu.dsc.tws.data.api.formatters">edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner</a> extends <a href="edu/iu/dsc/tws/data/api/formatters/CSVInputPartitioner.html" title="class in edu.iu.dsc.tws.data.api.formatters">CSVInputPartitioner</a>&lt;java.lang.String&gt; implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>numberOfTasks</h4>
+<pre>int numberOfTasks</pre>
+</li>
+<li class="blockListLast">
+<h4>assigner</h4>
+<pre><a href="edu/iu/dsc/tws/data/api/assigner/OrderedInputSplitAssigner.html" title="class in edu.iu.dsc.tws.data.api.assigner">OrderedInputSplitAssigner</a>&lt;<a href="edu/iu/dsc/tws/data/api/assigner/OrderedInputSplitAssigner.html" title="type parameter in OrderedInputSplitAssigner">T</a>&gt; assigner</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner">
 <!--   -->
 </a>
@@ -980,6 +1066,50 @@
 <li class="blockList">
 <h2 title="Package">Package&nbsp;edu.iu.dsc.tws.data.api.out</h2>
 <ul class="blockList">
+<li class="blockList"><a name="edu.iu.dsc.tws.data.api.out.CSVOutputWriter">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/data/api/out/CSVOutputWriter.html" title="class in edu.iu.dsc.tws.data.api.out">edu.iu.dsc.tws.data.api.out.CSVOutputWriter</a> extends <a href="edu/iu/dsc/tws/data/api/out/FileOutputWriter.html" title="class in edu.iu.dsc.tws.data.api.out">FileOutputWriter</a>&lt;java.lang.String&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>writerMap</h4>
+<pre>java.util.Map&lt;K,V&gt; writerMap</pre>
+</li>
+<li class="blockList">
+<h4>allowedNullValues</h4>
+<pre>boolean allowedNullValues</pre>
+</li>
+<li class="blockList">
+<h4>quoteStrings</h4>
+<pre>boolean quoteStrings</pre>
+</li>
+<li class="blockList">
+<h4>charsetName</h4>
+<pre>java.lang.String charsetName</pre>
+</li>
+<li class="blockList">
+<h4>headers</h4>
+<pre>java.lang.String[] headers</pre>
+</li>
+<li class="blockList">
+<h4>path</h4>
+<pre><a href="edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a> path</pre>
+</li>
+<li class="blockList">
+<h4>outputStream</h4>
+<pre><a href="edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a> outputStream</pre>
+</li>
+<li class="blockListLast">
+<h4>config</h4>
+<pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="edu.iu.dsc.tws.data.api.out.FileOutputWriter">
 <!--   -->
 </a>
@@ -992,6 +1122,10 @@
 <h4>fs</h4>
 <pre><a href="edu/iu/dsc/tws/api/data/FileSystem.html" title="class in edu.iu.dsc.tws.api.data">FileSystem</a> fs</pre>
 <div class="block">File system object</div>
+</li>
+<li class="blockList">
+<h4>pw</h4>
+<pre>java.io.PrintWriter pw</pre>
 </li>
 <li class="blockList">
 <h4>openStreams</h4>
@@ -1020,9 +1154,25 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
-<li class="blockListLast">
+<li class="blockList">
 <h4>writerMap</h4>
 <pre>java.util.Map&lt;K,V&gt; writerMap</pre>
+</li>
+<li class="blockList">
+<h4>headers</h4>
+<pre>java.lang.String[] headers</pre>
+</li>
+<li class="blockList">
+<h4>path</h4>
+<pre><a href="edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a> path</pre>
+</li>
+<li class="blockList">
+<h4>outputStream</h4>
+<pre><a href="edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a> outputStream</pre>
+</li>
+<li class="blockListLast">
+<h4>config</h4>
+<pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
 </li>
 </ul>
 </li>
@@ -1065,7 +1215,42 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.data.api.splits.CSVInputSplit">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.CSVInputSplit</a> extends <a href="edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a>&lt;java.lang.String&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.CSVInputSplit</a> extends <a href="edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;java.lang.Object&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>charsetName</h4>
+<pre>java.lang.String charsetName</pre>
+</li>
+<li class="blockList">
+<h4>delimiter</h4>
+<pre>byte[] delimiter</pre>
+</li>
+<li class="blockList">
+<h4>delimiterString</h4>
+<pre>java.lang.String delimiterString</pre>
+</li>
+<li class="blockList">
+<h4>lineLengthLimit</h4>
+<pre>int lineLengthLimit</pre>
+</li>
+<li class="blockList">
+<h4>bufferSize</h4>
+<pre>int bufferSize</pre>
+</li>
+<li class="blockList">
+<h4>offset</h4>
+<pre>long offset</pre>
+</li>
+<li class="blockListLast">
+<h4>config</h4>
+<pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit">
 <!--   -->
@@ -1151,11 +1336,6 @@
 <div class="block">The minimal split size, set by the configure() method.</div>
 </li>
 <li class="blockList">
-<h4>currentSplit</h4>
-<pre><a href="edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;<a href="edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="type parameter in FileInputSplit">OT</a>&gt; currentSplit</pre>
-<div class="block">Current split that is used</div>
-</li>
-<li class="blockList">
 <h4>splitStart</h4>
 <pre>long splitStart</pre>
 <div class="block">Start point of the current split</div>
@@ -1175,13 +1355,26 @@
 <pre>long openTimeout</pre>
 <div class="block">Time to wait when opening a file.</div>
 </li>
-<li class="blockList">
+<li class="blockListLast">
 <h4>config</h4>
 <pre><a href="edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a> config</pre>
 </li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/data/api/splits/GenericCSVInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.GenericCSVInputSplit</a> extends <a href="edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a>&lt;java.lang.String&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
 <li class="blockListLast">
-<h4>recordLength</h4>
-<pre>int recordLength</pre>
+<h4>charsetName</h4>
+<pre>java.lang.String charsetName</pre>
+<div class="block">The name of the charset to use for decoding.</div>
 </li>
 </ul>
 </li>
@@ -1388,7 +1581,7 @@
 </li>
 <li class="blockList">
 <h4>buffers</h4>
-<pre>java.util.Queue&lt;E&gt; buffers</pre>
+<pre>java.util.List&lt;E&gt; buffers</pre>
 </li>
 <li class="blockList">
 <h4>bufferedBytes</h4>
@@ -1406,9 +1599,17 @@
 <h4>rootPath</h4>
 <pre><a href="edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a> rootPath</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>reference</h4>
 <pre>java.lang.String reference</pre>
+</li>
+<li class="blockList">
+<h4>currentFileCache</h4>
+<pre>java.util.List&lt;E&gt; currentFileCache</pre>
+</li>
+<li class="blockListLast">
+<h4>cachedFileIndex</h4>
+<pre>int cachedFileIndex</pre>
 </li>
 </ul>
 </li>
@@ -1463,6 +1664,47 @@
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/dataset/partition/HDFSBackedCollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition</a> extends <a href="edu/iu/dsc/tws/dataset/partition/BufferedCollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">BufferedCollectionPartition</a>&lt;<a href="edu/iu/dsc/tws/dataset/partition/HDFSBackedCollectionPartition.html" title="type parameter in HDFSBackedCollectionPartition">T</a>&gt; implements Serializable</h3>
+</li>
+</ul>
+</li>
+<li class="blockList">
+<h2 title="Package">Package&nbsp;edu.iu.dsc.tws.deeplearning.common</h2>
+<ul class="blockList">
+<li class="blockList"><a name="edu.iu.dsc.tws.deeplearning.common.ParameterTool">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/deeplearning/common/ParameterTool.html" title="class in edu.iu.dsc.tws.deeplearning.common">edu.iu.dsc.tws.deeplearning.common.ParameterTool</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialization Methods</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>readObject</h4>
+<pre>private&nbsp;void&nbsp;readObject(java.io.ObjectInputStream&nbsp;in)
+                 throws java.io.IOException,
+                        java.lang.ClassNotFoundException</pre>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
+<dd><code>java.lang.ClassNotFoundException</code></dd>
+</dl>
+</li>
+</ul>
+</li>
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>data</h4>
+<pre>java.util.Map&lt;K,V&gt; data</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -1711,6 +1953,46 @@
 <li class="blockList">
 <h2 title="Package">Package&nbsp;edu.iu.dsc.tws.examples.batch.kmeans</h2>
 <ul class="blockList">
+<li class="blockList"><a name="edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest.TestSink">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/examples/batch/kmeans/CSVInputFormatTest.TestSink.html" title="class in edu.iu.dsc.tws.examples.batch.kmeans">edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest.TestSink</a> extends <a href="edu/iu/dsc/tws/api/compute/nodes/BaseCompute.html" title="class in edu.iu.dsc.tws.api.compute.nodes">BaseCompute</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-254264903510284748L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>inputKey</h4>
+<pre>java.lang.String inputKey</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest.TestSource">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/examples/batch/kmeans/CSVInputFormatTest.TestSource.html" title="class in edu.iu.dsc.tws.examples.batch.kmeans">edu.iu.dsc.tws.examples.batch.kmeans.CSVInputFormatTest.TestSource</a> extends <a href="edu/iu/dsc/tws/api/compute/nodes/BaseSource.html" title="class in edu.iu.dsc.tws.api.compute.nodes">BaseSource</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-254264903510284748L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>inputKey</h4>
+<pre>java.lang.String inputKey</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob.CentroidAggregator">
 <!--   -->
 </a>
@@ -1826,8 +2108,16 @@
 <pre>java.lang.String inputKey</pre>
 </li>
 <li class="blockList">
+<h4>fileType</h4>
+<pre>java.lang.String fileType</pre>
+</li>
+<li class="blockList">
 <h4>dimension</h4>
 <pre>int dimension</pre>
+</li>
+<li class="blockList">
+<h4>datasize</h4>
+<pre>int datasize</pre>
 </li>
 <li class="blockListLast">
 <h4>dataPointsLocal</h4>
@@ -4813,9 +5103,13 @@
 <h4>timingCondition</h4>
 <pre>boolean timingCondition</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>endNotified</h4>
 <pre>boolean endNotified</pre>
+</li>
+<li class="blockListLast">
+<h4>joinRelation</h4>
+<pre><a href="edu/iu/dsc/tws/comms/utils/JoinRelation.html" title="enum in edu.iu.dsc.tws.comms.utils">JoinRelation</a> joinRelation</pre>
 </li>
 </ul>
 </li>
@@ -5784,6 +6078,15 @@
 <dd>-2753072757838198105L</dd>
 </dl>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.examples.tset.batch.SetSchemaExample">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/examples/tset/batch/SetSchemaExample.html" title="class in edu.iu.dsc.tws.examples.tset.batch">edu.iu.dsc.tws.examples.tset.batch.SetSchemaExample</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-2753072757838198105L</dd>
+</dl>
+</li>
 <li class="blockList"><a name="edu.iu.dsc.tws.examples.tset.batch.TSetExecDemo">
 <!--   -->
 </a>
@@ -5845,6 +6148,15 @@
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/examples/tset/streaming/SReduceExample.html" title="class in edu.iu.dsc.tws.examples.tset.streaming">edu.iu.dsc.tws.examples.tset.streaming.SReduceExample</a> extends <a href="edu/iu/dsc/tws/examples/tset/streaming/StreamingTsetExample.html" title="class in edu.iu.dsc.tws.examples.tset.streaming">StreamingTsetExample</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-275307275783819805L</dd>
+</dl>
+</li>
+<li class="blockList"><a name="edu.iu.dsc.tws.examples.tset.streaming.SReduceWindowExample">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/examples/tset/streaming/SReduceWindowExample.html" title="class in edu.iu.dsc.tws.examples.tset.streaming">edu.iu.dsc.tws.examples.tset.streaming.SReduceWindowExample</a> extends <a href="edu/iu/dsc/tws/examples/tset/streaming/StreamingTsetExample.html" title="class in edu.iu.dsc.tws.examples.tset.streaming">StreamingTsetExample</a> implements Serializable</h3>
 <dl class="nameValue">
 <dt>serialVersionUID:</dt>
 <dd>-2753072757838198105L</dd>
@@ -6796,6 +7108,34 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.task.dataobjects.DataObjectCSVSource">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/task/dataobjects/DataObjectCSVSource.html" title="class in edu.iu.dsc.tws.task.dataobjects">edu.iu.dsc.tws.task.dataobjects.DataObjectCSVSource</a> extends <a href="edu/iu/dsc/tws/api/compute/nodes/BaseSource.html" title="class in edu.iu.dsc.tws.api.compute.nodes">BaseSource</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>-1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>source</h4>
+<pre><a href="edu/iu/dsc/tws/dataset/DataSource.html" title="class in edu.iu.dsc.tws.dataset">DataSource</a>&lt;<a href="edu/iu/dsc/tws/dataset/DataSource.html" title="type parameter in DataSource">T</a>,<a href="edu/iu/dsc/tws/dataset/DataSource.html" title="type parameter in DataSource">O</a> extends <a href="edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;<a href="edu/iu/dsc/tws/dataset/DataSource.html" title="type parameter in DataSource">T</a>&gt;&gt; source</pre>
+</li>
+<li class="blockList">
+<h4>edgeName</h4>
+<pre>java.lang.String edgeName</pre>
+</li>
+<li class="blockListLast">
+<h4>dataDirectory</h4>
+<pre>java.lang.String dataDirectory</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="edu.iu.dsc.tws.task.dataobjects.DataObjectSink">
 <!--   -->
 </a>
@@ -7726,16 +8066,6 @@
 </ul>
 </li>
 <li class="blockList">
-<h2 title="Package">Package&nbsp;edu.iu.dsc.tws.tset.data</h2>
-<ul class="blockList">
-<li class="blockList"><a name="edu.iu.dsc.tws.tset.data.ExecutableDataObject">
-<!--   -->
-</a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/data/ExecutableDataObject.html" title="class in edu.iu.dsc.tws.tset.data">edu.iu.dsc.tws.tset.data.ExecutableDataObject</a> extends java.lang.Object implements Serializable</h3>
-</li>
-</ul>
-</li>
-<li class="blockList">
 <h2 title="Package">Package&nbsp;edu.iu.dsc.tws.tset.fn</h2>
 <ul class="blockList">
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.fn.FlatMapCompute">
@@ -7943,6 +8273,22 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.tset.fn.ProcessWindowCompute">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/tset/fn/ProcessWindowCompute.html" title="class in edu.iu.dsc.tws.tset.fn">edu.iu.dsc.tws.tset.fn.ProcessWindowCompute</a> extends java.lang.Object implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>processFn</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;<a href="edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="type parameter in MapFunc">O</a>,<a href="edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="type parameter in MapFunc">I</a>&gt; processFn</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="blockList">
@@ -8089,6 +8435,22 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a> extends <a href="edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a>&lt;<a href="edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="type parameter in BaseTLinkWithSchema">T1</a>,<a href="edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="type parameter in BaseTLinkWithSchema">T0</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>linkSchema</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a> linkSchema</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="blockList">
@@ -8098,6 +8460,17 @@
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/AllGatherTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.AllGatherTLink</a> extends <a href="edu/iu/dsc/tws/tset/links/batch/BatchGatherLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchGatherLink</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/AllGatherTLink.html" title="type parameter in AllGatherTLink">T</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.AllReduceTLink">
 <!--   -->
@@ -8138,17 +8511,39 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a> extends <a href="edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="type parameter in BatchTLinkImpl">T1</a>,<a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="type parameter in BatchTLinkImpl">T0</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a> extends <a href="edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="type parameter in BatchTLinkImpl">T1</a>,<a href="edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="type parameter in BatchTLinkImpl">T0</a>&gt; implements Serializable</h3>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.DirectTLink">
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/DirectTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.DirectTLink</a> extends <a href="edu/iu/dsc/tws/tset/links/batch/BatchIteratorLinkWrapper.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchIteratorLinkWrapper</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/DirectTLink.html" title="type parameter in DirectTLink">T</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.GatherTLink">
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/GatherTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.GatherTLink</a> extends <a href="edu/iu/dsc/tws/tset/links/batch/BatchGatherLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchGatherLink</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/GatherTLink.html" title="type parameter in GatherTLink">T</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.JoinTLink">
 <!--   -->
@@ -8171,12 +8566,20 @@
 <pre>java.util.Comparator&lt;T&gt; keyComparator</pre>
 </li>
 <li class="blockList">
+<h4>algorithm</h4>
+<pre><a href="edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a> algorithm</pre>
+</li>
+<li class="blockList">
 <h4>leftTSet</h4>
 <pre><a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&lt;<a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="type parameter in TupleTSet">K</a>,<a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="type parameter in TupleTSet">V</a>&gt; leftTSet</pre>
 </li>
-<li class="blockListLast">
+<li class="blockList">
 <h4>rightTSet</h4>
 <pre><a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&lt;<a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="type parameter in TupleTSet">K</a>,<a href="edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="type parameter in TupleTSet">V</a>&gt; rightTSet</pre>
+</li>
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
 </li>
 </ul>
 </li>
@@ -8191,6 +8594,17 @@
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/KeyedDirectTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink</a> extends <a href="edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedBatchIteratorLinkWrapper</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/KeyedDirectTLink.html" title="type parameter in KeyedDirectTLink">K</a>,<a href="edu/iu/dsc/tws/tset/links/batch/KeyedDirectTLink.html" title="type parameter in KeyedDirectTLink">V</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink">
 <!--   -->
@@ -8233,9 +8647,13 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
-<li class="blockListLast">
+<li class="blockList">
 <h4>partitionFunction</h4>
 <pre><a href="edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="type parameter in PartitionFunc">T</a>&gt; partitionFunction</pre>
+</li>
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
 </li>
 </ul>
 </li>
@@ -8265,6 +8683,10 @@
 <li class="blockList">
 <h3>Serialized Fields</h3>
 <ul class="blockList">
+<li class="blockList">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
 <li class="blockListLast">
 <h4>partitionFunction</h4>
 <pre><a href="edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="type parameter in PartitionFunc">T</a>&gt; partitionFunction</pre>
@@ -8293,6 +8715,17 @@
 <!--   -->
 </a>
 <h3>Class <a href="edu/iu/dsc/tws/tset/links/batch/ReplicateTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.ReplicateTLink</a> extends <a href="edu/iu/dsc/tws/tset/links/batch/BatchIteratorLinkWrapper.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchIteratorLinkWrapper</a>&lt;<a href="edu/iu/dsc/tws/tset/links/batch/ReplicateTLink.html" title="type parameter in ReplicateTLink">T</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>useDisk</h4>
+<pre>boolean useDisk</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -8406,7 +8839,18 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.links.streaming.StreamingTLinkImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.streaming">edu.iu.dsc.tws.tset.links.streaming.StreamingTLinkImpl</a> extends <a href="edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a>&lt;<a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="type parameter in StreamingTLinkImpl">T1</a>,<a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="type parameter in StreamingTLinkImpl">T0</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.streaming">edu.iu.dsc.tws.tset.links.streaming.StreamingTLinkImpl</a> extends <a href="edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="type parameter in StreamingTLinkImpl">T1</a>,<a href="edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="type parameter in StreamingTLinkImpl">T0</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>windowParameter</h4>
+<pre><a href="edu/iu/dsc/tws/task/window/util/WindowParameter.html" title="class in edu.iu.dsc.tws.task.window.util">WindowParameter</a> windowParameter</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -8586,6 +9030,38 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.tset.ops.WindowComputeOp">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/tset/ops/WindowComputeOp.html" title="class in edu.iu.dsc.tws.tset.ops">edu.iu.dsc.tws.tset.ops.WindowComputeOp</a> extends <a href="edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="edu/iu/dsc/tws/tset/ops/WindowComputeOp.html" title="type parameter in WindowComputeOp">I</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>tSetContext</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/TSetContext.html" title="class in edu.iu.dsc.tws.api.tset">TSetContext</a> tSetContext</pre>
+</li>
+<li class="blockList">
+<h4>receivables</h4>
+<pre><a href="edu/iu/dsc/tws/api/compute/modifiers/IONames.html" title="class in edu.iu.dsc.tws.api.compute.modifiers">IONames</a> receivables</pre>
+</li>
+<li class="blockList">
+<h4>rcvTSets</h4>
+<pre>java.util.Map&lt;K,V&gt; rcvTSets</pre>
+</li>
+<li class="blockList">
+<h4>multiEdgeOpAdapter</h4>
+<pre><a href="edu/iu/dsc/tws/tset/ops/MultiEdgeOpAdapter.html" title="class in edu.iu.dsc.tws.tset.ops">MultiEdgeOpAdapter</a> multiEdgeOpAdapter</pre>
+</li>
+<li class="blockListLast">
+<h4>computeFunction</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/fn/ComputeFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ComputeFunc</a>&lt;<a href="edu/iu/dsc/tws/api/tset/fn/ComputeFunc.html" title="type parameter in ComputeFunc">O</a>,<a href="edu/iu/dsc/tws/api/tset/fn/ComputeFunc.html" title="type parameter in ComputeFunc">I</a>&gt; computeFunction</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="blockList">
@@ -8628,6 +9104,26 @@
 </li>
 </ul>
 </li>
+<li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="type parameter in BaseTSetWithSchema">T</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>outSchema</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a> outSchema</pre>
+</li>
+<li class="blockListLast">
+<h4>inSchema</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a> inSchema</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="blockList">
@@ -8636,12 +9132,12 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="type parameter in BatchTSetImpl">T</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="type parameter in BatchTSetImpl">T</a>&gt; implements Serializable</h3>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.batch.BatchTupleTSetImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTupleTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTupleTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt; implements Serializable</h3>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.batch.CachedTSet">
 <!--   -->
@@ -8770,7 +9266,7 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.batch.SinkTSet">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.SinkTSet</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.SinkTSet</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt; implements Serializable</h3>
 <ul class="blockList">
 <li class="blockList">
 <h3>Serialized Fields</h3>
@@ -8921,12 +9417,32 @@
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.streaming.StreamingTSetImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">edu.iu.dsc.tws.tset.sets.streaming.StreamingTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">edu.iu.dsc.tws.tset.sets.streaming.StreamingTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt; implements Serializable</h3>
 </li>
 <li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.streaming.StreamingTupleTSetImpl">
 <!--   -->
 </a>
-<h3>Class <a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">edu.iu.dsc.tws.tset.sets.streaming.StreamingTupleTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTupleTSetImpl.html" title="type parameter in StreamingTupleTSetImpl">V</a>&gt; implements Serializable</h3>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">edu.iu.dsc.tws.tset.sets.streaming.StreamingTupleTSetImpl</a> extends <a href="edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTupleTSetImpl.html" title="type parameter in StreamingTupleTSetImpl">V</a>&gt; implements Serializable</h3>
+</li>
+<li class="blockList"><a name="edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet">
+<!--   -->
+</a>
+<h3>Class <a href="edu/iu/dsc/tws/tset/sets/streaming/WindowComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet</a> extends <a href="edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">StreamingTSetImpl</a>&lt;<a href="edu/iu/dsc/tws/tset/sets/streaming/WindowComputeTSet.html" title="type parameter in WindowComputeTSet">O</a>&gt; implements Serializable</h3>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>computeFunc</h4>
+<pre><a href="edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;<a href="edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="type parameter in TFunction">O</a>,<a href="edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="type parameter in TFunction">I</a>&gt; computeFunc</pre>
+</li>
+<li class="blockListLast">
+<h4>windowParameter</h4>
+<pre><a href="edu/iu/dsc/tws/task/window/util/WindowParameter.html" title="class in edu.iu.dsc.tws.task.window.util">WindowParameter</a> windowParameter</pre>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 </li>

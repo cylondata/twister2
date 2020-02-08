@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -188,19 +188,25 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsCo
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#useDisk-boolean-">useDisk</a></span>(boolean&nbsp;useDisk)</code>&nbsp;</td>
+<td class="colFirst"><code>protected void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#generateSchema--">generateSchema</a></span>()</code>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
+</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#withKeyType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">withKeyType</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#useDisk-boolean-">useDisk</a></span>(boolean&nbsp;useDisk)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#withKeyType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">withKeyType</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;C&gt;&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#withTaskPartitioner-java.lang.Class-edu.iu.dsc.tws.api.compute.TaskPartitioner-">withTaskPartitioner</a></span>(java.lang.Class&lt;C&gt;&nbsp;tClass,
                    <a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&lt;C&gt;&nbsp;taskPartitioner)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#withTaskPartitioner-edu.iu.dsc.tws.api.compute.TaskPartitioner-">withTaskPartitioner</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&nbsp;taskPartitioner)</code>&nbsp;</td>
 </tr>
@@ -309,10 +315,25 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsCo
 <a name="useDisk-boolean-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>useDisk</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a>&nbsp;useDisk(boolean&nbsp;useDisk)</pre>
+</li>
+</ul>
+<a name="generateSchema--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>generateSchema</h4>
+<pre>protected&nbsp;void&nbsp;generateSchema()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#generateSchema--">AbstractOpsConfig</a></code></span></div>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#generateSchema--">generateSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">AbstractOpsConfig</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="type parameter in AbstractKeyedOpsConfig">T</a> extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">AbstractOpsConfig</a>&gt;</code></dd>
+</dl>
 </li>
 </ul>
 </li>

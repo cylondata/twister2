@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a>&lt;T&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -108,6 +111,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.sets.batch.PersistedTSet&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -184,9 +189,10 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html#PersistedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">PersistedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html#PersistedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">PersistedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
              <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;?&gt;&nbsp;sinkFunc,
-             int&nbsp;parallelism)</code>&nbsp;</td>
+             int&nbsp;parallelism,
+             <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -242,6 +248,12 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <div class="block">Sets the name for the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title="interface in edu.iu.dsc.tws.api.tset"><code>TBase</code></a></div>
 </td>
 </tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="type parameter in PersistedTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output.</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.batch.StoredTSet">
@@ -256,6 +268,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a></h3>
 <code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#getTSetEnv--">getTSetEnv</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getInputSchema--">getInputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getOutputSchema--">getOutputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#setOutputSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">setOutputSchema</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSet">
@@ -306,7 +325,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="PersistedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">
+<a name="PersistedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -314,7 +333,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <h4>PersistedTSet</h4>
 <pre>public&nbsp;PersistedTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                      <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;?&gt;&nbsp;sinkFunc,
-                     int&nbsp;parallelism)</pre>
+                     int&nbsp;parallelism,
+                     <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</pre>
 </li>
 </ul>
 </li>
@@ -419,7 +439,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <a name="addInput-java.lang.String-edu.iu.dsc.tws.api.tset.sets.StorableTBase-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>addInput</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="type parameter in PersistedTSet">T</a>&gt;&nbsp;addInput(java.lang.String&nbsp;key,
@@ -438,6 +458,28 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.
 <dd><code>input</code> - a @<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>StorableTBase</code></a> TSet to be added as an input</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>this test</dd>
+</dl>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="type parameter in PersistedTSet">T</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">TSet</a></code></span></div>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output. This will be used in the packers for efficient
+ SER-DE operations in the following <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="type parameter in PersistedTSet">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="type parameter in PersistedTSet">T</a>&gt;</code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>schema</code> - data type as a <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types"><code>MessageType</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a></dd>
 </dl>
 </li>
 </ul>

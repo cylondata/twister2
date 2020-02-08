@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
 /**
- * Base classed used by cache/persist sinks that receive an {@link Iterator<T>}.
+ * Base classed used by cache/persist sinks that receive an {@link Iterator}.
  *
  * @param <T>  Base type of the input
  * @param <T1> type that is passed to the partition through the {@link ValueExtractor}
