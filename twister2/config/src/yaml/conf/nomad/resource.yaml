@@ -3,7 +3,7 @@ twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
 
 twister2.resource.job.package.url: "http://149.165.xxx.xx:8082/twister2/mesos/twister2-job.tar.gz"
 
-twister2.resource.core.package.url: "http://149.165.xxx.xx:8082/twister2/mesos/twister2-core-0.5.0.tar.gz"
+twister2.resource.core.package.url: "http://149.165.xxx.xx:8082/twister2/mesos/twister2-core-0.6.0-SNAPSHOT.tar.gz"
 
 
 # the launcher class
@@ -28,7 +28,7 @@ twister2.resource.filesystem.shared: true
 twister2.resource.nomad.shell.script: "nomad.sh"
 
 # path to the system core package
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.5.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
