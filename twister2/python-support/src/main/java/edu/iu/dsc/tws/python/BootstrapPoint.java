@@ -8,16 +8,11 @@ import java.util.UUID;
 
 import edu.iu.dsc.tws.python.config.ComputeResource;
 
-public class BootstrapPoint {
+public class BootstrapPoint extends EntryPoint {
 
   private Map<String, Object> configs = new HashMap<>();
   private List<ComputeResource> computeResources = new ArrayList<>();
   private String jobName = "python-job-" + UUID.randomUUID().toString();
-  private BootstrapListener bootstrapListener;
-
-  public void setBootstrapListener(BootstrapListener bootstrapListener) {
-    this.bootstrapListener = bootstrapListener;
-  }
 
   public void addConfig(String key, Object value) {
     this.configs.put(key, value);
@@ -44,13 +39,5 @@ public class BootstrapPoint {
 
   public Map<String, Object> getConfigs() {
     return configs;
-  }
-
-  public void commit() {
-    this.bootstrapListener.onBootstrapped(this);
-  }
-
-  public interface BootstrapListener {
-    void onBootstrapped(BootstrapPoint bootstrapPoint);
   }
 }
