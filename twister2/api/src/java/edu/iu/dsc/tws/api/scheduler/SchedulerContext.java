@@ -180,7 +180,7 @@ public class SchedulerContext extends Context {
 
   public static boolean useOpenMPI(Config cfg) {
     return cfg.getStringValue("twister2.network.channel.class")
-        .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+        .equals("edu.iu.dsc.tws.comms.mpi.TWSMPIChannel");
   }
 
   public static String downloadMethod(Config cfg) {
