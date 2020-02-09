@@ -33,6 +33,7 @@ edu.iu.dsc.tws.api.tset.fn
 edu.iu.dsc.tws.api.tset.link
 edu.iu.dsc.tws.api.tset.link.batch
 edu.iu.dsc.tws.api.tset.link.streaming
+edu.iu.dsc.tws.api.tset.schema
 edu.iu.dsc.tws.api.tset.sets
 edu.iu.dsc.tws.api.tset.sets.batch
 edu.iu.dsc.tws.api.tset.sets.streaming
@@ -49,6 +50,7 @@ edu.iu.dsc.tws.common.logging
 edu.iu.dsc.tws.common.net
 edu.iu.dsc.tws.common.net.tcp
 edu.iu.dsc.tws.common.net.tcp.request
+edu.iu.dsc.tws.common.pojo
 edu.iu.dsc.tws.common.util
 edu.iu.dsc.tws.common.zk
 edu.iu.dsc.tws.comms.batch
@@ -72,6 +74,7 @@ edu.iu.dsc.tws.comms.selectors
 edu.iu.dsc.tws.comms.shuffle
 edu.iu.dsc.tws.comms.stream
 edu.iu.dsc.tws.comms.tcp
+edu.iu.dsc.tws.comms.ucx
 edu.iu.dsc.tws.comms.utils
 edu.iu.dsc.tws.connectors.kafka
 edu.iu.dsc.tws.dashboard
@@ -97,6 +100,8 @@ edu.iu.dsc.tws.data.utils
 edu.iu.dsc.tws.dataset
 edu.iu.dsc.tws.dataset.consumer
 edu.iu.dsc.tws.dataset.partition
+edu.iu.dsc.tws.deeplearning.common
+edu.iu.dsc.tws.deeplearning.pytorch
 edu.iu.dsc.tws.examples
 edu.iu.dsc.tws.examples.basic
 edu.iu.dsc.tws.examples.batch.cdfw
@@ -217,7 +222,6 @@ edu.iu.dsc.tws.rsched.schedulers.k8s
 edu.iu.dsc.tws.rsched.schedulers.k8s.driver
 edu.iu.dsc.tws.rsched.schedulers.k8s.master
 edu.iu.dsc.tws.rsched.schedulers.k8s.mpi
-edu.iu.dsc.tws.rsched.schedulers.k8s.uploader
 edu.iu.dsc.tws.rsched.schedulers.k8s.worker
 edu.iu.dsc.tws.rsched.schedulers.mesos
 edu.iu.dsc.tws.rsched.schedulers.mesos.driver
@@ -229,7 +233,9 @@ edu.iu.dsc.tws.rsched.schedulers.standalone
 edu.iu.dsc.tws.rsched.schedulers.standalone.bootstrap
 edu.iu.dsc.tws.rsched.uploaders
 edu.iu.dsc.tws.rsched.uploaders.hdfs
+edu.iu.dsc.tws.rsched.uploaders.k8s
 edu.iu.dsc.tws.rsched.uploaders.localfs
+edu.iu.dsc.tws.rsched.uploaders.s3
 edu.iu.dsc.tws.rsched.uploaders.scp
 edu.iu.dsc.tws.rsched.utils
 edu.iu.dsc.tws.rsched.worker
@@ -281,7 +287,6 @@ edu.iu.dsc.tws.tsched.userdefined
 edu.iu.dsc.tws.tsched.utils
 edu.iu.dsc.tws.tset
 edu.iu.dsc.tws.tset.cdfw
-edu.iu.dsc.tws.tset.data
 edu.iu.dsc.tws.tset.env
 edu.iu.dsc.tws.tset.fn
 edu.iu.dsc.tws.tset.fn.impl

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -159,10 +159,11 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyed
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#JoinConfig-java.lang.String-java.lang.String-edu.iu.dsc.tws.task.impl.ComputeConnection-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">JoinConfig</a></span>(java.lang.String&nbsp;leftParent,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#JoinConfig-java.lang.String-java.lang.String-edu.iu.dsc.tws.task.impl.ComputeConnection-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">JoinConfig</a></span>(java.lang.String&nbsp;leftParent,
           java.lang.String&nbsp;rightParent,
           <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html" title="class in edu.iu.dsc.tws.task.impl">ComputeConnection</a>&nbsp;computeConnection,
-          <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</code>&nbsp;</td>
+          <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+          <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -184,46 +185,52 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyed
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#connect--">connect</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>protected void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#generateSchema--">generateSchema</a></span>()</code>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#updateEdge-edu.iu.dsc.tws.api.compute.graph.Edge-">updateEdge</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;newEdge)</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#useDisk-boolean-">useDisk</a></span>(boolean&nbsp;useDisk)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#viaLeftEdge-java.lang.String-">viaLeftEdge</a></span>(java.lang.String&nbsp;edge)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#viaRightEdge-java.lang.String-">viaRightEdge</a></span>(java.lang.String&nbsp;edge)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withComparator-java.util.Comparator-">withComparator</a></span>(java.util.Comparator&lt;T&gt;&nbsp;keyComparator)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withLeftDataType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">withLeftDataType</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;dataType)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withLeftMessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">withLeftMessageSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;messageSchema)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withMessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">withMessageSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;messageSchema)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withRightDataType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">withRightDataType</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;dataType)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withRightMessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">withRightMessageSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;messageSchema)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html#withTargetEdge-java.lang.String-">withTargetEdge</a></span>(java.lang.String&nbsp;g)</code>&nbsp;</td>
 </tr>
@@ -263,7 +270,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyed
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JoinConfig-java.lang.String-java.lang.String-edu.iu.dsc.tws.task.impl.ComputeConnection-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">
+<a name="JoinConfig-java.lang.String-java.lang.String-edu.iu.dsc.tws.task.impl.ComputeConnection-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -272,7 +279,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyed
 <pre>public&nbsp;JoinConfig(java.lang.String&nbsp;leftParent,
                   java.lang.String&nbsp;rightParent,
                   <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html" title="class in edu.iu.dsc.tws.task.impl">ComputeConnection</a>&nbsp;computeConnection,
-                  <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</pre>
+                  <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+                  <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 </li>
 </ul>
 </li>
@@ -379,6 +387,21 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyed
 <li class="blockList">
 <h4>withTargetEdge</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a>&nbsp;withTargetEdge(java.lang.String&nbsp;g)</pre>
+</li>
+</ul>
+<a name="generateSchema--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>generateSchema</h4>
+<pre>protected&nbsp;void&nbsp;generateSchema()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#generateSchema--">AbstractOpsConfig</a></code></span></div>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html#generateSchema--">generateSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractKeyedOpsConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">AbstractKeyedOpsConfig</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a>&gt;</code></dd>
+</dl>
 </li>
 </ul>
 <a name="connect--">

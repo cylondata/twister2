@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -170,11 +170,20 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i6" class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#getJobMasterServiceIPByPolling-java.lang.String-java.lang.String-long-">getJobMasterServiceIPByPolling</a></span>(java.lang.String&nbsp;namespace,
+                              java.lang.String&nbsp;jobID,
+                              long&nbsp;timeLimitMS)</code>
+<div class="block">get job master service IP from job master service name
+ poll repeatedly until getting it or times out</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static JobMasterAPI.NodeInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#getNodeInfoFromEncodedStr-java.lang.String-java.lang.String-">getNodeInfoFromEncodedStr</a></span>(java.lang.String&nbsp;encodedNodeInfoList,
                          java.lang.String&nbsp;nodeIP)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static JobMasterAPI.WorkerState</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#initialStateAndUpdate-edu.iu.dsc.tws.api.config.Config-java.lang.String-JobMasterAPI.WorkerInfo-">initialStateAndUpdate</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
                      java.lang.String&nbsp;jbID,
@@ -186,7 +195,7 @@ extends java.lang.Object</pre>
    currently we just return STARTED.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#initLogger-edu.iu.dsc.tws.api.config.Config-java.lang.String-">initLogger</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
           java.lang.String&nbsp;entityName)</code>
@@ -194,7 +203,7 @@ extends java.lang.Object</pre>
  entityName can be "jobMaster", "mpiMaster", etc.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#initWorkerLogger-int-edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume-edu.iu.dsc.tws.api.config.Config-">initWorkerLogger</a></span>(int&nbsp;workerID,
                 <a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sPersistentVolume.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s.worker">K8sPersistentVolume</a>&nbsp;pv,
@@ -202,13 +211,13 @@ extends java.lang.Object</pre>
 <div class="block">initialize the logger</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#loadConfig-java.lang.String-">loadConfig</a></span>(java.lang.String&nbsp;configDir)</code>
 <div class="block">load configuration files from the given directory</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerUtils.html#waitIndefinitely--">waitIndefinitely</a></span>()</code>
 <div class="block">a test method to make the worker wait indefinitely</div>
@@ -334,6 +343,19 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;java.lang.String&nbsp;getJobMasterServiceIP(java.lang.String&nbsp;namespace,
                                                      java.lang.String&nbsp;jobID)</pre>
 <div class="block">get job master service IP from job master service name</div>
+</li>
+</ul>
+<a name="getJobMasterServiceIPByPolling-java.lang.String-java.lang.String-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobMasterServiceIPByPolling</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;getJobMasterServiceIPByPolling(java.lang.String&nbsp;namespace,
+                                                              java.lang.String&nbsp;jobID,
+                                                              long&nbsp;timeLimitMS)</pre>
+<div class="block">get job master service IP from job master service name
+ poll repeatedly until getting it or times out</div>
 </li>
 </ul>
 <a name="generateAdditionalPorts-edu.iu.dsc.tws.api.config.Config-int-">

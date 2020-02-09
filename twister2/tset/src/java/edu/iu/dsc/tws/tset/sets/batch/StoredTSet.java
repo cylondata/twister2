@@ -130,9 +130,9 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
 
   /**
    * Once a cache TSet is run, it will produce data and store data in the data executor with the
-   * tset ID as the key. This will be exposed to other operations as a {@link SourceTSet<T>}
+   * tset ID as the key. This will be exposed to other operations as a {@link SourceTSet}
    *
-   * @return {@link SourceTSet<T>} source tset from data
+   * @return {@link SourceTSet} source tset from data
    * <p>
    */
   @Override

@@ -148,19 +148,21 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/IParallelOperation.html" title="interface in edu.iu.dsc.tws.api.compute.executor">IParallelOperation</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/executor/core/ParallelOperationFactory.html#build-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.OperationMode-">build</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;leftEdge,
+     <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources1,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources2,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
+     <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph">OperationMode</a>&nbsp;operationMode)</code>&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/IParallelOperation.html" title="interface in edu.iu.dsc.tws.api.compute.executor">IParallelOperation</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/executor/core/ParallelOperationFactory.html#build-edu.iu.dsc.tws.api.compute.graph.Edge-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.OperationMode-">build</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;edge,
      java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
      java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
      <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph">OperationMode</a>&nbsp;operationMode)</code>
 <div class="block">Building the parallel operation based on the batch or streaming tasks.</div>
 </td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/IParallelOperation.html" title="interface in edu.iu.dsc.tws.api.compute.executor">IParallelOperation</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/executor/core/ParallelOperationFactory.html#build-java.util.List-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.OperationMode-">build</a></span>(java.util.List&lt;<a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&gt;&nbsp;edges,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
-     <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph">OperationMode</a>&nbsp;operationMode)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -203,14 +205,16 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="build-java.util.List-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.OperationMode-">
+<a name="build-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.OperationMode-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>build</h4>
-<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/IParallelOperation.html" title="interface in edu.iu.dsc.tws.api.compute.executor">IParallelOperation</a>&nbsp;build(java.util.List&lt;<a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&gt;&nbsp;edges,
-                                java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/IParallelOperation.html" title="interface in edu.iu.dsc.tws.api.compute.executor">IParallelOperation</a>&nbsp;build(<a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;leftEdge,
+                                <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge,
+                                java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources1,
+                                java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources2,
                                 java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
                                 <a href="../../../../../../edu/iu/dsc/tws/api/compute/graph/OperationMode.html" title="enum in edu.iu.dsc.tws.api.compute.graph">OperationMode</a>&nbsp;operationMode)</pre>
 </li>
