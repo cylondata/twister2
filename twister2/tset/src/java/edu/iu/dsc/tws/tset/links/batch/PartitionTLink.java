@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
 
@@ -49,6 +50,7 @@ public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
       e.setPartitioner(partitionFunction);
     }
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
   }
 

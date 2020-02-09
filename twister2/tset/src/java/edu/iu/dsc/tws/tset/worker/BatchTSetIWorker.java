@@ -33,6 +33,8 @@ public interface BatchTSetIWorker extends IWorker {
     WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
 
+    this.retrieveWorkerEnvironment(workerEnv);
+
     BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 
     execute(tSetEnv);
@@ -48,6 +50,14 @@ public interface BatchTSetIWorker extends IWorker {
               .build();
       senderToDriver.sendToDriver(workerState);
     }
+  }
+
+  /**
+   * This method can be used to retrieve the {@link WorkerEnvironment} instance for advanced
+   * use cases
+   */
+  default void retrieveWorkerEnvironment(WorkerEnvironment workerEnvironment) {
+
   }
 
   void execute(BatchTSetEnvironment env);

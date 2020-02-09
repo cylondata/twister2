@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -73,13 +73,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.data.api.out.FileOutputWriter">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -135,12 +135,31 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <!--   -->
 </a>
 <h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#fieldDelimiter">fieldDelimiter</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#lineDelimiter">lineDelimiter</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#tabDelimiter">tabDelimiter</a></span></code>&nbsp;</td>
+</tr>
+</table>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.edu.iu.dsc.tws.data.api.out.FileOutputWriter">
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;edu.iu.dsc.tws.data.api.out.<a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html" title="class in edu.iu.dsc.tws.data.api.out">FileOutputWriter</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#fs">fs</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#openStreams">openStreams</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#outPath">outPath</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#writeMode">writeMode</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#fs">fs</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#openStreams">openStreams</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#outPath">outPath</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#pw">pw</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#writeMode">writeMode</a></code></li>
 </ul>
 </li>
 </ul>
@@ -158,6 +177,11 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#TextOutputWriter-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-edu.iu.dsc.tws.api.data.Path-">TextOutputWriter</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode,
                 <a href="../../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;outPath)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#TextOutputWriter-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-edu.iu.dsc.tws.api.data.Path-edu.iu.dsc.tws.api.config.Config-">TextOutputWriter</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;outPath,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -182,17 +206,29 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#createOutput--">createOutput</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#createOutput-int-edu.iu.dsc.tws.api.data.FSDataOutputStream-">createOutput</a></span>(int&nbsp;partition,
             <a href="../../../../../../../edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a>&nbsp;out)</code>
 <div class="block">Create a suitable output</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#setHeaders-java.lang.String:A-">setHeaders</a></span>(java.lang.String[]&nbsp;headerNames)</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#writeRecord-int-java.lang.String-">writeRecord</a></span>(int&nbsp;partition,
            java.lang.String&nbsp;data)</code>
 <div class="block">Write the record to output</div>
 </td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/TextOutputWriter.html#writeRecord-java.lang.String-">writeRecord</a></span>(java.lang.String&nbsp;data)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -200,7 +236,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.data.api.out.<a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html" title="class in edu.iu.dsc.tws.data.api.out">FileOutputWriter</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#write-int-T-">write</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#generateRandom-int-">generateRandom</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#write-int-T-">write</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#write-T-">write</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -217,6 +253,41 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="lineDelimiter">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>lineDelimiter</h4>
+<pre>protected static&nbsp;java.lang.String lineDelimiter</pre>
+</li>
+</ul>
+<a name="fieldDelimiter">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>fieldDelimiter</h4>
+<pre>protected static&nbsp;java.lang.String fieldDelimiter</pre>
+</li>
+</ul>
+<a name="tabDelimiter">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>tabDelimiter</h4>
+<pre>protected static&nbsp;java.lang.String tabDelimiter</pre>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -226,11 +297,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <a name="TextOutputWriter-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-edu.iu.dsc.tws.api.data.Path-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>TextOutputWriter</h4>
 <pre>public&nbsp;TextOutputWriter(<a href="../../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode,
                         <a href="../../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;outPath)</pre>
+</li>
+</ul>
+<a name="TextOutputWriter-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-edu.iu.dsc.tws.api.data.Path-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>TextOutputWriter</h4>
+<pre>public&nbsp;TextOutputWriter(<a href="../../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode,
+                        <a href="../../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;outPath,
+                        <a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
 </li>
@@ -276,6 +358,37 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>partition</code> - partition id</dd>
 <dd><code>data</code> - data</dd>
+</dl>
+</li>
+</ul>
+<a name="setHeaders-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setHeaders</h4>
+<pre>public&nbsp;void&nbsp;setHeaders(java.lang.String[]&nbsp;headerNames)</pre>
+</li>
+</ul>
+<a name="createOutput--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createOutput</h4>
+<pre>public&nbsp;void&nbsp;createOutput()</pre>
+</li>
+</ul>
+<a name="writeRecord-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>writeRecord</h4>
+<pre>public&nbsp;void&nbsp;writeRecord(java.lang.String&nbsp;data)</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html#writeRecord-T-">writeRecord</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWriter.html" title="class in edu.iu.dsc.tws.data.api.out">FileOutputWriter</a>&lt;java.lang.String&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -349,13 +462,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/out/FileOutputWrit
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.data.api.out.FileOutputWriter">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

@@ -159,13 +159,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.htm
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-">initialize</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">initialize</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+          JobAPI.Job&nbsp;job)</code>
 <div class="block">Initialize the uploader</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html#undo--">undo</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">undo</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+    java.lang.String&nbsp;jobID)</code>
 <div class="block">If subsequent stages fail, undo will be called to free resources used by
  uploading package.</div>
 </td>
@@ -183,6 +185,13 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.htm
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.scheduler.IUploader">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.scheduler.<a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></h3>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#complete--">complete</a></code></li>
 </ul>
 </li>
 </ul>
@@ -215,17 +224,18 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.htm
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="initialize-edu.iu.dsc.tws.api.config.Config-">
+<a name="initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>initialize</h4>
-<pre>public&nbsp;void&nbsp;initialize(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</pre>
+<pre>public&nbsp;void&nbsp;initialize(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                       JobAPI.Job&nbsp;job)</pre>
 <div class="block">Initialize the uploader</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-">initialize</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">initialize</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -251,18 +261,22 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.htm
 </dl>
 </li>
 </ul>
-<a name="undo--">
+<a name="undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>undo</h4>
-<pre>public&nbsp;boolean&nbsp;undo()</pre>
+<pre>public&nbsp;boolean&nbsp;undo(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+                    java.lang.String&nbsp;jobID)</pre>
 <div class="block">If subsequent stages fail, undo will be called to free resources used by
  uploading package. Ideally, this should try to remove the uploaded package.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo--">undo</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">undo</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>cnfg</code> - </dd>
+<dd><code>jobID</code> - </dd>
 </dl>
 </li>
 </ul>

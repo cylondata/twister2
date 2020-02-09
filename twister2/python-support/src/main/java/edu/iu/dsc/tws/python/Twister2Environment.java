@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-public class Twister2Environment {
+public class Twister2Environment extends EntryPoint {
 
   private TSetEnvironment tSetEnvironment;
 

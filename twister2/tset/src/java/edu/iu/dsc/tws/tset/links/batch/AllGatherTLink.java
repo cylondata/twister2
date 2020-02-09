@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 /**
  * Represent a data set created by an all gather operation
@@ -51,6 +52,7 @@ public class AllGatherTLink<T> extends BatchGatherLink<T> {
   public Edge getEdge() {
     Edge e = new Edge(getId(), OperationNames.ALLGATHER, this.getSchema().getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
   }
 
