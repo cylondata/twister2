@@ -216,18 +216,6 @@ public class TeraSort implements IWorker {
     cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
     cEnv.close();
     LOG.info("Finished Sorting...");
-    waitAndComplete();
-  }
-
-  private void waitAndComplete() {
-
-    long duration = 600;
-    try {
-      LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
-      Thread.sleep(duration * 1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
   }
 
   /**
