@@ -70,17 +70,16 @@ public class HelloTwister2Pytorch implements IWorker {
       spawnArgv[0] = scriptPath;
       int maxprocs = workers;
       int[] errcode = new int[maxprocs];
+
       Intercomm child = MPI.COMM_WORLD.spawn("bash", spawnArgv, maxprocs,
           MPI.INFO_NULL, 0, errcode);
       int[] data = new int[]{1, 2, 3, 4};
       if (workerId == 0) {
         child.send(data, data.length, MPI.INT, 1, 0);
       }
-      executePythonScript(workerID);
+      //executePythonScript(workerID);
     } catch (MPIException exception) {
       System.out.println("Exception " + exception.getMessage());
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
     }
 
   }
@@ -88,7 +87,8 @@ public class HelloTwister2Pytorch implements IWorker {
   public void executePythonScript(int workerId) throws IOException {
     String pythonScriptPath = scriptPath;
     String[] cmd = new String[2];
-    cmd[0] = "/home/vibhatha/venv/ENV3/bin/python3"; // check version of installed python: python -V
+    cmd[0] = "/home/vibhatha/venv/ENV37/bin/python3"; // check version of installed python:
+    // python -V
     cmd[1] = pythonScriptPath;
 
     // create runtime to execute external command
