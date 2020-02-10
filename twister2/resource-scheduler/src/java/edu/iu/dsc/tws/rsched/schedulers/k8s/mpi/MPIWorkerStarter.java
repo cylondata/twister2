@@ -11,8 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.mpi;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +37,6 @@ import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
@@ -143,7 +145,12 @@ public final class MPIWorkerStarter {
     int workerPort = KubernetesContext.workerBasePort(config)
         + workerID * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
 
-    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobID, podIP);
+    String nodeIP = null;
+    try {
+      nodeIP = Files.readAllLines(Paths.get("hostip.txt")).get(0);
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Could not get host-ip from hostip.txt file.", e);
+    }
     JobMasterAPI.NodeInfo nodeInfo = null;
     if (nodeIP == null) {
       LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
