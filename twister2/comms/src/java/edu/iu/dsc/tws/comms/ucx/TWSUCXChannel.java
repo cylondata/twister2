@@ -33,6 +33,7 @@ import org.openucx.jucx.UcxCallback;
 import org.openucx.jucx.ucp.UcpContext;
 import org.openucx.jucx.ucp.UcpEndpoint;
 import org.openucx.jucx.ucp.UcpEndpointParams;
+import org.openucx.jucx.ucp.UcpListener;
 import org.openucx.jucx.ucp.UcpListenerParams;
 import org.openucx.jucx.ucp.UcpParams;
 import org.openucx.jucx.ucp.UcpRequest;
@@ -90,9 +91,11 @@ public class TWSUCXChannel implements TWSChannel {
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
 
     // start listener
-    ucpWorker.newListener(new UcpListenerParams().setSockAddr(
-        new InetSocketAddress("0.0.0.0", iWorkerController.getWorkerInfo().getPort())
+    UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
+        new InetSocketAddress(iWorkerController.getWorkerInfo().getWorkerIP(),
+            iWorkerController.getWorkerInfo().getPort())
     ));
+    this.closeables.add(ucpListener);
     this.closeables.add(context);
     this.closeables.add(ucpWorker);
 
