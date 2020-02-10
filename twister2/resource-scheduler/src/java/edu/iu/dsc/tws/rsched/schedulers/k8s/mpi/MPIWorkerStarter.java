@@ -68,7 +68,6 @@ public final class MPIWorkerStarter {
 
     String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
     jobID = args[1];
-    String encodedNodeInfoList = args[2];
 
     if (jobMasterIP == null) {
       throw new RuntimeException("JobMasterIP address is null");
@@ -77,9 +76,6 @@ public final class MPIWorkerStarter {
     if (jobID == null) {
       throw new RuntimeException("jobID is null");
     }
-
-    // remove the first and the last single quotas from encodedNodeInfoList
-    encodedNodeInfoList = encodedNodeInfoList.replaceAll("'", "");
 
     // load the configuration parameters from configuration directory
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
@@ -151,15 +147,23 @@ public final class MPIWorkerStarter {
     } catch (IOException e) {
       LOG.log(Level.WARNING, "Could not get host-ip from hostip.txt file.", e);
     }
+
     JobMasterAPI.NodeInfo nodeInfo = null;
     if (nodeIP == null) {
       LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
       nodeInfo = NodeInfoUtils.createNodeInfo(podIP, null, null);
+    } else if (KubernetesContext.nodeLocationsFromConfig(config)) {
+      nodeInfo = KubernetesContext.getNodeInfo(config, nodeIP);
     } else {
 
-      nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
-          ? KubernetesContext.getNodeInfo(config, nodeIP)
-          : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+      try {
+        String encodedNodeInfos = Files.readAllLines(Paths.get("node-info-list.txt")).get(0);
+        nodeInfo = K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfos, nodeIP);
+      } catch (IOException e) {
+        LOG.log(Level.WARNING, "Could not get node-info list from file: node-info-list.txt. "
+            + "Will use podIP as nodeIP", e);
+        nodeInfo = NodeInfoUtils.createNodeInfo(podIP, null, null);
+      }
     }
 
     LOG.info(String.format("PodName: %s, NodeInfo for this worker: %s", podName, nodeInfo));

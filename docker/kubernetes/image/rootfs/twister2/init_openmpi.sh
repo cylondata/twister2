@@ -42,6 +42,9 @@ LOGGER_PROPERTIES_FILE=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$LOGGER_PROPERT
 # write host ip to file
 echo ${HOST_IP} >> hostip.txt
 
+# write node-ip list to file
+echo ${ENCODED_NODE_INFO_LIST} >> node-info-list.txt
+
 ###################  check whether this is the first pod #############################
 # if this is the first pod in the first StatefulSet, HOSTNAME ends with "-0-0"
 # in that case, it should run mpimaster
