@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,7 +101,12 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a>&lt;T&gt;</li>
+<li>
+<ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.sets.streaming.StreamingTSetImpl&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -116,12 +121,12 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSinkTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSourceTSet</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSinkTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/WindowComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">WindowComputeTSet</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public abstract class <span class="typeNameLabel">StreamingTSetImpl&lt;T&gt;</span>
-extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;T&gt;
+extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;T&gt;
 implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/StreamingTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.streaming">StreamingTSet</a>&lt;T&gt;</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
@@ -160,9 +165,10 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html#StreamingTSetImpl-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-java.lang.String-int-">StreamingTSetImpl</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html#StreamingTSetImpl-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-java.lang.String-int-edu.iu.dsc.tws.api.tset.schema.Schema-">StreamingTSetImpl</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
                  java.lang.String&nbsp;name,
-                 int&nbsp;parallelism)</code>&nbsp;</td>
+                 int&nbsp;parallelism,
+                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -258,7 +264,20 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <div class="block">Returns a single <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> that create a union of data in both <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
 </td>
 </tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">StreamingTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output.</div>
+</td>
+</tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getInputSchema--">getInputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getOutputSchema--">getOutputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#setOutputSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">setOutputSchema</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSet">
 <!--   -->
@@ -315,7 +334,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="StreamingTSetImpl-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-java.lang.String-int-">
+<a name="StreamingTSetImpl-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-java.lang.String-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -323,7 +342,8 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <h4>StreamingTSetImpl</h4>
 <pre>public&nbsp;StreamingTSetImpl(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
                          java.lang.String&nbsp;name,
-                         int&nbsp;parallelism)</pre>
+                         int&nbsp;parallelism,
+                         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</pre>
 </li>
 </ul>
 </li>
@@ -573,7 +593,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <a name="replicate-int-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>replicate</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/SReplicateTLink.html" title="class in edu.iu.dsc.tws.tset.links.streaming">SReplicateTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt;&nbsp;replicate(int&nbsp;replications)</pre>
@@ -589,6 +609,26 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/streaming/
 <dd><code>replications</code> - Replicas of data (= target TSet parallelism)</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Replicate TLink</dd>
+</dl>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">StreamingTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">TSet</a></code></span></div>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output. This will be used in the packers for efficient
+ SER-DE operations in the following <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="type parameter in StreamingTSetImpl">T</a>&gt;</code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>schema</code> - data type as a <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types"><code>MessageType</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a></dd>
 </dl>
 </li>
 </ul>

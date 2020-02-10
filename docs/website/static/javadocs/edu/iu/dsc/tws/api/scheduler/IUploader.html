@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
+var methods = {"i0":6,"i1":18,"i2":6,"i3":6,"i4":6};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -103,7 +103,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/hdfs/HdfsUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.hdfs">HdfsUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/localfs/LocalFileSystemUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.localfs">LocalFileSystemUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders">NullUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.scp">ScpUploader</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/hdfs/HdfsUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.hdfs">HdfsUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/K8sUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">K8sUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/localfs/LocalFileSystemUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.localfs">LocalFileSystemUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/NullUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders">NullUploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/s3/S3Uploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.s3">S3Uploader</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.scp">ScpUploader</a></dd>
 </dl>
 <hr>
 <br>
@@ -135,7 +135,7 @@ extends java.lang.AutoCloseable</pre>
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t5" class="tableTab"><span><a href="javascript:show(16);">Default Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -148,19 +148,28 @@ extends java.lang.AutoCloseable</pre>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-">initialize</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>
-<div class="block">Initialize the uploader with the incoming context.</div>
+<td class="colFirst"><code>default boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#complete--">complete</a></span>()</code>
+<div class="block">if uploader is threaded,
+ this method will wait for the threaded uploading to finish</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">initialize</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+          JobAPI.Job&nbsp;job)</code>
+<div class="block">Initialize the uploader with the incoming context.</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo--">undo</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">undo</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+    java.lang.String&nbsp;jobID)</code>
 <div class="block">If subsequent stages fail, undo will be called to free resources used by
  uploading package.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>java.net.URI</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#uploadPackage-java.lang.String-">uploadPackage</a></span>(java.lang.String&nbsp;sourceLocation)</code>
 <div class="block">UploadPackage will upload the topology package to the given location.</div>
@@ -181,13 +190,14 @@ extends java.lang.AutoCloseable</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="initialize-edu.iu.dsc.tws.api.config.Config-">
+<a name="initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>initialize</h4>
-<pre>void&nbsp;initialize(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</pre>
+<pre>void&nbsp;initialize(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                JobAPI.Job&nbsp;job)</pre>
 <div class="block">Initialize the uploader with the incoming context.</div>
 </li>
 </ul>
@@ -211,15 +221,35 @@ extends java.lang.AutoCloseable</pre>
 </dl>
 </li>
 </ul>
-<a name="undo--">
+<a name="complete--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>complete</h4>
+<pre>default&nbsp;boolean&nbsp;complete()</pre>
+<div class="block">if uploader is threaded,
+ this method will wait for the threaded uploading to finish</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
+</li>
+</ul>
+<a name="undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>undo</h4>
-<pre>boolean&nbsp;undo()</pre>
+<pre>boolean&nbsp;undo(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+             java.lang.String&nbsp;jobID)</pre>
 <div class="block">If subsequent stages fail, undo will be called to free resources used by
  uploading package. Ideally, this should try to remove the uploaded package.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>cnfg</code> - </dd>
+<dd><code>jobID</code> - </dd>
+</dl>
 </li>
 </ul>
 <a name="close--">
