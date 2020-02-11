@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":6,"i3":10,"i4":6,"i5":6,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10};
+var methods = {"i0":10,"i1":10,"i2":6,"i3":10,"i4":6,"i5":6,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -73,13 +73,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.api.compute.nodes.BaseNode">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -126,7 +126,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/AggregateWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">AggregateWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/FoldWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">FoldWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/ProcessWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">ProcessWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/ReduceWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">ReduceWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowCustomExample.DirectCustomWindowReceiver.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowCustomExample.DirectCustomWindowReceiver</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowEventTimeExample.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowEventTimeExample.DirectWindowedReceivingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowExample.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowExample.DirectWindowedReceivingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowMPI.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowMPI.DirectWindowedReceivingTask</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/AggregateWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">AggregateWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/FoldWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">FoldWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/ProcessWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">ProcessWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/task/window/collectives/ReduceWindow.html" title="class in edu.iu.dsc.tws.task.window.collectives">ReduceWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowCustomExample.DirectCustomWindowReceiver.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowCustomExample.DirectCustomWindowReceiver</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowEventTimeExample.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowEventTimeExample.DirectWindowedReceivingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowExample.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowExample.DirectWindowedReceivingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/task/streaming/windowing/STWindowMPI.DirectWindowedReceivingTask.html" title="class in edu.iu.dsc.tws.examples.task.streaming.windowing">STWindowMPI.DirectWindowedReceivingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/ops/WindowComputeOp.html" title="class in edu.iu.dsc.tws.tset.ops">WindowComputeOp</a></dd>
 </dl>
 <hr>
 <br>
@@ -149,6 +149,73 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <!--   -->
 </a>
 <h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/config/WindowConfig.Duration.html" title="class in edu.iu.dsc.tws.task.window.config">WindowConfig.Duration</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#allowedLateness">allowedLateness</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IWindowMessage.html" title="interface in edu.iu.dsc.tws.task.window.api">IWindowMessage</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#collectiveEvents">collectiveEvents</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#collectiveOutput">collectiveOutput</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected static long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#DEFAULT_MAX_LAG">DEFAULT_MAX_LAG</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected static long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#DEFAULT_WATERMARK_INTERVAL">DEFAULT_WATERMARK_INTERVAL</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IEvictionPolicy.html" title="interface in edu.iu.dsc.tws.task.window.api">IEvictionPolicy</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#evictionPolicy">evictionPolicy</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/ITimestampExtractor.html" title="interface in edu.iu.dsc.tws.task.window.api">ITimestampExtractor</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#iTimestampExtractor">iTimestampExtractor</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IWindow.html" title="interface in edu.iu.dsc.tws.task.window.api">IWindow</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#iWindow">iWindow</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#maxLagMs">maxLagMs</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/event/WatermarkEventGenerator.html" title="class in edu.iu.dsc.tws.task.window.event">WatermarkEventGenerator</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#watermarkEventGenerator">watermarkEventGenerator</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/config/WindowConfig.Duration.html" title="class in edu.iu.dsc.tws.task.window.config">WindowConfig.Duration</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#watermarkInterval">watermarkInterval</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/policy/trigger/IWindowingPolicy.html" title="interface in edu.iu.dsc.tws.task.window.policy.trigger">IWindowingPolicy</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#windowingPolicy">windowingPolicy</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/WindowLifeCycleListener.html" title="interface in edu.iu.dsc.tws.task.window.api">WindowLifeCycleListener</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#windowLifeCycleListener">windowLifeCycleListener</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/manage/WindowManager.html" title="class in edu.iu.dsc.tws.task.window.manage">WindowManager</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#windowManager">windowManager</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/util/WindowParameter.html" title="class in edu.iu.dsc.tws.task.window.util">WindowParameter</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#windowParameter">windowParameter</a></span></code>&nbsp;</td>
+</tr>
+</table>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.edu.iu.dsc.tws.api.compute.nodes.BaseNode">
 <!--   -->
@@ -230,70 +297,74 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#initialize-edu.iu.dsc.tws.api.compute.TaskContext-">initialize</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskContext.html" title="interface in edu.iu.dsc.tws.api.compute">TaskContext</a>&nbsp;context)</code>&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
+<td class="colFirst"><code>protected boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#isTimestamped--">isTimestamped</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/task/window/api/WindowLifeCycleListener.html" title="interface in edu.iu.dsc.tws.task.window.api">WindowLifeCycleListener</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#newWindowLifeCycleListener--">newWindowLifeCycleListener</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#prepare-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.compute.TaskContext-">prepare</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
        <a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskContext.html" title="interface in edu.iu.dsc.tws.api.compute">TaskContext</a>&nbsp;ctx)</code>
 <div class="block">Prepare the task to be executed</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#reset--">reset</a></span>()</code>
 <div class="block">Reset the task</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#setPolicies-edu.iu.dsc.tws.task.window.strategy.IWindowStrategy-">setPolicies</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/task/window/strategy/IWindowStrategy.html" title="interface in edu.iu.dsc.tws.task.window.strategy">IWindowStrategy</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;&nbsp;windowStrategy)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#start--">start</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withAllowedLateness-long-java.util.concurrent.TimeUnit-">withAllowedLateness</a></span>(long&nbsp;lateness,
                    java.util.concurrent.TimeUnit&nbsp;timeUnit)</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withCustomTimestampExtractor-edu.iu.dsc.tws.task.window.api.ITimestampExtractor-">withCustomTimestampExtractor</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/ITimestampExtractor.html" title="interface in edu.iu.dsc.tws.task.window.api">ITimestampExtractor</a>&nbsp;timestampExtractor)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withSlidingCountWindow-long-long-">withSlidingCountWindow</a></span>(long&nbsp;windowCount,
                       long&nbsp;slidingCount)</code>&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withSlidingDurationWindow-long-java.util.concurrent.TimeUnit-long-java.util.concurrent.TimeUnit-">withSlidingDurationWindow</a></span>(long&nbsp;windowDuration,
                          java.util.concurrent.TimeUnit&nbsp;windowTU,
                          long&nbsp;slidingDuration,
                          java.util.concurrent.TimeUnit&nbsp;slidingTU)</code>&nbsp;</td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withTimestampExtractor--">withTimestampExtractor</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withTumblingCountWindow-long-">withTumblingCountWindow</a></span>(long&nbsp;tumblingCount)</code>&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withTumblingDurationWindow-long-java.util.concurrent.TimeUnit-">withTumblingDurationWindow</a></span>(long&nbsp;tumblingDuration,
                           java.util.concurrent.TimeUnit&nbsp;timeUnit)</code>&nbsp;</td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withWatermarkInterval-long-java.util.concurrent.TimeUnit-">withWatermarkInterval</a></span>(long&nbsp;watermarkInt,
                      java.util.concurrent.TimeUnit&nbsp;timeUnit)</code>&nbsp;</td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="class in edu.iu.dsc.tws.task.window.core">BaseWindowedSink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html#withWindow-edu.iu.dsc.tws.task.window.api.IWindow-">withWindow</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IWindow.html" title="interface in edu.iu.dsc.tws.task.window.api">IWindow</a>&nbsp;window)</code>&nbsp;</td>
 </tr>
@@ -313,6 +384,157 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="DEFAULT_WATERMARK_INTERVAL">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DEFAULT_WATERMARK_INTERVAL</h4>
+<pre>protected static final&nbsp;long DEFAULT_WATERMARK_INTERVAL</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.task.window.core.BaseWindowedSink.DEFAULT_WATERMARK_INTERVAL">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DEFAULT_MAX_LAG">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DEFAULT_MAX_LAG</h4>
+<pre>protected static final&nbsp;long DEFAULT_MAX_LAG</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.task.window.core.BaseWindowedSink.DEFAULT_MAX_LAG">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="maxLagMs">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxLagMs</h4>
+<pre>protected&nbsp;long maxLagMs</pre>
+</li>
+</ul>
+<a name="watermarkInterval">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>watermarkInterval</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/config/WindowConfig.Duration.html" title="class in edu.iu.dsc.tws.task.window.config">WindowConfig.Duration</a> watermarkInterval</pre>
+</li>
+</ul>
+<a name="allowedLateness">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>allowedLateness</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/config/WindowConfig.Duration.html" title="class in edu.iu.dsc.tws.task.window.config">WindowConfig.Duration</a> allowedLateness</pre>
+</li>
+</ul>
+<a name="windowManager">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>windowManager</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/manage/WindowManager.html" title="class in edu.iu.dsc.tws.task.window.manage">WindowManager</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; windowManager</pre>
+</li>
+</ul>
+<a name="windowingPolicy">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>windowingPolicy</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/policy/trigger/IWindowingPolicy.html" title="interface in edu.iu.dsc.tws.task.window.policy.trigger">IWindowingPolicy</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; windowingPolicy</pre>
+</li>
+</ul>
+<a name="windowParameter">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>windowParameter</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/util/WindowParameter.html" title="class in edu.iu.dsc.tws.task.window.util">WindowParameter</a> windowParameter</pre>
+</li>
+</ul>
+<a name="windowLifeCycleListener">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>windowLifeCycleListener</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/WindowLifeCycleListener.html" title="interface in edu.iu.dsc.tws.task.window.api">WindowLifeCycleListener</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; windowLifeCycleListener</pre>
+</li>
+</ul>
+<a name="evictionPolicy">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>evictionPolicy</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IEvictionPolicy.html" title="interface in edu.iu.dsc.tws.task.window.api">IEvictionPolicy</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; evictionPolicy</pre>
+</li>
+</ul>
+<a name="iWindow">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>iWindow</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IWindow.html" title="interface in edu.iu.dsc.tws.task.window.api">IWindow</a> iWindow</pre>
+</li>
+</ul>
+<a name="collectiveOutput">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>collectiveOutput</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a> collectiveOutput</pre>
+</li>
+</ul>
+<a name="collectiveEvents">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>collectiveEvents</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/IWindowMessage.html" title="interface in edu.iu.dsc.tws.task.window.api">IWindowMessage</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; collectiveEvents</pre>
+</li>
+</ul>
+<a name="iTimestampExtractor">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>iTimestampExtractor</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/api/ITimestampExtractor.html" title="interface in edu.iu.dsc.tws.task.window.api">ITimestampExtractor</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; iTimestampExtractor</pre>
+</li>
+</ul>
+<a name="watermarkEventGenerator">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>watermarkEventGenerator</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/window/event/WatermarkEventGenerator.html" title="class in edu.iu.dsc.tws.task.window.event">WatermarkEventGenerator</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/task/window/core/BaseWindowedSink.html" title="type parameter in BaseWindowedSink">T</a>&gt; watermarkEventGenerator</pre>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -569,7 +791,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <a name="reset--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>reset</h4>
 <pre>public&nbsp;void&nbsp;reset()</pre>
@@ -581,6 +803,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/nodes/BaseNode.html#reset--">reset</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/nodes/BaseNode.html" title="class in edu.iu.dsc.tws.api.compute.nodes">BaseNode</a></code></dd>
 </dl>
+</li>
+</ul>
+<a name="isTimestamped--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isTimestamped</h4>
+<pre>protected&nbsp;boolean&nbsp;isTimestamped()</pre>
 </li>
 </ul>
 </li>
@@ -636,13 +867,13 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/task/window/IWindowCompu
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.api.compute.nodes.BaseNode">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

@@ -27,10 +27,15 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIContext;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
+
+import mpi.Info;
+import mpi.MPI;
+import mpi.MPIException;
 
 import py4j.DefaultGatewayServerListener;
 import py4j.GatewayServer;
@@ -40,30 +45,70 @@ public class PythonWorker implements BatchTSetIWorker {
 
   private static final Logger LOG = Logger.getLogger(PythonWorker.class.getName());
 
+  private static final String PYTHON_PORT_OFFSET = "twister2.python.port";
+  private static final String MPI_AWARE_PYTHON = "MPI_AWARE_PYTHON";
+
   private static void startPythonProcess(String pythonPath, int port,
-                                         boolean bootstrap, String[] args) throws IOException {
+                                         boolean bootstrap, String[] args,
+                                         boolean useMPIIfAvailable,
+                                         int worldSize,
+                                         Config config) throws IOException, MPIException {
     LOG.info("Starting python process : " + pythonPath);
-    String[] newArgs = new String[args.length + 2];
-    newArgs[0] = "python3";
-    newArgs[1] = pythonPath;
-    System.arraycopy(args, 0, newArgs, 2, args.length);
-    ProcessBuilder python3 = new ProcessBuilder().command(newArgs);
-    python3.environment().put("T2_PORT", Integer.toString(port));
-    python3.environment().put("T2_BOOTSTRAP", Boolean.toString(bootstrap));
 
-    python3.redirectErrorStream(true);
-    Process exec = python3.start();
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      LOG.info(line);
+    boolean useMPI = false;
+    try {
+      useMPI = useMPIIfAvailable && MPI.isInitialized();
+    } catch (MPIException e) {
+      LOG.warning("Error occurred when trying to check mpi status. "
+          + "Python process will start without MPI support.");
     }
-    LOG.info("Python process ended.");
+
+    if (useMPI) {
+      LOG.info("Starting python process with MPI support...");
+
+      StringBuilder envBuilder = new StringBuilder();
+      envBuilder.append("T2_PORT=")
+          .append(port)
+          .append(System.lineSeparator())
+          .append("T2_BOOTSTRAP=")
+          .append(bootstrap);
+
+      Info info = new Info();
+      info.set("env", envBuilder.toString());
+      info.set("map_by", config.getStringValue(MPIContext.MPI_MAP_BY));
+
+      String[] newArgs = new String[args.length + 1];
+      newArgs[0] = pythonPath;
+      System.arraycopy(args, 0, newArgs, 1, args.length);
+
+      int[] errorCodes = new int[worldSize];
+      MPI.COMM_WORLD.spawn("python3", newArgs, worldSize, info, 0,
+          errorCodes);
+    } else {
+      String[] newArgs = new String[args.length + 2];
+      newArgs[0] = "python3";
+      newArgs[1] = pythonPath;
+      System.arraycopy(args, 0, newArgs, 2, args.length);
+
+      ProcessBuilder python3 = new ProcessBuilder().command(newArgs);
+      python3.environment().put("T2_PORT", Integer.toString(port));
+      python3.environment().put("T2_BOOTSTRAP", Boolean.toString(bootstrap));
+
+      python3.redirectErrorStream(true);
+      Process exec = python3.start();
+
+      BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        LOG.info(line);
+      }
+    }
   }
 
-  private static GatewayServer initJavaServer(int port, Object entryPoint,
-                                              String pythonPath, boolean bootstrap, String[] args) {
+  private static GatewayServer initJavaServer(int port, EntryPoint entryPoint,
+                                              String pythonPath, boolean bootstrap,
+                                              String[] args, boolean useMPIIfAvailable,
+                                              int worldSize, Config config) {
     GatewayServer py4jServer = new GatewayServer(entryPoint, port);
     py4jServer.addListener(new DefaultGatewayServerListener() {
 
@@ -73,14 +118,26 @@ public class PythonWorker implements BatchTSetIWorker {
       }
 
       @Override
+      public void connectionStopped(Py4JServerConnection gatewayConnection) {
+        // this will release all the threads who are waiting on waitForCompletion()
+        entryPoint.close();
+      }
+
+      @Override
       public void serverStarted() {
         LOG.info("Started java server on " + port);
         new Thread(() -> {
           try {
-            startPythonProcess(pythonPath, port, bootstrap, args);
+            startPythonProcess(pythonPath, port, bootstrap, args,
+                useMPIIfAvailable, worldSize, config);
+            entryPoint.waitForCompletion();
             py4jServer.shutdown();
           } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error in starting python process");
+          } catch (MPIException e) {
+            LOG.log(Level.SEVERE, "Python process failed to start with MPI Support", e);
+          } catch (InterruptedException e) {
+            LOG.log(Level.SEVERE, "Failed while waiting for the completion of python process", e);
           }
         }, "python-process" + (bootstrap ? "-bootstrap" : "")).start();
       }
@@ -89,13 +146,21 @@ public class PythonWorker implements BatchTSetIWorker {
   }
 
   public void execute(BatchTSetEnvironment env) {
-    int port = 5000 + env.getWorkerID();
+    int port = env.getConfig().getIntegerValue(PYTHON_PORT_OFFSET) + env.getWorkerID();
     Twister2Environment twister2Environment = new Twister2Environment(env);
     String tw2Home = env.getConfig().getStringValue("twister2.directory.home");
     String pythonFileName = env.getConfig().getStringValue("python_file");
     String[] args = (String[]) env.getConfig().get("args");
     String mainPy = new File(tw2Home, pythonFileName).getAbsolutePath();
-    GatewayServer gatewayServer = initJavaServer(port, twister2Environment, mainPy, false, args);
+
+    boolean mpiAwarePython = env.getConfig().getBooleanValue(MPI_AWARE_PYTHON, false);
+
+    if (mpiAwarePython) {
+      LOG.info("Python has requested MPI awareness");
+    }
+
+    GatewayServer gatewayServer = initJavaServer(port, twister2Environment, mainPy,
+        false, args, mpiAwarePython, env.getNoOfWorkers(), env.getConfig());
     gatewayServer.start();
     final Semaphore wait = new Semaphore(0);
     gatewayServer.addListener(new DefaultGatewayServerListener() {
@@ -139,25 +204,22 @@ public class PythonWorker implements BatchTSetIWorker {
       }
     }
 
+    Config config = ResourceAllocator.loadConfig(Collections.emptyMap());
+
     final BootstrapPoint bootstrapPoint = new BootstrapPoint();
     String mainPy = new File(pythonFile).getAbsolutePath();
-    final GatewayServer gatewayServer = initJavaServer(4500, bootstrapPoint, mainPy, true, args);
-    final Semaphore semaphore = new Semaphore(0);
-    bootstrapPoint.setBootstrapListener(bootstrapPoint1 -> semaphore.release());
+    final GatewayServer gatewayServer = initJavaServer(
+        config.getIntegerValue(PYTHON_PORT_OFFSET) - 1, bootstrapPoint, mainPy,
+        true, args, false, 1, config);
     LOG.info("Exchanging configurations...");
     gatewayServer.start();
 
-    // this is to start Twister2 job in the main thread. Starting this inside callback, throws
-    // twister2 errors inside python process, since callback is called by python
-    semaphore.acquire();
+    bootstrapPoint.waitForCompletion();
 
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(bootstrapPoint.getConfigs());
     jobConfig.put("python_file", new File(pythonFile).getName());
     jobConfig.put("args", args);
-
-
-    Config config = ResourceAllocator.loadConfig(Collections.emptyMap());
 
 
     Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
