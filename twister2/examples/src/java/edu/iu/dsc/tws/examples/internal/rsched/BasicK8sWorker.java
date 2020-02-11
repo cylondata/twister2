@@ -103,7 +103,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-//    waitAndComplete();
+//    waitAndComplete(60);
     testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
@@ -149,9 +149,8 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
         .collect(Collectors.toList());
   }
 
-  private void waitAndComplete() {
+  public static void waitAndComplete(int duration) {
 
-    long duration = 60;
     try {
       LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
       Thread.sleep(duration * 1000);

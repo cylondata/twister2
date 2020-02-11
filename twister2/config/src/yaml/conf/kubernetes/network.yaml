@@ -6,7 +6,8 @@
 # the job is started as OpenMPI job
 # Otherwise, it is a regular twister2 job. OpenMPI is not started in this case.
 # twister2.network.channel.class: "edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"
+# twister2.network.channel.class: "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.ucx.TWSUCXChannel"
 
 # A Secret object must be present in Kubernetes master
 # Its name must be specified here
