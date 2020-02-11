@@ -1,7 +1,7 @@
 import twister2.tset.TLink as tl
 from twister2.tset.fn.PartitionFunc import PartitionFunc
 from twister2.utils import function_wrapper
-from twister2.data import DataObject
+from twister2.data.DataObject import DataObject
 
 
 class TSet:
@@ -63,7 +63,7 @@ class TSet:
 
     def get_data(self):
         if self.__cached:
-          return DataObject(self.getDataObject())
+          return DataObject(self.__java_ref.getDataObject(), self.__env)
         return None
 
     # TLink functions
