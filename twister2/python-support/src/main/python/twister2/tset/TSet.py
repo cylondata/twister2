@@ -1,12 +1,14 @@
 import twister2.tset.TLink as tl
 from twister2.tset.fn.PartitionFunc import PartitionFunc
 from twister2.utils import function_wrapper
+from twister2.data import DataObject
 
 
 class TSet:
-    def __init__(self, java_ref, env):
+    def __init__(self, java_ref, env, cached=False):
         self.__java_ref = java_ref
         self.__env = env
+        self.__cached = cached
 
     @property
     def parallelism(self):
@@ -51,13 +53,18 @@ class TSet:
         return self
 
     def cache(self):  # todo should return a cached tset instead
-        return TSet(self.__java_ref.cache(), self.__env)
+        return TSet(self.__java_ref.cache(), self.__env, cached=True)
 
     def lazy_cache(self):
         return TSet(self.__java_ref.lazyCache(), self.__env)
 
     def persist(self):
         return TSet(self.__java_ref.persist(), self.__env)
+
+    def get_data(self):
+        if self.__cached:
+          return DataObject(self.getDataObject())
+        return None
 
     # TLink functions
 

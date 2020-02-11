@@ -165,4 +165,9 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
 
     return results;
   }
+
+  @Override
+  public DataObject<T> getDataObject() {
+    return getTSetEnv().getData(getId());
+  }
 }
