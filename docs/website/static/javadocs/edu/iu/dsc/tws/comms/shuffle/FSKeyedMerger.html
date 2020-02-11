@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -115,8 +115,8 @@ var activeTableTab = "activeTableTab";
 extends java.lang.Object
 implements <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html" title="interface in edu.iu.dsc.tws.comms.shuffle">Shuffle</a></pre>
 <div class="block">Un sorted merger
-
- This merger can't output data in the expected format Iterator&lt;Tuple&lt;Key,Iterator&gt;&gt;</div>
+ <p>
+ This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>></div>
 </li>
 </ul>
 </div>
@@ -167,23 +167,29 @@ implements <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html"
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/FSKeyedMerger.html#add-edu.iu.dsc.tws.api.comms.structs.Tuple-">add</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&nbsp;tuple)</code>
+<div class="block">Add tuple with byte value and key</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/FSKeyedMerger.html#clean--">clean</a></span>()</code>
 <div class="block">Cleanup the directories</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>java.util.Iterator&lt;java.lang.Object&gt;</code></td>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/ResettableIterator.html" title="interface in edu.iu.dsc.tws.comms.shuffle">ResettableIterator</a>&lt;java.lang.Object&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/FSKeyedMerger.html#readIterator--">readIterator</a></span>()</code>
 <div class="block">This method gives the values</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/FSKeyedMerger.html#run--">run</a></span>()</code>
 <div class="block">This method saves the data to file system</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/FSKeyedMerger.html#switchToReading--">switchToReading</a></span>()</code>
 <div class="block">Switch to reading, we cannot add after this</div>
@@ -202,7 +208,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html"
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.comms.shuffle.<a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html" title="interface in edu.iu.dsc.tws.comms.shuffle">Shuffle</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html#add-byte:A-int-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html#add-edu.iu.dsc.tws.api.comms.structs.Tuple-">add</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html#add-byte:A-int-">add</a></code></li>
 </ul>
 </li>
 </ul>
@@ -240,6 +246,23 @@ implements <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html"
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="add-edu.iu.dsc.tws.api.comms.structs.Tuple-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>add</h4>
+<pre>public&nbsp;void&nbsp;add(<a href="../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&nbsp;tuple)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html#add-edu.iu.dsc.tws.api.comms.structs.Tuple-">Shuffle</a></code></span></div>
+<div class="block">Add tuple with byte value and key</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html#add-edu.iu.dsc.tws.api.comms.structs.Tuple-">add</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html" title="interface in edu.iu.dsc.tws.comms.shuffle">Shuffle</a></code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>tuple</code> - tuple</dd>
+</dl>
+</li>
+</ul>
 <a name="add-java.lang.Object-byte:A-int-">
 <!--   -->
 </a>
@@ -295,7 +318,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/Shuffle.html"
 <ul class="blockList">
 <li class="blockList">
 <h4>readIterator</h4>
-<pre>public&nbsp;java.util.Iterator&lt;java.lang.Object&gt;&nbsp;readIterator()</pre>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/comms/shuffle/ResettableIterator.html" title="interface in edu.iu.dsc.tws.comms.shuffle">ResettableIterator</a>&lt;java.lang.Object&gt;&nbsp;readIterator()</pre>
 <div class="block">This method gives the values</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>

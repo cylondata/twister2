@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,10 +101,15 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a>&lt;T&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.sets.batch.SourceTSet&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -205,6 +210,12 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetIm
 <div class="block">Sets the name</div>
 </td>
 </tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="type parameter in SourceTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output.</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl">
@@ -212,6 +223,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetIm
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a></h3>
 <code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#allGather--">allGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#allReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">allReduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#cache--">cache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#direct--">direct</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#gather--">gather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#getTSetEnv--">getTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#lazyCache--">lazyCache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#lazyPersist--">lazyPersist</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#persist--">persist</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">reduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#replicate-int-">replicate</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#union-java.util.Collection-">union</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getInputSchema--">getInputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getOutputSchema--">getOutputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#setOutputSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">setOutputSchema</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSet">
@@ -327,24 +345,46 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetIm
 </dl>
 </li>
 </ul>
-<a name="getINode--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getINode</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/compute/nodes/INode.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">INode</a>&nbsp;getINode()</pre>
-</li>
-</ul>
 <a name="setName-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setName</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="type parameter in SourceTSet">T</a>&gt;&nbsp;setName(java.lang.String&nbsp;name)</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#setName-java.lang.String-">TSet</a></code></span></div>
 <div class="block">Sets the name</div>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="type parameter in SourceTSet">T</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">TSet</a></code></span></div>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output. This will be used in the packers for efficient
+ SER-DE operations in the following <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="type parameter in SourceTSet">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="type parameter in SourceTSet">T</a>&gt;</code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>schema</code> - data type as a <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types"><code>MessageType</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a></dd>
+</dl>
+</li>
+</ul>
+<a name="getINode--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getINode</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/compute/nodes/INode.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">INode</a>&nbsp;getINode()</pre>
 </li>
 </ul>
 </li>

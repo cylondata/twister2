@@ -16,5 +16,17 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 public interface Schema {
 
   MessageType getDataType();
+
+  default int getDataSize() {
+    return -1;
+  }
+
+  default int getTotalSize() {
+    return this.getDataSize();
+  }
+
+  default boolean isLengthsSpecified() {
+    return this.getDataSize() != -1;
+  }
 }
 

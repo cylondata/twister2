@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":9};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":9,"i18":10,"i19":9,"i20":10,"i21":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -146,31 +146,36 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createApiInstances--">createApiInstances</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolume-V1PersistentVolume-">createPersistentVolume</a></span>(V1PersistentVolume&nbsp;pv)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolumeClaim-V1PersistentVolumeClaim-">createPersistentVolumeClaim</a></span>(V1PersistentVolumeClaim&nbsp;pvc)</code>
 <div class="block">create the given PersistentVolumeClaim on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createService-V1Service-">createService</a></span>(V1Service&nbsp;service)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createStatefulSet-V1StatefulSet-">createStatefulSet</a></span>(V1StatefulSet&nbsp;statefulSet)</code>
 <div class="block">create the given StatefulSet on Kubernetes master</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteJobPackage-java.util.List-java.lang.String-">deleteJobPackage</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;uploaderPods,
+                java.lang.String&nbsp;jobPackageName)</code>
+<div class="block">delete job package file from uploader web server pods
+ currently it does not delete job package file from multiple uploader pods
+ so, It is not in use</div>
 </td>
 </tr>
 <tr id="i5" class="rowColor">
@@ -207,10 +212,10 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i11" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
+<td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existServices-java.util.List-">existServices</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;serviceNames)</code>
-<div class="block">return true if one of the services exist in Kubernetes master,
- otherwise return false</div>
+<div class="block">return existing service name if one of the services exist in Kubernetes master,
+ otherwise return null</div>
 </td>
 </tr>
 <tr id="i12" class="altColor">
@@ -247,17 +252,26 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i17" class="rowColor">
+<td class="colFirst"><code>static java.util.List&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getUploaderWebServerPods-java.lang.String-java.lang.String-">getUploaderWebServerPods</a></span>(java.lang.String&nbsp;ns,
+                        java.lang.String&nbsp;uploaderLabel)</code>&nbsp;</td>
+</tr>
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#init-java.lang.String-">init</a></span>(java.lang.String&nbsp;nspace)</code>&nbsp;</td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#initApiInstances--">initApiInstances</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#patchStatefulSet-java.lang.String-int-">patchStatefulSet</a></span>(java.lang.String&nbsp;ssName,
                 int&nbsp;replicas)</code>
 <div class="block">scale up or down the given StatefulSet</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#runProcess-java.lang.String:A-">runProcess</a></span>(java.lang.String[]&nbsp;command)</code>
 <div class="block">sending a command to shell</div>
@@ -311,13 +325,13 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;void&nbsp;init(java.lang.String&nbsp;nspace)</pre>
 </li>
 </ul>
-<a name="createApiInstances--">
+<a name="initApiInstances--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>createApiInstances</h4>
-<pre>public&nbsp;void&nbsp;createApiInstances()</pre>
+<h4>initApiInstances</h4>
+<pre>public static&nbsp;void&nbsp;initApiInstances()</pre>
 </li>
 </ul>
 <a name="existStatefulSets-java.util.List-">
@@ -390,9 +404,9 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>existServices</h4>
-<pre>public&nbsp;boolean&nbsp;existServices(java.util.List&lt;java.lang.String&gt;&nbsp;serviceNames)</pre>
-<div class="block">return true if one of the services exist in Kubernetes master,
- otherwise return false</div>
+<pre>public&nbsp;java.lang.String&nbsp;existServices(java.util.List&lt;java.lang.String&gt;&nbsp;serviceNames)</pre>
+<div class="block">return existing service name if one of the services exist in Kubernetes master,
+ otherwise return null</div>
 </li>
 </ul>
 <a name="deleteService-java.lang.String-">
@@ -434,11 +448,6 @@ extends java.lang.Object</pre>
 <h4>existPersistentVolumeClaim</h4>
 <pre>public&nbsp;boolean&nbsp;existPersistentVolumeClaim(java.lang.String&nbsp;pvcName)</pre>
 <div class="block">check whether the given PersistentVolumeClaim exist on Kubernetes master</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>pvcName</code> - </dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
 </li>
 </ul>
 <a name="createPersistentVolumeClaim-V1PersistentVolumeClaim-">
@@ -502,7 +511,7 @@ extends java.lang.Object</pre>
 <a name="getNodeInfo-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getNodeInfo</h4>
 <pre>public&nbsp;java.util.ArrayList&lt;JobMasterAPI.NodeInfo&gt;&nbsp;getNodeInfo(java.lang.String&nbsp;rackLabelKey,
@@ -512,6 +521,29 @@ extends java.lang.Object</pre>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the NodeInfoUtils object list. If it can not get the list from K8s master, return null.</dd>
 </dl>
+</li>
+</ul>
+<a name="getUploaderWebServerPods-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getUploaderWebServerPods</h4>
+<pre>public static&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;getUploaderWebServerPods(java.lang.String&nbsp;ns,
+                                                                        java.lang.String&nbsp;uploaderLabel)</pre>
+</li>
+</ul>
+<a name="deleteJobPackage-java.util.List-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>deleteJobPackage</h4>
+<pre>public&nbsp;boolean&nbsp;deleteJobPackage(java.util.List&lt;java.lang.String&gt;&nbsp;uploaderPods,
+                                java.lang.String&nbsp;jobPackageName)</pre>
+<div class="block">delete job package file from uploader web server pods
+ currently it does not delete job package file from multiple uploader pods
+ so, It is not in use</div>
 </li>
 </ul>
 </li>

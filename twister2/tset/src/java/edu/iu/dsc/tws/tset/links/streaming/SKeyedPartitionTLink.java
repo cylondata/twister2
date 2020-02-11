@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
@@ -35,6 +36,7 @@ public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>>
     e.setKeyed(true);
     e.setKeyType(this.getSchema().getKeyType());
     e.setPartitioner(partitionFunction);
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

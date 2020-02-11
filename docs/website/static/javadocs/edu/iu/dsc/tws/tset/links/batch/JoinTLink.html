@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLink</a>&lt;T1,T0&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a>&lt;T1,T0&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a>&lt;java.util.Iterator&lt;T&gt;,T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -111,6 +114,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.links.batch.JoinTLink&lt;K,VL,VR&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -155,19 +160,21 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-">JoinTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;env,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.schema.JoinSchema-">JoinTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;env,
          <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;type,
          java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;kComparator,
          <a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;partitioner,
          <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;leftT,
-         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT)</code>&nbsp;</td>
+         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT,
+         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a>&nbsp;joinSchema)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-">JoinTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;env,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.schema.JoinSchema-">JoinTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;env,
          <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;type,
          java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;kComparator,
          <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;leftT,
-         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT)</code>&nbsp;</td>
+         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT,
+         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a>&nbsp;joinSchema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -188,7 +195,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#build-edu.iu.dsc.tws.task.graph.GraphBuilder-java.util.Collection-">build</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/task/graph/GraphBuilder.html" title="class in edu.iu.dsc.tws.task.graph">GraphBuilder</a>&nbsp;graphBuilder,
      java.util.Collection&lt;? extends <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title="interface in edu.iu.dsc.tws.api.tset">TBase</a>&gt;&nbsp;buildSequence)</code>
-<div class="block">Builds the underlying node or edge</div>
+<div class="block">Uses a different build pattern than the usual <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -196,10 +203,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#getEdge--">getEdge</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#getSchema--">getSchema</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">JoinTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#setName-java.lang.String-">setName</a></span>(java.lang.String&nbsp;name)</code>
 <div class="block">Name of the TSet and return the same tlink</div>
 </td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">JoinTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#useDisk--">useDisk</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">JoinTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html#useHashAlgorithm--">useHashAlgorithm</a></span>()</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -228,7 +247,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -265,7 +284,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-">
+<a name="JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.schema.JoinSchema-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -275,10 +294,11 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
                  <a href="../../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;type,
                  java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;kComparator,
                  <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;leftT,
-                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT)</pre>
+                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT,
+                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a>&nbsp;joinSchema)</pre>
 </li>
 </ul>
-<a name="JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-">
+<a name="JoinTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.sets.TupleTSet-edu.iu.dsc.tws.api.tset.schema.JoinSchema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -289,7 +309,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
                  java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;kComparator,
                  <a href="../../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>&gt;&nbsp;partitioner,
                  <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;leftT,
-                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT)</pre>
+                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&nbsp;rightT,
+                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a>&nbsp;joinSchema)</pre>
 </li>
 </ul>
 </li>
@@ -326,21 +347,51 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;getEdge()</pre>
 </li>
 </ul>
+<a name="getSchema--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getSchema</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/JoinSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">JoinSchema</a>&nbsp;getSchema()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html#getSchema--">getSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/JoinedTuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">JoinedTuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;&gt;,<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/JoinedTuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">JoinedTuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;&gt;</code></dd>
+</dl>
+</li>
+</ul>
 <a name="build-edu.iu.dsc.tws.task.graph.GraphBuilder-java.util.Collection-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>build</h4>
 <pre>public&nbsp;void&nbsp;build(<a href="../../../../../../../edu/iu/dsc/tws/task/graph/GraphBuilder.html" title="class in edu.iu.dsc.tws.task.graph">GraphBuilder</a>&nbsp;graphBuilder,
                   java.util.Collection&lt;? extends <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title="interface in edu.iu.dsc.tws.api.tset">TBase</a>&gt;&nbsp;buildSequence)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/Buildable.html#build-edu.iu.dsc.tws.task.graph.GraphBuilder-java.util.Collection-">Buildable</a></code></span></div>
-<div class="block">Builds the underlying node or edge</div>
+<div class="block">Uses a different build pattern than the usual <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>graphBuilder</code> - Dataflow graph builder</dd>
-<dd><code>buildSequence</code> - partial build sequence. i.e. the set of nodes and edges that have been</dd>
+<dd><code>graphBuilder</code> - graph builder</dd>
+<dd><code>buildSequence</code> - build seq</dd>
 </dl>
+</li>
+</ul>
+<a name="useHashAlgorithm--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>useHashAlgorithm</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">JoinTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;&nbsp;useHashAlgorithm()</pre>
+</li>
+</ul>
+<a name="useDisk--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>useDisk</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">JoinTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VL</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/JoinTLink.html" title="type parameter in JoinTLink">VR</a>&gt;&nbsp;useDisk()</pre>
 </li>
 </ul>
 </li>

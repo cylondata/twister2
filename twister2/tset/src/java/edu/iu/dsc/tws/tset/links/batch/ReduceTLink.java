@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class ReduceTLink<T> extends BatchSingleLink<T> {
   private ReduceFunc<T> reduceFn;
@@ -48,7 +49,9 @@ public class ReduceTLink<T> extends BatchSingleLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.REDUCE, this.getSchema().getDataType(), reduceFn);
+    Edge e =  new Edge(getId(), OperationNames.REDUCE, this.getSchema().getDataType(), reduceFn);
+    TLinkUtils.generateCommsSchema(getSchema(), e);
+    return e;
   }
 
 }

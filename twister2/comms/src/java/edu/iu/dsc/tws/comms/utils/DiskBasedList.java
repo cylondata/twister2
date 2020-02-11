@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
@@ -29,9 +28,12 @@ import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
 public class DiskBasedList implements List {
 
-  private BufferedCollectionPartition<byte[]> collectionPartition;
+  private BufferedCollectionPartition collectionPartition;
   private MessageType dataType;
   private int size = 0;
+
+  private DataPartitionConsumer currentConsumer;
+  private int consumingIndex = -1;
 
   public DiskBasedList(Config conf,
                        MessageType dataType) {
@@ -39,7 +41,7 @@ public class DiskBasedList implements List {
     long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(conf);
 
     this.collectionPartition = new DiskBackedCollectionPartition<>(maxRecordsInMemory,
-        MessageTypes.BYTE_ARRAY, maxBytesInMemory, conf, UUID.randomUUID().toString());
+        dataType, maxBytesInMemory, conf, UUID.randomUUID().toString());
     this.dataType = dataType;
   }
 
@@ -64,11 +66,7 @@ public class DiskBasedList implements List {
 
   @Override
   public boolean add(Object t) {
-    if (t instanceof byte[]) {
-      this.collectionPartition.add((byte[]) t);
-    } else {
-      this.collectionPartition.add(this.dataType.getDataPacker().packToByteArray(t));
-    }
+    this.collectionPartition.add(t);
     this.size++;
     return true;
   }
@@ -107,15 +105,7 @@ public class DiskBasedList implements List {
 
   @Override
   public Object get(int i) {
-    DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
-    int index = 0;
-    while (index++ < i && consumer.hasNext()) {
-      consumer.next();
-    }
-    if (consumer.hasNext()) {
-      return dataType.getDataPacker().unpackFromByteArray(consumer.next());
-    }
-    return null;
+    return this.collectionPartition.get(i);
   }
 
   @Override
