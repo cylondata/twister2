@@ -1,4 +1,4 @@
-FROM twister2/twister2-k8s-base:latest
+FROM twister2/twister2-k8s-base:0.6.0-SNAPSHOT
 
 # Disable prompts from apt.
 ENV DEBIAN_FRONTEND noninteractive
