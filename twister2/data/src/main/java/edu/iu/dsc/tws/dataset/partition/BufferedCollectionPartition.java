@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -38,6 +39,8 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 public abstract class BufferedCollectionPartition<T> extends CollectionPartition<T>
     implements Closeable {
 
+  private static final Logger LOG = Logger.getLogger(BufferedCollectionPartition.class.getName());
+
   private static final long DEFAULT_MAX_BUFFERED_BYTES = 10000000;
   private static final MessageType DEFAULT_DATA_TYPE = MessageTypes.OBJECT;
 
@@ -49,7 +52,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   private List<Path> filesList = new ArrayList<>();
   private long fileCounter;
 
-  private Queue<byte[]> buffers = new LinkedList<>();
+  private List<byte[]> buffers = new ArrayList<>();
   private long bufferedBytes = 0;
   private long maxBufferedBytes;
 
@@ -165,6 +168,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
+      LOG.info("Writing to disk...");
       // write to buffer
       byte[] bytes = dataType.getDataPacker().packToByteArray(val);
       this.buffers.add(bytes);
@@ -237,6 +241,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    */
   public void dispose() {
     this.buffers = null;
+    this.dataList = null;
   }
 
   @Override
@@ -251,6 +256,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
       }
     }
 
+    super.clear();
     this.filesList.clear();
     this.buffers.clear();
     this.bufferedBytes = 0;
@@ -261,8 +267,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     Path filePath = new Path(this.rootPath, (this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
       outputStream.writeLong(this.buffers.size());
-      while (!this.buffers.isEmpty()) {
-        byte[] next = this.buffers.poll();
+      Iterator<byte[]> bufferIt = this.buffers.iterator();
+      while (bufferIt.hasNext()) {
+        byte[] next = bufferIt.next();
         outputStream.writeInt(next.length);
         outputStream.write(next);
       }
@@ -270,7 +277,54 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
       throw new Twister2RuntimeException("Couldn't flush partitions to the disk", e);
     }
     this.filesList.add(filePath);
+    this.buffers.clear();
     this.bufferedBytes = 0;
+  }
+
+  public boolean hasIndexInMemory(int index) {
+    return index < this.dataList.size();
+  }
+
+  private List<byte[]> currentFileCache = new ArrayList<>();
+  private int cachedFileIndex = -1;
+
+  public T get(int index) {
+    //read from memory
+    if (index < this.dataList.size()) {
+      return this.dataList.get(index);
+    } else {
+      //iterate over files
+      long currentSize = this.dataList.size();
+      for (int fileIndex = 0; fileIndex < this.filesList.size(); fileIndex++) {
+        Path nextFile = this.filesList.get(fileIndex);
+        try {
+          DataInputStream reader = new DataInputStream(fileSystem.open(nextFile));
+          long noOfFrames = reader.readLong();
+          if (index < currentSize + noOfFrames) {
+            if (cachedFileIndex != fileIndex) {
+              cachedFileIndex = fileIndex;
+              this.currentFileCache = new ArrayList<>();
+              //read from this file
+              for (long i = 0; i < noOfFrames; i++) {
+                int size = reader.readInt();
+                byte[] data = new byte[size];
+                reader.read(data);
+                this.currentFileCache.add(data);
+              }
+            }
+            //not we have this file in cache
+            return (T) dataType.getDataPacker().unpackFromByteArray(
+                this.currentFileCache.get((int) (index - this.dataList.size() - currentSize)));
+          } else {
+            currentSize += noOfFrames;
+          }
+        } catch (IOException ioex) {
+          throw new Twister2RuntimeException("Failed to read from file : " + nextFile);
+        }
+      }
+      return (T) dataType.getDataPacker().unpackFromByteArray(
+          this.buffers.get((int) (index - currentSize)));
+    }
   }
 
   @Override

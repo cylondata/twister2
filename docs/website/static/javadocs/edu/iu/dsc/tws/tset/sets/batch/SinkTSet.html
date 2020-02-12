@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,7 +101,12 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;T&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a>&lt;T&gt;</li>
+<li>
+<ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.sets.batch.SinkTSet&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -117,7 +122,7 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">SinkTSet&lt;T&gt;</span>
-extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&lt;T&gt;
+extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a>&lt;T&gt;
 implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingData.html" title="interface in edu.iu.dsc.tws.api.tset.sets">AcceptingData</a>&lt;T&gt;</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
@@ -156,16 +161,18 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html#SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-">SinkTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;s)</code>
-<div class="block">Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1</div>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html#SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">SinkTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;sinkFn,
+        int&nbsp;parallelism,
+        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</code>
+<div class="block">Creates SinkTSet with the given parameters</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html#SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">SinkTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;sinkFn,
-        int&nbsp;parallelism)</code>
-<div class="block">Creates SinkTSet with the given parameters</div>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html#SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-edu.iu.dsc.tws.api.tset.schema.Schema-">SinkTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;s,
+        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</code>
+<div class="block">Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1</div>
 </td>
 </tr>
 </table>
@@ -200,7 +207,18 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <div class="block">Sets the name for the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title="interface in edu.iu.dsc.tws.api.tset"><code>TBase</code></a></div>
 </td>
 </tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SinkTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
+</tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getInputSchema--">getInputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#getOutputSchema--">getOutputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#setOutputSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">setOutputSchema</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSet">
 <!--   -->
@@ -243,14 +261,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-">
+<a name="SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>SinkTSet</h4>
 <pre>public&nbsp;SinkTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;s)</pre>
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;s,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</pre>
 <div class="block">Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -259,7 +278,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 </dl>
 </li>
 </ul>
-<a name="SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">
+<a name="SinkTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -267,7 +286,8 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <h4>SinkTSet</h4>
 <pre>public&nbsp;SinkTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;sinkFn,
-                int&nbsp;parallelism)</pre>
+                int&nbsp;parallelism,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</pre>
 <div class="block">Creates SinkTSet with the given parameters</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -316,7 +336,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <a name="addInput-java.lang.String-edu.iu.dsc.tws.api.tset.sets.StorableTBase-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>addInput</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SinkTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;addInput(java.lang.String&nbsp;key,
@@ -332,6 +352,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/AcceptingD
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>this TSet</dd>
 </dl>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SinkTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SinkTSet.html" title="type parameter in SinkTSet">T</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
 </li>
 </ul>
 </li>

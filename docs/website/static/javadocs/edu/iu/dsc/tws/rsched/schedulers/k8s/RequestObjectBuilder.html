@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -73,13 +73,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -116,6 +116,25 @@ extends java.lang.Object</pre>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#uploadMethod">uploadMethod</a></span></code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- ========== METHOD SUMMARY =========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.summary">
@@ -219,6 +238,10 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#setUniformMappingAffinity-V1Affinity-">setUniformMappingAffinity</a></span>(V1Affinity&nbsp;affinity)</code>&nbsp;</td>
 </tr>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#setUploadMethod-java.lang.String-">setUploadMethod</a></span>(java.lang.String&nbsp;uploadType)</code>&nbsp;</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -235,6 +258,23 @@ extends java.lang.Object</pre>
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="uploadMethod">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>uploadMethod</h4>
+<pre>public static&nbsp;java.lang.String uploadMethod</pre>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ============ METHOD DETAIL ========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.detail">
@@ -250,6 +290,15 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;void&nbsp;init(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
                         java.lang.String&nbsp;jID,
                         long&nbsp;jpFileSize)</pre>
+</li>
+</ul>
+<a name="setUploadMethod-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setUploadMethod</h4>
+<pre>public static&nbsp;void&nbsp;setUploadMethod(java.lang.String&nbsp;uploadType)</pre>
 </li>
 </ul>
 <a name="getJobMasterIP--">
@@ -270,9 +319,6 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;V1StatefulSet&nbsp;createStatefulSetForWorkers(ComputeResource&nbsp;computeResource,
                                                         java.lang.String&nbsp;encodedNodeInfoList)</pre>
 <div class="block">create StatefulSet object for a job</div>
-<dl>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
 </li>
 </ul>
 <a name="constructPodTemplate-ComputeResource-java.lang.String-java.lang.String-">
@@ -285,11 +331,6 @@ extends java.lang.Object</pre>
                                                      java.lang.String&nbsp;serviceLabel,
                                                      java.lang.String&nbsp;encodedNodeInfoList)</pre>
 <div class="block">construct pod template</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>serviceLabel</code> - </dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
 </li>
 </ul>
 <a name="constructAffinity-V1PodSpec-">
@@ -338,11 +379,6 @@ extends java.lang.Object</pre>
                                              int&nbsp;containerIndex,
                                              java.lang.String&nbsp;encodedNodeInfoList)</pre>
 <div class="block">construct a container</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>containerIndex</code> - </dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
 </li>
 </ul>
 <a name="constructEnvironmentVariables-java.lang.String-int-java.lang.String-">
@@ -355,10 +391,6 @@ extends java.lang.Object</pre>
                                                                      int&nbsp;workerPort,
                                                                      java.lang.String&nbsp;encodedNodeInfoList)</pre>
 <div class="block">set environment variables for containers</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>containerName</code> - </dd>
-</dl>
 </li>
 </ul>
 <a name="setNodeAffinity-V1Affinity-">
@@ -417,11 +449,6 @@ extends java.lang.Object</pre>
 <div class="block">we initially used this method to create PersistentVolumes
  we no longer use this method
  it is just here in case we may need it for some reason at one point</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>pvName</code> - </dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
 </li>
 </ul>
 <a name="createPersistentVolumeClaimObject-java.lang.String-int-">
@@ -487,13 +514,13 @@ extends java.lang.Object</pre>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

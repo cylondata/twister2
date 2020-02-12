@@ -87,7 +87,7 @@ public class BcastGatherBatchReceiver extends TargetFinalReceiver {
     List<Object> values = readyToSend.get(target);
 
     if (values == null || values.isEmpty()) {
-      return false;
+      return isFilledToSend(target);
     }
 
     if (receiver.receive(target, values.iterator())) {

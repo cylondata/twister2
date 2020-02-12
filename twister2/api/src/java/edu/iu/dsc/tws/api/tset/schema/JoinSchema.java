@@ -16,11 +16,19 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
 public class JoinSchema extends KeyedSchema {
   private MessageType dTypeR;
+  private int rightDatSize;
 
   public JoinSchema(MessageType keyType, MessageType leftDataType,
                     MessageType rightDataType) {
     super(keyType, leftDataType);
     this.dTypeR = rightDataType;
+  }
+
+  public JoinSchema(MessageType keyType, MessageType leftDataType,
+                    MessageType rightDataType, int keySize, int leftDataSize, int rightDataSize) {
+    super(keyType, leftDataType, keySize, leftDataSize);
+    this.dTypeR = rightDataType;
+    this.rightDatSize = rightDataSize;
   }
 
   public JoinSchema(TupleSchema leftSchema, TupleSchema rightSchema) {
@@ -30,6 +38,21 @@ public class JoinSchema extends KeyedSchema {
       throw new RuntimeException("Left and right schemas have different key "
           + "types");
     }
+  }
+
+  public int getRightDatSize() {
+    return rightDatSize;
+  }
+
+  public boolean isRightLengthsSpecified() {
+    return this.getKeySize() != -1 && this.rightDatSize != -1;
+  }
+
+  public int getRightTotalSize() {
+    if (!this.isRightLengthsSpecified()) {
+      return -1;
+    }
+    return this.getKeySize() + this.getRightDatSize();
   }
 
   public MessageType getDataTypeRight() {

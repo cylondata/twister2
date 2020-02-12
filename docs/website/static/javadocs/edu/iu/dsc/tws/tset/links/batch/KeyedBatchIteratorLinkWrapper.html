@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLink</a>&lt;T1,T0&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a>&lt;T1,T0&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a>&lt;java.util.Iterator&lt;T&gt;,T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -108,6 +111,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.links.batch.KeyedBatchIteratorLinkWrapper&lt;K,V&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -181,18 +186,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/KeyedSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">KeyedSchema</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#getSchema--">getSchema</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedCachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyCache--">lazyCache</a></span>()</code>
 <div class="block">Performs caching lazily.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedPersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedPersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyPersist--">lazyPersist</a></span>()</code>
 <div class="block">Performs persisting lazily.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedPersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedPersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#persist--">persist</a></span>()</code>
 <div class="block">Similar to cache, but the data is stored in a disk based
@@ -219,7 +228,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -341,7 +350,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <a name="persist--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>persist</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedPersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedPersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;&nbsp;persist()</pre>
@@ -356,6 +365,19 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchItera
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html#persist--">persist</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchTLinkImpl</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;&gt;,<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Persisted / Checkpointed TSets</dd>
+</dl>
+</li>
+</ul>
+<a name="getSchema--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getSchema</h4>
+<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/KeyedSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">KeyedSchema</a>&nbsp;getSchema()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html#getSchema--">getSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;&gt;,<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="type parameter in KeyedBatchIteratorLinkWrapper">V</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>

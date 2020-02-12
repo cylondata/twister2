@@ -116,7 +116,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/BinaryInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">BinaryInputSplit</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/BinaryInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">BinaryInputSplit</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">CSVInputSplit</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a></dd>
 </dl>
 <hr>
 <br>
@@ -168,55 +168,49 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/LocatableIn
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#currentSplit">currentSplit</a></span></code>
-<div class="block">Current split that is used</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>protected boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#enumerateNestedFiles">enumerateNestedFiles</a></span></code>
 <div class="block">The flag to specify whether recursive traversal of the input directory
  structure is enabled.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected static float</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#MAX_SPLIT_SIZE_DISCREPANCY">MAX_SPLIT_SIZE_DISCREPANCY</a></span></code>
 <div class="block">The fraction that the last split may be larger than the others.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#minSplitSize">minSplitSize</a></span></code>
 <div class="block">The minimal split size, set by the configure() method.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#numSplits">numSplits</a></span></code>
 <div class="block">The desired number of splits, as set by the configure() method.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#openTimeout">openTimeout</a></span></code>
 <div class="block">Time to wait when opening a file.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitLength">splitLength</a></span></code>
 <div class="block">Length of the current split</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitStart">splitStart</a></span></code>
 <div class="block">Start point of the current split</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/api/data/FSDataInputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataInputStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#stream">stream</a></span></code>
 <div class="block">The input data stream</div>
@@ -420,16 +414,6 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/LocatableIn
 <h4>minSplitSize</h4>
 <pre>protected&nbsp;long minSplitSize</pre>
 <div class="block">The minimal split size, set by the configure() method.</div>
-</li>
-</ul>
-<a name="currentSplit">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>currentSplit</h4>
-<pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a> currentSplit</pre>
-<div class="block">Current split that is used</div>
 </li>
 </ul>
 <a name="splitStart">
