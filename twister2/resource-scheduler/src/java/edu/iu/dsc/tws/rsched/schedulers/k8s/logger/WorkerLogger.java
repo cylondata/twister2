@@ -70,7 +70,7 @@ public class WorkerLogger extends Thread {
       LOG.log(Level.SEVERE, "Cannot get the log stream for " + id, e);
     }
 
-    jobLogger.workerLoggerCompleted(this);
+    jobLogger.workerLoggerCompleted(id);
   }
 
   /**

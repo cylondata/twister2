@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.logger;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,6 +29,7 @@ import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
 
@@ -48,13 +51,14 @@ public class JobLogger extends Thread {
   private boolean stopLogger = false;
 
   private List<WorkerLogger> loggers;
-  private int completedLoggerCounter = 0;
+  private Set<String> completedLoggers;
 
   public JobLogger(String namespace, JobAPI.Job job) {
     this.job = job;
     this.namespace = namespace;
 
     loggers = new LinkedList<>();
+    completedLoggers = new CopyOnWriteArraySet();
 
     containerNames = new LinkedList<>();
     for (int i = 0; i < job.getComputeResource(0).getWorkersPerPod(); i++) {
@@ -76,13 +80,11 @@ public class JobLogger extends Thread {
 
   /**
    * TODO: need to take into account restarts and scaling up/down
-   * @param workerLogger
    */
-  public void workerLoggerCompleted(WorkerLogger workerLogger) {
-    completedLoggerCounter++;
-    loggers.remove(workerLogger);
+  public void workerLoggerCompleted(String loggerID) {
+    completedLoggers.add(loggerID);
 
-    if (completedLoggerCounter == job.getNumberOfWorkers() + 1) {
+    if (completedLoggers.size() == job.getNumberOfWorkers() + 1) {
       stopLogger();
       LOG.info("All workers completed. Job has finished.");
     }
@@ -137,18 +139,21 @@ public class JobLogger extends Thread {
         ) {
 
           String podName = item.object.getMetadata().getName();
+          List<V1Container> containers = item.object.getSpec().getContainers();
           if (podName.endsWith("-jm-0")) {
+            String contName = containers.get(0).getName();
             WorkerLogger workerLogger = new WorkerLogger(
-                namespace, podName, "twister2-job-master-0", "job-master", logsDir, v1Api, this);
+                namespace, podName, contName, "job-master", logsDir, v1Api, this);
             workerLogger.start();
             loggers.add(workerLogger);
             continue;
           }
 
-          for (String cont: containerNames) {
-            String id = "worker-" + K8sWorkerUtils.calculateWorkerID(job, podName, cont);
+          for (V1Container container : containers) {
+            String id =
+                "worker-" + K8sWorkerUtils.calculateWorkerID(job, podName, container.getName());
             WorkerLogger workerLogger =
-                new WorkerLogger(namespace, podName, cont, id, logsDir, v1Api, this);
+                new WorkerLogger(namespace, podName, container.getName(), id, logsDir, v1Api, this);
             workerLogger.start();
             loggers.add(workerLogger);
           }
