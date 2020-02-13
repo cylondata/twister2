@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,7 +75,9 @@ public class WorkerLogger extends Thread {
   }
 
   /**
-   * TODO: if file exist, take care of that case
+   * TODO: if the worker is coming from failure
+   *       currently, the old file is replaced.
+   *       we may append the logs to that file
    * @return
    */
   private Path createLogFile() {
@@ -118,4 +121,20 @@ public class WorkerLogger extends Thread {
 
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    WorkerLogger that = (WorkerLogger) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
 }

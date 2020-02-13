@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +43,6 @@ public class JobLogger extends Thread {
 
   private JobAPI.Job job;
   private String namespace;
-  private List<String> containerNames;
   private String logsDir;
 
   private CoreV1Api v1Api;
@@ -53,17 +52,15 @@ public class JobLogger extends Thread {
   private List<WorkerLogger> loggers;
   private Set<String> completedLoggers;
 
+  private int numberOfWorkers;
+
   public JobLogger(String namespace, JobAPI.Job job) {
-    this.job = job;
     this.namespace = namespace;
+    this.job = job;
+    this.numberOfWorkers = job.getNumberOfWorkers();
 
     loggers = new LinkedList<>();
-    completedLoggers = new CopyOnWriteArraySet();
-
-    containerNames = new LinkedList<>();
-    for (int i = 0; i < job.getComputeResource(0).getWorkersPerPod(); i++) {
-      containerNames.add(KubernetesUtils.createContainerName(i));
-    }
+    completedLoggers = new TreeSet<>();
   }
 
   @Override
@@ -79,12 +76,13 @@ public class JobLogger extends Thread {
   }
 
   /**
-   * TODO: need to take into account restarts and scaling up/down
+   * worker loggers let JobLogger know that they completed
+   * JobLogger needs to close watcher and finish log saving
    */
   public void workerLoggerCompleted(String loggerID) {
     completedLoggers.add(loggerID);
 
-    if (completedLoggers.size() == job.getNumberOfWorkers() + 1) {
+    if (completedLoggers.size() == numberOfWorkers + 1) {
       stopLogger();
       LOG.info("All workers completed. Job has finished.");
     }
@@ -150,8 +148,12 @@ public class JobLogger extends Thread {
           }
 
           for (V1Container container : containers) {
-            String id =
-                "worker-" + K8sWorkerUtils.calculateWorkerID(job, podName, container.getName());
+            int wID = K8sWorkerUtils.calculateWorkerID(job, podName, container.getName());
+            // this means job is scaled up
+            if (wID >= numberOfWorkers) {
+              numberOfWorkers = wID + 1;
+            }
+            String id = "worker-" + wID;
             WorkerLogger workerLogger =
                 new WorkerLogger(namespace, podName, container.getName(), id, logsDir, v1Api, this);
             workerLogger.start();
