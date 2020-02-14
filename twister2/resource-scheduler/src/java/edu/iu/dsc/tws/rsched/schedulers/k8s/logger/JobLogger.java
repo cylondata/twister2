@@ -79,7 +79,7 @@ public class JobLogger extends Thread {
    * worker loggers let JobLogger know that they completed
    * JobLogger needs to close watcher and finish log saving
    */
-  public void workerLoggerCompleted(String loggerID) {
+  public synchronized void workerLoggerCompleted(String loggerID) {
     completedLoggers.add(loggerID);
 
     if (completedLoggers.size() == numberOfWorkers + 1) {
@@ -140,10 +140,10 @@ public class JobLogger extends Thread {
           List<V1Container> containers = item.object.getSpec().getContainers();
           if (podName.endsWith("-jm-0")) {
             String contName = containers.get(0).getName();
+            String id = "job-master";
             WorkerLogger workerLogger = new WorkerLogger(
-                namespace, podName, contName, "job-master", logsDir, v1Api, this);
-            workerLogger.start();
-            loggers.add(workerLogger);
+                namespace, podName, contName, id, logsDir, v1Api, this);
+            startWorkerLogger(workerLogger);
             continue;
           }
 
@@ -153,11 +153,10 @@ public class JobLogger extends Thread {
             if (wID >= numberOfWorkers) {
               numberOfWorkers = wID + 1;
             }
-            String id = "worker-" + wID;
+            String id = "worker" + wID;
             WorkerLogger workerLogger =
                 new WorkerLogger(namespace, podName, container.getName(), id, logsDir, v1Api, this);
-            workerLogger.start();
-            loggers.add(workerLogger);
+            startWorkerLogger(workerLogger);
           }
 
         }
@@ -173,6 +172,21 @@ public class JobLogger extends Thread {
     }
 
     closeWatcher();
+  }
+
+  private void startWorkerLogger(WorkerLogger workerLogger) {
+    if (loggers.contains(workerLogger)) {
+      WorkerLogger existingLogger = loggers.get(loggers.indexOf(workerLogger));
+      if (existingLogger.isAlive()) {
+        // ignore the event, it is double event for the same worker
+        LOG.info("Ignoring " + workerLogger.getID() + " start event for logging, "
+            + "since a logger for that worker is already running.");
+        return;
+      }
+    }
+    workerLogger.start();
+    completedLoggers.removeIf(loggerID -> loggerID.equals(workerLogger.getID()));
+    loggers.add(workerLogger);
   }
 
   private void closeWatcher() {

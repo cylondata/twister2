@@ -13,12 +13,20 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -37,6 +45,13 @@ public class WorkerLogger extends Thread {
   private CoreV1Api coreV1Api;
   private JobLogger jobLogger;
 
+  // set this flag if logger stopped by stopLogger method
+  private boolean stop = false;
+
+  // response for log stream
+  private InputStream logStream;
+  private Response response;
+
   public WorkerLogger(String namespace,
                       String podName,
                       String containerName,
@@ -53,6 +68,10 @@ public class WorkerLogger extends Thread {
     this.jobLogger = jobLogger;
   }
 
+  public String getID() {
+    return id;
+  }
+
   @Override
   public void run() {
 
@@ -60,34 +79,89 @@ public class WorkerLogger extends Thread {
     LOG.info("Saving " + id + " logs to: " + logFileName);
 
     try {
-      InputStream logStream = streamContainerLog();
-      java.nio.file.Files.copy(logStream, logfile, StandardCopyOption.REPLACE_EXISTING);
-      logStream.close();
-      LOG.info("Logging completed for " + id + " to: " + logFileName);
+      logStream = streamContainerLog();
+      Files.copy(logStream, logfile, StandardCopyOption.REPLACE_EXISTING);
+      if (!stop) {
+        logStream.close();
+        response.body().close();
+        response.close();
+        LOG.info("Logging completed for " + id + " to: " + logFileName);
+      }
 
     } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Cannot get the log stream for " + id, e);
+      if (!stop) {
+        LOG.log(Level.SEVERE, "Cannot get the log stream for " + id, e);
+      }
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Cannot get the log stream for " + id, e);
+      if (!stop) {
+        LOG.log(Level.SEVERE, "Cannot get the log stream for " + id, e);
+      }
     }
 
     jobLogger.workerLoggerCompleted(id);
   }
 
   /**
-   * TODO: if the worker is coming from failure
-   *       currently, the old file is replaced.
-   *       we may append the logs to that file
+   * if the worker is coming from failure,
+   * old log files are renamed
+   * the index of each existing log file is increased by one
+   * current worker log is saved into index 0
    * @return
    */
   private Path createLogFile() {
-    logFileName = logsDir + "/" + id + ".log";
+    logFileName = logsDir + "/" + id + "-0.log";
     Path logfile = Paths.get(logFileName);
-//    if (Files.notExists(logfile)) {
-//      return logfile;
-//    }
+    if (Files.notExists(logfile)) {
+      return logfile;
+    }
+
+    List<Path> existingWorkerLogFiles = getWorkerFiles();
+
+    LOG.fine("Existing log files for worker: ");
+    existingWorkerLogFiles.stream().map(f -> f.toString()).forEach(LOG::fine);
+
+    renameOlderLogFiles(existingWorkerLogFiles);
 
     return logfile;
+  }
+
+  private void renameOlderLogFiles(List<Path> logFiles) {
+    Map<Integer, Path> filesMap = new TreeMap<>(Collections.reverseOrder());
+    for (Path p: logFiles) {
+      int lastDashIndex = p.toString().lastIndexOf("-");
+      int lastDotIndex = p.toString().lastIndexOf(".");
+      int logFileIndex = Integer.parseInt(p.toString().substring(lastDashIndex + 1, lastDotIndex));
+      filesMap.put(logFileIndex, p);
+    }
+
+    for (Map.Entry<Integer, Path> entry: filesMap.entrySet()) {
+      String index = "-" + entry.getKey() + ".";
+      String toReplace = "-" + (entry.getKey() + 1) + ".";
+      String newLogFile = entry.getValue().toString().replace(index, toReplace);
+      try {
+        Files.move(entry.getValue(), Paths.get(newLogFile));
+        LOG.fine("Log file " + entry.getValue() + " renamed to " + newLogFile);
+      } catch (IOException e) {
+        LOG.log(Level.WARNING,
+            "Cannot rename log file: " + entry.getValue() + " to " + newLogFile, e);
+        continue;
+      }
+    }
+  }
+
+  private List<Path> getWorkerFiles() {
+    try (Stream<Path> walk = Files.walk(Paths.get(logsDir))) {
+
+      List<Path> workerFiles = walk.filter(Files::isRegularFile)
+          .filter(x -> x.toString().contains(id))
+          .collect(Collectors.toList());
+
+      return workerFiles;
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when  getting log file list.", e);
+      return new LinkedList<>();
+    }
   }
 
   // Important note. You must close this stream or else you can leak connections.
@@ -109,7 +183,7 @@ public class WorkerLogger extends Thread {
         tailLines,
         timestamps,
         null);
-    Response response = call.execute();
+    response = call.execute();
     if (!response.isSuccessful()) {
       throw new ApiException(response.code(), "Logs request failed: " + response.code());
     }
@@ -118,7 +192,12 @@ public class WorkerLogger extends Thread {
 
 
   public void stopLogging() {
-
+    try {
+      logStream.close();
+    } catch (IOException e) {
+    }
+    response.body().close();
+    response.close();
   }
 
   @Override
@@ -130,7 +209,7 @@ public class WorkerLogger extends Thread {
       return false;
     }
     WorkerLogger that = (WorkerLogger) o;
-    return Objects.equals(id, that.id);
+    return id.equals(that.id);
   }
 
   @Override
