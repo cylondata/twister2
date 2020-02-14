@@ -138,8 +138,13 @@ public final class SortJoinUtils {
 
       private Iterator<JoinedTuple> localJoinIterator;
 
-      private void advance() {
-        if (this.leftBackup != null) {
+      /**
+       * Advances two iterators by reading onto memory
+       *
+       * @return true if advance() should be called again
+       */
+      private boolean advance() {
+        if (this.leftList != null) {
           this.leftList.dispose();
           this.oldLists.add(this.leftList);
         }
@@ -148,6 +153,8 @@ public final class SortJoinUtils {
           this.rightList.dispose();
           this.oldLists.add(this.rightList);
         }
+
+        long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(config) / 2;
 
         // previous lists are now garbage collectible
         this.leftList = new DiskBasedList(config, MessageTypes.OBJECT);
@@ -164,6 +171,10 @@ public final class SortJoinUtils {
           }
           if (comparator.compare(currentTuple, nextLeft) == 0) {
             this.leftList.add(nextLeft);
+          } else if (comparator.compare(currentTuple, nextLeft) < 0
+              && this.leftList.size() < maxRecordsInMemory) {
+            currentTuple = nextLeft;
+            this.leftList.add(nextLeft);
           } else {
             this.leftBackup = nextLeft;
             break;
@@ -177,7 +188,7 @@ public final class SortJoinUtils {
           if (currentTuple == null) {
             currentTuple = nextRight;
           }
-          if (comparator.compare(currentTuple, nextRight) == 0) {
+          if (comparator.compare(currentTuple, nextRight) >= 0) {
             this.rightList.add(nextRight);
           } else {
             this.rightBackup = nextRight;
@@ -194,13 +205,20 @@ public final class SortJoinUtils {
 
         // if current local iterators doesn't has join tuples and if we have more data on
         // data iterators, let's advance() again
-        if (!this.localJoinIterator.hasNext() && (leftIt.hasNext() || rightIt.hasNext())) {
-          this.advance();
+        return !this.localJoinIterator.hasNext()
+            && (leftBackup != null || rightBackup != null
+            || leftIt.hasNext() || rightIt.hasNext());
+      }
+
+      private void callAdvanceIt() {
+        boolean shouldCall = true;
+        while (shouldCall) {
+          shouldCall = this.advance();
         }
       }
 
       {
-        this.advance();
+        this.callAdvanceIt();
 
         // add a shutdown hook to cleanup
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -223,7 +241,7 @@ public final class SortJoinUtils {
       public JoinedTuple next() {
         JoinedTuple next = this.localJoinIterator.next();
         if (!this.localJoinIterator.hasNext()) {
-          this.advance();
+          this.callAdvanceIt();
         }
         return next;
       }

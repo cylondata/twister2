@@ -148,7 +148,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
      <a href="../../../../../../edu/iu/dsc/tws/comms/utils/LogicalPlanBuilder.html" title="class in edu.iu.dsc.tws.comms.utils">LogicalPlanBuilder</a>&nbsp;logicalPlanBuilder,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
@@ -157,13 +157,14 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
      boolean&nbsp;shuffle,
      java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
-     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</code>&nbsp;</td>
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
-     <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+     <a href="../../../../../../edu/iu/dsc/tws/comms/utils/LogicalPlanBuilder.html" title="class in edu.iu.dsc.tws.comms.utils">LogicalPlanBuilder</a>&nbsp;logicalPlanBuilder,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSource,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;rightDataType,
@@ -171,12 +172,14 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
      boolean&nbsp;shuffle,
      java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
-     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</code>&nbsp;</td>
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
      java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
@@ -186,13 +189,13 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
      boolean&nbsp;shuffle,
      java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
-     <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;leftSchema,
-     <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;rightSchema)</code>&nbsp;</td>
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-int-int-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
      java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
@@ -200,10 +203,29 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/BulkReceiver.html" title="interface in edu.iu.dsc.tws.api.comms">BulkReceiver</a>&nbsp;rcvr,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
      boolean&nbsp;shuffle,
+     java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;leftSchema,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;rightSchema)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/batch/BJoin.html#BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-int-int-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">BJoin</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
+     java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;rightDataType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/BulkReceiver.html" title="interface in edu.iu.dsc.tws.api.comms">BulkReceiver</a>&nbsp;rcvr,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
+     boolean&nbsp;useDisk,
      java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
      int&nbsp;leftEdgeId,
      int&nbsp;rightEdgeId,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+     <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;leftSchema,
      <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;rightSchema)</code>
 <div class="block">Construct a Batch partition operation</div>
@@ -302,7 +324,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-int-int-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">
+<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-int-int-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -310,18 +332,20 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <h4>BJoin</h4>
 <pre>public&nbsp;BJoin(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-             java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
              java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;rightDataType,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/BulkReceiver.html" title="interface in edu.iu.dsc.tws.api.comms">BulkReceiver</a>&nbsp;rcvr,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
-             boolean&nbsp;shuffle,
+             boolean&nbsp;useDisk,
              java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
              int&nbsp;leftEdgeId,
              int&nbsp;rightEdgeId,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;leftSchema,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;rightSchema)</pre>
 <div class="block">Construct a Batch partition operation</div>
@@ -329,7 +353,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>comm</code> - the communicator</dd>
 <dd><code>plan</code> - task plan</dd>
-<dd><code>sources</code> - source tasks</dd>
 <dd><code>targets</code> - target tasks</dd>
 <dd><code>rcvr</code> - receiver</dd>
 <dd><code>leftDataType</code> - data type</dd>
@@ -337,7 +360,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 </dl>
 </li>
 </ul>
-<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">
+<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-edu.iu.dsc.tws.api.comms.packing.MessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -345,7 +368,8 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <h4>BJoin</h4>
 <pre>public&nbsp;BJoin(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-             java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
              java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
@@ -355,11 +379,12 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
              boolean&nbsp;shuffle,
              java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;leftSchema,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;rightSchema)</pre>
 </li>
 </ul>
-<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">
+<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -367,7 +392,8 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
 <h4>BJoin</h4>
 <pre>public&nbsp;BJoin(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;plan,
-             java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSources,
              java.util.Set&lt;java.lang.Integer&gt;&nbsp;targets,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
@@ -376,13 +402,14 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
              boolean&nbsp;shuffle,
              java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
-             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</pre>
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 </li>
 </ul>
-<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-">
+<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>BJoin</h4>
 <pre>public&nbsp;BJoin(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
@@ -394,7 +421,29 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/comms/BaseOperation.html" 
              <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
              boolean&nbsp;shuffle,
              java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
-             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType)</pre>
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
+</li>
+</ul>
+<a name="BJoin-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.BulkReceiver-edu.iu.dsc.tws.api.comms.DestinationSelector-boolean-java.util.Comparator-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>BJoin</h4>
+<pre>public&nbsp;BJoin(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+             <a href="../../../../../../edu/iu/dsc/tws/comms/utils/LogicalPlanBuilder.html" title="class in edu.iu.dsc.tws.comms.utils">LogicalPlanBuilder</a>&nbsp;logicalPlanBuilder,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;leftSources,
+             java.util.Set&lt;java.lang.Integer&gt;&nbsp;rightSource,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;keyType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;leftDataType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;rightDataType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/BulkReceiver.html" title="interface in edu.iu.dsc.tws.api.comms">BulkReceiver</a>&nbsp;rcvr,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html" title="interface in edu.iu.dsc.tws.api.comms">DestinationSelector</a>&nbsp;destSelector,
+             boolean&nbsp;shuffle,
+             java.util.Comparator&lt;java.lang.Object&gt;&nbsp;comparator,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinType.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinType</a>&nbsp;joinType,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 </li>
 </ul>
 </li>

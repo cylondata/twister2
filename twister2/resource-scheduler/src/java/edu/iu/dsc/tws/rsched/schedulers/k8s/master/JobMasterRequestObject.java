@@ -178,9 +178,10 @@ public final class JobMasterRequestObject {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
     container.setCommand(Arrays.asList("./init.sh"));
 
+    int jmRam = JobMasterContext.jobMasterRAM(config) + 128;
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", new Quantity(JobMasterContext.jobMasterCpu(config) + ""));
-    resReq.putRequestsItem("memory", new Quantity(JobMasterContext.jobMasterRAM(config) + "Mi"));
+    resReq.putRequestsItem("memory", new Quantity(jmRam + "Mi"));
     container.setResources(resReq);
 
     ArrayList<V1VolumeMount> volumeMounts = new ArrayList<>();
@@ -211,7 +212,7 @@ public final class JobMasterRequestObject {
     port.setProtocol("TCP");
     container.setPorts(Arrays.asList(port));
 
-    container.setEnv(constructEnvironmentVariables());
+    container.setEnv(constructEnvironmentVariables(JobMasterContext.jobMasterRAM(config)));
 
     return container;
   }
@@ -219,7 +220,7 @@ public final class JobMasterRequestObject {
   /**
    * set environment variables for containers
    */
-  public static List<V1EnvVar> constructEnvironmentVariables() {
+  public static List<V1EnvVar> constructEnvironmentVariables(int jvmMem) {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     envVars.add(new V1EnvVar()
@@ -284,6 +285,10 @@ public final class JobMasterRequestObject {
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
         .value(LoggingContext.LOGGER_PROPERTIES_FILE));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JVM_MEMORY_MB + "")
+        .value(jvmMem + ""));
 
     return envVars;
   }

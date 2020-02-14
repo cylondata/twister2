@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLink</a>&lt;T1,T0&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a>&lt;T1,T0&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl</a>&lt;java.util.Iterator&lt;T&gt;,T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -114,6 +117,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink&lt;K,V&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -160,19 +165,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-                int&nbsp;sourceParallelism)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+                int&nbsp;sourceParallelism,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;partitionFn,
-                int&nbsp;sourceParallelism)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-java.util.Comparator-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-java.util.Comparator-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;partitionFn,
                 int&nbsp;sourceParallelism,
-                java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;keyCompartor)</code>&nbsp;</td>
+                java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;keyCompartor,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html#KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">KeyedGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;partitionFn,
+                int&nbsp;sourceParallelism,
+                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -212,7 +220,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedBatchIteratorLinkWrapper</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#cache--">cache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyCache--">lazyCache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyPersist--">lazyPersist</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#persist--">persist</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#cache--">cache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#getSchema--">getSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyCache--">lazyCache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#lazyPersist--">lazyPersist</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedBatchIteratorLinkWrapper.html#persist--">persist</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.batch.BatchIteratorLink">
@@ -233,7 +241,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -277,17 +285,18 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-">
+<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>KeyedGatherTLink</h4>
 <pre>public&nbsp;KeyedGatherTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
-                        int&nbsp;sourceParallelism)</pre>
+                        int&nbsp;sourceParallelism,
+                        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</pre>
 </li>
 </ul>
-<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">
+<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -295,10 +304,11 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <h4>KeyedGatherTLink</h4>
 <pre>public&nbsp;KeyedGatherTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;partitionFn,
-                        int&nbsp;sourceParallelism)</pre>
+                        int&nbsp;sourceParallelism,
+                        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</pre>
 </li>
 </ul>
-<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-java.util.Comparator-">
+<a name="KeyedGatherTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-java.util.Comparator-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -307,7 +317,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGathe
 <pre>public&nbsp;KeyedGatherTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;partitionFn,
                         int&nbsp;sourceParallelism,
-                        java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;keyCompartor)</pre>
+                        java.util.Comparator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedGatherTLink.html" title="type parameter in KeyedGatherTLink">K</a>&gt;&nbsp;keyCompartor,
+                        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</pre>
 </li>
 </ul>
 </li>

@@ -113,12 +113,25 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     return this.computeConnection;
   }
 
+  /**
+   * This method tries to generate a schema, if user hasn't given a schema
+   */
+  protected void generateSchema() {
+    if (this.opDataType.isPrimitive()
+        && !this.opDataType.isArray()
+        && this.messageSchema == MessageSchema.noSchema()) {
+      this.messageSchema = MessageSchema.ofSize(this.opDataType.getUnitSizeInBytes());
+    }
+  }
+
   Edge buildEdge() {
     this.runValidation();
     Edge edge = new Edge(this.edgeName, this.operationName);
     edge.setDataType(opDataType);
     edge.addProperties(propertiesMap);
-    edge.setMessageSchema(messageSchema);
+
+    this.generateSchema();
+    edge.setMessageSchema(this.messageSchema);
     return this.updateEdge(edge);
   }
 }

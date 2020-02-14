@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SPartitionTLink<T> extends StreamingSingleLink<T> {
 
@@ -45,6 +46,7 @@ public class SPartitionTLink<T> extends StreamingSingleLink<T> {
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }
+    TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
   }
 
