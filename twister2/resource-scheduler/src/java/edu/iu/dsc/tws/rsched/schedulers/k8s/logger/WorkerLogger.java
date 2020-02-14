@@ -33,6 +33,9 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import okhttp3.Call;
 import okhttp3.Response;
 
+/**
+ * save log of a worker or a job master to a log file
+ */
 public class WorkerLogger extends Thread {
   private static final Logger LOG = Logger.getLogger(WorkerLogger.class.getName());
 

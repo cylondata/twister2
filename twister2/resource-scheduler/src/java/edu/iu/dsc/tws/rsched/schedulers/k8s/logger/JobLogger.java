@@ -34,8 +34,9 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
 
 /**
- * get logs of all workers in a job from Kubernetes master
- * save it to local disk
+ * get logs of all workers and the job master in a job from Kubernetes master
+ * save them to local disk under the directory:
+ *   $HOME/.twister2/jobID
  */
 
 public class JobLogger extends Thread {
