@@ -46,6 +46,7 @@ public class PythonWorker implements BatchTSetIWorker {
   private static final Logger LOG = Logger.getLogger(PythonWorker.class.getName());
 
   private static final String PYTHON_PORT_OFFSET = "twister2.python.port";
+  private static final String PYTHON_BIN = "twister2.python.bin";
   private static final String MPI_AWARE_PYTHON = "MPI_AWARE_PYTHON";
 
   private static void startPythonProcess(String pythonPath, int port,
@@ -54,6 +55,8 @@ public class PythonWorker implements BatchTSetIWorker {
                                          int worldSize,
                                          Config config) throws IOException, MPIException {
     LOG.info("Starting python process : " + pythonPath);
+
+    String pythonBin = config.getStringValue(PYTHON_BIN);
 
     boolean useMPI = false;
     try {
@@ -82,11 +85,11 @@ public class PythonWorker implements BatchTSetIWorker {
       System.arraycopy(args, 0, newArgs, 1, args.length);
 
       int[] errorCodes = new int[worldSize];
-      MPI.COMM_WORLD.spawn("python3", newArgs, worldSize, info, 0,
+      MPI.COMM_WORLD.spawn(pythonBin, newArgs, worldSize, info, 0,
           errorCodes);
     } else {
       String[] newArgs = new String[args.length + 2];
-      newArgs[0] = "python3";
+      newArgs[0] = pythonBin;
       newArgs[1] = pythonPath;
       System.arraycopy(args, 0, newArgs, 2, args.length);
 
