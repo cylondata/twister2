@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,7 +61,7 @@ public class JobLogger extends Thread {
     this.numberOfWorkers = job.getNumberOfWorkers();
 
     loggers = new LinkedList<>();
-    completedLoggers = new TreeSet<>();
+    completedLoggers = new ConcurrentSkipListSet<>();
   }
 
   @Override
