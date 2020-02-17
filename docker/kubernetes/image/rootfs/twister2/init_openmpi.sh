@@ -66,6 +66,7 @@ if [ "$lastFourChars" = "-0-0" ]; then
 else
   echo "This is not the first pod: $HOSTNAME"
   echo "Starting to sleep to infinity ..."
+  echo "All worker logs sent to worker-0. Please check worker-0 logs."
   sleep infinity
 fi
 
