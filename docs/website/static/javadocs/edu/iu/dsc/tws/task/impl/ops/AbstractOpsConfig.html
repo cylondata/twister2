@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":9,"i2":10,"i3":10,"i4":10,"i5":10,"i6":6,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var methods = {"i0":10,"i1":9,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":6,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -204,42 +204,48 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#failValidation-java.lang.String-">failValidation</a></span>(java.lang.String&nbsp;msg)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>protected void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#generateSchema--">generateSchema</a></span>()</code>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#getEdgeName--">getEdgeName</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>protected <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#getOpDataType--">getOpDataType</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#getSource--">getSource</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#runValidation--">runValidation</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected abstract <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#updateEdge-edu.iu.dsc.tws.api.compute.graph.Edge-">updateEdge</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;newEdge)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="type parameter in AbstractOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#viaEdge-java.lang.String-">viaEdge</a></span>(java.lang.String&nbsp;edge)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="type parameter in AbstractOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#withDataType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">withDataType</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;dataType)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="type parameter in AbstractOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#withMessageSchema-edu.iu.dsc.tws.api.comms.packing.MessageSchema-">withMessageSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/comms/packing/MessageSchema.html" title="class in edu.iu.dsc.tws.api.comms.packing">MessageSchema</a>&nbsp;mc)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="type parameter in AbstractOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#withProperties-java.util.Map-">withProperties</a></span>(java.util.Map&lt;java.lang.String,java.lang.Object&gt;&nbsp;properties)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html" title="type parameter in AbstractOpsConfig">T</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/task/impl/ops/AbstractOpsConfig.html#withProperty-java.lang.String-java.lang.Object-">withProperty</a></span>(java.lang.String&nbsp;propertyName,
             java.lang.Object&nbsp;property)</code>&nbsp;</td>
@@ -459,10 +465,20 @@ extends java.lang.Object</pre>
 <a name="connect--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>connect</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html" title="class in edu.iu.dsc.tws.task.impl">ComputeConnection</a>&nbsp;connect()</pre>
+</li>
+</ul>
+<a name="generateSchema--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>generateSchema</h4>
+<pre>protected&nbsp;void&nbsp;generateSchema()</pre>
+<div class="block">This method tries to generate a schema, if user hasn't given a schema</div>
 </li>
 </ul>
 </li>

@@ -167,8 +167,9 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#innerJoin-java.lang.String-java.lang.String-">innerJoin</a></span>(java.lang.String&nbsp;leftSource,
-         java.lang.String&nbsp;rightSource)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#innerJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">innerJoin</a></span>(java.lang.String&nbsp;leftSource,
+         java.lang.String&nbsp;rightSource,
+         <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>
 <div class="block">Create an inner join operation.</div>
 </td>
 </tr>
@@ -192,8 +193,9 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#leftOuterJoin-java.lang.String-java.lang.String-">leftOuterJoin</a></span>(java.lang.String&nbsp;leftSource,
-             java.lang.String&nbsp;rightSource)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#leftOuterJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">leftOuterJoin</a></span>(java.lang.String&nbsp;leftSource,
+             java.lang.String&nbsp;rightSource,
+             <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>
 <div class="block">Create an left outer join operation.</div>
 </td>
 </tr>
@@ -211,8 +213,9 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i13" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#rightOuterJoin-java.lang.String-java.lang.String-">rightOuterJoin</a></span>(java.lang.String&nbsp;leftSource,
-              java.lang.String&nbsp;rightSource)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/task/impl/ComputeConnection.html#rightOuterJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">rightOuterJoin</a></span>(java.lang.String&nbsp;leftSource,
+              java.lang.String&nbsp;rightSource,
+              <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</code>
 <div class="block">Create an right outer join operation.</div>
 </td>
 </tr>
@@ -318,14 +321,15 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="innerJoin-java.lang.String-java.lang.String-">
+<a name="innerJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>innerJoin</h4>
 <pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a>&nbsp;innerJoin(java.lang.String&nbsp;leftSource,
-                            java.lang.String&nbsp;rightSource)</pre>
+                            java.lang.String&nbsp;rightSource,
+                            <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 <div class="block">Create an inner join operation. The left source and right source can be the same source</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -354,14 +358,15 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="leftOuterJoin-java.lang.String-java.lang.String-">
+<a name="leftOuterJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>leftOuterJoin</h4>
 <pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a>&nbsp;leftOuterJoin(java.lang.String&nbsp;leftSource,
-                                java.lang.String&nbsp;rightSource)</pre>
+                                java.lang.String&nbsp;rightSource,
+                                <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 <div class="block">Create an left outer join operation. The left source and right source can be the same source</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -372,14 +377,15 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="rightOuterJoin-java.lang.String-java.lang.String-">
+<a name="rightOuterJoin-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinAlgorithm-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>rightOuterJoin</h4>
 <pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/task/impl/ops/JoinConfig.html" title="class in edu.iu.dsc.tws.task.impl.ops">JoinConfig</a>&nbsp;rightOuterJoin(java.lang.String&nbsp;leftSource,
-                                 java.lang.String&nbsp;rightSource)</pre>
+                                 java.lang.String&nbsp;rightSource,
+                                 <a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.JoinAlgorithm.html" title="enum in edu.iu.dsc.tws.api.comms">CommunicationContext.JoinAlgorithm</a>&nbsp;joinAlgorithm)</pre>
 <div class="block">Create an right outer join operation. The left source and right source can be the same source</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

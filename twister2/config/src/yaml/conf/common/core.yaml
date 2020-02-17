@@ -47,6 +47,10 @@ twister2.common.thread.pool.threads: 2
 # maximum time that excess idle threads will wait for new tasks before terminating
 twister2.common.thread.pool.keepalive: 10
 
+# path to python binary
+# ex: venv/bin/python3
+twister.python.bin: python3
+
 ###################################################################
 # Dashboard related settings
 ###################################################################
