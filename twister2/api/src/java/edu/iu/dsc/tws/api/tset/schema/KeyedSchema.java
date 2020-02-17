@@ -14,12 +14,17 @@ package edu.iu.dsc.tws.api.tset.schema;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
 public class KeyedSchema implements TupleSchema {
-
-  private final MessageType dType;
-  private final MessageType kType;
-
+  private MessageType dType;
+  private MessageType kType;
   private int keySize = -1;
   private int dataSize = -1;
+
+
+  public KeyedSchema() {
+    //non-arg constructor for kryo
+
+  }
+
 
   public KeyedSchema(MessageType keyType, MessageType dataType) {
     this.dType = dataType;

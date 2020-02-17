@@ -25,7 +25,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.local.mock.MockWorker;
 import edu.iu.dsc.tws.local.util.LocalClassLoader;
 
@@ -34,6 +36,8 @@ public final class LocalSubmitter {
   private static final Logger LOG = Logger.getLogger(LocalSubmitter.class.getName());
 
   private static boolean prepared = false;
+  private static boolean failed = false;
+  private static Throwable fault;
 
   private static final String[] FILES_LIST = new String[]{
       "core.yaml",
@@ -116,8 +120,8 @@ public final class LocalSubmitter {
   /**
    * This method can be used to run a {@link Twister2Job} with default configurations
    */
-  public static void submitJob(Twister2Job twister2Job) {
-    submitJob(twister2Job, Config.newBuilder().build());
+  public static Twister2JobState submitJob(Twister2Job twister2Job) {
+    return submitJob(twister2Job, Config.newBuilder().build());
   }
 
   /**
@@ -125,9 +129,10 @@ public final class LocalSubmitter {
    * Additional configurations can be loaded by specifying the root of a twister2 configuration
    * directory. Configurations loaded from the files can be overridden in {@link Config} object.
    */
-  public static void submitJob(Twister2Job twister2Job, String configDir, Config config) {
+  public static Twister2JobState submitJob(Twister2Job twister2Job,
+                                           String configDir, Config config) {
     prepare(configDir);
-    submitJob(twister2Job, config);
+    return submitJob(twister2Job, config);
   }
 
   /**
@@ -135,16 +140,17 @@ public final class LocalSubmitter {
    * Additional configurations can be loaded by specifying the root of a twister2 configuration
    * directory.
    */
-  public static void submitJob(Twister2Job twister2Job, String configDir) {
+  public static Twister2JobState submitJob(Twister2Job twister2Job, String configDir) {
     prepare(configDir);
-    submitJob(twister2Job);
+    return submitJob(twister2Job);
   }
 
   /**
    * This method can be used to run a {@link Twister2Job} with default configurations.
    * Additional configurations can be defined/overridden by passing the {@link Config} object.
    */
-  public static void submitJob(Twister2Job twister2Job, Config config) {
+  public static Twister2JobState submitJob(Twister2Job twister2Job, Config config) {
+    Twister2JobState state = new Twister2JobState(false);
     if (!prepared) {
       prepare();
     }
@@ -156,6 +162,16 @@ public final class LocalSubmitter {
     for (int i = 0; i < twister2Job.getNumberOfWorkers(); i++) {
       startWorker(twister2Job, newConfig, i, cyclicBarrier);
     }
+    if (failed) {
+      state.setJobstate(DriverJobState.FAILED);
+      state.setCause((Exception) fault);
+    } else {
+      state.setJobstate(DriverJobState.COMPLETED);
+    }
+    //reset the local state for next job
+    failed = false;
+    fault =  null;
+    return state;
   }
 
   /**
@@ -175,6 +191,13 @@ public final class LocalSubmitter {
    */
   private static void startWorker(Twister2Job twister2Job,
                                   Config config, int workerId, CyclicBarrier cyclicBarrier) {
+    Thread.UncaughtExceptionHandler hndler = new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable ex) {
+        failed = true;
+        fault = ex;
+        return;
+      }
+    };
     LocalClassLoader localClassLoader = new LocalClassLoader(LocalSubmitter.class.getClassLoader());
     localClassLoader.addJobClass(twister2Job.getWorkerClass());
     try {
@@ -189,12 +212,16 @@ public final class LocalSubmitter {
           (Runnable) o
       );
       thread.setName("worker-" + workerId);
+      thread.setUncaughtExceptionHandler(hndler);
       thread.start();
+      thread.join();
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | IllegalAccessException
         | InstantiationException
         | InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
   }
