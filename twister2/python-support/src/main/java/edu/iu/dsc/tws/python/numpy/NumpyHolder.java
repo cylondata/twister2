@@ -25,10 +25,10 @@ public class NumpyHolder implements Serializable {
 
   }
 
-  public NumpyHolder(Object numpyFlatArray, Object type, Object shape) {
+  public NumpyHolder(Object numpyFlatArray, Object shape, Object type) {
     this.numpyFlatArray = numpyFlatArray;
-    this.type = new ArrayList<>((List) type);
-    this.shape = shape;
+    this.type = type;
+    this.shape = new ArrayList<>((List) shape);
   }
 
   public void setNumpyFlatArray(Object numpyFlatArray) {

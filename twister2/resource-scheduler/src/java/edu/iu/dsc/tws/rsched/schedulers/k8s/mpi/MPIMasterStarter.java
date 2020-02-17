@@ -63,8 +63,8 @@ public final class MPIMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
-    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
+    String jvmMemory = System.getenv(K8sEnvVariables.JVM_MEMORY_MB + "");
 
     jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
     if (jobID == null) {
@@ -150,7 +150,7 @@ public final class MPIMasterStarter {
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
     String[] mpirunCommand = generateMPIrunCommand(
-        classToRun, workersPerPod, jobMasterIP, encodedNodeInfoList, logPropsFile);
+        classToRun, workersPerPod, jobMasterIP, logPropsFile, jvmMemory);
 
     // when all pods become running, sshd may have not started on some pods yet
     // it takes some time to start sshd, after pods become running
@@ -208,8 +208,8 @@ public final class MPIMasterStarter {
   public static String[] generateMPIrunCommand(String className,
                                                int workersPerPod,
                                                String jobMasterIP,
-                                               String encodedNodeInfoList,
-                                               String logPropsFile) {
+                                               String logPropsFile,
+                                               String jvmMemory) {
 
     String jobMasterCLArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
 
@@ -228,12 +228,13 @@ public final class MPIMasterStarter {
 //            "/twister2-memory-dir/logfile",
             "-tag-output",
             "java",
+            "-Xms" + jvmMemory + "m",
+            "-Xmx" + jvmMemory + "m",
             "-Djava.util.logging.config.file=" + logPropsFile,
             "-cp", System.getenv("CLASSPATH"),
             className,
             jobMasterCLArgument,
-            jobID,
-            "'" + encodedNodeInfoList + "'"
+            jobID
         };
   }
 

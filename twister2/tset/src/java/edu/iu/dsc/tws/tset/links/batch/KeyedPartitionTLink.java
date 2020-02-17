@@ -29,7 +29,9 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private PartitionFunc<K> partitionFunction;
@@ -37,17 +39,19 @@ public class KeyedPartitionTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, 
   private boolean useDisk = false;
 
   public KeyedPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
-                             int sourceParallelism) {
-    super(tSetEnv, "kpartition", sourceParallelism);
+                             int sourceParallelism, TupleSchema schema) {
+    super(tSetEnv, "kpartition", sourceParallelism, schema);
     this.partitionFunction = parFn;
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, this.getSchema().getDataType());
     e.setKeyed(true);
+    e.setKeyType(this.getSchema().getKeyType());
     e.setPartitioner(partitionFunction);
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

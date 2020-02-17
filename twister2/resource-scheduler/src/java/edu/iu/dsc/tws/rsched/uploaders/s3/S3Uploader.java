@@ -11,13 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.s3;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,10 +47,8 @@ public class S3Uploader extends Thread implements IUploader {
   @Override
   public void run() {
 
-    String uploaderScript = S3Context.uploaderScript(config);
-
-    String cmd = String.format(uploaderScript + " %s %s", localJobPackFile, s3File);
-    LOG.fine("cmd for s3 Uploader: " + cmd);
+    String cmd = String.format("aws s3 cp %s %s", localJobPackFile, s3File);
+    LOG.info("cmd for s3 Uploader: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
     Process p = null;
@@ -60,11 +56,10 @@ public class S3Uploader extends Thread implements IUploader {
       p = Runtime.getRuntime().exec(fullCmd);
       p.waitFor();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when executing the script: " + uploaderScript, e);
+      LOG.log(Level.SEVERE, "Exception when executing the command: " + cmd, e);
       return;
     } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Exception when waiting the script to complete: "
-          + uploaderScript, e);
+      LOG.log(Level.SEVERE, "Exception when waiting the command to complete: " + cmd, e);
       return;
     }
 
@@ -75,10 +70,6 @@ public class S3Uploader extends Thread implements IUploader {
       uploaded = true;
       LOG.info("Job Package uploaded successfully to: " + s3File);
 
-    } else if (exitCode == 11) {
-      String failMsg = String.format("the job package: %s can not be uploaded to: %s",
-          localJobPackFile, s3File);
-      LOG.severe(failMsg);
     } else {
       String failMsg = String.format("Some error occurred when uploading job package %s to s3: %s",
           localJobPackFile, s3File);
@@ -93,27 +84,31 @@ public class S3Uploader extends Thread implements IUploader {
         + JobUtils.createJobPackageFileName(job.getJobId());
 
     long linkExpDur = S3Context.linkExpirationDuration(config);
-    String urlGenScript = S3Context.urlGenScript(config);
 
-    String cmd = String.format(urlGenScript + " %s %s", s3File, linkExpDur);
+    String cmd = String.format("aws s3 presign %s --expires-in %s", s3File, linkExpDur);
     LOG.fine("cmd for s3 URL Generation: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
+    String url;
     Process p = null;
     try {
       p = Runtime.getRuntime().exec(fullCmd);
+
+      BufferedReader reader = new BufferedReader(
+          new InputStreamReader(p.getInputStream()));
+
+      url = reader.readLine();
       p.waitFor();
     } catch (IOException e) {
-      throw new UploaderException("Exception when executing the script: " + urlGenScript, e);
+      throw new UploaderException("Exception when executing the command: " + cmd, e);
     } catch (InterruptedException e) {
       throw new UploaderException("Exception when waiting the script to complete: "
-          + urlGenScript, e);
+          + cmd, e);
     }
 
     int exitCode = p.exitValue();
 
     if (exitCode == 0) {
-      String url = readUrlFile();
       LOG.fine("Job Package Download URL: " + url);
       try {
         URI uri = new URI(url);
@@ -126,24 +121,10 @@ public class S3Uploader extends Thread implements IUploader {
         throw new UploaderException("Can not generate URI for download link: " + url, e);
       }
 
-    } else if (exitCode == 12) {
-      String failMsg = String.format("the job package can not be presigned: %s", s3File);
-      throw new UploaderException(failMsg);
     } else {
       String failMsg = String.format("Some error occurred when presigning job package %s at s3: %s",
           localJobPackFile, s3File);
       throw new UploaderException(failMsg);
-    }
-  }
-
-  private String readUrlFile() throws UploaderException {
-    String urlFile = System.getProperty("user.home") + "/.twister2/downloadURL.txt";
-    Path path = new File(urlFile).toPath();
-    try {
-      List<String> lines = Files.readAllLines(path);
-      return lines.get(0);
-    } catch (IOException e) {
-      throw new UploaderException("Exception when reading URL file: " + urlFile, e);
     }
   }
 
@@ -163,9 +144,8 @@ public class S3Uploader extends Thread implements IUploader {
   public boolean undo(Config cnfg, String jobID) {
 
     s3File = S3Context.s3BucketName(cnfg) + "/" + JobUtils.createJobPackageFileName(jobID);
-    String removerScript = S3Context.removerScript(cnfg);
 
-    String cmd = removerScript + " " + s3File;
+    String cmd = "aws s3 rm " + s3File;
     LOG.fine("cmd for s3 Remover: " + cmd);
     String[] fullCmd = {"bash", "-c", cmd};
 
@@ -174,11 +154,10 @@ public class S3Uploader extends Thread implements IUploader {
       p = Runtime.getRuntime().exec(fullCmd);
       p.waitFor();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when executing the script: " + removerScript, e);
+      LOG.log(Level.SEVERE, "Exception when executing the command: " + cmd, e);
       return false;
     } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Exception when waiting the script to complete: "
-          + removerScript, e);
+      LOG.log(Level.SEVERE, "Exception when waiting the command to complete: " + cmd, e);
       return false;
     }
 
@@ -187,10 +166,6 @@ public class S3Uploader extends Thread implements IUploader {
     if (exitCode == 0) {
       LOG.info("Job Package removed successfully: " + s3File);
       return true;
-    } else if (exitCode == 13) {
-      String failMsg = String.format("the job package: %s can not be removed.", s3File);
-      LOG.severe(failMsg);
-      return false;
     } else {
       String failMsg = String.format("Some error occurred when removing the job package %s",
           s3File);

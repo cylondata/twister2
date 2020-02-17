@@ -269,10 +269,10 @@ public class KubernetesController {
   }
 
   /**
-   * return true if one of the services exist in Kubernetes master,
-   * otherwise return false
+   * return existing service name if one of the services exist in Kubernetes master,
+   * otherwise return null
    */
-  public boolean existServices(List<String> serviceNames) {
+  public String existServices(List<String> serviceNames) {
 // sending the request with label does not work for list services call
 //    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
@@ -286,12 +286,11 @@ public class KubernetesController {
 
     for (V1Service service : serviceList.getItems()) {
       if (serviceNames.contains(service.getMetadata().getName())) {
-        LOG.severe("There is already a service with the name: " + service.getMetadata().getName());
-        return true;
+        return service.getMetadata().getName();
       }
     }
 
-    return false;
+    return null;
   }
 
   /**
@@ -435,7 +434,7 @@ public class KubernetesController {
       } else {
 
         if (response.code() == 404 && response.message().equals("Not Found")) {
-          LOG.log(Level.WARNING, "There is no PersistentVolumeClaim [" + pvcName
+          LOG.log(Level.FINE, "There is no PersistentVolumeClaim [" + pvcName
               + "] to delete on Kubernetes master. It may have already been deleted.");
           return true;
         }

@@ -18,15 +18,19 @@ import java.util.Comparator;
 import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.schema.JoinSchema;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K, VL, VR>> {
@@ -35,6 +39,8 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   private TaskPartitioner<K> partitioner;
   private Comparator<K> keyComparator;
 
+  private CommunicationContext.JoinAlgorithm algorithm = CommunicationContext.JoinAlgorithm.SORT;
+
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
   private boolean useDisk = false;
@@ -42,14 +48,15 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
-                   Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT) {
-    this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT);
+                   Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT,
+                   JoinSchema joinSchema) {
+    this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT, joinSchema);
   }
 
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
                    Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
-                   TupleTSet rightT) {
-    super(env, "join", ((BuildableTSet) leftT).getParallelism());
+                   TupleTSet rightT, JoinSchema joinSchema) {
+    super(env, "join", ((BuildableTSet) leftT).getParallelism(), joinSchema);
     this.joinType = type;
     this.leftTSet = leftT;
     this.rightTSet = rightT;
@@ -65,9 +72,21 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.JOIN, getMessageType());
+    // this method will not be used as build method is overridden!
+    return null;
   }
 
+  @Override
+  protected JoinSchema getSchema() {
+    return (JoinSchema) super.getSchema();
+  }
+
+  /**
+   * Uses a different build pattern than the usual {@link edu.iu.dsc.tws.api.tset.link.TLink}s
+   *
+   * @param graphBuilder graph builder
+   * @param buildSequence build seq
+   */
   @Override
   public void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
 
@@ -84,21 +103,32 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     HashSet<TBase> targets = new HashSet<>(getTBaseGraph().getSuccessors(this));
     targets.retainAll(buildSequence);
 
+    MessageType kType = getSchema().getKeyType();
+    MessageType dTypeL = getSchema().getDataType();
+    MessageType dTypeR = getSchema().getDataTypeRight();
+
     for (TBase target : targets) {
       // group name = left_right_join_target
       String groupName = leftTSet.getId() + "_" + rightTSet.getId() + "_" + getId() + "_"
           + target.getId();
 
+
       // build left
-      buildJoin(graphBuilder, leftTSet, target, 0, groupName);
+      buildJoin(graphBuilder, leftTSet, target, 0,
+          groupName, kType, dTypeL, getSchema().isLengthsSpecified(),
+          getSchema().getKeySize(), getSchema().getTotalSize());
 
       // build right
-      buildJoin(graphBuilder, rightTSet, target, 1, groupName);
+      buildJoin(graphBuilder, rightTSet, target, 1,
+          groupName, kType, dTypeR, getSchema().isRightLengthsSpecified(),
+          getSchema().getKeySize(), getSchema().getRightTotalSize());
     }
   }
 
-  private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName) {
-    Edge e = getEdge();
+  private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName,
+                         MessageType kType, MessageType dType,
+                         boolean lengthsSpecified, int keyLength, int totalLength) {
+    Edge e = new Edge(getId(), OperationNames.JOIN, dType);
     // override edge name with join_source_target
     e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
     e.setKeyed(true);
@@ -108,10 +138,24 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.setNumberOfEdges(2);
     e.setTargetEdge(groupName);
     e.addProperty(CommunicationContext.JOIN_TYPE, joinType);
+    e.addProperty(CommunicationContext.JOIN_ALGORITHM, algorithm);
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, useDisk);
+    e.setKeyType(kType);
+
+    if (lengthsSpecified) {
+      e.setMessageSchema(MessageSchema.ofSize(totalLength, keyLength));
+    } else {
+      TLinkUtils.generateCommsSchema(e);
+    }
+
 
     graphBuilder.connect(s.getId(), t.getId(), e);
+  }
+
+  public JoinTLink<K, VL, VR> useHashAlgorithm() {
+    this.algorithm = CommunicationContext.JoinAlgorithm.HASH;
+    return this;
   }
 
   public JoinTLink<K, VL, VR> useDisk() {

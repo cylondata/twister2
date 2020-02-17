@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.selectors;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.ObjectType;
 
 /**
  * Hashing selector, that does hash based selection for keys
@@ -50,7 +52,7 @@ public class HashingSelector implements DestinationSelector {
   private void initialize(Set<Integer> sources, Set<Integer> destinations) {
     for (int s : sources) {
       ArrayList<Integer> destList = new ArrayList<>(destinations);
-      destList.sort((o1, o2) -> o1 - o2);
+      destList.sort(Comparator.comparingInt(o -> o));
       destination.put(s, destList);
     }
   }
@@ -68,7 +70,7 @@ public class HashingSelector implements DestinationSelector {
   }
 
   private int getArrayHashCode(Object key, MessageType type) {
-    if (type == MessageTypes.OBJECT || keyType == null) {
+    if (type instanceof ObjectType || keyType == null) {
       if (key instanceof byte[]) {
         return Arrays.hashCode((byte[]) key);
       } else if (key instanceof int[]) {

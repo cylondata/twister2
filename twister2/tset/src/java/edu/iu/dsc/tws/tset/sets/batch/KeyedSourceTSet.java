@@ -15,6 +15,8 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
@@ -29,7 +31,8 @@ public class KeyedSourceTSet<K, V> extends BatchTupleTSetImpl<K, V> {
 
   public KeyedSourceTSet(BatchTSetEnvironment tSetEnv, String name, SourceFunc<Tuple<K, V>> src,
                          int parallelism) {
-    super(tSetEnv, name, parallelism);
+    // no schema is preceding a keyedsource tset. Hence, the input schema will be NULL type.
+    super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }
 
@@ -37,6 +40,11 @@ public class KeyedSourceTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   public KeyedSourceTSet<K, V> addInput(String key, StorableTBase<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
+  }
+
+  @Override
+  public KeyedSourceTSet<K, V> withSchema(TupleSchema schema) {
+    return (KeyedSourceTSet<K, V>) super.withSchema(schema);
   }
 
   @Override

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # build Twister2 base docker image
-VERSION="0.5.0-SNAPSHOT"
+VERSION="0.6.0-SNAPSHOT"
 TWISTER2_BASE_IMAGE="twister2/twister2-k8s-base"
 
 # build docker image
-docker build -t $TWISTER2_BASE_IMAGE":"${VERSION} -t $TWISTER2_BASE_IMAGE":latest" -f Dockerfile .
+docker build -t $TWISTER2_BASE_IMAGE":"${VERSION} -f Dockerfile .
 
 # check whether image build successful
 return_code=$?

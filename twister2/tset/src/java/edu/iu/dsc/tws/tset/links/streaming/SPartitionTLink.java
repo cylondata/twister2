@@ -16,34 +16,37 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SPartitionTLink<T> extends StreamingSingleLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 
-  public SPartitionTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism);
+  public SPartitionTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
+                         Schema schema) {
+    this(tSetEnv, null, sourceParallelism, schema);
   }
 
   public SPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
-                         int sourceParallelism) {
-    this(tSetEnv, parFn, sourceParallelism, sourceParallelism);
+                         int sourceParallelism, Schema schema) {
+    this(tSetEnv, parFn, sourceParallelism, sourceParallelism, schema);
   }
 
   public SPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
-                         int sourceParallelism, int targetParallelism) {
-    super(tSetEnv, "spartition", sourceParallelism,
-        targetParallelism);
+                         int sourceParallelism, int targetParallelism, Schema schema) {
+    super(tSetEnv, "spartition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.PARTITION, this.getSchema().getDataType());
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }
+    TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
   }
 

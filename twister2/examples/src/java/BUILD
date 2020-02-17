@@ -24,6 +24,7 @@ common_deps_files = [
     "@com_google_protobuf//:protobuf_java",
     "@commons_io_commons_io//jar",
     "@maven//:org_apache_curator_curator_framework",
+    "@maven//:com_opencsv_opencsv",
     "@org_apache_hadoop_hadoop_hdfs//jar",
     "@org_apache_hadoop_hadoop_common//jar",
     "@org_apache_hadoop_hadoop_annotations//jar",

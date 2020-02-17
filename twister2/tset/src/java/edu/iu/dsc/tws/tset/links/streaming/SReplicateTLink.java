@@ -15,16 +15,20 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SReplicateTLink<T> extends StreamingSingleLink<T> {
-  public SReplicateTLink(StreamingTSetEnvironment tSetEnv, int reps) {
-    super(tSetEnv, "sreplicate", 1, reps);
+  public SReplicateTLink(StreamingTSetEnvironment tSetEnv, int reps, Schema schema) {
+    super(tSetEnv, "sreplicate", 1, reps, schema);
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.BROADCAST, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.BROADCAST, this.getSchema().getDataType());
+    TLinkUtils.generateCommsSchema(getSchema(), e);
+    return e;
   }
 
   @Override

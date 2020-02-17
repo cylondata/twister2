@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.io.Serializable;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TBase;
 
 /**
@@ -33,6 +34,11 @@ public interface StorableTBase<T> extends TBase, Serializable {
    * @return dataObject
    */
   List<T> getData();
+
+
+  default DataObject<T> getDataObject() {
+    return null;
+  }
 
   /**
    * retrieve data saved in the TSet

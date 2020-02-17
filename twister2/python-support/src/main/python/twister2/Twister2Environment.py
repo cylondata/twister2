@@ -14,19 +14,26 @@ from twister2.utils import SourceWrapper
 
 class Twister2Environment:
 
-    def __init__(self, name=None, resources=None, config=None):
+    def __init__(self, name=None, resources=None, config=None, mpi_aware=False):
         if config is None:
             config = {}
         if resources is None:
             resources = []
 
-        port = int(os.environ['T2_PORT'])
         bootstrap = os.environ['T2_BOOTSTRAP'] == "true"
+        if mpi_aware and not bootstrap:
+          from mpi4py import MPI
+          comm = MPI.COMM_WORLD
+          rank = comm.Get_rank()
+          port = int(os.environ['T2_PORT']) + rank
+        else:
+          port = int(os.environ['T2_PORT'])
         self.__gateway = JavaGateway(
             gateway_parameters=GatewayParameters(port=port, auto_convert=True))
         self.__entrypoint = self.__gateway.entry_point
 
         if bootstrap:
+            self.__entrypoint.addConfig("MPI_AWARE_PYTHON", mpi_aware)
             for key in config:
                 self.__entrypoint.addConfig(key, config[key])
 
@@ -37,12 +44,13 @@ class Twister2Environment:
                 self.__entrypoint.createComputeResource(resource["cpu"], resource["ram"],
                                                         resource["instances"])
 
-            self.__entrypoint.commit()
-            time.sleep(5)
-            self.__gateway.shutdown()
+            self.close()
             sys.exit(0)
         else:
             self.__predef_functions = TSetFunctions(self.__entrypoint.functions(), self)
+
+    def close(self):
+        self.__gateway.shutdown()
 
     @property
     def config(self):
@@ -93,3 +101,9 @@ class Twister2Environment:
         )
         src_tset = KeyedTSet(java_src_ref, self)
         return src_tset
+
+    @property
+    def numpy_builder(self):
+        # should be remove in future releases
+        return self.__entrypoint.getNumpyBuilder()
+

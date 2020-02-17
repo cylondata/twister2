@@ -12,16 +12,22 @@
 
 package edu.iu.dsc.tws.api.resource;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -102,6 +108,13 @@ public final class WorkerEnvironment {
       throw new RuntimeException("Unable to get the worker list", e);
     }
 
+    // if this is a Kubernetes cluster, check whether all worker pods are reachable
+    // sometimes it takes some time to populate dns ip values in Kubernetes
+    // although all workers is started, some workers may be unreachable by ip address
+    if ("kubernetes".equalsIgnoreCase(Context.clusterType(config))) {
+      checkAllPodsReachable();
+    }
+
     // create the channel
     this.channel = Network.initializeChannel(config, workerController);
     // create the communicator
@@ -150,7 +163,69 @@ public final class WorkerEnvironment {
   public void close() {
     this.communicator.close();
     this.channel.close();
+    CommonThreadPool.close();
     this.workerEnv = null;
+  }
+
+  /**
+   * TODO: this is in infinite loop if some pods are not reachable
+   *       we should put a limit to waiting and checking
+   * TODO: we are checking reachability of all pods in the job
+   *       we should only check the pods this worker will connect to.
+   * @return
+   */
+  private boolean checkAllPodsReachable() {
+
+    Set<String> podIPs = workerList
+        .stream()
+        .map(workerInfo -> workerInfo.getWorkerIP())
+        .collect(Collectors.toSet());
+
+    // remove own IP, no need to check own pod
+    podIPs.removeIf(ipStr -> ipStr.equals(workerController.getWorkerInfo().getWorkerIP()));
+
+    long start = System.currentTimeMillis();
+    long count = 0;
+    final long logPeriod = 6;
+    final long sleepInterval = 500;
+
+    while (!podIPs.isEmpty()) {
+      podIPs.removeIf(this::isReachable);
+
+      if (podIPs.isEmpty()) {
+        LOG.info("All worker pods are reachable by IP. count: " + count);
+        return true;
+      }
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+      }
+
+      count++;
+      if (count % logPeriod == 0) {
+        long duration = (System.currentTimeMillis() - start) / 1000;
+        LOG.info("We are trying to reach following worker pod IP addresses for " + duration
+            + " seconds: " + String.join(", ", podIPs));
+      }
+    }
+
+    return true;
+  }
+
+  private boolean isReachable(String podIP) {
+    InetAddress ip = null;
+    try {
+      ip = InetAddress.getByName(podIP);
+    } catch (UnknownHostException e) {
+      return false;
+    }
+    try {
+      LOG.finest("Checking IP: " + podIP);
+      return ip.isReachable(5000);
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   /**
@@ -174,8 +249,15 @@ public final class WorkerEnvironment {
               volatileVolume);
         }
       }
+    } else {
+      //If the worker Env exists reset the config (need to check if complete re-init is needed)
+      workerEnv.setConfig(config);
     }
     return workerEnv;
+  }
+
+  private void setConfig(Config conf) {
+    this.config = conf;
   }
 
   /*Shared Key-Value Store Related Methods*/

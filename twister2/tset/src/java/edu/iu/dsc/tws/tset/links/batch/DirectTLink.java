@@ -16,7 +16,9 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
   private boolean useDisk = false;
@@ -25,12 +27,13 @@ public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
     //non arg constructor for kryp
   }
 
-  public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "direct", sourceParallelism);
+  public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+    super(tSetEnv, "direct", sourceParallelism, schema);
   }
 
-  public DirectTLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism) {
-    super(tSetEnv, name, sourceParallelism);
+  public DirectTLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism,
+                     Schema schema) {
+    super(tSetEnv, name, sourceParallelism, schema);
   }
 
   @Override
@@ -41,8 +44,9 @@ public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.DIRECT, this.getSchema().getDataType());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
+    TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
   }
 

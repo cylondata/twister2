@@ -37,6 +37,17 @@ java_tests(
     ],
 )
 
+#java_tests_debug(
+#    classpath_resources = twister2_client_common_files(),
+#    test_classes = [
+#        "edu.iu.dsc.tws.data.DiskBackedCollectionPartitionTest",
+#        #"edu.iu.dsc.tws.data.HDFSBackedCollectionPartitionTest",
+#    ],
+#    runtime_deps = [
+#        ":data-tests",
+#    ],
+#)
+
 #filegroup(
 #    name = "srcs",
 #    srcs = ["BUILD"] + glob(["**/*.java"]),

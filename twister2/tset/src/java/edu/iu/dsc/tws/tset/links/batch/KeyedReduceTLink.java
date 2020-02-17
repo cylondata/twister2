@@ -28,20 +28,26 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedReduceTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
   private ReduceFunc<V> reduceFn;
 
-  public KeyedReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism) {
-    super(tSetEnv, "kreduce", sourceParallelism);
+  public KeyedReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism,
+                          TupleSchema schema) {
+    super(tSetEnv, "kreduce", sourceParallelism, schema);
     this.reduceFn = rFn;
   }
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.KEYED_REDUCE, getMessageType(), reduceFn);
+    Edge e = new Edge(getId(), OperationNames.KEYED_REDUCE, this.getSchema().getDataType(),
+        reduceFn);
     e.setKeyed(true);
+    e.setKeyType(this.getSchema().getKeyType());
+    TLinkUtils.generateKeyedCommsSchema(getSchema(), e);
     return e;
   }
 

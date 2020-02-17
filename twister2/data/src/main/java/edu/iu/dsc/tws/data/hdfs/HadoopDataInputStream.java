@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.data.hdfs;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
@@ -44,6 +45,11 @@ public final class HadoopDataInputStream extends FSDataInputStream {
   @Override
   public long getPos() throws IOException {
     return fosInputStream.getPos();
+  }
+
+  @Override
+  public Reader getReader() {
+    return null;
   }
 
   @Override

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -161,6 +161,26 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#checkPersDirWaitIfNeeded-CuratorFramework-java.lang.String-java.lang.String-">checkPersDirWaitIfNeeded</a></span>(CuratorFramework&nbsp;client,
+                        java.lang.String&nbsp;rootPath,
+                        java.lang.String&nbsp;jobID)</code>
+<div class="block">Initialize worker persistent state at ZooKeeper server
+ If the worker is starting for the first time, returns false
+ If the worker is restarting, returns true</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#createJobMasterPersState-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">createJobMasterPersState</a></span>(CuratorFramework&nbsp;client,
+                        java.lang.String&nbsp;rootPath,
+                        java.lang.String&nbsp;jobID,
+                        java.lang.String&nbsp;jmAddress)</code>
+<div class="block">create job master persistent state at ZooKeeper server
+ this method must be called if isJobMasterRestarting returns false</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#createPersStateDir-CuratorFramework-java.lang.String-JobAPI.Job-">createPersStateDir</a></span>(CuratorFramework&nbsp;client,
                   java.lang.String&nbsp;rootPath,
@@ -170,13 +190,24 @@ extends java.lang.Object</pre>
  This method should be called by the submitting client</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#createWorkerPersState-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">createWorkerPersState</a></span>(CuratorFramework&nbsp;client,
+                     java.lang.String&nbsp;rootPath,
+                     java.lang.String&nbsp;jobID,
+                     WorkerInfo&nbsp;workerInfo)</code>
+<div class="block">Initialize worker persistent state at ZooKeeper server
+ This method must be called after making sure that
+ there is no pers state znode for this worker at zk</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static JobAPI.Job</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#decodeJobZnode-byte:A-">decodeJobZnode</a></span>(byte[]&nbsp;body)</code>
 <div class="block">decode job znode body bytes</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static java.util.LinkedList&lt;<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#getWorkers-CuratorFramework-java.lang.String-java.lang.String-">getWorkers</a></span>(CuratorFramework&nbsp;client,
           java.lang.String&nbsp;rootPath,
@@ -184,41 +215,41 @@ extends java.lang.Object</pre>
 <div class="block">return all registered workers</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#getWorkerWithState-CuratorFramework-java.lang.String-">getWorkerWithState</a></span>(CuratorFramework&nbsp;client,
                   java.lang.String&nbsp;workerFullPath)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#getWorkerWithState-CuratorFramework-java.lang.String-java.lang.String-int-">getWorkerWithState</a></span>(CuratorFramework&nbsp;client,
                   java.lang.String&nbsp;rootPath,
                   java.lang.String&nbsp;jobID,
                   int&nbsp;workerID)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#initJobMasterPersState-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">initJobMasterPersState</a></span>(CuratorFramework&nbsp;client,
-                      java.lang.String&nbsp;rootPath,
-                      java.lang.String&nbsp;jobID,
-                      java.lang.String&nbsp;jmAddress)</code>
-<div class="block">Initialize job master persistent state at ZooKeeper server
- If the job master is starting for the first time, return false
- If the job master is restarting, return true</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#isJobMasterRestarting-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">isJobMasterRestarting</a></span>(CuratorFramework&nbsp;client,
+                     java.lang.String&nbsp;rootPath,
+                     java.lang.String&nbsp;jobID,
+                     java.lang.String&nbsp;jmAddress)</code>
+<div class="block">Check whether job master is restarting,
+ if it is restarting, update jm pers state znode
+ otherwise, return false, do not create jm pers znode</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#initWorkerPersState-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">initWorkerPersState</a></span>(CuratorFramework&nbsp;client,
-                   java.lang.String&nbsp;rootPath,
-                   java.lang.String&nbsp;jobID,
-                   WorkerInfo&nbsp;workerInfo)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#isWorkerRestarting-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">isWorkerRestarting</a></span>(CuratorFramework&nbsp;client,
+                  java.lang.String&nbsp;rootPath,
+                  java.lang.String&nbsp;jobID,
+                  WorkerInfo&nbsp;workerInfo)</code>
 <div class="block">Initialize worker persistent state at ZooKeeper server
  If the worker is starting for the first time, returns false
  If the worker is restarting, returns true</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static JobAPI.Job</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#readJobZNode-CuratorFramework-java.lang.String-java.lang.String-">readJobZNode</a></span>(CuratorFramework&nbsp;client,
             java.lang.String&nbsp;rootPath,
@@ -227,7 +258,7 @@ extends java.lang.Object</pre>
  decode and return</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#removeScaledDownZNodes-CuratorFramework-java.lang.String-java.lang.String-int-int-">removeScaledDownZNodes</a></span>(CuratorFramework&nbsp;client,
                       java.lang.String&nbsp;rootPath,
@@ -237,7 +268,7 @@ extends java.lang.Object</pre>
 <div class="block">When a job is scaled down, we must delete the znodes of killed workers.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#updateJobZNode-CuratorFramework-java.lang.String-JobAPI.Job-">updateJobZNode</a></span>(CuratorFramework&nbsp;client,
               java.lang.String&nbsp;rootPath,
@@ -247,7 +278,7 @@ extends java.lang.Object</pre>
  This method should be called by the submitting client</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKPersStateManager.html#updateWorkerStatus-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-WorkerState-">updateWorkerStatus</a></span>(CuratorFramework&nbsp;client,
                   java.lang.String&nbsp;rootPath,
@@ -313,17 +344,17 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="initWorkerPersState-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">
+<a name="isWorkerRestarting-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>initWorkerPersState</h4>
-<pre>public static&nbsp;boolean&nbsp;initWorkerPersState(CuratorFramework&nbsp;client,
-                                          java.lang.String&nbsp;rootPath,
-                                          java.lang.String&nbsp;jobID,
-                                          WorkerInfo&nbsp;workerInfo)
-                                   throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<h4>isWorkerRestarting</h4>
+<pre>public static&nbsp;boolean&nbsp;isWorkerRestarting(CuratorFramework&nbsp;client,
+                                         java.lang.String&nbsp;rootPath,
+                                         java.lang.String&nbsp;jobID,
+                                         WorkerInfo&nbsp;workerInfo)
+                                  throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
 <div class="block">Initialize worker persistent state at ZooKeeper server
  If the worker is starting for the first time, returns false
  If the worker is restarting, returns true
@@ -336,23 +367,83 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="initJobMasterPersState-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">
+<a name="checkPersDirWaitIfNeeded-CuratorFramework-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>initJobMasterPersState</h4>
-<pre>public static&nbsp;boolean&nbsp;initJobMasterPersState(CuratorFramework&nbsp;client,
-                                             java.lang.String&nbsp;rootPath,
-                                             java.lang.String&nbsp;jobID,
-                                             java.lang.String&nbsp;jmAddress)
-                                      throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
-<div class="block">Initialize job master persistent state at ZooKeeper server
- If the job master is starting for the first time, return false
- If the job master is restarting, return true
+<h4>checkPersDirWaitIfNeeded</h4>
+<pre>public static&nbsp;boolean&nbsp;checkPersDirWaitIfNeeded(CuratorFramework&nbsp;client,
+                                               java.lang.String&nbsp;rootPath,
+                                               java.lang.String&nbsp;jobID)
+                                        throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">Initialize worker persistent state at ZooKeeper server
+ If the worker is starting for the first time, returns false
+ If the worker is restarting, returns true
  <p>
- A persistent znode is created/updated for the job master on ZooKeeper server
+ A persistent znode is created/updated for this worker on ZooKeeper server
+ Each worker must call this method exactly once when they start</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="createWorkerPersState-CuratorFramework-java.lang.String-java.lang.String-WorkerInfo-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createWorkerPersState</h4>
+<pre>public static&nbsp;void&nbsp;createWorkerPersState(CuratorFramework&nbsp;client,
+                                         java.lang.String&nbsp;rootPath,
+                                         java.lang.String&nbsp;jobID,
+                                         WorkerInfo&nbsp;workerInfo)
+                                  throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">Initialize worker persistent state at ZooKeeper server
+ This method must be called after making sure that
+ there is no pers state znode for this worker at zk</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="isJobMasterRestarting-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isJobMasterRestarting</h4>
+<pre>public static&nbsp;boolean&nbsp;isJobMasterRestarting(CuratorFramework&nbsp;client,
+                                            java.lang.String&nbsp;rootPath,
+                                            java.lang.String&nbsp;jobID,
+                                            java.lang.String&nbsp;jmAddress)
+                                     throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">Check whether job master is restarting,
+ if it is restarting, update jm pers state znode
+ otherwise, return false, do not create jm pers znode
+ <p>
  Job master must call this method exactly once when it starts</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="createJobMasterPersState-CuratorFramework-java.lang.String-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createJobMasterPersState</h4>
+<pre>public static&nbsp;void&nbsp;createJobMasterPersState(CuratorFramework&nbsp;client,
+                                            java.lang.String&nbsp;rootPath,
+                                            java.lang.String&nbsp;jobID,
+                                            java.lang.String&nbsp;jmAddress)
+                                     throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">create job master persistent state at ZooKeeper server
+ this method must be called if isJobMasterRestarting returns false</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>

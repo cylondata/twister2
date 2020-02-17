@@ -15,7 +15,9 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 /**
  * Create a gather data set
@@ -24,13 +26,16 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
  */
 public class SGatherTLink<T> extends StreamingGatherLink<T> {
 
-  public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "sgather", sourceParallelism, 1);
+  public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism,
+                      Schema schema) {
+    super(tSetEnv, "sgather", sourceParallelism, 1, schema);
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.GATHER, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.GATHER, this.getSchema().getDataType());
+    TLinkUtils.generateCommsSchema(getSchema(), e);
+    return e;
   }
 
   @Override

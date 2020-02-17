@@ -17,10 +17,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
@@ -63,7 +66,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       public String next() {
         return dataList[c++ % dataList.length];
       }
-    }, parallel);
+    }, parallel).withSchema(PrimitiveSchemas.STRING);
   }
 
   KeyedSourceTSet<String, Integer> dummyKeyedSource(BatchTSetEnvironment env, int count,
@@ -81,7 +84,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
         c++;
         return new Tuple<>(Integer.toString(c), c);
       }
-    }, parallel);
+    }, parallel).withSchema(new KeyedSchema(MessageTypes.STRING, MessageTypes.INTEGER));
   }
 
   SourceTSet<Integer> dummyReplayableSource(BatchTSetEnvironment env, int count, int parallel) {
@@ -118,7 +121,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       public Integer next() {
         return c++;
       }
-    }, parallel);
+    }, parallel).withSchema(PrimitiveSchemas.INTEGER);
   }
 
   KeyedSourceTSet<String, Integer> dummyKeyedSourceOther(BatchTSetEnvironment env, int count,
@@ -136,7 +139,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
         c++;
         return new Tuple<>(Integer.toString(c), c + 25);
       }
-    }, parallel);
+    }, parallel).withSchema(new KeyedSchema(MessageTypes.STRING, MessageTypes.INTEGER));
   }
 
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {

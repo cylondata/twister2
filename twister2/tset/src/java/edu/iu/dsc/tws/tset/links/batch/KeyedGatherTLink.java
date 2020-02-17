@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterator<V>> {
@@ -25,18 +26,18 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
     //non arg constructor for kryo
   }
 
-  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    this(tSetEnv, null, sourceParallelism, null);
+  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, TupleSchema schema) {
+    this(tSetEnv, null, sourceParallelism, null, schema);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                          int sourceParallelism) {
-    this(tSetEnv, partitionFn, sourceParallelism, null);
+                          int sourceParallelism, TupleSchema schema) {
+    this(tSetEnv, partitionFn, sourceParallelism, null, schema);
   }
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
-                          int sourceParallelism, Comparator<K> keyCompartor) {
-    super(tSetEnv, partitionFn, sourceParallelism, keyCompartor);
+                          int sourceParallelism, Comparator<K> keyCompartor, TupleSchema schema) {
+    super(tSetEnv, partitionFn, sourceParallelism, keyCompartor, schema);
     this.enableGroupByKey();
   }
 

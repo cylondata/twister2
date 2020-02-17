@@ -90,6 +90,7 @@ public class TeraSort implements IWorker {
   private static final String ARG_RESOURCE_CPU = "instanceCPUs";
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
   private static final String ARG_RESOURCE_INSTANCES = "instances";
+  private static final String ARG_RESOURCE_VOLATILE_DISK = "volatileDisk";
 
   private static final String ARG_TASKS_SOURCES = "sources";
   private static final String ARG_TASKS_SINKS = "sinks";
@@ -104,6 +105,7 @@ public class TeraSort implements IWorker {
   private static final String TASK_SAMPLER = "sample-source";
   private static final String TASK_SAMPLER_REDUCE = "sample-recv";
   private static final String EDGE = "edge";
+  private static final String VERIFY = "verify";
 
   private static BenchmarkResultsRecorder resultsRecorder;
 
@@ -212,7 +214,8 @@ public class TeraSort implements IWorker {
     ComputeGraph computeGraph = teraSortTaskGraph.build();
     ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
     cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
-    LOG.info("Stopping execution...");
+    cEnv.close();
+    LOG.info("Finished Sorting...");
   }
 
   /**
@@ -353,17 +356,17 @@ public class TeraSort implements IWorker {
 
     @Override
     public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
-      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
-      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
-      resultsRecorder.writeToCSV();
 
       byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
+      boolean verify = config.getBooleanValue(VERIFY, false);
       long readStart = System.currentTimeMillis();
+
       while (content.hasNext()) {
         Tuple<byte[], byte[]> nextTuple = content.next();
-        if (previousKey != null
+        if (verify
+            && previousKey != null
             && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
           allOrdered = false;
@@ -380,6 +383,10 @@ public class TeraSort implements IWorker {
           }
         }
       }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+
       LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
           System.currentTimeMillis() - readStart));
       tasksCount.decrementAndGet();
@@ -541,9 +548,8 @@ public class TeraSort implements IWorker {
         false));
 
     //non-file based mode configurations
-    options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
-            + "A source will generate this much of data. Including size of both key and value.",
-        false));
+    options.addOption(createOption(ARG_SIZE, true, "Total Data Size in GigaBytes for all workers.",
+        true));
     options.addOption(createOption(ARG_KEY_SIZE, true,
         "Size of the key in bytes of a single Tuple", true));
     options.addOption(createOption(ARG_KEY_SEED, true,
@@ -558,6 +564,8 @@ public class TeraSort implements IWorker {
         "Amount of Memory in mega bytes to allocate per instance", true));
     options.addOption(createOption(ARG_RESOURCE_INSTANCES, true,
         "No. of instances", true));
+    options.addOption(createOption(ARG_RESOURCE_VOLATILE_DISK, true,
+        "Volatile Disk for each worker at K8s", false));
 
     //tasks and sources counts
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
@@ -593,6 +601,11 @@ public class TeraSort implements IWorker {
         ARG_FIXED_SCHEMA, false, "Use fixed schema feature", false
     ));
 
+    //verify option
+    options.addOption(createOption(
+        VERIFY, false, "Verify whether the results are sorted.", false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -602,6 +615,12 @@ public class TeraSort implements IWorker {
       jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
       jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
       jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
+    }
+
+    // in GB, default value is 4GB
+    double volatileDisk = 0.0;
+    if (cmd.hasOption(ARG_RESOURCE_VOLATILE_DISK)) {
+      volatileDisk = Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_VOLATILE_DISK));
     }
 
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
@@ -636,13 +655,18 @@ public class TeraSort implements IWorker {
       jobConfig.put(ARG_FIXED_SCHEMA, true);
     }
 
+    if (cmd.hasOption(VERIFY)) {
+      jobConfig.put(VERIFY, true);
+    }
+
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(TeraSort.class.getName())
+        .setJobName("terasort")
         .setWorkerClass(TeraSort.class.getName())
         .addComputeResource(
-            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
+            Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
+            volatileDisk,
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
         )
         .setConfig(jobConfig)

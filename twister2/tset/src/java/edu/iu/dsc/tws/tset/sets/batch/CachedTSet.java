@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
@@ -27,8 +28,9 @@ public class CachedTSet<T> extends StoredTSet<T> {
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
-  public CachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
-    super(tSetEnv, "cached", sinkFunc, parallelism);
+  public CachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism,
+                    Schema inputSchema) {
+    super(tSetEnv, "cached", sinkFunc, parallelism, inputSchema);
   }
 
   @Override
@@ -60,5 +62,10 @@ public class CachedTSet<T> extends StoredTSet<T> {
   @Override
   public CachedTSet<T> addInput(String key, StorableTBase<?> input) {
     return (CachedTSet<T>) super.addInput(key, input);
+  }
+
+  @Override
+  public CachedTSet<T> withSchema(Schema schema) {
+    return (CachedTSet<T>) super.withSchema(schema);
   }
 }

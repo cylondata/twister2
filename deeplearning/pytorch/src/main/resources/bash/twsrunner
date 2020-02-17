@@ -1,0 +1,2 @@
+#!/bin/bash
+/home/vibhatha/venv/ENV37/bin/python3 /home/vibhatha/github/forks/twister2/deeplearning/pytorch/src/main/python/twister2worker.py

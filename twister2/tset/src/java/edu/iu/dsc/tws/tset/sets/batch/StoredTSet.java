@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -56,8 +57,8 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
   StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
-             int parallelism) {
-    super(tSetEnv, name, parallelism);
+             int parallelism, Schema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = sinkFunc;
     this.storedSourcePrefix = "stored(" + getId() + ")";
   }
@@ -129,9 +130,9 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
 
   /**
    * Once a cache TSet is run, it will produce data and store data in the data executor with the
-   * tset ID as the key. This will be exposed to other operations as a {@link SourceTSet<T>}
+   * tset ID as the key. This will be exposed to other operations as a {@link SourceTSet}
    *
-   * @return {@link SourceTSet<T>} source tset from data
+   * @return {@link SourceTSet} source tset from data
    * <p>
    */
   @Override
@@ -163,5 +164,10 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
     }
 
     return results;
+  }
+
+  @Override
+  public DataObject<T> getDataObject() {
+    return getTSetEnv().getData(getId());
   }
 }

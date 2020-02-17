@@ -34,23 +34,19 @@ public class LocalFixedInputPartitioner<T> extends FixedInputPartitioner<T> {
     this.nTasks = numTasks;
   }
 
-  public LocalFixedInputPartitioner(Path filePath, int numTasks,
-                                    Config config, int datasize) {
+  public LocalFixedInputPartitioner(Path filePath, int numTasks, Config config, int datasize) {
     super(filePath, config, datasize);
     this.nTasks = numTasks;
   }
 
   @Override
-  protected TextInputSplit createSplit(int num, Path file, long start,
-                                       long length, String[] hosts) {
-
-
+  protected TextInputSplit createSplit(int num, Path file, long start, long length,
+                                       String[] hosts) {
     return new TextInputSplit(num, file, start, length, hosts);
   }
 
   @Override
-  public OrderedInputSplitAssigner<T> getInputSplitAssigner(
-      FileInputSplit<T>[] inputSplits) {
+  public OrderedInputSplitAssigner<T> getInputSplitAssigner(FileInputSplit<T>[] inputSplits) {
     if (assigner == null) {
       assigner = new OrderedInputSplitAssigner<T>(inputSplits, nTasks);
     }
