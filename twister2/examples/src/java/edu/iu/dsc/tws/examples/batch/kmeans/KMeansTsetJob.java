@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
@@ -65,20 +66,58 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
         dsize, csize, dataDirectory, centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
-    CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();
+
+     /*CachedTSet<double[][]> points =
+        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
+
+    SourceTSet<String> pointSource = tc.createCSVSource(dataDirectory, 4);
+
+    ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String>>() {
+          private double[][] localPoints = new double[dsize / parallelismValue][dimension];
+          private Pattern pattern = Pattern.compile(",");
+
+          @Override
+          public double[][] compute(Iterator<String> input) {
+            for (int i = 0; i < dsize / parallelismValue && input.hasNext(); i++) {
+              String[] splits = pattern.split(input.next());
+              for (int j = 0; j < dimension; j++) {
+                localPoints[i][j] = Double.parseDouble(splits[j]);
+              }
+            }
+            LOG.info("local points size:" + Arrays.deepToString(localPoints));
+            return localPoints;
+          }
+        });
+
+    //tc.run(points);
+    points.setName("dataSource").cache();
+
 
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
-    //TODO: Incorporate Schema also
-    SourceTSet<String> lines = tc.createCSVSource(dataDirectory, parallelismValue);
-    lines.direct().map((MapFunc<Double[], String>) input -> {
-      Pattern pattern = Pattern.compile(",");
-      return pattern.splitAsStream(input)
-          .map(Double::parseDouble)
-          .toArray(Double[]::new);
-    }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
+    /*SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, 4);
+
+    ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String>>() {
+          private double[][] localCenters = new double[csize][dimension];
+          private Pattern pattern = Pattern.compile(",");
+
+          @Override
+          public double[][] compute(Iterator<String> input) {
+            for (int i = 0; i < csize && input.hasNext(); i++) {
+              String[] splits = pattern.split(input.next());
+              for (int j = 0; j < dimension; j++) {
+                localCenters[i][j] = Double.parseDouble(splits[j]);
+              }
+            }
+            LOG.fine("local centers size:" + Arrays.deepToString(localCenters));
+            return localCenters;
+          }
+        });
+    //tc.run(centers);
+    centers.cache();*/
 
     long endTimeData = System.currentTimeMillis();
 
@@ -86,8 +125,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
         (t1, t2) -> {
-          double[][] newCentroids = new double[t1.length]
-              [t1[0].length];
+          double[][] newCentroids = new double[t1.length][t1[0].length];
           for (int j = 0; j < t1.length; j++) {
             for (int k = 0; k < t1[0].length; k++) {
               double newVal = t1[j][k] + t2[j][k];

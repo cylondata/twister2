@@ -95,7 +95,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     Map<Object, Object> values = reduced.get(target);
 
     if (values == null || values.isEmpty()) {
-      return true;
+      return isFilledToSend(target);
     }
 
     boolean send = bulkReceiver.receive(target, new ReduceIterator(values));

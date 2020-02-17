@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.task.impl.ops;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -47,6 +48,19 @@ public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
 
   public T useDisk(boolean useDisk) {
     return this.withProperty(CommunicationContext.USE_DISK, useDisk);
+  }
+
+  @Override
+  protected void generateSchema() {
+    if (this.opDataType.isPrimitive() && this.opKeyType.isPrimitive()
+        && !this.opDataType.isArray()
+        && !this.opKeyType.isArray()
+        && this.messageSchema == MessageSchema.noSchema()) {
+      this.messageSchema = MessageSchema.ofSize(
+          this.opDataType.getUnitSizeInBytes() + this.opKeyType.getUnitSizeInBytes(),
+          this.opKeyType.getUnitSizeInBytes()
+      );
+    }
   }
 
   @Override

@@ -19,6 +19,7 @@ import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
+import edu.iu.dsc.tws.tset.links.TLinkUtils;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K, VL, VR>> {
@@ -82,7 +84,7 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
   /**
    * Uses a different build pattern than the usual {@link edu.iu.dsc.tws.api.tset.link.TLink}s
    *
-   * @param graphBuilder  graph builder
+   * @param graphBuilder graph builder
    * @param buildSequence build seq
    */
   @Override
@@ -110,16 +112,22 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
       String groupName = leftTSet.getId() + "_" + rightTSet.getId() + "_" + getId() + "_"
           + target.getId();
 
+
       // build left
-      buildJoin(graphBuilder, leftTSet, target, 0, groupName, kType, dTypeL);
+      buildJoin(graphBuilder, leftTSet, target, 0,
+          groupName, kType, dTypeL, getSchema().isLengthsSpecified(),
+          getSchema().getKeySize(), getSchema().getTotalSize());
 
       // build right
-      buildJoin(graphBuilder, rightTSet, target, 1, groupName, kType, dTypeR);
+      buildJoin(graphBuilder, rightTSet, target, 1,
+          groupName, kType, dTypeR, getSchema().isRightLengthsSpecified(),
+          getSchema().getKeySize(), getSchema().getRightTotalSize());
     }
   }
 
   private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName,
-                         MessageType kType, MessageType dType) {
+                         MessageType kType, MessageType dType,
+                         boolean lengthsSpecified, int keyLength, int totalLength) {
     Edge e = new Edge(getId(), OperationNames.JOIN, dType);
     // override edge name with join_source_target
     e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
@@ -134,6 +142,13 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, useDisk);
     e.setKeyType(kType);
+
+    if (lengthsSpecified) {
+      e.setMessageSchema(MessageSchema.ofSize(totalLength, keyLength));
+    } else {
+      TLinkUtils.generateCommsSchema(e);
+    }
+
 
     graphBuilder.connect(s.getId(), t.getId(), e);
   }

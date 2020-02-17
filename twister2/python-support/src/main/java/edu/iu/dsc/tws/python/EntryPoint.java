@@ -9,26 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.schema;
+package edu.iu.dsc.tws.python;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import java.util.concurrent.Semaphore;
 
-public interface TupleSchema extends Schema {
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 
-  MessageType getKeyType();
+public abstract class EntryPoint implements Closable {
 
-  int getKeySize();
+  private Semaphore wait = new Semaphore(0);
 
   @Override
-  default int getTotalSize() {
-    if (!this.isLengthsSpecified()) {
-      return -1;
-    }
-    return this.getKeySize() + this.getDataSize();
+  public void close() {
+    wait.release();
   }
 
-  @Override
-  default boolean isLengthsSpecified() {
-    return this.getKeySize() != -1 && this.getDataSize() != -1;
+  /**
+   * This wait should be released only when python process has disconnected
+   */
+  public void waitForCompletion() throws InterruptedException {
+    this.wait.acquire();
   }
 }
