@@ -13,26 +13,9 @@ package edu.iu.dsc.tws.api.tset.schema;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
-public class KeyedSchema implements TupleSchema {
-  private MessageType dType;
-  private MessageType kType;
-
-  public KeyedSchema() {
-    //non-arg constructor for kryo
-
-  }
-
-  public KeyedSchema(MessageType keyType, MessageType dataType) {
-    this.dType = dataType;
-    this.kType = keyType;
-  }
-
+public class NullSchema implements Schema {
   @Override
   public MessageType getDataType() {
-    return dType;
-  }
-
-  public MessageType getKeyType() {
-    return kType;
+    return null;
   }
 }

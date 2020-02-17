@@ -17,6 +17,10 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 public class JoinSchema extends KeyedSchema {
   private MessageType dTypeR;
 
+  public JoinSchema() {
+    //non-arg constructor for kryo
+  }
+
   public JoinSchema(MessageType keyType, MessageType leftDataType,
                     MessageType rightDataType) {
     super(keyType, leftDataType);

@@ -175,8 +175,15 @@ public final class WorkerEnvironment {
               volatileVolume);
         }
       }
+    } else {
+      //If the worker Env exists reset the config (need to check if complete re-init is needed)
+      workerEnv.setConfig(config);
     }
     return workerEnv;
+  }
+
+  private void setConfig(Config conf) {
+    this.config = conf;
   }
 
   /*Shared Key-Value Store Related Methods*/
