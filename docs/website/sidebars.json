@@ -67,6 +67,23 @@
       "examples/tset/tset_persisting"
     ]
   },
+  "ai": {
+    "AI": [
+      "ai/artificial_intelligence"
+    ],
+    "Twister2Flow": [
+      "ai/twister2flow/twister2flow"
+    ],
+    "Machine Learning": [
+      "ai/machinelearning/machinelearning",
+      "ai/machinelearning/kmeans/kmeans",
+      "ai/machinelearning/svm/svm"
+    ],
+    "Deep Learning": [
+      "ai/deeplearning/deeplearning",
+      "ai/deeplearning/pytorch/pytorchinitial"
+    ]
+  },
   "examples": {
     "Examples": [
       "examples/examples",

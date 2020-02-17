@@ -101,6 +101,9 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLink</a>&lt;T1,T0&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema</a>&lt;T1,T0&gt;</li>
+<li>
+<ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.streaming">edu.iu.dsc.tws.tset.links.streaming.StreamingTLinkImpl</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;java.lang.Integer,T&gt;&gt;,T&gt;</li>
 <li>
 <ul class="inheritance">
@@ -108,6 +111,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.links.streaming.SGatherTLink&lt;T&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -155,8 +160,9 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/Stream
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/SGatherTLink.html#SGatherTLink-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-int-">SGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
-            int&nbsp;sourceParallelism)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/SGatherTLink.html#SGatherTLink-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.Schema-">SGatherTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
+            int&nbsp;sourceParallelism,
+            <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -196,14 +202,21 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/Stream
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.streaming.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.streaming">StreamingTLinkImpl</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#getTSetEnv--">getTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#sink-edu.iu.dsc.tws.api.tset.fn.SinkFunc-">sink</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#compute-java.lang.String-edu.iu.dsc.tws.api.tset.fn.ComputeFunc-">compute</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#countWindow-long-">countWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#countWindow-long-long-">countWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#getTSetEnv--">getTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#sink-edu.iu.dsc.tws.api.tset.fn.SinkFunc-">sink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#timeWindow-long-java.util.concurrent.TimeUnit-">timeWindow</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html#timeWindow-long-java.util.concurrent.TimeUnit-long-java.util.concurrent.TimeUnit-">timeWindow</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html#getSchema--">getSchema</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.BaseTLink">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">addChildToGraph</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#equals-java.lang.Object-">equals</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getId--">getId</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -247,14 +260,15 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/streaming/Stream
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="SGatherTLink-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-int-">
+<a name="SGatherTLink-edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>SGatherTLink</h4>
 <pre>public&nbsp;SGatherTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/StreamingTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">StreamingTSetEnvironment</a>&nbsp;tSetEnv,
-                    int&nbsp;sourceParallelism)</pre>
+                    int&nbsp;sourceParallelism,
+                    <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
 </li>
 </ul>
 </li>

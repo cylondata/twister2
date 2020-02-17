@@ -217,7 +217,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
    *
    * @return keyed schema
    */
-  public KeyedSchema getOutputSchema() {
-    return (KeyedSchema) super.getOutputSchema();
+  public TupleSchema getOutputSchema() {
+    return (TupleSchema) super.getOutputSchema();
   }
 }

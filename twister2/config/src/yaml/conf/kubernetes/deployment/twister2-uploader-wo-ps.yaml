@@ -41,7 +41,7 @@ metadata:
     app: twister2-uploader
 
 spec:
-  replicas: 2
+  replicas: 1
   serviceName: twister2-uploader
 
   selector:

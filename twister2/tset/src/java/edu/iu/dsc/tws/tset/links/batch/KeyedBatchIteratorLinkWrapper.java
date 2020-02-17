@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
+import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
@@ -24,12 +25,12 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
   KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP,
-                                KeyedSchema schema) {
+                                TupleSchema schema) {
     super(env, n, sourceP, schema);
   }
 
   KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
-                                KeyedSchema schema) {
+                                TupleSchema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 

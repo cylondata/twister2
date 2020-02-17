@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -98,7 +98,10 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
-<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;V&gt;</li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSet</a>&lt;T&gt;</li>
+<li>
+<ul class="inheritance">
+<li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema</a>&lt;V&gt;</li>
 <li>
 <ul class="inheritance">
 <li><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">edu.iu.dsc.tws.tset.sets.batch.BatchTupleTSetImpl</a>&lt;K,V&gt;</li>
@@ -108,6 +111,8 @@ var activeTableTab = "activeTableTab";
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet&lt;K,V&gt;</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -180,9 +185,10 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStored
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html#KeyedCachedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">KeyedCachedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html#KeyedCachedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.KeyedSchema-">KeyedCachedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;&gt;&gt;&nbsp;sinkFunc,
-               int&nbsp;parallelism)</code>&nbsp;</td>
+               int&nbsp;parallelism,
+               <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/KeyedSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">KeyedSchema</a>&nbsp;inputSchema)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -231,20 +237,33 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStored
 <div class="block">Name of the tset</div>
 </td>
 </tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedCachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</code>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TupleTSet</code></a> output.</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.batch.KeyedStoredTSet">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedStoredTSet</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getData--">getData</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getINode--">getINode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getStoredSourceTSet--">getStoredSourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#join-edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-">join</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#join-edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-">join</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedDirect--">keyedDirect</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather--">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-java.util.Comparator-">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped--">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-java.util.Comparator-">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedPartition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedPartition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">keyedReduce</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getData--">getData</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getINode--">getINode</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getInputSchema--">getInputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#getStoredSourceTSet--">getStoredSourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#join-edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-">join</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#join-edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet-edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType-java.util.Comparator-edu.iu.dsc.tws.api.compute.TaskPartitioner-">join</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedDirect--">keyedDirect</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather--">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGather-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-java.util.Comparator-">keyedGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped--">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedGatherUngrouped-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-java.util.Comparator-">keyedGatherUngrouped</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedPartition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">keyedPartition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">keyedReduce</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.batch.BatchTupleTSetImpl">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTupleTSetImpl</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#addInput-java.lang.String-edu.iu.dsc.tws.api.tset.sets.StorableTBase-">addInput</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#getTSetEnv--">getTSetEnv</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#addInput-java.lang.String-edu.iu.dsc.tws.api.tset.sets.StorableTBase-">addInput</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#getOutputSchema--">getOutputSchema</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#getTSetEnv--">getTSetEnv</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSetWithSchema</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSetWithSchema.html#setOutputSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">setOutputSchema</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.BaseTSet">
@@ -295,7 +314,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStored
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="KeyedCachedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-">
+<a name="KeyedCachedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.SinkFunc-int-edu.iu.dsc.tws.api.tset.schema.KeyedSchema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -303,7 +322,8 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStored
 <h4>KeyedCachedTSet</h4>
 <pre>public&nbsp;KeyedCachedTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
                        <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;&gt;&gt;&nbsp;sinkFunc,
-                       int&nbsp;parallelism)</pre>
+                       int&nbsp;parallelism,
+                       <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/KeyedSchema.html" title="class in edu.iu.dsc.tws.api.tset.schema">KeyedSchema</a>&nbsp;inputSchema)</pre>
 </li>
 </ul>
 </li>
@@ -336,6 +356,28 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStored
 <dd><code>n</code> - name</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>this set</dd>
+</dl>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedCachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">TupleTSet</a></code></span></div>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TupleTSet</code></a> output. This will be used in the packers for efficient
+ SER-DE operations in the following <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">withSchema</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">withSchema</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTupleTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="type parameter in KeyedCachedTSet">V</a>&gt;</code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>schema</code> - data type as a <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types"><code>MessageType</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TupleTSet</code></a></dd>
 </dl>
 </li>
 </ul>

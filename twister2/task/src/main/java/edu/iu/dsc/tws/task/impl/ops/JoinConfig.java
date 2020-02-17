@@ -33,7 +33,6 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
 
   private String group;
 
-  private MessageSchema leftMessageSchema = MessageSchema.noSchema();
   private MessageSchema rightMessageSchema = MessageSchema.noSchema();
 
   public JoinConfig(String leftParent, String rightParent,
@@ -78,13 +77,13 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
 
   @Override
   public JoinConfig withMessageSchema(MessageSchema messageSchema) {
-    this.leftMessageSchema = messageSchema;
+    super.withMessageSchema(messageSchema);
     this.rightMessageSchema = messageSchema;
     return this;
   }
 
   public JoinConfig withLeftMessageSchema(MessageSchema messageSchema) {
-    this.leftMessageSchema = messageSchema;
+    this.messageSchema = messageSchema;
     return this;
   }
 
@@ -107,13 +106,30 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     if (this.rightEdgeName == null) {
       failValidation("Right edge should have a name");
     }
+
+    if (this.rightSource == null) {
+      throw new OpConfigValidationFailedException("Parent can't be null");
+    }
+  }
+
+  @Override
+  protected void generateSchema() {
+    super.generateSchema();
+    if (this.rightOpDataType.isPrimitive() && this.opKeyType.isPrimitive()
+        && !this.rightOpDataType.isArray()
+        && !this.opKeyType.isArray()
+        && this.rightMessageSchema == MessageSchema.noSchema()) {
+      this.rightMessageSchema = MessageSchema.ofSize(
+          this.rightOpDataType.getUnitSizeInBytes() + this.opKeyType.getUnitSizeInBytes(),
+          this.opKeyType.getUnitSizeInBytes()
+      );
+    }
   }
 
   public ComputeConnection connect() {
     Edge leftEdge = this.buildEdge();
     leftEdge.setEdgeIndex(0);
     leftEdge.setNumberOfEdges(2);
-    leftEdge.setMessageSchema(this.leftMessageSchema);
 
     Edge rightEdge = this.buildRightEdge();
     rightEdge.setEdgeIndex(1);
@@ -133,10 +149,10 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
   }
 
   Edge buildRightEdge() {
-    this.runValidation();
     Edge edge = new Edge(this.rightEdgeName, this.operationName);
     edge.setDataType(rightOpDataType);
     edge.addProperties(propertiesMap);
+    edge.setMessageSchema(this.rightMessageSchema);
     updateEdge(edge);
 
     edge.setKeyed(true);

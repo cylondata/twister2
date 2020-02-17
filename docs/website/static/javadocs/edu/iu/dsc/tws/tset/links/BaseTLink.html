@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../edu/iu/dsc/tws/tset/links/BuildableTLink.html" title="interface in edu.iu.dsc.tws.tset.links"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/tset/links/BaseTLink.html" target="_top">Frames</a></li>
@@ -116,7 +116,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchTLinkImpl</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/links/streaming/StreamingTLinkImpl.html" title="class in edu.iu.dsc.tws.tset.links.streaming">StreamingTLinkImpl</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links">BaseTLinkWithSchema</a></dd>
 </dl>
 <hr>
 <br>
@@ -198,46 +198,38 @@ implements <a href="../../../../../../edu/iu/dsc/tws/tset/links/BuildableTLink.h
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>protected <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getMessageType--">getMessageType</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getName--">getName</a></span>()</code>
 <div class="block">Gets the name for the <a href="../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title="interface in edu.iu.dsc.tws.api.tset"><code>TBase</code></a></div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getSourceParallelism--">getSourceParallelism</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTargetParallelism--">getTargetParallelism</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">TSetEnvironment</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getTSetEnv--">getTSetEnv</a></span>()</code>
 <div class="block">tset env</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
-<td class="colFirst"><code>protected java.lang.Class</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#getType--">getType</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i9" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#hashCode--">hashCode</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#rename-java.lang.String-">rename</a></span>(java.lang.String&nbsp;n)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#setTSetEnv-edu.iu.dsc.tws.tset.env.TSetEnvironment-">setTSetEnv</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/env/TSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">TSetEnvironment</a>&nbsp;newEnv)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLink.html#toString--">toString</a></span>()</code>&nbsp;</td>
 </tr>
@@ -373,24 +365,6 @@ implements <a href="../../../../../../edu/iu/dsc/tws/tset/links/BuildableTLink.h
 <pre>protected&nbsp;void&nbsp;rename(java.lang.String&nbsp;n)</pre>
 </li>
 </ul>
-<a name="getType--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getType</h4>
-<pre>protected&nbsp;java.lang.Class&nbsp;getType()</pre>
-</li>
-</ul>
-<a name="getMessageType--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getMessageType</h4>
-<pre>protected&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;getMessageType()</pre>
-</li>
-</ul>
 <a name="addChildToGraph-edu.iu.dsc.tws.api.tset.TBase-">
 <!--   -->
 </a>
@@ -511,7 +485,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/tset/links/BuildableTLink.h
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../edu/iu/dsc/tws/tset/links/BuildableTLink.html" title="interface in edu.iu.dsc.tws.tset.links"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/tset/links/BaseTLinkWithSchema.html" title="class in edu.iu.dsc.tws.tset.links"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/tset/links/BaseTLink.html" target="_top">Frames</a></li>

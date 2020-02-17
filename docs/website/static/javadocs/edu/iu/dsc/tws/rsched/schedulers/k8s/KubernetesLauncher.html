@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -156,30 +156,18 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#createJobZnodes-JobAPI.Job-">createJobZnodes</a></span>(JobAPI.Job&nbsp;job)</code>
-<div class="block">create znodes on ZooKeeper server for this job</div>
-</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#deleteJobZnode-java.lang.String-">deleteJobZnode</a></span>(java.lang.String&nbsp;jobID)</code>
-<div class="block">delete job znodes on ZooKeeper server</div>
-</td>
-</tr>
-<tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#initialize-edu.iu.dsc.tws.api.config.Config-">initialize</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;conf)</code>
 <div class="block">Initialize with the configuration</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/Twister2JobState.html" title="class in edu.iu.dsc.tws.api.scheduler">Twister2JobState</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#launch-JobAPI.Job-">launch</a></span>(JobAPI.Job&nbsp;job)</code>
 <div class="block">Launch the processes according to the resource plan.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#terminateJob-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;jobID)</code>
 <div class="block">Terminate the Kubernetes Job</div>
@@ -254,31 +242,6 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html#launch-JobAPI.Job-">launch</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>true if the request is granted</dd>
-</dl>
-</li>
-</ul>
-<a name="createJobZnodes-JobAPI.Job-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>createJobZnodes</h4>
-<pre>public&nbsp;boolean&nbsp;createJobZnodes(JobAPI.Job&nbsp;job)</pre>
-<div class="block">create znodes on ZooKeeper server for this job</div>
-</li>
-</ul>
-<a name="deleteJobZnode-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>deleteJobZnode</h4>
-<pre>public&nbsp;boolean&nbsp;deleteJobZnode(java.lang.String&nbsp;jobID)</pre>
-<div class="block">delete job znodes on ZooKeeper server</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>jobID</code> - </dd>
-<dt><span class="returnLabel">Returns:</span></dt>
 </dl>
 </li>
 </ul>
