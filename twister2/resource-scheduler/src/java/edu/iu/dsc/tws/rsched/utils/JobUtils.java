@@ -127,7 +127,7 @@ public final class JobUtils {
         builder.put(key, object);
       }
     } catch (Exception e) {
-      LOG.info("Error while overriding Configs " + e.getMessage());
+      LOG.severe("Error while overriding Configs " + e.getMessage());
     }
     return builder.build();
   }
