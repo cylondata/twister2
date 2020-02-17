@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CheckpointedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/ComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">ComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSinkTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">StoredTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">StreamingTSetImpl</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CheckpointedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/ComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">ComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SComputeTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSinkTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSinkTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/SSourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">SSourceTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">StoredTSet</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/StreamingTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">StreamingTSetImpl</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/streaming/WindowComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.streaming">WindowComputeTSet</a></dd>
 </dl>
 <hr>
 <br>
@@ -223,6 +223,12 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title=
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;&nbsp;unionTSet)</code>
 <div class="block">Returns a single <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> that create a union of data in both <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
+</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html#withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;dataType)</code>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output.</div>
 </td>
 </tr>
 </table>
@@ -432,7 +438,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title=
 <a name="union-java.util.Collection-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>union</h4>
 <pre><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;&nbsp;union(java.util.Collection&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;&gt;&nbsp;tSets)</pre>
@@ -442,6 +448,23 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/api/tset/TBase.html" title=
 <dd><code>tSets</code> - a collection of TSet's to union with</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Union TSet</dd>
+</dl>
+</li>
+</ul>
+<a name="withSchema-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>withSchema</h4>
+<pre><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="type parameter in TSet">T</a>&gt;&nbsp;withSchema(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;dataType)</pre>
+<div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> output. This will be used in the packers for efficient
+ SER-DE operations in the following <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a>s</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>dataType</code> - data type as a <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types"><code>MessageType</code></a></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a></dd>
 </dl>
 </li>
 </ul>

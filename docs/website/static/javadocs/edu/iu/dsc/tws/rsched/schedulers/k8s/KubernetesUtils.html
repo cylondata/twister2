@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -140,9 +140,10 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static java.lang.String[]</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#createCopyCommand-java.lang.String-java.lang.String-java.lang.String-">createCopyCommand</a></span>(java.lang.String&nbsp;filename,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#createCopyCommand-java.lang.String-java.lang.String-java.lang.String-java.lang.String-">createCopyCommand</a></span>(java.lang.String&nbsp;filename,
                  java.lang.String&nbsp;namespace,
-                 java.lang.String&nbsp;podName)</code>
+                 java.lang.String&nbsp;podName,
+                 java.lang.String&nbsp;podFile)</code>
 <div class="block">create file copy command to a pod</div>
 </td>
 </tr>
@@ -261,19 +262,24 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i23" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#jobPackageFullPath-edu.iu.dsc.tws.api.config.Config-java.lang.String-">jobPackageFullPath</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                  java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#numberOfWorkerPods-JobAPI.Job-">numberOfWorkerPods</a></span>(JobAPI.Job&nbsp;job)</code>
 <div class="block">calculate the number of pods in a job</div>
 </td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#podNameFromStatefulSetName-java.lang.String-int-">podNameFromStatefulSetName</a></span>(java.lang.String&nbsp;ssName,
                           int&nbsp;podIndex)</code>
 <div class="block">create podName from StatefulSet name with pod index</div>
 </td>
 </tr>
-<tr id="i25" class="rowColor">
+<tr id="i26" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesUtils.html#removeIndexFromName-java.lang.String-">removeIndexFromName</a></span>(java.lang.String&nbsp;name)</code>
 <div class="block">when the given name is in the form of "name-index"
@@ -334,7 +340,7 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="createCopyCommand-java.lang.String-java.lang.String-java.lang.String-">
+<a name="createCopyCommand-java.lang.String-java.lang.String-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -342,7 +348,8 @@ extends java.lang.Object</pre>
 <h4>createCopyCommand</h4>
 <pre>public static&nbsp;java.lang.String[]&nbsp;createCopyCommand(java.lang.String&nbsp;filename,
                                                    java.lang.String&nbsp;namespace,
-                                                   java.lang.String&nbsp;podName)</pre>
+                                                   java.lang.String&nbsp;podName,
+                                                   java.lang.String&nbsp;podFile)</pre>
 <div class="block">create file copy command to a pod</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -597,6 +604,16 @@ extends java.lang.Object</pre>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 </dl>
+</li>
+</ul>
+<a name="jobPackageFullPath-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>jobPackageFullPath</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;jobPackageFullPath(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                                                  java.lang.String&nbsp;jobID)</pre>
 </li>
 </ul>
 <a name="getLocalAddress--">

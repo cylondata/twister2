@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -73,13 +73,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li><a href="#nested.classes.inherited.from.class.edu.iu.dsc.tws.data.api.splits.FileInputSplit">Nested</a>&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -101,15 +101,10 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/LocatableInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.LocatableInputSplit</a>&lt;OT&gt;</li>
 <li>
 <ul class="inheritance">
-<li><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.FileInputSplit</a>&lt;OT&gt;</li>
-<li>
-<ul class="inheritance">
-<li><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit</a>&lt;java.lang.String&gt;</li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">edu.iu.dsc.tws.data.api.splits.FileInputSplit</a>&lt;java.lang.Object&gt;</li>
 <li>
 <ul class="inheritance">
 <li>edu.iu.dsc.tws.data.api.splits.CSVInputSplit</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -122,12 +117,14 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;java.lang.String&gt;, java.io.Serializable</dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;java.lang.Object&gt;, java.io.Serializable</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">CSVInputSplit</span>
-extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a>&lt;java.lang.String&gt;</pre>
+extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;java.lang.Object&gt;</pre>
+<div class="block">This class is primarily responsible for reading the split of a CSV file. It receive the input as
+ start and length of the file to be read for each split.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../../serialized-form.html#edu.iu.dsc.tws.data.api.splits.CSVInputSplit">Serialized Form</a></dd>
@@ -159,19 +156,37 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedIn
 <!--   -->
 </a>
 <h3>Field Summary</h3>
-<ul class="blockList">
-<li class="blockList"><a name="fields.inherited.from.class.edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit">
-<!--   -->
-</a>
-<h3>Fields inherited from class&nbsp;edu.iu.dsc.tws.data.api.splits.<a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#RECORD_DELIMITER">RECORD_DELIMITER</a></code></li>
-</ul>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#DEFAULT_FIELD_DELIMITER">DEFAULT_FIELD_DELIMITER</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#DEFAULT_LINE_DELIMITER">DEFAULT_LINE_DELIMITER</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#DEFAULT_TAB_DELIMITER">DEFAULT_TAB_DELIMITER</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#RECORD_DELIMITER">RECORD_DELIMITER</a></span></code>
+<div class="block">The configuration key to set the record delimiter.</div>
+</td>
+</tr>
+</table>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.edu.iu.dsc.tws.data.api.splits.FileInputSplit">
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;edu.iu.dsc.tws.data.api.splits.<a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#currentSplit">currentSplit</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#enumerateNestedFiles">enumerateNestedFiles</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#MAX_SPLIT_SIZE_DISCREPANCY">MAX_SPLIT_SIZE_DISCREPANCY</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#minSplitSize">minSplitSize</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#numSplits">numSplits</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#openTimeout">openTimeout</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitLength">splitLength</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitStart">splitStart</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#stream">stream</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#enumerateNestedFiles">enumerateNestedFiles</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#MAX_SPLIT_SIZE_DISCREPANCY">MAX_SPLIT_SIZE_DISCREPANCY</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#minSplitSize">minSplitSize</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#numSplits">numSplits</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#openTimeout">openTimeout</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitLength">splitLength</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#splitStart">splitStart</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#stream">stream</a></code></li>
 </ul>
 </li>
 </ul>
@@ -211,22 +226,94 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedIn
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#readRecord-java.lang.String-byte:A-int-int-">readRecord</a></span>(java.lang.String&nbsp;reuse,
-          byte[]&nbsp;bytes,
-          int&nbsp;readOffset,
-          int&nbsp;numBytes)</code>
-<div class="block">This function parses the given byte array which represents a serialized record.</div>
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#close--">close</a></span>()</code>
+<div class="block">Closes the input by releasing all buffers and closing the file input stream.</div>
 </td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;parameters)</code>
+<div class="block">Configures this input format by reading the path to the file from the
+ configuration and the string that
+ defines the record delimiter.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getBufferSize--">getBufferSize</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>java.nio.charset.Charset</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getCharset--">getCharset</a></span>()</code>
+<div class="block">Get the character set used for the row delimiter.</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getCharsetName--">getCharsetName</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>byte[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getDelimiter--">getDelimiter</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getDelimiterString--">getDelimiterString</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#getLineLengthLimit--">getLineLengthLimit</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#nextRecord-java.lang.Object-">nextRecord</a></span>(java.lang.Object&nbsp;record)</code>
+<div class="block">Reads the next record from the input.</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#open-edu.iu.dsc.tws.api.config.Config-">open</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>
+<div class="block">Opens the given input split.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#reachedEnd--">reachedEnd</a></span>()</code>
+<div class="block">Checks whether the current split is at its end.</div>
+</td>
+</tr>
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code>protected boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#readLine--">readLine</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#readRecord-byte:A-int-int-">readRecord</a></span>(byte[]&nbsp;bytes,
+          int&nbsp;readOffset,
+          int&nbsp;numBytes)</code>&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#setBufferSize-int-">setBufferSize</a></span>(int&nbsp;bufferSize)</code>&nbsp;</td>
+</tr>
+<tr id="i14" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#setCharsetName-java.lang.String-">setCharsetName</a></span>(java.lang.String&nbsp;charsetName)</code>&nbsp;</td>
+</tr>
+<tr id="i15" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#setDelimiter-byte:A-">setDelimiter</a></span>(byte[]&nbsp;delimiter)</code>&nbsp;</td>
+</tr>
+<tr id="i16" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#setDelimiterString-java.lang.String-">setDelimiterString</a></span>(java.lang.String&nbsp;delimiterString)</code>&nbsp;</td>
+</tr>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/CSVInputSplit.html#setLineLengthLimit-int-">setLineLengthLimit</a></span>(int&nbsp;lineLengthLimit)</code>&nbsp;</td>
+</tr>
 </table>
-<ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit">
-<!--   -->
-</a>
-<h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.data.api.splits.<a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#close--">close</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getBufferSize--">getBufferSize</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getCharset--">getCharset</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getCharsetName--">getCharsetName</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getDelimiter--">getDelimiter</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getDelimiterString--">getDelimiterString</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#getLineLengthLimit--">getLineLengthLimit</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#nextRecord-OT-">nextRecord</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#open-edu.iu.dsc.tws.api.config.Config-">open</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#reachedEnd--">reachedEnd</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#readLine--">readLine</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#setBufferSize-int-">setBufferSize</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#setCharsetName-java.lang.String-">setCharsetName</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#setDelimiter-byte:A-">setDelimiter</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#setDelimiterString-java.lang.String-">setDelimiterString</a>, <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#setLineLengthLimit-int-">setLineLengthLimit</a></code></li>
-</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.data.api.splits.FileInputSplit">
 <!--   -->
@@ -256,6 +343,67 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedIn
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="DEFAULT_LINE_DELIMITER">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DEFAULT_LINE_DELIMITER</h4>
+<pre>public static final&nbsp;java.lang.String DEFAULT_LINE_DELIMITER</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.data.api.splits.CSVInputSplit.DEFAULT_LINE_DELIMITER">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DEFAULT_FIELD_DELIMITER">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DEFAULT_FIELD_DELIMITER</h4>
+<pre>public static final&nbsp;java.lang.String DEFAULT_FIELD_DELIMITER</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.data.api.splits.CSVInputSplit.DEFAULT_FIELD_DELIMITER">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DEFAULT_TAB_DELIMITER">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DEFAULT_TAB_DELIMITER</h4>
+<pre>public static final&nbsp;java.lang.String DEFAULT_TAB_DELIMITER</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.data.api.splits.CSVInputSplit.DEFAULT_TAB_DELIMITER">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="RECORD_DELIMITER">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>RECORD_DELIMITER</h4>
+<pre>protected static final&nbsp;java.lang.String RECORD_DELIMITER</pre>
+<div class="block">The configuration key to set the record delimiter.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../../constant-values.html#edu.iu.dsc.tws.data.api.splits.CSVInputSplit.RECORD_DELIMITER">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -292,32 +440,234 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedIn
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="readRecord-java.lang.String-byte:A-int-int-">
+<a name="getDelimiter--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDelimiter</h4>
+<pre>public&nbsp;byte[]&nbsp;getDelimiter()</pre>
+</li>
+</ul>
+<a name="setDelimiter-byte:A-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setDelimiter</h4>
+<pre>public&nbsp;void&nbsp;setDelimiter(byte[]&nbsp;delimiter)</pre>
+</li>
+</ul>
+<a name="getDelimiterString--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDelimiterString</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getDelimiterString()</pre>
+</li>
+</ul>
+<a name="setDelimiterString-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setDelimiterString</h4>
+<pre>public&nbsp;void&nbsp;setDelimiterString(java.lang.String&nbsp;delimiterString)</pre>
+</li>
+</ul>
+<a name="getBufferSize--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getBufferSize</h4>
+<pre>public&nbsp;int&nbsp;getBufferSize()</pre>
+</li>
+</ul>
+<a name="setBufferSize-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setBufferSize</h4>
+<pre>public&nbsp;void&nbsp;setBufferSize(int&nbsp;bufferSize)</pre>
+</li>
+</ul>
+<a name="getCharsetName--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCharsetName</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getCharsetName()</pre>
+</li>
+</ul>
+<a name="setCharsetName-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setCharsetName</h4>
+<pre>public&nbsp;void&nbsp;setCharsetName(java.lang.String&nbsp;charsetName)</pre>
+</li>
+</ul>
+<a name="getLineLengthLimit--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getLineLengthLimit</h4>
+<pre>public&nbsp;int&nbsp;getLineLengthLimit()</pre>
+</li>
+</ul>
+<a name="setLineLengthLimit-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setLineLengthLimit</h4>
+<pre>public&nbsp;void&nbsp;setLineLengthLimit(int&nbsp;lineLengthLimit)</pre>
+</li>
+</ul>
+<a name="getCharset--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCharset</h4>
+<pre>public&nbsp;java.nio.charset.Charset&nbsp;getCharset()</pre>
+<div class="block">Get the character set used for the row delimiter.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the charset</dd>
+</dl>
+</li>
+</ul>
+<a name="configure-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>configure</h4>
+<pre>public&nbsp;void&nbsp;configure(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;parameters)</pre>
+<div class="block">Configures this input format by reading the path to the file from the
+ configuration and the string that
+ defines the record delimiter.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#configure-edu.iu.dsc.tws.api.config.Config-">configure</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>parameters</code> - The configuration object to read the parameters from.</dd>
+</dl>
+</li>
+</ul>
+<a name="open-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>open</h4>
+<pre>public&nbsp;void&nbsp;open(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)
+          throws java.io.IOException</pre>
+<div class="block">Opens the given input split. This method opens the input stream to the specified file,
+ allocates read buffers
+ and positions the stream at the correct position, making sure that any partial
+ record at the beginning is skipped.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html#open-edu.iu.dsc.tws.api.config.Config-">open</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#open-edu.iu.dsc.tws.api.config.Config-">open</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="nextRecord-java.lang.Object-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>nextRecord</h4>
+<pre>public&nbsp;java.lang.String&nbsp;nextRecord(java.lang.Object&nbsp;record)
+                            throws java.io.IOException</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html#nextRecord-OT-">InputSplit</a></code></span></div>
+<div class="block">Reads the next record from the input.
+ <p>
+ When this method is called, the input format it guaranteed to be opened.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>record</code> - Object that may be reused.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Read record.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code> - Thrown, if an I/O error occurred.</dd>
+</dl>
+</li>
+</ul>
+<a name="readRecord-byte:A-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>readRecord</h4>
+<pre>public&nbsp;java.lang.String&nbsp;readRecord(byte[]&nbsp;bytes,
+                                   int&nbsp;readOffset,
+                                   int&nbsp;numBytes)
+                            throws java.io.IOException</pre>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="readLine--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>readLine</h4>
+<pre>protected final&nbsp;boolean&nbsp;readLine()
+                          throws java.io.IOException</pre>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="close--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>close</h4>
+<pre>public&nbsp;void&nbsp;close()
+           throws java.io.IOException</pre>
+<div class="block">Closes the input by releasing all buffers and closing the file input stream.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/fs/io/InputSplit.html" title="interface in edu.iu.dsc.tws.data.fs.io">InputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html#close--">close</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/FileInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">FileInputSplit</a>&lt;java.lang.Object&gt;</code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code> - Thrown, if the closing of the file stream causes an I/O error.</dd>
+</dl>
+</li>
+</ul>
+<a name="reachedEnd--">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>readRecord</h4>
-<pre>public&nbsp;java.lang.String&nbsp;readRecord(java.lang.String&nbsp;reuse,
-                                   byte[]&nbsp;bytes,
-                                   int&nbsp;readOffset,
-                                   int&nbsp;numBytes)
-                            throws java.io.IOException</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#readRecord-OT-byte:A-int-int-">DelimitedInputSplit</a></code></span></div>
-<div class="block">This function parses the given byte array which represents a serialized record.
- The function returns a valid record or throws an IOException.</div>
+<h4>reachedEnd</h4>
+<pre>public&nbsp;boolean&nbsp;reachedEnd()</pre>
+<div class="block">Checks whether the current split is at its end.</div>
 <dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html#readRecord-OT-byte:A-int-int-">readRecord</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedInputSplit.html" title="class in edu.iu.dsc.tws.data.api.splits">DelimitedInputSplit</a>&lt;java.lang.String&gt;</code></dd>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>reuse</code> - An optionally reusable object.</dd>
-<dd><code>bytes</code> - Binary data of serialized records.</dd>
-<dd><code>readOffset</code> - The offset where to start to read the record data.</dd>
-<dd><code>numBytes</code> - The number of bytes that can be read starting at the offset position.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>Returns the read record if it was successfully deserialized.</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.io.IOException</code> - if the record could not be read.</dd>
+<dd>True, if the split is at its end, false otherwise.</dd>
 </dl>
 </li>
 </ul>
@@ -374,13 +724,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/data/api/splits/DelimitedIn
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li><a href="#nested.classes.inherited.from.class.edu.iu.dsc.tws.data.api.splits.FileInputSplit">Nested</a>&nbsp;|&nbsp;</li>
-<li><a href="#fields.inherited.from.class.edu.iu.dsc.tws.data.api.splits.DelimitedInputSplit">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
