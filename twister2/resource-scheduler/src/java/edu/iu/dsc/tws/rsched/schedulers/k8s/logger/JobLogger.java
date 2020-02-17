@@ -138,10 +138,12 @@ public class JobLogger extends Thread {
         ) {
 
           String podName = item.object.getMetadata().getName();
+          String podIP = item.object.getStatus().getPodIP();
+
           List<V1Container> containers = item.object.getSpec().getContainers();
           if (podName.endsWith("-jm-0")) {
             String contName = containers.get(0).getName();
-            String id = "job-master";
+            String id = "job-master-ip" + podIP;
             WorkerLogger workerLogger = new WorkerLogger(
                 namespace, podName, contName, id, logsDir, v1Api, this);
             startWorkerLogger(workerLogger);
@@ -154,7 +156,7 @@ public class JobLogger extends Thread {
             if (wID >= numberOfWorkers) {
               numberOfWorkers = wID + 1;
             }
-            String id = "worker" + wID;
+            String id = "worker" + wID + "-ip" + podIP;
             WorkerLogger workerLogger =
                 new WorkerLogger(namespace, podName, container.getName(), id, logsDir, v1Api, this);
             startWorkerLogger(workerLogger);
