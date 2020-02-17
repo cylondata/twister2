@@ -4,7 +4,7 @@ set -eu
 
 echo -e "Installing maven snapshot locally...\n"
 
-version=${1:-0.5.1}
+version=${1:-0.6.0-SNAPSHOT}
 
 bash $(dirname $0)/execute-deploy.sh \
   "install:install-file" \

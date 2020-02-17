@@ -26,7 +26,7 @@ twister2.resource.mesos.scheduler.driver.stop.timeout.ms: 5000
 twister2.resource.mesos.native.library.path: "/usr/lib/mesos/0.28.1/lib/"
 
 # the core package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.5.1.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
 
 
 #overlay network name for docker containers

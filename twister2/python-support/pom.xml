@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.twister2</groupId>
             <artifactId>api-java</artifactId>
-            <version>0.5.1</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.ow2.asm/asm -->
         <dependency>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.twister2</groupId>
             <artifactId>tset-java</artifactId>
-            <version>0.5.1</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java -->
         <dependency>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.twister2</groupId>
             <artifactId>local-runner-java</artifactId>
-            <version>0.5.1</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.sf.py4j</groupId>
