@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # build Twister2 base docker image
-VERSION="0.6.0-SNAPSHOT"
+VERSION="0.5.1"
 TWISTER2_BASE_IMAGE="twister2/twister2-k8s-base"
 
 # build docker image

@@ -14,7 +14,7 @@ twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
 twister2.resource.scheduler.mpi.home: ""
 
 # the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.5.1.tar.gz"
 
 # the launcher class
 twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
