@@ -57,14 +57,10 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
-  @Override
-  public <T> BaseTSet<T> createCSVSource(String filePath, int dataSize, int parallelism) {
-    return createSource(new CSVBasedSourceFunction(filePath, dataSize), parallelism);
-  }
-
-  @Override
-  public <T> BaseTSet<T> createCSVSource(String filePath, int parallelism) {
-    return createSource(new CSVBasedSourceFunction(filePath), parallelism);
+  public <T> BaseTSet<T> createCSVSource(String filePath, int datasize, int parallelism,
+                                         String type) {
+    return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
+        parallelism);
   }
 
   @Override

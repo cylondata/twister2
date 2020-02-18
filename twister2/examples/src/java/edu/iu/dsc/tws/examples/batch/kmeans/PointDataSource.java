@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +27,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -105,6 +108,7 @@ public class PointDataSource extends BaseSource implements Collector {
     for (double[] d : points) {
       dataPointsLocal[i++] = d;
     }
+    LOG.info("Length:" + dataPointsLocal.length + "\tsize:" + Arrays.deepToString(dataPointsLocal));
     context.end(edgeName);
   }
 
@@ -113,12 +117,22 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    if ("csv".equalsIgnoreCase(fileType)) {
-      this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-          new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+    if ("txt".equalsIgnoreCase(fileType)) {
+      if ("points".equals(inputKey)) {
+        this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), cfg));
+      } else {
+        this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), cfg));
+      }
     } else {
-      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-          new Path(dataDirectory), context.getParallelism(), cfg));
+      if ("points".equals(inputKey)) {
+        this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+      } else {
+        this.source = runtime.createInput(cfg, context, new LocalCompleteCSVInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+      }
     }
   }
 

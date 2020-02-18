@@ -38,7 +38,7 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput" + env.getWorkerID(), 4);
+    SourceTSet<String> lines = env.createCSVSource("/tmp/dinput" + env.getWorkerID(), 4, 4, "full");
     parseCSV(lines);
     lines.direct().map((MapFunc<Double[], String>) input -> {
       Pattern pattern = Pattern.compile(",");
