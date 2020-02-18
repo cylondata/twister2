@@ -67,8 +67,17 @@ public abstract class ThreadSharingExecutor implements IExecutor {
     this.config = config;
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
+    Thread.UncaughtExceptionHandler hndler = new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable ex) {
+        throw new RuntimeException(ex);
+      }
+    };
     this.threads = Executors.newFixedThreadPool(numThreads,
-        new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
+        new ThreadFactoryBuilder()
+            .setNameFormat("executor-%d")
+            .setDaemon(true)
+            .setUncaughtExceptionHandler(hndler)
+            .build());
     this.executionPlan = plan;
     this.executionHook = hook;
   }
@@ -102,12 +111,14 @@ public abstract class ThreadSharingExecutor implements IExecutor {
 
   /**
    * Specific implementation needs to implement this method
+   *
    * @return weather we executed successfully
    */
   public abstract boolean runExecution();
 
   /**
    * Specific implementation needs to implement this method
+   *
    * @return weather we executed successfully
    */
   public abstract IExecution runIExecution();

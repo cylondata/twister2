@@ -19,7 +19,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
@@ -114,7 +113,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     if (bindTaskToThread) {
       doneSignal = new CountDownLatch(tasks.size());
       for (INodeInstance task : tasks) {
-        threads.submit(new BatchWorker(task));
+        threads.execute(new BatchWorker(task));
       }
     } else {
 
@@ -124,7 +123,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
       doneSignal = new CountDownLatch(numThreads);
       for (int i = 0; i < numThreads; i++) {
-        threads.submit(new BatchWorker(tasks, taskStatus));
+        threads.execute(new BatchWorker(tasks, taskStatus));
       }
     }
   }
@@ -198,7 +197,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     doneSignal = new CountDownLatch(curTaskSize);
     for (int i = 0; i < curTaskSize; i++) {
       workers[i] = new CommunicationWorker(tasks);
-      threads.submit(workers[i]);
+      threads.execute(workers[i]);
     }
   }
 
@@ -250,23 +249,23 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public void run() {
       while (isNotStopped()) {
-        try {
-          INodeInstance nodeInstance = tasks.poll();
-          if (nodeInstance != null) {
-            boolean complete = nodeInstance.isComplete();
-            if (complete) {
-              finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
-            } else {
-              // we need to further execute this task
-              tasks.offer(nodeInstance);
-            }
+//        try {
+        INodeInstance nodeInstance = tasks.poll();
+        if (nodeInstance != null) {
+          boolean complete = nodeInstance.isComplete();
+          if (complete) {
+            finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
           } else {
-            break;
+            // we need to further execute this task
+            tasks.offer(nodeInstance);
           }
-        } catch (Throwable t) {
-          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
-          throw new RuntimeException("Error occurred in execution of task", t);
+        } else {
+          break;
         }
+//        } catch (Throwable t) {
+//          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+//          throw new RuntimeException("Error occurred in execution of task", t);
+//        }
       }
       doneSignal.countDown();
     }
@@ -317,22 +316,22 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         }
       } else {
         while (isNotStopped() && finishedInstances.get() != tasks.size()) {
-          try {
-            int nodeInstanceIndex = this.getNext();
-            if (nodeInstanceIndex != -1) {
-              INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
-              boolean needsFurther = nodeInstance.execute();
-              if (!needsFurther) {
-                finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
-              } else {
-                //need further execution
-                this.ignoreIndex[nodeInstanceIndex].set(false);
-              }
+//          try {
+          int nodeInstanceIndex = this.getNext();
+          if (nodeInstanceIndex != -1) {
+            INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
+            boolean needsFurther = nodeInstance.execute();
+            if (!needsFurther) {
+              finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
+            } else {
+              //need further execution
+              this.ignoreIndex[nodeInstanceIndex].set(false);
             }
-          } catch (Throwable t) {
-            LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
-            throw new RuntimeException("Error occurred in execution of task", t);
           }
+//          } catch (Throwable t) {
+//            LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+//            throw new RuntimeException("Error occurred in execution of task", t);
+//          }
         }
       }
       doneSignal.countDown();
