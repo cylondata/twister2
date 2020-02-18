@@ -17,15 +17,15 @@ public final class PrimitiveSchemas {
   private PrimitiveSchemas() {
   }
 
-  public static final Schema INTEGER = () -> MessageTypes.INTEGER;
+  public static final Schema INTEGER = new IntegerSchema();
 
-  public static final Schema STRING = () -> MessageTypes.STRING;
+  public static final Schema STRING = new StringSchema();
 
-  public static final Schema OBJECT = () -> MessageTypes.OBJECT;
+  public static final Schema OBJECT = new ObjectSchema();
 
-  public static final Schema EMPTY = () -> MessageTypes.EMPTY;
+  public static final Schema EMPTY = new EmptySchema();
 
-  public static final Schema NULL = () -> null;
+  public static final Schema NULL = new NullSchema();
 
   public static final KeyedSchema OBJECT_TUPLE2 = new KeyedSchema(MessageTypes.OBJECT,
       MessageTypes.OBJECT);

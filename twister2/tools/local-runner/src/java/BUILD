@@ -23,5 +23,8 @@ t2_java_lib(
         "//twister2/executor/src/java:executor-java",
         "//twister2/proto:proto-java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/driver:driver-api-java",
+        "//twister2/tset/src/java:tset-java",
     ] + other_deps,
 )

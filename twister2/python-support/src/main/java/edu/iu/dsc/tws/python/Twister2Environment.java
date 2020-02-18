@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.python.numpy.NumpyHolderBuilder;
 import edu.iu.dsc.tws.python.tset.PyTSetKeyedSource;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
 import edu.iu.dsc.tws.python.tset.fn.TSetFunctions;
@@ -63,5 +64,9 @@ public class Twister2Environment extends EntryPoint {
 
   public TSetFunctions functions() {
     return TSetFunctions.getInstance();
+  }
+
+  public NumpyHolderBuilder getNumpyBuilder() {
+    return NumpyHolderBuilder.getInstance();
   }
 }

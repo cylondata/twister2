@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1StatefulSetList;
 import io.kubernetes.client.util.ClientBuilder;
+import okhttp3.OkHttpClient;
 
 /**
  * a controller class to talk to the Kubernetes Master to manage jobs
@@ -64,17 +66,43 @@ public class KubernetesController {
     initApiInstances();
   }
 
-  public static void initApiInstances() {
+  public static ApiClient getApiClient() {
+    if (client != null) {
+      return client;
+    }
+
     try {
       client = io.kubernetes.client.util.Config.defaultClient();
+      return client;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
     }
-    Configuration.setDefaultApiClient(client);
+  }
 
+  public static void initApiInstances() {
+    if (client == null) {
+      getApiClient();
+    }
+
+    Configuration.setDefaultApiClient(client);
     coreApi = new CoreV1Api();
     appsApi = new AppsV1Api(client);
+  }
+
+  /**
+   * create CoreV1Api that does not time out
+   * @return
+   */
+  public static CoreV1Api createCoreV1Api() {
+    if (client == null) {
+      getApiClient();
+    }
+    OkHttpClient httpClient =
+        client.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    client.setHttpClient(httpClient);
+    Configuration.setDefaultApiClient(client);
+    return new CoreV1Api(client);
   }
 
   /**
