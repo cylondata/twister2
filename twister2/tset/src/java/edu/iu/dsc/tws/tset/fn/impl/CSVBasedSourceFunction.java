@@ -51,7 +51,7 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     this.ctx = context;
     Config cfg = ctx.getConfig();
 
-    this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 100);
+    //this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 100);
     this.parallel = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 4);
     this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(new Path(datainputDirectory),
         parallel, dataSize, cfg), parallel);

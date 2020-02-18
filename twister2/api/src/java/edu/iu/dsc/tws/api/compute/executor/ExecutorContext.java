@@ -49,7 +49,7 @@ public class ExecutorContext extends Context {
   }
 
   public static String getBatchExecutor(Config cfg) {
-    return cfg.getStringValue(BATCH_EXECUTOR, BATCH_EXECUTOR_SHARING_SEP_COMM);
+    return cfg.getStringValue(BATCH_EXECUTOR, BATCH_EXECUTOR_SHARING);
   }
 
   public static String getStreamExecutor(Config cfg) {

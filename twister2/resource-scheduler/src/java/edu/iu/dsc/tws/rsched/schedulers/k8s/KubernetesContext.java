@@ -24,6 +24,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
+  public static final boolean K8S_LOG_IN_CLIENT_DEFAULT = false;
+  public static final String K8S_LOG_IN_CLIENT = "kubernetes.log.in.client";
+
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9000;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
@@ -93,6 +96,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean logInClient(Config cfg) {
+    return cfg.getBooleanValue(K8S_LOG_IN_CLIENT, K8S_LOG_IN_CLIENT_DEFAULT);
   }
 
   public static boolean nodeLocationsFromConfig(Config cfg) {

@@ -67,11 +67,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     long startTime = System.currentTimeMillis();
 
-     /*CachedTSet<double[][]> points =
+    /*CachedTSet<double[][]> points =
         tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
 
-    SourceTSet<String> pointSource = tc.createCSVSource(dataDirectory, 4);
-
+    SourceTSet<String> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelismValue);
     ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           private double[][] localPoints = new double[dsize / parallelismValue][dimension];
@@ -85,20 +84,17 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
                 localPoints[i][j] = Double.parseDouble(splits[j]);
               }
             }
-            LOG.info("local points size:" + Arrays.deepToString(localPoints));
+            LOG.info("local points size:" + localPoints.length);
             return localPoints;
           }
         });
-
     //tc.run(points);
     points.setName("dataSource").cache();
-
 
     CachedTSet<double[][]> centers =
         tc.createSource(new CenterSource(type), parallelismValue).cache();
 
-    /*SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, 4);
-
+    /*SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, csize, 4);
     ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           private double[][] localCenters = new double[csize][dimension];
@@ -112,17 +108,16 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
                 localCenters[i][j] = Double.parseDouble(splits[j]);
               }
             }
-            LOG.fine("local centers size:" + Arrays.deepToString(localCenters));
+            LOG.info("local centers size:" + Arrays.deepToString(localCenters));
             return localCenters;
           }
         });
-    //tc.run(centers);
-    centers.cache();*/
+    tc.run(centers);
+    //centers.cache();*/
 
     long endTimeData = System.currentTimeMillis();
 
     ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet = points.direct().map(new KMeansMap());
-
     ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
         (t1, t2) -> {
           double[][] newCentroids = new double[t1.length][t1[0].length];
@@ -134,11 +129,9 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           }
           return newCentroids;
         }).map(new AverageCenters());
-
     kmeansTSet.addInput("centers", centers);
 
     CachedTSet<double[][]> cached = reduced.lazyCache();
-
     for (int i = 0; i < iterations; i++) {
       tc.evalAndUpdate(cached, centers);
     }

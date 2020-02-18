@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.tset.TBaseGraph;
 
 /**
  * This class loader will be used to virtually create isolated contexts for Worker instances.
@@ -48,9 +49,11 @@ public class LocalClassLoader extends SecureClassLoader {
     twsClassesToExclude.add(Twister2Job.class.getName());
     twsClassesToExclude.add(Config.class.getName());
     twsClassesToExclude.add(Config.Builder.class.getName());
+    twsClassesToExclude.add(TBaseGraph.class.getName());
 
     // delegating following packages to parent class loader
     twsPackagesToExclude.add("edu.iu.dsc.tws.proto");
+    twsPackagesToExclude.add("edu.iu.dsc.tws");
     twsPackagesToExclude.add("jep"); // to support python debugging
     twsPackagesToExclude.add("edu.iu.dsc.tws.python.processors.JepInstance");
   }

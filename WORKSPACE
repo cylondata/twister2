@@ -129,9 +129,9 @@ http_archive(
 http_archive(
     name = "ucx",
     build_file = "@//:third_party/ucx/ucx.BUILD",
-    sha256 = "6038eba0d785e0b88296394db8cb7e5f66cf7567ea3b10dd0d52f79de22247a8",
-    strip_prefix = "ucx-43152f76ded60710cf72d5e6230a89c67970597f",
-    urls = ["https://github.com/openucx/ucx/archive/43152f76ded60710cf72d5e6230a89c67970597f.zip"],
+    sha256 = "9614ff9a157351042a607a490c9e02c9f0e55e88b2b906f6e8ce17e3c6038bf1",
+    strip_prefix = "ucx-1.7.0",
+    urls = ["https://github.com/openucx/ucx/archive/v1.7.0.zip"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")

@@ -17,6 +17,7 @@ import org.apache.commons.collections4.map.HashedMap;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.ObjectType;
 
 public class THashMap<K, V> extends HashedMap<K, V> {
   private MessageType keyType;
@@ -28,7 +29,7 @@ public class THashMap<K, V> extends HashedMap<K, V> {
   @Override
   protected int hash(Object o) {
     if (o != null && o.getClass().isArray()) {
-      if (keyType == MessageTypes.OBJECT) {
+      if (keyType instanceof ObjectType) {
         if (o instanceof byte[]) {
           return Arrays.hashCode((byte[]) o);
         } else if (o instanceof int[]) {
@@ -75,7 +76,7 @@ public class THashMap<K, V> extends HashedMap<K, V> {
   @Override
   protected boolean isEqualKey(Object o, Object o1) {
     if (o != null && o1 != null && o.getClass().isArray() && o1.getClass().isArray()) {
-      if (keyType == MessageTypes.OBJECT || keyType == null) {
+      if (keyType == null || keyType instanceof ObjectType) {
         if (o instanceof byte[]) {
           return Arrays.equals((byte[]) o, (byte[]) o1);
         } else if (o instanceof int[]) {

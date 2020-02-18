@@ -45,6 +45,11 @@ public class Twister2JobState {
    */
   private Map<Integer, String> messages;
 
+  /**
+   * Cause of the failure
+   */
+  private Exception cause;
+
 
   public Twister2JobState(boolean granted) {
     this.requestGranted = granted;
@@ -86,6 +91,9 @@ public class Twister2JobState {
   }
 
   public Exception getCause() {
+    if (cause != null) {
+      return cause;
+    }
     if (jobstate == DriverJobState.FAILED) {
       for (Integer workerId : messages.keySet()) {
         if (!messages.get(workerId).equals("Worker Completed")) {
@@ -95,5 +103,9 @@ public class Twister2JobState {
       }
     }
     return null;
+  }
+
+  public void setCause(Exception ex) {
+    cause = ex;
   }
 }
