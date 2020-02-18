@@ -18,6 +18,10 @@ public class JoinSchema extends KeyedSchema {
   private MessageType dTypeR;
   private int rightDatSize;
 
+  public JoinSchema() {
+    //non-arg constructor for kryo
+  }
+
   public JoinSchema(MessageType keyType, MessageType leftDataType,
                     MessageType rightDataType) {
     super(keyType, leftDataType);

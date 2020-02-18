@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.ObjectType;
 
 /**
  * Hashing selector, that does hash based selection for keys
@@ -69,7 +70,7 @@ public class HashingSelector implements DestinationSelector {
   }
 
   private int getArrayHashCode(Object key, MessageType type) {
-    if (type == MessageTypes.OBJECT || keyType == null) {
+    if (type instanceof ObjectType || keyType == null) {
       if (key instanceof byte[]) {
         return Arrays.hashCode((byte[]) key);
       } else if (key instanceof int[]) {

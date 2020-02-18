@@ -66,14 +66,41 @@ waits to upload the job package to workers.
 
 ### Job Logs
 
-You can see the job logs either from Kubernetes Dashboard website, using kubectl command or 
-through persistent storage logs if enabled. 
-The workers in HelloWorld job prints a log message and sleeps 1 minutes before exiting. 
-So the user can check Kubernetes Dashboard website for worker log messages. 
-There must be a StatefulSet with the job name. List the pods in that StatefulSet. 
+There are a number of ways to check the logs of a Twister2 job. 
+* Saving Log Files in Submitting Client
+* Saving Log Files in Persistent Storage
+* Getting Log Files from Kubernetes Dashboard
+* Getting Log Files with kubectl
+
+#### Saving Log Files in Submitting Client
+Before submitting the job, you need to set the following parameter to true: 
+```text
+kubernetes.log.in.client 
+```
+Log files of all workers and the job master will be saved to the directory: 
+```text
+$HOME/.twister2/jobID
+```
+Loggers will run in the submitting client. So, you should let the submitting client run during
+the job execution. 
+
+#### Saving Log Files in Persistent Storage
+When a persistent storage is enabled for a job, 
+log files are written to that directory by default. 
+They are saved in the directory called "logs" under the persistent storage directory. 
+
+You need to learn the persistent logging directory of your storage provisioner. 
+You can learn it from Kubernetes Dashboard by checking the provisioner entity or consulting your administrator. 
+
+#### Getting Log Files from Kubernetes Dashboard
+Go to Kubernetes Dashboard website. 
+There must be at least two StatefulSets with the jobID. 
+One of them is for the job master and the other(s) is for workers. 
+List the pods in a StatefulSet. 
 Check the output for each pod by clicking on the right hand side button. 
 You will see the output for each worker in that window.
 
+#### Getting Log Files with kubectl
 To see the logs by using kubectl, you first need to learn the pod names in the job. 
 You can execute "kubectl get pods" command to list the pods in the cluster. 
 The pod names for the job are in the form of <job-name><ss-index><pod-index>.
@@ -81,11 +108,6 @@ You can see the logs of each pod by executing the command:
 ```bash
     $ kubectl logs <podname>
 ```
-
-You can also check the log files from persistent storage if the persistent storage is enabled. 
-You need to learn the persistent logging directory of your storage provisioner. 
-You can learn it from Kubernetes Dashboard by checking the provisioner entity or consulting your administrator. 
-Check that directory for the job logs.
 
 ### Logs for MPI Enabled Jobs
 
@@ -115,12 +137,15 @@ Twister2Job.loadTwister2Job()
 
 ### Job Names
 
-We are using job names as StatefulSet and Service names. In addition we are using job names as labels. 
+We are using job names in jobIDs. 
+In addition, we are using jobIDs as StatefulSet and Service names. 
+Furthermore, we are using jobIDs in labels to identify job pods. 
 Therefore job names must follow Kubernetes naming rules: [Kubernetes resource naming rules](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
 
-Job names should consist of lower case alphanumeric characters and dash\(-\) only. Their length can be 50 chars at most. 
+Job names should consist of lower case alphanumeric characters and dash\(-\) only. 
+Their length can be 30 chars at most. 
 If job names do not conform to these rules, we automatically change them to accommodate those rules. 
-We use the changed names as job names.  
+We use the changed names in jobIDs. 
 
 ## Job Package Uploader Settings
 
