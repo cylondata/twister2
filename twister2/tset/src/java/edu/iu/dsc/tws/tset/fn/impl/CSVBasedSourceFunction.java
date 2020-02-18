@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 
 public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
@@ -35,14 +35,15 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
   private String datainputDirectory;
   private int dataSize;
   private int parallel;
+  private int count = 0;
+  private String partitionerType;
 
-  public CSVBasedSourceFunction(String dataInputdirectory) {
-    this.datainputDirectory = dataInputdirectory;
-  }
-
-  public CSVBasedSourceFunction(String dataInputdirectory, int datasize) {
+  public CSVBasedSourceFunction(String dataInputdirectory, int datasize, int parallelism,
+                                String type) {
     this.datainputDirectory = dataInputdirectory;
     this.dataSize = datasize;
+    this.parallel = parallelism;
+    this.partitionerType = type;
   }
 
   @Override
@@ -50,13 +51,14 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     super.prepare(context);
     this.ctx = context;
     Config cfg = ctx.getConfig();
-
-    //this.dataSize = cfg.getIntegerValue(DataObjectConstants.DSIZE, 100);
-    this.parallel = cfg.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE, 4);
-    this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(new Path(datainputDirectory),
-        parallel, dataSize, cfg), parallel);
+    if ("complete".equals(partitionerType)) {
+      this.dataSource = new DataSource(cfg, new LocalCompleteCSVInputPartitioner(
+          new Path(datainputDirectory), context.getParallelism(), dataSize, cfg), parallel);
+    } else {
+      this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(
+          new Path(datainputDirectory), parallel, dataSize, cfg), parallel);
+    }
     this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
-    LOG.info("%%%% Task Index Value:" + context.getIndex() + "\tDataSource:\t" + this.dataSource);
   }
 
   @Override
@@ -71,13 +73,10 @@ public class CSVBasedSourceFunction<T> extends BaseSourceFunc<T> {
     }
   }
 
-  private int count = 0;
   @Override
   public T next() {
     try {
       T object = dataSplit.nextRecord(null);
-      count++;
-      LOG.fine("count value:" + count);
       return object;
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {
