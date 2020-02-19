@@ -84,18 +84,16 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
                 localPoints[i][j] = Double.parseDouble(splits[j]);
               }
             }
-            LOG.info("local points size:" + localPoints.length);
             return localPoints;
           }
         });
-    //tc.run(points);
     points.setName("dataSource").cache();
 
-    CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
+    //CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
 
     SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
         "complete");
-    ComputeTSet<double[][], Iterator<String>> center = centerSource.direct().compute(
+    ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           private double[][] localCenters = new double[csize][dimension];
           private Pattern pattern = Pattern.compile(",");
@@ -108,12 +106,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
                 localCenters[i][j] = Double.parseDouble(splits[j]);
               }
             }
-            LOG.info("local points size:" + Arrays.deepToString(localCenters));
             return localCenters;
           }
         });
-    //tc.run(center);
-    center.cache();
+    CachedTSet<double[][]> cachedCenters = centers.cache();
 
     long endTimeData = System.currentTimeMillis();
 
@@ -129,11 +125,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           }
           return newCentroids;
         }).map(new AverageCenters());
-    kmeansTSet.addInput("centers", centers);
+    kmeansTSet.addInput("centers", cachedCenters);
 
     CachedTSet<double[][]> cached = reduced.lazyCache();
     for (int i = 0; i < iterations; i++) {
-      tc.evalAndUpdate(cached, centers);
+      tc.evalAndUpdate(cached, cachedCenters);
     }
     tc.finishEval(cached);
 
@@ -143,7 +139,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
       LOG.info("Final Centroids After\t" + iterations + "\titerations\t");
-      centers.direct().forEach(i -> LOG.info(Arrays.toString(i)));
+      cachedCenters.direct().forEach(i -> LOG.info(Arrays.deepToString(i)));
     }
   }
 
