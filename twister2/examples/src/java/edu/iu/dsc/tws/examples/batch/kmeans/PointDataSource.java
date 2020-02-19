@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,22 +46,11 @@ public class PointDataSource extends BaseSource implements Collector {
   private String fileType;
 
   private int dimension;
-
-  public int getDatasize() {
-    return datasize;
-  }
-
   private int datasize;
+
   private double[][] dataPointsLocal;
 
   PointDataSource() {
-  }
-
-  PointDataSource(String edgename, String dataDirectory, String inputKey, int dim) {
-    this.edgeName = edgename;
-    this.dataDirectory = dataDirectory;
-    this.inputKey = inputKey;
-    this.dimension = dim;
   }
 
   PointDataSource(String edgename, String dataDirectory, String inputKey, int dim, int dsize,
@@ -97,7 +85,7 @@ public class PointDataSource extends BaseSource implements Collector {
             points.add(row);
           }
         }
-        LOG.info("context task index:" + context.taskIndex());
+        LOG.fine("context task index:" + context.taskIndex());
         inputSplit = source.getNextSplit(context.taskIndex());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -108,7 +96,7 @@ public class PointDataSource extends BaseSource implements Collector {
     for (double[] d : points) {
       dataPointsLocal[i++] = d;
     }
-    LOG.info("Length:" + dataPointsLocal.length + "\tsize:" + Arrays.deepToString(dataPointsLocal));
+    LOG.fine(inputKey + "\tLength:" + dataPointsLocal.length);
     context.end(edgeName);
   }
 
@@ -117,7 +105,7 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    if ("txt".equalsIgnoreCase(fileType)) {
+    if ("txt".equals(fileType)) {
       if ("points".equals(inputKey)) {
         this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
             new Path(dataDirectory), context.getParallelism(), cfg));
@@ -128,10 +116,10 @@ public class PointDataSource extends BaseSource implements Collector {
     } else {
       if ("points".equals(inputKey)) {
         this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-            new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+            new Path(dataDirectory), context.getParallelism(), datasize, cfg));
       } else {
         this.source = runtime.createInput(cfg, context, new LocalCompleteCSVInputPartitioner(
-            new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+            new Path(dataDirectory), context.getParallelism(), datasize, cfg));
       }
     }
   }

@@ -70,7 +70,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     /*CachedTSet<double[][]> points =
         tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
 
-    SourceTSet<String> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelism, "split");
+    SourceTSet<String> pointSource = tc.createTextSource(dataDirectory, dsize, parallelism,
+        "split");
     ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           private double[][] localPoints = new double[dsize / parallelism][dimension];
@@ -91,7 +92,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     //CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
 
-    SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
+    SourceTSet<String> centerSource = tc.createTextSource(centroidDirectory, csize, parallelism,
         "complete");
     ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {

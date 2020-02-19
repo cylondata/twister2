@@ -13,24 +13,23 @@ package edu.iu.dsc.tws.tset.fn.impl;
 
 import java.io.IOException;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
-import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class CSVBasedSourceFunction extends TextBasedSourceFunction<String[]> {
+public class TextBasedSourceFunction<T> extends BaseSourceFunc<T> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
-  private DataSource<String, FileInputSplit<String>> dataSource;
-  private InputSplit<String> dataSplit;
+  private DataSource<T, FileInputSplit<T>> dataSource;
+  private InputSplit<T> dataSplit;
   private TSetContext ctx;
 
   private String datainputDirectory;
@@ -39,9 +38,11 @@ public class CSVBasedSourceFunction extends TextBasedSourceFunction<String[]> {
   private int count = 0;
   private String partitionerType;
 
-  public CSVBasedSourceFunction(String dataInputdirectory, int datasize,
-                                int parallelism, String type) {
-    super(dataInputdirectory, datasize, parallelism, type);
+  public TextBasedSourceFunction() {
+  }
+
+  public TextBasedSourceFunction(String dataInputdirectory, int datasize,
+                                 int parallelism, String type) {
     this.datainputDirectory = dataInputdirectory;
     this.dataSize = datasize;
     this.parallel = parallelism;
@@ -76,13 +77,11 @@ public class CSVBasedSourceFunction extends TextBasedSourceFunction<String[]> {
   }
 
   @Override
-  public String[] next() {
+  public T next() {
     try {
-      String delimiter = (String) CSVInputSplit.DEFAULT_FIELD_DELIMITER;
-      String obj = dataSplit.nextRecord(null);
-      Pattern pattern = Pattern.compile(delimiter);
-      String[] object = pattern.split(obj);
+      T object = dataSplit.nextRecord(null);
       return object;
+      //return dataSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
     }

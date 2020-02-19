@@ -186,8 +186,6 @@ public class KMeansComputeJob implements IWorker {
       int dim = config.getIntegerValue("dim", 2);
       double[][] datapoints = (double[][]) dataPartition.first();
       double[][] centroid = (double[][]) centroidPartition.first();
-
-      LOG.info("datapoints length:" + datapoints.length + "\t" + centroid.length);
       double[][] kMeansCenters = KMeansUtils.findNearestCenter(dim, datapoints, centroid);
       context.writeEnd("all-reduce", kMeansCenters);
     }
