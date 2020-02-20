@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
@@ -57,15 +58,15 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
-  public <T> SSourceTSet<T[]> createCSVSource(String filePath, int datasize, int parallelism,
-                                             String type) {
+  public SSourceTSet<String[]> createCSVSource(String filePath, int datasize, int parallelism,
+                                            String type) {
     return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
         parallelism);
   }
 
-  public <T> SSourceTSet<T> createTextSource(String filePath, int datasize, int parallelism,
-                                            String type) {
-    return createSource(new TextBasedSourceFunction(filePath, datasize, parallelism, type),
+  public SSourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,
+                                           String type) {
+    return createSource(new TextBasedSourceFunction(filePath, dataSize, parallelism, type),
         parallelism);
   }
 

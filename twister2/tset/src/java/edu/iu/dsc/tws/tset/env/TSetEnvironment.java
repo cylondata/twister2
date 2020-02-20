@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.MapBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 /**
  * Entry point to tset operations. This is a singleton which initializes as
@@ -98,13 +99,11 @@ public abstract class TSetEnvironment {
    */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
 
-//  public abstract <T> BaseTSet<T> createCSVSource(String filePath, int dataSize, int parallelism);
-//
-  public abstract <T> BaseTSet<T[]> createCSVSource(String filePath, int dataSize,
-                                                           int parallelism, String type);
+  public abstract SourceTSet<String> createCSVSource(String filePath, int dataSize,
+                                                     int parallelism, String type);
 
-  public abstract <T> BaseTSet<T> createTextSource(String filePath, int dataSize,
-                                                  int parallelism, String type);
+  public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
+                                                     int parallelism, String type);
 
   /**
    * This method will create a source based on the list and each source will read only a part

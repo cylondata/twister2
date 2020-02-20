@@ -11,26 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.fn.impl;
 
-import java.io.IOException;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<T[]> {
+public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<String[]> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
   private DataSource<String, FileInputSplit<String>> dataSource;
-  private InputSplit<String> dataSplit;
+  //private InputSplit<String> dataSplit;
   private TSetContext ctx;
 
   private String datainputDirectory;
@@ -48,7 +42,7 @@ public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<T[]> {
     this.partitionerType = type;
   }
 
-  @Override
+  /*@Override
   public void prepare(TSetContext context) {
     super.prepare(context);
     this.ctx = context;
@@ -74,16 +68,21 @@ public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<T[]> {
       throw new RuntimeException("Unable read data split!");
     }
   }
-
+*/
   @Override
-  public T[] next() {
-    try {
-      String obj = dataSplit.nextRecord(null);
+  public String next() {
+    String obj = String.valueOf(super.next());
+    Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
+    String[] object = pattern.split(obj);
+    return object;
+
+    /*try {
+      String obj = String.valueOf(super.next());
       Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
-      T[] object = (T[]) pattern.split(obj);
+      String[] object = pattern.split(obj);
       return object;
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
-    }
+    }*/
   }
 }

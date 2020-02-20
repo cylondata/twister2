@@ -24,12 +24,12 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class TextBasedSourceFunction<T> extends BaseSourceFunc<T> {
+public class TextBasedSourceFunction<T> extends BaseSourceFunc<String> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
-  private DataSource<T, FileInputSplit<T>> dataSource;
-  private InputSplit<T> dataSplit;
+  private DataSource<java.lang.String, FileInputSplit<java.lang.String>> dataSource;
+  protected InputSplit<java.lang.String> dataSplit;
   private TSetContext ctx;
 
   private String datainputDirectory;
@@ -37,9 +37,6 @@ public class TextBasedSourceFunction<T> extends BaseSourceFunc<T> {
   private int parallel;
   private int count = 0;
   private String partitionerType;
-
-  public TextBasedSourceFunction() {
-  }
 
   public TextBasedSourceFunction(String dataInputdirectory, int datasize,
                                  int parallelism, String type) {
@@ -77,9 +74,9 @@ public class TextBasedSourceFunction<T> extends BaseSourceFunc<T> {
   }
 
   @Override
-  public T next() {
+  public String next() {
     try {
-      T object = dataSplit.nextRecord(null);
+      String object = dataSplit.nextRecord(null);
       return object;
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {

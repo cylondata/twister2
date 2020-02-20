@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
@@ -70,42 +69,79 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     /*CachedTSet<double[][]> points =
         tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
 
-    SourceTSet<String> pointSource = tc.createTextSource(dataDirectory, dsize, parallelism,
+    SourceTSet<String[]> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelism,
         "split");
-    ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String>>() {
+
+//    ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
+//        new ComputeFunc<double[][], Iterator<String>>() {
+//          private double[][] localPoints = new double[dsize / parallelism][dimension];
+//          private Pattern pattern = Pattern.compile(",");
+//
+//          @Override
+//          public double[][] compute(Iterator<String> input) {
+//            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
+//              String[] splits = pattern.split(input.next());
+//              for (int j = 0; j < dimension; j++) {
+//                localPoints[i][j] = Double.parseDouble(splits[j]);
+//              }
+//            }
+//            return localPoints;
+//          }
+//        });
+//    points.setName("dataSource").cache();
+
+    ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String[]>>() {
           private double[][] localPoints = new double[dsize / parallelism][dimension];
-          private Pattern pattern = Pattern.compile(",");
 
           @Override
-          public double[][] compute(Iterator<String> input) {
-            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
-              String[] splits = pattern.split(input.next());
-              for (int j = 0; j < dimension; j++) {
-                localPoints[i][j] = Double.parseDouble(splits[j]);
-              }
+          public double[][] compute(Iterator<String[]> input) {
+            int i = 0;
+            String[] inp = input.next();
+            for (int j = 0; j < dimension; j++) {
+              localPoints[i][j] = Double.parseDouble(inp[j]);
+              i++;
             }
             return localPoints;
           }
         });
     points.setName("dataSource").cache();
 
+
     //CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
 
-    SourceTSet<String> centerSource = tc.createTextSource(centroidDirectory, csize, parallelism,
-        "complete");
-    ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String>>() {
-          private double[][] localCenters = new double[csize][dimension];
-          private Pattern pattern = Pattern.compile(",");
+//    SourceTSet<String> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
+//        "complete");
+//    ComputeTSet<double[][], Iterator<String>> centers = centerSource.direct().compute(
+//        new ComputeFunc<double[][], Iterator<String>>() {
+//          private double[][] localCenters = new double[csize][dimension];
+//          private Pattern pattern = Pattern.compile(",");
+//
+//          @Override
+//          public double[][] compute(Iterator<String> input) {
+//            for (int i = 0; i < csize && input.hasNext(); i++) {
+//              String[] splits = pattern.split(input.next());
+//              for (int j = 0; j < dimension; j++) {
+//                localCenters[i][j] = Double.parseDouble(splits[j]);
+//              }
+//            }
+//            return localCenters;
+//          }
+//        });
+//    CachedTSet<double[][]> cachedCenters = centers.cache();
 
+    SourceTSet<String[]> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
+        "complete");
+    ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String[]>>() {
+          private double[][] localCenters = new double[csize][dimension];
           @Override
-          public double[][] compute(Iterator<String> input) {
-            for (int i = 0; i < csize && input.hasNext(); i++) {
-              String[] splits = pattern.split(input.next());
-              for (int j = 0; j < dimension; j++) {
-                localCenters[i][j] = Double.parseDouble(splits[j]);
-              }
+          public double[][] compute(Iterator<String[]> input) {
+            String[] inp = input.next();
+            int i = 0;
+            for (int j = 0; j < dimension; j++) {
+              localCenters[i][j] = Double.parseDouble(inp[j]);
+              i++;
             }
             return localCenters;
           }

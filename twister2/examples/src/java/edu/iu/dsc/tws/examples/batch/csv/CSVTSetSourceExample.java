@@ -38,13 +38,13 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<String> lines = env.createTextSource("/tmp/dinput" + env.getWorkerID(),
+   /* SourceTSet<String> lines = env.createTextSource("/tmp/dinput" + env.getWorkerID(),
         4, 4, "full");
     parseCSV(lines);
     lines.direct().map((MapFunc<Double[], String>) input -> {
       Pattern pattern = Pattern.compile(",");
       return pattern.splitAsStream(input).map(Double::parseDouble).toArray(Double[]::new);
-    }).direct().forEach(i -> LOG.fine("out" + Arrays.toString(i)));
+    }).direct().forEach(i -> LOG.fine("out" + Arrays.toString(i)));*/
   }
 
   private Double[][] parseCSV(SourceTSet<String> inputValues) {
