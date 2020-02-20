@@ -81,8 +81,8 @@ public class TWSUCXChannel implements TWSChannel {
 
   public TWSUCXChannel(Config config,
                        IWorkerController workerController) {
-    createUXCWorker(workerController);
     this.workerId = workerController.getWorkerInfo().getWorkerID();
+    createUXCWorker(workerController);
   }
 
   private void createUXCWorker(IWorkerController iWorkerController) {
