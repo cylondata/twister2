@@ -49,7 +49,7 @@ public final class BenchmarkUtils {
           generateColumnLabelWithUnit(COLUMN_TOTAL_TIME, TIMING_ALL_SEND),
           time
       );
-      LOG.info("Total time for all iterations : " + time);
+      LOG.severe("Total time for all iterations : " + time);
     }
   }
 
