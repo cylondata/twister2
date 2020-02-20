@@ -42,39 +42,17 @@ public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<String[]>
     this.partitionerType = type;
   }
 
-  /*@Override
+  @Override
   public void prepare(TSetContext context) {
     super.prepare(context);
-    this.ctx = context;
-    Config cfg = ctx.getConfig();
-    if ("complete".equals(partitionerType)) {
-      this.dataSource = new DataSource(cfg, new LocalCompleteCSVInputPartitioner(
-          new Path(datainputDirectory), context.getParallelism(), dataSize, cfg), parallel);
-    } else {
-      this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(
-          new Path(datainputDirectory), parallel, dataSize, cfg), parallel);
-    }
-    this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
   }
 
-  @Override
-  public boolean hasNext() {
-    try {
-      if (dataSplit == null || dataSplit.reachedEnd()) {
-        dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
-      }
-      return dataSplit != null && !dataSplit.reachedEnd();
-    } catch (IOException e) {
-      throw new RuntimeException("Unable read data split!");
-    }
-  }
-*/
   @Override
   public String next() {
     String obj = String.valueOf(super.next());
     Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
     String[] object = pattern.split(obj);
-    return object;
+    return String.valueOf(object);
 
     /*try {
       String obj = String.valueOf(super.next());

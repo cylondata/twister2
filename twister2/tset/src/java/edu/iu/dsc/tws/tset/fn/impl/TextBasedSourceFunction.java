@@ -77,7 +77,7 @@ public class TextBasedSourceFunction<T> extends BaseSourceFunc<String> {
   public String next() {
     try {
       String object = dataSplit.nextRecord(null);
-      return object;
+      return String.valueOf(new String[]{object});
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");

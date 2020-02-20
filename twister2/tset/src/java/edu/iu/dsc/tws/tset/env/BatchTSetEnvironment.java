@@ -76,7 +76,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
-  public SourceTSet<String> createCSVSource(String filePath, int datasize, int parallelism,
+  public SourceTSet<String[]> createCSVSource(String filePath, int datasize, int parallelism,
                                             String type) {
     return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
         parallelism);
