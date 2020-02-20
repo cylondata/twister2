@@ -31,7 +31,7 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 
 # get log messages to twister2 client and save in files
 # it is false by default
-# kubernetes.log.in.client: true
+kubernetes.log.in.client: true
 
 ################################################################################
 # Job configuration parameters for submission of twister2 jobs
