@@ -161,8 +161,8 @@ public final class WorkerEnvironment {
    * Close the worker environment
    */
   public void close() {
-    this.communicator.close();
-    this.channel.close();
+//    this.communicator.close();
+//    this.channel.close();
     CommonThreadPool.close();
     this.workerEnv = null;
   }
