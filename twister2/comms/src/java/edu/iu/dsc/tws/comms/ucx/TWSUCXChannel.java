@@ -101,7 +101,9 @@ public class TWSUCXChannel implements TWSChannel {
 
     try {
       // wait till everyone add listeners
+      LOG.info("Waiting on the barrier: " + workerId);
       iWorkerController.waitOnBarrier();
+      LOG.info("Proceeded through the barrier: " + workerId);
     } catch (TimeoutException e) {
       LOG.log(Level.SEVERE, "Failed to wait on barrier", e);
     }
