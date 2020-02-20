@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class CSVBasedSourceFunction extends TextBasedSourceFunction<String[]> {
+public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<T[]> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
@@ -76,12 +76,11 @@ public class CSVBasedSourceFunction extends TextBasedSourceFunction<String[]> {
   }
 
   @Override
-  public String[] next() {
+  public T[] next() {
     try {
-      String delimiter = (String) CSVInputSplit.DEFAULT_FIELD_DELIMITER;
       String obj = dataSplit.nextRecord(null);
-      Pattern pattern = Pattern.compile(delimiter);
-      String[] object = pattern.split(obj);
+      Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
+      T[] object = (T[]) pattern.split(obj);
       return object;
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");

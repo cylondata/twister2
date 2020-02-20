@@ -100,8 +100,8 @@ public abstract class TSetEnvironment {
 
 //  public abstract <T> BaseTSet<T> createCSVSource(String filePath, int dataSize, int parallelism);
 //
-//  public abstract <T> BaseTSet<String[]> createCSVSource(String filePath, int dataSize,
-//                                                           int parallelism, String type);
+  public abstract <T> BaseTSet<T[]> createCSVSource(String filePath, int dataSize,
+                                                           int parallelism, String type);
 
   public abstract <T> BaseTSet<T> createTextSource(String filePath, int dataSize,
                                                   int parallelism, String type);
