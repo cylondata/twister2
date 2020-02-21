@@ -91,7 +91,7 @@ public class TWSUCXChannel implements TWSChannel {
         .setMtWorkersShared(true));
     this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
-    this.closeables.push(context);
+    this.closeables.push(ucpWorker);
 
     // start listener
     UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
@@ -285,7 +285,8 @@ public class TWSUCXChannel implements TWSChannel {
       e.printStackTrace();
     }
     LOG.info("Closing UCX...");
-    for (Closeable closeable : this.closeables) {
+    while (!this.closeables.isEmpty()) {
+      Closeable closeable = this.closeables.pop();
       try {
         LOG.info("Closing : " + closeable);
         closeable.close();
