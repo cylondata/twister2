@@ -15,52 +15,35 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
-import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.dataset.DataSource;
 
-public class CSVBasedSourceFunction<T> extends TextBasedSourceFunction<String[]> {
+public class CSVBasedSourceFunction<T> extends BaseSourceFunc<String[]> {
 
-  private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
+  private static final Logger LOG = Logger.getLogger(CSVBasedSourceFunction.class.getName());
 
-  private DataSource<String, FileInputSplit<String>> dataSource;
-  //private InputSplit<String> dataSplit;
-  private TSetContext ctx;
-
-  private String datainputDirectory;
-  private int dataSize;
-  private int parallel;
-  private int count = 0;
-  private String partitionerType;
+  private TextBasedSourceFunction<String> textSource;
+  private Pattern pattern;
 
   public CSVBasedSourceFunction(String dataInputdirectory, int datasize,
                                 int parallelism, String type) {
-    super(dataInputdirectory, datasize, parallelism, type);
-    this.datainputDirectory = dataInputdirectory;
-    this.dataSize = datasize;
-    this.parallel = parallelism;
-    this.partitionerType = type;
+    this.textSource = new TextBasedSourceFunction<>(dataInputdirectory, datasize,
+        parallelism, type);
+    pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
   }
 
   @Override
   public void prepare(TSetContext context) {
-    super.prepare(context);
+    textSource.prepare(context);
   }
 
   @Override
-  public String next() {
-    String obj = String.valueOf(super.next());
-    Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
-    String[] object = pattern.split(obj);
-    return String.valueOf(object);
+  public boolean hasNext() {
+    return textSource.hasNext();
+  }
 
-    /*try {
-      String obj = String.valueOf(super.next());
-      Pattern pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
-      String[] object = pattern.split(obj);
-      return object;
-    } catch (IOException e) {
-      throw new RuntimeException("Unable read data split!");
-    }*/
+  @Override
+  public String[] next() {
+    return pattern.split(textSource.next());
   }
 }

@@ -72,23 +72,23 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     SourceTSet<String[]> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelism,
         "split");
 
-//    ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
-//        new ComputeFunc<double[][], Iterator<String>>() {
-//          private double[][] localPoints = new double[dsize / parallelism][dimension];
-//          private Pattern pattern = Pattern.compile(",");
-//
-//          @Override
-//          public double[][] compute(Iterator<String> input) {
-//            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
-//              String[] splits = pattern.split(input.next());
-//              for (int j = 0; j < dimension; j++) {
-//                localPoints[i][j] = Double.parseDouble(splits[j]);
-//              }
-//            }
-//            return localPoints;
-//          }
-//        });
-//    points.setName("dataSource").cache();
+    /*ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String>>() {
+          private double[][] localPoints = new double[dsize / parallelism][dimension];
+          private Pattern pattern = Pattern.compile(",");
+
+          @Override
+          public double[][] compute(Iterator<String> input) {
+            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
+              String[] splits = pattern.split(input.next());
+              for (int j = 0; j < dimension; j++) {
+                localPoints[i][j] = Double.parseDouble(splits[j]);
+              }
+            }
+            return localPoints;
+          }
+        });
+    points.setName("dataSource").cache();*/
 
     ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String[]>>() {
@@ -96,11 +96,12 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
           @Override
           public double[][] compute(Iterator<String[]> input) {
-            int i = 0;
-            String[] inp = input.next();
-            for (int j = 0; j < dimension; j++) {
-              localPoints[i][j] = Double.parseDouble(inp[j]);
-              i++;
+            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
+              String[] splits = input.next();
+              LOG.info("points value:" + Arrays.toString(splits));
+              for (int j = 0; j < splits.length; j++) {
+                localPoints[i][j] = Double.parseDouble(splits[j]);
+              }
             }
             return localPoints;
           }
@@ -135,13 +136,14 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String[]>>() {
           private double[][] localCenters = new double[csize][dimension];
+
           @Override
           public double[][] compute(Iterator<String[]> input) {
-            String[] inp = input.next();
-            int i = 0;
-            for (int j = 0; j < dimension; j++) {
-              localCenters[i][j] = Double.parseDouble(inp[j]);
-              i++;
+            for (int i = 0; i < csize && input.hasNext(); i++) {
+              String[] splits = input.next();
+              for (int j = 0; j < dimension; j++) {
+                localCenters[i][j] = Double.parseDouble(splits[j]);
+              }
             }
             return localCenters;
           }
