@@ -56,7 +56,7 @@ public class PythonWorker implements BatchTSetIWorker {
                                          Config config) throws IOException, MPIException {
     LOG.info("Starting python process : " + pythonPath);
 
-    String pythonBin = config.getStringValue(PYTHON_BIN);
+    String pythonBin = config.getStringValue(PYTHON_BIN, "python3");
 
     boolean useMPI = false;
     try {
