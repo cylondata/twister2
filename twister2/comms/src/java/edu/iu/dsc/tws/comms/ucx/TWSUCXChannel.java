@@ -277,6 +277,12 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public void close() {
+    LOG.info("Waiting to close UCX...");
+    try {
+      Thread.sleep(15000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     LOG.info("Closing UCX...");
     for (Closeable closeable : this.closeables) {
       try {
