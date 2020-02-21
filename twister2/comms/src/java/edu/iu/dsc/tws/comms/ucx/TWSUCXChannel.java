@@ -277,9 +277,7 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public void close() {
-    while (this.pendingSendRequests.get() != 0) {
-
-    }
+    LOG.info("Closing UCX...");
     for (Closeable closeable : this.closeables) {
       try {
         closeable.close();
