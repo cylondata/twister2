@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
@@ -26,6 +27,10 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 
 public class FixedSchemaKeyedDataDeSerializer extends KeyedDataDeSerializer {
+
+  private static final Logger LOG = Logger.getLogger(
+      FixedSchemaKeyedDataDeSerializer.class.getName()
+  );
 
   private MessageSchema messageSchema;
 

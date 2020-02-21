@@ -4,15 +4,16 @@ from twister2.TSetContext import TSetContext
 
 
 class IteratorWrapper:
-    def __init__(self, java_ref):
+    def __init__(self, java_ref, numpy_builder = None):
         self.__java_ref = java_ref
+        self.__numpy_builder = numpy_builder
 
     def __iter__(self):
         return self
 
     def __next__(self):
         if self.__java_ref.hasNext():
-            return do_arg_map(self.__java_ref.next())
+            return do_arg_map(self.__java_ref.next(), self.__numpy_builder)
         else:
             raise StopIteration()
 
@@ -52,10 +53,12 @@ def do_arg_map(arg, numpy_builder=None):
         return IteratorWrapper(arg)
     elif type_str == "<class 'numpy.ndarray'>":  # P to J
         return numpy_builder.build(arg.tolist(), arg.shape, arg.dtype)
-    elif type_str == "<class 'jep.PyJObject'>":  # J to P
+    elif type_str == "<class 'jep.PyJObject'>" or type_str == "<class 'py4j.java_gateway.JavaObject'>":  # J to P
         if hasattr(arg, "getNumpy"):
             # numpy array found
-            return np.array(arg.getNumpy())
+            if str(type(arg.getNumpy())) == "<class 'py4j.java_collections.JavaList'>":
+              return np.array(list(arg.getNumpy()), dtype = arg.getType())
+            return np.array(arg.getNumpy(), dtype = arg.getType())
         if hasattr(arg, "getInput"):
             # TSetContext
             return TSetContext(arg)

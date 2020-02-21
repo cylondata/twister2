@@ -37,6 +37,13 @@ fi
 
 # update the classpath with the user job jar package
 CLASSPATH=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$USER_JOB_JAR_FILE:$CLASSPATH
+LOGGER_PROPERTIES_FILE=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$LOGGER_PROPERTIES_FILE
+
+# write host ip to file
+echo ${HOST_IP} >> hostip.txt
+
+# write node-ip list to file
+echo ${ENCODED_NODE_INFO_LIST} >> node-info-list.txt
 
 ###################  check whether this is the first pod #############################
 # if this is the first pod in the first StatefulSet, HOSTNAME ends with "-0-0"
@@ -53,12 +60,13 @@ lastFourChars=$(echo $HOSTNAME| cut -c $(($length-3))-$length)
 if [ "$lastFourChars" = "-0-0" ]; then
   echo "This is the first pod in the first StatefulSet of the job: $HOSTNAME"
   echo "Starting $CLASS_TO_RUN .... "
-  exec java $CLASS_TO_RUN
+  exec java -Djava.util.logging.config.file=$LOGGER_PROPERTIES_FILE $CLASS_TO_RUN
   echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
   sleep infinity
 else
   echo "This is not the first pod: $HOSTNAME"
   echo "Starting to sleep to infinity ..."
+  echo "All worker logs sent to worker-0. Please check worker-0 logs."
   sleep infinity
 fi
 

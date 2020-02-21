@@ -33,7 +33,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 # ssh and MPI installation is based on the Dockerfile from
 #    https://github.com/everpeace
 
-ARG OPENMPI_VERSION="3.1.2"
+ARG OPENMPI_VERSION="4.0.2"
 ARG WITH_CUDA="false"
 
 #

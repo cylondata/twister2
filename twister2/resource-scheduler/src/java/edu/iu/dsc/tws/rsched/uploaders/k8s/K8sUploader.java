@@ -126,6 +126,8 @@ public class K8sUploader extends Thread implements IUploader {
 
     if (webServerPodNames.size() == 0) {
       uploadToWebServers = false;
+      // set upload method in RequestObjectBuilder
+      RequestObjectBuilder.setUploadMethod("client-to-pods");
     } else {
       uploadToWebServers = true;
     }
@@ -160,8 +162,6 @@ public class K8sUploader extends Thread implements IUploader {
       startUploadersToWebServers();
     } else {
       watchPodsStartUploaders();
-      // set upload method in RequestObjectBuilder
-      RequestObjectBuilder.setUploadMethod("client-to-pods");
     }
   }
 

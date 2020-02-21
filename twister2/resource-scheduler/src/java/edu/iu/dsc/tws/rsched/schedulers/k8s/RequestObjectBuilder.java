@@ -297,7 +297,7 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
     String startScript = null;
     double cpuPerContainer = computeResource.getCpu();
-    int ramPerContainer = computeResource.getRamMegaBytes();
+    int ramPerContainer = computeResource.getRamMegaBytes() + 128;
 
     if (SchedulerContext.useOpenMPI(config)) {
       startScript = "./init_openmpi.sh";
@@ -359,7 +359,7 @@ public final class RequestObjectBuilder {
 
     container.setEnv(
         constructEnvironmentVariables(
-            containerName, containerPort, encodedNodeInfoList));
+            containerName, containerPort, encodedNodeInfoList, computeResource.getRamMegaBytes()));
 
     return container;
   }
@@ -369,7 +369,8 @@ public final class RequestObjectBuilder {
    */
   public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
                                                              int workerPort,
-                                                             String encodedNodeInfoList) {
+                                                             String encodedNodeInfoList,
+                                                             int jvmMem) {
 
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
@@ -472,6 +473,10 @@ public final class RequestObjectBuilder {
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
         .value(LoggingContext.LOGGER_PROPERTIES_FILE));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JVM_MEMORY_MB + "")
+        .value(jvmMem + ""));
 
     return envVars;
   }
