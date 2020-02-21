@@ -31,7 +31,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openucx.jucx.UcxCallback;
-import org.openucx.jucx.UcxRequest;
 import org.openucx.jucx.ucp.UcpContext;
 import org.openucx.jucx.ucp.UcpEndpoint;
 import org.openucx.jucx.ucp.UcpEndpointParams;
@@ -135,7 +134,7 @@ public class TWSUCXChannel implements TWSChannel {
           tag,
           new UcxCallback() {
             @Override
-            public void onSuccess(UcxRequest request) {
+            public void onSuccess(UcpRequest request) {
               pendingSendRequests.decrementAndGet();
               if (buffersLeft.decrementAndGet() == 0) {
                 callback.onSendComplete(id, message.getHeader().getEdge(), message);
