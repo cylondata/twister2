@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openucx.jucx.UcxCallback;
+import org.openucx.jucx.UcxRequest;
 import org.openucx.jucx.ucp.UcpContext;
 import org.openucx.jucx.ucp.UcpEndpoint;
 import org.openucx.jucx.ucp.UcpEndpointParams;
@@ -88,7 +89,7 @@ public class TWSUCXChannel implements TWSChannel {
 
   private void createUXCWorker(IWorkerController iWorkerController) {
     UcpContext context = new UcpContext(new UcpParams().requestTagFeature()
-        .setMtWorkersShared(true));
+        .setMtWorkersShared(false));
     this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
     this.closeables.push(ucpWorker);
@@ -129,15 +130,12 @@ public class TWSUCXChannel implements TWSChannel {
       LOG.log(Level.FINE, () ->
           String.format("SENDING to %d[%d] : %s, TAG[%d]", id, message.getHeader().getEdge(),
               buffer.getByteBuffer(), tag));
-      if (!this.endpoints.containsKey(id)) {
-        LOG.info("Trying to send a message from :" + this.workerId + " to " + id);
-      }
       this.endpoints.get(id).sendTaggedNonBlocking(
           buffer.getByteBuffer(),
           tag,
           new UcxCallback() {
             @Override
-            public void onSuccess(UcpRequest request) {
+            public void onSuccess(UcxRequest request) {
               pendingSendRequests.decrementAndGet();
               if (buffersLeft.decrementAndGet() == 0) {
                 callback.onSendComplete(id, message.getHeader().getEdge(), message);
@@ -283,17 +281,9 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public void close() {
-    LOG.info("Waiting to close UCX...");
-    try {
-      Thread.sleep(15000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-    LOG.info("Closing UCX...");
     while (!this.closeables.isEmpty()) {
       Closeable closeable = this.closeables.pop();
       try {
-        LOG.info("Closing : " + closeable);
         closeable.close();
       } catch (IOException e) {
         throw new Twister2RuntimeException("Failed to close UCX channel component : "
