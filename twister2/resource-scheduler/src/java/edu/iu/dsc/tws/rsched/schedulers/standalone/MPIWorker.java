@@ -99,7 +99,7 @@ public final class MPIWorker {
         closeWorker();
       }
       LOG.info("Finalizing MPI...");
-      try{
+      try {
         Thread.sleep(10000);
       } catch (InterruptedException e) {
         e.printStackTrace();
