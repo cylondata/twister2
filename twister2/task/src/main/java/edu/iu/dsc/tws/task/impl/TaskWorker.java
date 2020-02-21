@@ -95,6 +95,7 @@ public abstract class TaskWorker implements IWorker {
     execute();
     // wait for the sync
     try {
+      LOG.info("Waiting at the barrier....");
       workerEnvironment.getWorkerController().waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
