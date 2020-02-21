@@ -18,16 +18,16 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 
-public class CSVBasedSourceFunction<T> extends BaseSourceFunc<String[]> {
+public class CSVBasedSourceFunction extends BaseSourceFunc<String[]> {
 
   private static final Logger LOG = Logger.getLogger(CSVBasedSourceFunction.class.getName());
 
-  private TextBasedSourceFunction<String> textSource;
+  private TextBasedSourceFunction textSource;
   private Pattern pattern;
 
   public CSVBasedSourceFunction(String dataInputdirectory, int datasize,
                                 int parallelism, String type) {
-    this.textSource = new TextBasedSourceFunction<>(dataInputdirectory, datasize,
+    this.textSource = new TextBasedSourceFunction(dataInputdirectory, datasize,
         parallelism, type);
     pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
   }

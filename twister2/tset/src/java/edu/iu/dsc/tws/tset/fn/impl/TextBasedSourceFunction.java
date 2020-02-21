@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class TextBasedSourceFunction<T> extends BaseSourceFunc<String> {
+public class TextBasedSourceFunction extends BaseSourceFunc<String> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
@@ -77,7 +77,7 @@ public class TextBasedSourceFunction<T> extends BaseSourceFunc<String> {
   public String next() {
     try {
       String object = dataSplit.nextRecord(null);
-      return String.valueOf(new String[]{object});
+      return object;
       //return dataSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split!");
