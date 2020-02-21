@@ -98,12 +98,6 @@ public final class MPIWorker {
       if (JobMasterContext.isJobMasterUsed(config)) {
         closeWorker();
       }
-      LOG.info("Finalizing MPI...");
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
       MPI.Finalize();
     } catch (MPIException ignore) {
     }

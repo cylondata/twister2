@@ -69,7 +69,6 @@ public class MPIWorkerController implements IWorkerController {
   @Override
   public void waitOnBarrier() throws TimeoutException {
     try {
-      LOG.info("Calling MPI barrier");
       MPI.COMM_WORLD.barrier();
     } catch (MPIException e) {
       throw new Twister2RuntimeException("Failed to wait on barrier");
