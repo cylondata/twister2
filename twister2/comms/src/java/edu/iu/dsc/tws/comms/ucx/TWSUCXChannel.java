@@ -129,6 +129,9 @@ public class TWSUCXChannel implements TWSChannel {
       LOG.log(Level.FINE, () ->
           String.format("SENDING to %d[%d] : %s, TAG[%d]", id, message.getHeader().getEdge(),
               buffer.getByteBuffer(), tag));
+      if (!this.endpoints.containsKey(id)) {
+        LOG.info("Trying to send a message from :" + this.workerId + " to " + id);
+      }
       this.endpoints.get(id).sendTaggedNonBlocking(
           buffer.getByteBuffer(),
           tag,
