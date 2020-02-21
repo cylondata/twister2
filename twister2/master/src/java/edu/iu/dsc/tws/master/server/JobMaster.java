@@ -35,15 +35,14 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.Scaler;
-import edu.iu.dsc.tws.master.driver.ZKJobUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -167,6 +166,12 @@ public class JobMaster {
   private BarrierHandler barrierHandler;
 
   /**
+   * to connect to ZooKeeper server and update job object
+   * in case of scaling or job state changes
+   */
+  private ZKJobUpdater zkJobUpdater;
+
+  /**
    * JobMaster to ZooKeeper connection
    * TODO: need to close zk connection, need to integrate with zk-con in scaler, job terminator.
    */
@@ -208,6 +213,8 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
     this.initialState = initialState;
+
+    this.zkJobUpdater = new ZKJobUpdater(config, job.getJobId());
 
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
@@ -267,7 +274,8 @@ public class JobMaster {
     initDriver();
 
     boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver, faultTolerant);
+    workerMonitor = new WorkerMonitor(
+        this, rrServer, dashClient, zkJobUpdater, job, driver, faultTolerant);
 
     workerHandler =
         new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
@@ -455,8 +463,7 @@ public class JobMaster {
 
     Thread driverThread = new Thread() {
       public void run() {
-        ZKJobUpdater zkJobUpdater = new ZKJobUpdater(config);
-        Scaler scaler = new Scaler(job, clusterScaler, workerMonitor, zkJobUpdater);
+        Scaler scaler = new Scaler(clusterScaler, workerMonitor, zkJobUpdater);
         DriverMessenger driverMessenger = new DriverMessenger(workerMonitor);
         driver.execute(config, scaler, driverMessenger);
       }
@@ -517,12 +524,7 @@ public class JobMaster {
    * this method finishes the job
    * It is executed when the worker completed message received from all workers
    */
-  public void completeJob(JobState jobFinalState) {
-
-    // if Dashboard is used, tell it that the job has completed or killed
-    if (dashClient != null) {
-      dashClient.jobStateChange(jobFinalState);
-    }
+  public void completeJob(JobAPI.JobState jobFinalState) {
 
     jobCompleted = true;
     looper.wakeup();
@@ -559,8 +561,9 @@ public class JobMaster {
 
         // if Dashboard is used, tell it that the job is killed
         if (dashClient != null) {
-          dashClient.jobStateChange(JobState.KILLED);
+          dashClient.jobStateChange(JobAPI.JobState.KILLED);
         }
+        zkJobUpdater.updateState(JobAPI.JobState.KILLED);
 
         if (zkMasterController != null) {
           zkMasterController.close();
@@ -587,7 +590,7 @@ public class JobMaster {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
-      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, job.getJobId());
+      zkCleared = JobZNodeManager.deleteJobZNodes(client, rootPath, job.getJobId());
       ZKUtils.closeClient();
     }
     return zkCleared;

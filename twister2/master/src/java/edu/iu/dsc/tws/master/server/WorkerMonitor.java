@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -67,12 +66,14 @@ public class WorkerMonitor implements MessageHandler {
   private JobMaster jobMaster;
   private RRServer rrServer;
   private DashboardClient dashClient;
+  private ZKJobUpdater zkJobUpdater;
   private IDriver driver;
+
   // whether this is a fault tolerant job
   private boolean faultTolerant;
 
   // upto date status of the job
-  private JobState jobState;
+  private JobAPI.JobState jobState;
 
   // a flag to show whether all expected workers has already joined
   private boolean allJoined = false;
@@ -96,6 +97,7 @@ public class WorkerMonitor implements MessageHandler {
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
                        DashboardClient dashClient,
+                       ZKJobUpdater zkJobUpdater,
                        JobAPI.Job job,
                        IDriver driver,
                        boolean faultTolerant) {
@@ -103,10 +105,11 @@ public class WorkerMonitor implements MessageHandler {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.dashClient = dashClient;
+    this.zkJobUpdater = zkJobUpdater;
     this.driver = driver;
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.faultTolerant = faultTolerant;
-    this.jobState = JobState.STARTING;
+    this.jobState = JobAPI.JobState.STARTING;
 
     workers = new ConcurrentSkipListMap<>();
   }
@@ -185,6 +188,22 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
+  private void jobStateChanged(JobAPI.JobState newState) {
+
+    jobState = newState;
+
+    // update job state at zookeeper if it is used
+    zkJobUpdater.updateState(newState);
+
+    if (dashClient != null) {
+      dashClient.jobStateChange(newState);
+    }
+
+    if (newState == JobAPI.JobState.COMPLETED || newState == JobAPI.JobState.FAILED) {
+      jobMaster.completeJob(newState);
+    }
+  }
+
   /**
    * new worker joins for the first time
    * returns null if the join is successful,
@@ -252,12 +271,11 @@ public class WorkerMonitor implements MessageHandler {
     // if this is not a fault tolerant job, we terminate the job with failure
     // because, this worker has failed previously and it is coming from failure
     if (!faultTolerant) {
-      jobState = JobState.FAILED;
       String failMessage =
           String.format("worker[%s] is coming from failure in NON-FAULT TOLERANT job. "
               + "Terminating the job.", workerWithState.getWorkerID());
       LOG.info(failMessage);
-      jobMaster.completeJob(JobState.FAILED);
+      jobStateChanged(JobAPI.JobState.FAILED);
       return failMessage;
     }
 
@@ -289,12 +307,8 @@ public class WorkerMonitor implements MessageHandler {
       informDriverForAllJoined();
 
       // if the job is becoming all joined for the first time, inform dashboard
-      if (jobState == JobState.STARTING) {
-        jobState = JobState.STARTED;
-
-        if (dashClient != null) {
-          dashClient.jobStateChange(JobState.STARTED);
-        }
+      if (jobState == JobAPI.JobState.STARTING) {
+        jobStateChanged(JobAPI.JobState.STARTED);
       }
     }
   }
@@ -315,9 +329,8 @@ public class WorkerMonitor implements MessageHandler {
     // if so, stop the job master
     // if all workers have completed, no need to send the response message back to the client
     if (allWorkersCompleted()) {
-      jobState = JobState.COMPLETED;
       LOG.info("All " + numberOfWorkers + " workers COMPLETED. Terminating the job.");
-      jobMaster.completeJob(JobState.COMPLETED);
+      jobStateChanged(JobAPI.JobState.COMPLETED);
     }
   }
 
@@ -344,9 +357,8 @@ public class WorkerMonitor implements MessageHandler {
     // TODO: test whether this works
     // if this is a non-fault tolerant job, job needs to be terminated
     if (!faultTolerant) {
-      jobState = JobState.FAILED;
       LOG.info("A worker failed in a NON-FAULT TOLERANT job. Terminating the job.");
-      jobMaster.completeJob(JobState.FAILED);
+      jobStateChanged(JobAPI.JobState.FAILED);
     }
   }
 
@@ -429,7 +441,7 @@ public class WorkerMonitor implements MessageHandler {
 
     if (workers.size() == numberOfWorkers && allWorkersJoined()) {
       allJoined = true;
-      jobState = JobState.STARTED;
+      jobState = JobAPI.JobState.STARTED;
 
       LOG.info("All workers have already joined, before the job master restarted.");
       return true;
