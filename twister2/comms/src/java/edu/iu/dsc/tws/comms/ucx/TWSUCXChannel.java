@@ -108,16 +108,17 @@ public class TWSUCXChannel implements TWSChannel {
     }
 
     // create end points
+    LOG.info("This worker ID : " + workerId);
     for (JobMasterAPI.WorkerInfo worker : iWorkerController.getJoinedWorkers()) {
       if (worker.getWorkerID() != workerId) {
-        LOG.info("Creating a channel to worker : " + worker.getWorkerID());
+        LOG.info("Creating a channel to worker : " + worker.getWorkerID() + " from " + worker);
         UcpEndpoint ucpEndpoint = ucpWorker.newEndpoint(new UcpEndpointParams().setSocketAddress(
             new InetSocketAddress(worker.getWorkerIP(), worker.getPort())
         ));
         this.endpoints.put(worker.getWorkerID(), ucpEndpoint);
         this.closeables.push(ucpEndpoint);
       } else {
-        LOG.info("Not creating a channel to id " + worker.getWorkerID());
+        LOG.info("Not creating a channel to id " + worker.getWorkerID() + " from " + worker);
       }
     }
   }
