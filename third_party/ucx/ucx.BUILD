@@ -6,7 +6,7 @@ package(default_visibility = ["//visibility:public"])
 # when having just one out file
 lib_files = ["lib/libjucx.a"]
 
-jar_files = ["lib/jucx-1.8.0.jar"]
+jar_files = ["lib/jucx-1.7.0.jar"]
 
 out_files = jar_files + lib_files
 
