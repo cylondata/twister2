@@ -91,7 +91,7 @@ public class TWSUCXChannel implements TWSChannel {
         .setMtWorkersShared(true));
     this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
-    this.closeables.push(context)
+    this.closeables.push(context);
 
     // start listener
     UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
