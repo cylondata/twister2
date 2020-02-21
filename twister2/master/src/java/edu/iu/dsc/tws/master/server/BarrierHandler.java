@@ -91,8 +91,8 @@ public class BarrierHandler implements MessageHandler {
    */
   private void sendBarrierResponseToWaitList() {
 
-    LOG.fine("All workers reached the barrier. "
-        + "BarrierResponse message will be sent to all workers.");
+    LOG.info("All workers reached the barrier: " + numberOfWorkersOnBarrier
+        + " Sending out BarrierResponse messages to all workers.");
 
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
       JobMasterAPI.BarrierResponse response = JobMasterAPI.BarrierResponse.newBuilder()
