@@ -15,13 +15,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+import mpi.MPI;
+import mpi.MPIException;
+
 public class MPIWorkerController implements IWorkerController {
+
+  private static final Logger LOG = Logger.getLogger(MPIWorkerController.class.getName());
+
   private int thisWorkerID;
 
   private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
@@ -60,6 +68,11 @@ public class MPIWorkerController implements IWorkerController {
 
   @Override
   public void waitOnBarrier() throws TimeoutException {
+    try {
+      MPI.COMM_WORLD.barrier();
+    } catch (MPIException e) {
+      throw new Twister2RuntimeException("Failed to wait on barrier");
+    }
   }
 
   public void add(String name, Object obj) {

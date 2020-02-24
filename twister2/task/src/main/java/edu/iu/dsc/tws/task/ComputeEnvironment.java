@@ -91,6 +91,7 @@ public final class ComputeEnvironment {
 
   /**
    * Create a compute graph builder
+   *
    * @param operationMode specify the operation mode
    * @return the graph builder
    */
@@ -100,6 +101,7 @@ public final class ComputeEnvironment {
 
   /**
    * Create a new task graph builder with a name
+   *
    * @param operationMode operation node
    * @param name name of the graph
    * @return the graph builder
@@ -114,6 +116,7 @@ public final class ComputeEnvironment {
 
   /**
    * Initialize the task environment
+   *
    * @param config configuration
    * @param workerId worker id
    * @param wController worker controller
@@ -128,6 +131,7 @@ public final class ComputeEnvironment {
 
   /**
    * Initialize the compute environment with the worker environment
+   *
    * @param workerEnv worker environment
    * @return the compute environment
    */
@@ -137,11 +141,12 @@ public final class ComputeEnvironment {
 
   /**
    * Closes the task environment
-   *
+   * <p>
    * This method should be called at the end of worker
    */
   public void close() {
     try {
+      LOG.info("Waiting on barrier in Compute Env...");
       workerEnvironment.getWorkerController().waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
@@ -160,7 +165,7 @@ public final class ComputeEnvironment {
     workerEnvironment.close();
   }
 
-  public Map<String, ExecutionPlan> build(ComputeGraph ...computeGraphs) {
+  public Map<String, ExecutionPlan> build(ComputeGraph... computeGraphs) {
     return this.getTaskExecutor().plan(computeGraphs);
   }
 }
