@@ -18,8 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.curator.framework.CuratorFramework;
-
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.driver.DefaultDriver;
@@ -35,7 +33,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -415,9 +412,9 @@ public class JobMaster {
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
 
-    if (zkMasterController != null) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController.close();
-      deleteZKNodes();
+      ZKUtils.closeClient();
     }
 
     if (jobTerminator != null) {
@@ -524,8 +521,7 @@ public class JobMaster {
    * this method finishes the job
    * It is executed when the worker completed message received from all workers
    */
-  public void completeJob(JobAPI.JobState jobFinalState) {
-
+  public void completeJob() {
     jobCompleted = true;
     looper.wakeup();
   }
@@ -563,11 +559,11 @@ public class JobMaster {
         if (dashClient != null) {
           dashClient.jobStateChange(JobAPI.JobState.KILLED);
         }
-        zkJobUpdater.updateState(JobAPI.JobState.KILLED);
 
-        if (zkMasterController != null) {
+        if (ZKContext.isZooKeeperServerUsed(config)) {
+          zkJobUpdater.updateState(JobAPI.JobState.KILLED);
           zkMasterController.close();
-          deleteZKNodes();
+          ZKUtils.closeClient();
         }
 
         if (clearResourcesWhenKilled) {
@@ -583,17 +579,6 @@ public class JobMaster {
     };
 
     Runtime.getRuntime().addShutdownHook(hookThread);
-  }
-
-  private boolean deleteZKNodes() {
-    boolean zkCleared = true;
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-      String rootPath = ZKContext.rootNode(config);
-      zkCleared = JobZNodeManager.deleteJobZNodes(client, rootPath, job.getJobId());
-      ZKUtils.closeClient();
-    }
-    return zkCleared;
   }
 
   public IDriver getDriver() {
