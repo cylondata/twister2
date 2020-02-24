@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,9 +51,14 @@ public class JobWithState {
    * @return
    */
   public byte[] toByteArray() {
-    byte[] stateNameBytes = state.name().getBytes();
+    byte[] stateNameBytes;
+    try {
+      stateNameBytes = state.name().getBytes("UTF8");
+    } catch (UnsupportedEncodingException e) {
+      LOG.log(Level.WARNING, "UTF8 Unsupported. Using default encoding instead.");
+      stateNameBytes = state.name().getBytes();
+    }
     byte[] stateLengthBytes = Ints.toByteArray(stateNameBytes.length);
-
     byte[] jobBytes = job.toByteArray();
 
     return Bytes.concat(stateLengthBytes, stateNameBytes, jobBytes);
