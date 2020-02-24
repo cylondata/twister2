@@ -79,4 +79,15 @@ public class JobWithState {
     }
   }
 
+  public boolean finished() {
+    return state == JobAPI.JobState.COMPLETED
+        || state == JobAPI.JobState.KILLED
+        || state == JobAPI.JobState.FAILED;
+  }
+
+  public boolean active() {
+    return state == JobAPI.JobState.STARTING
+        || state == JobAPI.JobState.STARTED;
+  }
+
 }

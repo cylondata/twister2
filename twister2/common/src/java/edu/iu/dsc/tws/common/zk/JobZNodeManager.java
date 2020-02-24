@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,9 +95,9 @@ public final class JobZNodeManager {
   }
 
   public static boolean updateJob(CuratorFramework client,
-                                       String rootPath,
-                                       JobAPI.Job job,
-                                       JobAPI.JobState state) throws Twister2Exception {
+                                  String rootPath,
+                                  JobAPI.Job job,
+                                  JobAPI.JobState state) throws Twister2Exception {
 
     String jobDir = ZKUtils.jobDir(rootPath, job.getJobId());
     JobWithState jobWithState = new JobWithState(job, state);
@@ -118,6 +119,7 @@ public final class JobZNodeManager {
     LOG.info("Job state changed to: " + state);
     return updated;
   }
+
   /**
    * delete job related znode from previous sessions
    */
@@ -196,5 +198,28 @@ public final class JobZNodeManager {
     updateJob(client, rootPath, updatedJob, jobWithState.getState());
     LOG.info("NumberOfWorkers in Job updated to: " + updatedJob.getNumberOfWorkers());
   }
+
+  /**
+   * return all jobs
+   */
+  public static List<JobWithState> getJobs(CuratorFramework client,
+                                           String rootPath) throws Twister2Exception {
+
+    try {
+      List<String> jobPaths = client.getChildren().forPath(rootPath);
+      LinkedList<JobWithState> jobs = new LinkedList();
+      for (String jobID : jobPaths) {
+        String childPath = rootPath + "/" + jobID;
+        byte[] jobZNodeBody = client.getData().forPath(childPath);
+        JobWithState jobWithState = JobWithState.decode(jobZNodeBody);
+        jobs.add(jobWithState);
+      }
+
+      return jobs;
+    } catch (Exception e) {
+      throw new Twister2Exception("Could not get job znode data: " + rootPath, e);
+    }
+  }
+
 
 }
