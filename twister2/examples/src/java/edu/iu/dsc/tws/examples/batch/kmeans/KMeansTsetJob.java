@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -37,8 +37,6 @@ import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
-
-// TODO: this needs to checked for correctness!!!
 
 public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
@@ -203,13 +201,9 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
           + context.getWorkerId();
       localPoints = new double[dataSize / para][dimension];
-      if ("csv".equalsIgnoreCase(fileType)) {
-        this.source = new DataSource(cfg, new LocalCSVInputPartitioner(
-            new Path(datainputDirectory), context.getParallelism(), cfg), dataSize);
-      } else {
-        this.source = new DataSource(cfg, new LocalTextInputPartitioner(
-            new Path(datainputDirectory), context.getParallelism(), cfg), dataSize);
-      }
+      this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
+          Path(datainputDirectory), context.getParallelism(), cfg, dataSize),
+          context.getParallelism());
     }
 
     @Override
@@ -269,13 +263,9 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       int csize = cfg.getIntegerValue(DataObjectConstants.CSIZE, 4);
 
       this.centers = new double[csize][dimension];
-      if ("csv".equalsIgnoreCase(fileType)) {
-        this.source = new DataSource(cfg, new LocalCSVInputPartitioner(
-            new Path(datainputDirectory), context.getParallelism(), cfg), csize);
-      } else {
-        this.source = new DataSource(cfg, new LocalTextInputPartitioner(
-            new Path(datainputDirectory), context.getParallelism(), cfg), csize);
-      }
+      this.source = new DataSource(cfg, new LocalCompleteTextInputPartitioner(new
+          Path(datainputDirectory), context.getParallelism(), cfg),
+          context.getParallelism());
     }
 
     @Override
