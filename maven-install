@@ -1,0 +1,4 @@
+Given mirror in documentation for installing maven, no longer exists. This mirror can be used insted. 
+
+wget https://archive.apache.org/dist/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.tar.gz
+
