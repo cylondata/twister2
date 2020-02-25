@@ -12,23 +12,31 @@
 package edu.iu.dsc.tws.rsched.job;
 
 import java.util.Formatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.JobWithState;
 import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
  * list jobs from ZooKeeper server
@@ -43,18 +51,43 @@ public final class ZKJobLister {
   }
 
   public static void main(String[] args) {
-    if (args.length != 1) {
-      LOG.severe("Usage: java ZKJobLister jobs/jobID");
-      return;
-    }
 
-    // load configurations
-    config = ResourceAllocator.loadConfig(new HashMap<>());
+    Options cmdOptions = null;
+    try {
+      cmdOptions = setupOptions();
+      CommandLineParser parser = new DefaultParser();
+      // parse the help options first.
+      CommandLine cmd = parser.parse(cmdOptions, args);
 
-    // if ZooKeeper server is not used, return. Nothing to be done.
-    if (ZKContext.serverAddresses(config) == null) {
-      LOG.severe("ZooKeeper server address is not provided in configuration files.");
-      return;
+      // load the configuration
+      // we are loading the configuration for all the components
+      config = loadConfigurations(cmd);
+      // normal worker
+      String command = cmd.getOptionValue("command");
+      String jobID = Context.jobId(config);
+      LOG.log(Level.INFO, "command: " + command);
+      LOG.log(Level.INFO, "jobID: " + jobID);
+
+      // if ZooKeeper server is not used, return. Nothing to be done.
+      if (ZKContext.serverAddresses(config) == null) {
+        LOG.severe("ZooKeeper server address is not provided in configuration files.");
+        return;
+      }
+
+      if ("jobs".equals(jobID)) {
+        listJobs();
+      } else {
+        listJob(jobID);
+      }
+
+    } catch (ParseException e) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("SubmitterMain", cmdOptions);
+      throw new RuntimeException("Error parsing command line options: ", e);
+    } catch (Throwable t) {
+      String msg = "Un-expected error";
+      LOG.log(Level.SEVERE, msg, t);
+      throw new RuntimeException(msg, t);
     }
 
     if (args[0].equals("jobs")) {
@@ -63,6 +96,69 @@ public final class ZKJobLister {
       listJob(args[0]);
     }
   }
+
+  public static Config loadConfigurations(CommandLine cmd) {
+    String twister2Home = cmd.getOptionValue("twister2_home");
+    String configDir = cmd.getOptionValue("config_path");
+    String jobID = cmd.getOptionValue("job_id");
+
+    Config conf = ConfigLoader.loadConfig(twister2Home, configDir);
+
+    return Config.newBuilder()
+        .putAll(conf)
+        .put(Context.TWISTER2_HOME.getKey(), twister2Home)
+        .put(SchedulerContext.CONFIG_DIR, configDir)
+        .put(Context.JOB_ID, jobID)
+        .build();
+  }
+
+  /**
+   * Setup the command line options for the MPI process
+   *
+   * @return cli options
+   */
+  public static Options setupOptions() {
+    Options options = new Options();
+
+    Option configDirectory = Option.builder("d")
+        .desc("The config directory")
+        .longOpt("config_path")
+        .hasArgs()
+        .argName("configuration directory")
+        .required()
+        .build();
+
+    Option twister2Home = Option.builder("t")
+        .desc("The class name of the container to launch")
+        .longOpt("twister2_home")
+        .hasArgs()
+        .argName("twister2 home")
+        .required()
+        .build();
+
+    Option command = Option.builder("m")
+        .desc("Command name")
+        .longOpt("command")
+        .hasArgs()
+        .argName("command")
+        .required()
+        .build();
+
+    Option jobID = Option.builder("j")
+        .desc("Job id")
+        .longOpt("job_id")
+        .hasArgs()
+        .argName("job id")
+        .required()
+        .build();
+    options.addOption(twister2Home);
+    options.addOption(configDirectory);
+    options.addOption(command);
+    options.addOption(jobID);
+
+    return options;
+  }
+
 
   /**
    * list jobs from ZooKeeper
