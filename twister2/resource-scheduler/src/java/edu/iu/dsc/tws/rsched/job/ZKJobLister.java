@@ -65,8 +65,8 @@ public final class ZKJobLister {
       // normal worker
       String command = cmd.getOptionValue("command");
       String jobID = Context.jobId(config);
-      LOG.log(Level.INFO, "command: " + command);
-      LOG.log(Level.INFO, "jobID: " + jobID);
+      LOG.log(Level.FINE, "command: " + command);
+      LOG.log(Level.FINE, "jobID: " + jobID);
 
       // if ZooKeeper server is not used, return. Nothing to be done.
       if (ZKContext.serverAddresses(config) == null) {
