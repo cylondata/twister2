@@ -89,12 +89,6 @@ public final class ZKJobLister {
       LOG.log(Level.SEVERE, msg, t);
       throw new RuntimeException(msg, t);
     }
-
-    if (args[0].equals("jobs")) {
-      listJobs();
-    } else {
-      listJob(args[0]);
-    }
   }
 
   public static Config loadConfigurations(CommandLine cmd) {
