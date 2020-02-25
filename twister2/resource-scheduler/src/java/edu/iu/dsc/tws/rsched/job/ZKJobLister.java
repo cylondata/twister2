@@ -107,7 +107,7 @@ public final class ZKJobLister {
 
     StringBuilder buffer = new StringBuilder();
     Formatter f = new Formatter(buffer);
-    f.format("\n%s", "Number of all jobs: " + jobs.size());
+    f.format("\n\n%s", "Number of all jobs: " + jobs.size());
     f.format("\n%s", "");
     f.format("\n%s", "List of finished jobs: " + finishedJobs.size() + "\n");
     outputJobs(finishedJobs, f, format, separator);
@@ -160,7 +160,7 @@ public final class ZKJobLister {
 
     StringBuilder buffer = new StringBuilder();
     Formatter f = new Formatter(buffer);
-    f.format("\n%s", "JobID: " + job.getJob().getJobId());
+    f.format("\n\n%s", "JobID: " + job.getJob().getJobId());
     f.format("\n%s", "Job State: " + job.getState());
     f.format("\n%s", "Number of Workers: " + job.getJob().getNumberOfWorkers());
     f.format("\n%s", "");
