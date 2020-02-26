@@ -30,7 +30,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         'list',
         help='List jobs, or list workers of a job',
-        usage="%(prog)s cluster jobs/jobID",
+        usage="%(prog)s jobs/jobID",
         add_help=True
     )
 
