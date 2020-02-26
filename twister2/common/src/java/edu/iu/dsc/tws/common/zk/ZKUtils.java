@@ -78,7 +78,7 @@ public final class ZKUtils {
           sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 5));
       client.start();
 
-      LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServers);
+      LOG.log(Level.FINE, "Connected to ZooKeeper server: " + zkServers);
       return client;
 
     } catch (Exception e) {
