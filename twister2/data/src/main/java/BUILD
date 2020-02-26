@@ -38,6 +38,10 @@ common_deps_files = [
     "@org_apache_htrace_htrace_core4//jar",
     "@org_apache_hadoop_hadoop_hdfs_client//jar",
     "@org_slf4j_slf4j_api//jar",
+    "@org_apache_arrow_arrow_vector//jar",
+    "@org_apache_arrow_arrow_memory//jar",
+    "@org_apache_arrow_arrow_format//jar",
+    "@com_google_flatbuffers_flatbuffers_java//jar",
 ]
 
 t2_java_lib(
