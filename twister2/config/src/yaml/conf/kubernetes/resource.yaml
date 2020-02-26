@@ -58,11 +58,11 @@ twister2.resource.worker.compute.resources:
 # twister2.resource.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
 
 # worker class to run
-twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.sort.SortJob"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 
 # by default each worker has one port
 # additional ports can be requested for all workers in a job
@@ -91,28 +91,6 @@ twister2.resource.kubernetes.persistent.storage.class: "twister2-nfs-storage"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
 twister2.resource.kubernetes.storage.access.mode: "ReadWriteMany"
-
-###################################################################################
-# ZooKeeper related config parameters
-###################################################################################
-
-# ZooKeeper can be used to exchange job status data and discovery
-# Workers can discover one another through ZooKeeper
-# They update their status on ZooKeeper
-# Dashboard can get job events through ZooKeeper
-# If fault tolerance is enabled, ZooKeeper is used, irrespective of this parameter
-twister2.zookeeper.based.group.management: false
-
-# ZooKeeper server addresses: comma separated host:port pairs
-# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-# when conf/kubernetes/deployment/zookeeper-wo-persistence.yaml is used
-# following service name can be used as zk address
-twister2.resource.zookeeper.server.addresses: "twister2-zookeeper.default.svc.cluster.local:2181"
-# twister2.resource.zookeeper.server.addresses: "ip:port"
-
-# the root node path of this job on ZooKeeper
-# the default is "/twister2"
-# twister2.zookeeper.root.node.path: "/twister2"
 
 #########################################################################
 # K8sUploader Settings
