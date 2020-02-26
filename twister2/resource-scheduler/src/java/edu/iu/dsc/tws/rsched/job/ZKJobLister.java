@@ -52,42 +52,40 @@ public final class ZKJobLister {
 
   public static void main(String[] args) {
 
-    Options cmdOptions = null;
+    Options cmdOptions = setupOptions();
+    CommandLineParser parser = new DefaultParser();
+    CommandLine cmd;
     try {
-      cmdOptions = setupOptions();
-      CommandLineParser parser = new DefaultParser();
       // parse the help options first.
-      CommandLine cmd = parser.parse(cmdOptions, args);
-
-      // load the configuration
-      // we are loading the configuration for all the components
-      config = loadConfigurations(cmd);
-      // normal worker
-      String command = cmd.getOptionValue("command");
-      String jobID = Context.jobId(config);
-      LOG.log(Level.FINE, "command: " + command);
-      LOG.log(Level.FINE, "jobID: " + jobID);
-
-      // if ZooKeeper server is not used, return. Nothing to be done.
-      if (ZKContext.serverAddresses(config) == null) {
-        LOG.severe("ZooKeeper server address is not provided in configuration files.");
-        return;
-      }
-
-      if ("jobs".equals(jobID)) {
-        listJobs();
-      } else {
-        listJob(jobID);
-      }
-
+      cmd = parser.parse(cmdOptions, args);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("SubmitterMain", cmdOptions);
+      formatter.printHelp("ZKJobLister", cmdOptions);
       throw new RuntimeException("Error parsing command line options: ", e);
     } catch (Throwable t) {
       String msg = "Un-expected error";
       LOG.log(Level.SEVERE, msg, t);
       throw new RuntimeException(msg, t);
+    }
+
+    // load the configuration
+    config = loadConfigurations(cmd);
+    String command = cmd.getOptionValue("command");
+    String jobID = Context.jobId(config);
+    LOG.log(Level.FINE, "command: " + command);
+    LOG.log(Level.FINE, "jobID: " + jobID);
+
+    // if ZooKeeper server address is not given, return. Nothing to be done.
+    if (ZKContext.serverAddresses(config) == null) {
+      LOG.severe("ZooKeeper server address is not provided in configuration files. "
+          + "Please the value of: twister2.resource.zookeeper.server.addresses");
+      return;
+    }
+
+    if ("jobs".equals(jobID)) {
+      listJobs();
+    } else {
+      listJob(jobID);
     }
   }
 
@@ -107,7 +105,7 @@ public final class ZKJobLister {
   }
 
   /**
-   * Setup the command line options for the MPI process
+   * Setup the command line options for JobLister
    *
    * @return cli options
    */
@@ -170,9 +168,7 @@ public final class ZKJobLister {
     }
 
     if (jobs.size() == 0) {
-      StringBuffer buffer = new StringBuffer();
-      buffer.append("\nNumber of all jobs: " + jobs.size());
-      LOG.info(buffer.toString());
+      LOG.info("\nNumber of all jobs: " + jobs.size());
       return;
     }
 
@@ -222,11 +218,10 @@ public final class ZKJobLister {
           jws.getState().toString(),
           "" + jws.getJob().getNumberOfWorkers());
     }
-
   }
 
   /**
-   * list job info from zk server
+   * list a single job info from zk server
    * @param jobID
    */
   public static void listJob(String jobID) {
@@ -243,10 +238,15 @@ public final class ZKJobLister {
       return;
     }
 
+    if (workers.size() == 0) {
+      LOG.info("\nNumber of workers in the job: 0");
+      return;
+    }
+
     int maxWorkerIPLength = workers.stream()
         .mapToInt(w -> w.getInfo().getWorkerIP().length())
         .max()
-        .orElseThrow(() -> new RuntimeException("No valid workerIP in jobs"));
+        .orElseThrow(() -> new RuntimeException("No valid workerIP in WorkerInfo"));
 
     StringBuilder buffer = new StringBuilder();
     Formatter f = new Formatter(buffer);
