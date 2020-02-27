@@ -67,8 +67,8 @@ public final class ConfigLoader {
    * must be converted to either local or cluster mode to trigger pattern substitution of wildcards
    * tokens.
    */
-  private static Config loadConfig(String twister2Home,
-                                   String configPath) {
+  public static Config loadConfig(String twister2Home,
+                                  String configPath) {
     Config defaultConfig = loadDefaults(twister2Home, configPath);
     // to token-substitute the conf paths
     Config localConfig = Config.transform(defaultConfig);

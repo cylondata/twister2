@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 
 /**
  * submit a job to Aurora Scheduler using AuroraClientController
@@ -48,13 +47,6 @@ public class AuroraLauncher implements ILauncher {
   public Twister2JobState launch(JobAPI.Job job) {
 
     String jobName = job.getJobName();
-
-    // first check whether there is an active job running with same name on ZooKeeper
-    if (ZKUtil.isThereAnActiveJob(jobName, config)) {
-      throw new RuntimeException("There is an active job in ZooKeeper with same name."
-          + "\nFirst try to kill that job. Run terminate job command."
-          + "\nThis job is not submitted to Aurora Server");
-    }
 
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraContext.auroraClusterName(config);
@@ -112,10 +104,7 @@ public class AuroraLauncher implements ILauncher {
       LOG.log(Level.SEVERE, "Aurora job kill command failed.");
     }
 
-    // first clear ZooKeeper data
-    boolean deletedZKNodes = ZKUtil.terminateJob(jobID, config);
-
-    return killedAuroraJob && deletedZKNodes;
+    return killedAuroraJob;
   }
 
   /**

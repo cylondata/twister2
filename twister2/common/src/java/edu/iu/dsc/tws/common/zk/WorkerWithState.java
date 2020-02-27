@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,10 +51,17 @@ public class WorkerWithState {
   }
 
   public byte[] toByteArray() {
-    byte[] stateBytes = Ints.toByteArray(state.getNumber());
+    byte[] stateNameBytes;
+    try {
+      stateNameBytes = state.name().getBytes("UTF8");
+    } catch (UnsupportedEncodingException e) {
+      LOG.log(Level.WARNING, "UTF8 Unsupported. Using default encoding instead.");
+      stateNameBytes = state.name().getBytes();
+    }
+    byte[] stateLengthBytes = Ints.toByteArray(stateNameBytes.length);
     byte[] workerInfoBytes = info.toByteArray();
 
-    return Bytes.concat(stateBytes, workerInfoBytes);
+    return Bytes.concat(stateLengthBytes, stateNameBytes, workerInfoBytes);
   }
 
   public static WorkerWithState decode(byte[] encodedBytes) {
@@ -61,13 +69,14 @@ public class WorkerWithState {
       return null;
     }
 
-    // first 4 bytes is the status
-    int state = Ints.fromByteArray(encodedBytes);
-    WorkerState workerState = WorkerState.forNumber(state);
+    // first 4 bytes is the length of worker state
+    int stateLength = Ints.fromByteArray(encodedBytes);
+    String stateName = new String(encodedBytes, 4, stateLength);
+    WorkerState workerState = WorkerState.valueOf(stateName);
 
     try {
       WorkerInfo workerInfo = WorkerInfo.newBuilder()
-          .mergeFrom(encodedBytes, 4, encodedBytes.length - 4)
+          .mergeFrom(encodedBytes, 4 + stateLength, encodedBytes.length - 4 - stateLength)
           .build();
       return new WorkerWithState(workerInfo, workerState);
     } catch (InvalidProtocolBufferException e) {

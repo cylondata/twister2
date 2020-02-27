@@ -100,6 +100,6 @@ RUN if [ "$WITH_CUDA" = "true" ]; then \
 # install python
 # clear apt-get cache, no more apt usage after this point
 RUN apt-get update && \
-    apt-get install -y python3 && \
+    apt-get install -y python3 nano && \
     rm -rf /var/lib/apt/lists/*
 
