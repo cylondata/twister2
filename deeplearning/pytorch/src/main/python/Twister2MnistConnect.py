@@ -153,6 +153,16 @@ def tset_to_numpy(tset):
     return data_items
 
 
+def check_one_dim_array(arr: np.ndarray):
+    return True if len(arr.shape) == 1 else False
+
+
+def fix_array_shape(arr: np.ndarray):
+    if check_one_dim_array(arr):
+        arr = np.reshape(arr, (arr.shape[0], 1))
+    return arr
+
+
 def load_data():
     t1 = time.time()
 
@@ -191,13 +201,13 @@ dtype = np.float32
 samples = 8
 features = 784
 
-#train_data = np.ones(shape=(samples, features), dtype=dtype) * world_rank
-#test_data = np.random.randint(10, size=(samples, 1))
-
-#train_data = train_data.astype('double')
-#test_data = test_data.astype('double')
-
 train_data, train_target, test_data, test_target = load_data()
+
+train_target = fix_array_shape(train_target)
+test_target = fix_array_shape(test_target)
+
+if world_rank == 0:
+    print("From Memory: ", train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
 # send_buf = np.concatenate((train_data, test_data), axis=1)
 #
@@ -521,7 +531,7 @@ test_target = format_data(input_data=test_target, world_size=world_size, init_ba
 test_target = format_mnist_target(data=test_target)
 
 if world_rank == 0:
-    print("Train: ", train_data.shape, train_target.shape, test_data.shape, test_target.shape)
+    print("From File: ", train_data.shape, train_target.shape, test_data.shape, test_target.shape)
 
 # print(train_data.shape, train_data[0][0][0:5][0:5])
 
@@ -530,8 +540,8 @@ do_log = False
 
 # print("worker {} , data {} ".format(world_rank, train_target[0]))
 
-# initialize training
-# launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,
-#        train_data=train_data, train_target=train_target,
-#        test_data=test_data, test_target=test_target,
-#        do_log=do_log, comms=comm)
+#initialize training
+launch(rank=world_rank, size=world_size, fn=train, backend=__BACKEND,
+       train_data=train_data, train_target=train_target,
+       test_data=test_data, test_target=test_target,
+       do_log=do_log, comms=comm)
