@@ -11,23 +11,18 @@
 #  // limitations under the License.
 
 
-import os
+import time
+
 import numpy as np
+from mpi4py import MPI
 # CORE PYTWISTER2 IMPORTS
-from twister2 import TSetContext
 from twister2.Twister2Environment import Twister2Environment
-from twister2.tset.TSet import TSet
 from twister2.tset.fn.SourceFunc import SourceFunc
+
+import twister2deepnet.deepnet.util.utils as utils
 # TWISTER2 DEEPNET IMPORTS
-from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
 from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
 from twister2deepnet.deepnet.io.FileUtils import FileUtils
-
-
-import mpi4py
-from mpi4py import MPI
-
-import time
 
 DATA_FOLDER = '/tmp/twister2deepnet/mnist/'
 
@@ -107,85 +102,61 @@ class DataSource(SourceFunc):
             pass
 
 
-def save_to_disk(dataset=None, save_path=None, save_file=None):
-    # TODO use os.path.join and refactor
-    if dataset is None or save_path is None or save_file is None:
-        raise Exception("Input Cannot be None")
-    elif not os.path.exists(save_path):
-        raise Exception("Save Path doesn't exist")
-    elif os.path.exists(save_path + save_file):
-        pass
-    else:
-        dataframe = UtilPanda.convert_numpy_to_pandas(dataset)
-        table = ArrowUtils.create_to_table(dataFrame=dataframe)
-        ArrowUtils.write_to_table(table=table, save_path=os.path.join(save_path, save_file))
+t1 = time.time()
 
+source_train = env.create_source(DataSource(train=True), PARALLELISM)
+source_train_tset_cache = source_train.cache()
 
-def tset_to_numpy(tset):
-    cache_tset = tset.cache()
-    test_data_object = cache_tset.get_data()
-    data_items = []
-    for partition in test_data_object.get_partitions():
-        for consumer in partition.consumer():
-            data_items.append(consumer)
-    return data_items
+source_test = env.create_source(DataSource(train=False), PARALLELISM)
+source_test_tset_cache = source_test.cache()
 
+data_loading_time = time.time() - t1
 
-def check_one_dim_array(arr: np.ndarray):
-    return True if len(arr.shape) == 1 else False
+t1 = time.time()
 
+train_data_list = utils.tset_to_numpy(source_train)
+test_data_list = utils.tset_to_numpy(source_test)
 
-def fix_array_shape(arr: np.ndarray):
-    if check_one_dim_array(arr):
-        arr = np.reshape(arr, (arr.shape[0], 1))
-    return arr
+convert_numpy_time = time.time() - t1
 
+print("Source Test {} {} {} {}".format(len(test_data_list), type(test_data_list[0]), test_data_list[0].shape,
+                                       test_data_list[1].shape))
 
-def load_data():
-    t1 = time.time()
+time_taken = data_loading_time + convert_numpy_time
 
-    source_train = env.create_source(DataSource(train=True), PARALLELISM)
-    source_train_tset_cache = source_train.cache()
+print("Total Time Taken {}, \nData Loading Time {}, Numpy Conversion Time {} ".format(time_taken, data_loading_time,
+                                                                                      convert_numpy_time))
+train_data = train_data_list[0]
+train_target = train_data_list[1]
 
-    source_test = env.create_source(DataSource(train=False), PARALLELISM)
-    source_test_tset_cache = source_test.cache()
-
-    data_loading_time = time.time() - t1
-
-    t1 = time.time()
-
-    train_data_list = tset_to_numpy(source_train)
-    test_data_list = tset_to_numpy(source_test)
-
-    convert_numpy_time = time.time() - t1
-
-    print("Source Test {} {} {} {}".format(len(test_data_list), type(test_data_list[0]), test_data_list[0].shape,
-                                           test_data_list[1].shape))
-
-    time_taken = data_loading_time + convert_numpy_time
-
-    print("Total Time Taken {}, \nData Loading Time {}, Numpy Conversion Time {} ".format(time_taken, data_loading_time,
-                                                                                          convert_numpy_time))
-    train_data = train_data_list[0]
-    train_target = train_data_list[1]
-
-    test_data = test_data_list[0]
-    test_target = test_data_list[1]
-    return train_data, train_target, test_data, test_target
-
+test_data = test_data_list[0]
+test_target = test_data_list[1]
 
 dtype = np.float32
 
 samples = 8
 features = 784
 
-train_data, train_target, test_data, test_target = load_data()
-
-train_target = fix_array_shape(train_target)
-test_target = fix_array_shape(test_target)
+train_target = utils.fix_array_shape(train_target)
+test_target = utils.fix_array_shape(test_target)
 
 if world_rank == 0:
     print("From Memory: ", train_data.shape, train_target.shape, test_data.shape, test_target.shape)
+
+# LOAD DATA FROM DISK
+
+## load train data
+train_data = utils.generate_minibatches(input_data=train_data, world_size=world_size, init_batch_size=128)
+train_data = utils.format_data(data=train_data)
+## load test data
+test_data = utils.generate_minibatches(input_data=test_data, world_size=world_size, init_batch_size=16)
+test_data = utils.format_data(data=test_data)
+## load train target
+train_target = utils.generate_minibatches(input_data=train_target, world_size=world_size, init_batch_size=128)
+train_target = utils.format_target(data=train_target)
+## load test target
+test_target = utils.generate_minibatches(input_data=test_target, world_size=world_size, init_batch_size=16)
+test_target = utils.format_target(data=test_target)
 
 print("Loading Done")
 
@@ -194,17 +165,15 @@ print("Loading Done")
 print("Start Training")
 
 import numpy as np
-import os
 import time
 import torch
 import twister2deepnet.deepnet.torch.distributed as dist
+import torch.distributed as dist1
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from math import sqrt
 
-from twister2deepnet.deepnet.data.DataUtil import DataUtil
-from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
+
 
 
 class Net(nn.Module):
@@ -234,30 +203,6 @@ class Net(nn.Module):
 
 
 """ Gradient averaging. """
-
-
-def average_gradients_mpi(model, comm=None, world_size=4):
-    size = float(world_size)
-    for param in model.parameters():
-        param_numpy = param.grad.data.numpy()
-        param_output = np.empty(param_numpy.shape, dtype=param_numpy.dtype)
-        param_torch = torch.from_numpy(param_numpy)
-        # print(type(param.grad.data), type(param_numpy), type(param_torch), param_numpy.dtype, param_output.dtype)
-        comm.Allreduce(param_numpy, param_output, op=MPI.SUM)
-        param.grad.data = torch.from_numpy(param_output)
-        # dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
-        param.grad.data /= size
-
-
-def average_accuracy_mpi(local_accuracy, comm=None, world_size=4):
-    size = float(world_size)
-    # dist.all_reduce(local_accuracy, op=dist.ReduceOp.SUM)
-    param_numpy = local_accuracy.numpy()
-    param_output = np.empty(param_numpy.shape, dtype=param_numpy.dtype)
-    comm.Allreduce(param_numpy, param_output, op=MPI.SUM)
-    local_accuracy = torch.from_numpy(param_output)
-    global_accuracy = local_accuracy / size
-    return global_accuracy
 
 
 def average_gradients(model):
@@ -361,7 +306,8 @@ def predict(rank, model, device, test_data=None, test_target=None, do_log=False,
 
     test_loss /= (total_samples)
     local_accuracy = 100.0 * correct / total_samples
-    global_accuracy = average_accuracy(torch.tensor(local_accuracy)) #average_accuracy_mpi(torch.tensor(local_accuracy), comm=comms, world_size=4)
+    global_accuracy = average_accuracy(
+        torch.tensor(local_accuracy))  # average_accuracy_mpi(torch.tensor(local_accuracy), comm=comms, world_size=4)
     if (rank == 0):
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
             test_loss, correct, total_samples,
@@ -413,7 +359,7 @@ def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log
             loss.backward()
             if (world_rank == 0):
                 local_time_communication = time.time()
-            average_gradients(model) #average_gradients_mpi(model, comm=comms, world_size=4)
+            average_gradients(model)  # average_gradients_mpi(model, comm=comms, world_size=4)
             if (world_rank == 0):
                 local_time_communication = time.time() - local_time_communication
                 local_total_time_communication = local_total_time_communication + local_time_communication
@@ -424,98 +370,10 @@ def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log
     return model, local_total_time_communication
 
 
-def format_mnist_data(data=None):
-    """
-    This method re-shapes the data to fit into the Network Input Shape
-    :rtype: data re-formatted to fit to the network designed
-    """
-    data_shape = data.shape
-    img_size = int(sqrt(data_shape[2]))
-    data = np.reshape(data, (data_shape[0], data_shape[1], img_size, img_size))
-    return data
-
-
-def format_mnist_target(data=None):
-    """
-    Reshaping the mnist target values to fit into model
-    :param data:
-    :return:
-    """
-    data_shape = data.shape
-    data = np.reshape(data, (data_shape[0], data_shape[1]))
-    return data
-
-
-def format_data(input_data=None, world_size=4, init_batch_size=128):
-    """
-    Specific For MNIST and 3 dimensional data
-    This function is generated for MNIST only cannot be used in general for all data shapes
-    :param input_data: data in numpy format with (N,M) format Here N number of samples
-            M is the tensor length
-    :return: For numpy we reshape this and return a tensor of the shape, (N, sqrt(M), sqrt(M))
-    """
-    bsz = int(init_batch_size / float(world_size))
-    data = DataUtil.generate_minibatches(data=input_data, minibatch_size=bsz)
-    return data
-
-
-def read_from_disk(source_file=None, source_path=None):
-    """
-    A helper function to load the data from the disk
-    This function is useful for in-memory oriented data reads, doesn't support very large data reads
-    Reads the data from disk (using PyArrow Parquet)
-    :param source_file: file name
-    :param source_path: path to reading file
-    :return: returns a numpy array of the saved data
-    """
-    data = None
-    if source_file is None and source_path is None:
-        raise Exception("Input cannot be None")
-    elif not os.path.exists(source_path + source_file):
-        raise Exception("Data source doesn't exist")
-    else:
-        dataframe = ArrowUtils.read_from_table(source_path + source_file)
-        data = dataframe.to_numpy()
-    return data
-
-
-# world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-# world_rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
-#
-# train_data_save_path = "/tmp/parquet/train/"
-# test_data_save_path = "/tmp/parquet/test/"
-#
-# train_data_file = str(world_rank) + ".data"
-# test_data_file = str(world_rank) + ".data"
-# train_target_file = str(world_rank) + ".target"
-# test_target_file = str(world_rank) + ".target"
-
 __BACKEND = 'mpi'
-
-# LOAD DATA FROM DISK
-
-## load train data
-# train_data = read_from_disk(source_file=train_data_file, source_path=train_data_save_path)
-train_data = format_data(input_data=train_data, world_size=world_size, init_batch_size=128)
-train_data = format_mnist_data(data=train_data)
-## load test data
-# test_data = read_from_disk(source_file=test_data_file, source_path=test_data_save_path)
-test_data = format_data(input_data=test_data, world_size=world_size, init_batch_size=16)
-test_data = format_mnist_data(data=test_data)
-## load train target
-# train_target = read_from_disk(source_file=train_target_file, source_path=train_data_save_path)
-train_target = format_data(input_data=train_target, world_size=world_size, init_batch_size=128)
-train_target = format_mnist_target(data=train_target)
-## load test target
-# test_target = read_from_disk(source_file=test_target_file, source_path=test_data_save_path)
-test_target = format_data(input_data=test_target, world_size=world_size, init_batch_size=16)
-test_target = format_mnist_target(data=test_target)
 
 if world_rank == 0:
     print("From File: ", train_data.shape, train_target.shape, test_data.shape, test_target.shape)
-
-# print(train_data.shape, train_data[0][0][0:5][0:5])
-
 
 do_log = False
 
