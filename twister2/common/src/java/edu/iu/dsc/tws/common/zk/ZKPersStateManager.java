@@ -15,8 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
@@ -24,7 +22,6 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This class has methods to keep persistent status of a job in ZooKeeper servers
@@ -53,17 +50,17 @@ public final class ZKPersStateManager {
    * Assumes that there is no znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
-  public static void createPersStateDir(CuratorFramework client, String rootPath, JobAPI.Job job)
+  public static void createPersStateDir(CuratorFramework client, String rootPath, String jobID)
       throws Twister2Exception {
 
-    String persStatePath = ZKUtils.persDir(rootPath, job.getJobId());
+    String persStatePath = ZKUtils.persDir(rootPath, jobID);
 
     try {
       client
           .create()
           .creatingParentsIfNeeded()
           .withMode(CreateMode.PERSISTENT)
-          .forPath(persStatePath, job.toByteArray());
+          .forPath(persStatePath);
 
       LOG.info("Job PersStateDir created: " + persStatePath);
 
@@ -340,48 +337,4 @@ public final class ZKPersStateManager {
   }
 
 
-  /**
-   * read the body of persistent directory body
-   * decode and return
-   */
-  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
-
-    String persDir = ZKUtils.persDir(rootPath, jobID);
-
-    try {
-      byte[] jobBytes = client.getData().forPath(persDir);
-      return decodeJobZnode(jobBytes);
-    } catch (Exception e) {
-      throw new Twister2Exception("Could not read job znode body: " + e.getMessage(), e);
-    }
-  }
-
-  /**
-   * decode job znode body bytes
-   */
-  public static JobAPI.Job decodeJobZnode(byte[] body) throws InvalidProtocolBufferException {
-    return JobAPI.Job.newBuilder().mergeFrom(body).build();
-  }
-
-  /**
-   * Create job znode with JobAPI.Job object as its payload
-   * Assumes that there is no job znode exists in the ZooKeeper
-   * This method should be called by the submitting client
-   */
-  public static void updateJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
-      throws Twister2Exception {
-
-    String persDir = ZKUtils.persDir(rootPath, job.getJobId());
-    try {
-      client
-          .setData()
-          .forPath(persDir, job.toByteArray());
-
-      LOG.info("Job object in PersStateDir updated: " + persDir);
-
-    } catch (Exception e) {
-      throw new Twister2Exception("Could not update the job znode: " + e.getMessage(), e);
-    }
-  }
 }

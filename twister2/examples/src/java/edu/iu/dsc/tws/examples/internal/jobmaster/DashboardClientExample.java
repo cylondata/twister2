@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
@@ -44,7 +43,7 @@ public final class DashboardClientExample {
 
     // if number of args is 3, kill the job
     if (args.length == 3) {
-      dashClient.jobStateChange(JobState.KILLED);
+      dashClient.jobStateChange(JobAPI.JobState.KILLED);
       return;
     }
 
@@ -80,10 +79,10 @@ public final class DashboardClientExample {
 
     // test state change
     dashClient.workerStateChange(0, JobMasterAPI.WorkerState.COMPLETED);
-    dashClient.jobStateChange(JobState.STARTED);
+    dashClient.jobStateChange(JobAPI.JobState.STARTED);
 
     // job killed
-    dashClient.jobStateChange(JobState.KILLED);
+    dashClient.jobStateChange(JobAPI.JobState.KILLED);
 
     dashClient.close();
   }

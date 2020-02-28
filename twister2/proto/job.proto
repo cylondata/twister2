@@ -4,6 +4,15 @@ package tws.proto.job;
 option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "JobAPI";
 
+// a worker can be any one of these states
+enum JobState {
+    STARTING = 0;
+    STARTED = 1;
+    COMPLETED = 2;
+    FAILED = 3;
+    KILLED = 4;
+}
+
 enum JobFormatType {
     JAR = 0;
     JAVA_ZIP = 1;
