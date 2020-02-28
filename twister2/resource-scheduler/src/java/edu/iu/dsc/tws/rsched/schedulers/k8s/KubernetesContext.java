@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
@@ -183,4 +183,5 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_LABEL,
         K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT);
   }
+
 }
