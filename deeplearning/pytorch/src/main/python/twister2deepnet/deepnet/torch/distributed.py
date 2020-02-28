@@ -4,7 +4,14 @@ import numpy as np
 
 mpi4py.rc(initialize=False, finalize=False)
 from mpi4py import MPI
-from twister2deepnet.deepnet.torch.ReduceOp import ReduceOp
+from enum import Enum
+
+
+class ReduceOp(Enum):
+    SUM = MPI.SUM
+    MAX = MPI.MAX
+    MIN = MPI.MIN
+    PROD = MPI.PROD
 
 
 def init_process_group():
@@ -27,11 +34,15 @@ def get_comm():
     return _get_comm()
 
 
-def get_rank(comm: MPI.COMM_WORLD) -> int:
+def get_rank(comm: MPI.COMM_WORLD = None) -> int:
+    if comm is None:
+        comm = _get_comm()
     return comm.Get_rank()
 
 
-def get_size(comm: MPI.COMM_WORLD) -> int:
+def get_world_size(comm: MPI.COMM_WORLD = None) -> int:
+    if comm is None:
+        comm = _get_comm()
     return comm.Get_size()
 
 
@@ -41,5 +52,5 @@ def all_reduce(tensor: torch.Tensor, op=ReduceOp.SUM, comm: MPI.COMM_WORLD = Non
     if comm is None:
         comm = _get_comm()
     comm.Allreduce(param_numpy, param_output, op=op.value)
-    out_tensor: torch.Tensor = torch.from_numpy(param_output)
-    return out_tensor
+    tensor = torch.from_numpy(param_output)
+    return tensor

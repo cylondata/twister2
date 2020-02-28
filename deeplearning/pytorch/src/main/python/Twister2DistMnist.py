@@ -21,16 +21,8 @@ from twister2.tset.fn.SourceFunc import SourceFunc
 # TWISTER2 DEEPNET IMPORTS
 from twister2deepnet.deepnet.data.UtilPanda import UtilPanda
 from twister2deepnet.deepnet.examples.MnistDistributed import MnistDistributed
-from twister2deepnet.deepnet.io.ArrowUtils import ArrowUtils
 from twister2deepnet.deepnet.io.FileUtils import FileUtils
-from twister2deepnet.deepnet.data.DataUtil import DataUtil
 
-import torch
-import torch.distributed as dist
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from math import sqrt
 
 import mpi4py
 from mpi4py import MPI
@@ -205,7 +197,7 @@ import numpy as np
 import os
 import time
 import torch
-import torch.distributed as dist
+import twister2deepnet.deepnet.torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -264,6 +256,20 @@ def average_accuracy_mpi(local_accuracy, comm=None, world_size=4):
     param_output = np.empty(param_numpy.shape, dtype=param_numpy.dtype)
     comm.Allreduce(param_numpy, param_output, op=MPI.SUM)
     local_accuracy = torch.from_numpy(param_output)
+    global_accuracy = local_accuracy / size
+    return global_accuracy
+
+
+def average_gradients(model):
+    size = float(dist.get_world_size())
+    for param in model.parameters():
+        param.grad.data = dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
+        param.grad.data /= size
+
+
+def average_accuracy(local_accuracy):
+    size = float(dist.get_world_size())
+    local_accuracy = dist.all_reduce(local_accuracy, op=dist.ReduceOp.SUM)
     global_accuracy = local_accuracy / size
     return global_accuracy
 
@@ -355,7 +361,7 @@ def predict(rank, model, device, test_data=None, test_target=None, do_log=False,
 
     test_loss /= (total_samples)
     local_accuracy = 100.0 * correct / total_samples
-    global_accuracy = average_accuracy_mpi(torch.tensor(local_accuracy), comm=comms, world_size=4)
+    global_accuracy = average_accuracy(torch.tensor(local_accuracy)) #average_accuracy_mpi(torch.tensor(local_accuracy), comm=comms, world_size=4)
     if (rank == 0):
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
             test_loss, correct, total_samples,
@@ -407,7 +413,7 @@ def train(world_rank=0, world_size=4, train_data=None, train_target=None, do_log
             loss.backward()
             if (world_rank == 0):
                 local_time_communication = time.time()
-            average_gradients_mpi(model, comm=comms, world_size=4)
+            average_gradients(model) #average_gradients_mpi(model, comm=comms, world_size=4)
             if (world_rank == 0):
                 local_time_communication = time.time() - local_time_communication
                 local_total_time_communication = local_total_time_communication + local_time_communication
