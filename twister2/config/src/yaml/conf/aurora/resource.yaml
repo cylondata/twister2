@@ -15,18 +15,6 @@ twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.Bas
 # the Aurora worker class
 twister2.resource.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter"
 
-###################################################################################
-# ZooKeeper related config parameters
-###################################################################################
-
-# ZooKeeper server addresses: comma separated host:port pairs
-# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.resource.zookeeper.server.addresses: "149.165.150.81:2181"
-
-# the root node path of this job on ZooKeeper
-# the default is "/twister2"
-#twister2.zookeeper.root.node.path: "/twister2"
-
 ##############################################################################
 # Uploader configuration
 #############################################################################
