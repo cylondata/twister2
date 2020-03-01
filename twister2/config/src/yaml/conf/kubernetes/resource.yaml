@@ -24,6 +24,14 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 # it is false by default
 # kubernetes.log.in.client: true
 
+# before connecting to other pods in the job,
+# check whether all pods are reachable from each pod
+# wait until all pods become reachable
+# when there are networking issues, pods may not be reachable immediately,
+# so this makes sure to wait before all pods become reachable
+# it is false by default
+# kubernetes.check.pods.reachable: true
+
 ################################################################################
 # Job configuration parameters for submission of twister2 jobs
 # Jobs can be loaded from these configurations or

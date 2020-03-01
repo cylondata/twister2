@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
@@ -26,7 +27,6 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 

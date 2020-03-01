@@ -20,9 +20,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
