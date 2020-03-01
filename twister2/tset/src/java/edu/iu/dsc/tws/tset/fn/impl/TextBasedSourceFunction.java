@@ -28,8 +28,8 @@ public class TextBasedSourceFunction extends BaseSourceFunc<String> {
 
   private static final Logger LOG = Logger.getLogger(TextBasedSourceFunction.class.getName());
 
-  private DataSource<java.lang.String, FileInputSplit<java.lang.String>> dataSource;
-  protected InputSplit<java.lang.String> dataSplit;
+  private DataSource<String, FileInputSplit<String>> dataSource;
+  private InputSplit<String> dataSplit;
   private TSetContext ctx;
 
   private String datainputDirectory;
@@ -69,7 +69,7 @@ public class TextBasedSourceFunction extends BaseSourceFunc<String> {
       }
       return dataSplit != null && !dataSplit.reachedEnd();
     } catch (IOException e) {
-      throw new RuntimeException("Unable read data split!");
+      throw new RuntimeException("Unable read data split", e);
     }
   }
 
@@ -78,7 +78,7 @@ public class TextBasedSourceFunction extends BaseSourceFunc<String> {
     try {
       return dataSplit.nextRecord(null);
     } catch (IOException e) {
-      throw new RuntimeException("Unable read data split!");
+      throw new RuntimeException("Unable read data split", e);
     }
   }
 }

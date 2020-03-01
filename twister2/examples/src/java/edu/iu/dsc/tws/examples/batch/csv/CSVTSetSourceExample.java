@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.examples.batch.csv;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,10 +24,11 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -38,23 +39,27 @@ public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-   /* SourceTSet<String> lines = env.createTextSource("/tmp/dinput" + env.getWorkerID(),
-        4, 4, "full");
-    parseCSV(lines);
-    lines.direct().map((MapFunc<Double[], String>) input -> {
-      Pattern pattern = Pattern.compile(",");
-      return pattern.splitAsStream(input).map(Double::parseDouble).toArray(Double[]::new);
-    }).direct().forEach(i -> LOG.fine("out" + Arrays.toString(i)));*/
-  }
+    int dsize = 100;
+    int parallelism = 2;
+    int dimension = 2;
 
-  private Double[][] parseCSV(SourceTSet<String> inputValues) {
-    inputValues.direct().map((MapFunc<Double[], String>) input -> {
-      Double[] value;
-      Pattern pattern = Pattern.compile(",");
-      value = pattern.splitAsStream(input).map(Double::parseDouble).toArray(Double[]::new);
-      return value;
-    }).direct().forEach(i -> LOG.info("out" + Arrays.toString(i)));
-    return null;
+    SourceTSet<String[]> pointSource = env.createCSVSource("/tmp/dinput", dsize,
+        parallelism, "split");
+    ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String[]>>() {
+          private double[][] localPoints = new double[dsize / parallelism][dimension];
+          @Override
+          public double[][] compute(Iterator<String[]> input) {
+            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
+              String[] value = input.next();
+              for (int j = 0; j < value.length; j++) {
+                localPoints[i][j] = Double.parseDouble(value[j]);
+              }
+            }
+            LOG.info("Double Array Values:" + Arrays.deepToString(localPoints));
+            return localPoints;
+          }
+        });
   }
 
   public static void main(String[] args) throws Exception {
