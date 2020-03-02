@@ -16,8 +16,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
-import edu.iu.dsc.tws.deeplearning.util.FileUtils;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class ReadCSV {
 
@@ -38,7 +38,8 @@ public class ReadCSV {
   }
 
   public void read() {
-    if (FileUtils.fileExists(this.filePath)) {
+
+    if (Files.exists(Paths.get(this.filePath))) {
       System.out.println("File Exists");
       try {
         String currentLine = "";
