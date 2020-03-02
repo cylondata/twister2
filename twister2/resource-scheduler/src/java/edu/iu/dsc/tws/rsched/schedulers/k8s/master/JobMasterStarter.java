@@ -19,10 +19,10 @@ import java.util.logging.Logger;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;

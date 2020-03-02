@@ -18,7 +18,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class MesosController {

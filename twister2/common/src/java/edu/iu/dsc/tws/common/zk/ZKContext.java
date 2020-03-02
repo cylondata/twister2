@@ -30,9 +30,9 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 
 public final class ZKContext extends Context {
 
+  public static final boolean ZK_BASED_GROUP_MANAGEMENT_DEFAULT = false;
   public static final String ZK_BASED_GROUP_MANAGEMENT
       = "twister2.zookeeper.based.group.management";
-  public static final boolean ZK_BASED_GROUP_MANAGEMENT_DEFAULT = false;
 
   public static final String ROOT_NODE = "twister2.resource.zookeeper.root.node.path";
   public static final String ROOT_NODE_DEFAULT = "/twister2";

@@ -37,7 +37,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 
