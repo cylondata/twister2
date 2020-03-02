@@ -15,12 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.data.utils.ArrowDataFileWriter;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
@@ -49,23 +47,15 @@ public class ArrowComputeJob implements IWorker {
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
-    int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
+    int dimension = config.getIntegerValue(DataObjectConstants.WORKERS);
 
-    ArrowDataFileWriter arrowDataFileWriter
-        = new ArrowDataFileWriter(config, "/tmp/test.arrow");
-    arrowDataFileWriter.setUpwriteArrowFile(new Path("/tmp/test.arrow"), true);
+    try {
+      ArrowDataFileWriter arrowDataFileWriter = new ArrowDataFileWriter(config, "/tmp/test.arrow");
+      //arrowDataFileWriter.setUpwriteArrowFile(new Path("/tmp/test.arrow"), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     long startTime = System.currentTimeMillis();
-
-//    /* First Graph to partition and read the partitioned data points **/
-//    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-//        parallelismValue, dimension, config, type);
-//
-//    //Get the execution plan for the first task graph
-//    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-//
-//    //Actual execution for the first taskgraph
-//    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-
     long endTimeData = System.currentTimeMillis();
     cEnv.close();
     long endTime = System.currentTimeMillis();
@@ -73,18 +63,4 @@ public class ArrowComputeJob implements IWorker {
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
   }
-
-//  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
-//                                               int parallelismValue, int dimension,
-//                                               Config conf, String filetype) {
-//    PointDataSource ps = new PointDataSource(Context.TWISTER2_DIRECT_EDGE,
-//        dataDirectory, "points", dimension, dsize, filetype);
-//    ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
-//
-//    // Add source, compute, and sink tasks to the task graph builder for the first task graph
-//    datapointsComputeGraphBuilder.addSource("datapointsource", ps, parallelismValue);
-//    datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
-//    datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
-//    return datapointsComputeGraphBuilder.build();
-//  }
 }

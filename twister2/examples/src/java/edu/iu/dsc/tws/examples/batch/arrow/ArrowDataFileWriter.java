@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.utils;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.batch.arrow;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,9 +45,10 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
-import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.DataFileReader;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 
@@ -79,29 +92,12 @@ public final class ArrowDataFileWriter {
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
-  private long showColumnSum() {
-    long intSum = 0;
-    long longSum = 0;
-    long arrSum = 0;
-    long floatSum = 0;
-    for (int i = 0; i < this.entries; i++) {
-      intSum += this.data[i].anInt;
-      longSum += this.data[i].aLong;
-      arrSum += ArrowExampleClass.hashArray(this.data[i].arr);
-      floatSum += this.data[i].aFloat;
-    }
-    System.out.println("intSum " + intSum + " longSum " + longSum + " arrSum " + arrSum
-        + " floatSum " + floatSum);
-    return intSum + longSum + arrSum + floatSum;
-  }
-
   /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
    * array for the later processing. The size of the two-dimensional array should be equal to the
    * number of clusters and the dimension considered for the clustering process.
    */
   public void setUpwriteArrowFile(Path path, boolean flag) {
-    final FileStatus pathFile;
     try {
       final FileSystem fs = FileSystemUtils.get(path, config);
       this.fileOutputStream = new FileOutputStream(new File(fileName));
@@ -186,5 +182,21 @@ public final class ArrowDataFileWriter {
     childrenBuilder.add(new Field("double", FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)),
         null));
     return new Schema(childrenBuilder.build(), null);
+  }
+
+  private long showColumnSum() {
+    long intSum = 0;
+    long longSum = 0;
+    long arrSum = 0;
+    long floatSum = 0;
+    for (int i = 0; i < this.entries; i++) {
+      intSum += this.data[i].anInt;
+      longSum += this.data[i].aLong;
+      arrSum += ArrowExampleClass.hashArray(this.data[i].arr);
+      floatSum += this.data[i].aFloat;
+    }
+    System.out.println("intSum " + intSum + " longSum " + longSum + " arrSum " + arrSum
+        + " floatSum " + floatSum);
+    return intSum + longSum + arrSum + floatSum;
   }
 }

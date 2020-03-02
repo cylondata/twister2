@@ -322,9 +322,3 @@ def load_modules():
     _maven_import(artifact = "org.apache.commons:commons-collections4:4.4", licenses = ["notice"], sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1")
     _maven_import(artifact = "org.apache.commons:commons-configuration2:2.6", licenses = ["notice"], sha256 = "225788911e53af0b29a31a18e0d03b05d86aa9c9e0b3c6686982c30c10f931fb")
 
-    #for apache arrow
-    #_maven_import(artifact = "org.apache.arrow:arrow-vector:0.16.0", licenses = ["notice"], sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1")
-    #_maven_import(artifact = "org.apache.arrow:arrow-memory:0.16.0", licenses = ["notice"], sha256 = "225788911e53af0b29a31a18e0d03b05d86aa9c9e0b3c6686982c30c10f931fb")
-    #_maven_import(artifact = "org.apache.arrow:arrow-format:0.16.0", licenses = ["notice"], sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835")
-    #_maven_import(artifact = "com.google.flatbuffers:flatbuffers-java:1.9.0", licenses = ["notice"], sha256 = "3cdb4a043692be8a51e58ca5a6de55073c55a6500557852a3ad0b5d0fee33f49")
-
