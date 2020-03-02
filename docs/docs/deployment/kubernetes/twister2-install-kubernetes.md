@@ -64,61 +64,7 @@ If there is a problem with job submission, job submission client will exit with 
 printed to the screen. Otherwise, job submission client either finishes execution with success or 
 waits to upload the job package to workers.
 
-### Job Logs
-
-There are a number of ways to check the logs of a Twister2 job. 
-* Saving Log Files in Submitting Client
-* Saving Log Files in Persistent Storage
-* Getting Log Files from Kubernetes Dashboard
-* Getting Log Files with kubectl
-
-#### Saving Log Files in Submitting Client
-Before submitting the job, you need to set the following parameter to true: 
-```text
-kubernetes.log.in.client 
-```
-Log files of all workers and the job master will be saved to the directory: 
-```text
-$HOME/.twister2/jobID
-```
-Loggers will run in the submitting client. So, you should let the submitting client run during
-the job execution. 
-
-#### Saving Log Files in Persistent Storage
-When a persistent storage is enabled for a job, 
-log files are written to that directory by default. 
-They are saved in the directory called "logs" under the persistent storage directory. 
-
-You need to learn the persistent logging directory of your storage provisioner. 
-You can learn it from Kubernetes Dashboard by checking the provisioner entity or consulting your administrator. 
-
-#### Getting Log Files from Kubernetes Dashboard
-Go to Kubernetes Dashboard website. 
-There must be at least two StatefulSets with the jobID. 
-One of them is for the job master and the other(s) is for workers. 
-List the pods in a StatefulSet. 
-Check the output for each pod by clicking on the right hand side button. 
-You will see the output for each worker in that window.
-
-#### Getting Log Files with kubectl
-To see the logs by using kubectl, you first need to learn the pod names in the job. 
-You can execute "kubectl get pods" command to list the pods in the cluster. 
-The pod names for the job are in the form of <job-name><ss-index><pod-index>.
-You can see the logs of each pod by executing the command: 
-```bash
-    $ kubectl logs <podname>
-```
-
-### Logs for MPI Enabled Jobs
-
-The outputs of MPI enabled jobs are a little different in Kubernetes Dashboard and pod logs. 
-In those jobs, first worker starts all other workers by using mpirun command. 
-Therefore, the outputs of all other pods are transferred to the first pod.  
-So, all outputs from all workers in an MPI enabled job is shown in first worker pod. 
-The pods of other workers will only have initialization messages.
-
-However, persistent log files are different. In those files, each worker has its own log messages in its log file. 
-Therefore, checking log files would be more preferable in MPI enabled jobs compared to checking the dashboard.
+Please check the [logging document](../logging.md) for accessing job logs in Kubernetes clusters.
 
 ### Configuration Settings
 

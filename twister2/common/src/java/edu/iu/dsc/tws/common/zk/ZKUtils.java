@@ -25,7 +25,6 @@
 package edu.iu.dsc.tws.common.zk;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,8 +46,6 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
  */
 public final class ZKUtils {
   public static final Logger LOG = Logger.getLogger(ZKUtils.class.getName());
-
-  private static final long MAX_WAIT_TIME_FOR_ZNODE_DELETE = 5000;
 
   // a singleton client
   private static CuratorFramework client;
@@ -81,7 +78,7 @@ public final class ZKUtils {
           sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 5));
       client.start();
 
-      LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServers);
+      LOG.log(Level.FINE, "Connected to ZooKeeper server: " + zkServers);
       return client;
 
     } catch (Exception e) {
@@ -208,100 +205,4 @@ public final class ZKUtils {
     return Bytes.concat(stateBytes, addressBytes);
   }
 
-  /**
-   * check whether there is an active job
-   */
-  public static boolean isThereJobZNodes(CuratorFramework clnt, String rootPath, String jobID) {
-
-    try {
-      // check whether the job znode exists, if not, return false, nothing to do
-      String jobDir = jobDir(rootPath, jobID);
-      if (clnt.checkExists().forPath(jobDir) != null) {
-        LOG.info("main jobZnode exists: " + jobDir);
-        return true;
-      }
-
-      return false;
-
-    } catch (Exception e) {
-      ZKEphemStateManager.LOG.log(Level.SEVERE, e.getMessage(), e);
-      return false;
-    }
-  }
-
-  /**
-   * delete all znodes related to the given jobID
-   */
-  public static boolean terminateJob(String zkServers, String rootPath, String jobID) {
-    try {
-      CuratorFramework clnt = connectToServer(zkServers);
-      boolean deleteResult = deleteJobZNodes(clnt, rootPath, jobID);
-      clnt.close();
-      return deleteResult;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not delete job znodes", e);
-      return false;
-    }
-  }
-
-  /**
-   * delete job related znode from previous sessions
-   */
-  public static boolean deleteJobZNodes(CuratorFramework clnt, String rootPath, String jobID) {
-
-    boolean allDeleted = true;
-
-    // delete workers ephemeral znode directory
-    String jobPath = ephemDir(rootPath, jobID);
-    try {
-      if (clnt.checkExists().forPath(jobPath) != null) {
-
-        // wait for workers to be deleted
-        long delay = 0;
-        long start = System.currentTimeMillis();
-        List<String> list = clnt.getChildren().forPath(jobPath);
-        int children = list.size();
-
-        while (children != 0 && delay < MAX_WAIT_TIME_FOR_ZNODE_DELETE) {
-          try {
-            Thread.sleep(200);
-          } catch (InterruptedException e) { }
-
-          delay = System.currentTimeMillis() - start;
-          list = clnt.getChildren().forPath(jobPath);
-          children = list.size();
-        }
-
-        if (list.size() != 0) {
-          LOG.info("Waited " + delay + " ms before deleting job znode. Children: " + list);
-        }
-
-        clnt.delete().deletingChildrenIfNeeded().forPath(jobPath);
-        LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
-      } else {
-        LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
-      }
-    } catch (Exception e) {
-      LOG.log(Level.FINE, "", e);
-      LOG.info("Following exception is thrown when deleting the job znode: " + jobPath
-          + "; " + e.getMessage());
-      allDeleted = false;
-    }
-
-    try {
-      // delete job directory
-      String jobDir = jobDir(rootPath, jobID);
-      if (clnt.checkExists().forPath(jobDir) != null) {
-        clnt.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
-        LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);
-      } else {
-        LOG.info("JobDirectory does not exist at ZooKeeper: " + jobDir);
-      }
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "", e);
-      allDeleted = false;
-    }
-
-    return allDeleted;
-  }
 }

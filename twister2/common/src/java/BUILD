@@ -14,6 +14,7 @@ common_deps_files = [
     "@maven//:org_apache_zookeeper_zookeeper",
     "@org_yaml_snakeyaml//jar",
     "//twister2/proto:proto-java",
+    "//twister2/proto/utils:proto-utils-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
