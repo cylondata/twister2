@@ -21,7 +21,7 @@ env = Twister2Environment(resources=[{"cpu": 1, "ram": 512, "instances": 2}])
 # Your worker code starts here
 print("Hello from worker {}".format(env.worker_id))
 
-script_path = "/home/vibhatha/github/forks/twister2/deeplearning/pytorch/src/main/resources/bash/pytorchrunner"
+script_path = "deeplearning/pytorch/src/main/resources/bash/pytorchrunner"
 
 pm = ProcessManager(env=env)
 child = pm.spawn(spawnargv=[script_path], maxprocs=2, errorcode=[0,0])
