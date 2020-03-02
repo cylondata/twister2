@@ -37,8 +37,8 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;

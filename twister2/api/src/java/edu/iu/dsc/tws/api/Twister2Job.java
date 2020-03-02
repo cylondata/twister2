@@ -21,8 +21,8 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.util.JobIDUtils;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;

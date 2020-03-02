@@ -26,13 +26,13 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;

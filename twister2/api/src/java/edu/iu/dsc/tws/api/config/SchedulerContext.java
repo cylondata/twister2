@@ -10,15 +10,24 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.scheduler;
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+package edu.iu.dsc.tws.api.config;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.config.TokenSub;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 
@@ -86,6 +95,11 @@ public class SchedulerContext extends Context {
   public static final String COPY_SYSTEM_PACKAGE = "twister2.resource.systempackage.copy";
 
   public static final String FAILURE_RETRIES = "twister2.resource.faulttlerence.retries";
+
+  // we define these variables in this file because
+  // KubernetesContext is not reachable from WorkerEnvironment class
+  public static final boolean K8S_CHECK_PODS_REACHABLE_DEFAULT = false;
+  public static final String K8S_CHECK_PODS_REACHABLE = "kubernetes.check.pods.reachable";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -197,6 +211,10 @@ public class SchedulerContext extends Context {
 
   public static int failureRetries(Config cfg, int def) {
     return cfg.getIntegerValue(FAILURE_RETRIES, def);
+  }
+
+  public static boolean checkPodsReachable(Config cfg) {
+    return cfg.getBooleanValue(K8S_CHECK_PODS_REACHABLE, K8S_CHECK_PODS_REACHABLE_DEFAULT);
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {

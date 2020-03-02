@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -108,10 +109,13 @@ public final class WorkerEnvironment {
       throw new RuntimeException("Unable to get the worker list", e);
     }
 
-    // if this is a Kubernetes cluster, check whether all worker pods are reachable
+    // if this is a Kubernetes cluster, and it is not an OpenMPI job,
+    // check whether all worker pods are reachable
     // sometimes it takes some time to populate dns ip values in Kubernetes
     // although all workers is started, some workers may be unreachable by ip address
-    if ("kubernetes".equalsIgnoreCase(Context.clusterType(config))) {
+    if ("kubernetes".equalsIgnoreCase(Context.clusterType(config))
+        && !SchedulerContext.useOpenMPI(config)
+        && SchedulerContext.checkPodsReachable(config)) {
       checkAllPodsReachable();
     }
 
