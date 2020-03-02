@@ -87,7 +87,7 @@ public class HelloTwister2Pytorch implements IWorker {
   public void executePythonScript(int workerId) throws IOException {
     String pythonScriptPath = scriptPath;
     String[] cmd = new String[2];
-    cmd[0] = "/home/vibhatha/venv/ENV37/bin/python3"; // check version of installed python:
+    cmd[0] = "python3"; // check version of installed python: path to venv python3
     // python -V
     cmd[1] = pythonScriptPath;
 
