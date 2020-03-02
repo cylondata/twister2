@@ -19,11 +19,12 @@ import java.util.logging.Logger;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
@@ -147,22 +148,23 @@ public final class JobMasterStarter {
     try {
       if (ZKPersStateManager.isJobMasterRestarting(client, rootPath, jobID, jmAddress)) {
         ZKEventsManager.initEventCounter(client, rootPath, jobID);
-        job = ZKPersStateManager.readJobZNode(client, rootPath, jobID);
+        job = JobZNodeManager.readJobZNode(client, rootPath, jobID).getJob();
         return JobMasterAPI.JobMasterState.JM_RESTARTED;
       }
 
       // check if there is a job directory,
       // if so, that is a problem
-      if (ZKUtils.isThereJobZNodes(client, rootPath, jobID)) {
+      if (JobZNodeManager.isThereJobZNode(client, rootPath, jobID)) {
         throw new Twister2RuntimeException("There is already a job znode at zookeeper for this job."
             + "Can not run this job.");
       }
 
       // if jm is not restarting, create job directories
+      JobZNodeManager.createJobZNode(client, rootPath, job);
       ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
       ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
-      ZKPersStateManager.createPersStateDir(client, rootPath, job);
+      ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
 
       // create pers znode for jm
       ZKPersStateManager.createJobMasterPersState(client, rootPath, jobID, jmAddress);
