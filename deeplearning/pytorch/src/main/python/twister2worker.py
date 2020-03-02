@@ -1,4 +1,3 @@
-#!/home/vibhatha/venv/ENV3/bin/python3
 import numpy as np
 import mpi4py
 import torch
