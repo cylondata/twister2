@@ -9,19 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.arrow;
+
+//import java.io.File;
+//import java.io.FileOutputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,19 +33,19 @@ import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.utils.DataFileReader;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 
 public final class ArrowDataFileWriter {
 
-  private static final Logger LOG = Logger.getLogger(DataFileReader.class.getName());
+  private static final Logger LOG = Logger.getLogger(ArrowDataFileWriter.class.getName());
 
   private final Config config;
   private final String fileName;
@@ -66,7 +57,7 @@ public final class ArrowDataFileWriter {
   private long nullEntries;
   private boolean useNullValues;
 
-  private ArrowExampleClass[] data;
+  private ArrowRandomGenerator[] data;
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
   private FileOutputStream fileOutputStream;
@@ -85,7 +76,7 @@ public final class ArrowDataFileWriter {
     random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
     for (int i = 0; i < this.entries; i++) {
-      this.data[i] = new ArrowExampleClass(this.random, i);
+      this.data[i] = new ArrowRandomGenerator(this.random, i);
       long csum = this.data[i].getSumHash();
       checksum += csum;
     }
@@ -100,6 +91,7 @@ public final class ArrowDataFileWriter {
   public void setUpwriteArrowFile(Path path, boolean flag) {
     try {
       final FileSystem fs = FileSystemUtils.get(path, config);
+      //this.fileOutputStream = fs.create(new Path(path, generateRandom(10) + ".arrow"));
       this.fileOutputStream = new FileOutputStream(new File(fileName));
       Schema schema = makeSchema();
       this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
@@ -116,6 +108,12 @@ public final class ArrowDataFileWriter {
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
+  }
+
+  public static String generateRandom(int length) {
+    boolean useLetters = true;
+    boolean useNumbers = false;
+    return RandomStringUtils.random(length, useLetters, useNumbers);
   }
 
   private int isSet() {
@@ -192,7 +190,7 @@ public final class ArrowDataFileWriter {
     for (int i = 0; i < this.entries; i++) {
       intSum += this.data[i].anInt;
       longSum += this.data[i].aLong;
-      arrSum += ArrowExampleClass.hashArray(this.data[i].arr);
+      arrSum += ArrowRandomGenerator.hashArray(this.data[i].arr);
       floatSum += this.data[i].aFloat;
     }
     System.out.println("intSum " + intSum + " longSum " + longSum + " arrSum " + arrSum
