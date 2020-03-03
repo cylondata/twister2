@@ -306,7 +306,8 @@ public final class RequestObjectBuilder {
     } else {
       startScript = "./init.sh";
     }
-    container.setCommand(Arrays.asList(startScript));
+    container.setCommand(Arrays.asList("/bin/bash"));
+    container.setArgs(Arrays.asList("-c", startScript));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
