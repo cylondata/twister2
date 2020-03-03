@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * Keep information about a managed environment where workers can get restarted.
@@ -117,7 +116,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     // we default to three retries
     this.maxRetries = SchedulerContext.failureRetries(config, 3);
 
-    WorkerRuntime.addWorkerFailureListener(this);
+//    WorkerRuntime.addWorkerFailureListener(this);
 //    WorkerRuntime.addAllJoinedListener(this);
     this.workerStatus = WorkerStatus.RUNNING;
   }
