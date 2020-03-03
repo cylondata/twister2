@@ -109,12 +109,12 @@ This method will wait for the Job Master znode to be registered until the timeLi
 A sample usage of ZKJobMasterRegistrar is provided in the example class:
 
 ```text
-edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterRegistrarExample.java
+edu.iu.dsc.tws.examples.internal.jobmaster.ZKJobMasterRegistrarExample.java
 ```
 
 Its corresponding sample usage of ZKJobMasterFinder is provided in the example class:
 
 ```text
-edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterFinderExample.java
+edu.iu.dsc.tws.examples.internal.jobmaster.ZKJobMasterFinderExample.java
 ```
 
