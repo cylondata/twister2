@@ -26,5 +26,9 @@ t2_java_lib(
         "@com_google_guava_guava",
         "@org_apache_hadoop_hadoop_common//jar",
         "@org_apache_hadoop_hadoop_mapreduce_client_core//jar",
+        "@maven//:org_apache_arrow_arrow_vector",
+        "@maven//:org_apache_arrow_arrow_memory",
+        "@maven//:org_apache_arrow_arrow_format",
+        "@maven//:com_google_flatbuffers_flatbuffers_java",
     ],
 )
