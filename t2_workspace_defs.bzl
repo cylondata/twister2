@@ -81,6 +81,7 @@ def load_modules():
             "org.apache.arrow:arrow-memory:0.16.0",
             "org.apache.arrow:arrow-format:0.16.0",
             "com.google.flatbuffers:flatbuffers-java:1.9.0",
+            "javax.annotation:javax.annotation-api:1.3.2",
         ],
         repositories = [
             "https://repo1.maven.org/maven2",
@@ -321,4 +322,3 @@ def load_modules():
     _maven_import(artifact = "org.easymock:easymock:4.0.2", licenses = ["notice"], sha256 = "104370107ef64d115e642cbdc14cea438a8d076f5aee9a9cb7882dc9a8ed4123")
     _maven_import(artifact = "org.apache.commons:commons-collections4:4.4", licenses = ["notice"], sha256 = "1df8b9430b5c8ed143d7815e403e33ef5371b2400aadbe9bda0883762e0846d1")
     _maven_import(artifact = "org.apache.commons:commons-configuration2:2.6", licenses = ["notice"], sha256 = "225788911e53af0b29a31a18e0d03b05d86aa9c9e0b3c6686982c30c10f931fb")
-

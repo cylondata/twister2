@@ -66,6 +66,5 @@ public class ArrowFileTestingExample {
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
-
   }
 }

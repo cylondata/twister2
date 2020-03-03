@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -49,12 +50,9 @@ public class ArrowComputeJob implements IWorker {
     int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
     int dimension = config.getIntegerValue(DataObjectConstants.WORKERS);
 
-    try {
-      ArrowDataFileWriter arrowDataFileWriter = new ArrowDataFileWriter(config, "/tmp/test.arrow");
-      //arrowDataFileWriter.setUpwriteArrowFile(new Path("/tmp/test.arrow"), true);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    ArrowDataFileWriter arrowDataFileWriter = new ArrowDataFileWriter(config, "/tmp/test.arrow");
+    arrowDataFileWriter.setUpwriteArrowFile(new Path("/tmp/test.arrow"), true);
+
     long startTime = System.currentTimeMillis();
     long endTimeData = System.currentTimeMillis();
     cEnv.close();

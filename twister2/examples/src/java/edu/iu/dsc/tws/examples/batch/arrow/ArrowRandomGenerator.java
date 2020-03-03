@@ -37,14 +37,14 @@ package edu.iu.dsc.tws.examples.batch.arrow;
 
 import java.util.Random;
 
-public class ArrowExampleClass {
+public class ArrowRandomGenerator {
   public int anInt;
   public long aLong;
   public byte[] arr;
   public float aFloat;
   public Random random;
 
-  public ArrowExampleClass(Random random, int index) {
+  public ArrowRandomGenerator(Random random, int index) {
     this.random = random;
     this.anInt = this.random.nextInt(1024);
     this.aLong = this.random.nextInt(Integer.MAX_VALUE);
@@ -79,7 +79,7 @@ public class ArrowExampleClass {
     long ret = 0;
     ret += anInt;
     ret += aLong;
-    ret += ArrowExampleClass.hashArray(this.arr);
+    ret += ArrowRandomGenerator.hashArray(this.arr);
     ret += aFloat;
     return ret;
   }

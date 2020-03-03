@@ -30,5 +30,6 @@ t2_java_lib(
         "@maven//:org_apache_arrow_arrow_memory",
         "@maven//:org_apache_arrow_arrow_format",
         "@maven//:com_google_flatbuffers_flatbuffers_java",
+        "@maven//:javax_annotation_javax_annotation_api",
     ],
 )
