@@ -77,6 +77,14 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     }
   }
 
+  public FileSystem.WriteMode getWriteMode() {
+    return writeMode;
+  }
+
+  public void setWriteMode(FileSystem.WriteMode writeMode) {
+    this.writeMode = writeMode;
+  }
+
   public void write(int partition, T out) {
     FSDataOutputStream fsOut;
     if (!openStreams.containsKey(partition)) {

@@ -127,7 +127,7 @@ def launch(rank, size, fn, backend='tcp',
         local_testing_time = time.time() - local_testing_time
         print("Total Training Time : {}".format(local_training_time))
         print("Total Testing Time : {}".format(local_testing_time))
-        save_log("stats.csv",
+        save_log("../stats.csv",
                  stat="{},{},{},{}".format(size, local_training_time, total_communication_time, local_testing_time))
 
 

@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -481,12 +480,12 @@ public class JobMaster {
         LOG.warning("Thread sleep interrupted.");
       }
 
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
+      new Thread("Twister2-AllJoinedSupplierToDriver") {
         @Override
         public void run() {
           workerMonitor.informDriverForAllJoined();
         }
-      });
+      }.start();
     }
 
     return driverThread;

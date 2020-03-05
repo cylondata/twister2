@@ -176,7 +176,8 @@ public final class JobMasterRequestObject {
     }
     container.setImage(containerImage);
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
-    container.setCommand(Arrays.asList("./init.sh"));
+    container.setCommand(Arrays.asList("/bin/bash"));
+    container.setArgs(Arrays.asList("-c", "./init.sh"));
 
     int jmRam = JobMasterContext.jobMasterRAM(config) + 128;
     V1ResourceRequirements resReq = new V1ResourceRequirements();

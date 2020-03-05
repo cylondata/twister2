@@ -145,8 +145,7 @@ public class KMeansComputeJob implements IWorker {
         "centroids", dimension, csize, filetype);
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
-    centroidsComputeGraphBuilder.addSource("centroidsource", cs,
-        parallelismValue);
+    centroidsComputeGraphBuilder.addSource("centroidsource", cs, parallelismValue);
     centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
     centroidsComputeGraphBuilder.setTaskGraphName("centTG");
     return centroidsComputeGraphBuilder.build();

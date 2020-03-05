@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -84,7 +85,7 @@ public final class JobMasterExample {
     String host = "localhost";
 
     JobMasterAPI.JobMasterState initialState;
-
+    JobMasterStarter.job = job;
 
     if ("start".equalsIgnoreCase(args[0])) {
 
@@ -105,6 +106,15 @@ public final class JobMasterExample {
       return;
     }
 
+    // write jobID to file
+    String dir = System.getProperty("user.home") + "/.twister2";
+    if (!FileUtils.isDirectoryExists(dir)) {
+      FileUtils.createDirectory(dir);
+    }
+    String filename = dir + "/last-job-id.txt";
+    FileUtils.writeToFile(filename, (job.getJobId() + "").getBytes(), true);
+    LOG.info("Written jobID to file: " + job.getJobId());
+
     String ip = null;
     try {
       ip = Inet4Address.getLocalHost().getHostAddress();
@@ -115,15 +125,14 @@ public final class JobMasterExample {
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
     KubernetesController controller = new KubernetesController();
-//    controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = new ZKJobTerminator(config);
-//    IJobTerminator jobTerminator = new JobTerminator(config);
+    IJobTerminator jobTerminator = null;
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
     try {
-      jobMaster.startJobMasterThreaded();
+//      jobMaster.startJobMasterThreaded();
+      jobMaster.startJobMasterBlocking();
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
@@ -135,10 +144,4 @@ public final class JobMasterExample {
     );
 
   }
-
-  public static void printUsage() {
-    LOG.info("Usage:\n"
-        + "java JobMasterExample");
-  }
-
 }
