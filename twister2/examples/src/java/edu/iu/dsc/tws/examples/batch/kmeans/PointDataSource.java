@@ -26,6 +26,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -44,22 +46,11 @@ public class PointDataSource extends BaseSource implements Collector {
   private String fileType;
 
   private int dimension;
-
-  public int getDatasize() {
-    return datasize;
-  }
-
   private int datasize;
+
   private double[][] dataPointsLocal;
 
   PointDataSource() {
-  }
-
-  PointDataSource(String edgename, String dataDirectory, String inputKey, int dim) {
-    this.edgeName = edgename;
-    this.dataDirectory = dataDirectory;
-    this.inputKey = inputKey;
-    this.dimension = dim;
   }
 
   PointDataSource(String edgename, String dataDirectory, String inputKey, int dim, int dsize,
@@ -94,7 +85,7 @@ public class PointDataSource extends BaseSource implements Collector {
             points.add(row);
           }
         }
-        LOG.info("context task index:" + context.taskIndex());
+        LOG.fine("context task index:" + context.taskIndex());
         inputSplit = source.getNextSplit(context.taskIndex());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -105,6 +96,7 @@ public class PointDataSource extends BaseSource implements Collector {
     for (double[] d : points) {
       dataPointsLocal[i++] = d;
     }
+    LOG.fine(inputKey + "\tLength:" + dataPointsLocal.length);
     context.end(edgeName);
   }
 
@@ -113,12 +105,22 @@ public class PointDataSource extends BaseSource implements Collector {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    if ("csv".equalsIgnoreCase(fileType)) {
-      this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
-          new Path(dataDirectory), context.getParallelism(), getDatasize(), cfg));
+    if ("txt".equals(fileType)) {
+      if ("points".equals(inputKey)) {
+        this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), cfg));
+      } else {
+        this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), cfg));
+      }
     } else {
-      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-          new Path(dataDirectory), context.getParallelism(), cfg));
+      if ("points".equals(inputKey)) {
+        this.source = runtime.createInput(cfg, context, new LocalCSVInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), datasize, cfg));
+      } else {
+        this.source = runtime.createInput(cfg, context, new LocalCompleteCSVInputPartitioner(
+            new Path(dataDirectory), context.getParallelism(), datasize, cfg));
+      }
     }
   }
 
