@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -287,7 +286,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
   }
 
-  private boolean isRestarted() {
+  public boolean isRestarted() {
     return initialState == WorkerState.RESTARTED;
   }
 
@@ -450,7 +449,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // if failEventBuffer is not null, deliver all messages in a new thread
     if (!failEventBuffer.isEmpty()) {
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
+      new Thread("Twister2-FailedEventSupplier") {
         @Override
         public void run() {
           for (JobMasterAPI.JobEvent jobEvent: failEventBuffer) {
@@ -463,7 +462,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
             }
           }
         }
-      });
+      }.start();
     }
 
     return true;
@@ -483,13 +482,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // if allJoinedEventToDeliver is not null, deliver that message in a new thread
     if (allJoinedEventCache != null) {
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
+      new Thread("Twister2-AllJoinedEventSupplier") {
         @Override
         public void run() {
           allJoinedListener.allWorkersJoined(allJoinedEventCache.getWorkerInfoList());
           LOG.fine("AllWorkersJoined event delivered from cache.");
         }
-      });
+      }.start();
     }
 
     return true;
@@ -508,8 +507,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     scalerListener = iScalerListener;
 
     // if scalingEventBuffer is not null, deliver that message in a new thread
-    if (scalingEventBuffer != null) {
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
+    if (!scalingEventBuffer.isEmpty()) {
+      new Thread("Twister2-ScalingEventSupplier") {
         @Override
         public void run() {
           for (Integer change: scalingEventBuffer) {
@@ -522,7 +521,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
             }
           }
         }
-      });
+      }.start();
     }
 
     return true;
@@ -537,13 +536,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     jmFailureListeners.add(iJobMasterFailureListener);
     // if allJoinedEventToDeliver is not null, deliver that message in a new thread
     if (jmRestartedCache != null) {
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
+      new Thread("Twister2-JMFailedEventSupplier") {
         @Override
         public void run() {
           jmFailureListeners.forEach(l -> l.restarted(jmRestartedCache.getJmAddress()));
           LOG.fine("JobMasterRestarted event delivered from cache.");
         }
-      });
+      }.start();
     }
     return true;
   }
