@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -23,6 +24,7 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
@@ -80,6 +82,17 @@ public class BatchTSetEnvironment extends TSetEnvironment {
                                             String type) {
     return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
         parallelism);
+  }
+
+  public SourceTSet<String[]> createArrowSource(String filePath, int parallelism,
+                                                Schema arrowschema) {
+    try {
+      return createSource(new ArrowBasedSourceFunc(
+          filePath, parallelism, arrowschema), parallelism);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public SourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,

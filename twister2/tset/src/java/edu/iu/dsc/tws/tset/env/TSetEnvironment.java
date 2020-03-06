@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.apache.arrow.vector.types.pojo.Schema;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
@@ -103,6 +105,9 @@ public abstract class TSetEnvironment {
 
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
                                                      int parallelism, String type);
+
+  public abstract BaseTSet<String[]> createArrowSource(String filePath, int parallelism,
+                                                       Schema schema);
 
   /**
    * This method will create a source based on the list and each source will read only a part
