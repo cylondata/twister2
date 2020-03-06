@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.arrow;
 
-//import java.io.File;
-//import java.io.FileOutputStream;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

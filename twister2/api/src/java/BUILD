@@ -25,5 +25,9 @@ t2_java_lib(
         "//twister2/proto:proto-java",
         "//twister2/proto/utils:proto-utils-java",
         "@com_google_protobuf//:protobuf_java",
+        "@maven//:org_apache_arrow_arrow_vector",
+        "@maven//:org_apache_arrow_arrow_memory",
+        "@maven//:org_apache_arrow_arrow_format",
+        "@maven//:com_google_flatbuffers_flatbuffers_java",
     ],
 )
