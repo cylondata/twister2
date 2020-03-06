@@ -98,10 +98,7 @@ public final class ArrowDataFileWriter {
       if (flag) {
         this.arrowFileWriter = new ArrowFileWriter(
             root, provider, this.fileOutputStream.getChannel());
-      } /*else {
-        this.arrowFileWriter = new ArrowFileWriter(root, provider,
-        new ArrowOutputStream(this.fileOutputStream));
-      }*/
+      }
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
@@ -127,7 +124,6 @@ public final class ArrowDataFileWriter {
     arrowFileWriter.start();
     for (int i = 0; i < this.entries; i++) {
       int toProcessItems = Math.min(this.batchSize, this.entries - i);
-      // set the batch row count
       root.setRowCount(toProcessItems);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());

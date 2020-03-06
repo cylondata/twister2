@@ -12,9 +12,12 @@
 
 package edu.iu.dsc.tws.tset.env;
 
+import org.apache.arrow.vector.types.pojo.Schema;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
@@ -67,6 +70,17 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
                                            String type) {
     return createSource(new TextBasedSourceFunction(filePath, dataSize, parallelism, type),
         parallelism);
+  }
+
+  public SSourceTSet<String[]> createArrowSource(String filePath, int parallelism,
+                                                Schema arrowschema) {
+    try {
+      return createSource(new ArrowBasedSourceFunc(
+          filePath, parallelism, arrowschema), parallelism);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   @Override

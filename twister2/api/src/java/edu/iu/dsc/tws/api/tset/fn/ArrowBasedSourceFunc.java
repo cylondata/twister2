@@ -11,35 +11,63 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.ipc.ArrowFileReader;
+import org.apache.arrow.vector.ipc.SeekableReadChannel;
+import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 
-public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
+public class ArrowBasedSourceFunc extends BaseSourceFunc<String[]> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
-  private String arrowInputDirectory;
+  private String arrowInputFile;
   private int parallelism;
   private Schema arrowSchema;
 
   private InputSplit<String> dataSplit;
+  private RootAllocator rootAllocator = null;
+  private TSetContext ctx;
 
-  public ArrowBasedSourceFunc(String arrowinputDirectory, int parallel, Schema schema) {
-    this.arrowInputDirectory = arrowinputDirectory;
+  public ArrowBasedSourceFunc(String arrowinputFile, int parallel, Schema schema)
+      throws Exception {
+    this.arrowInputFile = arrowinputFile;
     this.parallelism = parallel;
     this.arrowSchema = schema;
+    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
   public void prepare(TSetContext context) {
     super.prepare(context);
-    Config config = context.getConfig();
-    LOG.info("config values:" + config);
+    this.ctx = context;
+    Config cfg = ctx.getConfig();
+    FileInputStream fileInputStream = null;
+    try {
+      fileInputStream = new FileInputStream(arrowInputFile);
+      ArrowFileReader arrowFileReader = new ArrowFileReader(
+          new SeekableReadChannel(fileInputStream.getChannel()), this.rootAllocator);
+      VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
+      LOG.info("File size : " + arrowInputFile.length()
+          + " schema is " + root.getSchema().toString());
+      List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
+      LOG.info("arrow block size:" + arrowBlockList.size());
+    } catch (FileNotFoundException e) {
+      throw new Twister2RuntimeException("File Not Found", e);
+    } catch (IOException ioe) {
+      throw new Twister2RuntimeException("IOException Occured", ioe);
+    }
   }
 
   @Override
@@ -48,11 +76,12 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
   }
 
   @Override
-  public String next() {
-    try {
-      return dataSplit.nextRecord(null);
-    } catch (IOException e) {
-      throw new RuntimeException("unable to read arrow file", e);
-    }
+  public String[] next() {
+    return new String[]{"hello", "hello1"};
+//    try {
+//      return dataSplit.nextRecord(null);
+//    } catch (IOException e) {
+//      throw new RuntimeException("unable to read arrow file", e);
+//    }
   }
 }
