@@ -62,6 +62,10 @@ common_deps_files = [
     "@maven//:org_apache_arrow_arrow_format",
     "@maven//:com_google_flatbuffers_flatbuffers_java",
     "@maven//:javax_annotation_javax_annotation_api",
+    "@maven//:io_netty_netty_buffer",
+    "@maven//:io_netty_netty_all",
+    "@maven//:io_netty_netty_transport",
+    "@maven//:io_netty_netty_transport_native_epoll",
 ]
 
 t2_java_lib(

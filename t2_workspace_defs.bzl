@@ -82,6 +82,10 @@ def load_modules():
             "org.apache.arrow:arrow-format:0.16.0",
             "com.google.flatbuffers:flatbuffers-java:1.9.0",
             "javax.annotation:javax.annotation-api:1.3.2",
+            "io.netty:netty-buffer:4.1.46.Final",
+            "io.netty:netty-all:4.1.46.Final",
+            "io.netty:netty-transport:4.1.46.Final",
+            "io.netty:netty-transport-native-epoll:4.1.46.Final",
         ],
         repositories = [
             "https://repo1.maven.org/maven2",
