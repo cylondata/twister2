@@ -15,6 +15,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
         "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
