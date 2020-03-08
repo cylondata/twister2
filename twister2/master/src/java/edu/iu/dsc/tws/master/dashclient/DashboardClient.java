@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.master.dashclient.messages.RegisterJob;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterWorker;
 import edu.iu.dsc.tws.master.dashclient.messages.ScaledWorkers;
 import edu.iu.dsc.tws.master.dashclient.messages.WorkerStateChange;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -125,7 +124,7 @@ public class DashboardClient {
   /**
    * send JobStateChange message to Dashboard
    */
-  public boolean jobStateChange(JobState state) {
+  public boolean jobStateChange(JobAPI.JobState state) {
     JobStateChange jobStateChange = new JobStateChange(state.name());
 
     String endPoint = dashHost + "/jobs/" + jobID + "/state/";

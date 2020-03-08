@@ -21,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class SlurmCommand extends MPICommand {
@@ -67,9 +67,20 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(job.getJobId());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
-    mpiCommand.add(MPIContext.mpiRunFile(config));
+    String mpiRunFile = MPIContext.mpiRunFile(config);
+    if ("ompi/bin/mpirun".equals(mpiRunFile)) {
+      if (SchedulerContext.copySystemPackage(config)) {
+        mpiCommand.add("twister2-core" + "/" + mpiRunFile);
+      } else {
+        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
+      }
+    } else {
+      mpiCommand.add(mpiRunFile);
+    }
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
+    mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
+    mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
     return mpiCommand;
   }
 

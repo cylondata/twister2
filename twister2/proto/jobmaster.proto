@@ -36,6 +36,7 @@ enum WorkerState {
     FAILED = 3;
     ERROR = 4;
     UNASSIGNED = 5;
+    KILLED = 6;
 }
 
 message NodeInfo {

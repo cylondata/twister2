@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 
 public final class MesosContext extends SchedulerContext {

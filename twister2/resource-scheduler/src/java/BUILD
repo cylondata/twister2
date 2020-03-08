@@ -53,5 +53,6 @@ t2_java_lib(
         "@org_apache_mesos_mesos//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
+        "@org_apache_commons_commons_lang3//:org_apache_commons_commons_lang3",
     ],
 )

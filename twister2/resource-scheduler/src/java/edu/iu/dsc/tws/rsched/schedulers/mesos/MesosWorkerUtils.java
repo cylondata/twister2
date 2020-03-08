@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public final class MesosWorkerUtils {
   private static final Logger LOG = Logger.getLogger(MesosWorkerUtils.class.getName());

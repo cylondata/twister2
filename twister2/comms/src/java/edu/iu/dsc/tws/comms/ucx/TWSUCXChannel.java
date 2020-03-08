@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -65,7 +66,7 @@ public class TWSUCXChannel implements TWSChannel {
 
   private static final Logger LOG = Logger.getLogger(TWSUCXChannel.class.getName());
 
-  private final List<Closeable> closeables = new ArrayList<>();
+  private final Stack<Closeable> closeables = new Stack<>();
   private final Map<Integer, UcpEndpoint> endpoints = new HashMap<>();
 
   private UcpWorker ucpWorker;
@@ -81,23 +82,23 @@ public class TWSUCXChannel implements TWSChannel {
 
   public TWSUCXChannel(Config config,
                        IWorkerController workerController) {
-    createUXCWorker(workerController);
     this.workerId = workerController.getWorkerInfo().getWorkerID();
+    createUXCWorker(workerController);
   }
 
   private void createUXCWorker(IWorkerController iWorkerController) {
     UcpContext context = new UcpContext(new UcpParams().requestTagFeature()
-        .setMtWorkersShared(true));
+        .setMtWorkersShared(false));
+    this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
+    this.closeables.push(ucpWorker);
 
     // start listener
     UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
         new InetSocketAddress(iWorkerController.getWorkerInfo().getWorkerIP(),
             iWorkerController.getWorkerInfo().getPort())
     ));
-    this.closeables.add(ucpListener);
-    this.closeables.add(context);
-    this.closeables.add(ucpWorker);
+    this.closeables.push(ucpListener);
 
     try {
       // wait till everyone add listeners
@@ -108,11 +109,13 @@ public class TWSUCXChannel implements TWSChannel {
 
     // create end points
     for (JobMasterAPI.WorkerInfo worker : iWorkerController.getJoinedWorkers()) {
-      UcpEndpoint ucpEndpoint = ucpWorker.newEndpoint(new UcpEndpointParams().setSocketAddress(
-          new InetSocketAddress(worker.getWorkerIP(), worker.getPort())
-      ));
-      this.endpoints.put(worker.getWorkerID(), ucpEndpoint);
-      this.closeables.add(ucpEndpoint);
+      if (worker.getWorkerID() != workerId) {
+        UcpEndpoint ucpEndpoint = ucpWorker.newEndpoint(new UcpEndpointParams().setSocketAddress(
+            new InetSocketAddress(worker.getWorkerIP(), worker.getPort())
+        ));
+        this.endpoints.put(worker.getWorkerID(), ucpEndpoint);
+        this.closeables.push(ucpEndpoint);
+      }
     }
   }
 
@@ -277,7 +280,8 @@ public class TWSUCXChannel implements TWSChannel {
 
   @Override
   public void close() {
-    for (Closeable closeable : this.closeables) {
+    while (!this.closeables.isEmpty()) {
+      Closeable closeable = this.closeables.pop();
       try {
         closeable.close();
       } catch (IOException e) {

@@ -241,15 +241,15 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       // We cache job znode data
       // So we will listen job scaling up/down
-      String persDir = ZKUtils.persDir(rootPath, jobID);
-      jobZnodeCache = new NodeCache(client, persDir);
+      String jobDir = ZKUtils.jobDir(rootPath, jobID);
+      jobZnodeCache = new NodeCache(client, jobDir);
       addJobZnodeCacheListener();
       // start the cache and wait for it to get current data from zk server
       jobZnodeCache.start(true);
 
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
-      JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeCache.getCurrentData().getData());
+      JobAPI.Job job = JobWithState.decode(jobZnodeCache.getCurrentData().getData()).getJob();
       if (numberOfWorkers != job.getNumberOfWorkers()) {
         numberOfWorkers = job.getNumberOfWorkers();
         LOG.info("numberOfWorkers updated from persJobZnode as: " + numberOfWorkers);
@@ -615,7 +615,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       @Override
       public void nodeChanged() throws Exception {
         byte[] jobZnodeBodyBytes = jobZnodeCache.getCurrentData().getData();
-        JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeBodyBytes);
+        JobAPI.Job job = JobWithState.decode(jobZnodeBodyBytes).getJob();
 
         int change = job.getNumberOfWorkers() - numberOfWorkers;
         numberOfWorkers = job.getNumberOfWorkers();
