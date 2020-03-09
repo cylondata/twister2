@@ -106,7 +106,7 @@ public abstract class TSetEnvironment {
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
                                                      int parallelism, String type);
 
-  public abstract BaseTSet<String[]> createArrowSource(String filePath, int parallelism,
+  public abstract BaseTSet<String> createArrowSource(String filePath, int parallelism,
                                                        Schema schema);
 
   /**

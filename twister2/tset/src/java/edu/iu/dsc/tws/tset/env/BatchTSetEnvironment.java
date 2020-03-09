@@ -79,24 +79,19 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   public SourceTSet<String[]> createCSVSource(String filePath, int datasize, int parallelism,
-                                            String type) {
+                                              String type) {
     return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
         parallelism);
   }
 
-  public SourceTSet<String[]> createArrowSource(String filePath, int parallelism,
-                                                Schema arrowschema) {
-    try {
-      return createSource(new ArrowBasedSourceFunc(
-          filePath, parallelism, arrowschema), parallelism);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+  public SourceTSet<String> createArrowSource(String filePath, int parallelism,
+                                              Schema arrowschema) {
+    return createSource(new ArrowBasedSourceFunc(
+        filePath, parallelism, arrowschema, "complete"), parallelism);
   }
 
   public SourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,
-                                          String type) {
+                                             String type) {
     return createSource(new TextBasedSourceFunction(filePath, dataSize, parallelism, type),
         parallelism);
   }
