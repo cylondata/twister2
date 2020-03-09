@@ -87,7 +87,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   public SourceTSet<String> createArrowSource(String filePath, int parallelism,
                                               Schema arrowschema) {
     return createSource(new ArrowBasedSourceFunc(
-        filePath, parallelism, arrowschema, "complete"), parallelism);
+        filePath, parallelism, arrowschema), parallelism);
   }
 
   public SourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,
