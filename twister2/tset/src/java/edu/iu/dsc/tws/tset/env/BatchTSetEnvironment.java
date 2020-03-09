@@ -27,6 +27,8 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
+import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -72,6 +74,18 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
+  }
+
+  public SourceTSet<String[]> createCSVSource(String filePath, int datasize, int parallelism,
+                                            String type) {
+    return createSource(new CSVBasedSourceFunction(filePath, datasize, parallelism, type),
+        parallelism);
+  }
+
+  public SourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,
+                                          String type) {
+    return createSource(new TextBasedSourceFunction(filePath, dataSize, parallelism, type),
+        parallelism);
   }
 
   @Override
@@ -176,8 +190,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   /**
    * Runs a subgraph of TSets from the specified TSet and output results as a tset
    *
-   * @param <T> type of the output data object
-   * @param runTSet TSet to be run
+   * @param <T>        type of the output data object
+   * @param runTSet    TSet to be run
    * @param updateTSet TSet to be updated
    */
   public <T, ST extends BaseTSet<T> & StorableTBase<T>> void runAndUpdate(ST runTSet,
@@ -218,9 +232,9 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * Similar to eval, but here, the data produced by the evaluation will be passed on to the
    * updateTSet
    *
-   * @param evalTSet TSet to be evaluated
+   * @param evalTSet   TSet to be evaluated
    * @param updateTSet TSet to be updated
-   * @param <T> type
+   * @param <T>        type
    */
   public <T, ST extends BaseTSet<T> & StorableTBase<T>> void evalAndUpdate(ST evalTSet,
                                                                            ST updateTSet) {

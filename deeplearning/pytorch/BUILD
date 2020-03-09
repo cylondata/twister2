@@ -15,7 +15,6 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
     "//third_party:ompi_javabinding_java",
-    "@com_google_code_gson_gson//:com_google_code_gson_gson",
     "@com_esotericsoftware_kryo//jar",
     "@com_google_guava_guava//jar",
     "@org_lmdbjava_lmdbjava//jar",

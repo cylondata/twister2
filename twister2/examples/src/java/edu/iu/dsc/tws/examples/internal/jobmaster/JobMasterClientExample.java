@@ -35,13 +35,12 @@ import com.google.protobuf.Any;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerController;
@@ -73,24 +72,29 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
-    if (args.length != 1) {
-      LOG.severe("Provide workerID as the parameter.");
+    if (args.length != 2) {
+      LOG.severe("Provide workerID and jobID as parameters.");
       return;
     }
 
     int workerID = Integer.parseInt(args[0]);
+    String jobID = args[1];
 
     // we assume that the twister2Home is the current directory
 //    String configDir = "../twister2/config/src/yaml/";
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
-    Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
-    config = updateConfig(config);
+    Config config1 = ConfigLoader.loadConfig(twister2Home, "conf/kubernetes");
+    Config config2 = ConfigLoader.loadConfig(twister2Home, "conf/common");
+    Config config = updateConfig(config1, config2);
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
-    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
+    twister2Job.setJobID(jobID);
     JobAPI.Job job = twister2Job.serialize();
+
+    LOG.info("workerID: " + workerID);
+    LOG.info("jobID: " + jobID);
 
     simulateClient(config, job, workerID);
   }
@@ -149,7 +153,7 @@ public final class JobMasterClientExample {
     }
 
     // wait
-    sleeeep(200 * 1000);
+    sleeeep(2 * 1000);
 
     try {
       workerController.waitOnBarrier();
@@ -165,11 +169,29 @@ public final class JobMasterClientExample {
     // wait up to 3sec
     sleeeep((long) (Math.random() * 10 * 1000));
 
+    // start the worker
+    try {
+      throwException(workerID);
+    } catch (Throwable t) {
+      // update worker status to FAILED
+      statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      WorkerRuntime.close();
+//      properShutDown = true;
+//      System.exit(1);
+      throw t;
+    }
+
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     WorkerRuntime.close();
 
     System.out.println("Client has finished the computation. Client exiting.");
+  }
+
+  public static void throwException(int workerID) {
+    if (workerID == 0) {
+      throw new RuntimeException("test exception");
+    }
   }
 
   public static List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
@@ -182,10 +204,11 @@ public final class JobMasterClientExample {
   /**
    * construct a Config object
    */
-  public static Config updateConfig(Config config) {
+  public static Config updateConfig(Config config1, Config config2) {
     String jmIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
     Config cnfg = Config.newBuilder()
-        .putAll(config)
+        .putAll(config1)
+        .putAll(config2)
         .put(JobMasterContext.JOB_MASTER_IP, jmIP)
         .build();
     return cnfg;
@@ -220,11 +243,6 @@ public final class JobMasterClientExample {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-  }
-
-  public static void printUsage() {
-    LOG.info("Usage:\n"
-        + "java JobMasterClientExample numberOfWorkers");
   }
 
 }

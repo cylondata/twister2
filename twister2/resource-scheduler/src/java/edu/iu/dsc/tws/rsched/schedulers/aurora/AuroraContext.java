@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.aurora;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 /**
  * State parameters for Aurora Client

@@ -51,6 +51,11 @@ public class CSVOutputWriter extends FileOutputWriter<String> {
 
   private Config config;
 
+  public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
+    this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, null, "UTF-8");
+  }
+
+
   public CSVOutputWriter(FileSystem.WriteMode writeMode, Path outPath, Config cfg) {
     this(writeMode, outPath, lineDelimiter, fieldDelimiter, tabDelimiter, cfg, "UTF-8");
   }
