@@ -23,13 +23,11 @@
 package edu.iu.dsc.tws.examples.batch.csv;
 
 import java.io.Serializable;
-//import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.arrow.vector.types.pojo.Schema;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -45,6 +43,8 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
+//import java.util.Arrays;
+
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
@@ -57,29 +57,20 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     int dimension = 2;
     Schema schema = null;
     SourceTSet<String> pointSource
-          = env.createArrowSource("/home/kannan/ArrowExample/example.arrow", parallelism, schema);
+        = env.createArrowSource("/Users/kgovind-admin/ArrowExample/example.arrow",
+        parallelism, schema);
 
     //SourceTSet<String> pointSource = env.createArrowSource("/tmp/dinput", parallelism, schema);
     ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           @Override
           public double[][] compute(Iterator<String> input) {
+            LOG.info("string input:" + input);
             return new double[0][];
           }
-
-//          private double[][] localPoints = new double[dsize / parallelism][dimension];
-//          @Override
-//          public double[][] compute(Iterator<String[]> input) {
-//            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
-//              String value = input.next();
-//              /*for (int j = 0; j < value.length; j++) {
-//                localPoints[i][j] = Double.parseDouble(value[j]);
-//              }*/
-//            }
-//            LOG.info("Double Array Values:" + Arrays.deepToString(localPoints));
-//            return localPoints;
-//          }
         });
+    points.direct().forEach(s -> {
+    });
   }
 
   public static void main(String[] args) throws Exception {
