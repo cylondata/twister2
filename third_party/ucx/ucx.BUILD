@@ -2,8 +2,6 @@ licenses(["notice"])
 
 package(default_visibility = ["//visibility:public"])
 
-# lib_files is not necessary. But it was added as a temporary workaround for bazel's issue
-# when having just one out file
 lib_files = ["lib/libuct.so","lib/libucs.so","lib/libucp.so","lib/libucm.so","lib/libjucx.so"]
 
 jar_files = ["lib/jucx-1.9.0.jar"]

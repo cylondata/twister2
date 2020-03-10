@@ -10,9 +10,6 @@ java_library(
         "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
         "//conditions:default": glob(["**/*.java"]),
     }),
-    resources = [
-        "@ucx//:ucx-so-files",
-    ],
     deps = [
         "//third_party:ompi_javabinding_java",
         "//third_party/java:junit4",
@@ -42,15 +39,11 @@ java_library(
 )
 
 java_tests(
-    resources = [
-        "@ucx//:ucx-so-files",
-    ],
     test_classes = [
         "edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.RestorableIteratorTest",
-        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
         "edu.iu.dsc.tws.comms.utils.HeapTest",
         "edu.iu.dsc.tws.comms.utils.SortJoinUtilsTest",
         "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
@@ -65,6 +58,18 @@ java_tests(
         ":comms-tests",
     ],
 )
+
+#java_tests(
+#    classpath_resources = [
+#        "@ucx//:ucx-so-files",
+#    ],
+#    test_classes = [
+#        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
+#    ],
+#    runtime_deps = [
+#        ":comms-tests",
+#    ],
+#)
 
 #java_tests_debug(
 #    size = "enormous",
