@@ -24,6 +24,9 @@ LOGGER_PROPERTIES_FILE=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$LOGGER_PROPERT
 
 # start the class to run
 echo "Starting $CLASS_TO_RUN .... "
-exec java -Xms${JVM_MEMORY_MB}m -Xmx${JVM_MEMORY_MB}m -Djava.util.logging.config.file=$LOGGER_PROPERTIES_FILE $CLASS_TO_RUN
-echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
-sleep infinity
+java -Xms${JVM_MEMORY_MB}m -Xmx${JVM_MEMORY_MB}m -Djava.util.logging.config.file=$LOGGER_PROPERTIES_FILE $CLASS_TO_RUN
+result=$?
+echo "$CLASS_TO_RUN is done. return code: $result"
+# return the exit code of twister2-worker or jm,
+# so that they will be restarted in case of failure
+exit $result
