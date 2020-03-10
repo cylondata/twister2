@@ -10,6 +10,9 @@ java_library(
         "@bazel_tools//src/conditions:darwin": srcs_without_ucx,
         "//conditions:default": glob(["**/*.java"]),
     }),
+    resources = [
+        "@ucx//:ucx-so-files",
+    ],
     deps = [
         "//third_party:ompi_javabinding_java",
         "//third_party/java:junit4",
@@ -39,6 +42,9 @@ java_library(
 )
 
 java_tests(
+    resources = [
+        "@ucx//:ucx-so-files",
+    ],
     test_classes = [
         "edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
