@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.arrow;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -26,6 +28,8 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 public class ArrowWrite {
+
+  private static final Logger LOG = Logger.getLogger(ArrowWrite.class.getName());
 
   private String arrowFile;
   private int entries;
@@ -46,7 +50,7 @@ public class ArrowWrite {
 
   private Twister2ArrowOutputStream twister2ArrowOutputStream;
 
-  public ArrowWrite(String arrowfile, boolean flag) {
+  public ArrowWrite(String arrowfile, boolean flag) throws FileNotFoundException {
     this.maxEntries = 1024;
     this.checkSum = 0;
     random = new Random(System.nanoTime());
@@ -54,9 +58,12 @@ public class ArrowWrite {
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.arrowFile = arrowfile;
     this.flag = flag;
+    this.fileOutputStream = new FileOutputStream(arrowFile);
+    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(
+        this.arrowFileWriter, this.fileOutputStream);
   }
 
-  public ArrowWrite() {
+  public ArrowWrite(String arrowfile) throws FileNotFoundException {
     this.maxEntries = 1024;
     this.checkSum = 0;
     random = new Random(System.nanoTime());
@@ -74,13 +81,7 @@ public class ArrowWrite {
     twister2ArrowOutputStream.writeData();
   }
 
-  public void arrowFileWrite(String arrowfile, boolean val) throws Exception {
-    this.arrowFile = arrowfile;
-    this.flag = val;
-    this.fileOutputStream = new FileOutputStream(arrowFile);
-    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(
-        this.arrowFileWriter, this.fileOutputStream);
-
+  public void arrowFileWrite() throws Exception {
     Schema schema = makeSchema();
     this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
     DictionaryProvider.MapDictionaryProvider provider
@@ -90,6 +91,9 @@ public class ArrowWrite {
           this.fileOutputStream.getChannel());
     } else {
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
+    }
+    if (twister2ArrowOutputStream != null) {
+      LOG.info("Twister2 output stream:" + twister2ArrowOutputStream.toString());
     }
   }
 }

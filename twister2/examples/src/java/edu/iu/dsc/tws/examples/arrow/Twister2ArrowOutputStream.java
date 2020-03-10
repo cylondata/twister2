@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
@@ -26,12 +27,20 @@ import org.apache.arrow.vector.types.pojo.Field;
 
 public class Twister2ArrowOutputStream implements WritableByteChannel {
 
-  private long bytesSoFar;
+  private static final Logger LOG = Logger.getLogger(Twister2ArrowOutputStream.class.getName());
+
+  private String arrowfile;
+
   private int batchSize;
   private int entries;
   private int nullEntries;
-  private Boolean isOpen;
+
+  private long bytesSoFar;
+
+  private boolean flag;
+  private boolean isOpen;
   private boolean useNullValues;
+
   private byte[] tempBuffer;
 
   private Random random;
@@ -40,9 +49,6 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
-
-  private String arrowfile;
-  private boolean flag;
 
   public Twister2ArrowOutputStream(String arrowFile, boolean flag) {
     this.useNullValues = false;
@@ -91,6 +97,9 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   }
 
   public void writeData() throws Exception {
+    if (arrowFileWriter != null) {
+      LOG.info("Arrow File writer:" + arrowFileWriter);
+    }
     this.batchSize = 100;
     arrowFileWriter.start();
     for (int i = 0; i < 1; i++) {
