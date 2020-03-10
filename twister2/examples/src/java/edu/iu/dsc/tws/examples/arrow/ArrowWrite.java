@@ -27,18 +27,34 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 public class ArrowWrite {
 
-  private Random random;
+  private String arrowFile;
   private int entries;
   private int maxEntries;
   private long checkSum;
   private long nullEntries;
+
   private boolean useNullValues;
+  private boolean flag;
+
+  private Random random;
 
   private FileOutputStream fileOutputStream;
 
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
+
+  private Twister2ArrowOutputStream twister2ArrowOutputStream;
+
+  public ArrowWrite(String arrowfile, boolean flag) {
+    this.maxEntries = 1024;
+    this.checkSum = 0;
+    random = new Random(System.nanoTime());
+    this.entries = this.random.nextInt(this.maxEntries);
+    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    this.arrowFile = arrowfile;
+    this.flag = flag;
+  }
 
   public ArrowWrite() {
     this.maxEntries = 1024;
@@ -54,8 +70,17 @@ public class ArrowWrite {
     return new Schema(childrenBuilder.build(), null);
   }
 
-  public void arrowFileWrite(String arrowFile, boolean flag) throws Exception {
+  public void callTwister2ArrowWrite() throws Exception {
+    twister2ArrowOutputStream.writeData();
+  }
+
+  public void arrowFileWrite(String arrowfile, boolean val) throws Exception {
+    this.arrowFile = arrowfile;
+    this.flag = val;
     this.fileOutputStream = new FileOutputStream(arrowFile);
+    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(
+        this.arrowFileWriter, this.fileOutputStream);
+
     Schema schema = makeSchema();
     this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
     DictionaryProvider.MapDictionaryProvider provider
@@ -64,8 +89,7 @@ public class ArrowWrite {
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
           this.fileOutputStream.getChannel());
     } else {
-      this.arrowFileWriter = new ArrowFileWriter(root, provider,
-          new Twister2ArrowOutputStream(this.fileOutputStream));
+      this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
   }
 }

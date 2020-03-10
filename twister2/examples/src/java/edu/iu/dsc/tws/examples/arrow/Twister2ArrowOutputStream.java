@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.Random;
 
+import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -36,16 +37,32 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private Random random;
   private FileOutputStream fileOutputStream;
 
+  private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
 
-  public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
+  private String arrowfile;
+  private boolean flag;
+
+  public Twister2ArrowOutputStream(String arrowFile, boolean flag) {
     this.useNullValues = false;
     this.nullEntries = 0;
-    this.fileOutputStream = fileoutputStream;
     this.isOpen = true;
     this.tempBuffer = new byte[1024 * 1024];
     this.bytesSoFar = 0;
+    this.arrowfile = arrowFile;
+    this.flag = flag;
+  }
+
+  public Twister2ArrowOutputStream(ArrowFileWriter arrowfileWriter,
+                                   FileOutputStream fileoutputStream) {
+    this.useNullValues = false;
+    this.nullEntries = 0;
+    this.isOpen = true;
+    this.tempBuffer = new byte[1024 * 1024];
+    this.bytesSoFar = 0;
+    this.arrowFileWriter = arrowfileWriter;
+    this.fileOutputStream = fileoutputStream;
   }
 
   @Override
