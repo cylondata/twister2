@@ -81,7 +81,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
 
     wID = workerID;
 
-    LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
+    LOG.info(wID + " BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
       String volatileDirPath = volatileVolume.getWorkerDir().getPath();
@@ -94,7 +94,13 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
       LOG.info("Persistent Volume Directory: " + persVolumePath);
     }
 
-    List<JobMasterAPI.WorkerInfo> workerList = initSynch(workerController);
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
+//    List<JobMasterAPI.WorkerInfo> workerList = initSynch(workerController);
     if (workerList == null) {
       return;
     }
@@ -103,8 +109,11 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
+    // if this is not first worker
+    sleepSomeTime("worker-" + workerID, 600);
+
 //    waitAndComplete();
-    testScalingMessaging(workerController);
+//    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -273,11 +282,11 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
   /**
    * a test method to make the worker wait some time
    */
-  public void sleepSomeTime(long sleepSeconds) {
+  public static void sleepSomeTime(String id, long sleepSeconds) {
     try {
-      LOG.info("BasicK8sWorker will sleep: " + sleepSeconds + " seconds.");
+      LOG.info(id + " will sleep: " + sleepSeconds + " seconds.");
       Thread.sleep(sleepSeconds * 1000);
-      LOG.info("BasicK8sWorker sleep completed.");
+      LOG.info(id + " sleep completed.");
     } catch (InterruptedException e) {
       LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
     }
