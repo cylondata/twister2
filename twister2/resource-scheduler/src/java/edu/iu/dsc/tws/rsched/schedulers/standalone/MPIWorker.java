@@ -42,6 +42,7 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -51,6 +52,7 @@ import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.JSONUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
@@ -60,6 +62,7 @@ import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -169,6 +172,9 @@ public final class MPIWorker {
             wInfo = createWorkerInfo(config, -1, job);
           }
 
+          // init WorkerRuntime
+          WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
+
           // lets broadcast the master information
           broadCastMasterInformation(rank);
 
@@ -179,10 +185,12 @@ public final class MPIWorker {
           }
         } else {
           wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
+          WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
           startWorker(config, rank, MPI.COMM_WORLD, job);
         }
       } else {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
+        WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
         startWorkerWithoutMaster(config, rank, MPI.COMM_WORLD, job);
       }
     } catch (MPIException e) {
@@ -386,7 +394,10 @@ public final class MPIWorker {
         put(MPIContext.JOB_OBJECT, job).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(JobMasterContext.JOB_MASTER_IP, jIp).
-        put(JobMasterContext.JOB_MASTER_PORT, jPort).build();
+        put(JobMasterContext.JOB_MASTER_PORT, jPort).
+        put(FaultToleranceContext.FAULT_TOLERANT, false).
+        put(ZKContext.ZK_BASED_GROUP_MANAGEMENT, false).
+        build();
     return updatedConfig;
   }
 
@@ -446,7 +457,8 @@ public final class MPIWorker {
       initLogger(cfg, intracomm.getRank(), twister2Home);
 
       // now create the worker
-      IWorkerController wc = createWorkerController(job);
+//      IWorkerController wc = createWorkerController(job);
+      IWorkerController wc = WorkerRuntime.getWorkerController();
       MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
       IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
 
