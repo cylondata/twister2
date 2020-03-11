@@ -50,10 +50,11 @@ public final class K8sWorkerStarter {
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
-  // whether the worker shuts down properly
+  // whether the worker is killed externally
   // if the worker is forcefully shutdown such as by scaling down
+  // or by killing the job
   // we use shut down hook to clear some resources
-  private static boolean properShutDown = false;
+  private static boolean externallyKilled = true;
 
   private K8sWorkerStarter() { }
 
@@ -163,13 +164,21 @@ public final class K8sWorkerStarter {
     addShutdownHook(workerStatusUpdater);
 
     // start the worker
-    startWorker(workerController, pv);
+    try {
+      startWorker(workerController, pv);
+    } catch (Throwable t) {
+      // update worker status to FAILED
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      WorkerRuntime.close();
+      externallyKilled = false;
+      throw t;
+    }
 
     // update worker status to COMPLETED
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     WorkerRuntime.close();
-    properShutDown = true;
+    externallyKilled = false;
 
     // wait to be deleted by Job master
     K8sWorkerUtils.waitIndefinitely();
@@ -259,7 +268,7 @@ public final class K8sWorkerStarter {
       public void run() {
 
         // if thw worker shuts down properly, do nothing
-        if (properShutDown) {
+        if (!externallyKilled) {
           return;
         }
 
