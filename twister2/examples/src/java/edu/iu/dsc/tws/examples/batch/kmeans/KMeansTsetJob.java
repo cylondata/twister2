@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
@@ -34,9 +35,8 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
-
-// TODO: this needs to checked for correctness!!!
 
 public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
@@ -47,7 +47,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     LOG.info("TSet worker starting: " + workerId);
 
     Config config = tc.getConfig();
-    int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
+    int parallelism = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
     int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
     int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
     int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
@@ -63,21 +63,55 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
         dsize, csize, dataDirectory, centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
-    CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache();
 
-    CachedTSet<double[][]> centers =
-        tc.createSource(new CenterSource(), parallelismValue).cache();
+    /*CachedTSet<double[][]> points =
+        tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
+
+    SourceTSet<String[]> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelism,
+        "split");
+    ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String[]>>() {
+          private double[][] localPoints = new double[dsize / parallelism][dimension];
+          @Override
+          public double[][] compute(Iterator<String[]> input) {
+            for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
+              String[] value = input.next();
+              for (int j = 0; j < value.length; j++) {
+                localPoints[i][j] = Double.parseDouble(value[j]);
+              }
+            }
+            return localPoints;
+          }
+        });
+    points.setName("dataSource").cache();
+
+
+    //CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
+
+    SourceTSet<String[]> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
+        "complete");
+    ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<String[]>>() {
+          private double[][] localCenters = new double[csize][dimension];
+          @Override
+          public double[][] compute(Iterator<String[]> input) {
+            for (int i = 0; i < csize && input.hasNext(); i++) {
+              String[] value = input.next();
+              for (int j = 0; j < dimension; j++) {
+                localCenters[i][j] = Double.parseDouble(value[j]);
+              }
+            }
+            return localCenters;
+          }
+        });
+    CachedTSet<double[][]> cachedCenters = centers.cache();
 
     long endTimeData = System.currentTimeMillis();
 
-    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
-        points.direct().map(new KMeansMap());
-
+    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet = points.direct().map(new KMeansMap());
     ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
         (t1, t2) -> {
-          double[][] newCentroids = new double[t1.length]
-              [t1[0].length];
+          double[][] newCentroids = new double[t1.length][t1[0].length];
           for (int j = 0; j < t1.length; j++) {
             for (int k = 0; k < t1[0].length; k++) {
               double newVal = t1[j][k] + t2[j][k];
@@ -86,15 +120,12 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           }
           return newCentroids;
         }).map(new AverageCenters());
-
-    kmeansTSet.addInput("centers", centers);
+    kmeansTSet.addInput("centers", cachedCenters);
 
     CachedTSet<double[][]> cached = reduced.lazyCache();
-
     for (int i = 0; i < iterations; i++) {
-      tc.evalAndUpdate(cached, centers);
+      tc.evalAndUpdate(cached, cachedCenters);
     }
-
     tc.finishEval(cached);
 
     long endTime = System.currentTimeMillis();
@@ -102,13 +133,10 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-
       LOG.info("Final Centroids After\t" + iterations + "\titerations\t");
-
-      centers.direct().forEach(i -> LOG.info(Arrays.toString(i)));
+      cachedCenters.direct().forEach(i -> LOG.info(Arrays.deepToString(i)));
     }
   }
-
 
   private class KMeansMap extends BaseMapFunc<double[][], double[][]> {
     private int dimension;
@@ -156,6 +184,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     private int dimension;
     private double[][] localPoints;
     private boolean read = false;
+    private String fileType = null;
+
+    protected PointsSource(String filetype) {
+      this.fileType = filetype;
+    }
 
     @Override
     public void prepare(TSetContext context) {
@@ -167,7 +200,6 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       this.dimension = cfg.getIntegerValue(DataObjectConstants.DIMENSIONS, 2);
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
           + context.getWorkerId();
-      //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
       this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
           Path(datainputDirectory), context.getParallelism(), cfg, dataSize),
@@ -213,6 +245,12 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     private boolean read = false;
     private int dimension;
     private double[][] centers;
+
+    private String fileType = null;
+
+    protected CenterSource(String filetype) {
+      this.fileType = filetype;
+    }
 
     @Override
     public void prepare(TSetContext context) {

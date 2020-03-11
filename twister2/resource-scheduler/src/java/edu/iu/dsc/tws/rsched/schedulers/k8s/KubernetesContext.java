@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
@@ -23,6 +23,9 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
+
+  public static final boolean K8S_LOG_IN_CLIENT_DEFAULT = false;
+  public static final String K8S_LOG_IN_CLIENT = "kubernetes.log.in.client";
 
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9000;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
@@ -93,6 +96,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean logInClient(Config cfg) {
+    return cfg.getBooleanValue(K8S_LOG_IN_CLIENT, K8S_LOG_IN_CLIENT_DEFAULT);
   }
 
   public static boolean nodeLocationsFromConfig(Config cfg) {
@@ -176,4 +183,5 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_LABEL,
         K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT);
   }
+
 }

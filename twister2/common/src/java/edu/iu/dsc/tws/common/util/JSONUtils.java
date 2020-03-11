@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.util;
 
+import java.io.IOException;
+
 import com.google.gson.Gson;
 
 public final class JSONUtils {
@@ -18,13 +20,26 @@ public final class JSONUtils {
   private JSONUtils() {
   }
 
-  public static String toJSONString(Object obj) {
+  public static <T> String toJSONString(Object obj, Class<T> tClass) {
+
     Gson converter = new Gson();
-    return converter.toJson(obj);
+    return converter.toJson(obj, tClass);
   }
 
   public static <T> T fromJSONString(String jsonString, Class<T> tClass) {
     Gson converter = new Gson();
     return converter.fromJson(jsonString, tClass);
+  }
+
+  private static RuntimeTypeAdapterFactory<Exception> registerExceptionRuntimeTypes() {
+    RuntimeTypeAdapterFactory<Exception> vehicleAdapterFactory
+        = RuntimeTypeAdapterFactory.of(Exception.class, "type")
+
+        .registerSubtype(RuntimeException.class, "runex")
+        .registerSubtype(Exception.class, "exex")
+        .registerSubtype(IllegalStateException.class, "isex")
+        .registerSubtype(IOException.class, "ioex")
+        .registerSubtype(NullPointerException.class, "nullpex");
+    return vehicleAdapterFactory;
   }
 }

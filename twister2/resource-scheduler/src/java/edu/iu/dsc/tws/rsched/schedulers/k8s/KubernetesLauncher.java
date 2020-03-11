@@ -21,9 +21,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.logger.JobLogger;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -47,6 +48,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private KubernetesController controller;
   private String namespace;
   private JobSubmissionStatus jobSubmissionStatus;
+  private JobLogger jobLogger;
 
   public KubernetesLauncher() {
     controller = new KubernetesController();
@@ -129,6 +131,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         clearupWhenSubmissionFails(jobID);
         return state;
       }
+    }
+
+    if (KubernetesContext.logInClient(config)) {
+      jobLogger = new JobLogger(namespace, job);
+      jobLogger.start();
     }
 
     state.setRequestGranted(true);

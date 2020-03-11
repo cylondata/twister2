@@ -91,7 +91,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
     doneSignal = new CountDownLatch(numThreads);
     for (int i = 0; i < numThreads; i++) {
-      threads.submit(new StreamWorker(tasks));
+      threads.execute(new StreamWorker(tasks));
     }
   }
 

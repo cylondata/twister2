@@ -37,8 +37,8 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -126,6 +126,8 @@ public class K8sUploader extends Thread implements IUploader {
 
     if (webServerPodNames.size() == 0) {
       uploadToWebServers = false;
+      // set upload method in RequestObjectBuilder
+      RequestObjectBuilder.setUploadMethod("client-to-pods");
     } else {
       uploadToWebServers = true;
     }
@@ -160,8 +162,6 @@ public class K8sUploader extends Thread implements IUploader {
       startUploadersToWebServers();
     } else {
       watchPodsStartUploaders();
-      // set upload method in RequestObjectBuilder
-      RequestObjectBuilder.setUploadMethod("client-to-pods");
     }
   }
 

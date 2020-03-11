@@ -64,39 +64,7 @@ If there is a problem with job submission, job submission client will exit with 
 printed to the screen. Otherwise, job submission client either finishes execution with success or 
 waits to upload the job package to workers.
 
-### Job Logs
-
-You can see the job logs either from Kubernetes Dashboard website, using kubectl command or 
-through persistent storage logs if enabled. 
-The workers in HelloWorld job prints a log message and sleeps 1 minutes before exiting. 
-So the user can check Kubernetes Dashboard website for worker log messages. 
-There must be a StatefulSet with the job name. List the pods in that StatefulSet. 
-Check the output for each pod by clicking on the right hand side button. 
-You will see the output for each worker in that window.
-
-To see the logs by using kubectl, you first need to learn the pod names in the job. 
-You can execute "kubectl get pods" command to list the pods in the cluster. 
-The pod names for the job are in the form of <job-name><ss-index><pod-index>.
-You can see the logs of each pod by executing the command: 
-```bash
-    $ kubectl logs <podname>
-```
-
-You can also check the log files from persistent storage if the persistent storage is enabled. 
-You need to learn the persistent logging directory of your storage provisioner. 
-You can learn it from Kubernetes Dashboard by checking the provisioner entity or consulting your administrator. 
-Check that directory for the job logs.
-
-### Logs for MPI Enabled Jobs
-
-The outputs of MPI enabled jobs are a little different in Kubernetes Dashboard and pod logs. 
-In those jobs, first worker starts all other workers by using mpirun command. 
-Therefore, the outputs of all other pods are transferred to the first pod.  
-So, all outputs from all workers in an MPI enabled job is shown in first worker pod. 
-The pods of other workers will only have initialization messages.
-
-However, persistent log files are different. In those files, each worker has its own log messages in its log file. 
-Therefore, checking log files would be more preferable in MPI enabled jobs compared to checking the dashboard.
+Please check the [logging document](../logging.md) for accessing job logs in Kubernetes clusters.
 
 ### Configuration Settings
 
@@ -115,12 +83,15 @@ Twister2Job.loadTwister2Job()
 
 ### Job Names
 
-We are using job names as StatefulSet and Service names. In addition we are using job names as labels. 
+We are using job names in jobIDs. 
+In addition, we are using jobIDs as StatefulSet and Service names. 
+Furthermore, we are using jobIDs in labels to identify job pods. 
 Therefore job names must follow Kubernetes naming rules: [Kubernetes resource naming rules](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
 
-Job names should consist of lower case alphanumeric characters and dash\(-\) only. Their length can be 50 chars at most. 
+Job names should consist of lower case alphanumeric characters and dash\(-\) only. 
+Their length can be 30 chars at most. 
 If job names do not conform to these rules, we automatically change them to accommodate those rules. 
-We use the changed names as job names.  
+We use the changed names in jobIDs. 
 
 ## Job Package Uploader Settings
 

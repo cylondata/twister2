@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
@@ -306,7 +306,8 @@ public final class RequestObjectBuilder {
     } else {
       startScript = "./init.sh";
     }
-    container.setCommand(Arrays.asList(startScript));
+    container.setCommand(Arrays.asList("/bin/bash"));
+    container.setArgs(Arrays.asList("-c", startScript));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {

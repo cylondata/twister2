@@ -39,13 +39,13 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.JSONUtils;
@@ -126,7 +126,7 @@ public final class MPIWorker {
               JobExecutionState.WorkerJobState.newBuilder()
                   .setFailure(true)
                   .setJobName(config.getStringValue(Context.JOB_ID))
-                  .setWorkerMessage(JSONUtils.toJSONString(exception))
+                  .setWorkerMessage(JSONUtils.toJSONString(exception, Exception.class))
                   .build();
           senderToDriver.sendToDriver(workerState);
         } else {

@@ -15,34 +15,35 @@ twister2.network.receiveBuffer.count: 4
 twister2.network.channel.pending.size: 2048
 
 # the send pending messages
-twister2.network.send.pending.max: 4
+twister2.network.send.pending.max: 10000
 
 # group up to 8 ~ 16 messages
-twister2.network.message.group.low_water_mark: 8
+twister2.network.message.group.low_water_mark: 16000
 
 # this is the max number of messages to group
-twister2.network.message.group.high_water_mark: 16
+twister2.network.message.group.high_water_mark: 26000
 
 # in batch partition operations, this value will be used to create mini batches
 # within partial receivers
-twister2.network.message.grouping.size: 10
+twister2.network.message.grouping.size: 20000
 
 # For disk based operations, this directory list will be used to persist incoming messages.
 # This can be used to balance the load between multiple devices, by specifying directory locations
 # from different devices.
-twister2.network.ops.persistent.dirs: ["${TWISTER2_HOME}/persistent/"]
+# twister2.network.ops.persistent.dirs: ["/scratch/skamburu/terasort"]
+twister2.network.ops.persistent.dirs: ["/twister2-volatile"]
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
-twister2.network.shuffle.memory.bytes.max: 102400000
+twister2.network.shuffle.memory.bytes.max: 10240000
 
 # the maximum number of records kept in memory for operations that goes to dist
-twister2.network.shuffle.memory.records.max: 102400000
+twister2.network.shuffle.memory.records.max: 102400
 
 # size of the shuffle file (10MB default)
 twister2.network.shuffle.file.bytes.max: 10000000
 
 # no of parallel IO operations permitted
-twister2.network.shuffle.parallel.io: 2
+twister2.network.shuffle.parallel.io: 1
 
 # the partitioning algorithm
 twister2.network.alltoall.algorithm.batch: "ring"
@@ -145,16 +146,16 @@ twister2.network.receiveBuffer.count.batch.partition: 4
 twister2.network.alltoall.algorithm.batch.keyed_gather: "simple"
 
 # ring group worker
-ttwister2.network.partition.ring.group.workers.batch.keyed_gather: 2
+ttwister2.network.partition.ring.group.workers.batch.keyed_gather: 4
 
 # the buffer size to be used
 twister2.network.buffer.size.batch.keyed_gather: 1024000
 
 # number of send buffers to be used
-twister2.network.sendBuffer.count.batch.keyed_gather: 4
+twister2.network.sendBuffer.count.batch.keyed_gather: 1
 
 # number of receive buffers to be used
-twister2.network.receiveBuffer.count.batch.keyed_gather: 4
+twister2.network.receiveBuffer.count.batch.keyed_gather: 1
 
 # group up to 8 ~ 16 messages
 twister2.network.message.group.low_water_mark.batch.keyed_gather: 8000
@@ -168,7 +169,7 @@ twister2.network.message.grouping.size.batch.keyed_gather: 10000
 
 ## Keyed Reduce ##
 # the partitioning algorithm
-twister2.network.alltoall.algorithm.batch.keyed_reduce: "simple"
+twister2.network.alltoall.algorithm.batch.keyed_reduce: "ring"
 
 # ring group worker
 ttwister2.network.partition.ring.group.workers.batch.keyed_reduce: 2
@@ -181,9 +182,4 @@ twister2.network.sendBuffer.count.batch.keyed_reduce: 4
 
 # number of receive buffers to be used
 twister2.network.receiveBuffer.count.batch.keyed_reduce: 4
-
-# port offset for python-java connection.
-# port+workerId will be used by each worker to communicate with python process
-# port-1 will be used by client process for the initial communication
-twister2.python.port: 5400
 

@@ -30,11 +30,6 @@ twister2.resource.nomad.shell.script: "nomad.sh"
 # path to the system core package
 twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
 
-# ZooKeeper server addresses: comma separated host:port pairs
-# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.resource.zookeeper.server.addresses: "149.165.xxx.xx:2181"
-
-
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
 

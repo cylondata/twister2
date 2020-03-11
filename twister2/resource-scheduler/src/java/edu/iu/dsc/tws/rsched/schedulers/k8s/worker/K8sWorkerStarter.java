@@ -17,14 +17,15 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -49,10 +50,11 @@ public final class K8sWorkerStarter {
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
-  // whether the worker shuts down properly
+  // whether the worker is killed externally
   // if the worker is forcefully shutdown such as by scaling down
+  // or by killing the job
   // we use shut down hook to clear some resources
-  private static boolean properShutDown = false;
+  private static boolean externallyKilled = true;
 
   private K8sWorkerStarter() { }
 
@@ -159,16 +161,24 @@ public final class K8sWorkerStarter {
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
     // add shut down hook
-    addShutdownHook();
+    addShutdownHook(workerStatusUpdater);
 
     // start the worker
-    startWorker(workerController, pv);
+    try {
+      startWorker(workerController, pv);
+    } catch (Throwable t) {
+      // update worker status to FAILED
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      WorkerRuntime.close();
+      externallyKilled = false;
+      throw t;
+    }
 
     // update worker status to COMPLETED
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     WorkerRuntime.close();
-    properShutDown = true;
+    externallyKilled = false;
 
     // wait to be deleted by Job master
     K8sWorkerUtils.waitIndefinitely();
@@ -252,14 +262,18 @@ public final class K8sWorkerStarter {
    * we need to let ZooKeeper know about it and delete worker znode
    * if zookeeper is used
    */
-  public static void addShutdownHook() {
+  public static void addShutdownHook(IWorkerStatusUpdater workerStatusUpdater) {
 
     Thread hookThread = new Thread() {
       public void run() {
 
         // if thw worker shuts down properly, do nothing
-        if (properShutDown) {
+        if (!externallyKilled) {
           return;
+        }
+
+        if (workerStatusUpdater instanceof ZKWorkerController) {
+          workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.KILLED);
         }
 
         WorkerRuntime.close();

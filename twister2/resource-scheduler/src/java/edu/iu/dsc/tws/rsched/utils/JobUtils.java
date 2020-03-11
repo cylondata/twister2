@@ -34,7 +34,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
@@ -118,11 +118,16 @@ public final class JobUtils {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
     Map<String, ByteString> configMapSerialized = conf.getConfigByteMapMap();
-    for (Map.Entry<String, ByteString> e : configMapSerialized.entrySet()) {
-      String key = e.getKey();
-      byte[] bytes = e.getValue().toByteArray();
-      Object object = new KryoSerializer().deserialize(bytes);
-      builder.put(key, object);
+    try {
+
+      for (Map.Entry<String, ByteString> e : configMapSerialized.entrySet()) {
+        String key = e.getKey();
+        byte[] bytes = e.getValue().toByteArray();
+        Object object = new KryoSerializer().deserialize(bytes);
+        builder.put(key, object);
+      }
+    } catch (Exception e) {
+      LOG.severe("Error while overriding Configs " + e.getMessage());
     }
     return builder.build();
   }
@@ -209,5 +214,4 @@ public final class JobUtils {
 
     return true;
   }
-
 }

@@ -4,7 +4,7 @@
 
 # A flag to enable/disable fault tolerance in Twister2
 # By default, it is disabled
-twister2.fault.tolerant: false
+twister2.fault.tolerant: true
 
 # a timeout value to determine whether a worker failed
 # If a worker does not send heartbeat messages for this duration in milli seconds,
@@ -44,7 +44,7 @@ twister2.job.master.persistent.volume.size: 0.0
 
 # twister2 job master cpu request
 # default value is 0.2 percentage
-twister2.job.master.cpu: 0.5
+twister2.job.master.cpu: 2.0
 
 # twister2 job master RAM request in MB
 # default value is 1024 MB
