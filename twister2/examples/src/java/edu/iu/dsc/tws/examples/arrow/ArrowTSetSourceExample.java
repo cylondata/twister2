@@ -60,6 +60,7 @@ import org.apache.commons.cli.Options;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.data.arrow.Twister2ArrowWrite;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -73,18 +74,18 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+    Twister2ArrowWrite arrowWrite;
+    try {
+      arrowWrite = new Twister2ArrowWrite("/Users/kgovind-admin/test.arrow", true);
+      arrowWrite.setUpTwister2ArrowWrite();
+    } catch (Exception e) {
+      throw new RuntimeException("Exception Occured", e);
+    }
+
     int parallelism = 2;
     Schema schema = null;
-    ArrowWrite arrowWrite = null;
-    try {
-      arrowWrite = new ArrowWrite("/home/kannan/test.arrow", true);
-      arrowWrite.arrowFileWrite();
-      arrowWrite.callTwister2ArrowWrite();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    SourceTSet<String> pointSource
-        = env.createArrowSource("/home/kannan/ArrowExample/example.arrow", parallelism, schema);
+    SourceTSet<String> pointSource = env.createArrowSource(
+        "/Users/kgovind-admin/ArrowExample/example.arrow", parallelism, schema);
     ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           @Override
