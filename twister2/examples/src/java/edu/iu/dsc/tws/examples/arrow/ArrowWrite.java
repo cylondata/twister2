@@ -59,8 +59,6 @@ public class ArrowWrite {
     this.arrowFile = arrowfile;
     this.flag = flag;
     this.fileOutputStream = new FileOutputStream(arrowFile);
-    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(
-        this.arrowFileWriter, this.fileOutputStream);
   }
 
   public ArrowWrite(String arrowfile) throws FileNotFoundException {
@@ -82,6 +80,9 @@ public class ArrowWrite {
   }
 
   public void arrowFileWrite() throws Exception {
+    //this.fileOutputStream = new FileOutputStream(arrowFile);
+    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(
+        this.arrowFileWriter, fileOutputStream);
     Schema schema = makeSchema();
     this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
     DictionaryProvider.MapDictionaryProvider provider
