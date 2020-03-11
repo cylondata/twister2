@@ -44,7 +44,6 @@ java_tests(
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.RestorableIteratorTest",
-        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
         "edu.iu.dsc.tws.comms.utils.HeapTest",
         "edu.iu.dsc.tws.comms.utils.SortJoinUtilsTest",
         "edu.iu.dsc.tws.comms.utils.HashJoinUtilsTest",
@@ -59,6 +58,18 @@ java_tests(
         ":comms-tests",
     ],
 )
+
+#java_tests(
+#    classpath_resources = [
+#        "@ucx//:ucx-so-files",
+#    ],
+#    test_classes = [
+#        "edu.iu.dsc.tws.comms.ucx.TWSUCXChannelTest",
+#    ],
+#    runtime_deps = [
+#        ":comms-tests",
+#    ],
+#)
 
 #java_tests_debug(
 #    size = "enormous",
