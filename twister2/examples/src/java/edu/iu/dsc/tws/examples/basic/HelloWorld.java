@@ -39,14 +39,21 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
 
   private List<JobMasterAPI.WorkerInfo> workerList;
   private Object waitObject = new Object();
+  private long jobSubmitTime;
+  private int workerID;
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, int wID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    LOG.info("timestamp workerStart: " + System.currentTimeMillis());
+    this.workerID = wID;
+    jobSubmitTime = config.getLongValue("JOB_SUBMIT_TIME", -1);
+    LOG.info("jobSubmitTime: " + jobSubmitTime);
+    long workerStartTime = System.currentTimeMillis();
+    LOG.info("timestamp workerStart: " + workerStartTime);
+    LOG.severe("workerStartDelay: " + wID + " " + (workerStartTime - jobSubmitTime));
 
     boolean added = WorkerRuntime.addAllJoinedListener(this);
     if (!added) {
@@ -90,7 +97,9 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workers) {
     workerList = workers;
-    LOG.info("timestamp allWorkersJoined: " + System.currentTimeMillis());
+    long allJoinedTime = System.currentTimeMillis();
+    LOG.info("timestamp allWorkersJoined: " + allJoinedTime);
+    LOG.severe("allJoinedDelay: " + workerID + " " + (allJoinedTime - jobSubmitTime));
 
     synchronized (waitObject) {
       waitObject.notify();
@@ -121,6 +130,7 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
     // lets put a configuration here
     JobConfig jobConfig = new JobConfig();
     jobConfig.put("hello-key", "Twister2-Hello");
+    jobConfig.put("JOB_SUBMIT_TIME", System.currentTimeMillis() + "");
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("hello-world-job")

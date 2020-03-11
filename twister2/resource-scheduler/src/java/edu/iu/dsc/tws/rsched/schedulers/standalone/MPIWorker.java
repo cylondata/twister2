@@ -149,6 +149,11 @@ public final class MPIWorker {
       // normal worker
       LOG.log(Level.FINE, "A worker process is starting...");
 
+      long jobSubmitTime = config.getLongValue("JOB_SUBMIT_TIME", -1);
+      long mpiWorkerStartTime = System.currentTimeMillis();
+      LOG.info("timestamp mpiWorkerStart: " + mpiWorkerStartTime);
+      LOG.severe("mpiWorkerStartDelay: " + rank + " " + (mpiWorkerStartTime - jobSubmitTime));
+
       String jobId = MPIContext.jobId(config);
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
