@@ -57,8 +57,8 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
 
     boolean added = WorkerRuntime.addAllJoinedListener(this);
     if (!added) {
-      LOG.warning("Can not register IAllJoinedListener.");
-      waitAndComplete();
+      LOG.warning(wID + " Can not register IAllJoinedListener.");
+      return;
     }
 
     // lets wait for all workers to join the job
@@ -66,9 +66,7 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
       waitAllWorkersToJoin();
     }
 
-    LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
-
-    waitAndComplete();
+    LOG.severe(wID + " All workers joined. Number of joined workers: " + workerList.size());
   }
 
   private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workers) {
@@ -85,7 +83,7 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
   private void waitAllWorkersToJoin() {
     synchronized (waitObject) {
       try {
-        LOG.info("Waiting for all workers to join the job... ");
+        LOG.info(workerID + " Waiting for all workers to join the job... ");
         waitObject.wait();
       } catch (InterruptedException e) {
         e.printStackTrace();
