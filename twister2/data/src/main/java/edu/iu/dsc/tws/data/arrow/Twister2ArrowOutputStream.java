@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -46,6 +47,7 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private int batchSize;
   private int entries;
   private int nullEntries;
+  private int maxEntries;
 
   private long bytesSoFar;
 
@@ -61,13 +63,36 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
 
+  private int[] data;
+
   public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
     this.useNullValues = false;
     this.nullEntries = 0;
+    this.maxEntries = 1024;
     this.isOpen = true;
-    this.tempBuffer = new byte[1024 * 1024];
+    //this.tempBuffer = new byte[1024 * 1024];
     this.bytesSoFar = 0;
     this.fileOutputStream = fileoutputStream;
+    generateRandom();
+  }
+
+  public int randomInt;
+
+  private void generateRandom() {
+    random = new Random(System.nanoTime());
+    this.entries = this.random.nextInt(this.maxEntries);
+    LOG.info("this entries value:" + this.entries);
+    this.data = new int[this.entries];
+    for (int i = 0; i < this.entries; i++) {
+      this.data[i] = new Integer(this.random.nextInt(1024));
+      //this.data[i] = generateIntRandom();
+    }
+    LOG.info("Data input values:" + Arrays.toString(this.data));
+  }
+
+  private int generateIntRandom() {
+    randomInt = random.nextInt(1024);
+    return randomInt;
   }
 
   @Override
@@ -116,6 +141,7 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     }
     arrowFileWriter.end();
     arrowFileWriter.close();
+
     fileOutputStream.flush();
     fileOutputStream.close();
   }
@@ -124,9 +150,9 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     IntVector intVector = (IntVector) fieldVector;
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
-//    for (int i = 0; i < items; i++) {
-//      intVector.setSafe(i, isSet(), this.data[from + i].anInt);
-//    }
+    for (int i = 0; i < items; i++) {
+      intVector.setSafe(i, isSet(), this.data[from + i]);
+    }
     fieldVector.setValueCount(items);
   }
 

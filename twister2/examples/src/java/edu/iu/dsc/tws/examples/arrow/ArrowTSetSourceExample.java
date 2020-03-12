@@ -94,7 +94,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
             return new double[0][];
           }
         });
-    points.direct().forEach(s -> { });
+    //points.direct().forEach(s -> { });
   }
 
   public static void main(String[] args) throws Exception {

@@ -81,7 +81,7 @@ public class Twister2ArrowWrite {
 
   private String arrowFile;
   private int entries;
-  private int maxEntries;
+  private int maxEntries = 1024;
   private long checkSum;
   private long nullEntries;
 
