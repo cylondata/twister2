@@ -163,6 +163,4 @@ public abstract class BaseTSet<T> implements BuildableTSet {
   public int hashCode() {
     return Objects.hash(id);
   }
-
-
 }

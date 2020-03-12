@@ -40,7 +40,7 @@ class FileUtils:
             os.mkdir(dir_path, 0o777)
             print("Directory Created")
         else:
-            print("Director Exists")
+            print("Directory Exists")
 
     @staticmethod
     def mkdir_with_access(dir_path=None):
@@ -48,7 +48,7 @@ class FileUtils:
             os.mkdir(dir_path, 0o777)
             print("Directory Created")
         else:
-            print("Director Exists")
+            print("Directory Exists")
 
     @staticmethod
     def mkdir_branch_with_access(dir_path=None):

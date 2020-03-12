@@ -98,6 +98,12 @@ public abstract class TSetEnvironment {
    */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
 
+  public abstract BaseTSet<String[]> createCSVSource(String filePath, int dataSize,
+                                                     int parallelism, String type);
+
+  public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
+                                                     int parallelism, String type);
+
   /**
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.
@@ -149,6 +155,7 @@ public abstract class TSetEnvironment {
     WorkerEnvironment.putSharedValue(listName, keysList);
     return createKeyedSource(new MapBasedSourceFunction<>(listName, mapName), parallelism);
   }
+
 
   /**
    * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
