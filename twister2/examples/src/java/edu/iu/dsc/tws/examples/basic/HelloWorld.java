@@ -133,7 +133,7 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("hello-world-job")
         .setWorkerClass(HelloWorld.class)
-        .addComputeResource(.2, 128, numberOfWorkers)
+        .addComputeResource(1.0, 256, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job
