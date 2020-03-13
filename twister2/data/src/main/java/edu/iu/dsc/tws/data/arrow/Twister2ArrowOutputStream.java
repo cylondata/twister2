@@ -63,17 +63,31 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
 
-  private int[] data;
+  //private int[] data;
+
+  private ArrowGenerator[] data;
 
   public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
     this.useNullValues = false;
     this.nullEntries = 0;
     this.maxEntries = 1024;
     this.isOpen = true;
-    //this.tempBuffer = new byte[1024 * 1024];
+    this.tempBuffer = new byte[1024 * 1024];
     this.bytesSoFar = 0;
     this.fileOutputStream = fileoutputStream;
-    generateRandom();
+    random = new Random(System.nanoTime());
+    this.entries = this.random.nextInt(this.maxEntries);
+    LOG.info("this entries value:" + this.entries);
+    //this.data = new int[this.entries];
+    this.data = new ArrowGenerator[this.entries];
+    for (int i = 0; i < this.entries; i++) {
+      //this.data[i] = new Integer(this.random.nextInt(1024));
+      //this.data[i] = generateIntRandom();
+      this.data[i] = new ArrowGenerator(this.random);
+    }
+    LOG.info("Data input values:" + Arrays.toString(this.data));
+    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    //generateRandom();
   }
 
   public int randomInt;
@@ -82,10 +96,11 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
     LOG.info("this entries value:" + this.entries);
-    this.data = new int[this.entries];
+    this.data = new ArrowGenerator[this.entries];
     for (int i = 0; i < this.entries; i++) {
-      this.data[i] = new Integer(this.random.nextInt(1024));
+      //this.data[i] = new Integer(this.random.nextInt(1024));
       //this.data[i] = generateIntRandom();
+      this.data[i] = new ArrowGenerator(this.random);
     }
     LOG.info("Data input values:" + Arrays.toString(this.data));
   }
@@ -151,7 +166,7 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), this.data[from + i]);
+      intVector.setSafe(i, isSet(), this.data[from + i].randomInt);
     }
     fieldVector.setValueCount(items);
   }
