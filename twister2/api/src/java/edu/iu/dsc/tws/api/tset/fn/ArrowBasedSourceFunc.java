@@ -15,16 +15,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.Float4Vector;
-import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
@@ -40,7 +37,7 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
+public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
@@ -80,8 +77,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
 
   /**
    * Prepare method
-   *
-   * @param context
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
@@ -115,18 +110,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
             case INT:
               showIntAccessor(fieldVector.get(j));
               break;
-            case BIGINT:
-              showBigIntAccessor(fieldVector.get(j));
-              break;
-            case VARBINARY:
-              showVarBinaryAccessor(fieldVector.get(j));
-              break;
-            case FLOAT4:
-              showFloat4Accessor(fieldVector.get(j));
-              break;
-            case FLOAT8:
-              showFloat8Accessor(fieldVector.get(j));
-              break;
             default:
               throw new Exception("minortype");
           }
@@ -147,72 +130,12 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> {
     for (int j = 0; j < intVector.getValueCount(); j++) {
       if (!intVector.isNull(j)) {
         int value = intVector.get(j);
-        System.out.println("\t\t intAccessor[" + j + "] " + value);
+        LOG.info("\t\t intAccessor[" + j + "] " + value);
         intCsum += value;
         this.checkSumx += value;
       } else {
         this.nullEntries++;
-        System.out.println("\t\t intAccessor[" + j + "] : NULL ");
-      }
-    }
-  }
-
-  private void showBigIntAccessor(FieldVector fx) {
-    BigIntVector bigIntVector = (BigIntVector) fx;
-    for (int j = 0; j < bigIntVector.getValueCount(); j++) {
-      if (!bigIntVector.isNull(j)) {
-        long value = bigIntVector.get(j);
-        System.out.println("\t\t bigIntAccessor[" + j + "] " + value);
-        longCsum += value;
-        this.checkSumx += value;
-      } else {
-        this.nullEntries++;
-        System.out.println("\t\t bigIntAccessor[" + j + "] : NULL ");
-      }
-    }
-  }
-
-  private void showVarBinaryAccessor(FieldVector fx) {
-    VarBinaryVector varBinaryVector = (VarBinaryVector) fx;
-    for (int j = 0; j < varBinaryVector.getValueCount(); j++) {
-      if (!varBinaryVector.isNull(j)) {
-        byte[] value = varBinaryVector.get(j);
-        long valHash = hashArray(value);
-        arrCsum += valHash;
-        this.checkSumx += valHash;
-      } else {
-        this.nullEntries++;
-        System.out.println("\t\t varBinaryAccessor[" + j + "] : NULL ");
-      }
-    }
-  }
-
-  private void showFloat4Accessor(FieldVector fx) {
-    Float4Vector float4Vector = (Float4Vector) fx;
-    for (int j = 0; j < float4Vector.getValueCount(); j++) {
-      if (!float4Vector.isNull(j)) {
-        float value = float4Vector.get(j);
-        System.out.println("\t\t float4[" + j + "] " + value);
-        floatCsum += value;
-        this.checkSumx += value;
-      } else {
-        this.nullEntries++;
-        System.out.println("\t\t float4[" + j + "] : NULL ");
-      }
-    }
-  }
-
-  private void showFloat8Accessor(FieldVector fx) {
-    Float8Vector float8Vector = (Float8Vector) fx;
-    for (int j = 0; j < float8Vector.getValueCount(); j++) {
-      if (!float8Vector.isNull(j)) {
-        double value = float8Vector.get(j);
-        System.out.println("\t\t float8[" + j + "] " + value);
-        floatCsum += value;
-        this.checkSumx += value;
-      } else {
-        this.nullEntries++;
-        System.out.println("\t\t float8[" + j + "] : NULL ");
+        LOG.info("\t\t intAccessor[" + j + "] : NULL ");
       }
     }
   }

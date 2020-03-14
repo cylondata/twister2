@@ -9,25 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -63,11 +50,10 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
   private RootAllocator rootAllocator = null;
   private VectorSchemaRoot root;
 
-  //private int[] data;
-
   private ArrowGenerator[] data;
 
-  public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
+  public Twister2ArrowOutputStream(FileOutputStream fileoutputStream,
+                                   VectorSchemaRoot vectorSchemaRoot) {
     this.useNullValues = false;
     this.nullEntries = 0;
     this.maxEntries = 1024;
@@ -75,39 +61,15 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     this.tempBuffer = new byte[1024 * 1024];
     this.bytesSoFar = 0;
     this.fileOutputStream = fileoutputStream;
+    this.root = vectorSchemaRoot;
+    LOG.info("root values in output stream:" + this.root);
     random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
-    LOG.info("this entries value:" + this.entries);
-    //this.data = new int[this.entries];
     this.data = new ArrowGenerator[this.entries];
     for (int i = 0; i < this.entries; i++) {
-      //this.data[i] = new Integer(this.random.nextInt(1024));
-      //this.data[i] = generateIntRandom();
       this.data[i] = new ArrowGenerator(this.random);
     }
-    LOG.info("Data input values:" + Arrays.toString(this.data));
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
-    //generateRandom();
-  }
-
-  public int randomInt;
-
-  private void generateRandom() {
-    random = new Random(System.nanoTime());
-    this.entries = this.random.nextInt(this.maxEntries);
-    LOG.info("this entries value:" + this.entries);
-    this.data = new ArrowGenerator[this.entries];
-    for (int i = 0; i < this.entries; i++) {
-      //this.data[i] = new Integer(this.random.nextInt(1024));
-      //this.data[i] = generateIntRandom();
-      this.data[i] = new ArrowGenerator(this.random);
-    }
-    LOG.info("Data input values:" + Arrays.toString(this.data));
-  }
-
-  private int generateIntRandom() {
-    randomInt = random.nextInt(1024);
-    return randomInt;
   }
 
   @Override
@@ -156,7 +118,6 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     }
     arrowFileWriter.end();
     arrowFileWriter.close();
-
     fileOutputStream.flush();
     fileOutputStream.close();
   }
@@ -180,4 +141,15 @@ public class Twister2ArrowOutputStream implements WritableByteChannel {
     }
     return 1;
   }
+
+//  private class ArrowGenerator {
+//
+//    private int randomInt;
+//    private Random random;
+//
+//    protected ArrowGenerator(Random random) {
+//      this.random = random;
+//      randomInt = random.nextInt(1024);
+//    }
+//  }
 }

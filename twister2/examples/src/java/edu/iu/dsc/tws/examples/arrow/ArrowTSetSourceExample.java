@@ -9,41 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.arrow;
 
 import java.io.Serializable;
@@ -51,6 +16,11 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.ImmutableList;
+
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -68,9 +38,12 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
+
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
+
+  private transient Schema schema;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -83,9 +56,9 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     }
 
     int parallelism = 2;
-    Schema schema = null;
+    schema = makeSchema();
     SourceTSet<String> pointSource = env.createArrowSource(
-        "/Users/kgovind-admin/ArrowExample/example.arrow", parallelism, schema);
+        "/Users/kgovind-admin/test.arrow", parallelism, schema);
     ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String>>() {
           @Override
@@ -95,6 +68,13 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
           }
         });
     //points.direct().forEach(s -> { });
+    points.cache();
+  }
+
+  private Schema makeSchema() {
+    ImmutableList.Builder<Field> builder = ImmutableList.builder();
+    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+    return new Schema(builder.build(), null);
   }
 
   public static void main(String[] args) throws Exception {
