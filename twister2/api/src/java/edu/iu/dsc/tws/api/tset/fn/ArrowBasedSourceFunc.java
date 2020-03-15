@@ -41,27 +41,19 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
-  private Schema arrowSchema;
+  private transient Schema arrowSchema;
   private transient RootAllocator rootAllocator = null;
 
   private DataSource<String, FileInputSplit<String>> dataSource;
   private InputSplit<String> dataSplit;
   private TSetContext ctx;
 
-  private int dataSize = 100;
   private int parallel;
-  private int count = 0;
 
   private String arrowInputFile;
-  private String datainputDirectory;
-  private String partitionerType;
-  private String message;
 
   private long checkSumx;
   private long intCsum;
-  private long longCsum;
-  private long arrCsum;
-  private long floatCsum;
   private long nullEntries;
 
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
@@ -70,9 +62,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
     this.arrowSchema = schema;
     this.checkSumx = 0;
     this.intCsum = 0;
-    this.longCsum = 0;
-    this.arrCsum = 0;
-    this.floatCsum = 0;
   }
 
   /**

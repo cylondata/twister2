@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.data.arrow;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -29,7 +32,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-public class Twister2ArrowWrite {
+public class Twister2ArrowWrite implements WritableByteChannel {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowWrite.class.getName());
 
@@ -45,13 +48,13 @@ public class Twister2ArrowWrite {
 
   private Random random;
 
-  private FileOutputStream fileOutputStream;
+  private transient FileOutputStream fileOutputStream;
 
   private RootAllocator rootAllocator = null;
-  private VectorSchemaRoot root;
+  private transient VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
 
-  private Twister2ArrowOutputStream twister2ArrowOutputStream;
+  private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
   private ArrowGenerator[] data;
 
   public Twister2ArrowWrite(String arrowfile, boolean flag) throws FileNotFoundException {
@@ -142,6 +145,21 @@ public class Twister2ArrowWrite {
       //}
     }
     return 1;
+  }
+
+  @Override
+  public int write(ByteBuffer src) throws IOException {
+    return 0;
+  }
+
+  @Override
+  public boolean isOpen() {
+    return false;
+  }
+
+  @Override
+  public void close() throws IOException {
+
   }
 
   private class ArrowGenerator {
