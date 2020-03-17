@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.arrow;
 
+import java.io.Serializable;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,10 +29,12 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowWrite;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -38,11 +42,12 @@ import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 //import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
 
-public class ArrowTSetSourceExample implements BatchTSetIWorker {
+public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
   private transient Schema schema;
+  private SourceTSet<Integer> pointSource;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -56,17 +61,18 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker {
 
     int parallelism = 2;
     schema = makeSchema();
-    SourceTSet<String> pointSource = env.createArrowSource(
+    pointSource = env.createArrowSource(
         "/Users/kgovind-admin/test.arrow", parallelism, schema);
-//    ComputeTSet<double[][], Iterator<String>> points = pointSource.direct().compute(
-//        new ComputeFunc<double[][], Iterator<String>>() {
-//          @Override
-//          public double[][] compute(Iterator<String> input) {
-//            LOG.info("string input:" + input);
-//            return new double[0][];
-//          }
-//        });
-//    points.direct().forEach(s -> { });
+    ComputeTSet<double[][], Iterator<Integer>> points = pointSource.direct().compute(
+        new ComputeFunc<double[][], Iterator<Integer>>() {
+          @Override
+          public double[][] compute(Iterator<Integer> input) {
+            LOG.info("string input:" + input);
+            return new double[0][];
+          }
+        });
+    points.direct().cache();
+    //points.direct().forEach(s -> { });
   }
 
   private Schema makeSchema() {

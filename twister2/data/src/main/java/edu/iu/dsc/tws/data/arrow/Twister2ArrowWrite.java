@@ -63,11 +63,8 @@ public class Twister2ArrowWrite implements WritableByteChannel {
     this.batchSize = 100;
     random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
-    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.arrowFile = arrowfile;
     this.flag = flag;
-    random = new Random(System.nanoTime());
-    this.entries = this.random.nextInt(this.maxEntries);
     this.data = new ArrowGenerator[this.entries];
     for (int i = 0; i < this.entries; i++) {
       this.data[i] = new ArrowGenerator(this.random);
@@ -139,10 +136,8 @@ public class Twister2ArrowWrite implements WritableByteChannel {
 
   private int isSet() {
     if (useNullValues) {
-      //if (this.random.nextInt() % 10 == 0) {
       this.nullEntries++;
       return 0;
-      //}
     }
     return 1;
   }
@@ -159,7 +154,6 @@ public class Twister2ArrowWrite implements WritableByteChannel {
 
   @Override
   public void close() throws IOException {
-
   }
 
   private class ArrowGenerator {

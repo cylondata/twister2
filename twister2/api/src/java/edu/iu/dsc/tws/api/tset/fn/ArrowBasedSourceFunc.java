@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 
-public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Serializable {
+public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
@@ -56,6 +56,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
   private long intCsum;
   private long nullEntries;
 
+  private VectorSchemaRoot root;
+
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
@@ -73,31 +75,36 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
     this.ctx = context;
     Config cfg = ctx.getConfig();
     FileInputStream fileInputStream;
+
     try {
       fileInputStream = new FileInputStream(new File(arrowInputFile));
-      LOG.info("File Input Stream:" + fileInputStream.getChannel());
       DictionaryProvider.MapDictionaryProvider provider
           = new DictionaryProvider.MapDictionaryProvider();
       ArrowFileReader arrowFileReader = new ArrowFileReader(
           new SeekableReadChannel(fileInputStream.getChannel()), this.rootAllocator);
-      VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
+      //VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
+      root = arrowFileReader.getVectorSchemaRoot();
 
       LOG.info(String.format("File size : %d schema is %s",
           arrowInputFile.length(), root.getSchema().toString()));
-
       List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
-      LOG.info("arrow block size:" + arrowBlockList.size());
+      LOG.info("Number of arrow blocks:" + arrowBlockList.size());
       for (int i = 0; i < arrowBlockList.size(); i++) {
         ArrowBlock rbBlock = arrowBlockList.get(i);
+        LOG.info("\t[" + i + "] ArrowBlock, offset: " + rbBlock.getOffset()
+            + ", metadataLength: " + rbBlock.getMetadataLength()
+            + ", bodyLength " + rbBlock.getBodyLength());
       }
 
-      List<FieldVector> fieldVector = root.getFieldVectors();
-      for (int j = 0; j < fieldVector.size(); j++) {
-        Types.MinorType mt = fieldVector.get(j).getMinorType();
+      //TODO: Check Chunk Arrays for parallelism > 1
+      //TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
+      List<FieldVector> fieldVectors = root.getFieldVectors();
+      for (int j = 0; j < fieldVectors.size(); j++) {
+        Types.MinorType mt = fieldVectors.get(j).getMinorType();
         try {
           switch (mt) {
             case INT:
-              showIntAccessor(fieldVector.get(j));
+              showIntAccessor(fieldVectors.get(j));
               break;
             default:
               throw new Exception("minortype");
@@ -113,6 +120,36 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
       throw new Twister2RuntimeException("IOException Occured", ioe);
     }
   }
+
+  private List<FieldVector> fieldVector;
+
+  private FieldVector fVector;
+
+  @Override
+  public boolean hasNext() {
+    //TODO: move the Show Int logic into has next to next
+    fieldVector = root.getFieldVectors();
+    int j = 0;
+    while (j < fieldVector.size()) {
+      Types.MinorType mt = fieldVector.get(j).getMinorType();
+      j++;
+      fVector = fieldVector.get(j);
+    }
+    return true;
+  }
+
+  @Override
+  public Integer next() {
+    IntVector intVector = (IntVector) fVector;
+    int value = 0;
+    for (int j = 0; j < intVector.getValueCount(); j++) {
+      if (!intVector.isNull(j)) {
+        value = intVector.get(j);
+      }
+    }
+    return value;
+  }
+
 
   private void showIntAccessor(FieldVector fx) {
     IntVector intVector = (IntVector) fx;
@@ -135,15 +172,5 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<String> implements Seri
       ret += data[i];
     }
     return ret;
-  }
-
-  @Override
-  public boolean hasNext() {
-    return true;
-  }
-
-  @Override
-  public String next() {
-    return "hello";
   }
 }
