@@ -110,11 +110,17 @@ public class TWSUCXChannel implements TWSChannel {
     }
 
     // create end points
+    int smallMsgSize = 8;
+    for (int i = 0; i < iWorkerController.getNumberOfWorkers() - 1; i++) {
+      ucpWorker.recvTaggedNonBlocking(ByteBuffer.allocateDirect(smallMsgSize), 100, -1, null);
+    }
+    ByteBuffer sendBuffer = ByteBuffer.allocateDirect(smallMsgSize);
     for (JobMasterAPI.WorkerInfo worker : iWorkerController.getJoinedWorkers()) {
       if (worker.getWorkerID() != workerId) {
         UcpEndpoint ucpEndpoint = ucpWorker.newEndpoint(new UcpEndpointParams().setSocketAddress(
             new InetSocketAddress(worker.getWorkerIP(), worker.getPort())
         ));
+        ucpWorker.progressRequest(ucpEndpoint.sendTaggedNonBlocking(sendBuffer, 100, null));
         this.endpoints.put(worker.getWorkerID(), ucpEndpoint);
         this.closeables.push(ucpEndpoint);
       }
