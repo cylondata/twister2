@@ -227,6 +227,12 @@ def twister2_client_lib_communication_files():
         "//conditions:default": ["//third_party:ucx_javabinding_java"],
     })
 
+def twister2_ucx_native_libs():
+    return select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["@ucx//:ucx-so-files"],
+    })
+
 def twister2_client_lib_common_files():
     return [
         "//twister2/common/src/java:common-java",

@@ -255,10 +255,10 @@ public class RRServer {
 
   private class Handler implements ChannelHandler {
     @Override
-    public void onError(SocketChannel channel) {
+    public void onError(SocketChannel channel, StatusCode status) {
       workerChannels.remove(channel);
       connectedChannels.remove(channel);
-      connectHandler.onError(channel);
+      connectHandler.onError(channel, status);
 
       loop.removeAllInterest(channel);
 
@@ -271,9 +271,9 @@ public class RRServer {
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
+    public void onConnect(SocketChannel channel) {
       connectedChannels.add(channel);
-      connectHandler.onConnect(channel, status);
+      connectHandler.onConnect(channel);
     }
 
     @Override

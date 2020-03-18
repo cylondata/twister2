@@ -28,8 +28,9 @@ public class JMWorkerStatusUpdater implements IWorkerStatusUpdater {
   @Override
   public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
 
-    if (newState == JobMasterAPI.WorkerState.COMPLETED) {
-      return workerAgent.sendWorkerCompletedMessage();
+    if (newState == JobMasterAPI.WorkerState.COMPLETED
+        || newState == JobMasterAPI.WorkerState.FAILED) {
+      return workerAgent.sendWorkerCompletedMessage(newState);
     }
 
     LOG.severe("Unsupported state: " + newState);

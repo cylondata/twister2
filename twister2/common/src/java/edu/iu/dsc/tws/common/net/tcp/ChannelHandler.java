@@ -21,16 +21,16 @@ import edu.iu.dsc.tws.api.net.StatusCode;
 public interface ChannelHandler {
   /**
    * In case of an error this is called
+   * @param status of the error
    * @param channel the channel
    */
-  void onError(SocketChannel channel);
+  void onError(SocketChannel channel, StatusCode status);
 
   /**
    * The connect event
    * @param channel the channel
-   * @param status weather an error occurred or success
    */
-  void onConnect(SocketChannel channel, StatusCode status);
+  void onConnect(SocketChannel channel);
 
   /**
    * Closing of a socket
