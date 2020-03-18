@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.arrow;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,20 +39,16 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-//import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-//import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
-
-
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
   private transient Schema schema;
   private SourceTSet<Integer> pointSource;
+  private Twister2ArrowWrite arrowWrite;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    Twister2ArrowWrite arrowWrite;
     try {
       arrowWrite = new Twister2ArrowWrite("/Users/kgovind-admin/test.arrow", true);
       arrowWrite.setUpTwister2ArrowWrite();
@@ -59,20 +56,25 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
       throw new RuntimeException("Exception Occured", e);
     }
 
-    int parallelism = 2;
+    int parallelism = 1;
     schema = makeSchema();
     pointSource = env.createArrowSource(
         "/Users/kgovind-admin/test.arrow", parallelism, schema);
-    ComputeTSet<double[][], Iterator<Integer>> points = pointSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<Integer>>() {
+    //pointSource.direct().cache();
+    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
+        new ComputeFunc<Integer[], Iterator<Integer>>() {
+          private Integer[] integers = new Integer[100];
           @Override
-          public double[][] compute(Iterator<Integer> input) {
-            LOG.info("string input:" + input);
-            return new double[0][];
+          public Integer[] compute(Iterator<Integer> input) {
+            for (int i = 0; i < 100 && input.hasNext(); i++) {
+              Integer value = input.next();
+              integers[i] = value;
+            }
+            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
+            return integers;
           }
         });
-    points.direct().cache();
-    //points.direct().forEach(s -> { });
+    points.direct().forEach(s -> { });
   }
 
   private Schema makeSchema() {

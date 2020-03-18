@@ -56,7 +56,12 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
   private long intCsum;
   private long nullEntries;
 
+  private List<FieldVector> fieldVector;
+  private FieldVector fVector;
+
   private VectorSchemaRoot root;
+
+  private ArrowFileReader arrowFileReader;
 
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
     this.arrowInputFile = arrowinputFile;
@@ -74,17 +79,15 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.ctx = context;
     Config cfg = ctx.getConfig();
-    FileInputStream fileInputStream;
 
+    FileInputStream fileInputStream;
     try {
       fileInputStream = new FileInputStream(new File(arrowInputFile));
       DictionaryProvider.MapDictionaryProvider provider
           = new DictionaryProvider.MapDictionaryProvider();
-      ArrowFileReader arrowFileReader = new ArrowFileReader(
-          new SeekableReadChannel(fileInputStream.getChannel()), this.rootAllocator);
-      //VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
+      arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
+          fileInputStream.getChannel()), this.rootAllocator);
       root = arrowFileReader.getVectorSchemaRoot();
-
       LOG.info(String.format("File size : %d schema is %s",
           arrowInputFile.length(), root.getSchema().toString()));
       List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
@@ -94,26 +97,12 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
         LOG.info("\t[" + i + "] ArrowBlock, offset: " + rbBlock.getOffset()
             + ", metadataLength: " + rbBlock.getMetadataLength()
             + ", bodyLength " + rbBlock.getBodyLength());
+        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
       }
 
       //TODO: Check Chunk Arrays for parallelism > 1
       //TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
-      List<FieldVector> fieldVectors = root.getFieldVectors();
-      for (int j = 0; j < fieldVectors.size(); j++) {
-        Types.MinorType mt = fieldVectors.get(j).getMinorType();
-        try {
-          switch (mt) {
-            case INT:
-              showIntAccessor(fieldVectors.get(j));
-              break;
-            default:
-              throw new Exception("minortype");
-          }
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-      arrowFileReader.close();
+      //arrowFileReader.close();
     } catch (FileNotFoundException e) {
       throw new Twister2RuntimeException("File Not Found", e);
     } catch (IOException ioe) {
@@ -121,56 +110,35 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     }
   }
 
-  private List<FieldVector> fieldVector;
-
-  private FieldVector fVector;
-
   @Override
   public boolean hasNext() {
-    //TODO: move the Show Int logic into has next to next
-    fieldVector = root.getFieldVectors();
-    int j = 0;
-    while (j < fieldVector.size()) {
-      Types.MinorType mt = fieldVector.get(j).getMinorType();
-      j++;
-      fVector = fieldVector.get(j);
+    if (root.getFieldVectors() != null) {
+      fieldVector = root.getFieldVectors();
     }
     return true;
   }
 
   @Override
   public Integer next() {
-    IntVector intVector = (IntVector) fVector;
+    int i = 0;
     int value = 0;
-    for (int j = 0; j < intVector.getValueCount(); j++) {
-      if (!intVector.isNull(j)) {
-        value = intVector.get(j);
+    while (i < fieldVector.size()) {
+      Types.MinorType mt = fieldVector.get(i).getMinorType();
+      i++;
+      fVector = fieldVector.get(i);
+      IntVector intVector = (IntVector) fVector;
+      for (int j = 0; j < intVector.getValueCount(); j++) {
+        if (!intVector.isNull(j)) {
+          value = intVector.get(j);
+        }
       }
+    }
+    //todo: we have to check this
+    try {
+      arrowFileReader.close();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
     return value;
-  }
-
-
-  private void showIntAccessor(FieldVector fx) {
-    IntVector intVector = (IntVector) fx;
-    for (int j = 0; j < intVector.getValueCount(); j++) {
-      if (!intVector.isNull(j)) {
-        int value = intVector.get(j);
-        LOG.info("\t\t intAccessor[" + j + "] " + value);
-        intCsum += value;
-        this.checkSumx += value;
-      } else {
-        this.nullEntries++;
-        LOG.info("\t\t intAccessor[" + j + "] : NULL ");
-      }
-    }
-  }
-
-  public static long hashArray(byte[] data) {
-    long ret = 0;
-    for (int i = 0; i < data.length; i++) {
-      ret += data[i];
-    }
-    return ret;
   }
 }
