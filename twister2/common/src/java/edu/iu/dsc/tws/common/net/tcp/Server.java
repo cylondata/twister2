@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.net.StatusCode;
 
 public class Server implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Server.class.getName());
@@ -234,7 +233,7 @@ public class Server implements SelectHandler {
         channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
 
-        channelHandler.onConnect(socketChannel, StatusCode.SUCCESS);
+        channelHandler.onConnect(socketChannel);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error while accepting a new connection ", e);

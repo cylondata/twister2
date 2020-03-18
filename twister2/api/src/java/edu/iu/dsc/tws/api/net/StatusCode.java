@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.api.net;
 
 public enum StatusCode {
-  SUCCESS,
   ERROR_WRITE,
   ERROR_READ,
   ERROR_CONN,

@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.api.net.StatusCode;
  * Handle a connection
  */
 public interface ConnectHandler {
-  void onError(SocketChannel channel);
+  void onError(SocketChannel channel, StatusCode status);
 
-  void onConnect(SocketChannel channel, StatusCode status);
+  void onConnect(SocketChannel channel);
 
   void onClose(SocketChannel channel);
 }

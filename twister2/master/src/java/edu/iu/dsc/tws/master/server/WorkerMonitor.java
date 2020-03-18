@@ -354,7 +354,7 @@ public class WorkerMonitor implements MessageHandler {
       dashClient.workerStateChange(workerID, JobMasterAPI.WorkerState.FAILED);
     }
 
-    // TODO: test whether this works
+    // TODO: not sure whether we fail the whole job when a worker fails.
     // if this is a non-fault tolerant job, job needs to be terminated
     if (!faultTolerant) {
       LOG.info("A worker failed in a NON-FAULT TOLERANT job. Terminating the job.");
