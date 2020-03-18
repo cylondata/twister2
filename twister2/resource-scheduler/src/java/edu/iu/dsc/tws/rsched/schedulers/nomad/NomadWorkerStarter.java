@@ -401,7 +401,7 @@ public final class NomadWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
+    masterClient.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
     masterClient.close();
   }
 

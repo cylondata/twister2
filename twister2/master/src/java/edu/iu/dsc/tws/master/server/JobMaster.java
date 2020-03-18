@@ -586,11 +586,11 @@ public class JobMaster {
 
   public class ServerConnectHandler implements ConnectHandler {
     @Override
-    public void onError(SocketChannel channel) {
+    public void onError(SocketChannel channel, StatusCode status) {
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
+    public void onConnect(SocketChannel channel) {
       try {
         LOG.fine("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {

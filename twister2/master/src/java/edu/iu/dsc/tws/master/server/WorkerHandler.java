@@ -168,13 +168,8 @@ public class WorkerHandler implements MessageHandler {
 
     } else if (message.getState() == JobMasterAPI.WorkerState.FAILED) {
 
-      // TODO: we do not expect this message to arrive
-      // Failed workers can not send this message
-      // But we implement it anyway
       LOG.warning("Worker [" + message.getWorkerID() + "] Failed. ");
-
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
-
       workerMonitor.failed(message.getWorkerID());
       return;
 
