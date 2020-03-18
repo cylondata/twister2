@@ -443,9 +443,11 @@ public final class MPIWorker {
       // initialize the logger
       initLogger(cfg, intracomm.getRank(), twister2Home);
 
-      Map<Integer, JobMasterAPI.WorkerInfo> infos = createResourcePlan(cfg, intracomm, job);
+      Map<Integer, JobMasterAPI.WorkerInfo> infos = createWorkerInfoMap(cfg, intracomm, job);
       MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
       IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
+
+      WorkerRuntime.init(cfg, wc);
 
       // now create the worker
       wc.add("comm", intracomm);
@@ -492,9 +494,9 @@ public final class MPIWorker {
    * @param cfg configuration
    * @return a map of rank to hostname
    */
-  public Map<Integer, JobMasterAPI.WorkerInfo> createResourcePlan(Config cfg,
-                                                                  Intracomm intracomm,
-                                                                  JobAPI.Job job) {
+  public Map<Integer, JobMasterAPI.WorkerInfo> createWorkerInfoMap(Config cfg,
+                                                                   Intracomm intracomm,
+                                                                   JobAPI.Job job) {
     try {
       JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(cfg, intracomm.getRank(), job);
       byte[] workerBytes = workerInfo.toByteArray();
@@ -524,15 +526,15 @@ public final class MPIWorker {
       intracomm.allGatherv(sendBuffer, length, MPI.BYTE, receiveBuffer,
           receiveSizes, displacements, MPI.BYTE);
 
-      Map<Integer, JobMasterAPI.WorkerInfo> processNames = new HashMap<>();
+      Map<Integer, JobMasterAPI.WorkerInfo> workerInfoMap = new HashMap<>();
       for (int i = 0; i < receiveSizes.length; i++) {
         byte[] c = new byte[receiveSizes[i]];
         receiveBuffer.get(c);
         JobMasterAPI.WorkerInfo info = JobMasterAPI.WorkerInfo.newBuilder().mergeFrom(c).build();
-        processNames.put(i, info);
-        LOG.log(Level.FINE, String.format("Process %d name: %s", i, processNames.get(i)));
+        workerInfoMap.put(i, info);
+        LOG.log(Level.FINE, String.format("Worker %d info: %s", i, workerInfoMap.get(i)));
       }
-      return processNames;
+      return workerInfoMap;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
     } catch (InvalidProtocolBufferException e) {
