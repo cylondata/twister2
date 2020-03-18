@@ -47,18 +47,15 @@ import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.JSONUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
-import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
@@ -79,11 +76,6 @@ public final class MPIWorker {
   private static final Logger LOG = Logger.getLogger(MPIWorker.class.getName());
 
   /**
-   * The jobmaster client
-   */
-  private JMWorkerAgent masterClient;
-
-  /**
    * Configuration
    */
   private Config config;
@@ -93,13 +85,13 @@ public final class MPIWorker {
    */
   private JobMasterAPI.WorkerInfo wInfo;
 
-  public void finalizeMPI() {
+  public void finalizeMPI(JobMasterAPI.WorkerState finalState) {
     try {
       // lets do a barrier here so everyone is synchronized at the end
       // commenting out barrier to fix stale workers issue
       // MPI.COMM_WORLD.barrier();
       if (JobMasterContext.isJobMasterUsed(config)) {
-        closeWorker();
+        closeWorker(finalState);
       }
       MPI.Finalize();
     } catch (MPIException ignore) {
@@ -116,26 +108,15 @@ public final class MPIWorker {
     try {
       MPI.InitThread(args, MPI.THREAD_MULTIPLE);
       int rank = MPI.COMM_WORLD.getRank();
+      Thread.currentThread().setName("MPIWorker-" + rank);
 
       // on any uncaught exception, we will call MPI Finalize and exit
       Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
         LOG.log(Level.SEVERE, "Uncaught exception in thread "
             + thread + ". Finalizing this worker...", throwable);
 
-        if (JobMasterContext.isJobMasterUsed(config)) {
-          JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
-          Exception exception = (Exception) throwable;
-          JobExecutionState.WorkerJobState workerState =
-              JobExecutionState.WorkerJobState.newBuilder()
-                  .setFailure(true)
-                  .setJobName(config.getStringValue(Context.JOB_ID))
-                  .setWorkerMessage(JSONUtils.toJSONString(exception, Exception.class))
-                  .build();
-          senderToDriver.sendToDriver(workerState);
-        } else {
-          throw new RuntimeException("Worker faild with exception", throwable);
-        }
-        finalizeMPI();
+        finalizeMPI(JobMasterAPI.WorkerState.FAILED);
+        throw new RuntimeException("Worker faild with exception", throwable);
       });
 
       cmdOptions = setupOptions();
@@ -172,13 +153,12 @@ public final class MPIWorker {
             wInfo = createWorkerInfo(config, -1, job);
           }
 
-          // init WorkerRuntime
-          WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
-
           // lets broadcast the master information
           broadCastMasterInformation(rank);
 
           if (rank != 0) {
+            // init WorkerRuntime
+            WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
             startWorker(config, rank, comm, job);
           } else {
             startMaster(config, rank);
@@ -190,7 +170,6 @@ public final class MPIWorker {
         }
       } else {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
-        WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
         startWorkerWithoutMaster(config, rank, MPI.COMM_WORLD, job);
       }
     } catch (MPIException e) {
@@ -204,7 +183,7 @@ public final class MPIWorker {
       LOG.log(Level.SEVERE, "Protocol buffer exception ", e);
     }
 
-    finalizeMPI();
+    finalizeMPI(JobMasterAPI.WorkerState.COMPLETED);
   }
 
   /**
@@ -247,42 +226,6 @@ public final class MPIWorker {
 
   public static void main(String[] args) {
     new MPIWorker(args);
-  }
-
-  /**
-   * Create the resource plan
-   *
-   * @return the worker controller
-   */
-  private IWorkerController createWorkerController(JobAPI.Job job) {
-    // first get the worker id
-    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    int numberOfWorkers = job.getNumberOfWorkers();
-
-    this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
-        wInfo, numberOfWorkers);
-
-    return masterClient.getJMWorkerController();
-  }
-
-  /**
-   * Create the job master client to get information about the workers
-   */
-  private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
-                                          JobMasterAPI.WorkerInfo workerInfo,
-                                          int numberContainers) {
-
-    // should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
-
-    // we start the job master client
-    JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers, initialState);
-    LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
-    jobMasterAgent.startThreaded();
-
-    return jobMasterAgent;
   }
 
   /**
@@ -457,7 +400,6 @@ public final class MPIWorker {
       initLogger(cfg, intracomm.getRank(), twister2Home);
 
       // now create the worker
-//      IWorkerController wc = createWorkerController(job);
       IWorkerController wc = WorkerRuntime.getWorkerController();
       MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
       IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
@@ -534,14 +476,14 @@ public final class MPIWorker {
   /**
    * last method to call to close the worker
    */
-  private void closeWorker() {
+  private void closeWorker(JobMasterAPI.WorkerState finalState) {
     LOG.log(Level.INFO, String.format("Worker finished executing - %d", wInfo.getWorkerID()));
     // send worker completed message to the Job Master and finish
-    // Job master will delete the StatefulSet object
-    if (masterClient != null) {
-      masterClient.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
-      masterClient.close();
+    IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
+    if (workerStatusUpdater != null) {
+      workerStatusUpdater.updateWorkerStatus(finalState);
     }
+    WorkerRuntime.close();
   }
 
   /**
