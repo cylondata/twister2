@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController;
 
 public final class WorkerRuntime {
   private static final Logger LOG = Logger.getLogger(WorkerRuntime.class.getName());
@@ -46,6 +47,8 @@ public final class WorkerRuntime {
 
   private static ZKWorkerController zkWorkerController;
   private static JMWorkerAgent jmWorkerAgent;
+  private static MPIWorkerController mpiWorkerController;
+  private static boolean mpiWC = false;
 
   private static IWorkerController workerController;
   private static IWorkerStatusUpdater workerStatusUpdater;
@@ -54,6 +57,26 @@ public final class WorkerRuntime {
   private static IWorkerFailureListener failureListener;
 
   private WorkerRuntime() {
+  }
+
+  /**
+   * Initialize WorkerRuntime with MPIWorkerController
+   */
+  public static synchronized boolean init(Config cnfg, MPIWorkerController wc) {
+    if (initialized) {
+      return false;
+    }
+
+    config = cnfg;
+    mpiWC = true;
+    mpiWorkerController = wc;
+
+    workerController = mpiWorkerController;
+    workerStatusUpdater = null;
+    senderToDriver = null;
+
+    initialized = true;
+    return true;
   }
 
   /**
@@ -186,6 +209,11 @@ public final class WorkerRuntime {
    */
   public static boolean addAllJoinedListener(IAllJoinedListener allJoinedListener) {
 
+    if (mpiWC) {
+      mpiWorkerController.addAllJoinedListener(allJoinedListener);
+      return true;
+    }
+
     if (ZKContext.isZooKeeperServerUsed(config)) {
       return zkWorkerController.addAllJoinedListener(allJoinedListener);
     }
@@ -204,6 +232,10 @@ public final class WorkerRuntime {
    */
   public static boolean addReceiverFromDriver(IReceiverFromDriver receiverFromDriver) {
 
+    if (mpiWC) {
+      return false;
+    }
+
     if (job.getDriverClassName().isEmpty()) {
       return false;
     }
@@ -221,6 +253,10 @@ public final class WorkerRuntime {
    * if there is no Driver in the job
    */
   public static boolean addScalerListener(IScalerListener scalerListener) {
+
+    if (mpiWC) {
+      return false;
+    }
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
       return zkWorkerController.addScalerListener(scalerListener);
