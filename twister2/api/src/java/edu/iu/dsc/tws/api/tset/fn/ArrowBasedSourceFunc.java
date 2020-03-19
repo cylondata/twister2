@@ -56,15 +56,12 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private List<FieldVector> fieldVector;
   private FieldVector fVector;
-
   private VectorSchemaRoot root;
-
   private ArrowFileReader arrowFileReader;
 
-  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
+  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
-    this.arrowSchema = schema;
     this.checkSumx = 0;
     this.intCsum = 0;
   }
@@ -86,17 +83,17 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
       LOG.info(String.format("File size : %d schema is %s",
           arrowInputFile.length(), root.getSchema().toString()));
       List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
-      LOG.info("Number of arrow blocks:" + arrowBlockList.size());
       for (int i = 0; i < arrowBlockList.size(); i++) {
         ArrowBlock rbBlock = arrowBlockList.get(i);
-        LOG.info("\t[" + i + "] ArrowBlock, offset: " + rbBlock.getOffset()
-            + ", metadataLength: " + rbBlock.getMetadataLength()
-            + ", bodyLength " + rbBlock.getBodyLength());
+        if (!arrowFileReader.loadRecordBatch(rbBlock)) {
+          throw new IOException("read record batch");
+        }
         LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
+        fieldVector = root.getFieldVectors();
       }
       //TODO: Check Chunk Arrays for parallelism > 1
       //TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
-      arrowFileReader.close();
+      //arrowFileReader.close();
     } catch (FileNotFoundException e) {
       throw new Twister2RuntimeException("File Not Found", e);
     } catch (IOException ioe) {
@@ -106,26 +103,24 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   @Override
   public boolean hasNext() {
-    if (root.getFieldVectors() != null) {
-      fieldVector = root.getFieldVectors();
-    }
-    return true;
+    return fieldVector.size() > 0;
   }
 
   @Override
   public Integer next() {
-    int i = 0;
     int value = 0;
-    while (i < fieldVector.size()) {
-      fVector = fieldVector.get(i);
-      IntVector intVector = (IntVector) fVector;
+    for (int i = 0; i < fieldVector.size(); i++) {
+      IntVector intVector = (IntVector) fieldVector.get(i);
       for (int j = 0; j < intVector.getValueCount(); j++) {
         if (!intVector.isNull(j)) {
           value = intVector.get(j);
+          LOG.info("\t\t intAccessor[" + j + "] " + value);
+        } else {
+          LOG.info("\t\t intAccessor[" + j + "] : NULL ");
         }
       }
-      i++;
     }
+    LOG.info("int value:" + value);
     return value;
   }
 }

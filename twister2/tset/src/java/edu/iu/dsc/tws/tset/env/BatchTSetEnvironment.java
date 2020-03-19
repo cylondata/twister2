@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -84,10 +83,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
         parallelism);
   }
 
-  public SourceTSet<Integer> createArrowSource(String filePath, int parallelism,
-                                            Schema arrowschema) {
-    return createSource(new ArrowBasedSourceFunc(
-        filePath, parallelism, arrowschema), parallelism);
+  public SourceTSet<Integer> createArrowSource(String filePath, int parallelism) {
+    return createSource(new ArrowBasedSourceFunc(filePath, parallelism), parallelism);
   }
 
   public SourceTSet<String> createTextSource(String filePath, int dataSize, int parallelism,

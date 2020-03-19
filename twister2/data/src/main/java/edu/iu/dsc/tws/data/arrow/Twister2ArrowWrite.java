@@ -51,7 +51,6 @@ public class Twister2ArrowWrite {
   private ArrowFileWriter arrowFileWriter;
 
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
-  private int randomInt;
   private int[] data;
 
   public Twister2ArrowWrite(String arrowfile, boolean flag) {
@@ -61,7 +60,6 @@ public class Twister2ArrowWrite {
     this.random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
     this.arrowFile = arrowfile;
-
     this.flag = flag;
     this.data = new int[this.entries];
     for (int i = 0; i < this.entries; i++) {
@@ -84,22 +82,15 @@ public class Twister2ArrowWrite {
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
-      LOG.info("I am inside if loop:");
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
           this.fileOutputStream.getChannel());
     } else {
-      twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
-      this.arrowFileWriter = new ArrowFileWriter(root, provider, twister2ArrowOutputStream);
+      LOG.info("I am coming inside else loop");
+      this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
+      this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
     if (twister2ArrowOutputStream != null) {
       LOG.info("Twister2 output stream:" + twister2ArrowOutputStream.toString());
-    }
-
-    if (false) {
-      for (Field field : root.getSchema().getFields()) {
-        FieldVector vector = root.getVector(field.getName());
-        LOG.info("vector values:" + vector);
-      }
     }
     writeArrowData();
   }
