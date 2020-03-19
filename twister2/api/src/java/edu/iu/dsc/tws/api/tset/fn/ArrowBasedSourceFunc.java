@@ -27,7 +27,6 @@ import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
-import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -123,8 +122,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     int i = 0;
     int value = 0;
     while (i < fieldVector.size()) {
-      Types.MinorType mt = fieldVector.get(i).getMinorType();
-      i++;
+      //Types.MinorType mt = fieldVector.get(i).getMinorType();
       fVector = fieldVector.get(i);
       IntVector intVector = (IntVector) fVector;
       for (int j = 0; j < intVector.getValueCount(); j++) {
@@ -132,6 +130,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
           value = intVector.get(j);
         }
       }
+      i++;
     }
     //todo: we have to check this
     try {

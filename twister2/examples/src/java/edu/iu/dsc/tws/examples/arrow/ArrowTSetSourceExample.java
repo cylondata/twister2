@@ -11,14 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.arrow;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.ipc.ArrowFileReader;
+import org.apache.arrow.vector.ipc.SeekableReadChannel;
+import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -30,12 +38,10 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowWrite;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -46,35 +52,78 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   private transient Schema schema;
   private SourceTSet<Integer> pointSource;
   private Twister2ArrowWrite arrowWrite;
+  private RootAllocator rootAllocator;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+    String arrowInputFile = "/home/kannan/test.arrow";
     try {
-      arrowWrite = new Twister2ArrowWrite("/Users/kgovind-admin/test.arrow", true);
+      arrowWrite = new Twister2ArrowWrite(arrowInputFile, true);
       arrowWrite.setUpTwister2ArrowWrite();
+      Thread.sleep(1000);
     } catch (Exception e) {
       throw new RuntimeException("Exception Occured", e);
     }
 
-    int parallelism = 1;
-    schema = makeSchema();
-    pointSource = env.createArrowSource(
-        "/Users/kgovind-admin/test.arrow", parallelism, schema);
-    //pointSource.direct().cache();
-    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
-        new ComputeFunc<Integer[], Iterator<Integer>>() {
-          private Integer[] integers = new Integer[100];
-          @Override
-          public Integer[] compute(Iterator<Integer> input) {
-            for (int i = 0; i < 100 && input.hasNext(); i++) {
-              Integer value = input.next();
-              integers[i] = value;
+    /////////////////////////Testing to read the file
+    FileInputStream fileInputStream;
+    ArrowFileReader arrowFileReader;
+    try {
+      rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+      fileInputStream = new FileInputStream(new File(arrowInputFile));
+      arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
+          fileInputStream.getChannel()), this.rootAllocator);
+      VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
+      LOG.info(String.format("File size : %d schema is %s",
+          arrowInputFile.length(), root.getSchema().toString()));
+      List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
+      LOG.info("Number of arrow blocks:" + arrowBlockList.size());
+      for (int i = 0; i < arrowBlockList.size(); i++) {
+        ArrowBlock arrowBlock = arrowBlockList.get(i);
+        LOG.info("\t[" + i + "] ArrowBlock, offset: " + arrowBlock.getOffset()
+            + ", metadataLength: " + arrowBlock.getMetadataLength()
+            + ", bodyLength " + arrowBlock.getBodyLength());
+        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
+        List<FieldVector> fieldVector = root.getFieldVectors();
+        LOG.info("\t[" + i + "] number of fieldVectors (corresponding to columns) : "
+            + fieldVector.size());
+        for (int j = 0; j < fieldVector.size(); j++) {
+          int k = 0;
+          FieldVector fVector = fieldVector.get(k);
+          IntVector intVector = (IntVector) fVector;
+          for (int m = 0; m < intVector.getValueCount(); m++) {
+            if (!intVector.isNull(m)) {
+              int value = intVector.get(m);
+              LOG.info("value is:" + value);
             }
-            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
-            return integers;
           }
-        });
-    points.direct().forEach(s -> { });
+        }
+      }
+      arrowFileReader.close();
+    } catch (Exception e) {
+      throw new RuntimeException("exception:", e);
+    }
+
+    ////////////////////////////////////////////////////////////
+//    int parallelism = 1;
+//    schema = makeSchema();
+//    pointSource = env.createArrowSource(
+//        "/home/kannan/test.arrow", parallelism, schema);
+//    pointSource.direct().cache();
+//    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
+//        new ComputeFunc<Integer[], Iterator<Integer>>() {
+//          private Integer[] integers = new Integer[100];
+//          @Override
+//          public Integer[] compute(Iterator<Integer> input) {
+//            for (int i = 0; i < 100 && input.hasNext(); i++) {
+//              Integer value = input.next();
+//              integers[i] = value;
+//            }
+//            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
+//            return integers;
+//          }
+//        });
+//    points.direct().forEach(s -> { });
   }
 
   private Schema makeSchema() {

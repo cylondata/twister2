@@ -11,11 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.WritableByteChannel;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -32,7 +28,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-public class Twister2ArrowWrite implements WritableByteChannel {
+public class Twister2ArrowWrite {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowWrite.class.getName());
 
@@ -57,13 +53,14 @@ public class Twister2ArrowWrite implements WritableByteChannel {
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
   private ArrowGenerator[] data;
 
-  public Twister2ArrowWrite(String arrowfile, boolean flag) throws FileNotFoundException {
+  public Twister2ArrowWrite(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
     this.checkSum = 0;
     this.batchSize = 100;
-    random = new Random(System.nanoTime());
+    this.random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
     this.arrowFile = arrowfile;
+
     this.flag = flag;
     this.data = new ArrowGenerator[this.entries];
     for (int i = 0; i < this.entries; i++) {
@@ -86,20 +83,27 @@ public class Twister2ArrowWrite implements WritableByteChannel {
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
+      LOG.info("I am inside if loop:");
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
           this.fileOutputStream.getChannel());
     } else {
-      twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream, this.root);
+      twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, twister2ArrowOutputStream);
     }
     if (twister2ArrowOutputStream != null) {
       LOG.info("Twister2 output stream:" + twister2ArrowOutputStream.toString());
     }
-    //twister2ArrowOutputStream.writeData(this.arrowFileWriter);
-    writeData();
+
+    if (false) {
+      for (Field field : root.getSchema().getFields()) {
+        FieldVector vector = root.getVector(field.getName());
+        LOG.info("vector values:" + vector);
+      }
+    }
+    writeArrowData();
   }
 
-  public void writeData() throws Exception {
+  public void writeArrowData() throws Exception {
     this.batchSize = 100;
     arrowFileWriter.start();
     for (int i = 0; i < this.entries;) {
@@ -107,13 +111,7 @@ public class Twister2ArrowWrite implements WritableByteChannel {
       root.setRowCount(toProcessItems);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
-        switch (vector.getMinorType()) {
-          case INT:
-            writeFieldInt(vector, i, toProcessItems);
-            break;
-          default:
-            throw new Exception(" Not supported yet type: " + vector.getMinorType());
-        }
+        writeFieldInt(vector, i, toProcessItems);
       }
       arrowFileWriter.writeBatch();
       i += toProcessItems;
@@ -140,20 +138,6 @@ public class Twister2ArrowWrite implements WritableByteChannel {
       return 0;
     }
     return 1;
-  }
-
-  @Override
-  public int write(ByteBuffer src) throws IOException {
-    return 0;
-  }
-
-  @Override
-  public boolean isOpen() {
-    return false;
-  }
-
-  @Override
-  public void close() throws IOException {
   }
 
   private class ArrowGenerator {
