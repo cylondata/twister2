@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
@@ -27,10 +25,7 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
-import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.types.Types;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -49,10 +44,12 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
-  private transient Schema schema;
   private SourceTSet<Integer> pointSource;
+
   private Twister2ArrowWrite arrowWrite;
   private RootAllocator rootAllocator;
+
+  private long nullEntries = 0;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -108,15 +105,22 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         LOG.info("\t[" + i + "] number of fieldVectors (corresponding to columns) : "
             + fieldVector.size());
         for (int j = 0; j < fieldVector.size(); j++) {
-          int k = 0;
-          FieldVector fVector = fieldVector.get(k);
-          IntVector intVector = (IntVector) fVector;
+          Types.MinorType mt = fieldVector.get(j).getMinorType();
+          switch (mt) {
+            case INT:
+              showIntAccessor(fieldVector.get(j));
+              break;
+            default:
+              throw new Exception(" MinorType " + mt);
+          }
+          /*IntVector intVector = (IntVector) fieldVector.get(j);
+          LOG.info("int vector values:" + intVector);
           for (int m = 0; m < intVector.getValueCount(); m++) {
             if (!intVector.isNull(m)) {
               int value = intVector.get(m);
               LOG.info("value is:" + value);
             }
-          }
+          }*/
         }
       }
       arrowFileReader.close();
@@ -125,11 +129,25 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     }
   }
 
-  private Schema makeSchema() {
-    ImmutableList.Builder<Field> builder = ImmutableList.builder();
-    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
-    return new Schema(builder.build(), null);
+  private void showIntAccessor(FieldVector fx) {
+    LOG.info("I am getting called");
+    IntVector intVector = (IntVector) fx;
+    for (int j = 0; j < intVector.getValueCount(); j++) {
+      if (!intVector.isNull(j)) {
+        int value = intVector.get(j);
+        LOG.info("\t\t intAccessor[" + j + "] " + value);
+      } else {
+        this.nullEntries++;
+        LOG.info("\t\t intAccessor[" + j + "] : NULL ");
+      }
+    }
   }
+
+//  private Schema makeSchema() {
+//    ImmutableList.Builder<Field> builder = ImmutableList.builder();
+//    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+//    return new Schema(builder.build(), null);
+//  }
 
   public static void main(String[] args) throws Exception {
     LOG.log(Level.INFO, "Starting CSV Source Job");
