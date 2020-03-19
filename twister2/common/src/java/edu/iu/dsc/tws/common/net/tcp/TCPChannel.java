@@ -275,11 +275,11 @@ public class TCPChannel {
   private class ServerChannelHandler implements ChannelHandler {
 
     @Override
-    public void onError(SocketChannel channel) {
+    public void onError(SocketChannel channel, StatusCode status) {
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
+    public void onConnect(SocketChannel channel) {
       LOG.finest("Server connected to client");
       serverSocketChannels.add(channel);
       postHelloMessage(channel);
@@ -318,11 +318,11 @@ public class TCPChannel {
   private class ClientChannelChannelHandler implements ChannelHandler {
 
     @Override
-    public void onError(SocketChannel channel) {
+    public void onError(SocketChannel channel, StatusCode status) {
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
+    public void onConnect(SocketChannel channel) {
       LOG.finest("Client connected to server: " + channel);
       clientSocketChannels.add(channel);
       Integer key = invertedClientChannels.get(channel);

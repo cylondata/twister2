@@ -161,7 +161,7 @@ public final class MesosMPIMasterStarter {
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
 
-    mpiMaster.jobMasterAgent.sendWorkerCompletedMessage();
+    mpiMaster.jobMasterAgent.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
     mpiMaster.jobMasterAgent.close();
     workerController.close();
     LOG.info("Job DONE");

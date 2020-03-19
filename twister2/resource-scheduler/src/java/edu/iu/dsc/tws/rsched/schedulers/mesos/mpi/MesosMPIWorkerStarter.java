@@ -188,7 +188,7 @@ public final class MesosMPIWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    jobMasterAgent.sendWorkerCompletedMessage();
+    jobMasterAgent.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
     jobMasterAgent.close();
   }
 

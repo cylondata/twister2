@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -84,26 +85,28 @@ public final class JobMasterExample {
 
     String host = "localhost";
 
-    JobMasterAPI.JobMasterState initialState;
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
     JobMasterStarter.job = job;
 
-    if ("start".equalsIgnoreCase(args[0])) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      if ("start".equalsIgnoreCase(args[0])) {
 
-      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
 
-    } else if ("restart".equalsIgnoreCase(args[0])) {
+      } else if ("restart".equalsIgnoreCase(args[0])) {
 
-      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
-      job = JobMasterStarter.job;
+        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        job = JobMasterStarter.job;
 
-      if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
-        LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
+        if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
+          LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
+          return;
+        }
+
+      } else {
+        LOG.info("usage: java JobMasterExample start/restart");
         return;
       }
-
-    } else {
-      LOG.info("usage: java JobMasterExample start/restart");
-      return;
     }
 
     // write jobID to file
