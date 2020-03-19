@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.arrow;
 
-import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.collect.ImmutableList;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
@@ -26,6 +28,10 @@ import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -33,6 +39,7 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowWrite;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -48,8 +55,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private Twister2ArrowWrite arrowWrite;
   private RootAllocator rootAllocator;
-
-  private long nullEntries = 0;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -83,23 +88,20 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 //    points.direct().forEach(s -> { });
 
     /////////////////////////Testing to read the file
-    FileInputStream fileInputStream;
-    ArrowFileReader arrowFileReader;
+    rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    FileInputStream fileInputStream = null;
+    ArrowFileReader arrowFileReader = null;
     try {
-      rootAllocator = new RootAllocator(Integer.MAX_VALUE);
-      fileInputStream = new FileInputStream(new File(arrowInputFile));
+      fileInputStream = new FileInputStream(arrowInputFile);
       arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
-          fileInputStream.getChannel()), this.rootAllocator);
+          fileInputStream.getChannel()), rootAllocator);
+      System.out.println("\nReading the arrow file : " + arrowInputFile);
       VectorSchemaRoot root = arrowFileReader.getVectorSchemaRoot();
-      LOG.info(String.format("File size : %d schema is %s",
-          arrowInputFile.length(), root.getSchema().toString()));
-      List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
-      LOG.info("Number of arrow blocks:" + arrowBlockList.size());
-      for (int i = 0; i < arrowBlockList.size(); i++) {
-        ArrowBlock arrowBlock = arrowBlockList.get(i);
-        LOG.info("\t[" + i + "] ArrowBlock, offset: " + arrowBlock.getOffset()
-            + ", metadataLength: " + arrowBlock.getMetadataLength()
-            + ", bodyLength " + arrowBlock.getBodyLength());
+      LOG.info("File size : " + arrowInputFile.length()
+          + " schema is " + root.getSchema().toString());
+      List<ArrowBlock> arrowBlocks = arrowFileReader.getRecordBlocks();
+      LOG.info("Number of arrow blocks are " + arrowBlocks.size());
+      for (int i = 0; i < arrowBlocks.size(); i++) {
         LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
         List<FieldVector> fieldVector = root.getFieldVectors();
         LOG.info("\t[" + i + "] number of fieldVectors (corresponding to columns) : "
@@ -113,41 +115,33 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
             default:
               throw new Exception(" MinorType " + mt);
           }
-          /*IntVector intVector = (IntVector) fieldVector.get(j);
-          LOG.info("int vector values:" + intVector);
-          for (int m = 0; m < intVector.getValueCount(); m++) {
-            if (!intVector.isNull(m)) {
-              int value = intVector.get(m);
-              LOG.info("value is:" + value);
-            }
-          }*/
         }
       }
       arrowFileReader.close();
-    } catch (Exception e) {
-      throw new RuntimeException("exception:", e);
+    } catch (FileNotFoundException e) {
+      throw new Twister2RuntimeException("File Not Found", e);
+    } catch (Exception ioe) {
+      throw new Twister2RuntimeException("IOException Occured", ioe);
     }
   }
 
   private void showIntAccessor(FieldVector fx) {
-    LOG.info("I am getting called");
     IntVector intVector = (IntVector) fx;
     for (int j = 0; j < intVector.getValueCount(); j++) {
       if (!intVector.isNull(j)) {
         int value = intVector.get(j);
         LOG.info("\t\t intAccessor[" + j + "] " + value);
       } else {
-        this.nullEntries++;
         LOG.info("\t\t intAccessor[" + j + "] : NULL ");
       }
     }
   }
 
-//  private Schema makeSchema() {
-//    ImmutableList.Builder<Field> builder = ImmutableList.builder();
-//    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
-//    return new Schema(builder.build(), null);
-//  }
+  private Schema makeSchema() {
+    ImmutableList.Builder<Field> builder = ImmutableList.builder();
+    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+    return new Schema(builder.build(), null);
+  }
 
   public static void main(String[] args) throws Exception {
     LOG.log(Level.INFO, "Starting CSV Source Job");

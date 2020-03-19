@@ -303,6 +303,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-bin",
         ":twister2-checkpointing",
         ":twister2-communication",
@@ -339,7 +340,6 @@ pack_tw2(
         ":twister2-restarter",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
-        ":twister2-arrow-lib",
     ],
 )
 
@@ -350,6 +350,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-beam",
         ":twister2-bin",
         ":twister2-checkpointing",
@@ -401,7 +402,6 @@ pack_tw2(
         ":twister2-test-util",
         ":twister2-test-values",
         ":twister2-tset",
-        ":twister2-arrow-lib",
         ":twister2-ucx-native-libs",
     ],
 )

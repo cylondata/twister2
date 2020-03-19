@@ -51,7 +51,8 @@ public class Twister2ArrowWrite {
   private ArrowFileWriter arrowFileWriter;
 
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
-  private ArrowGenerator[] data;
+  private int randomInt;
+  private int[] data;
 
   public Twister2ArrowWrite(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
@@ -62,9 +63,9 @@ public class Twister2ArrowWrite {
     this.arrowFile = arrowfile;
 
     this.flag = flag;
-    this.data = new ArrowGenerator[this.entries];
+    this.data = new int[this.entries];
     for (int i = 0; i < this.entries; i++) {
-      this.data[i] = new ArrowGenerator(this.random);
+      this.data[i] = this.random.nextInt(1024);
     }
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
@@ -127,7 +128,7 @@ public class Twister2ArrowWrite {
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), this.data[from + i].randomInt);
+      intVector.setSafe(i, isSet(), this.data[from + i]);
     }
     fieldVector.setValueCount(items);
   }
@@ -138,16 +139,5 @@ public class Twister2ArrowWrite {
       return 0;
     }
     return 1;
-  }
-
-  private class ArrowGenerator {
-
-    private int randomInt;
-    private Random random;
-
-    protected ArrowGenerator(Random random) {
-      this.random = random;
-      randomInt = random.nextInt(1024);
-    }
   }
 }

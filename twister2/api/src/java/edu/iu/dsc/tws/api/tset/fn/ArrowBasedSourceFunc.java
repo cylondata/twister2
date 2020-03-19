@@ -23,7 +23,6 @@ import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
@@ -78,12 +77,9 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.ctx = context;
     Config cfg = ctx.getConfig();
-
     FileInputStream fileInputStream;
     try {
       fileInputStream = new FileInputStream(new File(arrowInputFile));
-      DictionaryProvider.MapDictionaryProvider provider
-          = new DictionaryProvider.MapDictionaryProvider();
       arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
           fileInputStream.getChannel()), this.rootAllocator);
       root = arrowFileReader.getVectorSchemaRoot();
@@ -98,10 +94,9 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
             + ", bodyLength " + rbBlock.getBodyLength());
         LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
       }
-
       //TODO: Check Chunk Arrays for parallelism > 1
       //TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
-      //arrowFileReader.close();
+      arrowFileReader.close();
     } catch (FileNotFoundException e) {
       throw new Twister2RuntimeException("File Not Found", e);
     } catch (IOException ioe) {
@@ -122,7 +117,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     int i = 0;
     int value = 0;
     while (i < fieldVector.size()) {
-      //Types.MinorType mt = fieldVector.get(i).getMinorType();
       fVector = fieldVector.get(i);
       IntVector intVector = (IntVector) fVector;
       for (int j = 0; j < intVector.getValueCount(); j++) {
@@ -131,12 +125,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
         }
       }
       i++;
-    }
-    //todo: we have to check this
-    try {
-      arrowFileReader.close();
-    } catch (IOException e) {
-      e.printStackTrace();
     }
     return value;
   }
