@@ -64,6 +64,26 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     } catch (Exception e) {
       throw new RuntimeException("Exception Occured", e);
     }
+////////////////////////////////////////////////////////////
+//    int parallelism = 1;
+//    schema = makeSchema();
+//    pointSource = env.createArrowSource(
+//        "/home/kannan/test.arrow", parallelism, schema);
+//    pointSource.direct().cache();
+//    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
+//        new ComputeFunc<Integer[], Iterator<Integer>>() {
+//          private Integer[] integers = new Integer[100];
+//          @Override
+//          public Integer[] compute(Iterator<Integer> input) {
+//            for (int i = 0; i < 100 && input.hasNext(); i++) {
+//              Integer value = input.next();
+//              integers[i] = value;
+//            }
+//            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
+//            return integers;
+//          }
+//        });
+//    points.direct().forEach(s -> { });
 
     /////////////////////////Testing to read the file
     FileInputStream fileInputStream;
@@ -103,27 +123,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     } catch (Exception e) {
       throw new RuntimeException("exception:", e);
     }
-
-    ////////////////////////////////////////////////////////////
-//    int parallelism = 1;
-//    schema = makeSchema();
-//    pointSource = env.createArrowSource(
-//        "/home/kannan/test.arrow", parallelism, schema);
-//    pointSource.direct().cache();
-//    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
-//        new ComputeFunc<Integer[], Iterator<Integer>>() {
-//          private Integer[] integers = new Integer[100];
-//          @Override
-//          public Integer[] compute(Iterator<Integer> input) {
-//            for (int i = 0; i < 100 && input.hasNext(); i++) {
-//              Integer value = input.next();
-//              integers[i] = value;
-//            }
-//            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
-//            return integers;
-//          }
-//        });
-//    points.direct().forEach(s -> { });
   }
 
   private Schema makeSchema() {
