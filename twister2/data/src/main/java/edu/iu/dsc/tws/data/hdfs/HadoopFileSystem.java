@@ -14,9 +14,13 @@ package edu.iu.dsc.tws.data.hdfs;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
 
 import edu.iu.dsc.tws.api.data.BlockLocation;
 import edu.iu.dsc.tws.api.data.FileStatus;
@@ -201,8 +205,16 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
    * @return the statuses of the files/directories in the given patch
    */
   @Override
-  public FileStatus[] listFiles(Path f) {
-    return new FileStatus[0];
+  public FileStatus[] listFiles(Path f) throws IOException {
+    RemoteIterator<LocatedFileStatus> locatedFileStatusRemoteIterator = null;
+    locatedFileStatusRemoteIterator = this.hadoopFileSystem.listFiles(toHadoopPath(f), true);
+    List<FileStatus> statusList = new ArrayList<>();
+    while (locatedFileStatusRemoteIterator.hasNext()) {
+      LocatedFileStatus next = locatedFileStatusRemoteIterator.next();
+      FileStatus status = new HadoopFileStatus(next);
+      statusList.add(status);
+    }
+    return statusList.toArray(new FileStatus[0]);
   }
 
   public void close() throws IOException {
