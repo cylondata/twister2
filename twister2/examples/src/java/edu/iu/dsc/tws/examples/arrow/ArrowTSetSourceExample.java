@@ -44,7 +44,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    String arrowInputFile = "/home/kannan/example1.arrow";
+    String arrowInputFile = "/home/kannan/test.arrow";
     try {
       arrowWrite = new Twister2ArrowWrite(arrowInputFile, true);
       arrowWrite.setUpTwister2ArrowWrite();

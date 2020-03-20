@@ -66,6 +66,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     this.intCsum = 0;
   }
 
+  private List<ArrowBlock> arrowBlockList;
+
   /**
    * Prepare method
    */
@@ -79,18 +81,19 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
       fileInputStream = new FileInputStream(new File(arrowInputFile));
       arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
           fileInputStream.getChannel()), this.rootAllocator);
-      root = arrowFileReader.getVectorSchemaRoot();
+      this.root = arrowFileReader.getVectorSchemaRoot();
       LOG.info(String.format("File size : %d schema is %s",
           arrowInputFile.length(), root.getSchema().toString()));
-      List<ArrowBlock> arrowBlockList = arrowFileReader.getRecordBlocks();
-      for (int i = 0; i < arrowBlockList.size(); i++) {
-        ArrowBlock rbBlock = arrowBlockList.get(i);
-        if (!arrowFileReader.loadRecordBatch(rbBlock)) {
-          throw new IOException("read record batch");
-        }
-        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
-        fieldVector = root.getFieldVectors();
-      }
+
+//      arrowBlockList = arrowFileReader.getRecordBlocks();
+//      for (int i = 0; i < arrowBlockList.size(); i++) {
+//        ArrowBlock rbBlock = arrowBlockList.get(i);
+//        if (!arrowFileReader.loadRecordBatch(rbBlock)) {
+//          throw new IOException("read record batch");
+//        }
+//        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
+//        fieldVector = root.getFieldVectors();
+//      }
       //TODO: Check Chunk Arrays for parallelism > 1
       //TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
       //arrowFileReader.close();
@@ -103,24 +106,41 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   @Override
   public boolean hasNext() {
-    return fieldVector.size() > 0;
+    try {
+      arrowBlockList = arrowFileReader.getRecordBlocks();
+      for (int i = 0; i < arrowBlockList.size(); i++) {
+        ArrowBlock rbBlock = arrowBlockList.get(i);
+        if (!arrowFileReader.loadRecordBatch(rbBlock)) {
+          throw new IOException("read record batch");
+        }
+        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
+        fieldVector = root.getFieldVectors();
+      }
+      return fieldVector != null;
+    } catch (Exception e) {
+      throw new RuntimeException("exception occured", e);
+    }
   }
 
   @Override
   public Integer next() {
     int value = 0;
-    for (int i = 0; i < fieldVector.size(); i++) {
-      IntVector intVector = (IntVector) fieldVector.get(i);
+    if (fieldVector != null) {
+      value = processIntData(fieldVector);
+    }
+    return value;
+  }
+
+  private Integer processIntData(List<FieldVector> fieldVectorList) {
+    int value = 0;
+    for (int i = 0; i < fieldVectorList.size(); i++) {
+      IntVector intVector = (IntVector) fieldVectorList.get(i);
       for (int j = 0; j < intVector.getValueCount(); j++) {
         if (!intVector.isNull(j)) {
           value = intVector.get(j);
-          LOG.info("\t\t intAccessor[" + j + "] " + value);
-        } else {
-          LOG.info("\t\t intAccessor[" + j + "] : NULL ");
         }
       }
     }
-    LOG.info("int value:" + value);
     return value;
   }
 }
