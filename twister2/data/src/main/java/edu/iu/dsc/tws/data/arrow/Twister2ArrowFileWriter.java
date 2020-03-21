@@ -28,17 +28,20 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-public class Twister2ArrowWrite {
+public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
 
-  private static final Logger LOG = Logger.getLogger(Twister2ArrowWrite.class.getName());
+  private static final Logger LOG = Logger.getLogger(Twister2ArrowFileWriter.class.getName());
 
   private String arrowFile;
+
   private int entries;
-  private int maxEntries = 1024;
+  private int maxEntries;
+  private int batchSize;
+  private int[] data;
+
   private long checkSum;
   private long nullEntries;
 
-  private int batchSize;
   private boolean useNullValues;
   private boolean flag;
 
@@ -51,9 +54,9 @@ public class Twister2ArrowWrite {
   private ArrowFileWriter arrowFileWriter;
 
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
-  private int[] data;
 
-  public Twister2ArrowWrite(String arrowfile, boolean flag) {
+
+  public Twister2ArrowFileWriter(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
     this.checkSum = 0;
     this.batchSize = 100;
@@ -68,7 +71,7 @@ public class Twister2ArrowWrite {
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
-  private Schema makeSchema() {
+  public Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
     builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
     return new Schema(builder.build(), null);
@@ -78,19 +81,14 @@ public class Twister2ArrowWrite {
     this.fileOutputStream = new FileOutputStream(arrowFile);
     Schema schema = makeSchema();
     this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
-    LOG.info("root values" + this.root);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
           this.fileOutputStream.getChannel());
     } else {
-      LOG.info("I am coming inside else loop");
       this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
-    }
-    if (twister2ArrowOutputStream != null) {
-      LOG.info("Twister2 output stream:" + twister2ArrowOutputStream.toString());
     }
     writeArrowData();
   }
