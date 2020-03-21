@@ -206,11 +206,11 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
    */
   @Override
   public FileStatus[] listFiles(Path f) throws IOException {
-    RemoteIterator<LocatedFileStatus> locatedFileStatusRemoteIterator = null;
-    locatedFileStatusRemoteIterator = this.hadoopFileSystem.listFiles(toHadoopPath(f), true);
+    RemoteIterator<LocatedFileStatus> listFiles = this.hadoopFileSystem.listFiles(
+        toHadoopPath(f), true);
     List<FileStatus> statusList = new ArrayList<>();
-    while (locatedFileStatusRemoteIterator.hasNext()) {
-      LocatedFileStatus next = locatedFileStatusRemoteIterator.next();
+    while (listFiles.hasNext()) {
+      LocatedFileStatus next = listFiles.next();
       FileStatus status = new HadoopFileStatus(next);
       statusList.add(status);
     }
