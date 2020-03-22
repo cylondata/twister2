@@ -67,9 +67,20 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(job.getJobId());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
-    mpiCommand.add(MPIContext.mpiRunFile(config));
+    String mpiRunFile = MPIContext.mpiRunFile(config);
+    if ("ompi/bin/mpirun".equals(mpiRunFile)) {
+      if (SchedulerContext.copySystemPackage(config)) {
+        mpiCommand.add("twister2-core" + "/" + mpiRunFile);
+      } else {
+        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
+      }
+    } else {
+      mpiCommand.add(mpiRunFile);
+    }
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
+    mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
+    mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
     return mpiCommand;
   }
 
@@ -81,7 +92,7 @@ public class SlurmCommand extends MPICommand {
    * Construct the SLURM Command
    * @param slurmScript slurm script name
    * @param containers number of containers
-   * @param slurm partition name
+   * @param partitionName partition name
    * @return list with the command
    */
   private List<String> mpiCommand(String slurmScript,
