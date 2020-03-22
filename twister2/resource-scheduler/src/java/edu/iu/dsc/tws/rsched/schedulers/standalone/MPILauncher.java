@@ -31,10 +31,12 @@ import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.driver.NullScalar;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -60,6 +62,18 @@ public class MPILauncher implements ILauncher {
 
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
+
+    if (FaultToleranceContext.faultTolerant(config)) {
+      LOG.warning("FaultTolerance is not supported in Standalone mode. Ignoring it.");
+      config = Config.newBuilder().putAll(config).put(
+          FaultToleranceContext.FAULT_TOLERANT, false).build();
+    }
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      LOG.warning("ZooKeeper is not supported in Standalone mode. Ignoring it.");
+      config = Config.newBuilder().putAll(config).put(
+          ZKContext.ZK_BASED_GROUP_MANAGEMENT, false).build();
+    }
   }
 
   @Override
