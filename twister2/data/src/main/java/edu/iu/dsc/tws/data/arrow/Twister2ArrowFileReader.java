@@ -15,13 +15,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
@@ -30,7 +29,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
-public class Twister2ArrowFileReader implements SeekableByteChannel, Serializable {
+public class Twister2ArrowFileReader implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileReader.class.getName());
 
@@ -48,6 +47,7 @@ public class Twister2ArrowFileReader implements SeekableByteChannel, Serializabl
 
   private transient VectorSchemaRoot root;
   private transient ArrowFileReader arrowFileReader;
+  private List<ArrowBlock> arrowBlocks;
 
   public Twister2ArrowFileReader(String inputFile) {
     this.arrowInputFile = inputFile;
@@ -60,18 +60,12 @@ public class Twister2ArrowFileReader implements SeekableByteChannel, Serializabl
       this.arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
           fileInputStream.getChannel()), rootAllocator);
       this.root = arrowFileReader.getVectorSchemaRoot();
-      List<ArrowBlock> arrowBlocks = arrowFileReader.getRecordBlocks();
+      arrowBlocks = arrowFileReader.getRecordBlocks();
+      Schema schema = root.getSchema();
       LOG.info("\nReading the arrow file : " + arrowInputFile
           + "\tFile size:" + arrowInputFile.length()
           + "\tschema:" + root.getSchema().toString()
           + "\tArrow Blocks Size: " + arrowBlocks.size());
-      for (int i = 0; i < arrowBlocks.size(); i++) {
-        ArrowBlock rbBlock = arrowBlocks.get(i);
-        arrowFileReader.loadRecordBatch(rbBlock);
-        this.setFieldVector(root.getFieldVectors());
-        LOG.info("\t[" + i + "] row count for this block is " + root.getRowCount());
-      }
-      this.close();
     } catch (FileNotFoundException e) {
       throw new Twister2RuntimeException("File Not Found", e);
     } catch (Exception ioe) {
@@ -79,70 +73,30 @@ public class Twister2ArrowFileReader implements SeekableByteChannel, Serializabl
     }
   }
 
-  public List<FieldVector> getFieldVector() {
-    processInputFile();
-    LOG.info("field vector:" + fieldVector.size() + "\t" + fieldVector);
-    return fieldVector;
-  }
+  private IntVector intVector;
 
-  public void setFieldVector(List<FieldVector> fieldVector) {
-    this.fieldVector = fieldVector;
-  }
+  private int currentValue = 0;
 
-  /*public List<FieldVector> getFieldVectorList() {
-    for (int j = 0; j < fieldVector.size(); j++) {
-      IntVector intVector = (IntVector) fieldVector.get(j);
-      for (int k = 0; k < intVector.getValueCount(); k++) {
-        if (!intVector.isNull(k)) {
-          int value = intVector.get(k);
-          LOG.info("\t\t intAccessor[" + k + "] " + value);
-        } else {
-          LOG.info("\t\t intAccessor[" + k + "] : NULL ");
-        }
+  public IntVector getIntegerVector() {
+    int currentBlock = 0;
+    int currentCell = 0;
+    try {
+      if (currentBlock + 1 < arrowBlocks.size()) {
+        arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock));
+        intVector = (IntVector) root.getFieldVectors().get(0);
+        currentBlock++;
+      } else {
+        intVector = null;
       }
+      currentCell = 0;
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-    return fieldVector;
-  }*/
-
-
-  @Override
-  public int read(ByteBuffer byteBuffer) throws IOException {
-    return 0;
+    LOG.info("current block and int vector:" + currentBlock + "\t" + intVector);
+    return intVector;
   }
-
-  @Override
-  public int write(ByteBuffer byteBuffer) throws IOException {
-    return 0;
-  }
-
-  @Override
-  public long position() throws IOException {
-    return 0;
-  }
-
-  @Override
-  public SeekableByteChannel position(long l) throws IOException {
-    return null;
-  }
-
-  @Override
-  public long size() throws IOException {
-    return 0;
-  }
-
-  @Override
-  public SeekableByteChannel truncate(long l) throws IOException {
-    return null;
-  }
-
-  @Override
-  public boolean isOpen() {
-    return this.isOpen;
-  }
-
-  @Override
-  public void close() throws IOException {
-    this.fileInputStream.close();
-    this.isOpen = false;
+  public int nextRecord() {
+    int value = intVector.get(currentValue++);
+    return value;
   }
 }

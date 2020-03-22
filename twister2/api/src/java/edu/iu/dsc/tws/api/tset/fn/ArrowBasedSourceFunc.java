@@ -11,16 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
-import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -38,15 +35,11 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private String arrowInputFile;
 
-  private transient Schema arrowSchema;
-  private transient RootAllocator rootAllocator;
-
   private List<FieldVector> fieldVector;
   private List<ArrowBlock> arrowBlockList;
 
   private FieldVector fVector;
 
-  private transient FileInputStream fileInputStream;
   private Twister2ArrowFileReader twister2ArrowFileReader;
 
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism) {
@@ -61,32 +54,29 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     super.prepare(context);
     this.ctx = context;
     Config cfg = ctx.getConfig();
-    twister2ArrowFileReader = new Twister2ArrowFileReader(arrowInputFile);
+    this.twister2ArrowFileReader = new Twister2ArrowFileReader(arrowInputFile);
+    twister2ArrowFileReader.processInputFile();
   }
+
+  private IntVector intVector = null;
 
   @Override
   public boolean hasNext() {
-    //twister2ArrowFileReader.processInputFile();
-    fieldVector = twister2ArrowFileReader.getFieldVector();
-    return fieldVector != null;
+    try {
+      if (twister2ArrowFileReader.getIntegerVector() != null) {
+        intVector = twister2ArrowFileReader.getIntegerVector();
+        //return intVector != null && currentCell < intVector.getValueCount();
+      }
+      return intVector != null;
+    } catch (Exception e) {
+      throw new RuntimeException("Unable read data split", e);
+    }
   }
 
   @Override
   public Integer next() {
-    int value = processIntData(fieldVector);
-    return value;
-  }
-
-  private Integer processIntData(List<FieldVector> fieldVectorList) {
-    int value = 0;
-    for (int i = 0; i < fieldVectorList.size(); i++) {
-      IntVector intVector = (IntVector) fieldVectorList.get(i);
-      for (int j = 0; j < intVector.getValueCount(); j++) {
-        if (!intVector.isNull(j)) {
-          value = intVector.get(j);
-        }
-      }
-    }
+    int value = twister2ArrowFileReader.nextRecord();
+    LOG.info("received value:" + value);
     return value;
   }
 }
