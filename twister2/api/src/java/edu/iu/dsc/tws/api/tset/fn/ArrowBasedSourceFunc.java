@@ -60,22 +60,24 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private IntVector intVector = null;
 
+  private int currentCell = 0;
+
   @Override
   public boolean hasNext() {
     try {
       if (twister2ArrowFileReader.getIntegerVector() != null) {
         intVector = twister2ArrowFileReader.getIntegerVector();
-        //return intVector != null && currentCell < intVector.getValueCount();
       }
-      return intVector != null;
+      return intVector != null && currentCell < intVector.getValueCount();
     } catch (Exception e) {
-      throw new RuntimeException("Unable read data split", e);
+      throw new RuntimeException("Unable to read int vector", e);
     }
   }
 
   @Override
   public Integer next() {
     int value = twister2ArrowFileReader.nextRecord();
+    currentCell++;
     LOG.info("received value:" + value);
     return value;
   }

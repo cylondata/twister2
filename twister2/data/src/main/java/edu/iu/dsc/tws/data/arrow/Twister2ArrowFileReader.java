@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
@@ -35,12 +34,7 @@ public class Twister2ArrowFileReader implements Serializable {
 
   private String arrowInputFile;
 
-  private boolean isOpen;
-
   private transient FileInputStream fileInputStream;
-
-  private FieldVector fVector;
-  private List<FieldVector> fieldVector;
 
   private transient Schema arrowSchema;
   private transient RootAllocator rootAllocator = null;
@@ -74,12 +68,10 @@ public class Twister2ArrowFileReader implements Serializable {
   }
 
   private IntVector intVector;
-
   private int currentValue = 0;
 
   public IntVector getIntegerVector() {
     int currentBlock = 0;
-    int currentCell = 0;
     try {
       if (currentBlock + 1 < arrowBlocks.size()) {
         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock));
@@ -88,13 +80,17 @@ public class Twister2ArrowFileReader implements Serializable {
       } else {
         intVector = null;
       }
-      currentCell = 0;
     } catch (IOException e) {
       e.printStackTrace();
     }
     LOG.info("current block and int vector:" + currentBlock + "\t" + intVector);
     return intVector;
   }
+
+  /**
+   * To retrieve the current value
+   * @return
+   */
   public int nextRecord() {
     int value = intVector.get(currentValue++);
     return value;
