@@ -170,20 +170,19 @@ public class Client implements SelectHandler {
   }
 
   public void disconnect() {
-    if (!isConnected && !connecting) {
-      return;
-    }
+    if (isConnected || connecting) {
+      channel.forceFlush();
+      progress.removeAllInterest(socketChannel);
 
-    channel.forceFlush();
-    progress.removeAllInterest(socketChannel);
-
-    try {
-      socketChannel.close();
-      // we call the onclose with null value
-      channelHandler.onClose(socketChannel);
-      isConnected = false;
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to stop Client", e);
+      try {
+        socketChannel.close();
+        // we call the onclose with null value
+        channelHandler.onClose(socketChannel);
+        isConnected = false;
+        connecting = false;
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to stop Client", e);
+      }
     }
   }
 
@@ -230,6 +229,22 @@ public class Client implements SelectHandler {
     try {
       if (socketChannel.finishConnect()) {
         progress.unregisterConnect(selectableChannel);
+        if (fixedBuffers) {
+          channel = new FixedBufferChannel(config, progress, this, socketChannel, channelHandler);
+        } else {
+          channel = new DynamicBufferChannel(config, progress, this, socketChannel, channelHandler);
+        }
+        channel.enableReading();
+        channel.enableWriting();
+
+        isConnected = true;
+        connecting = false;
+        channelHandler.onConnect(socketChannel);
+      } else {
+        LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address);
+        channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
+        connecting = false;
+        return;
       }
     } catch (java.net.ConnectException e) {
       if ("Connection refused".equalsIgnoreCase(e.getMessage())) {
@@ -237,7 +252,9 @@ public class Client implements SelectHandler {
         channelHandler.onError(socketChannel, StatusCode.CONNECTION_REFUSED);
         return;
       }
-    } catch (IOException e) {
+      channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
+      return;
+    } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
       channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
       return;
@@ -245,17 +262,6 @@ public class Client implements SelectHandler {
       // connection attempt completed
       connecting = false;
     }
-
-    if (fixedBuffers) {
-      channel = new FixedBufferChannel(config, progress, this, socketChannel, channelHandler);
-    } else {
-      channel = new DynamicBufferChannel(config, progress, this, socketChannel, channelHandler);
-    }
-    channel.enableReading();
-    channel.enableWriting();
-
-    isConnected = true;
-    channelHandler.onConnect(socketChannel);
   }
 
   @Override
@@ -272,6 +278,7 @@ public class Client implements SelectHandler {
     }
 
     isConnected = false;
+    connecting = false;
     channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
   }
 

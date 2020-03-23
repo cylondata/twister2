@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -222,7 +220,7 @@ public class MPILauncher implements ILauncher {
         int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
         if (hostAddress == null) {
-          hostAddress = InetAddress.getLocalHost().getHostAddress();
+          hostAddress = ResourceSchedulerUtils.getHostIP();
         }
         // add the port and ip to config
         config = Config.newBuilder().putAll(config).put("__job_master_port__", port).
@@ -237,13 +235,10 @@ public class MPILauncher implements ILauncher {
         NomadTerminator nt = new NomadTerminator();
 
         jobMaster = new JobMaster(
-            config, hostAddress, port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
+            config, "0.0.0.0", port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
         ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-        throw new RuntimeException(e);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
         throw new RuntimeException(e);
