@@ -69,30 +69,22 @@ public class Twister2ArrowFileReader implements Serializable {
 
   private IntVector intVector;
   private int currentValue = 0;
+  private int currentBlock = 0;
 
   public IntVector getIntegerVector() {
-    int currentBlock = 0;
     try {
-      if (currentBlock + 1 < arrowBlocks.size()) {
-        arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock));
+      if (currentBlock < arrowBlocks.size()) {
+        arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
         intVector = (IntVector) root.getFieldVectors().get(0);
-        currentBlock++;
       } else {
         intVector = null;
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-    LOG.info("current block and int vector:" + currentBlock + "\t" + intVector);
+    if (intVector != null) {
+      LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
+    }
     return intVector;
-  }
-
-  /**
-   * To retrieve the current value
-   * @return
-   */
-  public int nextRecord() {
-    int value = intVector.get(currentValue++);
-    return value;
   }
 }

@@ -59,14 +59,17 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
   }
 
   private IntVector intVector = null;
-
   private int currentCell = 0;
 
   @Override
   public boolean hasNext() {
     try {
-      if (twister2ArrowFileReader.getIntegerVector() != null) {
+      if (intVector == null || currentCell == intVector.getValueCount()) {
         intVector = twister2ArrowFileReader.getIntegerVector();
+        if (intVector == null) {
+          return false;
+        }
+        currentCell = 0;
       }
       return intVector != null && currentCell < intVector.getValueCount();
     } catch (Exception e) {
@@ -76,9 +79,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   @Override
   public Integer next() {
-    int value = twister2ArrowFileReader.nextRecord();
+    int value = intVector.get(currentCell);
     currentCell++;
-    LOG.info("received value:" + value);
     return value;
   }
 }
