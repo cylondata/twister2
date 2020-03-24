@@ -12,9 +12,7 @@
 
 package edu.iu.dsc.tws.master.server;
 
-import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
@@ -184,6 +182,14 @@ public class JobMaster {
   private JobMasterAPI.JobMasterState initialState;
 
   /**
+   * max back log value for tcp connections in Job Master
+   * it is set as numberOfWorkers/2
+   * if numberOfWorkers/2 < 50, backLog is not set. the Default is used.
+   * if numberOfWorkers/2 > 2048, backLog is set to 2048.
+   */
+  private static final int MAX_BACK_LOG = 2048;
+
+  /**
    * JobMaster constructor
    *
    * @param config configuration
@@ -262,8 +268,9 @@ public class JobMaster {
     }
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
+    int backLog = Math.min(job.getNumberOfWorkers() / 2, MAX_BACK_LOG);
     rrServer =
-        new RRServer(config, jmAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+        new RRServer(config, jmAddress, masterPort, looper, JOB_MASTER_ID, connectHandler, backLog);
 
     // init Driver if it exists
     // this ha to be done before WorkerMonitor initialization
@@ -587,19 +594,17 @@ public class JobMaster {
   public class ServerConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel, StatusCode status) {
+      LOG.warning("Error on channel: " + channel.socket().getRemoteSocketAddress());
     }
 
     @Override
     public void onConnect(SocketChannel channel) {
-      try {
-        LOG.fine("Client connected from:" + channel.getRemoteAddress());
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Exception when getting RemoteAddress", e);
-      }
+      LOG.fine("Client connected from: " + channel.socket().getRemoteSocketAddress());
     }
 
     @Override
     public void onClose(SocketChannel channel) {
+      LOG.fine("Client closed: " + channel.socket().getRemoteSocketAddress());
     }
   }
 

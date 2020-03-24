@@ -72,13 +72,14 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
-    if (args.length != 2) {
-      LOG.severe("Provide workerID and jobID as parameters.");
+    if (args.length != 3) {
+      LOG.severe("Provide jmAddress workerID and jobID as parameters.");
       return;
     }
 
-    int workerID = Integer.parseInt(args[0]);
-    String jobID = args[1];
+    String jmAddress = args[0];
+    int workerID = Integer.parseInt(args[1]);
+    String jobID = args[2];
 
     // we assume that the twister2Home is the current directory
 //    String configDir = "../twister2/config/src/yaml/";
@@ -86,7 +87,7 @@ public final class JobMasterClientExample {
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config1 = ConfigLoader.loadConfig(twister2Home, "conf/kubernetes");
     Config config2 = ConfigLoader.loadConfig(twister2Home, "conf/common");
-    Config config = updateConfig(config1, config2);
+    Config config = updateConfig(config1, config2, jmAddress);
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
@@ -116,7 +117,10 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerState initialState =
         K8sWorkerUtils.initialStateAndUpdate(config, job.getJobId(), workerInfo);
 
+    long start = System.currentTimeMillis();
     WorkerRuntime.init(config, job, workerInfo, initialState);
+    long delay = System.currentTimeMillis() - start;
+    LOG.severe("worker-" + workerID + " startupDelay " + delay);
 
     IWorkerStatusUpdater statusUpdater = WorkerRuntime.getWorkerStatusUpdater();
     IWorkerController workerController = WorkerRuntime.getWorkerController();
@@ -141,11 +145,11 @@ public final class JobMasterClientExample {
     // wait up to 2sec
 //    sleeeep((long) (Math.random() * 2 * 1000));
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
-    LOG.info("Currently joined worker IDs: " + getIDs(workerList));
+//    List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
+//    LOG.info("Currently joined worker IDs: " + getIDs(workerList));
 
     try {
-      workerList = workerController.getAllWorkers();
+      List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
       LOG.info("All workers joined... IDs: " + getIDs(workerList));
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
@@ -162,24 +166,24 @@ public final class JobMasterClientExample {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
-    int id = job.getNumberOfWorkers() - 1;
-    JobMasterAPI.WorkerInfo info = workerController.getWorkerInfoForID(id);
-    LOG.info("WorkerInfo for " + id + ": \n" + info);
+//    int id = job.getNumberOfWorkers() - 1;
+//    JobMasterAPI.WorkerInfo info = workerController.getWorkerInfoForID(id);
+//    LOG.info("WorkerInfo for " + id + ": \n" + info);
 
     // wait up to 3sec
     sleeeep((long) (Math.random() * 10 * 1000));
 
     // start the worker
-    try {
-      throwException(workerID);
-    } catch (Throwable t) {
-      // update worker status to FAILED
-      statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
-      WorkerRuntime.close();
-//      properShutDown = true;
-//      System.exit(1);
-      throw t;
-    }
+//    try {
+//      throwException(workerID);
+//    } catch (Throwable t) {
+//      // update worker status to FAILED
+//      statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+//      WorkerRuntime.close();
+////      properShutDown = true;
+////      System.exit(1);
+//      throw t;
+//    }
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
@@ -204,12 +208,11 @@ public final class JobMasterClientExample {
   /**
    * construct a Config object
    */
-  public static Config updateConfig(Config config1, Config config2) {
-    String jmIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
+  public static Config updateConfig(Config config1, Config config2, String jmAddress) {
     Config cnfg = Config.newBuilder()
         .putAll(config1)
         .putAll(config2)
-        .put(JobMasterContext.JOB_MASTER_IP, jmIP)
+        .put(JobMasterContext.JOB_MASTER_IP, jmAddress)
         .build();
     return cnfg;
   }
