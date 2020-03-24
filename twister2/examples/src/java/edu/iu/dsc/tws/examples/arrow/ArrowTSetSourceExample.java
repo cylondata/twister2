@@ -55,10 +55,10 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     pointSource = env.createArrowSource(arrowInputFile, parallelism);
     ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
         new ComputeFunc<Integer[], Iterator<Integer>>() {
-          private Integer[] integers = new Integer[100];
+          private Integer[] integers = new Integer[200];
           @Override
           public Integer[] compute(Iterator<Integer> input) {
-            for (int i = 0; i < 100 && input.hasNext(); i++) {
+            for (int i = 0; i < 200 && input.hasNext(); i++) {
               integers[i] = input.next();
             }
             LOG.info("Double Array Values:" + Arrays.deepToString(integers));

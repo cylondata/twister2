@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -78,6 +79,10 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
   }
 
   public void setUpTwister2ArrowWrite() throws Exception {
+    File file = new File(arrowFile);
+    if (file.exists()) {
+      file.delete();
+    }
     this.fileOutputStream = new FileOutputStream(arrowFile);
     Schema schema = makeSchema();
     this.root = VectorSchemaRoot.create(schema, this.rootAllocator);

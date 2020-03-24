@@ -71,6 +71,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
         }
         currentCell = 0;
       }
+      //LOG.info("current cell value:" + currentCell);
       return intVector != null && currentCell < intVector.getValueCount();
     } catch (Exception e) {
       throw new RuntimeException("Unable to read int vector", e);
