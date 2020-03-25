@@ -99,7 +99,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
   }
 
   public void writeArrowData() throws Exception {
-    this.batchSize = 100;
     arrowFileWriter.start();
     for (int i = 0; i < this.entries;) {
       int toProcessItems = Math.min(this.batchSize, this.entries - i);

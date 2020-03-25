@@ -12,14 +12,10 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.ipc.message.ArrowBlock;
 
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
 
@@ -29,16 +25,9 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
-  private TSetContext ctx;
-
   private int parallel;
 
   private String arrowInputFile;
-
-  private List<FieldVector> fieldVector;
-  private List<ArrowBlock> arrowBlockList;
-
-  private FieldVector fVector;
 
   private Twister2ArrowFileReader twister2ArrowFileReader;
 
@@ -52,8 +41,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
-    this.ctx = context;
-    Config cfg = ctx.getConfig();
     this.twister2ArrowFileReader = new Twister2ArrowFileReader(arrowInputFile);
     twister2ArrowFileReader.processInputFile();
   }
@@ -66,12 +53,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     try {
       if (intVector == null || currentCell == intVector.getValueCount()) {
         intVector = twister2ArrowFileReader.getIntegerVector();
-        if (intVector == null) {
-          return false;
-        }
         currentCell = 0;
       }
-      //LOG.info("current cell value:" + currentCell);
       return intVector != null && currentCell < intVector.getValueCount();
     } catch (Exception e) {
       throw new RuntimeException("Unable to read int vector", e);
@@ -80,8 +63,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   @Override
   public Integer next() {
-    int value = intVector.get(currentCell);
-    currentCell++;
-    return value;
+    return intVector.get(currentCell++); // post increment current cell
   }
 }

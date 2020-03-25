@@ -12,8 +12,9 @@
 package edu.iu.dsc.tws.examples.arrow;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,20 +54,21 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
     int parallelism = 1;
     pointSource = env.createArrowSource(arrowInputFile, parallelism);
-    ComputeTSet<Integer[], Iterator<Integer>> points = pointSource.direct().compute(
-        new ComputeFunc<Integer[], Iterator<Integer>>() {
-          private Integer[] integers = new Integer[200];
+
+    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
+        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
+          private ArrayList<Integer> integers = new ArrayList<>();
+
           @Override
-          public Integer[] compute(Iterator<Integer> input) {
-            for (int i = 0; i < 200 && input.hasNext(); i++) {
-              integers[i] = input.next();
-            }
-            LOG.info("Double Array Values:" + Arrays.deepToString(integers));
+          public List<Integer> compute(Iterator<Integer> input) {
+            input.forEachRemaining(integers::add);
             return integers;
           }
         });
-    points.direct().forEach(s -> { });
+
+    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
   }
+
   public static void main(String[] args) throws Exception {
     LOG.log(Level.INFO, "Starting CSV Source Job");
 
