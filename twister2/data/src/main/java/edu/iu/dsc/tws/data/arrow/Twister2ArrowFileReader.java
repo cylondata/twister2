@@ -28,7 +28,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
-public class Twister2ArrowFileReader implements Serializable {
+public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serializable {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileReader.class.getName());
 

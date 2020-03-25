@@ -11,5 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
+import org.apache.arrow.vector.IntVector;
+
 public interface ITwister2ArrowFileReader {
+  void processInputFile();
+  IntVector getIntegerVector();
 }
