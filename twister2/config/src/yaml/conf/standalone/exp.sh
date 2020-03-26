@@ -18,7 +18,9 @@ fi
 profile=
 
 # set JAVA_HOME by user
-CUSTOM_JAVA_HOME=
+CUSTOM_JAVA_HOME=/shared/java-8-openjdk-amd64
+LD_LIBRARY_PATH=/shared/openmpi-4.0.2/lib:$LD_LIBRARY_PATH
+
 # check if config specified JAVA_HOME
 if [ -z "${CUSTOM_JAVA_HOME}" ]; then
     # config did not specify JAVA_HOME. Use system JAVA_HOME
