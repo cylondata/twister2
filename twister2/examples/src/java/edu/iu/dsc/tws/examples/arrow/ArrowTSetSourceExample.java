@@ -18,6 +18,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.ImmutableList;
+
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -25,12 +31,14 @@ import org.apache.commons.cli.Options;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -41,9 +49,15 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   private transient SourceTSet<Integer> pointSource;
   private transient Twister2ArrowFileWriter arrowWrite;
 
+  private transient SinkTSet<Integer> pointSink;
+
   @Override
   public void execute(BatchTSetEnvironment env) {
-    String arrowInputFile = "/tmp/test.arrow";
+    Config config = env.getConfig();
+    int parallelism = (int) config.get("PARALLELISM");
+    String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+    Schema schema = makeSchema();
+    LOG.info("parallelism and input file:" + parallelism + "\t" + arrowInputFile);
     try {
       arrowWrite = new Twister2ArrowFileWriter(arrowInputFile, true);
       arrowWrite.setUpTwister2ArrowWrite();
@@ -52,8 +66,11 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
       throw new RuntimeException("Exception Occured", e);
     }
 
-    int parallelism = 1;
     pointSource = env.createArrowSource(arrowInputFile, parallelism);
+
+     /*pointSource.direct().sink(
+        new ArrowBasedSinkFunc<Iterator<Integer>>(arrowInputFile, parallel) {
+     });*/
 
     ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
         new ComputeFunc<List<Integer>, Iterator<Integer>>() {
@@ -65,8 +82,13 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
             return integers;
           }
         });
-
     points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
+  }
+
+  private static Schema makeSchema() {
+    ImmutableList.Builder<Field> builder = ImmutableList.builder();
+    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+    return new Schema(builder.build(), null);
   }
 
   public static void main(String[] args) throws Exception {
@@ -74,15 +96,26 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
     Options options = new Options();
     options.addOption("parallelism", true, "Parallelism");
+    options.addOption("workers", true, "Workers");
+    options.addOption("input", "Arrow Input File");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
+
+    String arrowInput = cmd.getOptionValue("input");
+    int parallelism = Integer.parseInt(cmd.getOptionValue("parallelism", "2"));
+    int workers = Integer.parseInt(cmd.getOptionValue("workers", "2"));
+
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
 
     JobConfig jobConfig = new JobConfig();
-    jobBuilder.setJobName("arrowtest");
+    jobConfig.put("ARROW_INPUT_FILE", arrowInput);
+    jobConfig.put("PARALLELISM", parallelism);
+    jobConfig.put("WORKERS", workers);
+
+    jobBuilder.setJobName("Arrow Testing Example");
     jobBuilder.setWorkerClass(ArrowTSetSourceExample.class);
-    jobBuilder.addComputeResource(1, 512, 2);
+    jobBuilder.addComputeResource(1, 512, 2, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

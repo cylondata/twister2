@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(CSVTSetSourceExample.class.getName());
-  private int count;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
