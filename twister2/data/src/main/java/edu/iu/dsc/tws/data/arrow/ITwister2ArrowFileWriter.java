@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-import org.apache.arrow.vector.types.pojo.Schema;
-
 public interface ITwister2ArrowFileWriter {
-  Schema makeSchema();
+  //Schema makeSchema();
   void setUpTwister2ArrowWrite() throws Exception;
   void writeArrowData() throws Exception;
 }

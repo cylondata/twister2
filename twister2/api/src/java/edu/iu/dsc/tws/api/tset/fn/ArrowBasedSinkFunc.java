@@ -11,59 +11,54 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Logger;
+
+import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
+import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<I> implements Serializable, SinkFunc<Integer> {
+public class ArrowBasedSinkFunc<I> implements Serializable, SinkFunc<ArrayList<Iterator>> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
-  private FileOutputWriter<Integer> outputWriter;
-
-  private BufferedWriter writer;
-
   private String arrowfileName = null;
 
-  private int partition;
   private int parallel = 0;
 
   private TSetContext ctx;
 
-  public ArrowBasedSinkFunc(String filepath, int parallelism) {
-    LOG.info("%%%%%%%%%%%%% arrow based sink function getting called%%%%%%%%");
+  private transient Schema schema;
+
+  private Twister2ArrowFileWriter twister2ArrowFileWriter;
+
+  public ArrowBasedSinkFunc(String filepath, int parallelism, Schema arrowSchema) {
+    LOG.info("Arrow based sink function getting called%:" + arrowSchema);
     this.parallel = parallelism;
     this.arrowfileName = filepath;
+    this.schema = arrowSchema;
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
+        arrowfileName + ctx.getId(), true, schema);
     try {
-      File outFile = new File(arrowfileName);
-      outFile.getParentFile().mkdirs();
-      writer = new BufferedWriter(new FileWriter(outFile, false));
-    } catch (IOException ioe) {
-      throw new RuntimeException("Unable to create arrow file", ioe);
+      twister2ArrowFileWriter.setUpTwister2ArrowWrite();
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to setup arrow file", e);
     }
     LOG.info("%%%%%%%%%%%%% Prepare function getting called%%%%%%%%");
   }
 
   @Override
   public void close() {
-    //outputWriter.close();
-    try {
-      writer.close();
-    } catch (IOException e) {
-      throw new RuntimeException("Unable to close the writer!");
-    }
+    twister2ArrowFileWriter.close();
   }
 
   @Override
@@ -71,17 +66,16 @@ public class ArrowBasedSinkFunc<I> implements Serializable, SinkFunc<Integer> {
     return null;
   }
 
+  //todo: change it as an iterator integer
   @Override
-  public boolean add(Integer value) {
+  public boolean add(ArrayList<Iterator> value) {
     LOG.info("I am getting called:" + value);
-    //while (value.hasNext()) {
+    //TODO: CALL write arrow data pass the iterator integer value
     try {
-      writer.write(String.valueOf(value/*.next()*/));
-      writer.newLine();
-    } catch (IOException e) {
-      e.printStackTrace();
+      twister2ArrowFileWriter.writeArrowData();
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to write arrow file", e);
     }
-    //}
     return true;
   }
 }

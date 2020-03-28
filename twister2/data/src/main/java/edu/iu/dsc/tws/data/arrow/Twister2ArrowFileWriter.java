@@ -56,6 +56,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
 
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
 
+  private Schema schema;
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
@@ -72,6 +73,22 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
+  public Twister2ArrowFileWriter(String arrowfile, boolean flag, Schema arrowSchema) {
+    this.maxEntries = 1024;
+    this.checkSum = 0;
+    this.batchSize = 100;
+    this.random = new Random(System.nanoTime());
+    this.entries = this.random.nextInt(this.maxEntries);
+    this.arrowFile = arrowfile;
+    this.flag = flag;
+    this.data = new int[this.entries];
+    for (int i = 0; i < this.entries; i++) {
+      this.data[i] = this.random.nextInt(1024);
+    }
+    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    this.schema = arrowSchema;
+  }
+
   public Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
     builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
@@ -84,8 +101,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
       file.delete();
     }
     this.fileOutputStream = new FileOutputStream(arrowFile);
-    Schema schema = makeSchema();
-    this.root = VectorSchemaRoot.create(schema, this.rootAllocator);
+    Schema arrowSchema = makeSchema();
+    this.root = VectorSchemaRoot.create(arrowSchema, this.rootAllocator);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
@@ -132,5 +149,9 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
       return 0;
     }
     return 1;
+  }
+
+  public void close() {
+    arrowFileWriter.close();
   }
 }

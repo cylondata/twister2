@@ -32,6 +32,7 @@ import org.apache.commons.cli.Options;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -42,6 +43,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
+//import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
+
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
@@ -51,31 +54,58 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private transient SinkTSet<Integer> pointSink;
 
+  //private transient SourceTSet<String[]> csvSource;
+
+  private transient Schema schema;
+
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
-    int parallelism = (int) config.get("PARALLELISM");
-    String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
-    Schema schema = makeSchema();
-    LOG.info("parallelism and input file:" + parallelism + "\t" + arrowInputFile);
+
+    //TODO: FIX THE NULL POINTER EXCEPTION
+    //int parallelism = (int) config.get("PARALLELISM");
+    //String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+    int parallel = 2;
+    String arrowInputFile = "/tmp/test.arrow";
+    schema = makeSchema();
+    LOG.info("schema value:" + schema);
+
+    //TODO: WE HAVE TO MOVE THIS PART
+    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
     try {
       arrowWrite = new Twister2ArrowFileWriter(arrowInputFile, true);
       arrowWrite.setUpTwister2ArrowWrite();
-      Thread.sleep(1000);
     } catch (Exception e) {
       throw new RuntimeException("Exception Occured", e);
     }
 
-    pointSource = env.createArrowSource(arrowInputFile, parallelism);
-
-     /*pointSource.direct().sink(
-        new ArrowBasedSinkFunc<Iterator<Integer>>(arrowInputFile, parallel) {
-     });*/
+    int dsize = 20;
+    int dimension = 2;
+    SourceTSet<String[]> csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
+    ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().compute(
+        new ComputeFunc<Integer, Iterator<String[]>>() {
+          private int localPoints = 0;
+          @Override
+          public Integer compute(Iterator<String[]> input) {
+            for (int i = 0; i < dsize / parallel && input.hasNext(); i++) {
+              String[] value = input.next();
+              for (int j = 0; j < value.length; j++) {
+                localPoints = Integer.parseInt(value[j]);
+              }
+            }
+            LOG.info("Integer value:" + localPoints);
+            return localPoints;
+          }
+        });
+    //TODO: CHECK WITH NIRANDA
+    pointSource = env.createArrowSource(arrowInputFile, parallel);
+    SinkTSet<Integer> sinkTSet = pointSource.direct().sink(new ArrowBasedSinkFunc(
+        arrowInputFile, parallel, schema) { });
+    env.run(sinkTSet);
 
     ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
         new ComputeFunc<List<Integer>, Iterator<Integer>>() {
           private ArrayList<Integer> integers = new ArrayList<>();
-
           @Override
           public List<Integer> compute(Iterator<Integer> input) {
             input.forEachRemaining(integers::add);
@@ -85,7 +115,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
   }
 
-  private static Schema makeSchema() {
+  private Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
     builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
     return new Schema(builder.build(), null);

@@ -22,7 +22,17 @@ twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.M
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
-twister2.resource.scheduler.mpi.mpirun.file: "ompi/bin/mpirun"
+#twister2.resource.scheduler.mpi.mpirun.file: "ompi/bin/mpirun"
+
+#TODO: Getting segmentation fault if I don't specify the proper path
+#[kannan-Precision-5820-Tower-X-Series:19226] *** Process received signal ***
+#[kannan-Precision-5820-Tower-X-Series:19226] Signal: Segmentation fault (11)
+#[kannan-Precision-5820-Tower-X-Series:19226] Signal code: Address not mapped (1)
+#[kannan-Precision-5820-Tower-X-Series:19226] Failing at address: (nil)
+#[kannan-Precision-5820-Tower-X-Series:19226] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x43f60)[0x7fd4c4a7ff60]
+#[kannan-Precision-5820-Tower-X-Series:19226] *** End of error message ***
+#/home/kannan/.cache/bazel/_bazel_kannan/e9508be7717b511160e8bb852071b464/execroot/__main__/bazel-out/k8-fastbuild/bin/scripts/package/twister2-0.6.0-SNAPSHOT/conf/standalone/mpi.sh: line 11: 19226 Segmentation fault      (core dumped) $9 -np $1 --map-by ${14} --hostfile $8 sh `pwd`/standalone/exp.sh "$@"
+twister2.resource.scheduler.mpi.mpirun.file: "/home/kannan/openmpi-4.0.1/build/bin/mpirun"
 
 # mpi scheduling policy. Two possible options are node and slot.
 # read more at https://www.open-mpi.org/faq/?category=running#mpirun-scheduling
