@@ -12,8 +12,6 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -22,7 +20,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<I> implements Serializable, SinkFunc<ArrayList<Iterator>> {
+public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Integer> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
@@ -68,11 +66,11 @@ public class ArrowBasedSinkFunc<I> implements Serializable, SinkFunc<ArrayList<I
 
   //todo: change it as an iterator integer
   @Override
-  public boolean add(ArrayList<Iterator> value) {
-    LOG.info("I am getting called:" + value);
+  public boolean add(Integer value) {
+    LOG.info("add function getting called:" + value);
     //TODO: CALL write arrow data pass the iterator integer value
     try {
-      twister2ArrowFileWriter.writeArrowData();
+      twister2ArrowFileWriter.writeArrowData(value);
     } catch (Exception e) {
       throw new RuntimeException("Unable to write arrow file", e);
     }

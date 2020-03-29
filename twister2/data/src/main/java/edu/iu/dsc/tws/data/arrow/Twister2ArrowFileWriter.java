@@ -54,6 +54,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
   private transient VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
 
+  private int totaldataValues;
+
   private transient Twister2ArrowOutputStream twister2ArrowOutputStream;
 
   private Schema schema;
@@ -114,6 +116,27 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
     }
     writeArrowData();
   }
+
+  public void writeArrowData(Integer integerdata) throws Exception {
+    arrowFileWriter.start();
+    int totalitems = 0;
+    for (Field field : root.getSchema().getFields()) {
+      FieldVector fieldVector = root.getVector(field.getName());
+      IntVector intVector = (IntVector) fieldVector;
+      intVector.setInitialCapacity(100);
+      intVector.allocateNew();
+      intVector.setSafe(totalitems, isSet(), integerdata);
+      fieldVector.setValueCount(totalitems);
+      totalitems++;
+    }
+    root.setRowCount(totaldataValues);
+    arrowFileWriter.writeBatch();
+    arrowFileWriter.end();
+    arrowFileWriter.close();
+    fileOutputStream.flush();
+    fileOutputStream.close();
+  }
+
 
   public void writeArrowData() throws Exception {
     arrowFileWriter.start();

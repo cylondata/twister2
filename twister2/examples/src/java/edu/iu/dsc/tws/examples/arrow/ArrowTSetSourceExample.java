@@ -71,18 +71,19 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     LOG.info("schema value:" + schema);
 
     //TODO: WE HAVE TO MOVE THIS PART
-    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
-    try {
-      arrowWrite = new Twister2ArrowFileWriter(arrowInputFile, true);
-      arrowWrite.setUpTwister2ArrowWrite();
-    } catch (Exception e) {
-      throw new RuntimeException("Exception Occured", e);
-    }
+//    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
+//    try {
+//      arrowWrite = new Twister2ArrowFileWriter(arrowInputFile, true);
+//      arrowWrite.setUpTwister2ArrowWrite();
+//    } catch (Exception e) {
+//      throw new RuntimeException("Exception Occured", e);
+//    }
 
     int dsize = 20;
     int dimension = 2;
     SourceTSet<String[]> csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
-    ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().compute(
+
+    /*ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().compute(
         new ComputeFunc<Integer, Iterator<String[]>>() {
           private int localPoints = 0;
           @Override
@@ -96,16 +97,36 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
             LOG.info("Integer value:" + localPoints);
             return localPoints;
           }
+     });*/
+
+    ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().compute(
+        new ComputeFunc<Integer, Iterator<String[]>>() {
+          private int localPoints = 0;
+
+          @Override
+          public Integer compute(Iterator<String[]> input) {
+            for (int i = 0; i < dsize / parallel && input.hasNext(); i++) {
+              String[] value = input.next();
+              for (int j = 0; j < value.length; j++) {
+                localPoints = Integer.parseInt(value[j]);
+              }
+            }
+            LOG.info("Integer value:" + localPoints);
+            return localPoints;
+          }
         });
+
     //TODO: CHECK WITH NIRANDA
     pointSource = env.createArrowSource(arrowInputFile, parallel);
-    SinkTSet<Integer> sinkTSet = pointSource.direct().sink(new ArrowBasedSinkFunc(
-        arrowInputFile, parallel, schema) { });
-    env.run(sinkTSet);
 
+    SinkTSet<Integer> sinkTSet = pointSource.direct().sink(new ArrowBasedSinkFunc(
+        arrowInputFile, parallel, schema) {
+    });
+    env.run(sinkTSet);
     ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
         new ComputeFunc<List<Integer>, Iterator<Integer>>() {
           private ArrayList<Integer> integers = new ArrayList<>();
+
           @Override
           public List<Integer> compute(Iterator<Integer> input) {
             input.forEachRemaining(integers::add);
