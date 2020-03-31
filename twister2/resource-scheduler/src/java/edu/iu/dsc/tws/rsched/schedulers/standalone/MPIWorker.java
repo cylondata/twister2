@@ -63,6 +63,7 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -362,7 +363,7 @@ public final class MPIWorker {
 
     try {
       int port = JobMasterContext.jobMasterPort(cfg);
-      String hostAddress = InetAddress.getLocalHost().getHostAddress();
+      String hostAddress = ResourceSchedulerUtils.getHostIP();
       LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
       IScalerPerCluster clusterScaler = null;
@@ -370,7 +371,7 @@ public final class MPIWorker {
       NomadTerminator nt = new NomadTerminator();
 
       JobMaster jobMaster = new JobMaster(
-          cfg, hostAddress, port, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
+          cfg, "0.0.0.0", port, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
       jobMaster.addShutdownHook(false);
       Thread jmThread = jobMaster.startJobMasterThreaded();
 
@@ -382,9 +383,6 @@ public final class MPIWorker {
       }
 
       LOG.log(Level.INFO, "Master done... ");
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-      throw new RuntimeException(e);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
@@ -448,7 +446,7 @@ public final class MPIWorker {
       // initialize the logger
       initLogger(cfg, intracomm.getRank(), twister2Home);
 
-      Map<Integer, JobMasterAPI.WorkerInfo> infos = createWorkerInfoMap(cfg, intracomm, job);
+      Map<Integer, JobMasterAPI.WorkerInfo> infos = createWorkerInfoMap(intracomm);
       MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
       IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
 
@@ -496,15 +494,11 @@ public final class MPIWorker {
   /**
    * create a AllocatedResources
    *
-   * @param cfg configuration
    * @return a map of rank to hostname
    */
-  public Map<Integer, JobMasterAPI.WorkerInfo> createWorkerInfoMap(Config cfg,
-                                                                   Intracomm intracomm,
-                                                                   JobAPI.Job job) {
+  public Map<Integer, JobMasterAPI.WorkerInfo> createWorkerInfoMap(Intracomm intracomm) {
     try {
-      JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(cfg, intracomm.getRank(), job);
-      byte[] workerBytes = workerInfo.toByteArray();
+      byte[] workerBytes = wInfo.toByteArray();
       int length = workerBytes.length;
 
       IntBuffer countSend = MPI.newIntBuffer(1);
@@ -558,15 +552,23 @@ public final class MPIWorker {
    */
   private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId,
                                                    JobAPI.Job job) throws MPIException {
-    String processName;
-    try {
-      processName = InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
-      throw new RuntimeException("Failed to get ip address", e);
+    String workerIP;
+    List<String> networkInterfaces = SchedulerContext.networkInterfaces(cfg);
+    if (networkInterfaces == null) {
+      try {
+        workerIP = InetAddress.getLocalHost().getHostAddress();
+      } catch (UnknownHostException e) {
+        throw new RuntimeException("Failed to get ip address", e);
+      }
+    } else {
+      workerIP = ResourceSchedulerUtils.getLocalIPFromNetworkInterfaces(networkInterfaces);
+      if (workerIP == null) {
+        throw new RuntimeException("Failed to get ip address from network interfaces: "
+            + networkInterfaces);
+      }
     }
 
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(processName,
-        "default", "default");
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(workerIP, "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
     final Map<String, Integer> freePorts = new HashMap<>();
@@ -591,9 +593,9 @@ public final class MPIWorker {
     }
     Integer workerPort = freePorts.get("__worker__");
     freePorts.remove("__worker__");
-    LOG.fine("Worker info host:" + processName + ":" + workerPort);
-    return WorkerInfoUtils.createWorkerInfo(workerId,
-        processName, workerPort, nodeInfo, computeResource, freePorts);
+    LOG.fine("Worker info host:" + workerIP + ":" + workerPort);
+    return WorkerInfoUtils.createWorkerInfo(
+        workerId, workerIP, workerPort, nodeInfo, computeResource, freePorts);
   }
 
   /**

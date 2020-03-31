@@ -362,6 +362,12 @@ public class ResourceAllocator {
       clearTemporaryFiles(jobDirectory);
     }
 
+    if (SchedulerContext.clusterType(updatedConfig).equals("standalone")
+        && SchedulerContext.uploaderClass(updatedConfig)
+        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
+      uploader.undo(updatedConfig, updatedJob.getJobId());
+    }
+
     return state;
   }
 
