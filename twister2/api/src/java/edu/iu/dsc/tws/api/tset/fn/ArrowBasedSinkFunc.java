@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -20,43 +21,49 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Integer> {
+public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<Integer>> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
   private String arrowfileName = null;
 
-  private int parallel = 0;
+  private int parallel;
 
   private TSetContext ctx;
 
-  private transient Schema schema;
+  private static Schema schema;
 
   private Twister2ArrowFileWriter twister2ArrowFileWriter;
 
+  private boolean flag = false;
+
   public ArrowBasedSinkFunc(String filepath, int parallelism, Schema arrowSchema) {
-    LOG.info("Arrow based sink function getting called%:" + arrowSchema);
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-    this.schema = arrowSchema;
+    schema = arrowSchema;
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
     this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName + ctx.getId(), true, schema);
+        arrowfileName, true, schema, ctx.getWorkerId());
     try {
-      twister2ArrowFileWriter.setUpTwister2ArrowWrite();
+      if (twister2ArrowFileWriter.setUpTwister2ArrowWrite()) {
+        flag = true;
+      }
     } catch (Exception e) {
       throw new RuntimeException("Unable to setup arrow file", e);
     }
-    LOG.info("%%%%%%%%%%%%% Prepare function getting called%%%%%%%%");
   }
 
   @Override
   public void close() {
-    twister2ArrowFileWriter.close();
+    //twister2ArrowFileWriter.close();
+  }
+
+  @Override
+  public void reset() {
   }
 
   @Override
@@ -64,15 +71,20 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Integer> {
     return null;
   }
 
-  //todo: change it as an iterator integer
   @Override
-  public boolean add(Integer value) {
+  public boolean add(Iterator<Integer> value) {
     LOG.info("add function getting called:" + value);
-    //TODO: CALL write arrow data pass the iterator integer value
-    try {
-      twister2ArrowFileWriter.writeArrowData(value);
-    } catch (Exception e) {
-      throw new RuntimeException("Unable to write arrow file", e);
+    if (flag) {
+      try {
+        while (value.hasNext()) {
+          twister2ArrowFileWriter.writeArrowData(value.next().intValue());
+        }
+        if (value == null) {
+          twister2ArrowFileWriter.close();
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Unable to write arrow file", e);
+      }
     }
     return true;
   }

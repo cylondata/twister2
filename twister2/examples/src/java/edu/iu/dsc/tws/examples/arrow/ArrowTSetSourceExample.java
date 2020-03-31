@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -44,20 +43,16 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-//import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
+//import java.util.ArrayList;
+//import java.util.Iterator;
+//import java.util.List;
 
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
-  private transient SourceTSet<Integer> pointSource;
-  private transient Twister2ArrowFileWriter arrowWrite;
-
-  private transient SinkTSet<Integer> pointSink;
-
-  //private transient SourceTSet<String[]> csvSource;
-
-  private transient Schema schema;
+  private SourceTSet<Integer> pointSource;
+  private Schema schema;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -66,52 +61,22 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     //TODO: FIX THE NULL POINTER EXCEPTION
     //int parallelism = (int) config.get("PARALLELISM");
     //String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+
     int parallel = 2;
-    String arrowInputFile = "/tmp/test.arrow";
-    schema = makeSchema();
-    LOG.info("schema value:" + schema);
-
-    //TODO: WE HAVE TO MOVE THIS PART
-    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
-    try {
-      arrowWrite = new Twister2ArrowFileWriter(arrowInputFile, true);
-      arrowWrite.setUpTwister2ArrowWrite();
-    } catch (Exception e) {
-      throw new RuntimeException("Exception Occured", e);
-    }
-
     int dsize = 20;
-    int dimension = 2;
+    String arrowInputFile = "/tmp/test.arrow";
+
+    schema = makeSchema();
     SourceTSet<String[]> csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
-
-    /*ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().compute(
-        new ComputeFunc<Integer, Iterator<String[]>>() {
-          private int localPoints = 0;
-          @Override
-          public Integer compute(Iterator<String[]> input) {
-            for (int i = 0; i < dsize / parallel && input.hasNext(); i++) {
-              String[] value = input.next();
-              for (int j = 0; j < value.length; j++) {
-                localPoints = Integer.parseInt(value[j]);
-              }
-            }
-            LOG.info("Integer value:" + localPoints);
-            return localPoints;
-          }
-     });*/
-
-    ComputeTSet<Integer, Iterator<String[]>> datapoints = csvSource.direct().flatmap(
+    SinkTSet sinkTSet = csvSource.direct().flatmap(
         (FlatMapFunc<Integer, String[]>) (input, collector) -> {
           for (int i = 0; i < input.length; i++) {
-            collector.collect(Integer.parseInt(input[i]));
+            collector.collect(Integer.parseInt(input[i].trim()));
           }
-        });
-    //TODO: CHECK WITH NIRANDA
-    pointSource = env.createArrowSource(arrowInputFile, parallel);
-    SinkTSet<Integer> sinkTSet = csvSource.direct().sink(new ArrowBasedSinkFunc(
-        arrowInputFile, parallel, schema) {
-    });
+        }).direct().sink(new ArrowBasedSinkFunc(arrowInputFile, parallel, schema));
     env.run(sinkTSet);
+
+    pointSource = env.createArrowSource(arrowInputFile, parallel);
     ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
         new ComputeFunc<List<Integer>, Iterator<Integer>>() {
           private ArrayList<Integer> integers = new ArrayList<>();

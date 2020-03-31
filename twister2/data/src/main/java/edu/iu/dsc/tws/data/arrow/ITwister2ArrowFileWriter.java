@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.data.arrow;
 
 public interface ITwister2ArrowFileWriter {
   //Schema makeSchema();
-  void setUpTwister2ArrowWrite() throws Exception;
+  boolean setUpTwister2ArrowWrite() throws Exception;
   void writeArrowData() throws Exception;
 }
