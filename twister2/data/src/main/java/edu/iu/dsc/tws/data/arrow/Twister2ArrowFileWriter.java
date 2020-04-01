@@ -14,10 +14,9 @@ package edu.iu.dsc.tws.data.arrow;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import com.google.common.collect.ImmutableList;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
@@ -25,12 +24,10 @@ import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
-import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
+public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serializable {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileWriter.class.getName());
 
@@ -55,39 +52,30 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter {
   private Twister2ArrowOutputStream twister2ArrowOutputStream;
   private FileOutputStream fileOutputStream;
 
-  private transient RootAllocator rootAllocator;
-  private transient VectorSchemaRoot root;
-  private transient ArrowFileWriter arrowFileWriter;
-  private transient Schema arrowSchema;
+  private RootAllocator rootAllocator;
+  private VectorSchemaRoot root;
+  private ArrowFileWriter arrowFileWriter;
+  private Schema arrowSchema;
 
-  public Twister2ArrowFileWriter(String arrowfile, boolean flag, Schema schema) {
+  public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema) {
     this.maxEntries = 1024;
     this.checkSum = 0;
     this.arrowFile = arrowfile;
     this.flag = flag;
-    this.arrowSchema = makeSchema();
+    try {
+      this.arrowSchema = Schema.fromJSON(schema);
+    } catch (IOException ioe) {
+      throw new RuntimeException("IOException Occured", ioe);
+    }
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
-//    try {
-//      this.fileOutputStream = new FileOutputStream(arrowFile);
-//    } catch (FileNotFoundException e) {
-//      e.printStackTrace();
-//    }
-//    LOG.info("arrow schema:" + this.arrowSchema);
-//    this.root = VectorSchemaRoot.create(this.arrowSchema, this.rootAllocator);
-  }
-
-  public Schema makeSchema() {
-    ImmutableList.Builder<Field> builder = ImmutableList.builder();
-    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
-    return new Schema(builder.build(), null);
   }
 
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
     LOG.info("arrow schema is:" + arrowSchema);
-    File file = new File(arrowFile + workerId);
-    if (file.exists()) {
+    File file = new File(arrowFile/* + workerId*/);
+    /*if (file.exists()) {
       file.delete();
-    }
+    }*/
     LOG.info("file name:" + file.getName());
     this.fileOutputStream = new FileOutputStream(arrowFile);
     this.root = VectorSchemaRoot.create(this.arrowSchema, this.rootAllocator);

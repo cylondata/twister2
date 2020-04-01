@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
@@ -32,13 +33,16 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private Twister2ArrowFileReader twister2ArrowFileReader;
 
-  private transient Schema arrowSchema;
+  private Schema arrowSchema;
 
-  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
+  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, String schema) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
-    this.arrowSchema = schema;
-    this.twister2ArrowFileReader = new Twister2ArrowFileReader(arrowinputFile, schema);
+    try {
+      this.arrowSchema = Schema.fromJSON(schema);
+    } catch (IOException ioe) {
+      throw new RuntimeException("IOException occured", ioe);
+    }
   }
 
   /**
@@ -46,6 +50,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
+    this.twister2ArrowFileReader = new Twister2ArrowFileReader(this.arrowInputFile, arrowSchema);
     this.twister2ArrowFileReader.processInputFile();
   }
 

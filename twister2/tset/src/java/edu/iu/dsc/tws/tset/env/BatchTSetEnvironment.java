@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.env;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -49,7 +49,7 @@ import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
  * 2. Running/ evaluating a tset and update another with the results
  * 3. Running just a single source TSet
  */
-public class BatchTSetEnvironment extends TSetEnvironment {
+public class BatchTSetEnvironment extends TSetEnvironment implements Serializable {
   private static final Logger LOG = Logger.getLogger(BatchTSetEnvironment.class.getName());
 
   /**
@@ -84,7 +84,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
         parallelism);
   }
 
-  public SourceTSet<Integer> createArrowSource(String filePath, int parallelism, Schema schema) {
+  public SourceTSet<Integer> createArrowSource(String filePath, int parallelism, String schema) {
     return createSource(new ArrowBasedSourceFunc(filePath, parallelism, schema), parallelism);
   }
 

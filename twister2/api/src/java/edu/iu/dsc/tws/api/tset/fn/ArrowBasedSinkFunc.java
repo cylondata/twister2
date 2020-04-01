@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -31,24 +32,28 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
 
   private TSetContext ctx;
 
-  private transient Schema schema;
+  private Schema schema;
 
   private Twister2ArrowFileWriter twister2ArrowFileWriter;
 
   private boolean flag = false;
 
-  public ArrowBasedSinkFunc(String filepath, int parallelism, Schema arrowSchema) {
+  public ArrowBasedSinkFunc(String filepath, int parallelism, String arrowSchema) {
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-    this.schema = arrowSchema;
-    LOG.info("arrow schema:" + this.schema);
+    try {
+      this.schema = Schema.fromJSON(arrowSchema);
+    } catch (IOException ioe) {
+      throw new RuntimeException("exception occured", ioe);
+    }
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
+    LOG.info("arrow schema:" + this.schema);
     this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName + ctx.getId(), true, schema);
+        arrowfileName + ctx.getId(), true, schema.toJson());
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(ctx.getWorkerId());
     } catch (Exception e) {

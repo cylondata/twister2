@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -49,7 +48,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
   private SourceTSet<Integer> pointSource;
-  private transient Schema schema;
+  private Schema schema;
   private SinkTSet<Integer> sinkTSet;
   private SourceTSet<String[]> csvSource;
 
@@ -65,13 +64,13 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     int dsize = 20;
     String arrowInputFile = "/tmp/test.arrow";
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
-    try {
+    /*try {
       Twister2ArrowFileWriter arrowWrite = new Twister2ArrowFileWriter(
           arrowInputFile, true, schema);
       arrowWrite.setUpTwister2ArrowWrite(1);
     } catch (Exception e) {
       throw new RuntimeException("Exception Occured", e);
-    }
+    }*/
 
     schema = makeSchema();
     csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
@@ -80,21 +79,21 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
           for (int i = 0; i < input.length; i++) {
             collector.collect(Integer.parseInt(input[i].trim()));
           }
-        }).direct().sink(new ArrowBasedSinkFunc(arrowInputFile, parallel, schema));
+        }).direct().sink(new ArrowBasedSinkFunc(arrowInputFile, parallel, schema.toJson()));
     env.run(sinkTSet);
 
-    pointSource = env.createArrowSource(arrowInputFile, parallel, schema);
-    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
-        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
-          private ArrayList<Integer> integers = new ArrayList<>();
-
-          @Override
-          public List<Integer> compute(Iterator<Integer> input) {
-            input.forEachRemaining(integers::add);
-            return integers;
-          }
-        });
-    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
+//    pointSource = env.createArrowSource(arrowInputFile, parallel, schema.toJson());
+//    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
+//        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
+//          private ArrayList<Integer> integers = new ArrayList<>();
+//
+//          @Override
+//          public List<Integer> compute(Iterator<Integer> input) {
+//            input.forEachRemaining(integers::add);
+//            return integers;
+//          }
+//        });
+//    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
   }
 
   private Schema makeSchema() {
