@@ -31,7 +31,7 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
 
   private TSetContext ctx;
 
-  private static Schema schema;
+  private transient Schema schema;
 
   private Twister2ArrowFileWriter twister2ArrowFileWriter;
 
@@ -40,30 +40,26 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
   public ArrowBasedSinkFunc(String filepath, int parallelism, Schema arrowSchema) {
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-    schema = arrowSchema;
+    this.schema = arrowSchema;
+    LOG.info("arrow schema:" + this.schema);
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
     this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName, true, schema, ctx.getWorkerId());
+        arrowfileName + ctx.getId(), true, schema);
     try {
-      if (twister2ArrowFileWriter.setUpTwister2ArrowWrite()) {
-        flag = true;
-      }
+      twister2ArrowFileWriter.setUpTwister2ArrowWrite(ctx.getWorkerId());
     } catch (Exception e) {
       throw new RuntimeException("Unable to setup arrow file", e);
     }
+    LOG.info("%%%%%%%%%%%%% Prepare function getting called%%%%%%%%");
   }
 
   @Override
   public void close() {
-    //twister2ArrowFileWriter.close();
-  }
-
-  @Override
-  public void reset() {
+    twister2ArrowFileWriter.close();
   }
 
   @Override

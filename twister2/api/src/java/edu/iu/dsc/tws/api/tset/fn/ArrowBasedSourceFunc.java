@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.logging.Logger;
 
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
@@ -31,9 +32,13 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   private Twister2ArrowFileReader twister2ArrowFileReader;
 
-  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism) {
+  private transient Schema arrowSchema;
+
+  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, Schema schema) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
+    this.arrowSchema = schema;
+    this.twister2ArrowFileReader = new Twister2ArrowFileReader(arrowinputFile, schema);
   }
 
   /**
@@ -41,8 +46,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
-    this.twister2ArrowFileReader = new Twister2ArrowFileReader(arrowInputFile);
-    twister2ArrowFileReader.processInputFile();
+    this.twister2ArrowFileReader.processInputFile();
   }
 
   private IntVector intVector = null;

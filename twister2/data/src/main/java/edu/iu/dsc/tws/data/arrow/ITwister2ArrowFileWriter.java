@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-public interface ITwister2ArrowFileWriter {
+import java.io.Serializable;
+
+public interface ITwister2ArrowFileWriter extends Serializable {
   //Schema makeSchema();
-  boolean setUpTwister2ArrowWrite() throws Exception;
+  boolean setUpTwister2ArrowWrite(int workerId) throws Exception;
   void writeArrowData() throws Exception;
 }

@@ -13,11 +13,12 @@ package edu.iu.dsc.tws.data.arrow;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Logger;
 
-public class Twister2ArrowOutputStream implements WritableByteChannel {
+public class Twister2ArrowOutputStream implements WritableByteChannel, Serializable {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowOutputStream.class.getName());
 
