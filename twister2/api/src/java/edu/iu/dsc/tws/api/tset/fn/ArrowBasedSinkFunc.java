@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.IOException;
-import java.io.Serializable;
+//import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -22,38 +21,33 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<Integer>> {
+public class ArrowBasedSinkFunc<T> implements SinkFunc<Iterator<Integer>> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
   private String arrowfileName = null;
-
   private int parallel;
 
   private TSetContext ctx;
-
-  private Schema schema;
-
+  private transient Schema schema;
   private Twister2ArrowFileWriter twister2ArrowFileWriter;
-
-  private boolean flag = false;
 
   public ArrowBasedSinkFunc(String filepath, int parallelism, String arrowSchema) {
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-    try {
-      this.schema = Schema.fromJSON(arrowSchema);
-    } catch (IOException ioe) {
-      throw new RuntimeException("exception occured", ioe);
-    }
+//    try {
+//      this.schema = Schema.fromJSON(arrowSchema);
+//    } catch (IOException ioe) {
+//      throw new RuntimeException("exception occured", ioe);
+//    }
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
+        arrowfileName, true, arrowSchema);
+    LOG.info("sink function constructor getting called" + schema);
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
-    LOG.info("arrow schema:" + this.schema);
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName + ctx.getId(), true, schema.toJson());
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(ctx.getWorkerId());
     } catch (Exception e) {
@@ -75,17 +69,17 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
   @Override
   public boolean add(Iterator<Integer> value) {
     LOG.info("add function getting called:" + value);
-    if (flag) {
-      try {
-        while (value.hasNext()) {
-          twister2ArrowFileWriter.writeArrowData(value.next().intValue());
-        }
-        if (value == null) {
-          twister2ArrowFileWriter.close();
-        }
-      } catch (Exception e) {
-        throw new RuntimeException("Unable to write arrow file", e);
+    try {
+      while (value.hasNext()) {
+        //twister2ArrowFileWriter.writeArrowData(value.next().intValue());
+        LOG.info("next value:" + value.next().intValue());
+        twister2ArrowFileWriter.writeArrowData();
       }
+      if (value == null) {
+        twister2ArrowFileWriter.close();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to write arrow file", e);
     }
     return true;
   }

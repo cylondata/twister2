@@ -12,9 +12,6 @@
 package edu.iu.dsc.tws.examples.arrow;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,45 +30,38 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+
+//import java.util.ArrayList;
+//import java.util.Iterator;
+//import java.util.List;
 
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
-  private SourceTSet<Integer> pointSource;
-  private Schema schema;
-  private SinkTSet<Integer> sinkTSet;
-  private SourceTSet<String[]> csvSource;
+  private transient Schema schema;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
-
     //TODO: FIX THE NULL POINTER EXCEPTION
     //int parallelism = (int) config.get("PARALLELISM");
     //String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+    SourceTSet<Integer> pointSource;
+    SinkTSet<Integer> sinkTSet;
+    SourceTSet<String[]> csvSource;
 
     int parallel = 2;
     int dsize = 20;
     String arrowInputFile = "/tmp/test.arrow";
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
-    /*try {
-      Twister2ArrowFileWriter arrowWrite = new Twister2ArrowFileWriter(
-          arrowInputFile, true, schema);
-      arrowWrite.setUpTwister2ArrowWrite(1);
-    } catch (Exception e) {
-      throw new RuntimeException("Exception Occured", e);
-    }*/
-
     schema = makeSchema();
     csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
     sinkTSet = csvSource.direct().flatmap(
@@ -82,18 +72,18 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         }).direct().sink(new ArrowBasedSinkFunc(arrowInputFile, parallel, schema.toJson()));
     env.run(sinkTSet);
 
-//    pointSource = env.createArrowSource(arrowInputFile, parallel, schema.toJson());
-//    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
-//        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
-//          private ArrayList<Integer> integers = new ArrayList<>();
-//
-//          @Override
-//          public List<Integer> compute(Iterator<Integer> input) {
-//            input.forEachRemaining(integers::add);
-//            return integers;
-//          }
-//        });
-//    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
+    /*pointSource = env.createArrowSource(arrowInputFile, parallel, schema.toJson());
+    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
+        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
+          private ArrayList<Integer> integers = new ArrayList<>();
+
+          @Override
+          public List<Integer> compute(Iterator<Integer> input) {
+            input.forEachRemaining(integers::add);
+            return integers;
+          }
+        });
+    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));*/
   }
 
   private Schema makeSchema() {

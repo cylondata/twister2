@@ -12,8 +12,6 @@
 
 package edu.iu.dsc.tws.tset.env;
 
-import java.io.Serializable;
-
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
@@ -30,7 +28,7 @@ import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
  * <p>
  * There is only a single execution mode that would run the entire TSet graph.
  */
-public class StreamingTSetEnvironment extends TSetEnvironment implements Serializable {
+public class StreamingTSetEnvironment extends TSetEnvironment {
 
   public StreamingTSetEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
