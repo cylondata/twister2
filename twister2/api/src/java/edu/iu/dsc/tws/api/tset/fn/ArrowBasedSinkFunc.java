@@ -11,18 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.logging.Logger;
-
-import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<Integer>> {
+//import java.io.Serializable;
+
+public class ArrowBasedSinkFunc<T> implements SinkFunc<Iterator<Integer>> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
@@ -32,7 +30,7 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
 
   private TSetContext ctx;
 
-  private Schema schema;
+  private String schema;
 
   private Twister2ArrowFileWriter twister2ArrowFileWriter;
 
@@ -41,19 +39,19 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
   public ArrowBasedSinkFunc(String filepath, int parallelism, String arrowSchema) {
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-    try {
-      this.schema = Schema.fromJSON(arrowSchema);
-    } catch (IOException ioe) {
-      throw new RuntimeException("exception occured", ioe);
-    }
+    this.schema = arrowSchema;
+//    try {
+//      schema = Schema.fromJSON(arrowSchema);
+//    } catch (IOException ioe) {
+//      throw new RuntimeException("exception occured", ioe);
+//    }
   }
 
   @Override
   public void prepare(TSetContext context) {
     this.ctx = context;
-    LOG.info("arrow schema:" + this.schema);
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName + ctx.getId(), true, schema.toJson());
+    LOG.info("arrow schema:" + schema);
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(arrowfileName, true, schema);
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(ctx.getWorkerId());
     } catch (Exception e) {

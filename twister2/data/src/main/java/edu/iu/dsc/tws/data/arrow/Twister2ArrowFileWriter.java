@@ -55,7 +55,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private RootAllocator rootAllocator;
   private VectorSchemaRoot root;
   private ArrowFileWriter arrowFileWriter;
-  private Schema arrowSchema;
+  private static Schema arrowSchema;
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema) {
     this.maxEntries = 1024;
@@ -63,7 +63,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.arrowFile = arrowfile;
     this.flag = flag;
     try {
-      this.arrowSchema = Schema.fromJSON(schema);
+      arrowSchema = Schema.fromJSON(schema);
     } catch (IOException ioe) {
       throw new RuntimeException("IOException Occured", ioe);
     }
@@ -76,19 +76,19 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     /*if (file.exists()) {
       file.delete();
     }*/
-    LOG.info("file name:" + file.getName());
+    //LOG.info("file name:" + file.getName());
     this.fileOutputStream = new FileOutputStream(arrowFile);
-    this.root = VectorSchemaRoot.create(this.arrowSchema, this.rootAllocator);
+    this.root = VectorSchemaRoot.create(arrowSchema, this.rootAllocator);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
-      this.arrowFileWriter = new ArrowFileWriter(root, provider,
-          this.fileOutputStream.getChannel());
+      this.arrowFileWriter = new ArrowFileWriter(
+          root, provider, this.fileOutputStream.getChannel());
     } else {
       this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
-    writeArrowData();
+    //writeArrowData();
     return true;
   }
 

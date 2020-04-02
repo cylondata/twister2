@@ -39,20 +39,25 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
 
   private FileInputStream fileInputStream;
 
-  private transient Schema arrowSchema;
-  private transient RootAllocator rootAllocator = null;
+  private Schema arrowSchema;
+  private RootAllocator rootAllocator = null;
 
-  private transient VectorSchemaRoot root;
-  private transient ArrowFileReader arrowFileReader;
+  private VectorSchemaRoot root;
+  private ArrowFileReader arrowFileReader;
   private List<ArrowBlock> arrowBlocks;
 
-  public Twister2ArrowFileReader(String inputFile, Schema schema) {
+  public Twister2ArrowFileReader(String inputFile, String schema) {
     this.arrowInputFile = inputFile;
-    this.arrowSchema = schema;
-    LOG.info("arrow schema:" + arrowSchema);
+    try {
+      arrowSchema = Schema.fromJSON(schema);
+      LOG.info("arrow schema at file reader:" + arrowSchema);
+    } catch (IOException ioe) {
+      throw new RuntimeException("IOException occured", ioe);
+    }
   }
 
   public void processInputFile() {
+    LOG.info("arrow schema:" + arrowSchema);
     try {
       this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
       this.fileInputStream = new FileInputStream(arrowInputFile);
@@ -70,8 +75,6 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
       throw new Twister2RuntimeException("IOException Occured", ioe);
     }
   }
-
-
 
   public IntVector getIntegerVector() {
     try {
