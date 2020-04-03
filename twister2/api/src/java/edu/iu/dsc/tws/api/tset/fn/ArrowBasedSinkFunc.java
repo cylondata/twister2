@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-//import java.io.IOException;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -21,11 +22,12 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<T> implements SinkFunc<Iterator<Integer>> {
+public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<Integer>> {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
   private String arrowfileName = null;
+
   private int parallel;
 
   private TSetContext ctx;

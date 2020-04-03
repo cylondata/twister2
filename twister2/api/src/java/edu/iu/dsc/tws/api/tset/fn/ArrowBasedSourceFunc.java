@@ -11,38 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
 
-//TODO: Check Chunk Arrays for parallelism > 1
-//TODO: LOOK AT ARROW METADATA check the chunk array and split it into different workers
 public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
   private int parallel;
+  private IntVector intVector = null;
+  private int currentCell = 0;
 
   private String arrowInputFile;
 
   private Twister2ArrowFileReader twister2ArrowFileReader;
 
-  private Schema arrowSchema;
+  private String arrowSchema;
 
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, String schema) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
-    try {
-      this.arrowSchema = Schema.fromJSON(schema);
-    } catch (IOException ioe) {
-      throw new RuntimeException("IOException occured", ioe);
-    }
+    this.arrowSchema = schema;
   }
 
   /**
@@ -53,9 +47,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
     this.twister2ArrowFileReader = new Twister2ArrowFileReader(this.arrowInputFile, arrowSchema);
     this.twister2ArrowFileReader.processInputFile();
   }
-
-  private IntVector intVector = null;
-  private int currentCell = 0;
 
   @Override
   public boolean hasNext() {

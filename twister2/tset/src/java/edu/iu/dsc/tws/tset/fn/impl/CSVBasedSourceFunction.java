@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.fn.impl;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 
-public class CSVBasedSourceFunction extends BaseSourceFunc<String[]> {
+public class CSVBasedSourceFunction extends BaseSourceFunc<String[]> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(CSVBasedSourceFunction.class.getName());
 
