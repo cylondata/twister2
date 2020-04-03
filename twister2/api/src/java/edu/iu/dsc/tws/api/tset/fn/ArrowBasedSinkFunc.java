@@ -35,14 +35,9 @@ public class ArrowBasedSinkFunc<T> implements SinkFunc<Iterator<Integer>> {
   public ArrowBasedSinkFunc(String filepath, int parallelism, String arrowSchema) {
     this.parallel = parallelism;
     this.arrowfileName = filepath;
-//    try {
-//      this.schema = Schema.fromJSON(arrowSchema);
-//    } catch (IOException ioe) {
-//      throw new RuntimeException("exception occured", ioe);
-//    }
     this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
         arrowfileName, true, arrowSchema);
-    LOG.info("sink function constructor getting called" + schema);
+    LOG.info("sink function constructor getting called" + arrowSchema);
   }
 
   @Override
@@ -71,13 +66,11 @@ public class ArrowBasedSinkFunc<T> implements SinkFunc<Iterator<Integer>> {
     LOG.info("add function getting called:" + value);
     try {
       while (value.hasNext()) {
-        //twister2ArrowFileWriter.writeArrowData(value.next().intValue());
-        LOG.info("next value:" + value.next().intValue());
-        twister2ArrowFileWriter.writeArrowData();
+        twister2ArrowFileWriter.writeArrowData(value.next().intValue());
       }
-      if (value == null) {
+      /*if (value == null) {
         twister2ArrowFileWriter.close();
-      }
+      }*/
     } catch (Exception e) {
       throw new RuntimeException("Unable to write arrow file", e);
     }
