@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.logging.Logger;
