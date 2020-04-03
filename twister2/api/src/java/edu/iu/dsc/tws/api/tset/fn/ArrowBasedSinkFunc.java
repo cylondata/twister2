@@ -38,7 +38,6 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
     this.arrowfileName = filepath;
     this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
         arrowfileName, true, arrowSchema);
-    LOG.info("sink function constructor getting called" + arrowSchema);
   }
 
   @Override
@@ -49,7 +48,6 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
     } catch (Exception e) {
       throw new RuntimeException("Unable to setup arrow file", e);
     }
-    LOG.info("%%%%%%%%%%%%% Prepare function getting called%%%%%%%%");
   }
 
   @Override

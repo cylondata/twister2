@@ -92,18 +92,12 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   }
 
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
-//    try {
-//      this.arrowSchema = Schema.fromJSON(schema);
-//    } catch (IOException ioe) {
-//      throw new RuntimeException("IOException Occured", ioe);
-//    }
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.root = VectorSchemaRoot.create(Schema.fromJSON(arrowSchema), this.rootAllocator);
     File file = new File(arrowFile/* + workerId*/);
     if (file.exists()) {
       file.delete();
     }
-    LOG.info("file name:" + file.getName());
     this.fileOutputStream = new FileOutputStream(file);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
@@ -114,13 +108,14 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
-    //writeArrowData();
     return true;
   }
 
   public void writeArrowData(Integer integerdata) throws Exception {
+    //LOG.info("%%% integer data to write:%%%" + integerdata);
     arrowFileWriter.start();
     int i = 0;
+    root.setRowCount(100);
     for (Field field : root.getSchema().getFields()) {
       FieldVector fieldVector = root.getVector(field.getName());
       IntVector intVector = (IntVector) fieldVector;
@@ -130,7 +125,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       fieldVector.setValueCount(totalitems);
       totalitems++;
     }
-    root.setRowCount(totaldataValues);
     arrowFileWriter.writeBatch();
   }
 

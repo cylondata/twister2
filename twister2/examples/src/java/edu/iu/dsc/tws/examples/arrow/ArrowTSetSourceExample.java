@@ -52,15 +52,17 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
+
     //TODO: FIX THE NULL POINTER EXCEPTION
     //int parallelism = (int) config.get("PARALLELISM");
     //String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+
     SourceTSet<Integer> pointSource;
     SinkTSet<Integer> sinkTSet;
     SourceTSet<String[]> csvSource;
 
     int parallel = 2;
-    int dsize = 20;
+    int dsize = 100;
     String arrowInputFile = "/tmp/test.arrow";
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
     schema = makeSchema();
@@ -84,7 +86,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
             return integers;
           }
         });
-    points.direct().forEach(s -> LOG.info("Double Array Values:" + s));
+    points.direct().forEach(s -> LOG.info("Integer Array Values:" + s));
   }
 
   private Schema makeSchema() {
