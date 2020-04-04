@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -111,24 +113,45 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     return true;
   }
 
-  public void writeArrowData(Integer integerdata) throws Exception {
-    LOG.info("schema value:" + root.getSchema());
+  private List<Integer> integersList = new ArrayList<>();
+
+  public void writeArrowData(Integer integerdata) {
+    integersList.add(integerdata);
+  }
+
+//  public void writeArrowData(Integer integerdata) throws Exception {
+//    LOG.info("schema value:" + root.getSchema());
+//    arrowFileWriter.start();
+//    root.setRowCount(100);
+//    for (Field field : root.getSchema().getFields()) {
+//      int i = 0;
+//      FieldVector fieldVector = root.getVector(field.getName());
+//      LOG.info("field vector:" + fieldVector);
+//      IntVector intVector = (IntVector) fieldVector;
+//      intVector.setInitialCapacity(100);
+//      intVector.allocateNew();
+//      intVector.setSafe(i, isSet(), integerdata);
+//      LOG.info("INT VECTOR:" + intVector);
+//      fieldVector.setValueCount(100);
+//      totalitems++;
+//      i++;
+//    }
+//    arrowFileWriter.writeBatch();
+//  }
+
+  public void processArrowData() throws Exception {
     arrowFileWriter.start();
-    root.setRowCount(100);
-    for (Field field : root.getSchema().getFields()) {
-      int i = 0;
-      FieldVector fieldVector = root.getVector(field.getName());
-      LOG.info("field vector:" + fieldVector);
-      IntVector intVector = (IntVector) fieldVector;
-      intVector.setInitialCapacity(100);
-      intVector.allocateNew();
-      intVector.setSafe(i, isSet(), integerdata);
-      LOG.info("INT VECTOR:" + intVector);
-      fieldVector.setValueCount(100);
-      totalitems++;
-      i++;
+    LOG.info("integer list size:" + integersList.size());
+    for (int i = 0; i < integersList.size();) {
+      int toProcessItems = integersList.size();
+      root.setRowCount(toProcessItems);
+      for (Field field : root.getSchema().getFields()) {
+        FieldVector vector = root.getVector(field.getName());
+        writeFieldInt(vector, i, toProcessItems);
+      }
+      arrowFileWriter.writeBatch();
+      i += toProcessItems;
     }
-    arrowFileWriter.writeBatch();
   }
 
   public void writeArrowData() throws Exception {
@@ -143,10 +166,10 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       arrowFileWriter.writeBatch();
       i += toProcessItems;
     }
-//    arrowFileWriter.end();
-//    arrowFileWriter.close();
-//    fileOutputStream.flush();
-//    fileOutputStream.close();
+    arrowFileWriter.end();
+    arrowFileWriter.close();
+    fileOutputStream.flush();
+    fileOutputStream.close();
   }
 
   private void writeFieldInt(FieldVector fieldVector, int from, int items) {
