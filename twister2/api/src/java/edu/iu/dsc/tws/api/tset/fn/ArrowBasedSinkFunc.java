@@ -62,14 +62,15 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
 
   @Override
   public boolean add(Iterator<Integer> value) {
-    LOG.info("add function getting called:" + value);
+    //LOG.info("add function getting called:" + value);
     try {
       while (value.hasNext()) {
         twister2ArrowFileWriter.writeArrowData(value.next().intValue());
+        //twister2ArrowFileWriter.writeArrowData();
       }
-      /*if (value == null) {
+      if (value == null) {
         twister2ArrowFileWriter.close();
-      }*/
+      }
     } catch (Exception e) {
       throw new RuntimeException("Unable to write arrow file", e);
     }

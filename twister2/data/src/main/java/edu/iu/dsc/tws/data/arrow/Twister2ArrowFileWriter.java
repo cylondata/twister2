@@ -53,8 +53,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private FileOutputStream fileOutputStream;
 
   private transient RootAllocator rootAllocator;
-  private VectorSchemaRoot root;
-  private ArrowFileWriter arrowFileWriter;
+  private transient VectorSchemaRoot root;
+  private transient ArrowFileWriter arrowFileWriter;
   private String arrowSchema;
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag) {
@@ -112,18 +112,21 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   }
 
   public void writeArrowData(Integer integerdata) throws Exception {
-    //LOG.info("%%% integer data to write:%%%" + integerdata);
+    LOG.info("schema value:" + root.getSchema());
     arrowFileWriter.start();
-    int i = 0;
     root.setRowCount(100);
     for (Field field : root.getSchema().getFields()) {
+      int i = 0;
       FieldVector fieldVector = root.getVector(field.getName());
+      LOG.info("field vector:" + fieldVector);
       IntVector intVector = (IntVector) fieldVector;
       intVector.setInitialCapacity(100);
       intVector.allocateNew();
-      intVector.setSafe(totalitems, isSet(), integerdata);
-      fieldVector.setValueCount(totalitems);
+      intVector.setSafe(i, isSet(), integerdata);
+      LOG.info("INT VECTOR:" + intVector);
+      fieldVector.setValueCount(100);
       totalitems++;
+      i++;
     }
     arrowFileWriter.writeBatch();
   }
@@ -140,10 +143,10 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       arrowFileWriter.writeBatch();
       i += toProcessItems;
     }
-    arrowFileWriter.end();
-    arrowFileWriter.close();
-    fileOutputStream.flush();
-    fileOutputStream.close();
+//    arrowFileWriter.end();
+//    arrowFileWriter.close();
+//    fileOutputStream.flush();
+//    fileOutputStream.close();
   }
 
   private void writeFieldInt(FieldVector fieldVector, int from, int items) {
