@@ -340,6 +340,7 @@ pack_tw2(
         ":twister2-restarter",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -403,6 +404,7 @@ pack_tw2(
         ":twister2-test-values",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -718,5 +720,12 @@ pack_tw2(
     name = "twister2-ucx-native-libs",
     srcs = twister2_ucx_native_libs(),
     package_dir = "lib/ucx",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-ucx-native-libs-dir",
+    srcs = ["EMPTY"],
+    package_dir = "lib/ucx/ucx",
     version = T2_VERSION,
 )
