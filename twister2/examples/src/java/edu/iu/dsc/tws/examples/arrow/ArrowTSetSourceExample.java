@@ -53,18 +53,15 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
 
-    //TODO: FIX THE NULL POINTER EXCEPTION
-    //int parallelism = (int) config.get("PARALLELISM");
-    //String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
-
     SourceTSet<Integer> pointSource;
     SinkTSet<Integer> sinkTSet;
     SourceTSet<String[]> csvSource;
 
-    int parallel = 2;
-    int dsize = 100;
-    String arrowInputFile = "/tmp/test.arrow";
+    int parallel = (int) config.get("PARALLELISM");
+    String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+    int dsize = (int) config.get("DSIZE");
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
+
     schema = makeSchema();
     csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
     sinkTSet = csvSource.direct().flatmap(
@@ -102,13 +99,15 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     options.addOption("parallelism", true, "Parallelism");
     options.addOption("workers", true, "Workers");
     options.addOption("input", "Arrow Input File");
+    options.addOption("dsize", true, "100");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
-    String arrowInput = cmd.getOptionValue("input");
+    String arrowInput = cmd.getOptionValue("input", "tmp.arrow");
     int parallelism = Integer.parseInt(cmd.getOptionValue("parallelism", "2"));
     int workers = Integer.parseInt(cmd.getOptionValue("workers", "2"));
+    int dsize = Integer.parseInt(cmd.getOptionValue("dsize", "100"));
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
 
@@ -116,6 +115,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     jobConfig.put("ARROW_INPUT_FILE", arrowInput);
     jobConfig.put("PARALLELISM", parallelism);
     jobConfig.put("WORKERS", workers);
+    jobConfig.put("DSIZE", dsize);
 
     jobBuilder.setJobName("Arrow Testing Example");
     jobBuilder.setWorkerClass(ArrowTSetSourceExample.class);
