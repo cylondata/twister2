@@ -75,21 +75,12 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   }
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema) {
-    this.maxEntries = 1024;
-    this.checkSum = 0;
     this.arrowFile = arrowfile;
     this.flag = flag;
     this.arrowSchema = schema;
+    this.batchSize = 1000;
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
-
-    this.batchSize = 100;
-    this.random = new Random(System.nanoTime());
-    this.entries = this.random.nextInt(this.maxEntries);
     this.arrowFile = arrowfile;
-    this.data = new int[this.entries];
-    for (int i = 0; i < this.entries; i++) {
-      this.data[i] = this.random.nextInt(1024);
-    }
     LOG.info("constructor getting called" + arrowSchema);
   }
 
@@ -113,37 +104,21 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     return true;
   }
 
+  @Override
+  public void writeArrowData() throws Exception {
+  }
+
   private List<Integer> integersList = new ArrayList<>();
 
   public void writeArrowData(Integer integerdata) {
     integersList.add(integerdata);
   }
 
-//  public void writeArrowData(Integer integerdata) throws Exception {
-//    LOG.info("schema value:" + root.getSchema());
-//    arrowFileWriter.start();
-//    root.setRowCount(100);
-//    for (Field field : root.getSchema().getFields()) {
-//      int i = 0;
-//      FieldVector fieldVector = root.getVector(field.getName());
-//      LOG.info("field vector:" + fieldVector);
-//      IntVector intVector = (IntVector) fieldVector;
-//      intVector.setInitialCapacity(100);
-//      intVector.allocateNew();
-//      intVector.setSafe(i, isSet(), integerdata);
-//      LOG.info("INT VECTOR:" + intVector);
-//      fieldVector.setValueCount(100);
-//      totalitems++;
-//      i++;
-//    }
-//    arrowFileWriter.writeBatch();
-//  }
-
   public void processArrowData() throws Exception {
     arrowFileWriter.start();
-    LOG.info("integer list size:" + integersList.size());
     for (int i = 0; i < integersList.size();) {
-      int toProcessItems = integersList.size();
+      int toProcessItems = Math.min(this.batchSize, this.integersList.size() - i);
+      LOG.info("to process items:" + toProcessItems);
       root.setRowCount(toProcessItems);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
@@ -152,24 +127,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       arrowFileWriter.writeBatch();
       i += toProcessItems;
     }
-  }
-
-  public void writeArrowData() throws Exception {
-    arrowFileWriter.start();
-    for (int i = 0; i < this.entries;) {
-      int toProcessItems = Math.min(this.batchSize, this.entries - i);
-      root.setRowCount(toProcessItems);
-      for (Field field : root.getSchema().getFields()) {
-        FieldVector vector = root.getVector(field.getName());
-        writeFieldInt(vector, i, toProcessItems);
-      }
-      arrowFileWriter.writeBatch();
-      i += toProcessItems;
-    }
-    arrowFileWriter.end();
-    arrowFileWriter.close();
-    fileOutputStream.flush();
-    fileOutputStream.close();
   }
 
   private void writeFieldInt(FieldVector fieldVector, int from, int items) {
@@ -177,7 +134,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), this.data[from + i]);
+      intVector.setSafe(i, isSet(), this.integersList.get(from + i));
     }
     fieldVector.setValueCount(items);
   }
@@ -200,4 +157,24 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       e.printStackTrace();
     }
   }
+
+  //  public void writeArrowData(Integer integerdata) throws Exception {
+//    LOG.info("schema value:" + root.getSchema());
+//    arrowFileWriter.start();
+//    root.setRowCount(100);
+//    for (Field field : root.getSchema().getFields()) {
+//      int i = 0;
+//      FieldVector fieldVector = root.getVector(field.getName());
+//      LOG.info("field vector:" + fieldVector);
+//      IntVector intVector = (IntVector) fieldVector;
+//      intVector.setInitialCapacity(100);
+//      intVector.allocateNew();
+//      intVector.setSafe(i, isSet(), integerdata);
+//      LOG.info("INT VECTOR:" + intVector);
+//      fieldVector.setValueCount(100);
+//      totalitems++;
+//      i++;
+//    }
+//    arrowFileWriter.writeBatch();
+//  }
 }
