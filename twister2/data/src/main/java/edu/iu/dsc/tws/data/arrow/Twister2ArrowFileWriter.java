@@ -40,6 +40,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private int batchSize;
   private int[] data;
 
+  private List<Integer> integersList = new ArrayList<>();
+
   private boolean useNullValues;
   private boolean flag;
 
@@ -101,14 +103,10 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   public void writeArrowData() throws Exception {
   }
 
-  private List<Integer> integersList = new ArrayList<>();
-
-  // todo lets rename this method to 'queueArrowData' // Done
   public void queueArrowData(Integer integerdata) {
     integersList.add(integerdata);
   }
 
-  // todo lets rename this method to 'commitArrowData' // Done
   public void commitArrowData() throws Exception {
     arrowFileWriter.start();
     for (int i = 0; i < integersList.size();) {

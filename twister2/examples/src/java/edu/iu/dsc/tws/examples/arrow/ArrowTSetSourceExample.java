@@ -32,9 +32,9 @@ import org.apache.commons.cli.Options;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.fn.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.impl.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -49,7 +49,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
-
     String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
     String csvInputDirectory = (String) config.get("CSV_INPUT_DIRECTORY");
     int parallel = (int) config.get("PARALLELISM");
@@ -57,7 +56,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile + csvInputDirectory);
 
     Schema schema = makeSchema();
-    // todo: take /tmp/dinput from the config
     SourceTSet<String[]> csvSource = env.createCSVSource(
         csvInputDirectory, dsize, parallel, "split");
     SinkTSet<Iterator<Integer>> sinkTSet = csvSource
