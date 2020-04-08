@@ -35,16 +35,10 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   private String arrowFile;
 
-  private int totalitems = 0;
-  private int totaldataValues;
-
   private int entries;
   private int maxEntries;
   private int batchSize;
   private int[] data;
-
-  private long checkSum;
-  private long nullEntries;
 
   private boolean useNullValues;
   private boolean flag;
@@ -61,7 +55,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
-    this.checkSum = 0;
     this.batchSize = 100;
     this.random = new Random(System.nanoTime());
     this.entries = this.random.nextInt(this.maxEntries);
@@ -81,7 +74,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.batchSize = 1000;
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.arrowFile = arrowfile;
-    LOG.info("constructor getting called" + arrowSchema);
   }
 
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
@@ -111,13 +103,13 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   private List<Integer> integersList = new ArrayList<>();
 
-  // todo lets rename this method to 'queueArrowData'
-  public void writeArrowData(Integer integerdata) {
+  // todo lets rename this method to 'queueArrowData' // Done
+  public void queueArrowData(Integer integerdata) {
     integersList.add(integerdata);
   }
 
-  // todo lets rename this method to 'commitArrowData'
-  public void processArrowData() throws Exception {
+  // todo lets rename this method to 'commitArrowData' // Done
+  public void commitArrowData() throws Exception {
     arrowFileWriter.start();
     for (int i = 0; i < integersList.size();) {
       int toProcessItems = Math.min(this.batchSize, this.integersList.size() - i);
@@ -144,7 +136,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   private int isSet() {
     if (useNullValues) {
-      this.nullEntries++;
       return 0;
     }
     return 1;
@@ -160,24 +151,4 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       e.printStackTrace();
     }
   }
-
-  //  public void writeArrowData(Integer integerdata) throws Exception {
-//    LOG.info("schema value:" + root.getSchema());
-//    arrowFileWriter.start();
-//    root.setRowCount(100);
-//    for (Field field : root.getSchema().getFields()) {
-//      int i = 0;
-//      FieldVector fieldVector = root.getVector(field.getName());
-//      LOG.info("field vector:" + fieldVector);
-//      IntVector intVector = (IntVector) fieldVector;
-//      intVector.setInitialCapacity(100);
-//      intVector.allocateNew();
-//      intVector.setSafe(i, isSet(), integerdata);
-//      LOG.info("INT VECTOR:" + intVector);
-//      fieldVector.setValueCount(100);
-//      totalitems++;
-//      i++;
-//    }
-//    arrowFileWriter.writeBatch();
-//  }
 }

@@ -50,15 +50,16 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
 
-    int parallel = (int) config.get("PARALLELISM");
     String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
+    String csvInputDirectory = (String) config.get("CSV_INPUT_DIRECTORY");
+    int parallel = (int) config.get("PARALLELISM");
     int dsize = (int) config.get("DSIZE");
-    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
+    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile + csvInputDirectory);
 
     Schema schema = makeSchema();
-
     // todo: take /tmp/dinput from the config
-    SourceTSet<String[]> csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
+    SourceTSet<String[]> csvSource = env.createCSVSource(
+        csvInputDirectory, dsize, parallel, "split");
     SinkTSet<Iterator<Integer>> sinkTSet = csvSource
         .direct()
         .flatmap(
@@ -101,13 +102,15 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     Options options = new Options();
     options.addOption("parallelism", true, "Parallelism");
     options.addOption("workers", true, "Workers");
-    options.addOption("input", "Arrow Input File");
     options.addOption("dsize", true, "100");
+    options.addOption("input", "Arrow Input File");
+    options.addOption("csvdirectory", "CSV Input Directory");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
     String arrowInput = cmd.getOptionValue("input", "tmp.arrow");
+    String csvInputDirectory = cmd.getOptionValue("csvdirectory", "/tmp/dinput");
     int parallelism = Integer.parseInt(cmd.getOptionValue("parallelism", "2"));
     int workers = Integer.parseInt(cmd.getOptionValue("workers", "2"));
     int dsize = Integer.parseInt(cmd.getOptionValue("dsize", "100"));
@@ -119,6 +122,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     jobConfig.put("PARALLELISM", parallelism);
     jobConfig.put("WORKERS", workers);
     jobConfig.put("DSIZE", dsize);
+    jobConfig.put("CSV_INPUT_DIRECTORY", csvInputDirectory);
 
     jobBuilder.setJobName("Arrow Testing Example");
     jobBuilder.setWorkerClass(ArrowTSetSourceExample.class);

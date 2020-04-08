@@ -51,8 +51,8 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     this.arrowSchema = schema;
   }
 
-  // todo lets rename this method to setup/init InputFile (like in the writer)
-  public void processInputFile() {
+  // todo lets rename this method to setup/init InputFile (like in the writer) //Done
+  public void initInputFile() {
     try {
       LOG.info("arrow schema:" + Schema.fromJSON(arrowSchema));
       this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);

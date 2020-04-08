@@ -46,7 +46,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
   public void prepare(TSetContext context) {
     super.prepare(context);
     this.twister2ArrowFileReader = new Twister2ArrowFileReader(this.arrowInputFile, arrowSchema);
-    this.twister2ArrowFileReader.processInputFile();
+    this.twister2ArrowFileReader.initInputFile();
   }
 
   @Override
@@ -64,6 +64,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
 
   @Override
   public Integer next() {
-    return intVector.get(currentCell++); // post increment current cell
+    return intVector.get(currentCell++);
   }
 }

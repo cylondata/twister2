@@ -63,10 +63,10 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
     try {
       while (value.hasNext()) {
         // todo: we are only supporting ints at the moment. we need to remove this cast!
-        twister2ArrowFileWriter.writeArrowData((Integer) value.next());
+        twister2ArrowFileWriter.queueArrowData((Integer) value.next());
       }
       // todo: either we can process arrow data in the close method, or here. WDYT?
-      twister2ArrowFileWriter.processArrowData();
+      twister2ArrowFileWriter.commitArrowData();
     } catch (Exception e) {
       throw new RuntimeException("Unable to write arrow file", e);
     }
