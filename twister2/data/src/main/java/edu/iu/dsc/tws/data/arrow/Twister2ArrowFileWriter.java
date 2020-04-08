@@ -87,6 +87,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
     this.root = VectorSchemaRoot.create(Schema.fromJSON(arrowSchema), this.rootAllocator);
+    // todo: need to reference this worker ID to properly handle parallelism
     File file = new File(arrowFile/* + workerId*/);
     if (file.exists()) {
       file.delete();
@@ -110,10 +111,12 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   private List<Integer> integersList = new ArrayList<>();
 
+  // todo lets rename this method to 'queueArrowData'
   public void writeArrowData(Integer integerdata) {
     integersList.add(integerdata);
   }
 
+  // todo lets rename this method to 'commitArrowData'
   public void processArrowData() throws Exception {
     arrowFileWriter.start();
     for (int i = 0; i < integersList.size();) {

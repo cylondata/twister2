@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
@@ -47,43 +46,47 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
-  private transient Schema schema;
-
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
-
-    SourceTSet<Integer> pointSource;
-    SinkTSet<Integer> sinkTSet;
-    SourceTSet<String[]> csvSource;
 
     int parallel = (int) config.get("PARALLELISM");
     String arrowInputFile = (String) config.get("ARROW_INPUT_FILE");
     int dsize = (int) config.get("DSIZE");
     LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile);
 
-    schema = makeSchema();
-    csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
-    sinkTSet = csvSource.direct().flatmap(
-        (FlatMapFunc<Integer, String[]>) (input, collector) -> {
-          for (int i = 0; i < input.length; i++) {
-            collector.collect(Integer.parseInt(input[i].trim()));
-          }
-        }).direct().sink(new ArrowBasedSinkFunc(arrowInputFile, parallel, schema.toJson()));
+    Schema schema = makeSchema();
+
+    // todo: take /tmp/dinput from the config
+    SourceTSet<String[]> csvSource = env.createCSVSource("/tmp/dinput", dsize, parallel, "split");
+    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
+        .direct()
+        .flatmap(
+            (FlatMapFunc<Integer, String[]>) (input, collector) -> {
+              for (String s : input) {
+                collector.collect(Integer.parseInt(s.trim()));
+              }
+            })
+        .direct()
+        .sink(new ArrowBasedSinkFunc<>(arrowInputFile, schema.toJson()));
+
+    // run sink explicitly
     env.run(sinkTSet);
 
-    pointSource = env.createArrowSource(arrowInputFile, parallel, schema.toJson());
-    ComputeTSet<List<Integer>, Iterator<Integer>> points = pointSource.direct().compute(
-        new ComputeFunc<List<Integer>, Iterator<Integer>>() {
-          private ArrayList<Integer> integers = new ArrayList<>();
+    env.createArrowSource(arrowInputFile, parallel, schema.toJson())
+        .direct()
+        .compute(
+            new ComputeFunc<List<Integer>, Iterator<Integer>>() {
+              private final ArrayList<Integer> integers = new ArrayList<>();
 
-          @Override
-          public List<Integer> compute(Iterator<Integer> input) {
-            input.forEachRemaining(integers::add);
-            return integers;
-          }
-        });
-    points.direct().forEach(s -> LOG.info("Integer Array Values:" + s));
+              @Override
+              public List<Integer> compute(Iterator<Integer> input) {
+                input.forEachRemaining(integers::add);
+                return integers;
+              }
+            })
+        .direct()
+        .forEach(s -> LOG.info("Integer Array Values:" + s));
   }
 
   private Schema makeSchema() {

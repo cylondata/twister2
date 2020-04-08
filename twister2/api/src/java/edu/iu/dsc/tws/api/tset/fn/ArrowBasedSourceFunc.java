@@ -19,19 +19,20 @@ import org.apache.arrow.vector.IntVector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
 
+// todo: move this to package edu.iu.dsc.tws.tset.fn.impl
 public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
+  // todo let's fix parallelism for sources
   private int parallel;
-  private IntVector intVector = null;
   private int currentCell = 0;
+  private IntVector intVector = null;
 
-  private String arrowInputFile;
+  private final String arrowInputFile;
+  private final String arrowSchema;
 
-  private Twister2ArrowFileReader twister2ArrowFileReader;
-
-  private String arrowSchema;
+  private transient Twister2ArrowFileReader twister2ArrowFileReader;
 
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, String schema) {
     this.arrowInputFile = arrowinputFile;

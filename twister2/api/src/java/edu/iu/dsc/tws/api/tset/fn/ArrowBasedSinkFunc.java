@@ -15,36 +15,39 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import org.apache.arrow.vector.types.pojo.Schema;
-
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
-public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<Integer>> {
+// todo: we need a second sink function to be used with SingleTLinks because
+//  this only works with iteratorTLinks like direct
+
+// todo: move this to package edu.iu.dsc.tws.tset.fn.impl
+public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
-  private String arrowfileName = null;
+  private final String filePath;
+  private final String arrowSchema;
 
-  private int parallel;
+  // transient because this will be created by the prepare method
+  private transient Twister2ArrowFileWriter twister2ArrowFileWriter;
 
-  private TSetContext ctx;
-  private transient Schema schema;
-  private Twister2ArrowFileWriter twister2ArrowFileWriter;
-
-  public ArrowBasedSinkFunc(String filepath, int parallelism, String arrowSchema) {
-    this.parallel = parallelism;
-    this.arrowfileName = filepath;
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(
-        arrowfileName, true, arrowSchema);
+  // todo: removed parallelism because it is not used to create arrowfilewriter
+  //  parallelism is handled by the workerID IMO
+  public ArrowBasedSinkFunc(String filepath, String schema) {
+    this.filePath = filepath;
+    this.arrowSchema = schema;
   }
 
   @Override
   public void prepare(TSetContext context) {
-    this.ctx = context;
+    super.prepare(context);
+    // creating the file writer in the prepare method because, each worker would need to create
+    // their own writer
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(this.filePath, true,
+        this.arrowSchema);
     try {
-      twister2ArrowFileWriter.setUpTwister2ArrowWrite(ctx.getWorkerId());
+      twister2ArrowFileWriter.setUpTwister2ArrowWrite(context.getWorkerId());
     } catch (Exception e) {
       throw new RuntimeException("Unable to setup arrow file", e);
     }
@@ -56,20 +59,14 @@ public class ArrowBasedSinkFunc<T> implements Serializable, SinkFunc<Iterator<In
   }
 
   @Override
-  public DataPartition<?> get() {
-    return null;
-  }
-
-  @Override
-  public boolean add(Iterator<Integer> value) {
+  public boolean add(Iterator<T> value) {
     try {
       while (value.hasNext()) {
-        twister2ArrowFileWriter.writeArrowData(value.next().intValue());
+        // todo: we are only supporting ints at the moment. we need to remove this cast!
+        twister2ArrowFileWriter.writeArrowData((Integer) value.next());
       }
+      // todo: either we can process arrow data in the close method, or here. WDYT?
       twister2ArrowFileWriter.processArrowData();
-      if (value == null) {
-        twister2ArrowFileWriter.close();
-      }
     } catch (Exception e) {
       throw new RuntimeException("Unable to write arrow file", e);
     }
