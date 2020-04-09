@@ -23,7 +23,7 @@ twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.M
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
 #twister2.resource.scheduler.mpi.mpirun.file: "ompi/bin/mpirun"
-twister2.resource.scheduler.mpi.mpirun.file: "/home/ubuntu/openmpi-4.0.2/bin/mpirun"
+twister2.resource.scheduler.mpi.mpirun.file: "/shared/openmpi-4.0.2/bin/mpirun"
 
 # mpi scheduling policy. Two possible options are node and slot.
 # read more at https://www.open-mpi.org/faq/?category=running#mpirun-scheduling
