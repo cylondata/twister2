@@ -90,6 +90,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_UPLOADER_WEB_SERVER_LABEL =
       "twister2.kubernetes.uploader.web.server.label";
 
+  public static final boolean K8S_CHECK_PWD_FREE_SSH_DEFAULT = false;
+  public static final String K8S_CHECK_PWD_FREE_SSH = "kubernetes.check.pwd.free.ssh";
+
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
   }
@@ -182,6 +185,10 @@ public class KubernetesContext extends SchedulerContext {
   public static String uploaderWebServerLabel(Config cfg) {
     return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_LABEL,
         K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT);
+  }
+
+  public static boolean checkPwdFreeSsh(Config cfg) {
+    return cfg.getBooleanValue(K8S_CHECK_PWD_FREE_SSH, K8S_CHECK_PWD_FREE_SSH_DEFAULT);
   }
 
 }
