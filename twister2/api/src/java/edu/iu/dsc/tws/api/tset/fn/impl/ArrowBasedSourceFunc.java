@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 
 import org.apache.arrow.vector.IntVector;
 
+import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
@@ -45,6 +46,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Seri
 
   private transient Twister2ArrowFileReader twister2ArrowFileReader;
 
+  private FileSystem fileSystem;
+
   public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, String schema) {
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
@@ -57,7 +60,6 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Seri
   public void prepare(TSetContext context) {
     super.prepare(context);
     String filename = "/tmp/" + context.getWorkerId() + "/" + this.arrowInputFile;
-    LOG.info("arrow file name:" + filename);
     this.twister2ArrowFileReader = new Twister2ArrowFileReader(filename, arrowSchema);
     this.twister2ArrowFileReader.initInputFile();
   }

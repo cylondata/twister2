@@ -26,7 +26,11 @@ import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.types.pojo.Schema;
 
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serializable {
 
@@ -38,6 +42,10 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   private int currentBlock = 0;
 
   private FileInputStream fileInputStream;
+
+  private FSDataInputStream fsDataInputStream;
+
+  private FileSystem fileSystem;
 
   private String arrowSchema;
   private RootAllocator rootAllocator = null;
@@ -54,6 +62,11 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   public void initInputFile() {
     try {
       LOG.info("arrow schema:" + Schema.fromJSON(arrowSchema));
+      //TODO: Fix This
+      Path path = new Path(arrowInputFile);
+      this.fileSystem = FileSystemUtils.get(path);
+      this.fsDataInputStream = fileSystem.open(path);
+
       this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
       this.fileInputStream = new FileInputStream(arrowInputFile);
       this.arrowFileReader = new ArrowFileReader(new SeekableReadChannel(

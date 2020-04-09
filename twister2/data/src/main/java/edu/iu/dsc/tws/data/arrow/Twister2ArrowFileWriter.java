@@ -39,6 +39,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileWriter.class.getName());
 
   private String arrowFile;
+  private String arrowSchema;
 
   private int entries;
   private int maxEntries;
@@ -53,12 +54,13 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private Random random;
 
   private Twister2ArrowOutputStream twister2ArrowOutputStream;
-  private FSDataOutputStream fileOutputStream;
+  private FSDataOutputStream fsDataOutputStream;
+
+  private FileSystem fileSystem;
 
   private transient RootAllocator rootAllocator;
   private transient VectorSchemaRoot root;
   private transient ArrowFileWriter arrowFileWriter;
-  private String arrowSchema;
 
   public Twister2ArrowFileWriter(String arrowfile, boolean flag) {
     this.maxEntries = 1024;
@@ -83,8 +85,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.arrowFile = arrowfile;
   }
 
-  private FileSystem fileSystem;
-
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
     LOG.info("%%%%%%%%% worker id details:" + workerId);
     this.root = VectorSchemaRoot.create(Schema.fromJSON(arrowSchema), this.rootAllocator);
@@ -93,15 +93,15 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     if (fileSystem.exists(path)) {
       fileSystem.delete(path, true);
     } else {
-      this.fileOutputStream = fileSystem.create(new Path(arrowFile));
+      this.fsDataOutputStream = fileSystem.create(new Path(arrowFile));
     }
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
-          this.fileOutputStream.getChannel());
+          this.fsDataOutputStream.getChannel());
     } else {
-      this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fileOutputStream);
+      this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fsDataOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
     return true;
@@ -146,8 +146,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     try {
       arrowFileWriter.end();
       arrowFileWriter.close();
-      fileOutputStream.flush();
-      fileOutputStream.close();
+      fsDataOutputStream.flush();
+      fsDataOutputStream.close();
     } catch (IOException e) {
       e.printStackTrace();
     }

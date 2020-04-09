@@ -27,15 +27,7 @@ public class Twister2ArrowOutputStream implements WritableByteChannel, Serializa
   private byte[] tempBuffer;
   private long bytesSoFar;
 
-  //private transient FileOutputStream fileOutputStream;
   private transient FSDataOutputStream fileOutputStream;
-
- /* public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
-    this.isOpen = true;
-    this.tempBuffer = new byte[1024 * 1024];
-    this.bytesSoFar = 0;
-    this.fileOutputStream = fileoutputStream;
-  }*/
 
   public Twister2ArrowOutputStream(FSDataOutputStream fileoutputStream) {
     this.isOpen = true;
