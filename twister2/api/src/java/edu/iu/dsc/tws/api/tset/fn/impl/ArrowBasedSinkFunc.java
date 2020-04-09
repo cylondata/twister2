@@ -39,6 +39,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
   private final String filePath;
+  private final String fileName;
   private final String arrowSchema;
 
   // transient because this will be created by the prepare method
@@ -46,9 +47,10 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
 
   // todo: removed parallelism because it is not used to create arrowfilewriter
   //  parallelism is handled by the workerID IMO
-  public ArrowBasedSinkFunc(String filepath, String schema) {
+  public ArrowBasedSinkFunc(String filepath, String filename, String schema) {
     this.filePath = filepath;
     this.arrowSchema = schema;
+    this.fileName = filename;
   }
 
   @Override
@@ -56,8 +58,8 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
     super.prepare(context);
     // creating the file writer in the prepare method because, each worker would need to create
     // their own writer
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter("/tmp/"
-        + context.getWorkerId() + "/" + this.filePath, true, this.arrowSchema);
+    String filename = this.filePath + "/" + context.getWorkerId() + "/" + this.fileName;
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(filename, true, this.arrowSchema);
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(context.getWorkerId());
     } catch (Exception e) {

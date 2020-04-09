@@ -82,18 +82,17 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.arrowSchema = schema;
     this.batchSize = 1000;
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
-    this.arrowFile = arrowfile;
   }
 
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
-    LOG.info("%%%%%%%%% worker id details:" + workerId);
+    LOG.fine("%%%%%%%%% worker id details:" + workerId + "\t" + arrowFile);
     this.root = VectorSchemaRoot.create(Schema.fromJSON(arrowSchema), this.rootAllocator);
     Path path = new Path(arrowFile);
     this.fileSystem = FileSystemUtils.get(path);
     if (fileSystem.exists(path)) {
       fileSystem.delete(path, true);
     } else {
-      this.fsDataOutputStream = fileSystem.create(new Path(arrowFile));
+      this.fsDataOutputStream = fileSystem.create(path);
     }
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();

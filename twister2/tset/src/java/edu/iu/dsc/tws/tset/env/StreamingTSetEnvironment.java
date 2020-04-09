@@ -76,10 +76,11 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
     return null;
   }
 
-  public SSourceTSet<Object> createArrowSource(String filePath, int parallelism, String schema) {
+  public SSourceTSet<Object> createArrowSource(String filePath, String fileName, int parallelism,
+                                               String schema) {
     try {
       return createSource(
-          new ArrowBasedSourceFunc(filePath, parallelism, schema), parallelism);
+          new ArrowBasedSourceFunc(filePath, fileName, parallelism, schema), parallelism);
     } catch (Exception e) {
       e.printStackTrace();
     }

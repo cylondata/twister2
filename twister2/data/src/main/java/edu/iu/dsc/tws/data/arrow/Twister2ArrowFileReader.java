@@ -37,19 +37,17 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileReader.class.getName());
 
   private String arrowInputFile;
+  private String arrowSchema;
 
-  private IntVector intVector;
   private int currentBlock = 0;
+  private IntVector intVector;
 
   private FileInputStream fileInputStream;
-
   private FSDataInputStream fsDataInputStream;
 
   private FileSystem fileSystem;
 
-  private String arrowSchema;
-  private RootAllocator rootAllocator = null;
-
+  private RootAllocator rootAllocator;
   private VectorSchemaRoot root;
   private ArrowFileReader arrowFileReader;
   private List<ArrowBlock> arrowBlocks;
@@ -57,17 +55,15 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   public Twister2ArrowFileReader(String inputFile, String schema) {
     this.arrowInputFile = inputFile;
     this.arrowSchema = schema;
+    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
   public void initInputFile() {
     try {
       LOG.info("arrow schema:" + Schema.fromJSON(arrowSchema));
-      //TODO: Fix This
       Path path = new Path(arrowInputFile);
       this.fileSystem = FileSystemUtils.get(path);
       this.fsDataInputStream = fileSystem.open(path);
-
-      this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
       this.fileInputStream = new FileInputStream(arrowInputFile);
       this.arrowFileReader = new ArrowFileReader(new SeekableReadChannel(
           fileInputStream.getChannel()), rootAllocator);

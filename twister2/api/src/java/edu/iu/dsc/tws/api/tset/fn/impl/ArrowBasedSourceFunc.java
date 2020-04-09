@@ -37,6 +37,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Seri
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
+  private final String arrowInputDirectory;
   private final String arrowInputFile;
   private final String arrowSchema;
 
@@ -48,7 +49,9 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Seri
 
   private FileSystem fileSystem;
 
-  public ArrowBasedSourceFunc(String arrowinputFile, int parallelism, String schema) {
+  public ArrowBasedSourceFunc(String arrowInputdirectory, String arrowinputFile, int parallelism,
+                              String schema) {
+    this.arrowInputDirectory = arrowInputdirectory;
     this.arrowInputFile = arrowinputFile;
     this.parallel = parallelism;
     this.arrowSchema = schema;
@@ -59,8 +62,8 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Seri
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
-    String filename = "/tmp/" + context.getWorkerId() + "/" + this.arrowInputFile;
-    this.twister2ArrowFileReader = new Twister2ArrowFileReader(filename, arrowSchema);
+    this.twister2ArrowFileReader = new Twister2ArrowFileReader(this.arrowInputDirectory
+        + "/" + context.getWorkerId() + "/" + this.arrowInputFile, arrowSchema);
     this.twister2ArrowFileReader.initInputFile();
   }
 
