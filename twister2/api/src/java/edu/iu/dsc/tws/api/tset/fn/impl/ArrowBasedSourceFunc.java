@@ -32,17 +32,16 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
 
-public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Serializable {
+public class ArrowBasedSourceFunc extends BaseSourceFunc<Object> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSourceFunc.class.getName());
 
-  // todo let's fix parallelism for sources
+  private final String arrowInputFile;
+  private final String arrowSchema;
+
   private int parallel;
   private int currentCell = 0;
   private IntVector intVector = null;
-
-  private final String arrowInputFile;
-  private final String arrowSchema;
 
   private transient Twister2ArrowFileReader twister2ArrowFileReader;
 
@@ -57,7 +56,9 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
    */
   public void prepare(TSetContext context) {
     super.prepare(context);
-    this.twister2ArrowFileReader = new Twister2ArrowFileReader(this.arrowInputFile, arrowSchema);
+    String filename = "/tmp/" + context.getWorkerId() + "/" + this.arrowInputFile;
+    LOG.info("arrow file name:" + filename);
+    this.twister2ArrowFileReader = new Twister2ArrowFileReader(filename, arrowSchema);
     this.twister2ArrowFileReader.initInputFile();
   }
 
@@ -75,7 +76,7 @@ public class ArrowBasedSourceFunc extends BaseSourceFunc<Integer> implements Ser
   }
 
   @Override
-  public Integer next() {
+  public Object next() {
     return intVector.get(currentCell++);
   }
 }

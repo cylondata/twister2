@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-import java.io.File;
-import java.io.FileOutputStream;
+//import java.io.File;
+//import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,6 +28,11 @@ import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
+
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serializable {
 
@@ -48,7 +53,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private Random random;
 
   private Twister2ArrowOutputStream twister2ArrowOutputStream;
-  private FileOutputStream fileOutputStream;
+  private FSDataOutputStream fileOutputStream;
 
   private transient RootAllocator rootAllocator;
   private transient VectorSchemaRoot root;
@@ -78,15 +83,18 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.arrowFile = arrowfile;
   }
 
+  private FileSystem fileSystem;
+
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
-    this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    LOG.info("%%%%%%%%% worker id details:" + workerId);
     this.root = VectorSchemaRoot.create(Schema.fromJSON(arrowSchema), this.rootAllocator);
-    // todo: need to reference this worker ID to properly handle parallelism
-    File file = new File(arrowFile/* + workerId*/);
-    if (file.exists()) {
-      file.delete();
+    Path path = new Path(arrowFile);
+    this.fileSystem = FileSystemUtils.get(path);
+    if (fileSystem.exists(path)) {
+      fileSystem.delete(path, true);
+    } else {
+      this.fileOutputStream = fileSystem.create(new Path(arrowFile));
     }
-    this.fileOutputStream = new FileOutputStream(file);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
@@ -99,10 +107,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     return true;
   }
 
-  @Override
-  public void writeArrowData() throws Exception {
-  }
-
   public void queueArrowData(Integer integerdata) {
     integersList.add(integerdata);
   }
@@ -111,7 +115,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     arrowFileWriter.start();
     for (int i = 0; i < integersList.size();) {
       int toProcessItems = Math.min(this.batchSize, this.integersList.size() - i);
-      LOG.info("to process items:" + toProcessItems);
       root.setRowCount(toProcessItems);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());

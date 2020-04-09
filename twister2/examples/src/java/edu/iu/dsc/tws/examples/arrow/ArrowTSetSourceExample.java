@@ -53,7 +53,8 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     String csvInputDirectory = (String) config.get("CSV_INPUT_DIRECTORY");
     int parallel = (int) config.get("PARALLELISM");
     int dsize = (int) config.get("DSIZE");
-    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile + csvInputDirectory);
+    LOG.info("parallelism and input file:" + parallel + "\t" + arrowInputFile + "\t"
+        + csvInputDirectory);
 
     Schema schema = makeSchema();
     SourceTSet<String[]> csvSource = env.createCSVSource(
@@ -75,11 +76,11 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     env.createArrowSource(arrowInputFile, parallel, schema.toJson())
         .direct()
         .compute(
-            new ComputeFunc<List<Integer>, Iterator<Integer>>() {
-              private final ArrayList<Integer> integers = new ArrayList<>();
+            new ComputeFunc<List<Object>, Iterator<Object>>() {
+              private final ArrayList<Object> integers = new ArrayList<>();
 
               @Override
-              public List<Integer> compute(Iterator<Integer> input) {
+              public List<Object> compute(Iterator<Object> input) {
                 input.forEachRemaining(integers::add);
                 return integers;
               }

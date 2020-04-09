@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 
 // todo: we need a second sink function to be used with SingleTLinks because
-//  this only works with iteratorTLinks like direct
+// this only works with iteratorTLinks like direct
 
 public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements Serializable {
 
@@ -54,11 +54,10 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   @Override
   public void prepare(TSetContext context) {
     super.prepare(context);
-    LOG.info("worker id:" + context.getId() + "\t" + context.getIndex());
     // creating the file writer in the prepare method because, each worker would need to create
     // their own writer
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(this.filePath, true,
-        this.arrowSchema);
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter("/tmp/"
+        + context.getWorkerId() + "/" + this.filePath, true, this.arrowSchema);
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(context.getWorkerId());
     } catch (Exception e) {

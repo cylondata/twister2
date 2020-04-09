@@ -83,8 +83,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
         parallelism);
   }
 
-  // todo let's support generic types next
-  public SourceTSet<Integer> createArrowSource(String filePath, int parallelism, String schema) {
+  //Todo: let's support generic types next
+  public SourceTSet<Object> createArrowSource(String filePath, int parallelism, String schema) {
     return createSource(new ArrowBasedSourceFunc(filePath, parallelism, schema), parallelism);
   }
 

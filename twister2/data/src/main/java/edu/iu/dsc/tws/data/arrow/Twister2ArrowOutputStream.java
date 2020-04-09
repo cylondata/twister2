@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 
 public class Twister2ArrowOutputStream implements WritableByteChannel, Serializable {
 
@@ -26,9 +27,17 @@ public class Twister2ArrowOutputStream implements WritableByteChannel, Serializa
   private byte[] tempBuffer;
   private long bytesSoFar;
 
-  private transient FileOutputStream fileOutputStream;
+  //private transient FileOutputStream fileOutputStream;
+  private transient FSDataOutputStream fileOutputStream;
 
-  public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
+ /* public Twister2ArrowOutputStream(FileOutputStream fileoutputStream) {
+    this.isOpen = true;
+    this.tempBuffer = new byte[1024 * 1024];
+    this.bytesSoFar = 0;
+    this.fileOutputStream = fileoutputStream;
+  }*/
+
+  public Twister2ArrowOutputStream(FSDataOutputStream fileoutputStream) {
     this.isOpen = true;
     this.tempBuffer = new byte[1024 * 1024];
     this.bytesSoFar = 0;
