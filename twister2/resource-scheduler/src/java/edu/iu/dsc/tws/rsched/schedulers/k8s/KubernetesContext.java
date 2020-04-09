@@ -91,7 +91,10 @@ public class KubernetesContext extends SchedulerContext {
       "twister2.kubernetes.uploader.web.server.label";
 
   public static final boolean K8S_CHECK_PWD_FREE_SSH_DEFAULT = false;
-  public static final String K8S_CHECK_PWD_FREE_SSH = "kubernetes.check.pwd.free.ssh";
+  public static final String K8S_CHECK_PWD_FREE_SSH = "twister2.kubernetes.check.pwd.free.ssh";
+
+  public static final double K8S_JVM_MEMORY_FRACTION_DEFAULT = 0.8;
+  public static final String K8S_JVM_MEMORY_FRACTION = "twister2.kubernetes.jvm.memory.fraction";
 
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
@@ -189,6 +192,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static boolean checkPwdFreeSsh(Config cfg) {
     return cfg.getBooleanValue(K8S_CHECK_PWD_FREE_SSH, K8S_CHECK_PWD_FREE_SSH_DEFAULT);
+  }
+
+  public static double jvmMemoryFraction(Config cfg) {
+    return cfg.getDoubleValue(K8S_JVM_MEMORY_FRACTION, K8S_JVM_MEMORY_FRACTION_DEFAULT);
   }
 
 }

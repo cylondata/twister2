@@ -16,7 +16,7 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 # password free ssh is setup among pods
 # password free ssh can be checked before running mpirun explicitly
 # by default it is false
-# kubernetes.check.pwd.free.ssh: true
+# twister2.kubernetes.check.pwd.free.ssh: true
 
 #############################################################################
 # Worker port settings
