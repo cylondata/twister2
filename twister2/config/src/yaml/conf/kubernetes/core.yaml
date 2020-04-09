@@ -1,4 +1,14 @@
 ###################################################################
+# Pod memory configurations
+###################################################################
+
+# The percentage of memory that will be allocated to JVM in worker pods
+# By default, it is %80
+# If memory based volume is used more, or
+# you want to give OpenMPI or UCX more memory, this can be decreased.
+twister2.kubernetes.jvm.memory.fraction: 0.8
+
+###################################################################
 # Fault Tolerance configurations
 ###################################################################
 
