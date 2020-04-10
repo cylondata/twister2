@@ -297,7 +297,7 @@ public final class RequestObjectBuilder {
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
     String startScript = null;
     double cpuPerContainer = computeResource.getCpu();
-    int ramPerContainer = computeResource.getRamMegaBytes() + 128;
+    int ramPerContainer = computeResource.getRamMegaBytes();
 
     if (SchedulerContext.useOpenMPI(config)) {
       startScript = "./init_openmpi.sh";
@@ -358,9 +358,11 @@ public final class RequestObjectBuilder {
     port.setProtocol(KubernetesContext.workerTransportProtocol(config));
     container.setPorts(Arrays.asList(port));
 
-    container.setEnv(
-        constructEnvironmentVariables(
-            containerName, containerPort, encodedNodeInfoList, computeResource.getRamMegaBytes()));
+    int jvmMemory =
+        (int) (computeResource.getRamMegaBytes() * KubernetesContext.jvmMemoryFraction(config));
+
+    container.setEnv(constructEnvironmentVariables(
+        containerName, containerPort, encodedNodeInfoList, jvmMemory));
 
     return container;
   }
