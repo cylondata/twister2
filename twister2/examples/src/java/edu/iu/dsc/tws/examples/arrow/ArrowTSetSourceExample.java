@@ -45,6 +45,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
+//import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
@@ -52,7 +54,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   @Override
   public void execute(BatchTSetEnvironment env) {
     Config config = env.getConfig();
-    String arrowInputFile = config.getStringValue(DataObjectConstants.FILE_TYPE);
     String csvInputDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
     String arrowInputDirectory = config.getStringValue(DataObjectConstants.ARROW_DIRECTORY);
     String arrowFileName = config.getStringValue(DataObjectConstants.FILE_NAME);
@@ -60,12 +61,13 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     int parallel = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
     int dsize = config.getIntegerValue(DataObjectConstants.DSIZE);
 
-    LOG.info("arrow input file:" + arrowFileName + "\t" + arrowInputFile
-        + "\t" + arrowInputDirectory + "\t" + csvInputDirectory + "\t" + workers + "\t" + parallel);
+    LOG.info("arrow input file:" + arrowFileName + "\t" + arrowInputDirectory + "\t"
+        + csvInputDirectory + "\t" + workers + "\t" + parallel);
 
     Schema schema = makeSchema();
-    SourceTSet<String[]> csvSource = env.createCSVSource(
-        csvInputDirectory, dsize, parallel, "split");
+    //TODO: We have to use the single dimensional value check with Niranda
+    SourceTSet<String[]> csvSource
+        = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
     SinkTSet<Iterator<Integer>> sinkTSet = csvSource
         .direct()
         .flatmap(
@@ -75,19 +77,16 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
               }
             })
         .direct()
-        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName + "." + arrowInputFile,
-            schema.toJson()));
+        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
 
     // run sink explicitly
     env.run(sinkTSet);
 
-    env.createArrowSource(arrowInputDirectory, arrowFileName + "." + arrowInputFile, parallel,
-        schema.toJson())
+    env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
         .compute(
             new ComputeFunc<List<Object>, Iterator<Object>>() {
               private final ArrayList<Object> integers = new ArrayList<>();
-
               @Override
               public List<Object> compute(Iterator<Object> input) {
                 input.forEachRemaining(integers::add);
@@ -117,9 +116,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         "Workers", true));
     options.addOption(Utils.createOption(DataObjectConstants.DSIZE, true,
         "100", true));
-
-    options.addOption(Utils.createOption(DataObjectConstants.FILE_TYPE, true,
-        "File Type", true));
     options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY, true,
         "CSV Input Directory", true));
     options.addOption(Utils.createOption(DataObjectConstants.ARROW_DIRECTORY, true,
@@ -133,7 +129,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     int parallelism = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.PARALLELISM_VALUE));
     int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
     int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
-    String fileType = cmd.getOptionValue(DataObjectConstants.FILE_TYPE);
     String csvInputDirectory = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
     String arrowInputDirectory = cmd.getOptionValue(DataObjectConstants.ARROW_DIRECTORY);
     String arrowFileName = cmd.getOptionValue(DataObjectConstants.FILE_NAME);
@@ -144,8 +139,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, parallelism);
     jobConfig.put(DataObjectConstants.WORKERS, workers);
     jobConfig.put(DataObjectConstants.DSIZE, dsize);
-
-    jobConfig.put(DataObjectConstants.FILE_TYPE, fileType);
     jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, csvInputDirectory);
     jobConfig.put(DataObjectConstants.ARROW_DIRECTORY, arrowInputDirectory);
     jobConfig.put(DataObjectConstants.FILE_NAME, arrowFileName);

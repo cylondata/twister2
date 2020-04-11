@@ -43,10 +43,8 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   private final String arrowSchema;
 
   // transient because this will be created by the prepare method
-  private transient Twister2ArrowFileWriter twister2ArrowFileWriter;
+  private Twister2ArrowFileWriter twister2ArrowFileWriter;
 
-  // todo: removed parallelism because it is not used to create arrowfilewriter
-  //  parallelism is handled by the workerID IMO
   public ArrowBasedSinkFunc(String filepath, String filename, String schema) {
     this.filePath = filepath;
     this.arrowSchema = schema;
@@ -69,6 +67,11 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
 
   @Override
   public void close() {
+//    try {
+//      twister2ArrowFileWriter.commitArrowData();
+//    } catch (Exception e) {
+//      throw new RuntimeException("Unable to commit arrow file", e);
+//    }
     twister2ArrowFileWriter.close();
   }
 
@@ -77,7 +80,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
     try {
       while (value.hasNext()) {
         // todo: we are only supporting ints at the moment. we need to remove this cast!
-        twister2ArrowFileWriter.queueArrowData((Integer) value.next());
+        twister2ArrowFileWriter.queueArrowData(value.next());
       }
       // todo: either we can process arrow data in the close method, or here. WDYT?
       twister2ArrowFileWriter.commitArrowData();

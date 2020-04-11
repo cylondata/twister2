@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.data.arrow;
 
 public interface ITwister2ArrowFileWriter {
   boolean setUpTwister2ArrowWrite(int workerId) throws Exception;
-  void queueArrowData(Integer data) throws Exception;
+  //void queueArrowData(Integer data) throws Exception;
+  void queueArrowData(Object data) throws Exception;
   void commitArrowData() throws Exception;
 }

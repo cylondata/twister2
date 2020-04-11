@@ -46,7 +46,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private int batchSize;
   private int[] data;
 
-  private List<Integer> integersList = new ArrayList<>();
+  private List<Object> integersList = new ArrayList<>();
 
   private boolean useNullValues;
   private boolean flag;
@@ -94,19 +94,19 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     } else {
       this.fsDataOutputStream = fileSystem.create(path);
     }
+    this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fsDataOutputStream);
     DictionaryProvider.MapDictionaryProvider provider
         = new DictionaryProvider.MapDictionaryProvider();
     if (!flag) {
       this.arrowFileWriter = new ArrowFileWriter(root, provider,
           this.fsDataOutputStream.getChannel());
     } else {
-      this.twister2ArrowOutputStream = new Twister2ArrowOutputStream(this.fsDataOutputStream);
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
     return true;
   }
 
-  public void queueArrowData(Integer integerdata) {
+  public void queueArrowData(Object integerdata) {
     integersList.add(integerdata);
   }
 
@@ -129,7 +129,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), this.integersList.get(from + i));
+      intVector.setSafe(i, isSet(), (int) this.integersList.get(from + i));
     }
     fieldVector.setValueCount(items);
   }
