@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.impl.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
@@ -44,8 +44,6 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
-
-//import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
@@ -65,28 +63,36 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         + csvInputDirectory + "\t" + workers + "\t" + parallel);
 
     Schema schema = makeSchema();
-    //TODO: We have to use the single dimensional value check with Niranda
     SourceTSet<String[]> csvSource
         = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
-    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
+    SinkTSet<Integer[]> sinkTSet = csvSource
         .direct()
-        .flatmap(
-            (FlatMapFunc<Integer, String[]>) (input, collector) -> {
-              for (String s : input) {
-                collector.collect(Integer.parseInt(s.trim()));
-              }
-            })
+        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
         .direct()
-        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+        .sink(new ArrowBasedSinkFunc(arrowInputDirectory, arrowFileName, schema.toJson()));
+    env.run(sinkTSet);
+
+//    Older Implementation
+//    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
+//        .direct()
+//        .flatmap(
+//            (FlatMapFunc<Integer, String[]>) (input, collector) -> {
+//              for (String s : input) {
+//                collector.collect(Integer.parseInt(s.trim()));
+//              }
+//            })
+//        .direct()
+//        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
 
     // run sink explicitly
-    env.run(sinkTSet);
+    //env.run(sinkTSet);
 
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
         .compute(
             new ComputeFunc<List<Object>, Iterator<Object>>() {
-              private final ArrayList<Object> integers = new ArrayList<>();
+              private final List<Object> integers = new ArrayList<>();
+
               @Override
               public List<Object> compute(Iterator<Object> input) {
                 input.forEachRemaining(integers::add);
@@ -108,7 +114,6 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
     Options options = new Options();
     options.addOption(Utils.createOption(DataObjectConstants.PARALLELISM_VALUE, true,
         "Parallelism", true));
