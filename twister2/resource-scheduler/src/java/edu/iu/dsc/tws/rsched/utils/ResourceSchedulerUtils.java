@@ -14,9 +14,13 @@ package edu.iu.dsc.tws.rsched.utils;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -133,4 +137,49 @@ public final class ResourceSchedulerUtils {
       return null;
     }
   }
+
+  /**
+   * get ipv4 address of first matching network interface in the given list
+   * network interface can not be loop back and it has to be up
+   * @param interfaceNames
+   * @return
+   */
+  public static String getLocalIPFromNetworkInterfaces(List<String> interfaceNames) {
+
+    try {
+      for (String nwInterfaceName: interfaceNames) {
+        NetworkInterface networkInterface = NetworkInterface.getByName(nwInterfaceName);
+        if (networkInterface != null
+            && !networkInterface.isLoopback()
+            && networkInterface.isUp()) {
+          List<InterfaceAddress> addressList = networkInterface.getInterfaceAddresses();
+          for (InterfaceAddress adress: addressList) {
+            if (isValidIPv4(adress.getAddress().getHostAddress())) {
+              return adress.getAddress().getHostAddress();
+            }
+          }
+        }
+      }
+
+    } catch (SocketException e) {
+      LOG.log(Level.SEVERE, "Error retrieving network interface list", e);
+    }
+
+    return null;
+  }
+
+  /**
+   * this is from:
+   * https://stackoverflow.com/questions/5667371/validate-ipv4-address-in-java
+   * @param ip
+   * @return
+   */
+  @SuppressWarnings("LineLength")
+  public static boolean isValidIPv4(final String ip) {
+    String pattern = "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$";
+
+    return ip.matches(pattern);
+  }
+
+
 }

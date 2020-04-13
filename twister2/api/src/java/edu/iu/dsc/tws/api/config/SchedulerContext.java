@@ -101,6 +101,8 @@ public class SchedulerContext extends Context {
   public static final boolean K8S_CHECK_PODS_REACHABLE_DEFAULT = false;
   public static final String K8S_CHECK_PODS_REACHABLE = "kubernetes.check.pods.reachable";
 
+  public static final String NETWORK_INTERFACES = "twister2.network.interfaces.for.workers";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -200,6 +202,7 @@ public class SchedulerContext extends Context {
   public static String downloadMethod(Config cfg) {
     return cfg.getStringValue(DOWNLOAD_METHOD);
   }
+
   public static List<String> additionalPorts(Config cfg) {
     return cfg.getStringList(ADDITIONAL_PORTS);
   }
@@ -215,6 +218,10 @@ public class SchedulerContext extends Context {
 
   public static boolean checkPodsReachable(Config cfg) {
     return cfg.getBooleanValue(K8S_CHECK_PODS_REACHABLE, K8S_CHECK_PODS_REACHABLE_DEFAULT);
+  }
+
+  public static List<String> networkInterfaces(Config cfg) {
+    return cfg.getStringList(NETWORK_INTERFACES);
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {
