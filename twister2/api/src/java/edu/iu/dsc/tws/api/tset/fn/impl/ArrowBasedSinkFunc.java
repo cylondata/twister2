@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 // todo: we need a second sink function to be used with SingleTLinks because
 // this only works with iteratorTLinks like direct
 
-public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T[]>> implements Serializable {
+public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
 
@@ -87,8 +87,9 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T[]>> implement
 //    return true;
 //  }
 
+  // now this can handle any incoming data from the IteratorLinks
   @Override
-  public boolean add(Iterator<T[]> value) {
+  public boolean add(Iterator<T> value) {
     try {
       while (value.hasNext()) {
         twister2ArrowFileWriter.queueArrowData(value.next());

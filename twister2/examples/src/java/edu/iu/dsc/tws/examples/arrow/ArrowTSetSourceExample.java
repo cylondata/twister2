@@ -65,11 +65,11 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     Schema schema = makeSchema();
     SourceTSet<String[]> csvSource
         = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
-    SinkTSet<Integer[]> sinkTSet = csvSource
+    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
         .direct()
         .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
         .direct()
-        .sink(new ArrowBasedSinkFunc(arrowInputDirectory, arrowFileName, schema.toJson()));
+        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
 
 //    Older Implementation
@@ -89,15 +89,12 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
+        // at computetset users can give the exact output type. We dont have to carry object type
         .compute(
-            new ComputeFunc<List<Object>, Iterator<Object>>() {
-              private final List<Object> integers = new ArrayList<>();
-
-              @Override
-              public List<Object> compute(Iterator<Object> input) {
-                input.forEachRemaining(integers::add);
-                return integers;
-              }
+            (ComputeFunc<List<Integer>, Iterator<Object>>) input -> {
+              List<Integer> integers = new ArrayList<>();
+              input.forEachRemaining(i -> integers.add((Integer) i));
+              return integers;
             })
         .direct()
         .forEach(s -> LOG.info("Integer Array Values:" + s));

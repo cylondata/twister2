@@ -76,6 +76,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
+  // todo lets give a meaningful name for this flag variable
   public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema) {
     this.arrowFile = arrowfile;
     this.flag = flag;
@@ -125,6 +126,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   }
 
   private void writeFieldInt(FieldVector fieldVector, int from, int items) {
+    // todo: we need to find a way to write to the field vector without having to cast to this INT
+    //  type now! because we wouldn't know the type of object during compile time.
     IntVector intVector = (IntVector) fieldVector;
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
