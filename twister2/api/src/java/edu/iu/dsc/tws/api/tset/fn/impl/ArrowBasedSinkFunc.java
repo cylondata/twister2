@@ -43,7 +43,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   private final String arrowSchema;
 
   // transient because this will be created by the prepare method
-  private Twister2ArrowFileWriter twister2ArrowFileWriter;
+  private transient Twister2ArrowFileWriter twister2ArrowFileWriter;
 
   public ArrowBasedSinkFunc(String filepath, String filename, String schema) {
     this.filePath = filepath;
@@ -67,25 +67,10 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
 
   @Override
   public void close() {
-    twister2ArrowFileWriter.close();
+    if (twister2ArrowFileWriter != null) {
+      twister2ArrowFileWriter.close();
+    }
   }
-
-
-//  Older Implementation
-//  @Override
-//  public boolean add(Iterator<T> value) {
-//    try {
-//      while (value.hasNext()) {
-//        // todo: we are only supporting ints at the moment. we need to remove this cast!
-//        twister2ArrowFileWriter.queueArrowData(value.next());
-//      }
-//      // todo: either we can process arrow data in the close method, or here. WDYT?
-//      twister2ArrowFileWriter.commitArrowData();
-//    } catch (Exception e) {
-//      throw new RuntimeException("Unable to write arrow file", e);
-//    }
-//    return true;
-//  }
 
   // now this can handle any incoming data from the IteratorLinks
   @Override

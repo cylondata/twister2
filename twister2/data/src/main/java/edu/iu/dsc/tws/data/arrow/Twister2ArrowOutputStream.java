@@ -43,7 +43,9 @@ public class Twister2ArrowOutputStream implements WritableByteChannel, Serializa
     while (soFar < remaining) {
       int toPush = Math.min(remaining - soFar, this.tempBuffer.length);
       byteBuffer.get(this.tempBuffer, 0, toPush);
-      this.fileOutputStream.write(this.tempBuffer, 0, toPush);
+      if (this.fileOutputStream != null) {
+        this.fileOutputStream.write(this.tempBuffer, 0, toPush);
+      }
       soFar += toPush;
     }
     this.bytesSoFar += remaining;
@@ -57,7 +59,9 @@ public class Twister2ArrowOutputStream implements WritableByteChannel, Serializa
 
   @Override
   public void close() throws IOException {
-    this.fileOutputStream.close();
+    if (this.fileOutputStream != null) {
+      this.fileOutputStream.close();
+    }
     this.isOpen = false;
   }
 }

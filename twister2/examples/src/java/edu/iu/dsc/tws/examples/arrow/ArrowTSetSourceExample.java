@@ -72,24 +72,9 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
 
-//    Older Implementation
-//    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
-//        .direct()
-//        .flatmap(
-//            (FlatMapFunc<Integer, String[]>) (input, collector) -> {
-//              for (String s : input) {
-//                collector.collect(Integer.parseInt(s.trim()));
-//              }
-//            })
-//        .direct()
-//        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
-
-    // run sink explicitly
-    //env.run(sinkTSet);
-
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
-        // at computetset users can give the exact output type. We dont have to carry object type
+        //at computetset users can give the exact output type. We dont have to carry object type
         .compute(
             (ComputeFunc<List<Integer>, Iterator<Object>>) input -> {
               List<Integer> integers = new ArrayList<>();
@@ -97,7 +82,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
               return integers;
             })
         .direct()
-        .forEach(s -> LOG.info("Integer Array Values:" + s));
+        .forEach(s -> LOG.info("Integer Array Size:" + s.size() + "\tand Values:" + s));
   }
 
   private Schema makeSchema() {
