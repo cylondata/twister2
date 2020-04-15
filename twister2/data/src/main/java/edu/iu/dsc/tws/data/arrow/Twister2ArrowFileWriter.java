@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.arrow;
 
-//import java.io.File;
-//import java.io.FileOutputStream;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -22,11 +19,11 @@ import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
-import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
@@ -34,6 +31,8 @@ import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
+
+//import org.apache.arrow.vector.types.Types;
 
 public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serializable {
 
@@ -44,7 +43,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 
   private int batchSize;
 
-  private List<Object> integersList = new ArrayList<>();
+  private List<Object> dataList = new ArrayList<>();
 
   private boolean useNullValues;
   private boolean flag;
@@ -85,61 +84,53 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     return true;
   }
 
-  public void queueArrowData(Object integerdata) {
-    integersList.add(integerdata);
+  public void queueArrowData(Object data) {
+    dataList.add(data);
   }
 
   public void commitArrowData() throws Exception {
     arrowFileWriter.start();
-    for (int i = 0; i < integersList.size();) {
-      int toProcessItems = Math.min(this.batchSize, this.integersList.size() - i);
+    for (int i = 0; i < dataList.size();) {
+      int toProcessItems = Math.min(this.batchSize, this.dataList.size() - i);
       root.setRowCount(toProcessItems);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
-        IntVector intVector = (IntVector) vector;
-        Types.MinorType mt = vector.getMinorType();
-        LOG.info("Int vector value:" + intVector + "\t" + mt);
-        writeFieldInt(vector, i, toProcessItems);
+        LOG.info("field vector type:" + vector.getMinorType());
+        switch (vector.getMinorType()) {
+          case INT:
+            LOG.info("I am coming inside int vector");
+            intVectorGeneration((IntVector) vector, i, toProcessItems);
+            break;
+          case FLOAT4:
+            doubleVectorGeneration((Float4Vector) vector, i, toProcessItems);
+            break;
+          default:
+            break;
+        }
       }
       arrowFileWriter.writeBatch();
       i += toProcessItems;
     }
   }
-  /*public void commitArrowData() throws Exception {
-    arrowFileWriter.start();
-    List<FieldVector> fieldVector = root.getFieldVectors();
-    for (FieldVector value : fieldVector) {
-      Types.MinorType mt = value.getMinorType();
-      for (int j = 0; j < integersList.size(); ) {
-        int toProcessItems = Math.min(this.batchSize, this.integersList.size() - j);
-        root.setRowCount(toProcessItems);
-        for (Field field : root.getSchema().getFields()) {
-          if (mt.toString().equals("INT")) {
-            FieldVector fieldVector1 = root.getVector(field.getName());
-            IntVector vector = (IntVector) fieldVector1;
-            LOG.info("int vector in arrow file writer:" + vector);
-            writeFieldInt1(vector, j, toProcessItems);
-          }
-          //FieldVector vector = root.getVector(field.getName());
-          //writeFieldInt(vector, j, toProcessItems);
-        }
-        arrowFileWriter.writeBatch();
-        j += toProcessItems;
-      }
-    }
-  }*/
 
-/*  private void writeFieldInt1(IntVector intVector, int from, int items) {
-    LOG.info("int vector in arrow file writer:" + intVector);
+  private void intVectorGeneration(IntVector intVector, int from, int items) {
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), (int) this.integersList.get(from + i));
+      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
     }
     intVector.setValueCount(items);
     //fieldVector.setValueCount(items);
-  }*/
+  }
 
+  private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
+    floatVector.setInitialCapacity(items);
+    floatVector.allocateNew();
+    for (int i = 0; i < items; i++) {
+      floatVector.setSafe(i, isSet(), (float) this.dataList.get(from + i));
+    }
+    floatVector.setValueCount(items);
+  }
 
   private void writeFieldInt(FieldVector fieldVector, int from, int items) {
     // todo: we need to find a way to write to the field vector without having to cast to this INT
@@ -148,7 +139,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     intVector.setInitialCapacity(items);
     intVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), (int) this.integersList.get(from + i));
+      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
     }
     fieldVector.setValueCount(items);
   }

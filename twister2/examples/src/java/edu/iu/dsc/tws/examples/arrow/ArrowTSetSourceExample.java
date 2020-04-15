@@ -45,6 +45,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
+import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
+
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
@@ -65,9 +67,16 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     Schema schema = makeSchema();
     SourceTSet<String[]> csvSource
         = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
-    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
+//    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
+//        .direct()
+//        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
+//        .direct()
+//        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+//    env.run(sinkTSet);
+
+    SinkTSet<Iterator<Double>> sinkTSet = csvSource
         .direct()
-        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
+        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
         .direct()
         .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
@@ -87,7 +96,8 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
-    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+    //builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
+    builder.add(new Field("double", FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null));
     return new Schema(builder.build(), null);
   }
 
