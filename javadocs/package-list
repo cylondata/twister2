@@ -220,6 +220,7 @@ edu.iu.dsc.tws.rsched.job
 edu.iu.dsc.tws.rsched.schedulers.aurora
 edu.iu.dsc.tws.rsched.schedulers.k8s
 edu.iu.dsc.tws.rsched.schedulers.k8s.driver
+edu.iu.dsc.tws.rsched.schedulers.k8s.logger
 edu.iu.dsc.tws.rsched.schedulers.k8s.master
 edu.iu.dsc.tws.rsched.schedulers.k8s.mpi
 edu.iu.dsc.tws.rsched.schedulers.k8s.worker

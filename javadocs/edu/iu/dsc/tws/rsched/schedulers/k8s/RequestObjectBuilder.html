@@ -161,9 +161,10 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static java.util.List&lt;V1EnvVar&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructEnvironmentVariables-java.lang.String-int-java.lang.String-">constructEnvironmentVariables</a></span>(java.lang.String&nbsp;containerName,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructEnvironmentVariables-java.lang.String-int-java.lang.String-int-">constructEnvironmentVariables</a></span>(java.lang.String&nbsp;containerName,
                              int&nbsp;workerPort,
-                             java.lang.String&nbsp;encodedNodeInfoList)</code>
+                             java.lang.String&nbsp;encodedNodeInfoList,
+                             int&nbsp;jvmMem)</code>
 <div class="block">set environment variables for containers</div>
 </td>
 </tr>
@@ -381,7 +382,7 @@ extends java.lang.Object</pre>
 <div class="block">construct a container</div>
 </li>
 </ul>
-<a name="constructEnvironmentVariables-java.lang.String-int-java.lang.String-">
+<a name="constructEnvironmentVariables-java.lang.String-int-java.lang.String-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -389,7 +390,8 @@ extends java.lang.Object</pre>
 <h4>constructEnvironmentVariables</h4>
 <pre>public static&nbsp;java.util.List&lt;V1EnvVar&gt;&nbsp;constructEnvironmentVariables(java.lang.String&nbsp;containerName,
                                                                      int&nbsp;workerPort,
-                                                                     java.lang.String&nbsp;encodedNodeInfoList)</pre>
+                                                                     java.lang.String&nbsp;encodedNodeInfoList,
+                                                                     int&nbsp;jvmMem)</pre>
 <div class="block">set environment variables for containers</div>
 </li>
 </ul>

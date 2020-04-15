@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":9,"i18":10,"i19":9,"i20":10,"i21":9};
+var methods = {"i0":9,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":9,"i15":10,"i16":10,"i17":10,"i18":10,"i19":9,"i20":10,"i21":9,"i22":10,"i23":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -146,30 +146,36 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>static CoreV1Api</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createCoreV1Api--">createCoreV1Api</a></span>()</code>
+<div class="block">create CoreV1Api that does not time out</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolume-V1PersistentVolume-">createPersistentVolume</a></span>(V1PersistentVolume&nbsp;pv)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolumeClaim-V1PersistentVolumeClaim-">createPersistentVolumeClaim</a></span>(V1PersistentVolumeClaim&nbsp;pvc)</code>
 <div class="block">create the given PersistentVolumeClaim on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createService-V1Service-">createService</a></span>(V1Service&nbsp;service)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createStatefulSet-V1StatefulSet-">createStatefulSet</a></span>(V1StatefulSet&nbsp;statefulSet)</code>
 <div class="block">create the given StatefulSet on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteJobPackage-java.util.List-java.lang.String-">deleteJobPackage</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;uploaderPods,
                 java.lang.String&nbsp;jobPackageName)</code>
@@ -178,72 +184,76 @@ extends java.lang.Object</pre>
  so, It is not in use</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deletePersistentVolume-java.lang.String-">deletePersistentVolume</a></span>(java.lang.String&nbsp;pvName)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deletePersistentVolumeClaim-java.lang.String-">deletePersistentVolumeClaim</a></span>(java.lang.String&nbsp;pvcName)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteService-java.lang.String-">deleteService</a></span>(java.lang.String&nbsp;serviceName)</code>
 <div class="block">delete the given service from Kubernetes master</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteStatefulSet-java.lang.String-">deleteStatefulSet</a></span>(java.lang.String&nbsp;statefulSetName)</code>
 <div class="block">delete the given StatefulSet from Kubernetes master</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existPersistentVolumeClaim-java.lang.String-">existPersistentVolumeClaim</a></span>(java.lang.String&nbsp;pvcName)</code>
 <div class="block">check whether the given PersistentVolumeClaim exist on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existSecret-java.lang.String-">existSecret</a></span>(java.lang.String&nbsp;secretName)</code>
 <div class="block">return true if the Secret object with that name exists in Kubernetes master,
  otherwise return false</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existServices-java.util.List-">existServices</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;serviceNames)</code>
 <div class="block">return existing service name if one of the services exist in Kubernetes master,
  otherwise return null</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existStatefulSets-java.util.List-">existStatefulSets</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;statefulSetNames)</code>
 <div class="block">return the StatefulSet object if it exists in the Kubernetes master,
  otherwise return null</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
+<td class="colFirst"><code>static ApiClient</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getApiClient--">getApiClient</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>java.util.ArrayList&lt;JobMasterAPI.NodeInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getNodeInfo-java.lang.String-java.lang.String-">getNodeInfo</a></span>(java.lang.String&nbsp;rackLabelKey,
            java.lang.String&nbsp;datacenterLabelKey)</code>
 <div class="block">get NodeInfoUtils objects for the nodes on this cluster</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>V1PersistentVolume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getPersistentVolume-java.lang.String-">getPersistentVolume</a></span>(java.lang.String&nbsp;pvName)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getServiceIP-java.lang.String-">getServiceIP</a></span>(java.lang.String&nbsp;serviceName)</code>
 <div class="block">get the IP address of the given service
  otherwise return null</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>java.util.ArrayList&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getStatefulSetsForJobWorkers-java.lang.String-">getStatefulSetsForJobWorkers</a></span>(java.lang.String&nbsp;jobID)</code>
 <div class="block">return the list of StatefulSet names that matches this jobs StatefulSet names for workers
@@ -251,27 +261,27 @@ extends java.lang.Object</pre>
  otherwise return an empty ArrayList</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static java.util.List&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getUploaderWebServerPods-java.lang.String-java.lang.String-">getUploaderWebServerPods</a></span>(java.lang.String&nbsp;ns,
                         java.lang.String&nbsp;uploaderLabel)</code>&nbsp;</td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#init-java.lang.String-">init</a></span>(java.lang.String&nbsp;nspace)</code>&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#initApiInstances--">initApiInstances</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#patchStatefulSet-java.lang.String-int-">patchStatefulSet</a></span>(java.lang.String&nbsp;ssName,
                 int&nbsp;replicas)</code>
 <div class="block">scale up or down the given StatefulSet</div>
 </td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#runProcess-java.lang.String:A-">runProcess</a></span>(java.lang.String[]&nbsp;command)</code>
 <div class="block">sending a command to shell</div>
@@ -325,6 +335,15 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;void&nbsp;init(java.lang.String&nbsp;nspace)</pre>
 </li>
 </ul>
+<a name="getApiClient--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getApiClient</h4>
+<pre>public static&nbsp;ApiClient&nbsp;getApiClient()</pre>
+</li>
+</ul>
 <a name="initApiInstances--">
 <!--   -->
 </a>
@@ -332,6 +351,19 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>initApiInstances</h4>
 <pre>public static&nbsp;void&nbsp;initApiInstances()</pre>
+</li>
+</ul>
+<a name="createCoreV1Api--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createCoreV1Api</h4>
+<pre>public static&nbsp;CoreV1Api&nbsp;createCoreV1Api()</pre>
+<div class="block">create CoreV1Api that does not time out</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
 </li>
 </ul>
 <a name="existStatefulSets-java.util.List-">
