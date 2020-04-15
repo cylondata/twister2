@@ -34,7 +34,7 @@ public class LocalFileSystemUploader implements IUploader {
 
   @Override
   public void initialize(Config config, JobAPI.Job job) {
-    this.destinationDirectory = FsContext.uploaderJobDirectory(config);
+    this.destinationDirectory = FsContext.uploaderJobDirectory(config) + "/" + job.getJobId();
   }
 
   @Override
@@ -77,20 +77,19 @@ public class LocalFileSystemUploader implements IUploader {
     try {
       FileUtils.copyDirectory(sourceLocation, destinationDirectory);
       return new URI(destinationDirectory);
-    }  catch (URISyntaxException e) {
+    } catch (URISyntaxException e) {
       throw new RuntimeException("Invalid file path for topology package destination: "
           + destinationDirectory, e);
     } catch (IOException e) {
       throw new RuntimeException(String.format("Failed to copy directory %s to %s",
-          filePath.toString(), destinationDirectory));
+          sourceLocation, destinationDirectory));
     }
   }
 
   @Override
   public boolean undo(Config cnfg, String jobID) {
-    LOG.info("Clean uploaded jar");
-    File file = new File(destinationDirectory);
-    return file.delete();
+    LOG.info("Cleaning upload directory: " + destinationDirectory);
+    return FileUtils.deleteDir(destinationDirectory);
   }
 
   @Override
