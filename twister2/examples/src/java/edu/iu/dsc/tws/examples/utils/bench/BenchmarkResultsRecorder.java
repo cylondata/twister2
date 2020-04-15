@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public class BenchmarkResultsRecorder {
 
@@ -51,7 +52,12 @@ public class BenchmarkResultsRecorder {
         BenchmarkMetadata benchmarkMetadata = objectMapper.readValue(
             decodedMeta, BenchmarkMetadata.class
         );
-        this.csvFile = new File(benchmarkMetadata.getResultsFile());
+        File results = new File(System.getProperty("user.home"),
+            ".twister2/benchmarks/" + config.getStringValue(SchedulerContext.WORKER_CLASS));
+        if (!results.exists()) {
+          results.mkdirs();
+        }
+        this.csvFile = new File(results, benchmarkMetadata.getResultsFile());
         this.benchName = benchmarkMetadata.getId();
         benchmarkMetadata.getArgs().forEach(
             arg -> recordColumn(arg.getColumn(), config.get(arg.getArg()))
