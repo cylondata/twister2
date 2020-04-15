@@ -145,7 +145,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(clazz)
+        .setJobName(clazz.substring(clazz.lastIndexOf(".") + 1))
         .setWorkerClass(clazz)
         .addComputeResource(1, 512, containers)
         .setConfig(jobConfig)

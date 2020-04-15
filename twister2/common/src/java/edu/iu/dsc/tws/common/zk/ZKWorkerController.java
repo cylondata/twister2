@@ -33,6 +33,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.utils.CloseableUtils;
 
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
@@ -172,6 +173,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private List<Integer> scalingEventBuffer = new LinkedList<>();
 
   /**
+   * this client is currently implemented through JMWorkerAgent
+   * we don't have ZK based implementation
+   */
+  private CheckpointingClient checkpointingClient;
+
+  /**
    * Construct ZKWorkerController but do not initialize yet
    */
   public ZKWorkerController(Config config,
@@ -262,6 +269,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
       throw e;
     }
+  }
+
+  public void setCheckpointingClient(CheckpointingClient checkpointingClient) {
+    this.checkpointingClient = checkpointingClient;
   }
 
   /**
@@ -841,6 +852,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public IWorkerFailureListener getFailureListener() {
     return failureListener;
+  }
+
+  @Override
+  public CheckpointingClient getCheckpointingClient() {
+    return checkpointingClient;
   }
 
   /**

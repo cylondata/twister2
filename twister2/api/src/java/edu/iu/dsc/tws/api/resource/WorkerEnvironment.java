@@ -113,7 +113,7 @@ public final class WorkerEnvironment {
     // check whether all worker pods are reachable
     // sometimes it takes some time to populate dns ip values in Kubernetes
     // although all workers is started, some workers may be unreachable by ip address
-    if ("kubernetes".equalsIgnoreCase(Context.clusterType(config))
+    if (Context.isKubernetesCluster(config)
         && !SchedulerContext.useOpenMPI(config)
         && SchedulerContext.checkPodsReachable(config)) {
       checkAllPodsReachable();

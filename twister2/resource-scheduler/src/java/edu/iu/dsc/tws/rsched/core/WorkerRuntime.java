@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
@@ -127,32 +128,42 @@ public final class WorkerRuntime {
     }
 
     // if there is a driver in the job, we need to start JMWorkerAgent
-    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
-    if (ZKContext.isZooKeeperServerUsed(config) && !job.getDriverClassName().isEmpty()) {
-      // construct JMWorkerAgent
-      jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
+    // if checkpointing is enabled, we need to start JMWorkerAgent
+    // We only have one implementation for ISenderToDriver and CheckpointingClient
+    // that is through JMWorkerAgent.
+    if (ZKContext.isZooKeeperServerUsed(config)) {
 
-      // start JMWorkerAgent
-      jmWorkerAgent.startThreaded();
+      if (!job.getDriverClassName().isEmpty()
+          || CheckpointingConfigurations.isCheckpointingEnabled(config)) {
 
-      // initialize JMSenderToDriver
-      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+        // construct JMWorkerAgent
+        jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
 
-      // add listener to renew connection after jm restart
-      if (FaultToleranceContext.faultTolerant(config)) {
-        zkWorkerController.addJMFailureListener(new IJobMasterFailureListener() {
-          @Override
-          public void failed() {
+        // start JMWorkerAgent
+        jmWorkerAgent.startThreaded();
 
-          }
+        // set checkpointing client from jmWorkerAgent to ZKWorkerController
+        zkWorkerController.setCheckpointingClient(jmWorkerAgent.getCheckpointClient());
 
-          @Override
-          public void restarted(String jobMasterAddress) {
-            LOG.info("JobMaster restarted. Worker will try to reconnect and re-register.");
-            jmWorkerAgent.reconnect(jobMasterAddress);
-          }
-        });
+        // initialize JMSenderToDriver
+        senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+
+        // add listener to renew connection after jm restart
+        if (FaultToleranceContext.faultTolerant(config)) {
+          zkWorkerController.addJMFailureListener(new IJobMasterFailureListener() {
+            @Override
+            public void failed() {
+
+            }
+
+            @Override
+            public void restarted(String jobMasterAddress) {
+              LOG.info("JobMaster restarted. Worker will try to reconnect and re-register.");
+              jmWorkerAgent.reconnect(jobMasterAddress);
+            }
+          });
+        }
       }
     }
 

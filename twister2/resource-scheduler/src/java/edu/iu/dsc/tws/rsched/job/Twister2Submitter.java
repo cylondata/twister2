@@ -104,7 +104,8 @@ public final class Twister2Submitter {
     );
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
-    if (CheckpointingConfigurations.isCheckpointingEnabled(updatedConfig)) {
+    if (CheckpointingConfigurations.isCheckpointingEnabled(updatedConfig)
+        && !Context.isKubernetesCluster(updatedConfig)) {
       LOG.info("Checkpointing has enabled for this job.");
 
       StateStore stateStore = CheckpointUtils.getStateStore(updatedConfig);
