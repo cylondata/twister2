@@ -107,7 +107,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.html" title="class in edu.iu.dsc.tws.api.comms">CommunicationContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/ExecutorContext.html" title="class in edu.iu.dsc.tws.api.compute.executor">ExecutorContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" title="class in edu.iu.dsc.tws.api.faulttolerance">FaultToleranceContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/HdfsDataContext.html" title="class in edu.iu.dsc.tws.data.utils">HdfsDataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/master/JobMasterContext.html" title="class in edu.iu.dsc.tws.master">JobMasterContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/lmdb/LMDBMemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory.lmdb">LMDBMemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/MemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory">MemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/SchedulerContext.html" title="class in edu.iu.dsc.tws.api.scheduler">SchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tsched/spi/common/TaskSchedulerContext.html" title="class in edu.iu.dsc.tws.tsched.spi.common">TaskSchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPContext.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html" title="class in edu.iu.dsc.tws.common.zk">ZKContext</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/bootstrap/ZKContext.html" title="class in edu.iu.dsc.tws.rsched.bootstrap">ZKContext</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.html" title="class in edu.iu.dsc.tws.api.comms">CommunicationContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/DataContext.html" title="class in edu.iu.dsc.tws.data.utils">DataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/ExecutorContext.html" title="class in edu.iu.dsc.tws.api.compute.executor">ExecutorContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" title="class in edu.iu.dsc.tws.api.faulttolerance">FaultToleranceContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/HdfsDataContext.html" title="class in edu.iu.dsc.tws.data.utils">HdfsDataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/master/JobMasterContext.html" title="class in edu.iu.dsc.tws.master">JobMasterContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/lmdb/LMDBMemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory.lmdb">LMDBMemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/MemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory">MemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/SchedulerContext.html" title="class in edu.iu.dsc.tws.api.scheduler">SchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tsched/spi/common/TaskSchedulerContext.html" title="class in edu.iu.dsc.tws.tsched.spi.common">TaskSchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPContext.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html" title="class in edu.iu.dsc.tws.common.zk">ZKContext</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/bootstrap/ZKContext.html" title="class in edu.iu.dsc.tws.rsched.bootstrap">ZKContext</a></dd>
 </dl>
 <hr>
 <br>
@@ -169,95 +169,87 @@ extends java.lang.Object</pre>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#HADOOP_HOME">HADOOP_HOME</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#HOME">HOME</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JAVA_HOME">JAVA_HOME</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JOB">JOB</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JOB_ARCHIVE_DIRECTORY">JOB_ARCHIVE_DIRECTORY</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JOB_ID">JOB_ID</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JOB_NAME">JOB_NAME</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#JOB_OBJECT">JOB_OBJECT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#NETWORK_YAML">NETWORK_YAML</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#OPERATION_NAME">OPERATION_NAME</a></span></code>
 <div class="block">Name of the operation in the current configuration</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#OVERRIDE_YAML">OVERRIDE_YAML</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#RESOURCE_SCHEDULER_YAML">RESOURCE_SCHEDULER_YAML</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#STREAMING">STREAMING</a></span></code>
 <div class="block">If it is streaming environment, this property will be set</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected static java.util.Map&lt;java.lang.String,<a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#substitutions">substitutions</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TASK_YAML">TASK_YAML</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_BANDWIDTH">TWISTER2_BANDWIDTH</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_BIN">TWISTER2_BIN</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_CLUSTER_TYPE">TWISTER2_CLUSTER_TYPE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_COMMON_CONF_DIR">TWISTER2_COMMON_CONF_DIR</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_CONF">TWISTER2_CONF</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_CONTAINER_ID">TWISTER2_CONTAINER_ID</a></span></code>&nbsp;</td>
-</tr>
 <tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_DATA_INPUT">TWISTER2_DATA_INPUT</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_CONTAINER_ID">TWISTER2_CONTAINER_ID</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
@@ -272,24 +264,16 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_GRAPH_JOB">TWISTER2_GRAPH_JOB</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_HDFS_FILESYSTEM">TWISTER2_HDFS_FILESYSTEM</a></span></code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_HOME">TWISTER2_HOME</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_LATENCY">TWISTER2_LATENCY</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_LIB">TWISTER2_LIB</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#TWISTER2_LOCAL_FILESYSTEM">TWISTER2_LOCAL_FILESYSTEM</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
@@ -694,15 +678,6 @@ extends java.lang.Object</pre>
 <pre>public static final&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a> DATA_YAML</pre>
 </li>
 </ul>
-<a name="HADOOP_HOME">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>HADOOP_HOME</h4>
-<pre>public static final&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.html" title="class in edu.iu.dsc.tws.api.config">ConfigEntry</a> HADOOP_HOME</pre>
-</li>
-</ul>
 <a name="JOB_NAME">
 <!--   -->
 </a>
@@ -830,45 +805,6 @@ extends java.lang.Object</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.config.Context.TWISTER2_DIRECT_EDGE">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
-<a name="TWISTER2_DATA_INPUT">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>TWISTER2_DATA_INPUT</h4>
-<pre>public static final&nbsp;java.lang.String TWISTER2_DATA_INPUT</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.config.Context.TWISTER2_DATA_INPUT">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
-<a name="TWISTER2_LOCAL_FILESYSTEM">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>TWISTER2_LOCAL_FILESYSTEM</h4>
-<pre>public static final&nbsp;java.lang.String TWISTER2_LOCAL_FILESYSTEM</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.config.Context.TWISTER2_LOCAL_FILESYSTEM">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
-<a name="TWISTER2_HDFS_FILESYSTEM">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>TWISTER2_HDFS_FILESYSTEM</h4>
-<pre>public static final&nbsp;java.lang.String TWISTER2_HDFS_FILESYSTEM</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.config.Context.TWISTER2_HDFS_FILESYSTEM">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>
