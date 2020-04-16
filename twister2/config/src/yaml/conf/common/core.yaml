@@ -2,7 +2,7 @@
 # User name that will be used in JobID
 ###################################################################
 # JobID is constructed as:
-#   <username>-<jobName>-<timestamp>
+#   [username]-[jobName]-[timestamp]
 # if username is specified here, we use this value.
 # Otherwise we get username from shell environment.
 # if the username is longer than 9 characters, we use first 9 characters of it
