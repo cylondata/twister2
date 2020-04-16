@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.Float4Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
@@ -31,6 +31,8 @@ import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
+
+//import org.apache.arrow.vector.Float4Vector;
 
 //import org.apache.arrow.vector.types.Types;
 
@@ -97,12 +99,11 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
         FieldVector vector = root.getVector(field.getName());
         LOG.info("field vector type:" + vector.getMinorType());
         switch (vector.getMinorType()) {
-          case INT:
-            LOG.info("I am coming inside int vector");
-            intVectorGeneration((IntVector) vector, i, toProcessItems);
-            break;
-          case FLOAT4:
-            doubleVectorGeneration((Float4Vector) vector, i, toProcessItems);
+//          case INT:
+//            intVectorGeneration((IntVector) vector, i, toProcessItems);
+//            break;
+          case BIGINT:
+            doubleVectorGeneration((BigIntVector) vector, i, toProcessItems);
             break;
           default:
             break;
@@ -120,14 +121,13 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
     }
     intVector.setValueCount(items);
-    //fieldVector.setValueCount(items);
   }
 
-  private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
+  private void doubleVectorGeneration(BigIntVector floatVector, int from, int items) {
     floatVector.setInitialCapacity(items);
     floatVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      floatVector.setSafe(i, isSet(), (float) this.dataList.get(from + i));
+      floatVector.setSafe(i, isSet(), (long) this.dataList.get(from + i));
     }
     floatVector.setValueCount(items);
   }

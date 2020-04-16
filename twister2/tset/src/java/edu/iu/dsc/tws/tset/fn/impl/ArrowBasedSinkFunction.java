@@ -21,7 +21,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.fn.impl;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.tset.fn.impl;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -34,9 +46,9 @@ import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileWriter;
 // todo: we need a second sink function to be used with SingleTLinks because
 // this only works with iteratorTLinks like direct
 
-public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements Serializable {
+public class ArrowBasedSinkFunction<T> extends BaseSinkFunc<Iterator<T>> implements Serializable {
 
-  private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunc.class.getName());
+  private static final Logger LOG = Logger.getLogger(ArrowBasedSinkFunction.class.getName());
 
   private final String filePath;
   private final String fileName;
@@ -45,7 +57,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   // transient because this will be created by the prepare method
   private transient Twister2ArrowFileWriter twister2ArrowFileWriter;
 
-  public ArrowBasedSinkFunc(String filepath, String filename, String schema) {
+  public ArrowBasedSinkFunction(String filepath, String filename, String schema) {
     this.filePath = filepath;
     this.arrowSchema = schema;
     this.fileName = filename;
@@ -57,7 +69,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
     // creating the file writer in the prepare method because, each worker would need to create
     // their own writer
     String filename = this.filePath + "/" + context.getWorkerId() + "/" + this.fileName;
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(filename, true, this.arrowSchema);
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(filename, false, this.arrowSchema);
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(context.getWorkerId());
     } catch (Exception e) {
@@ -76,6 +88,7 @@ public class ArrowBasedSinkFunc<T> extends BaseSinkFunc<Iterator<T>> implements 
   @Override
   public boolean add(Iterator<T> value) {
     try {
+      LOG.info("value is:" + value);
       while (value.hasNext()) {
         twister2ArrowFileWriter.queueArrowData(value.next());
       }

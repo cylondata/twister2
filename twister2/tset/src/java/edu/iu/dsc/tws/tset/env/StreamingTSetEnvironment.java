@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.fn.impl.ArrowBasedSourceFunc;
+import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -80,7 +80,7 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
                                                String schema) {
     try {
       return createSource(
-          new ArrowBasedSourceFunc(filePath, fileName, parallelism, schema), parallelism);
+          new ArrowBasedSourceFunction(filePath, fileName, parallelism, schema), parallelism);
     } catch (Exception e) {
       e.printStackTrace();
     }

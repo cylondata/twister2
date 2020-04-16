@@ -35,17 +35,17 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.fn.impl.ArrowBasedSinkFunc;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSinkFunction;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
+//import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
@@ -74,11 +74,18 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 //        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
 //    env.run(sinkTSet);
 
-    SinkTSet<Iterator<Double>> sinkTSet = csvSource
+//    SinkTSet<Iterator<Double>> sinkTSet = csvSource
+//        .direct()
+//        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
+//        .direct()
+//        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+//    env.run(sinkTSet);
+
+    SinkTSet<Iterator<Long>> sinkTSet = csvSource
         .direct()
-        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
+        .map((MapFunc<Long, String[]>) input -> Long.parseLong(input[0]))
         .direct()
-        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
 
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
@@ -96,8 +103,8 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
+    builder.add(new Field("long", FieldType.nullable(new ArrowType.Int(64, true)), null));
     //builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
-    builder.add(new Field("double", FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null));
     return new Schema(builder.build(), null);
   }
 

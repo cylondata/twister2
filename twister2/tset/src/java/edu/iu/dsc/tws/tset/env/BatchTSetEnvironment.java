@@ -25,9 +25,9 @@ import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.fn.impl.ArrowBasedSourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -86,7 +86,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   //Todo: let's support generic types next
   public SourceTSet<Object> createArrowSource(String filePath, String fileName,
                                               int parallelism, String schema) {
-    return createSource(new ArrowBasedSourceFunc(filePath, fileName, parallelism, schema),
+    return createSource(new ArrowBasedSourceFunction(filePath, fileName, parallelism, schema),
         parallelism);
   }
 

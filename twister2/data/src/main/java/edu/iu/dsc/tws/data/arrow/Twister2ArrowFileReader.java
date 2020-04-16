@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
@@ -40,7 +41,8 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   private String arrowSchema;
 
   private int currentBlock = 0;
-  private IntVector intVector;
+  //private IntVector intVector;
+  private BigIntVector intVector;
 
   private FileInputStream fileInputStream;
   private FSDataInputStream fsDataInputStream;
@@ -80,11 +82,33 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     }
   }
 
+  @Override
   public IntVector getIntegerVector() {
+    return null;
+  }
+
+  /* public IntVector getIntegerVector() {
+     try {
+       if (currentBlock < arrowBlocks.size()) {
+         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
+         intVector = (IntVector) root.getFieldVectors().get(0);
+       } else {
+         intVector = null;
+       }
+     } catch (IOException e) {
+       e.printStackTrace();
+     }
+     if (intVector != null) {
+       LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
+     }
+     return intVector;
+   }
+ */
+  public BigIntVector getBigIntegerVector() {
     try {
       if (currentBlock < arrowBlocks.size()) {
         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
-        intVector = (IntVector) root.getFieldVectors().get(0);
+        intVector = (BigIntVector) root.getFieldVectors().get(0);
       } else {
         intVector = null;
       }
