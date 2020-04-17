@@ -133,7 +133,22 @@ public abstract class FileSystem implements Serializable {
 
   public abstract FSDataInputStream open(final Path f, final int bufferSize) throws IOException;
 
+  /**
+   * Create a file system with the OVERWRITE
+   * @param f path
+   * @return the output stream
+   * @throws IOException if an error occurs
+   */
   public abstract FSDataOutputStream create(final Path f) throws IOException;
+
+  /**
+   * Create a file system with the specific write mdoe
+   * @param f path
+   * @param writeMode weather overwrite or not, when creating new files
+   * @return the output stream
+   * @throws IOException if an error occurs
+   */
+  public abstract FSDataOutputStream create(final Path f, WriteMode writeMode) throws IOException;
 
   public abstract boolean delete(final Path f, final boolean recursive) throws IOException;
 
