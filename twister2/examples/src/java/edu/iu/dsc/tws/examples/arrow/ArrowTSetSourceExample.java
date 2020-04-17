@@ -67,30 +67,30 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
     Schema schema = makeSchema();
     SourceTSet<String[]> csvSource
         = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
-//    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
-//        .direct()
-//        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
-//        .direct()
-//        .sink(new ArrowBasedSinkFunc<>(arrowInputDirectory, arrowFileName, schema.toJson()));
-//    env.run(sinkTSet);
-
-//    SinkTSet<Iterator<Double>> sinkTSet = csvSource
-//        .direct()
-//        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
-//        .direct()
-//        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
-//    env.run(sinkTSet);
-
-    SinkTSet<Iterator<Long>> sinkTSet = csvSource
+    SinkTSet<Iterator<Integer>> sinkTSet = csvSource
         .direct()
-        .map((MapFunc<Long, String[]>) input -> Long.parseLong(input[0]))
+        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
         .direct()
         .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
 
+    /*SinkTSet<Iterator<Double>> sinkTSet = csvSource
+        .direct()
+        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
+        .direct()
+        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+    env.run(sinkTSet);*/
+
+    /*SinkTSet<Iterator<Long>> sinkTSet = csvSource
+        .direct()
+        .map((MapFunc<Long, String[]>) input -> Long.parseLong(input[0]))
+        .direct()
+        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
+    env.run(sinkTSet);*/
+
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
-        //at computetset users can give the exact output type. We dont have to carry object type
+        //At computetset users can give the exact output type. We don't have to carry object type
         .compute(
             (ComputeFunc<List<Integer>, Iterator<Object>>) input -> {
               List<Integer> integers = new ArrayList<>();
@@ -103,8 +103,8 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
+    builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
     builder.add(new Field("long", FieldType.nullable(new ArrowType.Int(64, true)), null));
-    //builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
     return new Schema(builder.build(), null);
   }
 
