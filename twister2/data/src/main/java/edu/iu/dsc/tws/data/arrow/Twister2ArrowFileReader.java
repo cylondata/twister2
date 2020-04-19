@@ -20,11 +20,13 @@ import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
+import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
@@ -41,8 +43,7 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   private String arrowSchema;
 
   private int currentBlock = 0;
-  //private IntVector intVector;
-  private BigIntVector intVector;
+  private IntVector intVector;
 
   private FileInputStream fileInputStream;
   private FSDataInputStream fsDataInputStream;
@@ -82,33 +83,34 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     }
   }
 
-  @Override
-  public IntVector getIntegerVector() {
-    return null;
-  }
+//  public IntVector getIntegerVector() {
+//    try {
+//      if (currentBlock < arrowBlocks.size()) {
+//        arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
+//        //it should be generic
+//        intVector = (IntVector) root.getFieldVectors().get(0);
+//      } else {
+//        intVector = null;
+//      }
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+//    if (intVector != null) {
+//      LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
+//    }
+//    return intVector;
+//  }
 
-  /* public IntVector getIntegerVector() {
-     try {
-       if (currentBlock < arrowBlocks.size()) {
-         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
-         intVector = (IntVector) root.getFieldVectors().get(0);
-       } else {
-         intVector = null;
-       }
-     } catch (IOException e) {
-       e.printStackTrace();
-     }
-     if (intVector != null) {
-       LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
-     }
-     return intVector;
-   }
- */
-  public BigIntVector getBigIntegerVector() {
+
+  public IntVector getIntegerVector() {
     try {
       if (currentBlock < arrowBlocks.size()) {
         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
-        intVector = (BigIntVector) root.getFieldVectors().get(0);
+        //it should be generic
+        //intVector = (IntVector) root.getFieldVectors().get(0);
+        //Added for testing
+        List<FieldVector> fieldVector = root.getFieldVectors();
+        processVector(fieldVector);
       } else {
         intVector = null;
       }
@@ -119,5 +121,45 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
       LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
     }
     return intVector;
+  }
+
+  private IntVector processVector(List<FieldVector> fieldVectorList) {
+    IntVector intVector1 = null;
+    for (int i = 0; i < fieldVectorList.size(); i++) {
+      Types.MinorType mt = fieldVectorList.get(i).getMinorType();
+      switch (mt) {
+        case INT:
+          intVector1 = getIntVector(fieldVectorList.get(i));
+          break;
+        case BIGINT:
+          getBigIntegerVector(fieldVectorList.get(i));
+          break;
+        default:
+          throw new RuntimeException("Exception Occured");
+          break;
+      }
+    }
+    return intVector1;
+  }
+
+
+  public BigIntVector getBigIntegerVector(FieldVector vector) {
+    BigIntVector bigIntVector = null;
+    try {
+      bigIntVector = (BigIntVector) root.getFieldVectors().get(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return bigIntVector;
+  }
+
+  public IntVector getIntVector(FieldVector vector) {
+    IntVector intVector1 = null;
+    try {
+      intVector1 = (IntVector) root.getFieldVectors().get(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return intVector1;
   }
 }

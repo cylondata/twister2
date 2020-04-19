@@ -125,6 +125,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
     }
     intVector.setValueCount(items);
+    LOG.info("int vector:" + intVector);
   }
 
   private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
@@ -140,7 +141,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     bigIntVector.setInitialCapacity(items);
     bigIntVector.allocateNew();
     for (int i = 0; i < items; i++) {
-      bigIntVector.setSafe(i, isSet(), (long) this.dataList.get(from + i));
+      Long l = new Long(this.dataList.get(from + i).toString());
+      bigIntVector.setSafe(i, isSet(), l);
     }
     bigIntVector.setValueCount(items);
   }
