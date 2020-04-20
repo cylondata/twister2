@@ -136,7 +136,6 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
           break;
         default:
           throw new RuntimeException("Exception Occured");
-          break;
       }
     }
     return intVector1;

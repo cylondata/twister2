@@ -33,10 +33,6 @@ import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-//import org.apache.arrow.vector.Float4Vector;
-
-//import org.apache.arrow.vector.types.Types;
-
 public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serializable {
 
   private static final Logger LOG = Logger.getLogger(Twister2ArrowFileWriter.class.getName());
