@@ -18,4 +18,5 @@ public interface ITwister2ArrowFileReader {
   void initInputFile();
   IntVector getIntegerVector();
   //BigIntVector getBigIntegerVector();
+  void getBigIntegerVector();
 }

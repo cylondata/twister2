@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
@@ -101,46 +102,32 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
 //    return intVector;
 //  }
 
-
   public IntVector getIntegerVector() {
     try {
       if (currentBlock < arrowBlocks.size()) {
         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
-        //it should be generic
-        //intVector = (IntVector) root.getFieldVectors().get(0);
-        //Added for testing
-        List<FieldVector> fieldVector = root.getFieldVectors();
-        processVector(fieldVector);
+        FieldVector vector = root.getVector(field.getName());
+        if (vector.getMinorType().equals(Types.MinorType.INT)) {
+          intVector = getIntegerVector(vector);
+        } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) { //check this
+          getDoubleVector(vector);
+        } else if (vector.getMinorType().equals(Types.MinorType.LONG)) {
+          getBigIntegerVector(vector);
+        } else {
+          throw new RuntimeException("Not Supported Datatypes Now");
+        }
       } else {
         intVector = null;
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-    if (intVector != null) {
-      LOG.info("%%% Count Block:" + currentBlock + "%%% Int Vector:%%%" + intVector);
-    }
     return intVector;
   }
 
-  private IntVector processVector(List<FieldVector> fieldVectorList) {
-    IntVector intVector1 = null;
-    for (int i = 0; i < fieldVectorList.size(); i++) {
-      Types.MinorType mt = fieldVectorList.get(i).getMinorType();
-      switch (mt) {
-        case INT:
-          intVector1 = getIntVector(fieldVectorList.get(i));
-          break;
-        case BIGINT:
-          getBigIntegerVector(fieldVectorList.get(i));
-          break;
-        default:
-          throw new RuntimeException("Exception Occured");
-      }
-    }
-    return intVector1;
+  private Float4Vector getDoubleVector(FieldVector vector) {
+    return null;
   }
-
 
   public BigIntVector getBigIntegerVector(FieldVector vector) {
     BigIntVector bigIntVector = null;
@@ -152,7 +139,7 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     return bigIntVector;
   }
 
-  public IntVector getIntVector(FieldVector vector) {
+  public IntVector getIntegerVector(FieldVector vector) {
     IntVector intVector1 = null;
     try {
       intVector1 = (IntVector) root.getFieldVectors().get(0);

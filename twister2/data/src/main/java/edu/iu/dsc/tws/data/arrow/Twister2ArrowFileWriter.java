@@ -25,6 +25,7 @@ import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
+import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
@@ -95,18 +96,14 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       LOG.info("root schema fields:" + root.getSchema().getFields());
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
-        switch (vector.getMinorType()) {
-          case INT:
-            intVectorGeneration((IntVector) vector, i, min);
-            break;
-          case FLOAT4:
-            doubleVectorGeneration((Float4Vector) vector, i, min);
-            break;
-          case BIGINT:
-            longVectorGeneration((BigIntVector) vector, i, min);
-            break;
-          default:
-            throw new Exception("Exception Occured");
+        if (vector.getMinorType().equals(Types.MinorType.INT)) {
+          intVectorGeneration((IntVector) vector, i, min);
+        } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) {
+          doubleVectorGeneration((Float4Vector) vector, i, min);
+        } else if (vector.getMinorType().equals(Types.MinorType.LONG)) {
+          longVectorGeneration((BigIntVector) vector, i, min);
+        } else {
+          throw new RuntimeException("Not Supported Datatypes Now");
         }
       }
       arrowFileWriter.writeBatch();

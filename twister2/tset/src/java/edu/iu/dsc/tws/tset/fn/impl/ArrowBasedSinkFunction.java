@@ -88,7 +88,6 @@ public class ArrowBasedSinkFunction<T> extends BaseSinkFunc<Iterator<T>> impleme
   @Override
   public boolean add(Iterator<T> value) {
     try {
-      LOG.info("value is:" + value);
       while (value.hasNext()) {
         twister2ArrowFileWriter.queueArrowData(value.next());
       }

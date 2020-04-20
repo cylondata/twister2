@@ -45,8 +45,6 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-//import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
-
 public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
@@ -74,20 +72,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
         .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
 
-    /*SinkTSet<Iterator<Double>> sinkTSet = csvSource
-        .direct()
-        .map((MapFunc<Double, String[]>) input -> Double.parseDouble(input[0]))
-        .direct()
-        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
-    env.run(sinkTSet);*/
-
-    /*SinkTSet<Iterator<Long>> sinkTSet = csvSource
-        .direct()
-        .map((MapFunc<Long, String[]>) input -> Long.parseLong(input[0]))
-        .direct()
-        .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
-    env.run(sinkTSet);*/
-
+    //Source Function Call
     env.createArrowSource(arrowInputDirectory, arrowFileName, parallel, schema.toJson())
         .direct()
         //At computetset users can give the exact output type. We don't have to carry object type
