@@ -100,7 +100,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
           intVectorGeneration((IntVector) vector, i, min);
         } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) {
           doubleVectorGeneration((Float4Vector) vector, i, min);
-        } else if (vector.getMinorType().equals(Types.MinorType.LONG)) {
+        } else if (vector.getMinorType().equals(Types.MinorType.BIGINT)) {
           longVectorGeneration((BigIntVector) vector, i, min);
         } else {
           throw new RuntimeException("Not Supported Datatypes Now");

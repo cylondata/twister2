@@ -106,15 +106,18 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     try {
       if (currentBlock < arrowBlocks.size()) {
         arrowFileReader.loadRecordBatch(arrowBlocks.get(currentBlock++));
-        FieldVector vector = root.getVector(field.getName());
-        if (vector.getMinorType().equals(Types.MinorType.INT)) {
-          intVector = getIntegerVector(vector);
-        } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) { //check this
-          getDoubleVector(vector);
-        } else if (vector.getMinorType().equals(Types.MinorType.LONG)) {
-          getBigIntegerVector(vector);
-        } else {
-          throw new RuntimeException("Not Supported Datatypes Now");
+        List<FieldVector> fieldVectorList = root.getFieldVectors();
+        for (int i = 0; i < fieldVectorList.size(); i++) {
+          FieldVector fieldVector = fieldVectorList.get(i);
+          if (fieldVector.getMinorType().equals(Types.MinorType.INT)) {
+            intVector = getIntegerVector(fieldVector);
+          } else if (fieldVector.getMinorType().equals(Types.MinorType.FLOAT4)) { //check this
+            getDoubleVector(fieldVector);
+          } else if (fieldVector.getMinorType().equals(Types.MinorType.BIGINT)) { //check this
+            getBigIntegerVector(fieldVector);
+          } else {
+            throw new RuntimeException("Not Supported Datatypes Now");
+          }
         }
       } else {
         intVector = null;
@@ -125,8 +128,14 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     return intVector;
   }
 
-  private Float4Vector getDoubleVector(FieldVector vector) {
-    return null;
+  public IntVector getIntegerVector(FieldVector vector) {
+    IntVector intVector1 = null;
+    try {
+      intVector1 = (IntVector) root.getFieldVectors().get(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return intVector1;
   }
 
   public BigIntVector getBigIntegerVector(FieldVector vector) {
@@ -139,13 +148,7 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     return bigIntVector;
   }
 
-  public IntVector getIntegerVector(FieldVector vector) {
-    IntVector intVector1 = null;
-    try {
-      intVector1 = (IntVector) root.getFieldVectors().get(0);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return intVector1;
+  private Float4Vector getDoubleVector(FieldVector vector) {
+    return null;
   }
 }

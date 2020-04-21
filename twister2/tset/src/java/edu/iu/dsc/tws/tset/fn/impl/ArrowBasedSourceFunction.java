@@ -40,7 +40,6 @@ import java.util.logging.Logger;
 
 import org.apache.arrow.vector.IntVector;
 
-import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.arrow.Twister2ArrowFileReader;
@@ -58,8 +57,6 @@ public class ArrowBasedSourceFunction extends BaseSourceFunc<Object> implements 
   private IntVector intVector = null;
 
   private transient Twister2ArrowFileReader twister2ArrowFileReader;
-
-  private FileSystem fileSystem;
 
   public ArrowBasedSourceFunction(String arrowInputdirectory, String arrowinputFile,
                                   int parallelism, String schema) {
