@@ -42,6 +42,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private String arrowSchema;
 
   private int batchSize;
+  private int parallel;
 
   private List<Object> dataList = new ArrayList<>();
 
@@ -57,13 +58,16 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private transient VectorSchemaRoot root;
   private transient ArrowFileWriter arrowFileWriter;
 
+
   // todo lets give a meaningful name for this flag variable
-  public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema) {
+  public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema,
+                                 int parallelism) {
     this.arrowFile = arrowfile;
     this.flag = flag;
     this.arrowSchema = schema;
     this.batchSize = 1000;
     this.rootAllocator = new RootAllocator(Integer.MAX_VALUE);
+    this.parallel = parallelism;
   }
 
   public boolean setUpTwister2ArrowWrite(int workerId) throws Exception {
@@ -118,7 +122,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
     }
     intVector.setValueCount(items);
-    LOG.info("int vector:" + intVector);
   }
 
   private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
@@ -137,7 +140,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       Long l = new Long(this.dataList.get(from + i).toString());
       bigIntVector.setSafe(i, isSet(), l);
     }
-    LOG.info("big int vector:" + bigIntVector);
     bigIntVector.setValueCount(items);
   }
 

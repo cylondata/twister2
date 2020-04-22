@@ -69,7 +69,8 @@ public class ArrowBasedSinkFunction<T> extends BaseSinkFunc<Iterator<T>> impleme
     // creating the file writer in the prepare method because, each worker would need to create
     // their own writer
     String filename = this.filePath + "/" + context.getWorkerId() + "/" + this.fileName;
-    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(filename, false, this.arrowSchema);
+    this.twister2ArrowFileWriter = new Twister2ArrowFileWriter(filename, false,
+        this.arrowSchema, context.getParallelism());
     try {
       twister2ArrowFileWriter.setUpTwister2ArrowWrite(context.getWorkerId());
     } catch (Exception e) {
