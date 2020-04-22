@@ -45,6 +45,7 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
 
   private int currentBlock = 0;
   private IntVector intVector;
+  private BigIntVector bigIntVector;
 
   private FileInputStream fileInputStream;
   private FSDataInputStream fsDataInputStream;
@@ -111,10 +112,11 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
           FieldVector fieldVector = fieldVectorList.get(i);
           if (fieldVector.getMinorType().equals(Types.MinorType.INT)) {
             intVector = getIntegerVector(fieldVector);
+            return intVector;
           } else if (fieldVector.getMinorType().equals(Types.MinorType.FLOAT4)) { //check this
             getDoubleVector(fieldVector);
           } else if (fieldVector.getMinorType().equals(Types.MinorType.BIGINT)) { //check this
-            getBigIntegerVector(fieldVector);
+            bigIntVector = getBigIntegerVector(fieldVector);
           } else {
             throw new RuntimeException("Not Supported Datatypes Now");
           }
@@ -132,6 +134,7 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
     IntVector intVector1 = null;
     try {
       intVector1 = (IntVector) root.getFieldVectors().get(0);
+      LOG.info("int vector:" + intVector1);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -139,13 +142,14 @@ public class Twister2ArrowFileReader implements ITwister2ArrowFileReader, Serial
   }
 
   public BigIntVector getBigIntegerVector(FieldVector vector) {
-    BigIntVector bigIntVector = null;
+    BigIntVector bigIntVector1 = null;
     try {
-      bigIntVector = (BigIntVector) root.getFieldVectors().get(0);
+      bigIntVector1 = (BigIntVector) root.getFieldVectors().get(0);
+      LOG.info("big int vector:" + bigIntVector1);
     } catch (Exception e) {
       e.printStackTrace();
     }
-    return bigIntVector;
+    return bigIntVector1;
   }
 
   private Float4Vector getDoubleVector(FieldVector vector) {

@@ -137,6 +137,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       Long l = new Long(this.dataList.get(from + i).toString());
       bigIntVector.setSafe(i, isSet(), l);
     }
+    LOG.info("big int vector:" + bigIntVector);
     bigIntVector.setValueCount(items);
   }
 
