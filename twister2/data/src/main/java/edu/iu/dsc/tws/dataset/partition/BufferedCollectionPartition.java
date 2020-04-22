@@ -168,7 +168,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
-      LOG.info("Writing to disk...");
+      LOG.finest("Writing to disk...");
       // write to buffer
       byte[] bytes = dataType.getDataPacker().packToByteArray(val);
       this.buffers.add(bytes);
