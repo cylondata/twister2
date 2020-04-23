@@ -94,8 +94,6 @@ public class SchedulerContext extends Context {
 
   public static final String COPY_SYSTEM_PACKAGE = "twister2.resource.systempackage.copy";
 
-  public static final String FAILURE_RETRIES = "twister2.resource.faulttlerence.retries";
-
   // we define these variables in this file because
   // KubernetesContext is not reachable from WorkerEnvironment class
   public static final boolean K8S_CHECK_PODS_REACHABLE_DEFAULT = false;
@@ -210,10 +208,6 @@ public class SchedulerContext extends Context {
   public static int numberOfAdditionalPorts(Config cfg) {
     List<String> portNameList = additionalPorts(cfg);
     return portNameList == null ? 0 : portNameList.size();
-  }
-
-  public static int failureRetries(Config cfg, int def) {
-    return cfg.getIntegerValue(FAILURE_RETRIES, def);
   }
 
   public static boolean checkPodsReachable(Config cfg) {

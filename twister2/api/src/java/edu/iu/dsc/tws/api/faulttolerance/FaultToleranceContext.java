@@ -27,6 +27,8 @@ public class FaultToleranceContext extends Context {
   public static final String FAILURE_TIMEOUT = "twister2.fault.tolerance.failure.timeout";
   public static final int FAILURE_TIMEOUT_DEFAULT = 10 * 1000;
 
+  public static final String FAILURE_RETRIES = "twister2.fault.tolerance.retries";
+
   public static boolean faultTolerant(Config cfg) {
     return cfg.getBooleanValue(FAULT_TOLERANT, FAULT_TOLERANT_DEFAULT);
   }
@@ -35,5 +37,7 @@ public class FaultToleranceContext extends Context {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);
   }
 
-
+  public static int failureRetries(Config cfg, int def) {
+    return cfg.getIntegerValue(FAILURE_RETRIES, def);
+  }
 }

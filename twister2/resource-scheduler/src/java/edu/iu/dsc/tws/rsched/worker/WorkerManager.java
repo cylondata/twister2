@@ -17,10 +17,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -114,7 +114,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     this.volatileVolume = volatileVolume;
     this.managedWorker = worker;
     // we default to three retries
-    this.maxRetries = SchedulerContext.failureRetries(config, 3);
+    this.maxRetries = FaultToleranceContext.failureRetries(config, 3);
 
 //    WorkerRuntime.addWorkerFailureListener(this);
 //    WorkerRuntime.addAllJoinedListener(this);
