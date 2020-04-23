@@ -35,17 +35,20 @@ public class PersistExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     // test direct().cache() which has IterLink semantics
     PersistedTSet<Integer> cache = src.direct().persist();
     runOps(env, cache);
 
     // test reduce().cache() which has SingleLink semantics
+    LOG.info("test persist after reduce");
     PersistedTSet<Integer> cache1 = src.reduce(Integer::sum).persist();
     runOps(env, cache1);
 
     // test gather.cache() which has TupleValueIterLink
+    LOG.info("test persist after gather");
     PersistedTSet<Integer> cache2 = src.gather().persist();
     runOps(env, cache2);
   }

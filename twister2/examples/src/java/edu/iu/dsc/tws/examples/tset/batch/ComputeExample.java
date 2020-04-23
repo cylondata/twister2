@@ -27,6 +27,7 @@ package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
@@ -40,10 +41,13 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class ComputeExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
+  private static final Logger LOG = Logger.getLogger(ComputeExample.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src")
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM)
+        .setName("src")
         .withSchema(PrimitiveSchemas.INTEGER);
 
     ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
@@ -56,9 +60,9 @@ public class ComputeExample extends BatchTsetExample {
         }).withSchema(PrimitiveSchemas.INTEGER).setName("sum");
 
 
-    sum.direct().forEach(data -> System.out.println("val: " + data));
+    sum.direct().forEach(data -> LOG.info("val: " + data));
 
-    sum.reduce(Integer::sum).forEach(i -> System.out.println("red: " + i));
+    sum.reduce(Integer::sum).forEach(i -> LOG.info("red: " + i));
   }
 
 
