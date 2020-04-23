@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
@@ -43,6 +44,7 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   @Override
+  @SuppressWarnings("RegexpSinglelineJava")
   public void execute(CheckpointingTSetEnv env) {
     int sourcePar = 4;
     Config config = env.getConfig();
@@ -54,6 +56,10 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     // persist raw data
     PersistedTSet<String> persisted = source.direct().persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted initial raw data");
+
+    if (env.getWorkerID() == 2 && !WorkerRuntime.getWorkerController().workerRestarted()) {
+      System.exit(20);
+    }
 
     // map the words to a tuple, with <word, 1>, 1 is the count
     KeyedTSet<String, Integer> groupedWords = persisted.mapToTuple(w -> new Tuple<>(w, 1));
@@ -120,8 +126,8 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("wordcount");
     jobBuilder.setWorkerClass(WordCount.class);
-    // we use 2 processes, each with 512mb memory and 1 CPU assigned
-    jobBuilder.addComputeResource(1, 512, 2);
+    // we use 4 workers, each with 512mb memory and 1 CPU assigned
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

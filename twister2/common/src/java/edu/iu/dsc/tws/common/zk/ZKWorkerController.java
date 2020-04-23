@@ -850,6 +850,14 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   @Override
+  public boolean workerRestarted() {
+    if (initialState == WorkerState.RESTARTED) {
+      return true;
+    }
+    return false;
+  }
+
+  @Override
   public IWorkerFailureListener getFailureListener() {
     return failureListener;
   }

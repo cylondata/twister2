@@ -40,6 +40,14 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
+   * if this worker has restarted from failure, return true,
+   * if it is running for the first time, return false
+   */
+  default boolean workerRestarted() {
+    return false;
+  }
+
+  /**
    * get all joined workers in this job, including the ones finished execution
    * if there are some workers that have not joined yet, they may not be included in this list.
    * users can compare the total number of workers to the size of this list and

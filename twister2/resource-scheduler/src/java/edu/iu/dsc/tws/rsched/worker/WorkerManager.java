@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * Keep information about a managed environment where workers can get restarted.
@@ -113,11 +114,12 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
     this.managedWorker = worker;
+
     // we default to three retries
     this.maxRetries = FaultToleranceContext.failureRetries(config, 3);
 
-//    WorkerRuntime.addWorkerFailureListener(this);
-//    WorkerRuntime.addAllJoinedListener(this);
+    WorkerRuntime.addWorkerFailureListener(this);
+    WorkerRuntime.addAllJoinedListener(this);
     this.workerStatus = WorkerStatus.RUNNING;
   }
 
@@ -129,7 +131,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
       if (workerStatus == WorkerStatus.FAILED) {
         long elapsedTime = System.currentTimeMillis() - failedTime;
         if (elapsedTime > 600000) {
-          LOG.info("Waited 10 mins to recover the workers from failre, giving up");
+          LOG.info("Waited 10 mins to recover the workers from failure, giving up");
           break;
         }
         // lets sleep a little for avoid spinning
@@ -195,6 +197,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
   @Override
   public void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+    LOG.info("registered FaultAcceptable");
     faultComponents.add(faultAcceptable);
   }
 
