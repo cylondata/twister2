@@ -45,12 +45,16 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
 
   private static final Logger LOG = Logger.getLogger(CheckpointingClientImpl.class.getName());
 
+  public static final String CONFIG_WAIT_TIME = "twister2.checkpointing.request.timeout";
+
   private RRClient rrClient;
+  private long waitTime;
   private Map<RequestID, Message> blockingResponse = new ConcurrentHashMap<>();
   private Map<RequestID, MessageHandler> asyncHandlers = new ConcurrentHashMap<>();
 
-  public CheckpointingClientImpl(RRClient rrClient) {
+  public CheckpointingClientImpl(RRClient rrClient, long waitTime) {
     this.rrClient = rrClient;
+    this.waitTime = waitTime;
   }
 
   public void init() {
@@ -75,7 +79,7 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
             .setFamily(family)
             .setIndex(index)
             .build(),
-        10000
+        this.waitTime
     );
     return (Checkpoint.ComponentDiscoveryResponse) this.blockingResponse.remove(requestID);
   }
@@ -93,7 +97,7 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
             .setContainerIndex(containerIndex)
             .setContainers(containersCount)
             .build(),
-        10000
+        this.waitTime
     );
     return (Checkpoint.FamilyInitializeResponse) this.blockingResponse.remove(requestID);
   }
