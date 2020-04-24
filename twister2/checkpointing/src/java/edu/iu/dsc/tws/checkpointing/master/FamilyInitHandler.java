@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointing.master;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.request.RequestID;
@@ -24,7 +23,7 @@ public class FamilyInitHandler {
   private static final Logger LOG = Logger.getLogger(FamilyInitHandler.class.getName());
 
   private int count;
-  private Set<RequestID> pendingResponses;
+  private HashMap<Integer, RequestID> pendingResponses;
   private RRServer rrServer;
   private String family;
   private Long familyVersion;
@@ -35,20 +34,25 @@ public class FamilyInitHandler {
     this.rrServer = rrServer;
     this.family = family;
     this.familyVersion = familyVersion;
-    this.pendingResponses = new HashSet<>();
+    this.pendingResponses = new HashMap<>();
     this.count = count;
   }
 
-  public boolean scheduleResponse(RequestID requestID) {
-    this.pendingResponses.add(requestID);
+  public boolean scheduleResponse(int workerId, RequestID requestID) {
+    RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
+    if (previousRequest != null) {
+      LOG.warning("Duplicate request received for " + this.family
+          + " from worker : " + workerId + ". Workers might be coming after a failure.");
+    }
     if (this.pendingResponses.size() == count) {
-      for (RequestID pendingRespons : this.pendingResponses) {
+      for (RequestID pendingRespons : this.pendingResponses.values()) {
         this.rrServer.sendResponse(pendingRespons,
             Checkpoint.FamilyInitializeResponse.newBuilder()
                 .setFamily(this.family)
                 .setVersion(this.familyVersion)
                 .build());
       }
+      this.pendingResponses.clear();
       return true;
     } else {
       return false;
