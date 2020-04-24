@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -219,6 +220,14 @@ public final class JMWorkerAgent {
     rrClient.registerResponseHandler(JobMasterAPI.BarrierRequest.newBuilder(), workerController);
     rrClient.registerResponseHandler(JobMasterAPI.BarrierResponse.newBuilder(), workerController);
 
+    // try until jm becomes reachable
+    boolean jmReachable = tryUntilJMReachable(CONNECTION_TRY_TIME_LIMIT);
+    if (jmReachable) {
+      LOG.fine("JobMaster host is reachable at: " + jmAddress);
+    } else {
+      throw new RuntimeException("Job Master is not reachable. Exiting .....");
+    }
+
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
@@ -246,7 +255,7 @@ public final class JMWorkerAgent {
         LOG.fine("Worker is disconnecting from JobMaster from previous session.");
         rrClient.disconnect();
 
-        // update jmHost anf jmPort
+        // update jmHost and jmPort
         rrClient.setHostAndPort(jmAddress, jmPort);
 
         // reconnect
@@ -320,6 +329,45 @@ public final class JMWorkerAgent {
       this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
+  }
+
+  /**
+   * try until JM becomes reachable or the time limit is reached
+   */
+  public boolean tryUntilJMReachable(long timeLimit) {
+    long startTime = System.currentTimeMillis();
+    long duration = 0;
+    long checkingInterval = 100;
+    long maxCheckingInterval = 300;
+
+    // log interval in milliseconds
+    long logInterval = 1000;
+    long nextLogTime = logInterval;
+
+    while (duration < timeLimit) {
+      // check whether jm reachable
+      if (Network.isReachable(jmAddress)) {
+        return true;
+      }
+
+      try {
+        Thread.sleep(checkingInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted.");
+      }
+
+      if (checkingInterval < maxCheckingInterval) {
+        checkingInterval = Math.min(checkingInterval * 2, maxCheckingInterval);
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+      if (duration > nextLogTime) {
+        LOG.info("Still waiting Job Master to became reachable: " + jmAddress);
+        nextLogTime += logInterval;
+      }
+    }
+
+    return false;
   }
 
   /**

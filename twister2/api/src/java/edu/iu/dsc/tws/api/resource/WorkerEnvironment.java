@@ -12,10 +12,7 @@
 
 package edu.iu.dsc.tws.api.resource;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,7 +190,7 @@ public final class WorkerEnvironment {
     final long sleepInterval = 500;
 
     while (!podIPs.isEmpty()) {
-      podIPs.removeIf(this::isReachable);
+      podIPs.removeIf(Network::isReachable);
 
       if (podIPs.isEmpty()) {
         LOG.info("All worker pods are reachable by IP. count: " + count);
@@ -214,21 +211,6 @@ public final class WorkerEnvironment {
     }
 
     return true;
-  }
-
-  private boolean isReachable(String podIP) {
-    InetAddress ip = null;
-    try {
-      ip = InetAddress.getByName(podIP);
-    } catch (UnknownHostException e) {
-      return false;
-    }
-    try {
-      LOG.finest("Checking IP: " + podIP);
-      return ip.isReachable(5000);
-    } catch (IOException e) {
-      return false;
-    }
   }
 
   /**

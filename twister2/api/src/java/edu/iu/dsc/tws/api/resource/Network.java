@@ -36,7 +36,10 @@
 
 package edu.iu.dsc.tws.api.resource;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
@@ -70,4 +73,25 @@ public final class Network {
       throw new Twister2RuntimeException("Couldn't initialize TWSChannel", e);
     }
   }
+
+  /**
+   * check whether a host is reachable
+   * @param targetHostName
+   * @return
+   */
+  public static boolean isReachable(String targetHostName) {
+    InetAddress ip = null;
+    try {
+      ip = InetAddress.getByName(targetHostName);
+    } catch (UnknownHostException e) {
+      return false;
+    }
+    try {
+      LOG.finest("Checking IP: " + targetHostName);
+      return ip.isReachable(5000);
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
 }
