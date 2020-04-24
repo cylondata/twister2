@@ -39,6 +39,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.api.driver.IDriver;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -94,6 +95,9 @@ public class WorkerMonitor implements MessageHandler {
 
   private ConcurrentSkipListMap<Integer, WorkerWithState> workers;
 
+  // Inform worker failure events
+  private IWorkerFailureListener failureListener;
+
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
                        DashboardClient dashClient,
@@ -112,6 +116,20 @@ public class WorkerMonitor implements MessageHandler {
     this.jobState = JobAPI.JobState.STARTING;
 
     workers = new ConcurrentSkipListMap<>();
+  }
+
+  /**
+   * add a single IWorkerFailureListener
+   * if additional IWorkerFailureListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
+    if (this.failureListener != null) {
+      return false;
+    }
+
+    this.failureListener = iWorkerFailureListener;
+    return true;
   }
 
   public int getNumberOfWorkers() {
@@ -291,7 +309,10 @@ public class WorkerMonitor implements MessageHandler {
 
     handleAllJoined();
 
-    // TODO inform checkpoint master
+    if (failureListener != null) {
+      failureListener.restarted(workerWithState.getInfo());
+    }
+
     return null;
   }
 
@@ -360,6 +381,11 @@ public class WorkerMonitor implements MessageHandler {
       LOG.info("A worker failed in a NON-FAULT TOLERANT job. Terminating the job.");
       jobStateChanged(JobAPI.JobState.FAILED);
     }
+
+    if (failureListener != null) {
+      failureListener.failed(workerID);
+    }
+
   }
 
   public void workersScaledDown(int instancesRemoved) {
