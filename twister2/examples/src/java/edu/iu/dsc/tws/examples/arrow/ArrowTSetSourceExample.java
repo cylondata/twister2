@@ -89,7 +89,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   private Schema makeSchema() {
     ImmutableList.Builder<Field> builder = ImmutableList.builder();
     builder.add(new Field("int", FieldType.nullable(new ArrowType.Int(32, true)), null));
-    builder.add(new Field("long", FieldType.nullable(new ArrowType.Int(64, true)), null));
+    //builder.add(new Field("long", FieldType.nullable(new ArrowType.Int(64, true)), null));
     return new Schema(builder.build(), null);
   }
 

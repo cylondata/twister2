@@ -18,10 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.Float4Vector;
-import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
@@ -58,6 +55,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private transient VectorSchemaRoot root;
   private transient ArrowFileWriter arrowFileWriter;
 
+  private Twister2ArrowDataGenerator twister2ArrowDataGenerator;
+
 
   // todo lets give a meaningful name for this flag variable
   public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema,
@@ -85,6 +84,16 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     } else {
       this.arrowFileWriter = new ArrowFileWriter(root, provider, this.twister2ArrowOutputStream);
     }
+
+    LOG.info("root schema fields:" + root.getSchema().getFields());
+    for (Field field : root.getSchema().getFields()) {
+      FieldVector vector = root.getVector(field.getName());
+      if (vector.getMinorType().equals(Types.MinorType.INT)) {
+        twister2ArrowDataGenerator = new Twister2ArrowDataGenerator(root, dataList);
+      } else if (vector.getMinorType().equals(Types.MinorType.BIGINT)) {
+        twister2ArrowDataGenerator = new Twister2ArrowDataGenerator(root, dataList);
+      }
+    }
     return true;
   }
 
@@ -97,63 +106,42 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     for (int i = 0; i < dataList.size();) {
       int min = Math.min(this.batchSize, this.dataList.size() - i);
       root.setRowCount(min);
-      LOG.info("root schema fields:" + root.getSchema().getFields());
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
-        if (vector.getMinorType().equals(Types.MinorType.INT)) {
-          intVectorGeneration((IntVector) vector, i, min);
-        } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) {
-          doubleVectorGeneration((Float4Vector) vector, i, min);
-        } else if (vector.getMinorType().equals(Types.MinorType.BIGINT)) {
-          longVectorGeneration((BigIntVector) vector, i, min);
-        } else {
-          throw new RuntimeException("Not Supported Datatypes Now");
-        }
+        twister2ArrowDataGenerator.vectorGeneration(vector, i, min);
       }
       arrowFileWriter.writeBatch();
       i += min;
     }
   }
 
-  private void intVectorGeneration(IntVector intVector, int from, int items) {
-    intVector.setInitialCapacity(items);
-    intVector.allocateNew();
-    for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
-    }
-    intVector.setValueCount(items);
-  }
-
-  private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
-    floatVector.setInitialCapacity(items);
-    floatVector.allocateNew();
-    for (int i = 0; i < items; i++) {
-      floatVector.setSafe(i, isSet(), (float) this.dataList.get(from + i));
-    }
-    floatVector.setValueCount(items);
-  }
-
-  private void longVectorGeneration(BigIntVector bigIntVector, int from, int items) {
-    bigIntVector.setInitialCapacity(items);
-    bigIntVector.allocateNew();
-    for (int i = 0; i < items; i++) {
-      Long l = new Long(this.dataList.get(from + i).toString());
-      bigIntVector.setSafe(i, isSet(), l);
-    }
-    bigIntVector.setValueCount(items);
-  }
-
-  private void writeFieldInt(FieldVector fieldVector, int from, int items) {
-    //todo: we need to find a way to write to the field vector without having to cast to this INT
-    //type now! because we wouldn't know the type of object during compile time.
-    IntVector intVector = (IntVector) fieldVector;
-    intVector.setInitialCapacity(items);
-    intVector.allocateNew();
-    for (int i = 0; i < items; i++) {
-      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
-    }
-    fieldVector.setValueCount(items);
-  }
+//  private void intVectorGeneration(IntVector intVector, int from, int items) {
+//    intVector.setInitialCapacity(items);
+//    intVector.allocateNew();
+//    for (int i = 0; i < items; i++) {
+//      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
+//    }
+//    intVector.setValueCount(items);
+//  }
+//
+//  private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
+//    floatVector.setInitialCapacity(items);
+//    floatVector.allocateNew();
+//    for (int i = 0; i < items; i++) {
+//      floatVector.setSafe(i, isSet(), (float) this.dataList.get(from + i));
+//    }
+//    floatVector.setValueCount(items);
+//  }
+//
+//  private void longVectorGeneration(BigIntVector bigIntVector, int from, int items) {
+//    bigIntVector.setInitialCapacity(items);
+//    bigIntVector.allocateNew();
+//    for (int i = 0; i < items; i++) {
+//      Long l = new Long(this.dataList.get(from + i).toString());
+//      bigIntVector.setSafe(i, isSet(), l);
+//    }
+//    bigIntVector.setValueCount(items);
+//  }
 
   private int isSet() {
     if (useNullValues) {
