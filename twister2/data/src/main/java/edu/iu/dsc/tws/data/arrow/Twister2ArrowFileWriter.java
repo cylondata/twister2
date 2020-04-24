@@ -55,7 +55,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private transient VectorSchemaRoot root;
   private transient ArrowFileWriter arrowFileWriter;
 
-  private Twister2ArrowDataGenerator twister2ArrowDataGenerator;
+  private Twister2ArrowVectorGenerator twister2ArrowVectorGenerator;
 
 
   // todo lets give a meaningful name for this flag variable
@@ -89,9 +89,9 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     for (Field field : root.getSchema().getFields()) {
       FieldVector vector = root.getVector(field.getName());
       if (vector.getMinorType().equals(Types.MinorType.INT)) {
-        twister2ArrowDataGenerator = new Twister2ArrowDataGenerator(root, dataList);
+        twister2ArrowVectorGenerator = new Twister2ArrowVectorGenerator(root, dataList);
       } else if (vector.getMinorType().equals(Types.MinorType.BIGINT)) {
-        twister2ArrowDataGenerator = new Twister2ArrowDataGenerator(root, dataList);
+        twister2ArrowVectorGenerator = new Twister2ArrowVectorGenerator(root, dataList);
       }
     }
     return true;
@@ -108,46 +108,11 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       root.setRowCount(min);
       for (Field field : root.getSchema().getFields()) {
         FieldVector vector = root.getVector(field.getName());
-        twister2ArrowDataGenerator.vectorGeneration(vector, i, min);
+        twister2ArrowVectorGenerator.vectorGeneration(vector, i, min);
       }
       arrowFileWriter.writeBatch();
       i += min;
     }
-  }
-
-//  private void intVectorGeneration(IntVector intVector, int from, int items) {
-//    intVector.setInitialCapacity(items);
-//    intVector.allocateNew();
-//    for (int i = 0; i < items; i++) {
-//      intVector.setSafe(i, isSet(), (int) this.dataList.get(from + i));
-//    }
-//    intVector.setValueCount(items);
-//  }
-//
-//  private void doubleVectorGeneration(Float4Vector floatVector, int from, int items) {
-//    floatVector.setInitialCapacity(items);
-//    floatVector.allocateNew();
-//    for (int i = 0; i < items; i++) {
-//      floatVector.setSafe(i, isSet(), (float) this.dataList.get(from + i));
-//    }
-//    floatVector.setValueCount(items);
-//  }
-//
-//  private void longVectorGeneration(BigIntVector bigIntVector, int from, int items) {
-//    bigIntVector.setInitialCapacity(items);
-//    bigIntVector.allocateNew();
-//    for (int i = 0; i < items; i++) {
-//      Long l = new Long(this.dataList.get(from + i).toString());
-//      bigIntVector.setSafe(i, isSet(), l);
-//    }
-//    bigIntVector.setValueCount(items);
-//  }
-
-  private int isSet() {
-    if (useNullValues) {
-      return 0;
-    }
-    return 1;
   }
 
   public void close() {

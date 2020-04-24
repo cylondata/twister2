@@ -22,23 +22,15 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.Field;
 
-public class Twister2ArrowDataGenerator {
+public class Twister2ArrowVectorGenerator {
 
-  private static final Logger LOG = Logger.getLogger(Twister2ArrowDataGenerator.class.getName());
-
-  private List<Object> dataList;
-  private FieldVector fieldVector;
-
-  private boolean useNullValues;
+  private static final Logger LOG = Logger.getLogger(Twister2ArrowVectorGenerator.class.getName());
 
   private ArrowDataGenerator arrowDataGenerator;
+  private boolean useNullValues;
+  private List<Object> dataList;
 
-  public Twister2ArrowDataGenerator(List<Object> datalist, FieldVector fieldvector) {
-    this.dataList = datalist;
-    this.fieldVector = fieldvector;
-  }
-
-  public Twister2ArrowDataGenerator(VectorSchemaRoot root, List<Object> datalist) {
+  public Twister2ArrowVectorGenerator(VectorSchemaRoot root, List<Object> datalist) {
     this.dataList = datalist;
     for (Field field : root.getSchema().getFields()) {
       FieldVector vector = root.getVector(field.getName());
@@ -53,32 +45,32 @@ public class Twister2ArrowDataGenerator {
   }
 
   public <T> void vectorGeneration(T intVector, int from, int items) {
-    arrowDataGenerator.vectorGeneration(intVector, from, items);
+    arrowDataGenerator.vectorGenerator(intVector, from, items);
   }
 
-  public <T> void intVectorGeneration(T intVector, int from, int items) {
-    arrowDataGenerator.intVectorGeneration(intVector, from, items);
+  public <T> void intVectorGenerator(T intVector, int from, int items) {
+    arrowDataGenerator.intVectorGenerator(intVector, from, items);
   }
 
-  public <T> void bigIntVectorGeneration(T bigIntVector, int from, int items) {
-    arrowDataGenerator.bigIntVectorGeneration(bigIntVector, from, items);
+  public <T> void bigIntVectorGenerator(T bigIntVector, int from, int items) {
+    arrowDataGenerator.bigIntVectorGenerator(bigIntVector, from, items);
   }
 
-  public <T> void floatVectorGeneration(T float4Vector, int from, int items) {
-    arrowDataGenerator.floatVectorGeneration(float4Vector, from, items);
+  public <T> void floatVectorGenerator(T float4Vector, int from, int items) {
+    arrowDataGenerator.floatVectorGenerator(float4Vector, from, items);
   }
 
   private interface ArrowDataGenerator {
-    <T> void vectorGeneration(T vector, int from, int items);
-    <T> void intVectorGeneration(T intVector, int from, int items);
-    <T> void bigIntVectorGeneration(T bigIntVector, int from, int items);
-    <T> void floatVectorGeneration(T float4Vector, int from, int items);
+    <T> void vectorGenerator(T vector, int from, int items);
+    <T> void intVectorGenerator(T intVector, int from, int items);
+    <T> void bigIntVectorGenerator(T bigIntVector, int from, int items);
+    <T> void floatVectorGenerator(T float4Vector, int from, int items);
   }
 
   private class IntVectorGenerator implements ArrowDataGenerator {
 
     @Override
-    public <T> void vectorGeneration(T intVector1, int from, int items) {
+    public <T> void vectorGenerator(T intVector1, int from, int items) {
       IntVector intVector = (IntVector) intVector1;
       intVector.setInitialCapacity(items);
       intVector.allocateNew();
@@ -89,22 +81,22 @@ public class Twister2ArrowDataGenerator {
     }
 
     @Override
-    public <T> void intVectorGeneration(T intVector, int from, int items) {
+    public <T> void intVectorGenerator(T intVector, int from, int items) {
     }
 
     @Override
-    public <T> void bigIntVectorGeneration(T bigIntVector, int from, int items) {
+    public <T> void bigIntVectorGenerator(T bigIntVector, int from, int items) {
     }
 
     @Override
-    public <T> void floatVectorGeneration(T float4Vector, int from, int items) {
+    public <T> void floatVectorGenerator(T float4Vector, int from, int items) {
     }
   }
 
   private class BigIntVectorGenerator implements ArrowDataGenerator {
 
     @Override
-    public <T> void vectorGeneration(T bigIntVector1, int from, int items) {
+    public <T> void vectorGenerator(T bigIntVector1, int from, int items) {
       BigIntVector bigIntVector = (BigIntVector) bigIntVector1;
       bigIntVector.setInitialCapacity(items);
       bigIntVector.allocateNew();
@@ -116,22 +108,22 @@ public class Twister2ArrowDataGenerator {
     }
 
     @Override
-    public <T> void intVectorGeneration(T intVector, int from, int items) {
+    public <T> void intVectorGenerator(T intVector, int from, int items) {
     }
 
     @Override
-    public <T> void bigIntVectorGeneration(T bigIntVector, int from, int items) {
+    public <T> void bigIntVectorGenerator(T bigIntVector, int from, int items) {
     }
 
     @Override
-    public <T> void floatVectorGeneration(T float4Vector, int from, int items) {
+    public <T> void floatVectorGenerator(T float4Vector, int from, int items) {
     }
   }
 
   private class FloatVectorGenerator implements ArrowDataGenerator {
 
     @Override
-    public <T> void vectorGeneration(T floatVector1, int from, int items) {
+    public <T> void vectorGenerator(T floatVector1, int from, int items) {
       Float4Vector floatVector = (Float4Vector) floatVector1;
       floatVector.setInitialCapacity(items);
       floatVector.allocateNew();
@@ -142,15 +134,15 @@ public class Twister2ArrowDataGenerator {
     }
 
     @Override
-    public <T> void intVectorGeneration(T intVector, int from, int items) {
+    public <T> void intVectorGenerator(T intVector, int from, int items) {
     }
 
     @Override
-    public <T> void bigIntVectorGeneration(T bigIntVector, int from, int items) {
+    public <T> void bigIntVectorGenerator(T bigIntVector, int from, int items) {
     }
 
     @Override
-    public <T> void floatVectorGeneration(T float4Vector, int from, int items) {
+    public <T> void floatVectorGenerator(T float4Vector, int from, int items) {
     }
   }
 
