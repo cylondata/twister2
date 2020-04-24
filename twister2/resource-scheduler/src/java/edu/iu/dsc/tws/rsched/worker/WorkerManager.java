@@ -168,6 +168,12 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     faultComponents.add(fa);
   }
 
+  /**
+   * todo: if a worker in the job fails before getting allWorkersJoined event,
+   *       there is nothing to be done
+   *       that worker should be restarted and it should rejoin.
+   * @param workerList
+   */
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
 
@@ -184,7 +190,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
       try {
         fa.onFault(new Fault(workerID));
       } catch (Twister2Exception e) {
-        LOG.log(Level.WARNING, "Cannot propergate the failure", e);
+        LOG.log(Level.WARNING, "Cannot propagate the failure", e);
       }
     }
   }

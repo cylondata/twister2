@@ -58,7 +58,7 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     LOG.info("worker-" + env.getWorkerID() + " persisted initial raw data");
 
     if (env.getWorkerID() == 2 && !WorkerRuntime.getWorkerController().workerRestarted()) {
-      System.exit(20);
+      throw new RuntimeException("intentionally killed");
     }
 
     // map the words to a tuple, with <word, 1>, 1 is the count
