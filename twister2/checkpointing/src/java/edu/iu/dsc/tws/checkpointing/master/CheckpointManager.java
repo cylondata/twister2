@@ -178,7 +178,8 @@ public class CheckpointManager implements MessageHandler {
   }
 
   private void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
-    LOG.fine("Family init request received from " + message.getContainerIndex());
+    LOG.fine("Family init request received from " + message.getContainerIndex()
+        + ". Family : " + message.getFamily());
 
     FamilyInitHandler familyInitHandler = this.familyInitHandlers.get(message.getFamily());
 
@@ -203,10 +204,13 @@ public class CheckpointManager implements MessageHandler {
       }
     }
 
-    boolean sentResponses = familyInitHandler.scheduleResponse(id);
+    boolean sentResponses = familyInitHandler.scheduleResponse(message.getContainerIndex(), id);
     if (sentResponses) {
       LOG.info("Family " + message.getFamily() + " will start with version "
           + familyInitHandler.getVersion());
+    } else {
+      LOG.fine("Scheduled family init response for family : " + message.getFamily()
+          + " for worker id " + message.getContainerIndex());
     }
   }
 }
