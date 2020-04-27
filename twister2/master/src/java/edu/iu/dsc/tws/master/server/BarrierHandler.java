@@ -32,6 +32,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.IBarrierListener;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -49,10 +50,12 @@ public class BarrierHandler implements MessageHandler {
   private int numberOfWorkersOnBarrier;
   private HashMap<Integer, RequestID> waitList;
   private RRServer rrServer;
+  private IBarrierListener barrierListener;
 
-  public BarrierHandler(WorkerMonitor workerMonitor, RRServer rrServer) {
+  public BarrierHandler(WorkerMonitor workerMonitor, RRServer rrServer, IBarrierListener bl) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
+    this.barrierListener = bl;
     waitList = new HashMap<>();
   }
 
@@ -77,8 +80,20 @@ public class BarrierHandler implements MessageHandler {
 
       waitList.put(barrierRequest.getWorkerID(), requestID);
 
+      // if all workers arrived at the barrier
       if (waitList.size() == numberOfWorkersOnBarrier) {
+
+        // first let the barrier listener know
+        if (barrierListener != null) {
+          barrierListener.allArrived();
+        }
+
+        // send response messages to all workers
         sendBarrierResponseToWaitList();
+
+        // clear wait list for the next barrier event
+        waitList.clear();
+        numberOfWorkersOnBarrier = 0;
       }
 
     } else {
@@ -102,8 +117,5 @@ public class BarrierHandler implements MessageHandler {
       rrServer.sendResponse(entry.getValue(), response);
       LOG.fine("BarrierResponse message sent:\n" + response);
     }
-
-    waitList.clear();
-    numberOfWorkersOnBarrier = 0;
   }
 }

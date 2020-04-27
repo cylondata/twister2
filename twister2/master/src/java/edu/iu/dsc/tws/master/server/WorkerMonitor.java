@@ -104,6 +104,7 @@ public class WorkerMonitor implements MessageHandler {
                        ZKJobUpdater zkJobUpdater,
                        JobAPI.Job job,
                        IDriver driver,
+                       IWorkerFailureListener failureListener,
                        boolean faultTolerant) {
 
     this.jobMaster = jobMaster;
@@ -113,23 +114,10 @@ public class WorkerMonitor implements MessageHandler {
     this.driver = driver;
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.faultTolerant = faultTolerant;
+    this.failureListener = failureListener;
+
     this.jobState = JobAPI.JobState.STARTING;
-
     workers = new ConcurrentSkipListMap<>();
-  }
-
-  /**
-   * add a single IWorkerFailureListener
-   * if additional IWorkerFailureListener tried to be added,
-   * do not add and return false
-   */
-  public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
-    if (this.failureListener != null) {
-      return false;
-    }
-
-    this.failureListener = iWorkerFailureListener;
-    return true;
   }
 
   public int getNumberOfWorkers() {

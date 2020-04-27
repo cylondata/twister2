@@ -29,6 +29,7 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.api.resource.IBarrierListener;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
@@ -82,16 +83,20 @@ public class ZKMasterController {
 
   private WorkerMonitor workerMonitor;
 
+  private IBarrierListener barrierListener;
+
   public ZKMasterController(Config config,
                             String jobID,
                             int numberOfWorkers,
                             String jmAddress,
-                            WorkerMonitor workerMonitor) {
+                            WorkerMonitor workerMonitor,
+                            IBarrierListener barrierListener) {
     this.config = config;
     this.jobID = jobID;
     this.numberOfWorkers = numberOfWorkers;
     this.jmAddress = jmAddress;
     this.workerMonitor = workerMonitor;
+    this.barrierListener = barrierListener;
 
     rootPath = ZKContext.rootNode(config);
     persDir = ZKUtils.persDir(rootPath, jobID);
@@ -566,6 +571,13 @@ public class ZKMasterController {
   private void barrierZnodeAdded(PathChildrenCacheEvent event) {
 
     if (barrierChildrenCache.getCurrentData().size() == numberOfWorkers) {
+
+      // first inform barrier listener if there is any
+      if (barrierListener != null) {
+        barrierListener.allArrived();
+      }
+
+      // let all workers know
       JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
           .setNumberOfWorkers(numberOfWorkers)
           .build();

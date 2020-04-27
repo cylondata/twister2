@@ -12,12 +12,15 @@
 package edu.iu.dsc.tws.rsched.worker;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
@@ -32,6 +35,8 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * Keep information about a managed environment where workers can get restarted.
+ * todo: handle multiple worker failures.
+ *       one worker fails, before it restarts, another worker fails
  */
 public class WorkerManager implements IManagedFailureListener, IAllJoinedListener {
   private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
@@ -74,16 +79,15 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   /**
    * The worker status
    */
-  private enum WorkerStatus {
-    RUNNING,
-    FAILED,
-    RESTARTED,
+  private enum JobFaultStatus {
+    HEALTHY,
+    FAULTY
   }
 
   /**
    * Keep track of the status
    */
-  private WorkerStatus workerStatus;
+  private JobFaultStatus jobFaultStatus;
 
   /**
    * The current retries
@@ -101,6 +105,8 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   private long startTime = 0;
 
   private long failedTime = 0;
+
+  private List<String> failedWorkers = new LinkedList<>();
 
   public WorkerManager(Config config,
                        int workerID,
@@ -120,7 +126,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
-    this.workerStatus = WorkerStatus.RUNNING;
+    this.jobFaultStatus = JobFaultStatus.HEALTHY;
   }
 
   /**
@@ -128,7 +134,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
    */
   public void start() {
     while (retries < maxRetries) {
-      if (workerStatus == WorkerStatus.FAILED) {
+      if (jobFaultStatus == JobFaultStatus.FAULTY) {
         long elapsedTime = System.currentTimeMillis() - failedTime;
         if (elapsedTime > 600000) {
           LOG.info("Waited 10 mins to recover the workers from failure, giving up");
@@ -141,11 +147,20 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
         }
       }
 
-      if (workerStatus == WorkerStatus.RUNNING) {
+      if (jobFaultStatus == JobFaultStatus.HEALTHY) {
+
+        LOG.info("Waiting on a barrier before starting IWorker: " + workerId);
+        try {
+          workerController.waitOnBarrier();
+        } catch (TimeoutException e) {
+          throw new Twister2RuntimeException("Could not pass through the barrier", e);
+        }
+
+        LOG.info("StartingWorker: " + workerId);
         managedWorker.execute(config, workerId, workerController, persistentVolume, volatileVolume);
         retries++;
         // we are still in a good state, so we can stop
-        if (workerStatus == WorkerStatus.RUNNING) {
+        if (jobFaultStatus == JobFaultStatus.HEALTHY) {
           LOG.info("Worker finished successfully");
           break;
         }
@@ -182,7 +197,9 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   @Override
   public void failed(int workerID) {
     // set the status to fail and notify
-    workerStatus = WorkerStatus.FAILED;
+    jobFaultStatus = JobFaultStatus.FAULTY;
+    failedWorkers.add(Integer.toString(workerID));
+
     // lets record the failure time
     failedTime = System.currentTimeMillis();
     // lets tell everyone that there is a fault
@@ -197,8 +214,12 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
-    // wait until the previous execution is finished
-    workerStatus = WorkerStatus.RUNNING;
+    failedWorkers.remove(Integer.toString(workerInfo.getWorkerID()));
+
+    if (failedWorkers.isEmpty()) {
+      // wait until the previous execution is finished
+      jobFaultStatus = JobFaultStatus.HEALTHY;
+    }
   }
 
   @Override
