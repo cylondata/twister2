@@ -27,6 +27,7 @@ public class FamilyInitHandler {
   private RRServer rrServer;
   private String family;
   private Long familyVersion;
+  private boolean pause; // should be paused when cluster is unstable
 
   public FamilyInitHandler(RRServer rrServer,
                            String family,
@@ -38,7 +39,22 @@ public class FamilyInitHandler {
     this.count = count;
   }
 
+  public void pause() {
+    this.pendingResponses.clear();
+    this.pause = true;
+  }
+
+  public void resume() {
+    this.pendingResponses.clear();
+    this.pause = false;
+  }
+
   public boolean scheduleResponse(int workerId, RequestID requestID) {
+    if (this.pause) {
+      LOG.info("Handler is in paused mode, due to cluster instability. "
+          + "Ignored a request from " + workerId);
+      return false;
+    }
     RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
     if (previousRequest != null) {
       LOG.warning("Duplicate request received for " + this.family

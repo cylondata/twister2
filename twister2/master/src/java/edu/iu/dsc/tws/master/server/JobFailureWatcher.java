@@ -31,7 +31,7 @@ public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListen
   // after failures, all workers need to be restarted and they all arrive at the next barrier
   private boolean jobFaulty = false;
 
-  public JobFailureWatcher(JobFaultListener jobFaultListener) {
+  public void setJobFaultListener(JobFaultListener jobFaultListener) {
     this.jobFaultListener = jobFaultListener;
   }
 

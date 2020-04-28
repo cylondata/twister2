@@ -277,8 +277,7 @@ public class JobMaster {
     // this ha to be done before WorkerMonitor initialization
     initDriver();
 
-    // todo: checkpoint manager should be given as parameter to JobFailureWatcher
-    JobFailureWatcher jobFailureWatcher = new JobFailureWatcher(null);
+    JobFailureWatcher jobFailureWatcher = new JobFailureWatcher();
 
     boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
     workerMonitor = new WorkerMonitor(
@@ -354,6 +353,7 @@ public class JobMaster {
           stateStore,
           job.getJobId()
       );
+      jobFailureWatcher.setJobFaultListener(this.checkpointManager);
       LOG.info("Checkpoint manager initialized");
       this.checkpointManager.init();
     }

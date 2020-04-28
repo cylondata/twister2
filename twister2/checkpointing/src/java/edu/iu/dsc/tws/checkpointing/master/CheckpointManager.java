@@ -22,12 +22,13 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.faulttolerance.JobFaultListener;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
-public class CheckpointManager implements MessageHandler {
+public class CheckpointManager implements MessageHandler, JobFaultListener {
 
   private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
   private static final String STR_UNDERSCORE = "_";
@@ -211,6 +212,20 @@ public class CheckpointManager implements MessageHandler {
     } else {
       LOG.fine("Scheduled family init response for family : " + message.getFamily()
           + " for worker id " + message.getContainerIndex());
+    }
+  }
+
+  @Override
+  public void faultOccurred() {
+    for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
+      familyInitHandler.pause();
+    }
+  }
+
+  @Override
+  public void faultRestored() {
+    for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
+      familyInitHandler.resume();
     }
   }
 }

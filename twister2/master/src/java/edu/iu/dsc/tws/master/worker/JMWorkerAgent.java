@@ -209,6 +209,12 @@ public final class JMWorkerAgent {
     rrClient.registerResponseHandler(JobMasterAPI.DriverMessage.newBuilder(), handler);
     rrClient.registerResponseHandler(JobMasterAPI.WorkersJoined.newBuilder(), handler);
 
+    // create checkpointing client
+    this.checkpointClient = new CheckpointingClientImpl(rrClient, this.config.getLongValue(
+        CheckpointingClientImpl.CONFIG_WAIT_TIME,
+        10000
+    ));
+
     workerController = new JMWorkerController(
         config, thisWorker, rrClient, numberOfWorkers, this.checkpointClient);
 
@@ -235,10 +241,7 @@ public final class JMWorkerAgent {
       throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
 
-    this.checkpointClient = new CheckpointingClientImpl(rrClient, this.config.getLongValue(
-        CheckpointingClientImpl.CONFIG_WAIT_TIME,
-        10000
-    ));
+    // initialize checkpointing client
     this.checkpointClient.init();
   }
 
