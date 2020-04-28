@@ -60,9 +60,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
   private transient VectorSchemaRoot root;
   private transient ArrowFileWriter arrowFileWriter;
 
-  private Twister2ArrowVectorGenerator twister2ArrowVectorGenerator;
   private final Map<FieldVector, Generator> generatorMap = new LinkedHashMap<>();
-
 
   // todo lets give a meaningful name for this flag variable
   public Twister2ArrowFileWriter(String arrowfile, boolean flag, String schema,
@@ -95,10 +93,8 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     for (Field field : root.getSchema().getFields()) {
       FieldVector vector = root.getVector(field.getName());
       if (vector.getMinorType().equals(Types.MinorType.INT)) {
-//        twister2ArrowVectorGenerator = new Twister2ArrowVectorGenerator(root, dataList);
         this.generatorMap.put(vector, new IntVectorGenerator());
       } else if (vector.getMinorType().equals(Types.MinorType.BIGINT)) {
-//        twister2ArrowVectorGenerator = new Twister2ArrowVectorGenerator(root, dataList);
         this.generatorMap.put(vector, new BigIntVectorGenerator());
       } else if (vector.getMinorType().equals(Types.MinorType.FLOAT4)) {
         this.generatorMap.put(vector, new FloatVectorGenerator());
@@ -118,15 +114,9 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
     for (int i = 0; i < dataList.size();) {
       int min = Math.min(this.batchSize, this.dataList.size() - i);
       root.setRowCount(min);
-//      for (Field field : root.getSchema().getFields()) {
-//        FieldVector vector = root.getVector(field.getName());
-//        twister2ArrowVectorGenerator.vectorGeneration(vector, i, min);
-//      }
-
       for (Map.Entry<FieldVector, Generator> e : generatorMap.entrySet()) {
         e.getValue().generate(e.getKey(), i, min, 1);
       }
-
       arrowFileWriter.writeBatch();
       i += min;
     }
@@ -142,7 +132,6 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
       e.printStackTrace();
     }
   }
-
 
   private interface Generator {
     <T extends FieldVector> void generate(T vector, int from, int items, int isSet);
