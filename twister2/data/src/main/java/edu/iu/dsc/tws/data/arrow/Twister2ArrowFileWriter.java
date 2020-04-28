@@ -124,7 +124,7 @@ public class Twister2ArrowFileWriter implements ITwister2ArrowFileWriter, Serial
 //      }
 
       for (Map.Entry<FieldVector, Generator> e : generatorMap.entrySet()) {
-        e.getValue().generate(e.getKey(), i, min, 0);
+        e.getValue().generate(e.getKey(), i, min, 1);
       }
 
       arrowFileWriter.writeBatch();
