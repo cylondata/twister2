@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
@@ -55,25 +56,25 @@ public class MPIChannel {
   };
 
   private class PendingSend {
-    IntBuffer headerBuf;
-    Queue<TRequest> pendingData;
-    SendStatus status = SendStatus.SEND_INIT;
+    private IntBuffer headerBuf;
+    private Queue<TRequest> pendingData;
+    private SendStatus status = SendStatus.SEND_INIT;
     // the current send, if it is a actual send
-    TRequest currentSend;
-    Request request;
+    private TRequest currentSend;
+    private Request request;
   }
 
   private class PendingReceive {
     // we allow upto 8 integer header
-    IntBuffer headerBuf;
-    int receiveId;
-    ByteBuffer data;
-    int length;
-    ReceiveStatus status = ReceiveStatus.RECEIVE_INIT;
+    private IntBuffer headerBuf;
+    private int receiveId;
+    private ByteBuffer data;
+    private int length;
+    private ReceiveStatus status = ReceiveStatus.RECEIVE_INIT;
     // the current request
-    Request request;
+    private Request request;
     // the user header
-    int[] userHeader;
+    private int[] userHeader;
   };
 
 
@@ -116,7 +117,7 @@ public class MPIChannel {
       try {
         pendingReceive.request = comm.iRecv(pendingReceive.headerBuf, 8, MPI.INT, source, edge);
       } catch (MPIException e) {
-        LOG.log(Level.SEVERE,"Failed to request", e);
+        LOG.log(Level.SEVERE, "Failed to request", e);
         throw new RuntimeException(e);
       }
       // set the flag to true so we can identify later which buffers are posted
@@ -130,7 +131,7 @@ public class MPIChannel {
     try {
       rank = comm.getRank();
     } catch (MPIException e) {
-      LOG.log(Level.SEVERE,"Failed to get mpi processes", e);
+      LOG.log(Level.SEVERE, "Failed to get mpi processes", e);
       throw new RuntimeException(e);
     }
   }
@@ -325,7 +326,8 @@ public class MPIChannel {
         send.headerBuf.put(i + 2, r.header[i]);
       }
     }
-    // LOG(INFO) << rank << " Sent length to " << r->target << " addr: " << x.second->headerBuf << " len: " << r->headerLength + 2;
+    // LOG(INFO) << rank << " Sent length to " << r->target << " addr: "
+    // << x.second->headerBuf << " len: " << r->headerLength + 2;
     // we have to add 2 to the header length
     send.request = comm.iSend(send.headerBuf, 2 + r.headerLength, MPI.INT, r.target, edge);
     send.status = SendStatus.SEND_LENGTH_POSTED;
