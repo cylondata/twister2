@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.master.server;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.faulttolerance.JobFaultListener;
 import edu.iu.dsc.tws.api.resource.IBarrierListener;
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListener {
+  private static final Logger LOG = Logger.getLogger(JobFailureWatcher.class.getName());
 
   private JobFaultListener jobFaultListener;
 
@@ -43,6 +45,7 @@ public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListen
 
     if (jobFaulty && failedWorkers.isEmpty()) {
       jobFaulty = false;
+      LOG.fine("Calling faultRestored()");
       jobFaultListener.faultRestored();
     }
   }
@@ -75,6 +78,7 @@ public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListen
 
   private void jobBecomesFaulty() {
     jobFaulty = true;
+    LOG.fine("Calling faultOccurred()");
     jobFaultListener.faultOccurred();
   }
 }

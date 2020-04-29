@@ -155,7 +155,7 @@ public class RRClient {
         }
         if (!responseReceived) {
           throw new BlockingSendException(BlockingSendFailureReason.TIME_LIMIT_REACHED,
-              "Wait limit has been reached. Response message has not been received.", null);
+              "Response not received for Wait limit[" + waitLimit + "ms].", null);
         }
       } catch (InterruptedException e) {
         throw new BlockingSendException(BlockingSendFailureReason.EXCEPTION_WHEN_WAITING,
