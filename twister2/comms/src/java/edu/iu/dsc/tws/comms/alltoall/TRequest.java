@@ -13,12 +13,12 @@ package edu.iu.dsc.tws.comms.alltoall;
 
 import java.nio.ByteBuffer;
 
-public class TRequest {
-  ByteBuffer buffer;
-  int length;
-  int target;
-  int[] header;
-  int headerLength;
+public final class TRequest {
+  protected ByteBuffer buffer;
+  protected int length;
+  protected int target;
+  protected int[] header;
+  protected int headerLength;
 
   public TRequest(int tgt, ByteBuffer buf, int len) {
     target = tgt;
