@@ -36,5 +36,7 @@ public class DataObjectConstants {
   public static final String CONFIG_FILE = "config";
   public static final String DATA_INPUT = "datainput"; //"generate" or "read"
   public static final String JOB_TYPE = "type";
-  public static final String FILE_TYPE = "ftype"; //"txt" or "csv"
+  public static final String FILE_TYPE = "ftype"; //"txt" or "csv" or "arrow"
+  public static final String ARROW_DIRECTORY = "ainput";
+  public static final String FILE_NAME = "fname";
 }
