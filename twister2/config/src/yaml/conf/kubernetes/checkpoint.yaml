@@ -13,3 +13,6 @@ twister2.checkpointing.store.fs.dir: "/persistent/"
 
 # Source triggering frequency
 twister2.checkpointing.source.frequency: 1000
+
+# Checkpointing message request timeout
+twister2.checkpointing.request.timeout: 50000
