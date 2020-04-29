@@ -154,9 +154,8 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    int restartCount = K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**
      * Interfaces to interact with other workers and Job Master if there is any

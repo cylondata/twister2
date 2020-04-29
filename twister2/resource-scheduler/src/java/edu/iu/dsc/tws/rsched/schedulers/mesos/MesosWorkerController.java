@@ -121,8 +121,9 @@ public class MesosWorkerController implements IWorkerController {
         new ZKWorkerController(config, job.getJobId(), numberOfWorkers, thisWorker);
 
     try {
-      //TODO: real starting state needs to be given
-      zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTED);
+      //TODO: real restartCount needs to be given
+      int restartCount = 0;
+      zkWorkerController.initialize(restartCount);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

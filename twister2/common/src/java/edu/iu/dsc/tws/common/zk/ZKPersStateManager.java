@@ -72,13 +72,13 @@ public final class ZKPersStateManager {
 
   /**
    * Initialize worker persistent state at ZooKeeper server
-   * If the worker is starting for the first time, returns false
-   * If the worker is restarting, returns true
+   * return restart count: 0 means first start
+   * If the worker is restarting, update restartCount and WorkerInfo
    * <p>
    * A persistent znode is created/updated for this worker on ZooKeeper server
    * Each worker must call this method exactly once when they start
    */
-  public static boolean isWorkerRestarting(CuratorFramework client,
+  public static int initAndGetRestartCount(CuratorFramework client,
                                            String rootPath,
                                            String jobID,
                                            WorkerInfo workerInfo) throws Twister2Exception {
@@ -88,19 +88,24 @@ public final class ZKPersStateManager {
 
     try {
       // if the worker znode exists,
-      // update the body and return true
+      // update the body and return restartCount
       if (client.checkExists().forPath(workerPersPath) != null) {
-        LOG.warning("Worker PersStateDir exists: " + workerPersPath);
-        WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.RESTARTED);
+        LOG.warning("Worker restarting. Worker PersStateZNode exists: " + workerPersPath);
+        byte[] workerNodeBody = client.getData().forPath(workerPersPath);
+        WorkerWithState previousWws = WorkerWithState.decode(workerNodeBody);
+        int restartCount = previousWws.getRestartCount() + 1;
+
+        WorkerWithState workerWithState =
+            new WorkerWithState(workerInfo, WorkerState.RESTARTED, restartCount);
         client.setData().forPath(workerPersPath, workerWithState.toByteArray());
-        return true;
+        return restartCount;
       }
 
     } catch (Exception e) {
       throw new Twister2Exception("Can not initialize pers state znode for the worker.", e);
     }
 
-    return false;
+    return 0;
   }
 
   /**
@@ -171,7 +176,7 @@ public final class ZKPersStateManager {
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
 
     try {
-      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED);
+      WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.STARTED, 0);
       client
           .create()
           .withMode(CreateMode.PERSISTENT)
@@ -273,11 +278,12 @@ public final class ZKPersStateManager {
                                            String rootPath,
                                            String jobID,
                                            WorkerInfo workerInfo,
+                                           int restartCount,
                                            WorkerState newStatus) throws Twister2Exception {
 
     String workersPersDir = ZKUtils.persDir(rootPath, jobID);
     String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
-    WorkerWithState workerWithState = new WorkerWithState(workerInfo, newStatus);
+    WorkerWithState workerWithState = new WorkerWithState(workerInfo, newStatus, restartCount);
 
     try {
       client.setData().forPath(workerPersPath, workerWithState.toByteArray());

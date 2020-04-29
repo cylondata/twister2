@@ -115,9 +115,11 @@ message RegisterWorker {
         int32 workerID = 1;
     }
 
-    //initialState can be either STARTED or RESTARTED
-    oneof initialStateRequired {
-        WorkerState initialState = 2;
+    // how many times this worker is restarted
+    // zero means it is starting for the first time
+    // 1 means it is restarted one time
+    oneof restartCountRequired {
+        int32 restartCount = 2;
     }
 
     oneof workerInfoRequired {

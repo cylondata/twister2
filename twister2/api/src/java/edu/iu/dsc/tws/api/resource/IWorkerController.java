@@ -40,11 +40,11 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
-   * if this worker has restarted from failure, return true,
-   * if it is running for the first time, return false
+   * get worker restartCount
+   * zero means starting for the first time
    */
-  default boolean workerRestarted() {
-    return false;
+  default int workerRestartCount() {
+    return 0;
   }
 
   /**

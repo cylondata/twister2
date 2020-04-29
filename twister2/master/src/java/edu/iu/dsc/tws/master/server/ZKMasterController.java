@@ -536,8 +536,10 @@ public class ZKMasterController {
       workerMonitor.failed(removedWorkerID);
 
       try {
-        ZKPersStateManager.updateWorkerStatus(
-            client, rootPath, jobID, workerWithState.getInfo(), JobMasterAPI.WorkerState.FAILED);
+        ZKPersStateManager.updateWorkerStatus(client, rootPath, jobID,
+            workerWithState.getInfo(),
+            workerWithState.getRestartCount(),
+            JobMasterAPI.WorkerState.FAILED);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, e.getMessage(), e);
       }

@@ -178,7 +178,8 @@ public final class AuroraWorkerStarter {
     zkWorkerController =
         new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
     try {
-      zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTED);
+      int restartCount = 0;
+      zkWorkerController.initialize(restartCount);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

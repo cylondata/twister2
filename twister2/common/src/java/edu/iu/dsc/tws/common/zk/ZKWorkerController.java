@@ -107,6 +107,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // initial state of this worker
   private WorkerState initialState;
 
+  // restart count of this worker
+  private int restartCount;
+
   // the client to connect to ZK server
   private CuratorFramework client;
 
@@ -207,13 +210,14 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * The body of the persistent worker znode will be updated as the status of worker changes
    * from STARTED, COMPLETED,
    */
-  public void initialize(WorkerState initState) throws Exception {
+  public void initialize(int restartCount1) throws Exception {
 
-    this.initialState = initState;
+    this.restartCount = restartCount1;
+    this.initialState = restartCount > 0 ? WorkerState.RESTARTED : WorkerState.STARTED;
 
-    if (!(initState == WorkerState.STARTED || initState == WorkerState.RESTARTED)) {
+    if (!(initialState == WorkerState.STARTED || initialState == WorkerState.RESTARTED)) {
       throw new Exception("initialState has to be either WorkerState.STARTED or "
-          + "WorkerState.RESTARTED. Supplied value: " + initState);
+          + "WorkerState.RESTARTED. Supplied value: " + initialState);
     }
 
     try {
@@ -314,7 +318,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     try {
       return ZKPersStateManager.updateWorkerStatus(
-          client, rootPath, jobID, workerInfo, newStatus);
+          client, rootPath, jobID, workerInfo, restartCount, newStatus);
 
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -850,11 +854,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   @Override
-  public boolean workerRestarted() {
-    if (initialState == WorkerState.RESTARTED) {
-      return true;
-    }
-    return false;
+  public int workerRestartCount() {
+    return restartCount;
   }
 
   @Override

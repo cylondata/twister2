@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController;
@@ -86,7 +85,7 @@ public final class WorkerRuntime {
   public static synchronized boolean init(Config cnfg,
                                           JobAPI.Job jb,
                                           WorkerInfo wInfo,
-                                          JobMasterAPI.WorkerState initialState) {
+                                          int restartCount) {
     if (initialized) {
       return false;
     }
@@ -103,7 +102,7 @@ public final class WorkerRuntime {
       zkWorkerController =
           new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
       try {
-        zkWorkerController.initialize(initialState);
+        zkWorkerController.initialize(restartCount);
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
         throw new RuntimeException(e);
@@ -117,7 +116,7 @@ public final class WorkerRuntime {
 
       // construct JMWorkerAgent
       jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), restartCount);
 
       // start JMWorkerAgent
       jmWorkerAgent.startThreaded();
@@ -138,7 +137,7 @@ public final class WorkerRuntime {
 
         // construct JMWorkerAgent
         jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
+            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), restartCount);
 
         // start JMWorkerAgent
         jmWorkerAgent.startThreaded();

@@ -40,23 +40,19 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   private JobMasterAPI.WorkerInfo thisWorker;
   private ArrayList<JobMasterAPI.WorkerInfo> workerList;
   private int numberOfWorkers;
+  private int restartCount;
 
   private RRClient rrClient;
   private CheckpointingClient checkpointingClient;
   private Config config;
 
   public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
-                            RRClient rrClient, CheckpointingClient checkpointingClient) {
-    this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config),
-        checkpointingClient);
-  }
-
-  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
-                            RRClient rrClient, int numberOfWorkers,
+                            int numberOfWorkers, int restartCount, RRClient rrClient,
                             CheckpointingClient checkpointingClient) {
     this.config = config;
-    this.numberOfWorkers = numberOfWorkers;
     this.thisWorker = thisWorker;
+    this.numberOfWorkers = numberOfWorkers;
+    this.restartCount = restartCount;
     this.rrClient = rrClient;
     this.checkpointingClient = checkpointingClient;
     workerList = new ArrayList<>();
@@ -217,4 +213,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     return this.checkpointingClient;
   }
 
+  @Override
+  public int workerRestartCount() {
+    return restartCount;
+  }
 }

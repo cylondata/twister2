@@ -57,7 +57,7 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     PersistedTSet<String> persisted = source.direct().persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted initial raw data");
 
-    if (env.getWorkerID() == 2 && !WorkerRuntime.getWorkerController().workerRestarted()) {
+    if (env.getWorkerID() == 2 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
       throw new RuntimeException("intentionally killed");
     }
 
