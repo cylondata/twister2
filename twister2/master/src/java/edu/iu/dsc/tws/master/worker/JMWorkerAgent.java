@@ -226,7 +226,10 @@ public final class JMWorkerAgent {
       throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
 
-    this.checkpointClient = new CheckpointingClientImpl(rrClient);
+    this.checkpointClient = new CheckpointingClientImpl(rrClient, this.config.getLongValue(
+        CheckpointingClientImpl.CONFIG_WAIT_TIME,
+        10000
+    ));
     this.checkpointClient.init();
   }
 

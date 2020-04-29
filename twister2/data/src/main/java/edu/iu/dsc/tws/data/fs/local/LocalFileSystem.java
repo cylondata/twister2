@@ -178,6 +178,12 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
+  public FSDataOutputStream create(Path filePath, WriteMode writeMode) throws IOException {
+    LOG.log(Level.WARNING, "This file system doesn't have the override mode implemented");
+    return create(filePath);
+  }
+
+  @Override
   public boolean delete(Path f, boolean recursive) throws IOException {
     final File file = pathToFile(f);
     if (file.isFile()) {

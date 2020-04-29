@@ -104,6 +104,8 @@ public abstract class TSetEnvironment {
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
                                                      int parallelism, String type);
 
+  public abstract BaseTSet<Integer> createArrowSource(String filePath, int parallelism);
+
   /**
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.

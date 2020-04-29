@@ -57,6 +57,15 @@ common_deps_files = [
     "//twister2/proto/utils:proto-utils-java",
     "//twister2/tset/src/java:tset-java",
     "@org_apache_kafka_kafka_clients//:org_apache_kafka_kafka_clients",
+    "@maven//:org_apache_arrow_arrow_vector",
+    "@maven//:org_apache_arrow_arrow_memory",
+    "@maven//:org_apache_arrow_arrow_format",
+    "@maven//:com_google_flatbuffers_flatbuffers_java",
+    "@maven//:javax_annotation_javax_annotation_api",
+    "@maven//:io_netty_netty_buffer",
+    "@maven//:io_netty_netty_all",
+    "@maven//:io_netty_netty_transport",
+    "@maven//:io_netty_netty_transport_native_epoll",
 ]
 
 t2_java_lib(

@@ -48,6 +48,7 @@ load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools/rules:twister2_core.bzl", "twister2_python_support_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_jersey_files")
+load("//tools/rules:twister2_client.bzl", "twister2_arrow_lib_files")
 load(":pack_functions.bzl", "pack_tw2")
 load("//:t2_meta.bzl", "T2_VERSION")
 
@@ -257,6 +258,13 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-arrow-lib",
+    srcs = twister2_arrow_lib_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-core-lib-executor",
     srcs = twister2_client_lib_executor_files(),
     package_dir = "lib",
@@ -295,6 +303,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-bin",
         ":twister2-checkpointing",
         ":twister2-communication",
@@ -331,6 +340,7 @@ pack_tw2(
         ":twister2-restarter",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -341,6 +351,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-beam",
         ":twister2-bin",
         ":twister2-checkpointing",
@@ -393,6 +404,7 @@ pack_tw2(
         ":twister2-test-values",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -708,5 +720,12 @@ pack_tw2(
     name = "twister2-ucx-native-libs",
     srcs = twister2_ucx_native_libs(),
     package_dir = "lib/ucx",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-ucx-native-libs-dir",
+    srcs = ["EMPTY"],
+    package_dir = "lib/ucx/ucx",
     version = T2_VERSION,
 )

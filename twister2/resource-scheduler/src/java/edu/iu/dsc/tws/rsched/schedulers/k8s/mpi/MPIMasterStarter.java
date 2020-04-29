@@ -138,7 +138,7 @@ public final class MPIMasterStarter {
       return;
     }
 
-    boolean written = createHostFile(podIPs);
+    boolean written = createHostFile(podIPs, workersPerPod);
     if (!written) {
       LOG.severe("hostfile can not be generated. Aborting. "
           + "You need to terminate this job and resubmit it....");
@@ -154,21 +154,26 @@ public final class MPIMasterStarter {
 
     // when all pods become running, sshd may have not started on some pods yet
     // it takes some time to start sshd, after pods become running
-    // we check whether password free ssh is enabled from mpimaster pod to all other pods
-
-    start = System.currentTimeMillis();
-    // remove the IP of this pod from the list
-    podIPs.remove(podIP);
-    String[] scriptCommand = generateCheckSshCommand(podIPs);
-    boolean pwdFreeSshOk = runScript(scriptCommand);
-    duration = System.currentTimeMillis() - start;
-    LOG.info("Checking password free access took: " + duration + " ms");
-
-    if (pwdFreeSshOk) {
-      executeMpirun(mpirunCommand);
-    } else {
-      LOG.severe("Password free ssh can not be setup among pods. Not running mpirun ...");
+    // we have not seen this happening though
+    // it takes quite some time to check password free ssh among all pods in jobs with
+    // high number of pods
+    // so by default, this is disabled.
+    // it can be enabled from configuration files
+    if (KubernetesContext.checkPwdFreeSsh(config)) {
+      start = System.currentTimeMillis();
+      // remove the IP of this pod from the list
+      podIPs.remove(podIP);
+      String[] scriptCommand = generateCheckSshCommand(podIPs);
+      boolean pwdFreeSshOk = runScript(scriptCommand);
+      duration = System.currentTimeMillis() - start;
+      LOG.info("Checking password free access took: " + duration + " ms");
+      if (!pwdFreeSshOk) {
+        LOG.severe("Password free ssh can not be setup among pods. Not executing mpirun ...");
+        return;
+      }
     }
+
+    executeMpirun(mpirunCommand);
   }
 
   /**
@@ -177,7 +182,7 @@ public final class MPIMasterStarter {
    * other lines are unordered
    * each line has one ip
    */
-  public static boolean createHostFile(ArrayList<String> ipList) {
+  public static boolean createHostFile(ArrayList<String> ipList, int workersPerPod) {
 
     try {
       StringBuffer bufferToLog = new StringBuffer();
@@ -185,7 +190,7 @@ public final class MPIMasterStarter {
           new OutputStreamWriter(new FileOutputStream(HOSTFILE_NAME)));
 
       for (String ip : ipList) {
-        writer.write(ip + System.lineSeparator());
+        writer.write(ip + " slots=" + workersPerPod + System.lineSeparator());
         bufferToLog.append(ip + System.lineSeparator());
       }
 
@@ -218,6 +223,8 @@ public final class MPIMasterStarter {
             "--hostfile",
             HOSTFILE_NAME,
             "--allow-run-as-root",
+//            "--fwd-mpirun-port",
+//            "--mca", "oob_tcp_listen_mode", "listen_thread",
             "-npernode",
             workersPerPod + "",
             "-x",
