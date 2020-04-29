@@ -53,6 +53,12 @@ public class FamilyInitHandler {
     if (this.pause) {
       LOG.info("Handler is in paused mode, due to cluster instability. "
           + "Ignored a request from " + workerId);
+      this.rrServer.sendResponse(requestID,
+          Checkpoint.FamilyInitializeResponse.newBuilder()
+              .setFamily(this.family)
+              .setVersion(this.familyVersion)
+              .setStatus(Checkpoint.FamilyInitializeResponse.Status.REJECTED)
+              .build());
       return false;
     }
     RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
