@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
@@ -149,16 +150,27 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
       if (jobFaultStatus == JobFaultStatus.HEALTHY) {
 
-        LOG.info("Waiting on a barrier before starting IWorker: " + workerId);
+        LOG.info("Waiting on a barrier before starting IWorker: " + workerId
+            + " with restartCount: " + workerController.workerRestartCount());
         try {
           workerController.waitOnBarrier();
         } catch (TimeoutException e) {
           throw new Twister2RuntimeException("Could not pass through the barrier", e);
         }
 
-        LOG.info("StartingWorker: " + workerId);
-        managedWorker.execute(config, workerId, workerController, persistentVolume, volatileVolume);
-        retries++;
+        LOG.info("StartingWorker: " + workerId
+            + " with restartCount: " + workerController.workerRestartCount());
+        try {
+          managedWorker.execute(
+              config, workerId, workerController, persistentVolume, volatileVolume);
+          retries++;
+        } catch (ClusterUnstableException cue) {
+          // a worker in the cluster should have failed
+          // we will try to re-execute this worker
+          jobFaultStatus = JobFaultStatus.FAULTY;
+          LOG.warning("thrown ClusterUnstableException. Some workers should have failed.");
+        }
+
         // we are still in a good state, so we can stop
         if (jobFaultStatus == JobFaultStatus.HEALTHY) {
           LOG.info("Worker finished successfully");
