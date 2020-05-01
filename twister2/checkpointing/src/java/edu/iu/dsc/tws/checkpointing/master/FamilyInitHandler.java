@@ -39,9 +39,21 @@ public class FamilyInitHandler {
     this.count = count;
   }
 
+  private void sendRejectedResponse(RequestID requestID) {
+    this.rrServer.sendResponse(requestID,
+        Checkpoint.FamilyInitializeResponse.newBuilder()
+            .setFamily(this.family)
+            .setVersion(this.familyVersion)
+            .setStatus(Checkpoint.FamilyInitializeResponse.Status.REJECTED)
+            .build());
+  }
+
   public void pause() {
     this.pendingResponses.clear();
     this.pause = true;
+
+    // send the response to the waiting workers
+    this.pendingResponses.values().forEach(this::sendRejectedResponse);
   }
 
   public void resume() {
@@ -53,12 +65,7 @@ public class FamilyInitHandler {
     if (this.pause) {
       LOG.info("Handler is in paused mode, due to cluster instability. "
           + "Ignored a request from " + workerId);
-      this.rrServer.sendResponse(requestID,
-          Checkpoint.FamilyInitializeResponse.newBuilder()
-              .setFamily(this.family)
-              .setVersion(this.familyVersion)
-              .setStatus(Checkpoint.FamilyInitializeResponse.Status.REJECTED)
-              .build());
+      this.sendRejectedResponse(requestID);
       return false;
     }
     RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
