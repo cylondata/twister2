@@ -77,6 +77,11 @@ public class MPIWorkerController implements IWorkerController {
     }
   }
 
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    waitOnBarrier();
+  }
+
   public void add(String name, Object obj) {
     runtimeObjects.put(name, obj);
   }

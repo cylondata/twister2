@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.api.faulttolerance.Progress;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -78,19 +79,6 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   private IVolatileVolume volatileVolume;
 
   /**
-   * The worker status
-   */
-  private enum JobFaultStatus {
-    HEALTHY,
-    FAULTY
-  }
-
-  /**
-   * Keep track of the status
-   */
-  private JobFaultStatus jobFaultStatus;
-
-  /**
    * The current retries
    */
   private int retries = 0;
@@ -99,13 +87,6 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
    * Maximum retries
    */
   private final int maxRetries;
-
-  /**
-   * The start time of this worker
-   */
-  private long startTime = 0;
-
-  private long failedTime = 0;
 
   private List<String> failedWorkers = new LinkedList<>();
 
@@ -127,7 +108,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
-    this.jobFaultStatus = JobFaultStatus.HEALTHY;
+    Progress.init();
   }
 
   /**
@@ -135,31 +116,32 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
    */
   public void start() {
     while (retries < maxRetries) {
-      if (jobFaultStatus == JobFaultStatus.FAULTY) {
-        long elapsedTime = System.currentTimeMillis() - failedTime;
-        if (elapsedTime > 600000) {
-          LOG.info("Waited 10 mins to recover the workers from failure, giving up");
-          break;
-        }
-        // lets sleep a little for avoid spinning
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException ignore) {
+
+      // if the job is faulty, wait failed workers to restart
+      if (Progress.isJobFaulty()) {
+        waitFailedWorkersToRestart();
+        if (failedWorkers.isEmpty()) {
+          Progress.setJobStatus(Progress.JobStatus.RESTARTING);
+        } else {
+          // if timed out and not all workers restarted, finish execution
+          return;
         }
       }
 
-      if (jobFaultStatus == JobFaultStatus.HEALTHY) {
+      if (Progress.isJobHealthy()) {
 
-        LOG.info("Waiting on a barrier before starting IWorker: " + workerId
+        LOG.info("Waiting on the init barrier before starting IWorker: " + workerId
             + " with restartCount: " + workerController.workerRestartCount());
         try {
-          workerController.waitOnBarrier();
+          workerController.waitOnInitBarrier();
         } catch (TimeoutException e) {
-          throw new Twister2RuntimeException("Could not pass through the barrier", e);
+          throw new Twister2RuntimeException("Could not pass through the init barrier", e);
         }
 
         LOG.info("StartingWorker: " + workerId
             + " with restartCount: " + workerController.workerRestartCount());
+        Progress.setJobStatus(Progress.JobStatus.EXECUTING);
+        Progress.increaseWorkerExecuteCount();
         try {
           managedWorker.execute(
               config, workerId, workerController, persistentVolume, volatileVolume);
@@ -167,12 +149,12 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
         } catch (ClusterUnstableException cue) {
           // a worker in the cluster should have failed
           // we will try to re-execute this worker
-          jobFaultStatus = JobFaultStatus.FAULTY;
+          Progress.setJobStatus(Progress.JobStatus.FAULTY);
           LOG.warning("thrown ClusterUnstableException. Some workers should have failed.");
         }
 
         // we are still in a good state, so we can stop
-        if (jobFaultStatus == JobFaultStatus.HEALTHY) {
+        if (Progress.isJobHealthy()) {
           LOG.info("Worker finished successfully");
           break;
         }
@@ -182,6 +164,25 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
       if (retries >= maxRetries) {
         LOG.info(String.format("Retried %d times and failed, we are exiting", retries));
         break;
+      }
+    }
+  }
+
+  private void waitFailedWorkersToRestart() {
+
+    long startTime = System.currentTimeMillis();
+
+    while (!failedWorkers.isEmpty()) {
+
+      long elapsedTime = System.currentTimeMillis() - startTime;
+      if (elapsedTime > 600000) {
+        LOG.warning("Waited 10 mins to recover the workers from failure, giving up");
+        return;
+      }
+      // lets sleep a little for avoid spinning
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException ignore) {
       }
     }
   }
@@ -209,11 +210,9 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   @Override
   public void failed(int workerID) {
     // set the status to fail and notify
-    jobFaultStatus = JobFaultStatus.FAULTY;
+    Progress.setJobStatus(Progress.JobStatus.FAULTY);
     failedWorkers.add(Integer.toString(workerID));
 
-    // lets record the failure time
-    failedTime = System.currentTimeMillis();
     // lets tell everyone that there is a fault
     for (FaultAcceptable fa : faultComponents) {
       try {
@@ -227,11 +226,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
     failedWorkers.remove(Integer.toString(workerInfo.getWorkerID()));
-
-    if (failedWorkers.isEmpty()) {
-      // wait until the previous execution is finished
-      jobFaultStatus = JobFaultStatus.HEALTHY;
-    }
+    Progress.setJobStatus(Progress.JobStatus.FAULTY);
   }
 
   @Override

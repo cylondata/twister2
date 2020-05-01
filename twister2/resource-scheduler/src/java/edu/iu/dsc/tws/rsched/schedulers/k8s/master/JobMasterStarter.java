@@ -163,7 +163,8 @@ public final class JobMasterStarter {
       JobZNodeManager.createJobZNode(client, rootPath, job);
       ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
-      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
+      ZKBarrierManager.createDefaultBarrierDir(client, rootPath, job.getJobId());
+      ZKBarrierManager.createInitBarrierDir(client, rootPath, job.getJobId());
       ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
 
       // create pers znode for jm

@@ -161,6 +161,11 @@ public class MesosWorkerController implements IWorkerController {
     zkWorkerController.waitOnBarrier();
   }
 
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    zkWorkerController.waitOnInitBarrier();
+  }
+
   /**
    * needs to close down when finished computation
    */

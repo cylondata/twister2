@@ -195,6 +195,11 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    // not implemented yet
+  }
+
 
   /**
    * convert the given string to ip address object

@@ -35,9 +35,11 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.api.faulttolerance.Progress;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
@@ -143,14 +145,25 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private TreeMap<Integer, JobMasterAPI.JobEvent> pastEvents;
 
   // synchronization object for waiting all workers to join the job
-  private Object waitObjectAllJoined = new Object();
+  private Object allJoinedWaitObject = new Object();
 
   // synchronization object for waiting all workers to arrive on the barrier
-  private Object waitObjectBarrier = new Object();
+  private Object defaultBarrierWaitObject = new Object();
 
-  // it is set, when all workers arrived on the barrier
-  // it is set to false, when the worker starts to wait on a new barrier
-  private boolean barrierProceeded = false;
+  // synchronization object for waiting all workers to arrive on the barrier
+  private Object initBarrierWaitObject = new Object();
+
+  // it is set to false, when the worker starts to wait on the default barrier
+  // it is set to true, when all workers arrived on the default barrier
+  private boolean defaultBarrierProceeded = false;
+
+  // it is set to false, when the worker starts to wait on the default barrier
+  // it is set to true, when a fault occurs and we break the barrier
+  private boolean defaultBarrierBroken = false;
+
+  // it is set to false, when the worker starts to wait on the init barrier
+  // it is set to true, when all workers arrived on the init barrier
+  private boolean initBarrierProceeded = false;
 
   // Inform worker failure events
   private IWorkerFailureListener failureListener;
@@ -239,8 +252,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
         // if the worker barrier znode exist from the previous run, delete it
         // worker may have crashed during barrier operation
-        if (ZKBarrierManager.existWorkerZNode(client, rootPath, jobID, wID)) {
-          ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, wID);
+        if (ZKBarrierManager.existWorkerZNodeAtDefault(client, rootPath, jobID, wID)) {
+          ZKBarrierManager.deleteWorkerZNodeFromDefault(client, rootPath, jobID, wID);
+        }
+        if (ZKBarrierManager.existWorkerZNodeAtInit(client, rootPath, jobID, wID)) {
+          ZKBarrierManager.deleteWorkerZNodeFromInit(client, rootPath, jobID, wID);
         }
       }
 
@@ -407,9 +423,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     long delay = 0;
     while (delay < timeLimit) {
-      synchronized (waitObjectAllJoined) {
+      synchronized (allJoinedWaitObject) {
         try {
-          waitObjectAllJoined.wait(timeLimit - delay);
+          allJoinedWaitObject.wait(timeLimit - delay);
 
           // proceeding with notification or timeout
           if (allJoined) {
@@ -716,6 +732,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       } else {
         failEventBuffer.add(jobEvent);
       }
+
+      // break default barrier if there is any
+      defaultBarrierBroken = true;
+      synchronized (defaultBarrierWaitObject) {
+        defaultBarrierWaitObject.notify();
+      }
     }
 
     if (jobEvent.hasRestarted()) {
@@ -736,15 +758,36 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       } else {
         failEventBuffer.add(jobEvent);
       }
+
+      // break default barrier if there is any
+      defaultBarrierBroken = true;
+      synchronized (defaultBarrierWaitObject) {
+        defaultBarrierWaitObject.notify();
+      }
     }
 
     if (jobEvent.hasAllArrived()) {
-      barrierProceeded = true;
-      synchronized (waitObjectBarrier) {
-        waitObjectBarrier.notify();
+      if (jobEvent.getAllArrived().getBarrierType()
+          == JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT) {
+
+        defaultBarrierProceeded = true;
+        synchronized (defaultBarrierWaitObject) {
+          defaultBarrierWaitObject.notify();
+        }
+        LOG.info("Received AllArrived event on the default Barrier. numberOfWorkers: "
+            + jobEvent.getAllArrived().getNumberOfWorkers());
+
+      } else if (jobEvent.getAllArrived().getBarrierType()
+          == JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT) {
+
+        initBarrierProceeded = true;
+        synchronized (initBarrierWaitObject) {
+          initBarrierWaitObject.notify();
+        }
+        LOG.info("Received AllArrived event on the init Barrier. numberOfWorkers: "
+            + jobEvent.getAllArrived().getNumberOfWorkers());
       }
 
-      LOG.info("AllArrivedOnBarrier event received. Current numberOfWorkers: " + numberOfWorkers);
     }
 
     if (jobEvent.hasJmRestarted()) {
@@ -782,8 +825,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     workers.addAll(allJoinedEvent.getWorkerInfoList());
     allJoined = true;
 
-    synchronized (waitObjectAllJoined) {
-      waitObjectAllJoined.notify();
+    synchronized (allJoinedWaitObject) {
+      allJoinedWaitObject.notify();
     }
 
     if (allJoinedListener != null) {
@@ -794,13 +837,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
-   * All workers create a znode on the job barrier directory
-   * Job master watches for directory creations/removals
-   * when the number of znodes on that directory reaches the number of workers in thr job,
+   * All workers create a znode on the barrier directory
+   * Job master watches znode creations/removals on this directory
+   * when the number of znodes on that directory reaches the number of workers in the job,
    * Job master publishes AllArrivedOnBarrier event
    * Workers proceed when they get this event or when they time out
    * <p>
-   * Worker remove their znodes after they proceed through the barrier
+   * Workers remove their znodes after they proceed through the barrier
    * so that they can wait on the barrier again
    * Workers are responsible for creating and removing znodes on the barrier
    * Job master removes barrier znode after the job completion or scale down.
@@ -810,10 +853,18 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public void waitOnBarrier() throws TimeoutException {
 
-    barrierProceeded = false;
+    // if the cluster is in a faulty state,
+    // do not wait on the barrier
+    if (Progress.isJobFaulty()) {
+      throw new ClusterUnstableException("Can not wait on the barrier, since the job is faulty.");
+    }
+
+    defaultBarrierProceeded = false;
+    defaultBarrierBroken = false;
 
     try {
-      ZKBarrierManager.createWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
+      ZKBarrierManager.createWorkerZNodeAtDefault(
+          client, rootPath, jobID, workerInfo.getWorkerID());
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return;
@@ -825,10 +876,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     long delay = 0;
     while (delay < timeLimit) {
-      synchronized (waitObjectBarrier) {
+      synchronized (defaultBarrierWaitObject) {
         try {
-          if (!barrierProceeded) {
-            waitObjectBarrier.wait(timeLimit - delay);
+          if (!defaultBarrierProceeded && !defaultBarrierBroken) {
+            defaultBarrierWaitObject.wait(timeLimit - delay);
             break;
           }
 
@@ -840,12 +891,67 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // delete barrier znode in any case
     try {
-      ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
+      ZKBarrierManager.deleteWorkerZNodeFromDefault(
+          client, rootPath, jobID, workerInfo.getWorkerID());
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
 
-    if (barrierProceeded) {
+    if (defaultBarrierProceeded) {
+      return;
+    } else if (defaultBarrierBroken) {
+      throw new ClusterUnstableException("Barrier broken since a fault occurred in the job.");
+    } else {
+      throw new TimeoutException("Barrier timed out. Not all workers arrived on time limit: "
+          + timeLimit + "ms.");
+    }
+  }
+
+  /**
+   * init barrier
+   * the same algorithm as the default barrier
+   * @throws TimeoutException
+   */
+  public void waitOnInitBarrier() throws TimeoutException {
+
+    initBarrierProceeded = false;
+
+    try {
+      ZKBarrierManager.createWorkerZNodeAtInit(
+          client, rootPath, jobID, workerInfo.getWorkerID());
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    // wait until all workers joined or time limit is reached
+    long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
+    long startTime = System.currentTimeMillis();
+
+    long delay = 0;
+    while (delay < timeLimit) {
+      synchronized (initBarrierWaitObject) {
+        try {
+          if (!initBarrierProceeded) {
+            initBarrierWaitObject.wait(timeLimit - delay);
+            break;
+          }
+
+        } catch (InterruptedException e) {
+          delay = System.currentTimeMillis() - startTime;
+        }
+      }
+    }
+
+    // delete barrier znode in any case
+    try {
+      ZKBarrierManager.deleteWorkerZNodeFromInit(
+          client, rootPath, jobID, workerInfo.getWorkerID());
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
+
+    if (initBarrierProceeded) {
       return;
     } else {
       throw new TimeoutException("Barrier timed out. Not all workers arrived on time limit: "

@@ -55,7 +55,6 @@ public class ZKMasterController {
   protected String rootPath;
   protected String persDir;
   protected String ephemDir;
-  protected String barrierDir;
 
   // Job Master IP address
   private String jmAddress;
@@ -69,8 +68,11 @@ public class ZKMasterController {
   // children cache for persistent worker znodes for watching status changes
   protected PathChildrenCache persChildrenCache;
 
-  // children cache for barrier directory for determining barrier arrival of all workers
-  protected PathChildrenCache barrierChildrenCache;
+  // children cache for default barrier directory for determining barrier arrival of all workers
+  protected PathChildrenCache defaultBarrierCache;
+
+  // children cache for default barrier directory for determining barrier arrival of all workers
+  protected PathChildrenCache initBarrierCache;
 
   // persistent ephemeral znode for the job master for workers to watch the job master
   private PersistentNode masterEphemZNode;
@@ -101,7 +103,6 @@ public class ZKMasterController {
     rootPath = ZKContext.rootNode(config);
     persDir = ZKUtils.persDir(rootPath, jobID);
     ephemDir = ZKUtils.ephemDir(rootPath, jobID);
-    barrierDir = ZKUtils.barrierDir(rootPath, jobID);
   }
 
   /**
@@ -140,11 +141,17 @@ public class ZKMasterController {
         persChildrenCache.start();
       }
 
+      // We listen for status updates for the default barrier path
+      String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
+      defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
+      addDefaultBarrierChildrenCacheListener(defaultBarrierCache);
+      defaultBarrierCache.start();
 
-      // We listen for status updates for persistent path
-      barrierChildrenCache = new PathChildrenCache(client, barrierDir, true);
-      addBarrierChildrenCacheListener(barrierChildrenCache);
-      barrierChildrenCache.start();
+      // We listen for status updates for the init barrier path
+      String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
+      initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
+      addInitBarrierChildrenCacheListener(initBarrierCache);
+      initBarrierCache.start();
 
       // TODO: we nay need to create ephemeral job master znode so that
       //   workers can know when jm fails
@@ -318,18 +325,41 @@ public class ZKMasterController {
   }
 
   /**
-   * create the listener for worker znodes in the barrier directory
+   * create the listener for worker znodes in the default barrier directory
    * to determine whether all workers arrived on the barrier
    * @param cache
    */
-  private void addBarrierChildrenCacheListener(PathChildrenCache cache) {
+  private void addDefaultBarrierChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
       public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
 
         switch (event.getType()) {
           case CHILD_ADDED:
-            barrierZnodeAdded(event);
+            defaultBarrierZnodeAdded(event);
+            break;
+
+          default:
+            // nothing to do
+        }
+      }
+    };
+    cache.getListenable().addListener(listener);
+  }
+
+  /**
+   * create the listener for worker znodes in the init barrier directory
+   * to determine whether all workers arrived on the barrier
+   * @param cache
+   */
+  private void addInitBarrierChildrenCacheListener(PathChildrenCache cache) {
+    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
+
+      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
+
+        switch (event.getType()) {
+          case CHILD_ADDED:
+            initBarrierZnodeAdded(event);
             break;
 
           default:
@@ -570,9 +600,34 @@ public class ZKMasterController {
    * a worker znode added to the job barrier directory
    * @param event
    */
-  private void barrierZnodeAdded(PathChildrenCacheEvent event) {
+  private void defaultBarrierZnodeAdded(PathChildrenCacheEvent event) {
 
-    if (barrierChildrenCache.getCurrentData().size() == numberOfWorkers) {
+    if (defaultBarrierCache.getCurrentData().size() == numberOfWorkers) {
+
+      // let all workers know
+      JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
+          .setNumberOfWorkers(numberOfWorkers)
+          .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT)
+          .build();
+
+      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .setAllArrived(allArrived)
+          .build();
+      try {
+        ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+      } catch (Twister2Exception e) {
+        LOG.log(Level.SEVERE, e.getMessage(), e);
+      }
+    }
+  }
+
+  /**
+   * a worker znode added to the init barrier directory
+   * @param event
+   */
+  private void initBarrierZnodeAdded(PathChildrenCacheEvent event) {
+
+    if (initBarrierCache.getCurrentData().size() == numberOfWorkers) {
 
       // first inform barrier listener if there is any
       if (barrierListener != null) {
@@ -582,6 +637,7 @@ public class ZKMasterController {
       // let all workers know
       JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
           .setNumberOfWorkers(numberOfWorkers)
+          .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT)
           .build();
 
       JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
@@ -601,7 +657,8 @@ public class ZKMasterController {
   public void close() {
     CloseableUtils.closeQuietly(ephemChildrenCache);
     CloseableUtils.closeQuietly(persChildrenCache);
-    CloseableUtils.closeQuietly(barrierChildrenCache);
+    CloseableUtils.closeQuietly(defaultBarrierCache);
+    CloseableUtils.closeQuietly(initBarrierCache);
 
     if (masterEphemZNode != null) {
       CloseableUtils.closeQuietly(masterEphemZNode);
