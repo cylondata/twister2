@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
 /**
  * JMWorkerAgent class
@@ -134,6 +135,7 @@ public final class JMWorkerAgent {
 
   private CheckpointingClientImpl checkpointClient;
 
+  private int restartCount;
   private JobMasterAPI.WorkerState initialState;
 
   /**
@@ -144,13 +146,14 @@ public final class JMWorkerAgent {
                         String jmAddress,
                         int jmPort,
                         int numberOfWorkers,
-                        JobMasterAPI.WorkerState initialState) {
+                        int restartCount) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.jmAddress = jmAddress;
     this.jmPort = jmPort;
     this.numberOfWorkers = numberOfWorkers;
-    this.initialState = initialState;
+    this.restartCount = restartCount;
+    this.initialState = restartCount > 0 ? WorkerState.RESTARTED : WorkerState.STARTED;
   }
 
   /**
@@ -162,13 +165,13 @@ public final class JMWorkerAgent {
                                                   String jmAddress,
                                                   int jmPort,
                                                   int numberOfWorkers,
-                                                  JobMasterAPI.WorkerState initialState) {
+                                                  int restartCount) {
     if (workerAgent != null) {
       return workerAgent;
     }
 
     workerAgent = new JMWorkerAgent(
-        config, thisWorker, jmAddress, jmPort, numberOfWorkers, initialState);
+        config, thisWorker, jmAddress, jmPort, numberOfWorkers, restartCount);
     return workerAgent;
   }
 
@@ -216,7 +219,7 @@ public final class JMWorkerAgent {
     ));
 
     workerController = new JMWorkerController(
-        config, thisWorker, rrClient, numberOfWorkers, this.checkpointClient);
+        config, thisWorker, numberOfWorkers, restartCount, rrClient, this.checkpointClient);
 
     rrClient.registerResponseHandler(
         JobMasterAPI.ListWorkersRequest.newBuilder(), workerController);
@@ -289,7 +292,7 @@ public final class JMWorkerAgent {
     jmThread.setDaemon(true);
     jmThread.start();
 
-    boolean registered = registerWorker(initialState);
+    boolean registered = registerWorker();
 
     // if there was a connection problem when registering,
     // re-try that two more times
@@ -327,7 +330,7 @@ public final class JMWorkerAgent {
     startLooping();
 
     //TODO: this should be tested
-    boolean registered = registerWorker(initialState);
+    boolean registered = registerWorker();
     if (!registered) {
       this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
@@ -454,7 +457,7 @@ public final class JMWorkerAgent {
 
     // register the worker
     LOG.info("Worker re-registering with JobMaster to initialize things.");
-    return registerWorker(initialState);
+    return registerWorker();
   }
 
   /**
@@ -537,12 +540,12 @@ public final class JMWorkerAgent {
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    */
-  private boolean registerWorker(JobMasterAPI.WorkerState initState) {
+  private boolean registerWorker() {
 
     JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerInfo(thisWorker)
-        .setInitialState(initState)
+        .setRestartCount(restartCount)
         .build();
 
     LOG.fine("Sending RegisterWorker message: \n" + registerWorker);

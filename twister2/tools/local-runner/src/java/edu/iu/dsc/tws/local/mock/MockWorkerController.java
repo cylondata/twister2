@@ -88,4 +88,9 @@ public class MockWorkerController implements IWorkerController {
     }
   }
 
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    waitOnBarrier();
+  }
+
 }

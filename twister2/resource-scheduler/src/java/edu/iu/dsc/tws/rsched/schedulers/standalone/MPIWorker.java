@@ -159,14 +159,16 @@ public final class MPIWorker {
 
           if (rank != 0) {
             // init WorkerRuntime
-            WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
+            int restartCount = 0;
+            WorkerRuntime.init(config, job, wInfo, restartCount);
             startWorker(config, rank, comm, job);
           } else {
             startMaster(config, rank);
           }
         } else {
           wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
-          WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
+          int restartCount = 0;
+          WorkerRuntime.init(config, job, wInfo, restartCount);
           startWorker(config, rank, MPI.COMM_WORLD, job);
         }
       } else {

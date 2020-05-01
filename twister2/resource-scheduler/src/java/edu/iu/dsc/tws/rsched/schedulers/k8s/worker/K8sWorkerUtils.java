@@ -310,15 +310,15 @@ public final class K8sWorkerUtils {
 
   /**
    * worker is either starting for the first time, or it is coming from failure
-   * We return either WorkerState.STARTED or WorkerState.RESTARTED
-   *
+   * We return restartCount. If it is 0, it is WorkerState.STARTED
+   * If it is more than zero, it is WorkerState.RESTARTED
+   * <p>
    * TODO: If ZooKeeper is not used,
-   *   currently we just return STARTED. We do not determine real initial status.
-   * @return
+   * currently we just return zero. We do not determine real initial status.
    */
-  public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
-                                                               String jbID,
-                                                               JobMasterAPI.WorkerInfo wInfo) {
+  public static int initialStateAndUpdate(Config cnfg,
+                                          String jbID,
+                                          JobMasterAPI.WorkerInfo wInfo) {
 
     if (ZKContext.isZooKeeperServerUsed(cnfg)) {
       String zkServerAddresses = ZKContext.serverAddresses(cnfg);
@@ -327,23 +327,24 @@ public final class K8sWorkerUtils {
       String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKPersStateManager.isWorkerRestarting(client, rootPath, jbID, wInfo)) {
-          return JobMasterAPI.WorkerState.RESTARTED;
+        int restartCount = ZKPersStateManager.initAndGetRestartCount(client, rootPath, jbID, wInfo);
+        if (restartCount > 0) {
+          return restartCount;
         }
 
         if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
           ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
         }
 
-        return JobMasterAPI.WorkerState.STARTED;
+        return 0;
 
       } catch (Exception e) {
         LOG.log(Level.SEVERE,
             "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
-        return JobMasterAPI.WorkerState.STARTED;
+        return 0;
       }
     }
 
-    return JobMasterAPI.WorkerState.STARTED;
+    return 0;
   }
 }

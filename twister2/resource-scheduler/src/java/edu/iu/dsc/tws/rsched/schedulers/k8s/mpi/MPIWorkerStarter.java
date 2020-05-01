@@ -184,9 +184,8 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    int restartCount = K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**
      * Interfaces to interact with other workers and Job Master if there is any

@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.resource;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -40,11 +41,11 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
-   * if this worker has restarted from failure, return true,
-   * if it is running for the first time, return false
+   * get worker restartCount
+   * zero means starting for the first time
    */
-  default boolean workerRestarted() {
-    return false;
+  default int workerRestartCount() {
+    return 0;
   }
 
   /**
@@ -70,7 +71,15 @@ public interface IWorkerController {
    * After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
    * if some workers still could not arrive at the barrier, throw an exception
    */
-  void waitOnBarrier() throws TimeoutException;
+  void waitOnBarrier() throws TimeoutException, ClusterUnstableException;
+
+  /**
+   * this barrier is used when initializing the workers.
+   * when there is a failure in the job,
+   * workers synchronize with this barrier
+   * this must not be used in other parts of the system
+   */
+  void waitOnInitBarrier() throws TimeoutException;
 
   /**
    * Get the failure listener

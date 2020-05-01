@@ -36,7 +36,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.faulttolerance.Progress;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
@@ -44,21 +44,17 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListener,
-    IReceiverFromDriver, IWorkerFailureListener {
+public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDriver {
 
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   private int wID;
   private ISenderToDriver senderToDriver;
-
-  private Object waitObject = new Object();
 
   private List<Any> messages = Collections.synchronizedList(new LinkedList<>());
 
@@ -72,10 +68,8 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
     WorkerRuntime.addScalerListener(this);
-    WorkerRuntime.addWorkerFailureListener(this);
 
     senderToDriver = WorkerRuntime.getSenderToDriver();
 
@@ -100,8 +94,8 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
     } catch (TimeoutException e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
-//    List<JobMasterAPI.WorkerInfo> workerList = initSynch(workerController);
     if (workerList == null) {
+      LOG.severe("Can not get list of all workers. Something wrong. Exiting ....................");
       return;
     }
 
@@ -110,13 +104,75 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
     printWorkersPerNode(workersPerNode);
 
     // if this is not first worker
-    sleepSomeTime("worker-" + workerID, 600);
+    // sleepSomeTime("worker-" + workerID, 600);
 
+    testFaultTolerance2(workerController);
 //    waitAndComplete();
 //    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
+  }
+
+  private void testFaultTolerance1(IWorkerController workerController) {
+
+    if (wID == 2 && workerController.workerRestartCount() == 0) {
+      throw new RuntimeException("intentionally killed");
+    }
+
+    if (wID != 2 && Progress.getWorkerExecuteCount() == 1) {
+
+      LOG.warning("Waiting for the job to become faulty ........ ");
+      while (Progress.isJobHealthy()) {
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+      }
+
+      LOG.warning("Job is not healthy. Finishing IWorker ........ ");
+      return;
+    }
+
+    LOG.info("Will wait on a barrier...");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    LOG.info("Proceeded through the barrier...");
+  }
+
+  private void testFaultTolerance2(IWorkerController workerController) {
+
+    if (wID == 2 && workerController.workerRestartCount() == 0) {
+      sleepSomeTime("worker-" + wID, 3);
+      throw new RuntimeException("intentionally killed");
+    }
+
+    if (wID != 2 && Progress.getWorkerExecuteCount() == 1) {
+
+      LOG.info("Will wait on a barrier to fail...");
+      try {
+        workerController.waitOnBarrier();
+        LOG.info("Proceeded through the barrier. Not supposed to ...");
+      } catch (TimeoutException e) {
+        LOG.log(Level.SEVERE, e.getMessage(), e);
+        return;
+      }
+    }
+
+    LOG.info("Will wait on a barrier...");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    LOG.info("Proceeded through the barrier...");
   }
 
   private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
@@ -129,11 +185,11 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
       return null;
     }
     if (workerList == null) {
-      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      LOG.severe("Can not get list of all workers. Something wrong. Exiting ....................");
       return null;
     }
 
-    LOG.info("All workers joined. The list from getAllWorkers: " + getIDs(workerList));
+    LOG.info("All workers: " + getIDs(workerList));
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
@@ -166,30 +222,6 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
       Thread.sleep(duration * 1000);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }
-  }
-
-  /**
-   * wait for all workers to join the job
-   * this can be used for waiting initial worker joins or joins after scaling up the job
-   */
-  private void waitAllWorkersToJoin() {
-    synchronized (waitObject) {
-      try {
-        LOG.info("Waiting for all workers to join the job... ");
-        waitObject.wait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        return;
-      }
-    }
-  }
-
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("allWorkersJoined event received. IDs: " + getIDs(workerList));
-
-    synchronized (waitObject) {
-      waitObject.notify();
     }
   }
 
@@ -397,13 +429,4 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
 
   }
 
-  @Override
-  public void failed(int workerID) {
-    LOG.warning("Worker FAILED. Failed workerID: " + workerID);
-  }
-
-  @Override
-  public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
-    LOG.warning("Worker RESTARTED: " + workerInfo);
-  }
 }

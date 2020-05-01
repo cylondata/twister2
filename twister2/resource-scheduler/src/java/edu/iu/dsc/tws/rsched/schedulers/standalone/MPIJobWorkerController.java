@@ -64,6 +64,11 @@ public class MPIJobWorkerController implements IWorkerController {
   }
 
   @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    delegate.waitOnInitBarrier();
+  }
+
+  @Override
   public Object getRuntimeObject(String name) {
     return runtimeObjects.get(name);
   }

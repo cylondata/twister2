@@ -90,6 +90,11 @@ public class TWSUCXChannelTest {
         throw new Twister2RuntimeException("Failed on barrier");
       }
     }
+
+    @Override
+    public void waitOnInitBarrier() throws TimeoutException {
+      waitOnBarrier();
+    }
   }
 
   private List<MockWorkerController> workerControllers = new ArrayList<>();

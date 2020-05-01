@@ -109,9 +109,13 @@ public class WorkerHandler implements MessageHandler {
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
     boolean initialAllJoined = workerMonitor.isAllJoined();
-    WorkerWithState workerWithState = new WorkerWithState(workerInfo, message.getInitialState());
+    int restartCount = message.getRestartCount();
+    JobMasterAPI.WorkerState initialState =
+        restartCount > 0 ? JobMasterAPI.WorkerState.RESTARTED : JobMasterAPI.WorkerState.STARTED;
 
-    if (message.getInitialState() == JobMasterAPI.WorkerState.RESTARTED) {
+    WorkerWithState workerWithState = new WorkerWithState(workerInfo, initialState, restartCount);
+
+    if (initialState == JobMasterAPI.WorkerState.RESTARTED) {
       // if it is coming from failure
       String failMessage = workerMonitor.restarted(workerWithState);
       if (failMessage != null) {
