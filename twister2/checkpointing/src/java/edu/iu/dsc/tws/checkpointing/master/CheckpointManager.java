@@ -178,7 +178,7 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
     }
   }
 
-  private void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
+  private synchronized void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
     LOG.fine("Family init request received from " + message.getContainerIndex()
         + ". Family : " + message.getFamily());
 
@@ -216,14 +216,14 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
   }
 
   @Override
-  public void faultOccurred() {
+  public synchronized void faultOccurred() {
     for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
       familyInitHandler.pause();
     }
   }
 
   @Override
-  public void faultRestored() {
+  public synchronized void faultRestored() {
     for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
       familyInitHandler.resume();
     }
