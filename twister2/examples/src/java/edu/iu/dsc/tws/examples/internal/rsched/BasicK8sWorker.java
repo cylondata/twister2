@@ -171,8 +171,17 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return;
     }
-
     LOG.info("Proceeded through the barrier...");
+
+    LOG.info("Will wait on another barrier...");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    LOG.info("Proceeded through the second barrier...");
   }
 
   private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {

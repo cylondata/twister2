@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.master.server;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,6 +74,14 @@ public class ZKMasterController {
 
   // children cache for default barrier directory for determining barrier arrival of all workers
   protected PathChildrenCache initBarrierCache;
+
+  // keep the list of workers at the barriers
+  // all workers must arrive at the barrier
+  // and they all have to be removed after allArrived event published
+  private TreeSet<Integer> workersAtDefault = new TreeSet<>();
+  private TreeSet<Integer> toBeRemovedWorkersFromDefault = new TreeSet<>();
+  private TreeSet<Integer> workersAtInit = new TreeSet<>();
+  private TreeSet<Integer> toBeRemovedWorkersFromInit = new TreeSet<>();
 
   // persistent ephemeral znode for the job master for workers to watch the job master
   private PersistentNode masterEphemZNode;
@@ -166,6 +175,12 @@ public class ZKMasterController {
     }
   }
 
+  /**
+   * initialize JM when it is coming from failure
+   * todo: we need to implement jm-restart-resistant barriers
+   *       barriers not tested for jm restart
+   * @throws Exception
+   */
   private void initRestarting() throws Exception {
     LOG.info("Job Master restarting .... ");
 
@@ -185,7 +200,7 @@ public class ZKMasterController {
 
     // get all joined workers and provide them to workerMonitor
     List<WorkerWithState> joinedWorkers = new LinkedList<>();
-    for (ChildData child: joinedWorkerZnodes) {
+    for (ChildData child : joinedWorkerZnodes) {
       String fullPath = child.getPath();
       int workerID = ZKUtils.getWorkerIDFromEphemPath(fullPath);
 
@@ -210,14 +225,13 @@ public class ZKMasterController {
 
   /**
    * check whether allJoined event published previously for current number of workers
-   * @return
    */
   private boolean allJoinedPublished() throws Exception {
 
     TreeMap<Integer, JobMasterAPI.JobEvent> events =
         ZKEventsManager.getAllEvents(client, rootPath, jobID);
 
-    for (JobMasterAPI.JobEvent event: events.values()) {
+    for (JobMasterAPI.JobEvent event : events.values()) {
       // allJoined event with highest index, must have the same number of workers
       // if so, allJoined event already published, otherwise not published yet
       if (event.hasAllJoined()) {
@@ -234,7 +248,6 @@ public class ZKMasterController {
 
   /**
    * this method invoked by WorkerMonitor, when the job is scaled up
-   * @param newNumberOfWorkers
    */
   public void jobScaledUp(int newNumberOfWorkers) {
     this.numberOfWorkers = newNumberOfWorkers;
@@ -242,7 +255,6 @@ public class ZKMasterController {
 
   /**
    * this method invoked by WorkerMonitor, when the job is scaled down
-   * @param newNumberOfWorkers
    */
   public void jobScaledDown(int newNumberOfWorkers) {
     scaledDownWorkers = new LinkedList<>();
@@ -277,7 +289,6 @@ public class ZKMasterController {
 
   /**
    * create the listener for ephemeral worker znodes to determine worker joins and failures
-   * @param cache
    */
   private void addEphemChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
@@ -303,7 +314,6 @@ public class ZKMasterController {
 
   /**
    * create the listener for persistent worker znodes to determine worker status changes
-   * @param cache
    */
   private void addPersChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
@@ -314,52 +324,6 @@ public class ZKMasterController {
 
           case CHILD_UPDATED:
             childZnodeUpdated(event);
-            break;
-
-          default:
-            // nothing to do
-        }
-      }
-    };
-    cache.getListenable().addListener(listener);
-  }
-
-  /**
-   * create the listener for worker znodes in the default barrier directory
-   * to determine whether all workers arrived on the barrier
-   * @param cache
-   */
-  private void addDefaultBarrierChildrenCacheListener(PathChildrenCache cache) {
-    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
-
-      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
-
-        switch (event.getType()) {
-          case CHILD_ADDED:
-            defaultBarrierZnodeAdded(event);
-            break;
-
-          default:
-            // nothing to do
-        }
-      }
-    };
-    cache.getListenable().addListener(listener);
-  }
-
-  /**
-   * create the listener for worker znodes in the init barrier directory
-   * to determine whether all workers arrived on the barrier
-   * @param cache
-   */
-  private void addInitBarrierChildrenCacheListener(PathChildrenCache cache) {
-    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
-
-      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
-
-        switch (event.getType()) {
-          case CHILD_ADDED:
-            initBarrierZnodeAdded(event);
             break;
 
           default:
@@ -414,7 +378,6 @@ public class ZKMasterController {
   /**
    * get WorkerWithState from the local cache if exists,
    * otherwise, get it from the server
-   * @return
    */
   private WorkerWithState getWorkerWithState(int workerID) {
     String workerPersPath = ZKUtils.workerPath(persDir, workerID);
@@ -504,10 +467,10 @@ public class ZKMasterController {
    * when a worker znode is removed from the ephemeral znode of this job znode,
    * take necessary actions
    * Possibilities:
-   *   that worker may have completed and deleted its znode,
-   *   that worker may have failed
-   *   that worker may have been removed by scaling down
-   *   a failed and restarted worker may have deleted the znode from its previous run
+   * that worker may have completed and deleted its znode,
+   * that worker may have failed
+   * that worker may have been removed by scaling down
+   * a failed and restarted worker may have deleted the znode from its previous run
    */
   private void workerZnodeRemoved(PathChildrenCacheEvent event) {
 
@@ -597,57 +560,121 @@ public class ZKMasterController {
   }
 
   /**
-   * a worker znode added to the job barrier directory
-   * @param event
+   * create the listener for worker znodes in the default barrier directory
+   * to determine whether all workers arrived on the barrier
    */
-  private void defaultBarrierZnodeAdded(PathChildrenCacheEvent event) {
+  private void addDefaultBarrierChildrenCacheListener(PathChildrenCache cache) {
+    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
-    if (defaultBarrierCache.getCurrentData().size() == numberOfWorkers) {
+      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
 
-      // let all workers know
-      JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
-          .setNumberOfWorkers(numberOfWorkers)
-          .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT)
-          .build();
+        String childPath = event.getData().getPath();
+        int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
 
-      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-          .setAllArrived(allArrived)
-          .build();
-      try {
-        ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-      } catch (Twister2Exception e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
+        switch (event.getType()) {
+          case CHILD_ADDED:
+            workersAtDefault.add(workerID);
+            if (workersAtDefault.size() == numberOfWorkers
+                && toBeRemovedWorkersFromDefault.isEmpty()) {
+
+              allArrivedAtDefaultBarrier();
+              toBeRemovedWorkersFromDefault.addAll(workersAtDefault);
+            }
+            break;
+
+          case CHILD_REMOVED:
+            workersAtDefault.remove(workerID);
+            toBeRemovedWorkersFromDefault.remove(workerID);
+            break;
+
+          default:
+            // nothing to do
+        }
       }
+    };
+    cache.getListenable().addListener(listener);
+  }
+
+  /**
+   * create the listener for worker znodes in the init barrier directory
+   * to determine whether all workers arrived on the barrier
+   */
+  private void addInitBarrierChildrenCacheListener(PathChildrenCache cache) {
+    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
+
+      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
+
+        String childPath = event.getData().getPath();
+        int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
+
+        switch (event.getType()) {
+          case CHILD_ADDED:
+            workersAtInit.add(workerID);
+            if (workersAtInit.size() == numberOfWorkers
+                && toBeRemovedWorkersFromInit.isEmpty()) {
+
+              allArrivedAtInitBarrier();
+              toBeRemovedWorkersFromInit.addAll(workersAtInit);
+            }
+            break;
+
+          case CHILD_REMOVED:
+            workersAtInit.remove(workerID);
+            toBeRemovedWorkersFromInit.remove(workerID);
+            break;
+
+          default:
+            // nothing to do
+        }
+      }
+    };
+    cache.getListenable().addListener(listener);
+  }
+
+  /**
+   * a worker znode added to the job barrier directory
+   */
+  private void allArrivedAtDefaultBarrier() {
+
+    // let all workers know
+    JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers)
+        .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT)
+        .build();
+
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setAllArrived(allArrived)
+        .build();
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
   /**
    * a worker znode added to the init barrier directory
-   * @param event
    */
-  private void initBarrierZnodeAdded(PathChildrenCacheEvent event) {
+  private void allArrivedAtInitBarrier() {
 
-    if (initBarrierCache.getCurrentData().size() == numberOfWorkers) {
+    // first inform barrier listener if there is any
+    if (barrierListener != null) {
+      barrierListener.allArrived();
+    }
 
-      // first inform barrier listener if there is any
-      if (barrierListener != null) {
-        barrierListener.allArrived();
-      }
+    // let all workers know
+    JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers)
+        .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT)
+        .build();
 
-      // let all workers know
-      JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
-          .setNumberOfWorkers(numberOfWorkers)
-          .setBarrierType(JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT)
-          .build();
-
-      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-          .setAllArrived(allArrived)
-          .build();
-      try {
-        ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-      } catch (Twister2Exception e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
-      }
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setAllArrived(allArrived)
+        .build();
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
