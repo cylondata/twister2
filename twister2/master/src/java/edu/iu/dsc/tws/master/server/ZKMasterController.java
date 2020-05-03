@@ -149,21 +149,21 @@ public class ZKMasterController {
         persChildrenCache = new PathChildrenCache(client, persDir, true);
         addPersChildrenCacheListener(persChildrenCache);
         persChildrenCache.start();
+
+        // We listen for status updates for the default barrier path
+        String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
+        defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
+        addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
+            toBeRemovedWorkersFromDefault, JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT);
+        defaultBarrierCache.start();
+
+        // We listen for status updates for the init barrier path
+        String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
+        initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
+        addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
+            JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT);
+        initBarrierCache.start();
       }
-
-      // We listen for status updates for the default barrier path
-      String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
-      defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
-      addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
-          toBeRemovedWorkersFromDefault, JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT);
-      defaultBarrierCache.start();
-
-      // We listen for status updates for the init barrier path
-      String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
-      initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
-      addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
-          JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT);
-      initBarrierCache.start();
 
       // TODO: we nay need to create ephemeral job master znode so that
       //   workers can know when jm fails
@@ -180,8 +180,6 @@ public class ZKMasterController {
 
   /**
    * initialize JM when it is coming from failure
-   * todo: we need to implement jm-restart-resistant barriers
-   *       barriers not tested for jm restart
    * @throws Exception
    */
   private void initRestarting() throws Exception {
@@ -215,6 +213,26 @@ public class ZKMasterController {
       }
     }
 
+    // do not get previous events on barriers
+    // get current snapshots of both barriers at restart
+    String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
+    defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
+    addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
+        toBeRemovedWorkersFromDefault, JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT);
+    defaultBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+    addInitialWorkersAtBarrier(defaultBarrierCache, workersAtDefault);
+    LOG.info("Existing workers at default barrier: " + workersAtDefault.size());
+
+    // do not get previous events on barriers
+    // get current snapshots of both barriers at restart
+    String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
+    initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
+    addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
+        JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT);
+    initBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+    addInitialWorkersAtBarrier(initBarrierCache, workersAtInit);
+    LOG.info("Existing workers at init barrier: " + workersAtInit.size());
+
     // publish jm restarted event
     publishJobMasterRestarted();
 
@@ -223,6 +241,17 @@ public class ZKMasterController {
     if (allJoined && !allJoinedPublished()) {
       LOG.info("Publishing AllJoined event when restarting, since it is not previously published.");
       publishAllJoined();
+    }
+  }
+
+  private void addInitialWorkersAtBarrier(PathChildrenCache childrenCache,
+                                          Set<Integer> workersAtBarrier) {
+
+    List<ChildData> existingWorkerZnodes = childrenCache.getCurrentData();
+    for (ChildData child: existingWorkerZnodes) {
+      String fullPath = child.getPath();
+      int workerID = ZKUtils.getWorkerIDFromPersPath(fullPath);
+      workersAtBarrier.add(workerID);
     }
   }
 
