@@ -21,7 +21,9 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
@@ -37,7 +39,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 public class JMWorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
 
-  private JobMasterAPI.WorkerInfo thisWorker;
+  private JobMasterAPI.WorkerInfo workerInfo;
   private ArrayList<JobMasterAPI.WorkerInfo> workerList;
   private int numberOfWorkers;
   private int restartCount;
@@ -46,22 +48,22 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   private CheckpointingClient checkpointingClient;
   private Config config;
 
-  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
+  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo workerInfo,
                             int numberOfWorkers, int restartCount, RRClient rrClient,
                             CheckpointingClient checkpointingClient) {
     this.config = config;
-    this.thisWorker = thisWorker;
+    this.workerInfo = workerInfo;
     this.numberOfWorkers = numberOfWorkers;
     this.restartCount = restartCount;
     this.rrClient = rrClient;
     this.checkpointingClient = checkpointingClient;
     workerList = new ArrayList<>();
-    workerList.add(thisWorker);
+    workerList.add(workerInfo);
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return thisWorker;
+    return workerInfo;
   }
 
   /**
@@ -133,7 +135,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
                                         long timeLimit) {
 
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerID(workerInfo.getWorkerID())
         .setRequestType(requestType)
         .build();
 
@@ -159,12 +161,12 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
           listResponse.getWorkerList();
 
       workerList.clear();
-      workerList.add(thisWorker);
+      workerList.add(workerInfo);
 
       for (JobMasterAPI.WorkerInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
-        if (receivedWorkerInfo.getWorkerID() != thisWorker.getWorkerID()) {
+        if (receivedWorkerInfo.getWorkerID() != workerInfo.getWorkerID()) {
           workerList.add(receivedWorkerInfo);
         }
       }
@@ -179,25 +181,36 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   public void waitOnBarrier() throws TimeoutException {
-
-    JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
-        .build();
-
-    LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
-    try {
-      rrClient.sendRequestWaitResponse(barrierRequest,
-          ControllerContext.maxWaitTimeOnBarrier(config));
-    } catch (BlockingSendException e) {
-      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
-          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.", e);
-    }
-
+    sendBarrierRequest(JobMasterAPI.BarrierType.DEFAULT);
   }
 
   @Override
   public void waitOnInitBarrier() throws TimeoutException {
-    // not implemented yet
+    sendBarrierRequest(JobMasterAPI.BarrierType.INIT);
+  }
+
+  private void sendBarrierRequest(JobMasterAPI.BarrierType barrierType) throws TimeoutException {
+    JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
+        .setWorkerID(workerInfo.getWorkerID())
+        .setBarrierType(barrierType)
+        .build();
+
+    LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
+    try {
+      Tuple<RequestID, Message> response = rrClient.sendRequestWaitResponse(barrierRequest,
+          ControllerContext.maxWaitTimeOnBarrier(config));
+      JobMasterAPI.BarrierResponse barrierResponse =
+          (JobMasterAPI.BarrierResponse) response.getValue();
+
+      if (barrierResponse.getSucceeded()) {
+        return;
+      } else {
+        throw new ClusterUnstableException("Default Barrier failed.");
+      }
+    } catch (BlockingSendException e) {
+      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
+          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.", e);
+    }
   }
 
 

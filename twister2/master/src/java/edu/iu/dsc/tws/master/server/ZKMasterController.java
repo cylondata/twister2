@@ -154,14 +154,14 @@ public class ZKMasterController {
         String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
         defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
         addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
-            toBeRemovedWorkersFromDefault, JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT);
+            toBeRemovedWorkersFromDefault, JobMasterAPI.BarrierType.DEFAULT);
         defaultBarrierCache.start();
 
         // We listen for status updates for the init barrier path
         String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
         initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
         addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
-            JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT);
+            JobMasterAPI.BarrierType.INIT);
         initBarrierCache.start();
       }
 
@@ -218,7 +218,7 @@ public class ZKMasterController {
     String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
     defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
     addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
-        toBeRemovedWorkersFromDefault, JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT);
+        toBeRemovedWorkersFromDefault, JobMasterAPI.BarrierType.DEFAULT);
     defaultBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
     addInitialWorkersAtBarrier(defaultBarrierCache, workersAtDefault);
     LOG.info("Existing workers at default barrier: " + workersAtDefault.size());
@@ -228,7 +228,7 @@ public class ZKMasterController {
     String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
     initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
     addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
-        JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT);
+        JobMasterAPI.BarrierType.INIT);
     initBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
     addInitialWorkersAtBarrier(initBarrierCache, workersAtInit);
     LOG.info("Existing workers at init barrier: " + workersAtInit.size());
@@ -599,7 +599,7 @@ public class ZKMasterController {
       PathChildrenCache cache,
       Set<Integer> workersAtBarrier,
       Set<Integer> toBeRemovedWorkers,
-      JobMasterAPI.AllArrivedOnBarrier.BarrierType barrierType) {
+      JobMasterAPI.BarrierType barrierType) {
 
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
@@ -635,11 +635,11 @@ public class ZKMasterController {
   /**
    * publish all arrived event and let the listener know in the case of init barrier
    */
-  private void allArrivedAtBarrier(JobMasterAPI.AllArrivedOnBarrier.BarrierType barrierType) {
+  private void allArrivedAtBarrier(JobMasterAPI.BarrierType barrierType) {
 
     // first inform barrier listener if there is any
     if (barrierListener != null
-        && barrierType == JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT) {
+        && barrierType == JobMasterAPI.BarrierType.INIT) {
 
       barrierListener.allArrived();
     }

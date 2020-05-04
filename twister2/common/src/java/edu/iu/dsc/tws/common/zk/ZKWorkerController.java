@@ -767,8 +767,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     if (jobEvent.hasAllArrived()) {
-      if (jobEvent.getAllArrived().getBarrierType()
-          == JobMasterAPI.AllArrivedOnBarrier.BarrierType.DEFAULT) {
+      if (jobEvent.getAllArrived().getBarrierType() == JobMasterAPI.BarrierType.DEFAULT) {
 
         defaultBarrierProceeded = true;
         synchronized (defaultBarrierWaitObject) {
@@ -777,8 +776,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
         LOG.info("Received AllArrived event on the default Barrier. numberOfWorkers: "
             + jobEvent.getAllArrived().getNumberOfWorkers());
 
-      } else if (jobEvent.getAllArrived().getBarrierType()
-          == JobMasterAPI.AllArrivedOnBarrier.BarrierType.INIT) {
+      } else if (jobEvent.getAllArrived().getBarrierType() == JobMasterAPI.BarrierType.INIT) {
 
         initBarrierProceeded = true;
         synchronized (initBarrierWaitObject) {

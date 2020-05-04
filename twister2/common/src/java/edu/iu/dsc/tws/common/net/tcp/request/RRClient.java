@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendFailureReason;
@@ -72,6 +73,7 @@ public class RRClient {
 
   private final Object responseWaitObject = new Object();
   private RequestID requestIdOfWaitedResponse = null;
+  private Message waitedResponseMessage = null;
 
   /**
    * a flag to show whether the response received for the message that waits for the response
@@ -121,12 +123,13 @@ public class RRClient {
   }
 
   /**
+   * return requestID and response message
    * throw an exception with the failure reason
    * @param message message
    * @param waitLimit waitlimit
    * @return request id
    */
-  public RequestID sendRequestWaitResponse(Message message, long waitLimit)
+  public Tuple<RequestID, Message> sendRequestWaitResponse(Message message, long waitLimit)
       throws BlockingSendException {
 
     // if this method is already called and waiting for a response
@@ -161,7 +164,8 @@ public class RRClient {
         throw new BlockingSendException(BlockingSendFailureReason.EXCEPTION_WHEN_WAITING,
             "Exception when waiting the response.", e);
       }
-      return requestID;
+
+      return new Tuple(requestID, waitedResponseMessage);
     }
   }
 
@@ -233,6 +237,7 @@ public class RRClient {
       synchronized (responseWaitObject) {
         requestIdOfWaitedResponse = null;
         errorWhenSending = true;
+        waitedResponseMessage = null;
         responseWaitObject.notify();
       }
     }
@@ -294,6 +299,7 @@ public class RRClient {
           if (requestID.equals(requestIdOfWaitedResponse)) {
             requestIdOfWaitedResponse = null;
             responseReceived = true;
+            waitedResponseMessage = m;
             responseWaitObject.notify();
           }
         }

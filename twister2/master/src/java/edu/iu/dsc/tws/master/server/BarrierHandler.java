@@ -47,8 +47,10 @@ public class BarrierHandler implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(BarrierHandler.class.getName());
 
   private WorkerMonitor workerMonitor;
-  private int numberOfWorkersOnBarrier;
-  private HashMap<Integer, RequestID> waitList;
+  private int numberOfWorkersOnDefaultBarrier;
+  private int numberOfWorkersOnInitBarrier;
+  private HashMap<Integer, RequestID> defaultWaitList;
+  private HashMap<Integer, RequestID> initWaitList;
   private RRServer rrServer;
   private IBarrierListener barrierListener;
 
@@ -56,7 +58,8 @@ public class BarrierHandler implements MessageHandler {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     this.barrierListener = bl;
-    waitList = new HashMap<>();
+    defaultWaitList = new HashMap<>();
+    initWaitList = new HashMap<>();
   }
 
   @Override
@@ -65,35 +68,14 @@ public class BarrierHandler implements MessageHandler {
     if (message instanceof JobMasterAPI.BarrierRequest) {
       JobMasterAPI.BarrierRequest barrierRequest = (JobMasterAPI.BarrierRequest) message;
 
-      // log first and last workers messages as INFO, others as FINE
-      // numberOfWorkers in a job may change during job execution
-      // numberOfWorkersOnBarrier is assigned the value of numberOfWorkers in the job
-      // when the first barrier message received
-      if (waitList.size() == 0) {
-        numberOfWorkersOnBarrier = workerMonitor.getNumberOfWorkers();
-        LOG.fine("BarrierRequest message received from the first worker:\n" + barrierRequest);
-      } else if (waitList.size() == (numberOfWorkersOnBarrier - 1)) {
-        LOG.fine("BarrierRequest message received from the last worker:\n" + barrierRequest);
+      if (barrierRequest.getBarrierType() == JobMasterAPI.BarrierType.DEFAULT) {
+        receivedDefaultBarrierRequest(requestID, barrierRequest);
+      } else if (barrierRequest.getBarrierType() == JobMasterAPI.BarrierType.INIT) {
+        receivedInitBarrierRequest(requestID, barrierRequest);
       } else {
-        LOG.fine("BarrierRequest message received:\n" + barrierRequest);
-      }
-
-      waitList.put(barrierRequest.getWorkerID(), requestID);
-
-      // if all workers arrived at the barrier
-      if (waitList.size() == numberOfWorkersOnBarrier) {
-
-        // first let the barrier listener know
-        if (barrierListener != null) {
-          barrierListener.allArrived();
-        }
-
-        // send response messages to all workers
-        sendBarrierResponseToWaitList();
-
-        // clear wait list for the next barrier event
-        waitList.clear();
-        numberOfWorkersOnBarrier = 0;
+        LOG.warning("Received barrier request with unrecognized type: "
+            + barrierRequest.getBarrierType() + " Sending fail response.");
+        sendFailResponse(requestID, barrierRequest.getWorkerID(), barrierRequest.getBarrierType());
       }
 
     } else {
@@ -101,21 +83,102 @@ public class BarrierHandler implements MessageHandler {
     }
   }
 
+  public void receivedDefaultBarrierRequest(RequestID requestID,
+                                            JobMasterAPI.BarrierRequest message) {
+
+    // log first and last workers messages as INFO, others as FINE
+    // numberOfWorkers in a job may change during job execution
+    // numberOfWorkersOnBarrier is assigned the value of numberOfWorkers in the job
+    // when the first barrier message received
+    if (defaultWaitList.size() == 0) {
+      numberOfWorkersOnDefaultBarrier = workerMonitor.getNumberOfWorkers();
+      LOG.fine("First Default BarrierRequest message received:\n" + message);
+    } else {
+      LOG.fine("BarrierRequest message received:\n" + message);
+    }
+
+    defaultWaitList.put(message.getWorkerID(), requestID);
+
+    // if all workers arrived at the barrier
+    if (defaultWaitList.size() == numberOfWorkersOnDefaultBarrier) {
+
+      // send response messages to all workers
+      LOG.info("All workers reached the default barrier: " + numberOfWorkersOnDefaultBarrier
+          + " Sending out BarrierResponse messages to all workers.");
+      sendBarrierResponseToWaitList(defaultWaitList, message.getBarrierType());
+
+      // clear wait list for the next barrier event
+      defaultWaitList.clear();
+      numberOfWorkersOnDefaultBarrier = 0;
+    }
+  }
+
+  public void receivedInitBarrierRequest(RequestID requestID, JobMasterAPI.BarrierRequest message) {
+
+    // log first and last workers messages as INFO, others as FINE
+    // numberOfWorkers in a job may change during job execution
+    // numberOfWorkersOnBarrier is assigned the value of numberOfWorkers in the job
+    // when the first barrier message received
+    if (initWaitList.size() == 0) {
+      numberOfWorkersOnInitBarrier = workerMonitor.getNumberOfWorkers();
+      LOG.fine("First Init BarrierRequest message received:\n" + message);
+    } else {
+      LOG.fine("BarrierRequest message received:\n" + message);
+    }
+
+    initWaitList.put(message.getWorkerID(), requestID);
+
+    // if all workers arrived at the barrier
+    if (initWaitList.size() == numberOfWorkersOnInitBarrier) {
+
+      // first let the barrier listener know
+      if (barrierListener != null) {
+        barrierListener.allArrived();
+      }
+
+      // send response messages to all workers
+      LOG.info("All workers reached the init barrier: " + numberOfWorkersOnInitBarrier
+          + " Sending out BarrierResponse messages to all workers.");
+      sendBarrierResponseToWaitList(initWaitList, message.getBarrierType());
+
+      // clear wait list for the next barrier event
+      initWaitList.clear();
+      numberOfWorkersOnInitBarrier = 0;
+    }
+  }
+
   /**
    * send the response messages to all workers in waitList
    */
-  private void sendBarrierResponseToWaitList() {
+  private void sendBarrierResponseToWaitList(HashMap<Integer, RequestID> waitList,
+                                             JobMasterAPI.BarrierType barrierType) {
 
-    LOG.info("All workers reached the barrier: " + numberOfWorkersOnBarrier
-        + " Sending out BarrierResponse messages to all workers.");
-
-    for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
+    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
       JobMasterAPI.BarrierResponse response = JobMasterAPI.BarrierResponse.newBuilder()
           .setWorkerID(entry.getKey())
+          .setBarrierType(barrierType)
+          .setSucceeded(true)
           .build();
 
       rrServer.sendResponse(entry.getValue(), response);
       LOG.fine("BarrierResponse message sent:\n" + response);
     }
+  }
+
+  /**
+   * send failed response message to a worker
+   */
+  private void sendFailResponse(RequestID requestID,
+                                int workerID,
+                                JobMasterAPI.BarrierType barrierType) {
+
+    JobMasterAPI.BarrierResponse response = JobMasterAPI.BarrierResponse.newBuilder()
+        .setWorkerID(workerID)
+        .setBarrierType(barrierType)
+        .setSucceeded(false)
+        .build();
+
+    rrServer.sendResponse(requestID, response);
+    LOG.fine("Sending failed BarrierResponse message:\n" + response);
   }
 }

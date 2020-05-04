@@ -60,6 +60,11 @@ message WorkerInfo {
     map<string, int32> additionalPort = 6;
 }
 
+enum BarrierType {
+    DEFAULT = 0;
+    INIT = 1;
+}
+
 /////////////////////////////////////////////////////////////////
 // Message types published to ZooKeeper event queue for workers to consume
 // Job Master informs workers regarding the events in the job
@@ -95,10 +100,6 @@ message AllWorkersJoined {
 }
 
 message AllArrivedOnBarrier {
-    enum BarrierType {
-        DEFAULT = 0;
-        INIT = 1;
-    }
 
     int32 numberOfWorkers = 1;
     oneof typeRequired {
@@ -198,11 +199,20 @@ message BarrierRequest {
     oneof required{
         int32 workerID = 1;
     }
+    oneof typeRequired {
+        BarrierType barrierType = 2;
+    }
 }
 
 message BarrierResponse {
     oneof required {
         int32 workerID = 1;
+    }
+    oneof typeRequired {
+        BarrierType barrierType = 2;
+    }
+    oneof succeededRequired {
+        bool succeeded = 3;
     }
 }
 
