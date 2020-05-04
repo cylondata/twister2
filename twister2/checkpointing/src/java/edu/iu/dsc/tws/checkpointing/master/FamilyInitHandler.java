@@ -49,11 +49,11 @@ public class FamilyInitHandler {
   }
 
   public void pause() {
-    this.pendingResponses.clear();
     this.pause = true;
 
     // send the response to the waiting workers
     this.pendingResponses.values().forEach(this::sendRejectedResponse);
+    this.pendingResponses.clear();
   }
 
   public void resume() {
