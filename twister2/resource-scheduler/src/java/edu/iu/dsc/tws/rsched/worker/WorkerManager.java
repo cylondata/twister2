@@ -112,7 +112,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
-    JobProgress.init();
+    JobProgressImpl.init();
   }
 
   /**
@@ -125,7 +125,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
       if (JobProgress.isJobFaulty()) {
         waitFailedWorkersToRestart();
         if (failedWorkers.isEmpty()) {
-          JobProgress.setJobStatus(JobProgress.JobStatus.RESTARTING);
+          JobProgressImpl.setJobStatus(JobProgress.JobStatus.RESTARTING);
           LOG.warning("Job moves into RESTARTING stage after a fault.");
         } else {
           // if timed out and not all workers restarted, finish execution
@@ -145,9 +145,9 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
         LOG.info("StartingWorker: " + workerID
             + " with restartCount: " + workerController.workerRestartCount());
-        JobProgress.setJobStatus(JobProgress.JobStatus.EXECUTING);
-        JobProgress.increaseWorkerExecuteCount();
-        JobProgress.setRestartedWorkers(restartedWorkers);
+        JobProgressImpl.setJobStatus(JobProgress.JobStatus.EXECUTING);
+        JobProgressImpl.increaseWorkerExecuteCount();
+        JobProgressImpl.setRestartedWorkers(restartedWorkers);
         try {
           managedWorker.execute(
               config, workerID, workerController, persistentVolume, volatileVolume);
@@ -155,7 +155,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
         } catch (ClusterUnstableException cue) {
           // a worker in the cluster should have failed
           // we will try to re-execute this worker
-          JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
+          JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
           LOG.warning("thrown ClusterUnstableException. Some workers should have failed.");
         }
 
@@ -217,7 +217,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   public void failed(int wID) {
 
     // set the status to fail and notify
-    JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
+    JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
     failedWorkers.add(wID);
 
     // job is becoming faulty, clear restartedWorkers set
@@ -229,7 +229,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
     failedWorkers.remove(workerInfo.getWorkerID());
-    JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
+    JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
 
     // job is becoming faulty, clear restartedWorkers set
     if (JobProgress.isJobHealthy()) {

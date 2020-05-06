@@ -19,7 +19,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 /**
  * This class is used to monitor the status of the running job
  */
-public final class JobProgress {
+@SuppressWarnings("HideUtilityClassConstructor")
+public class JobProgress {
 
   /**
    * Job state
@@ -31,22 +32,13 @@ public final class JobProgress {
     FAULTY
   }
 
-  private static JobStatus jobStatus;
+  protected static JobStatus jobStatus;
 
-  private static int workerExecuteCount;
+  protected static int workerExecuteCount;
 
-  private static List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
+  protected static List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
 
-  private JobProgress() {
-  }
-
-  public static void init() {
-    jobStatus = JobStatus.STARTING;
-    workerExecuteCount = 0;
-  }
-
-  public static void setJobStatus(JobStatus jobStatus1) {
-    jobStatus = jobStatus1;
+  public JobProgress() {
   }
 
   public static JobStatus getJobStatus() {
@@ -63,15 +55,6 @@ public final class JobProgress {
 
   public static int getWorkerExecuteCount() {
     return workerExecuteCount;
-  }
-
-  public static void increaseWorkerExecuteCount() {
-    workerExecuteCount++;
-  }
-
-  public static void setRestartedWorkers(List<JobMasterAPI.WorkerInfo> restartedWorkers1) {
-    restartedWorkers.clear();
-    restartedWorkers.addAll(restartedWorkers1);
   }
 
   public static List<JobMasterAPI.WorkerInfo> getRestartedWorkers() {
