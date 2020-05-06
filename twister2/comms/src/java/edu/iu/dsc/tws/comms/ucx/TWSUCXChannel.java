@@ -298,4 +298,9 @@ public class TWSUCXChannel implements TWSChannel {
       receiveProgress.close();
     }
   }
+
+  @Override
+  public void reInit(List<JobMasterAPI.WorkerInfo> restartedWorkers) {
+
+  }
 }

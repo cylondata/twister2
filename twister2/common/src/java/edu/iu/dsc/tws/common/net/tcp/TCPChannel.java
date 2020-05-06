@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
@@ -54,11 +55,6 @@ public class TCPChannel {
   /**
    * Network information
    */
-  private List<NetworkInfo> networkInfos;
-
-  /**
-   * Network information
-   */
   private NetworkInfo thisInfo;
 
   /**
@@ -69,7 +65,7 @@ public class TCPChannel {
   /**
    * The client channels
    */
-  private Map<Integer, SocketChannel> clientChannel;
+  private Map<Integer, SocketChannel> clientChannels;
 
   /**
    * Channel to id
@@ -83,7 +79,7 @@ public class TCPChannel {
   /**
    * Channels connected to server
    */
-  private Map<Integer, SocketChannel> serverChannel;
+  private Map<Integer, SocketChannel> serverChannels;
 
   /**
    * The channels connected to server
@@ -112,8 +108,8 @@ public class TCPChannel {
     config = cfg;
     thisInfo = info;
 
-    clientChannel = new HashMap<>();
-    serverChannel = new HashMap<>();
+    clientChannels = new HashMap<>();
+    serverChannels = new HashMap<>();
     invertedClientChannels = new HashMap<>();
     invertedServerChannels = new HashMap<>();
 
@@ -143,12 +139,11 @@ public class TCPChannel {
 
   /**
    * Start the connections to the servers
-   * @param workerInfo information about all the workers
+   * @param workerInfos information about all the workers
    */
-  public void startConnections(List<NetworkInfo> workerInfo) {
-    this.networkInfos = workerInfo;
+  public void startConnections(List<NetworkInfo> workerInfos) {
 
-    for (NetworkInfo ni : workerInfo) {
+    for (NetworkInfo ni : workerInfos) {
       networkInfoMap.put(ni.getProcId(), ni);
       helloSendByteBuffers.add(ByteBuffer.allocate(4));
       helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
@@ -158,7 +153,7 @@ public class TCPChannel {
     }
 
     // after sync we need to connect to all the servers
-    for (NetworkInfo info : networkInfos) {
+    for (NetworkInfo info : workerInfos) {
       if (info.getProcId() == thisInfo.getProcId()) {
         continue;
       }
@@ -187,7 +182,7 @@ public class TCPChannel {
    * @return the reference message created
    */
   public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
-    SocketChannel ch = clientChannel.get(procId);
+    SocketChannel ch = clientChannels.get(procId);
     if (ch == null) {
       LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + procId);
       return null;
@@ -206,7 +201,7 @@ public class TCPChannel {
    * @return the reference message created
    */
   public TCPMessage iRecv(ByteBuffer buffer, int size, int procId, int edge) {
-    SocketChannel ch = serverChannel.get(procId);
+    SocketChannel ch = serverChannels.get(procId);
     if (ch == null) {
       LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + procId);
       return null;
@@ -260,16 +255,36 @@ public class TCPChannel {
    */
   public void waitForConnections() {
     //now wait for the handshakes to happen
-    while (clientsConnected != (networkInfos.size() - 1)
-        || (clientsCompleted != networkInfos.size() - 1)) {
+    while (clientsConnected != (networkInfoMap.size() - 1)
+        || (clientsCompleted != networkInfoMap.size() - 1)) {
       looper.loop();
     }
 
-    while (serverChannel.size() != networkInfos.size() - 1) {
+    while (serverChannels.size() != networkInfoMap.size() - 1) {
       looper.loop();
     }
 
     LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
+  }
+
+  public void closeConnection(int workerID) {
+    Client client = clients.get(workerID);
+    client.disconnect();
+    clients.remove(workerID);
+    networkInfoMap.remove(workerID);
+
+    invertedClientChannels.remove(clientChannels.get(workerID));
+    clientChannels.remove(workerID);
+
+    SocketChannel serverChannel = serverChannels.get(workerID);
+    if (serverChannel != null) {
+      try {
+        serverChannel.close();
+      } catch (IOException e) {
+      }
+      invertedServerChannels.remove(serverChannel);
+      serverChannels.remove(workerID);
+    }
   }
 
   private class ServerChannelHandler implements ChannelHandler {
@@ -299,7 +314,7 @@ public class TCPChannel {
         int destProc = buffer.getInt();
         // add this to
         invertedServerChannels.put(channel, destProc);
-        serverChannel.put(destProc, channel);
+        serverChannels.put(destProc, channel);
         LOG.finest("Server received hello message from: " + destProc);
         buffer.clear();
         helloReceiveByteBuffers.add(buffer);
@@ -328,7 +343,7 @@ public class TCPChannel {
       Integer key = invertedClientChannels.get(channel);
       // we need to send a hello message to server
       sendHelloMessage(key, channel);
-      clientChannel.put(key, channel);
+      clientChannels.put(key, channel);
     }
 
     @Override

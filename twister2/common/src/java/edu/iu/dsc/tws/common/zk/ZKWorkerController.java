@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.faulttolerance.Progress;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
@@ -853,7 +853,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // if the cluster is in a faulty state,
     // do not wait on the barrier
-    if (Progress.isJobFaulty()) {
+    if (JobProgress.isJobFaulty()) {
       throw new ClusterUnstableException("Can not wait on the barrier, since the job is faulty.");
     }
 

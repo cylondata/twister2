@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 
@@ -427,6 +428,11 @@ public class TWSMPIChannel implements TWSChannel {
    */
   public void releaseBuffers(int wId, int e) {
     pendingCloseRequests.add(new ImmutablePair<>(wId, e));
+  }
+
+  @Override
+  public void reInit(List<JobMasterAPI.WorkerInfo> restartedWorkers) {
+
   }
 }
 

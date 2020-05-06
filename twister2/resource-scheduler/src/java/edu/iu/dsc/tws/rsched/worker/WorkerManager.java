@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.rsched.worker;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,7 +27,7 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
 import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.faulttolerance.Progress;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -61,7 +63,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   /**
    * The worker id
    */
-  private int workerId;
+  private int workerID;
 
   /**
    * The worker controller
@@ -88,7 +90,9 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
    */
   private final int maxRetries;
 
-  private List<String> failedWorkers = new LinkedList<>();
+  private Set<Integer> failedWorkers = new TreeSet<>();
+
+  private List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
 
   public WorkerManager(Config config,
                        int workerID,
@@ -97,7 +101,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
                        IVolatileVolume volatileVolume,
                        IWorker worker) {
     this.config = config;
-    this.workerId = workerID;
+    this.workerID = workerID;
     this.workerController = workerController;
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
@@ -108,7 +112,7 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
-    Progress.init();
+    JobProgress.init();
   }
 
   /**
@@ -118,19 +122,20 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     while (retries < maxRetries) {
 
       // if the job is faulty, wait failed workers to restart
-      if (Progress.isJobFaulty()) {
+      if (JobProgress.isJobFaulty()) {
         waitFailedWorkersToRestart();
         if (failedWorkers.isEmpty()) {
-          Progress.setJobStatus(Progress.JobStatus.RESTARTING);
+          JobProgress.setJobStatus(JobProgress.JobStatus.RESTARTING);
+          LOG.warning("Job moves into RESTARTING stage after a fault.");
         } else {
           // if timed out and not all workers restarted, finish execution
           return;
         }
       }
 
-      if (Progress.isJobHealthy()) {
+      if (JobProgress.isJobHealthy()) {
 
-        LOG.info("Waiting on the init barrier before starting IWorker: " + workerId
+        LOG.info("Waiting on the init barrier before starting IWorker: " + workerID
             + " with restartCount: " + workerController.workerRestartCount());
         try {
           workerController.waitOnInitBarrier();
@@ -138,23 +143,24 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
           throw new Twister2RuntimeException("Could not pass through the init barrier", e);
         }
 
-        LOG.info("StartingWorker: " + workerId
+        LOG.info("StartingWorker: " + workerID
             + " with restartCount: " + workerController.workerRestartCount());
-        Progress.setJobStatus(Progress.JobStatus.EXECUTING);
-        Progress.increaseWorkerExecuteCount();
+        JobProgress.setJobStatus(JobProgress.JobStatus.EXECUTING);
+        JobProgress.increaseWorkerExecuteCount();
+        JobProgress.setRestartedWorkers(restartedWorkers);
         try {
           managedWorker.execute(
-              config, workerId, workerController, persistentVolume, volatileVolume);
+              config, workerID, workerController, persistentVolume, volatileVolume);
           retries++;
         } catch (ClusterUnstableException cue) {
           // a worker in the cluster should have failed
           // we will try to re-execute this worker
-          Progress.setJobStatus(Progress.JobStatus.FAULTY);
+          JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
           LOG.warning("thrown ClusterUnstableException. Some workers should have failed.");
         }
 
         // we are still in a good state, so we can stop
-        if (Progress.isJobHealthy()) {
+        if (JobProgress.isJobHealthy()) {
           LOG.info("Worker finished successfully");
           break;
         }
@@ -208,25 +214,50 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   }
 
   @Override
-  public void failed(int workerID) {
-    // set the status to fail and notify
-    Progress.setJobStatus(Progress.JobStatus.FAULTY);
-    failedWorkers.add(Integer.toString(workerID));
+  public void failed(int wID) {
 
-    // lets tell everyone that there is a fault
-    for (FaultAcceptable fa : faultComponents) {
-      try {
-        fa.onFault(new Fault(workerID));
-      } catch (Twister2Exception e) {
-        LOG.log(Level.WARNING, "Cannot propagate the failure", e);
-      }
+    // set the status to fail and notify
+    JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
+    failedWorkers.add(wID);
+
+    // job is becoming faulty, clear restartedWorkers set
+    if (JobProgress.isJobHealthy()) {
+      faultOccurred(wID);
     }
   }
 
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
-    failedWorkers.remove(Integer.toString(workerInfo.getWorkerID()));
-    Progress.setJobStatus(Progress.JobStatus.FAULTY);
+    failedWorkers.remove(workerInfo.getWorkerID());
+    JobProgress.setJobStatus(JobProgress.JobStatus.FAULTY);
+
+    // job is becoming faulty, clear restartedWorkers set
+    if (JobProgress.isJobHealthy()) {
+      faultOccurred(workerInfo.getWorkerID());
+    }
+
+    restartedWorkers.add(workerInfo);
+  }
+
+  /**
+   * this method must be called exactly once for each fault
+   * if there are multiple faults without restoring back to the normal in the middle,
+   * it must be called once only
+   */
+  private void faultOccurred(int wID) {
+
+    // job is becoming faulty, clear restartedWorkers set
+    LOG.warning("A fault occurred. Job moves into the FAULTY stage.");
+    restartedWorkers.clear();
+
+    // lets tell everyone that there is a fault
+    for (FaultAcceptable fa : faultComponents) {
+      try {
+        fa.onFault(new Fault(wID));
+      } catch (Twister2Exception e) {
+        LOG.log(Level.WARNING, "Cannot propagate the failure", e);
+      }
+    }
   }
 
   @Override

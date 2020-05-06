@@ -11,10 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.faulttolerance;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
 /**
  * This class is used to monitor the status of the running job
  */
-public final class Progress {
+public final class JobProgress {
 
   /**
    * Job state
@@ -30,7 +35,9 @@ public final class Progress {
 
   private static int workerExecuteCount;
 
-  private Progress() {
+  private static List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
+
+  private JobProgress() {
   }
 
   public static void init() {
@@ -60,5 +67,14 @@ public final class Progress {
 
   public static void increaseWorkerExecuteCount() {
     workerExecuteCount++;
+  }
+
+  public static void setRestartedWorkers(List<JobMasterAPI.WorkerInfo> restartedWorkers1) {
+    restartedWorkers.clear();
+    restartedWorkers.addAll(restartedWorkers1);
+  }
+
+  public static List<JobMasterAPI.WorkerInfo> getRestartedWorkers() {
+    return restartedWorkers;
   }
 }

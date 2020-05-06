@@ -36,7 +36,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.faulttolerance.Progress;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
@@ -120,10 +120,10 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
       throw new RuntimeException("intentionally killed");
     }
 
-    if (wID != 2 && Progress.getWorkerExecuteCount() == 1) {
+    if (wID != 2 && JobProgress.getWorkerExecuteCount() == 1) {
 
       LOG.warning("Waiting for the job to become faulty ........ ");
-      while (Progress.isJobHealthy()) {
+      while (JobProgress.isJobHealthy()) {
         try {
           Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -147,22 +147,22 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
 
   private void testFaultTolerance2(IWorkerController workerController) {
 
-    if (wID == 2 && workerController.workerRestartCount() == 0) {
-      sleepSomeTime("worker-" + wID, 3);
-      throw new RuntimeException("intentionally killed");
-    }
-
-    if (wID != 2 && Progress.getWorkerExecuteCount() == 1) {
-
-      LOG.info("Will wait on a barrier to fail...");
-      try {
-        workerController.waitOnBarrier();
-        LOG.info("Proceeded through the barrier. Not supposed to ...");
-      } catch (TimeoutException e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
-        return;
-      }
-    }
+//    if (wID == 2 && workerController.workerRestartCount() == 0) {
+//      sleepSomeTime("worker-" + wID, 3);
+//      throw new RuntimeException("intentionally killed");
+//    }
+//
+//    if (wID != 2 && JobProgress.getWorkerExecuteCount() == 1) {
+//
+//      LOG.info("Will wait on a barrier to fail...");
+//      try {
+//        workerController.waitOnBarrier();
+//        LOG.info("Proceeded through the barrier. Not supposed to ...");
+//      } catch (TimeoutException e) {
+//        LOG.log(Level.SEVERE, e.getMessage(), e);
+//        return;
+//      }
+//    }
 
     LOG.info("Will wait on a barrier...");
     try {
@@ -172,6 +172,10 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
       return;
     }
     LOG.info("Proceeded through the barrier...");
+
+    if (wID < 2) {
+      sleepSomeTime("worker-" + wID, 50);
+    }
 
     LOG.info("Will wait on another barrier...");
     try {

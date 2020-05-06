@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -237,6 +238,7 @@ public final class WorkerEnvironment {
     } else {
       //If the worker Env exists reset the config (need to check if complete re-init is needed)
       workerEnv.setConfig(config);
+      workerEnv.getChannel().reInit(JobProgress.getRestartedWorkers());
     }
     return workerEnv;
   }
