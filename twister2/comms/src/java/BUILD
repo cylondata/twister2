@@ -31,6 +31,10 @@ t2_java_lib(
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_collections4//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@maven//:org_apache_arrow_arrow_vector",
+        "@maven//:org_apache_arrow_arrow_memory",
+        "@maven//:org_apache_arrow_arrow_format",
+        "@maven//:com_google_flatbuffers_flatbuffers_java",
     ] + select({
         "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": ["//third_party:ucx_javabinding_java"],

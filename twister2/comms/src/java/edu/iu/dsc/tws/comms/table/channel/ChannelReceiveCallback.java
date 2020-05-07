@@ -9,23 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.comms.table.channel;
 
-public interface TableBuilder {
-  /**
-   * Add a row to build the tbale
-   * @param row row
-   */
-  void add(Row row);
+import java.nio.ByteBuffer;
 
-  /**
-   * Build the table at the end
-   * @return the built table
-   */
-  Table build();
+public interface ChannelReceiveCallback {
+  void receivedData(int receiveId, ByteBuffer buffer, int length);
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+  void receivedHeader(int receiveId, int finished, int[] header, int headerLength);
 }

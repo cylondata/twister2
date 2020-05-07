@@ -9,12 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.alltoall;
+package edu.iu.dsc.tws.api.tset.table;
 
-import java.nio.ByteBuffer;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
-public interface ChannelReceiveCallback {
-  void receivedData(int receiveId, ByteBuffer buffer, int length);
+public class Field {
+  private String name;
 
-  void receivedHeader(int receiveId, int finished, int[] header, int headerLength);
+  private MessageType type;
+
+  public Field(String name, MessageType type) {
+    this.name = name;
+    this.type = type;
+  }
+
+  public Field(MessageType type) {
+    this.type = type;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public MessageType getType() {
+    return type;
+  }
 }

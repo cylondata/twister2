@@ -12,4 +12,19 @@
 package edu.iu.dsc.tws.api.tset.table;
 
 public interface Row {
+  int numberOfColumns();
+
+  Row duplicate();
+
+  Object get(int column);
+
+  String getString(int column);
+
+  int getInt4(int column);
+
+  long getInt8(int column);
+
+  double getFloat8(int column);
+
+  float getFloat4(int column);
 }

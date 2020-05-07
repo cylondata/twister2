@@ -9,23 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.comms.table;
 
-public interface TableBuilder {
-  /**
-   * Add a row to build the tbale
-   * @param row row
-   */
-  void add(Row row);
+/**
+ * This class gets values as normal format and converts them into a row format before invoking the
+ * communication.
+ */
+public class ArrowAllToAll {
+  public boolean insert(ArrowTable table, int target) {
+    return false;
+  }
 
-  /**
-   * Build the table at the end
-   * @return the built table
-   */
-  Table build();
+  public boolean isComplete() {
+    return false;
+  }
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+  public void finish(int source) {
+
+  }
+
+  public void close() {
+
+  }
 }

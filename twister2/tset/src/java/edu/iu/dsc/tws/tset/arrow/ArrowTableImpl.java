@@ -9,23 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.tset.arrow;
 
-public interface TableBuilder {
-  /**
-   * Add a row to build the tbale
-   * @param row row
-   */
-  void add(Row row);
+import java.util.Iterator;
+import java.util.List;
 
-  /**
-   * Build the table at the end
-   * @return the built table
-   */
-  Table build();
+import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.Table;
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+public class ArrowTableImpl implements Table {
+  private List<ArrowColumn> columns;
+
+  public ArrowTableImpl(List<ArrowColumn> columns) {
+    this.columns = columns;
+  }
+
+  @Override
+  public Iterator<Row> getRowIterator() {
+    return null;
+  }
 }

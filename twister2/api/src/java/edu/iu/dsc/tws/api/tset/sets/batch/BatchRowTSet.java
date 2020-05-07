@@ -15,11 +15,15 @@ import java.util.Comparator;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.StoringData;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
 
 public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row> {
@@ -35,4 +39,13 @@ public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row
   BatchTLink<Iterator<Row>, Row> join(BatchRowTSet rightTSet,
                                              CommunicationContext.JoinType type,
                                              Comparator<Row> keyComparator);
+
+  /**
+   * Sets the data type of the {@link TSet} output. This will be used in the packers for efficient
+   * SER-DE operations in the following {@link TLink}s
+   *
+   * @param dataType data type as a {@link MessageType}
+   * @return this {@link TSet}
+   */
+  BatchRowTSet withSchema(Schema dataType);
 }

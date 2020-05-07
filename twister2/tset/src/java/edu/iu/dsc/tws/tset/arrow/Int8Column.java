@@ -9,25 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.alltoall;
+package edu.iu.dsc.tws.tset.arrow;
 
-import java.nio.ByteBuffer;
+import org.apache.arrow.vector.UInt8Vector;
 
-public class MemoryPool {
-  /**
-   * Allocate a bytebuffer
-   * @param size size of the buffer to allocate
-   * @return a bytebuffer, null if we cannot allocate anymore
-   */
-  public ByteBuffer allocate(int size) {
-    return null;
+public class Int8Column implements ArrowColumn<Long> {
+  private UInt8Vector vector;
+
+  private int currentIndex;
+
+  public Int8Column(UInt8Vector intVector) {
+    this.vector = intVector;
+    this.currentIndex = 0;
   }
 
-  /**
-   * Release a buffer to the pool
-   * @param buffer the buffer to be released
-   */
-  public void release(ByteBuffer buffer) {
+  @Override
+  public void addValue(Long value) {
+    vector.setSafe(currentIndex, value);
+    currentIndex++;
+  }
 
+  @Override
+  public Long get(int index) {
+    return vector.get(index);
+  }
+
+  @Override
+  public long currentSize() {
+    return vector.getBufferSize();
   }
 }

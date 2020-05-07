@@ -9,23 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.tset.arrow;
 
-public interface TableBuilder {
-  /**
-   * Add a row to build the tbale
-   * @param row row
-   */
-  void add(Row row);
+import org.apache.arrow.vector.Float8Vector;
 
-  /**
-   * Build the table at the end
-   * @return the built table
-   */
-  Table build();
+public class Float8Column implements ArrowColumn<Double> {
+  private Float8Vector vector;
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+  private int currentIndex;
+
+  public Float8Column(Float8Vector vector) {
+    this.vector = vector;
+  }
+
+  @Override
+  public void addValue(Double value) {
+    vector.setSafe(currentIndex, value);
+    currentIndex++;
+  }
+
+  public Double get(int index) {
+    return vector.get(index);
+  }
+
+  @Override
+  public long currentSize() {
+    return vector.getBufferSize();
+  }
 }
