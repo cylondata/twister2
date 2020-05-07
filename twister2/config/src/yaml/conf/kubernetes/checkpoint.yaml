@@ -1,18 +1,6 @@
-# Enable or disable checkpointing
-twister2.checkpointing.enable: true
-
-# The implementation of the store to be used
-#twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore
-twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore
-
 # Root directory of local file system based store
 twister2.checkpointing.store.fs.dir: "/persistent/"
 
-# Root directory of hdfs based store
-# twister2.checkpointing.store.hdfs.dir: "/twister2/persistent/"
-
-# Source triggering frequency
-twister2.checkpointing.source.frequency: 1000
-
 # Checkpointing message request timeout
 twister2.checkpointing.request.timeout: 50000
+

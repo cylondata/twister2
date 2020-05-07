@@ -9,19 +9,6 @@
 twister2.kubernetes.jvm.memory.fraction: 0.8
 
 ###################################################################
-# Fault Tolerance configurations
-###################################################################
-
-# A flag to enable/disable fault tolerance in Twister2
-# By default, it is disabled
-twister2.fault.tolerant: false
-
-# a timeout value to determine whether a worker failed
-# If a worker does not send heartbeat messages for this duration in milli seconds,
-# It is assumed failed
-twister2.fault.tolerance.failure.timeout: 10000
-
-###################################################################
 # Twister2 Job Master related settings
 ###################################################################
 

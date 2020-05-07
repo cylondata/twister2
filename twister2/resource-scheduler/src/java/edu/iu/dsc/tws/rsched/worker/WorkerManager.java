@@ -96,7 +96,7 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
     this.managedWorker = worker;
 
     // we default to three retries
-    this.maxRetries = FaultToleranceContext.failureRetries(config, 3);
+    this.maxRetries = FaultToleranceContext.failureRetries(config);
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
@@ -165,12 +165,14 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
   private void waitFailedWorkersToRestart() {
 
     long startTime = System.currentTimeMillis();
+    long maxWaitTime = FaultToleranceContext.waitTimeForFailedWorkers(config);
 
     while (!failedWorkers.isEmpty()) {
 
       long elapsedTime = System.currentTimeMillis() - startTime;
-      if (elapsedTime > 600000) {
-        LOG.warning("Waited 10 mins to recover the workers from failure, giving up");
+      if (elapsedTime > maxWaitTime) {
+        LOG.warning("Waited " + maxWaitTime / 60000
+            + " minutes to recover the workers from failure, giving up");
         return;
       }
       // lets sleep a little for avoid spinning

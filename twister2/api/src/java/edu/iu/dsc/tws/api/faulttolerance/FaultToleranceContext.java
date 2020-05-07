@@ -27,7 +27,15 @@ public class FaultToleranceContext extends Context {
   public static final String FAILURE_TIMEOUT = "twister2.fault.tolerance.failure.timeout";
   public static final int FAILURE_TIMEOUT_DEFAULT = 10 * 1000;
 
+  // the number of times to re-execute IWorker after some other workers failed in the job
   public static final String FAILURE_RETRIES = "twister2.fault.tolerance.retries";
+  public static final int FAILURE_RETRIES_DEFAULT = 5;
+
+  // the amount of time to wait for failed workers to be restarted
+  // default time is 3 minutes
+  public static final String WAIT_TIME_FOR_FAILED_WORKERS =
+      "twister2.fault.tolerance.wait.time.for.failed.workers";
+  public static final long WAIT_TIME_FOR_FAILED_WORKERS_DEFAULT = 10 * 60 * 1000;
 
   public static boolean faultTolerant(Config cfg) {
     return cfg.getBooleanValue(FAULT_TOLERANT, FAULT_TOLERANT_DEFAULT);
@@ -37,7 +45,11 @@ public class FaultToleranceContext extends Context {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);
   }
 
-  public static int failureRetries(Config cfg, int def) {
-    return cfg.getIntegerValue(FAILURE_RETRIES, def);
+  public static int failureRetries(Config cfg) {
+    return cfg.getIntegerValue(FAILURE_RETRIES, FAILURE_RETRIES_DEFAULT);
+  }
+
+  public static long waitTimeForFailedWorkers(Config cfg) {
+    return cfg.getLongValue(WAIT_TIME_FOR_FAILED_WORKERS, WAIT_TIME_FOR_FAILED_WORKERS_DEFAULT);
   }
 }
