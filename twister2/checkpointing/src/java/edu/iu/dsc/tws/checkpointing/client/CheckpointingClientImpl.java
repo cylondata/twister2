@@ -32,7 +32,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
@@ -106,7 +106,7 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
     Checkpoint.FamilyInitializeResponse initReso =
         (Checkpoint.FamilyInitializeResponse) this.blockingResponse.remove(response.getKey());
     if (initReso.getStatus().equals(Checkpoint.FamilyInitializeResponse.Status.REJECTED)) {
-      throw new ClusterUnstableException("Checkpointing initialization of "
+      throw new JobFaultyException("Checkpointing initialization of "
           + family + " failed. CheckpointManager rejected the request due to cluster instability.");
     }
     return initReso;

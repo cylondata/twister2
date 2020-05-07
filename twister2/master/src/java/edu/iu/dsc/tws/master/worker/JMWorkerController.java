@@ -23,7 +23,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
@@ -205,7 +205,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
       if (barrierResponse.getSucceeded()) {
         return;
       } else {
-        throw new ClusterUnstableException("Default Barrier failed.");
+        throw new JobFaultyException("Default Barrier failed.");
       }
     } catch (BlockingSendException e) {
       throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "

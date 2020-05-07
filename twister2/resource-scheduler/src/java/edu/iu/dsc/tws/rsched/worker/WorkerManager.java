@@ -18,7 +18,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
@@ -140,11 +140,11 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
           managedWorker.execute(
               config, workerID, workerController, persistentVolume, volatileVolume);
           retries++;
-        } catch (ClusterUnstableException cue) {
+        } catch (JobFaultyException cue) {
           // a worker in the cluster should have failed
           // we will try to re-execute this worker
           JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
-          LOG.warning("thrown ClusterUnstableException. Some workers should have failed.");
+          LOG.warning("thrown JobFaultyException. Some workers should have failed.");
         }
 
         // we are still in a good state, so we can stop

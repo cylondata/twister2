@@ -35,7 +35,7 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
@@ -854,7 +854,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     // if the cluster is in a faulty state,
     // do not wait on the barrier
     if (JobProgress.isJobFaulty()) {
-      throw new ClusterUnstableException("Can not wait on the barrier, since the job is faulty.");
+      throw new JobFaultyException("Can not wait on the barrier, since the job is faulty.");
     }
 
     defaultBarrierProceeded = false;
@@ -898,7 +898,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     if (defaultBarrierProceeded) {
       return;
     } else if (defaultBarrierBroken) {
-      throw new ClusterUnstableException("Barrier broken since a fault occurred in the job.");
+      throw new JobFaultyException("Barrier broken since a fault occurred in the job.");
     } else {
       throw new TimeoutException("Barrier timed out. Not all workers arrived on time limit: "
           + timeLimit + "ms.");

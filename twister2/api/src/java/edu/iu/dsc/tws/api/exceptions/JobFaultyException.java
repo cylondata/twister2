@@ -11,17 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.exceptions;
 
-public class ClusterUnstableException extends Twister2RuntimeException {
+public class JobFaultyException extends Twister2RuntimeException {
 
-  public ClusterUnstableException(String msg) {
+  public JobFaultyException(String msg) {
     super(msg);
   }
 
-  public ClusterUnstableException(String msg, Throwable cause) {
+  public JobFaultyException(String msg, Throwable cause) {
     super(msg, cause);
   }
 
-  public ClusterUnstableException(Throwable throwable) {
+  public JobFaultyException(Throwable throwable) {
     super(throwable);
   }
 }
