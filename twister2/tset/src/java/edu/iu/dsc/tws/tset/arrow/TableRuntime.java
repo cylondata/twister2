@@ -9,23 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.tset.arrow;
 
-public interface TableBuilder {
-  /**
-   * Add a row to build the tbale
-   * @param row row
-   */
-  void add(Row row);
+import org.apache.arrow.memory.RootAllocator;
 
-  /**
-   * Build the table at the end
-   * @return the built table
-   */
-  Table build();
+/**
+ * Table runtime holds objects that are common to the table runtime. This object is set to
+ * worker environment and accessible through it.
+ */
+public class TableRuntime {
+  public static final String TABLE_RUNTIME = "__table_runtime__";
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+  private RootAllocator rootAllocator;
+
+  public TableRuntime(RootAllocator rootAllocator) {
+    this.rootAllocator = rootAllocator;
+  }
+
+  public RootAllocator getRootAllocator() {
+    return rootAllocator;
+  }
 }

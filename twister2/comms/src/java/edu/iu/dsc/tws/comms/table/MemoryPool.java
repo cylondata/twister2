@@ -9,23 +9,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.comms.table;
 
-public interface TableBuilder {
+import java.nio.ByteBuffer;
+
+public class MemoryPool {
   /**
-   * Add a row to build the tbale
-   * @param row row
+   * Allocate a bytebuffer
+   * @param size size of the buffer to allocate
+   * @return a bytebuffer, null if we cannot allocate anymore
    */
-  void add(Row row);
+  public ByteBuffer allocate(int size) {
+    return null;
+  }
 
   /**
-   * Build the table at the end
-   * @return the built table
+   * Release a buffer to the pool
+   * @param buffer the buffer to be released
    */
-  Table build();
+  public void release(ByteBuffer buffer) {
 
-  /**
-   * Get the current size of the table
-   */
-  long currentSize();
+  }
 }

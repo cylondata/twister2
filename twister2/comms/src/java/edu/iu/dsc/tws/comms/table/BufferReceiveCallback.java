@@ -9,33 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.alltoall;
+package edu.iu.dsc.tws.comms.table;
 
 import java.nio.ByteBuffer;
 
-public final class TRequest {
-  protected ByteBuffer buffer;
-  protected int length;
-  protected int target;
-  protected int[] header;
-  protected int headerLength;
+public interface BufferReceiveCallback {
+  boolean onReceive(int source, ByteBuffer buffer, int length);
 
-  public TRequest(int tgt, ByteBuffer buf, int len) {
-    target = tgt;
-    buffer = buf;
-    length = len;
-  }
-
-  public TRequest(int tgt, ByteBuffer data, int len, int[] head, int hLength) {
-    target = tgt;
-    buffer = data;
-    length = len;
-    // we are copying the header
-    header = head;
-    headerLength = hLength;
-  }
-
-  public TRequest(int tgt) {
-    target = tgt;
-  }
+  boolean onReceive(int source, boolean finished, ByteBuffer buffer, int length);
 }

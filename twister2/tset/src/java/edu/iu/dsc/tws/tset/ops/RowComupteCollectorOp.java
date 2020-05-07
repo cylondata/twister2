@@ -20,7 +20,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetConstants;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.api.tset.table.Table;
@@ -30,8 +31,9 @@ import edu.iu.dsc.tws.tset.arrow.ArrowTableBuilder;
 import edu.iu.dsc.tws.tset.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class RowComputeOp extends BaseComputeOp<Table> {
-  private ComputeFunc<Row, Row> computeFunction;
+public class RowComupteCollectorOp extends BaseComputeOp<Table> {
+
+  private ComputeCollectorFunc<Row, Row> computeFunction;
 
   private TableBuilder builder;
 
@@ -50,11 +52,11 @@ public class RowComputeOp extends BaseComputeOp<Table> {
    */
   private TableSchema schema;
 
-  public RowComputeOp() {
+  public RowComupteCollectorOp() {
   }
 
-  public RowComputeOp(ComputeFunc<Row, Row> computeFunction, BaseTSet origin,
-                   Map<String, String> receivables) {
+  public RowComupteCollectorOp(ComputeCollectorFunc<Row, Row> computeFunction, BaseTSet origin,
+                               Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }
@@ -74,17 +76,24 @@ public class RowComputeOp extends BaseComputeOp<Table> {
   }
 
   @Override
-  public TFunction getFunction() {
-    return this.computeFunction;
-  }
-
-  @Override
   public boolean execute(IMessage<Table> content) {
+    CollectorImp collectorImp = new CollectorImp();
+
     for (Iterator<Row> it = content.getContent().getRowIterator(); it.hasNext();) {
       Row r = it.next();
-      Row output = computeFunction.compute(r);
+      computeFunction.compute(r, collectorImp);
+    }
 
-      builder.add(output);
+    collectorImp.close();
+    writeEndToEdges();
+    computeFunction.close();
+    return true;
+  }
+
+  private class CollectorImp implements RecordCollector<Row> {
+    @Override
+    public void collect(Row record) {
+      builder.add(record);
 
       if (builder.currentSize() > tableMaxSize) {
         writeToEdges(builder.build());
@@ -92,11 +101,14 @@ public class RowComputeOp extends BaseComputeOp<Table> {
       }
     }
 
-    writeToEdges(builder.build());
-    writeEndToEdges();
-    builder = null;
+    @Override
+    public void close() {
+      writeToEdges(builder.build());
+    }
+  }
 
-    computeFunction.close();
-    return true;
+  @Override
+  public TFunction getFunction() {
+    return computeFunction;
   }
 }

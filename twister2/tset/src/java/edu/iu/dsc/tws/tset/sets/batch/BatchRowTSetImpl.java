@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 
@@ -23,10 +22,9 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.RowDirectLink;
+import edu.iu.dsc.tws.tset.links.batch.RowPartitionTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implements BatchRowTSet {
@@ -35,10 +33,17 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
     super(tSetEnv, name, parallelism, inputSchema);
   }
 
+  protected BatchRowTSetImpl() {
+    //non arg constructor for kryo
+  }
+
   @Override
   public BatchTLink<Iterator<Row>, Row> partition(PartitionFunc<Row> partitionFn,
                                                   int targetParallelism) {
-    return null;
+    RowPartitionTLink partition = new RowPartitionTLink(getTSetEnv(), partitionFn,
+        getParallelism(), targetParallelism, getOutputSchema());
+    addChildToGraph(partition);
+    return partition;
   }
 
   @Override
@@ -89,21 +94,13 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
 
   @Override
   public TBase addInput(String key, StorableTBase<?> input) {
-    return direct().lazyPersist();
+    getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
   }
 
   @Override
-  public void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
-
-  }
-
-  @Override
-  public TBaseGraph getTBaseGraph() {
-    return null;
-  }
-
-  @Override
-  public String generateID(String prefix) {
-    return null;
+  public BatchRowTSet withSchema(Schema schema) {
+    this.setOutputSchema(schema);
+    return this;
   }
 }

@@ -11,10 +11,54 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.table;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 
-public class TableSchema {
-  private List<MessageType> types;
+public class TableSchema implements Schema {
+  private List<Field> types;
+
+  public static TableSchema make(Field... t) {
+    return new TableSchema(new ArrayList<>(Arrays.<Field>asList(t)));
+  }
+
+  public TableSchema(List<Field> types) {
+    this.types = types;
+  }
+
+  public MessageType get(int column) {
+    return types.get(column).getType();
+  }
+
+  public int getNumberOfColumns() {
+    return types.size();
+  }
+
+  public List<Field> getFields() {
+    return new ArrayList<>(types);
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return MessageTypes.ARROW_TABLE;
+  }
+
+  @Override
+  public int getDataSize() {
+    return 0;
+  }
+
+  @Override
+  public int getTotalSize() {
+    return 0;
+  }
+
+  @Override
+  public boolean isLengthsSpecified() {
+    return false;
+  }
 }

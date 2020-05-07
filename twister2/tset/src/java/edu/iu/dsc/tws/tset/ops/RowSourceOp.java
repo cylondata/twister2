@@ -13,22 +13,75 @@ package edu.iu.dsc.tws.tset.ops;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableBuilder;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.tset.arrow.ArrowTableBuilder;
+import edu.iu.dsc.tws.tset.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class RowSourceOp extends SourceOp<Row> {
+  private TableBuilder builder;
+
+  /**
+   * Table max size set to 64MB
+   */
+  private long tableMaxSize = 64000000;
+
+  /**
+   * Table runtime to use, it contains
+   */
+  private TableRuntime runtime;
+
+  /**
+   * The output schema
+   */
+  private TableSchema schema;
+
+
+  public RowSourceOp() {
+  }
+
   public RowSourceOp(SourceFunc<Row> src, BaseTSet originTSet,
                      Map<String, String> receivableTSets) {
     super(src, originTSet, receivableTSets);
   }
 
   @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
+    runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME,
+        TableRuntime.class);
+    if (runtime == null) {
+      throw new Twister2RuntimeException("Table runtime must be set");
+    }
+
+    schema = (TableSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
+    tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
+    builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+  }
+
+  @Override
   public void execute() {
     if (source.hasNext()) {
+      // todo:: change source function to accept a row, so we don't have to allocate new
+      // row every time
       Row tuple = source.next();
-      multiEdgeOpAdapter.writeToEdges(tuple);
+      builder.add(tuple);
+
+      if (builder.currentSize() > tableMaxSize) {
+        multiEdgeOpAdapter.writeToEdges(builder.build());
+        builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+      }
     } else {
+      multiEdgeOpAdapter.writeToEdges(builder.build());
+      builder = null;
       multiEdgeOpAdapter.writeEndToEdges();
     }
   }

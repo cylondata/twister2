@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 public abstract class BatchTsetExample implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(BatchTsetExample.class.getName());
 
-  static final int COUNT = 5;
-  static final int PARALLELISM = 2;
+  protected static final int COUNT = 5;
+  protected static final int PARALLELISM = 2;
 
   SourceTSet<Integer> dummySource(BatchEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {

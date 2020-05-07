@@ -25,13 +25,16 @@ import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.RowSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
@@ -122,6 +125,14 @@ public class BatchEnvironment extends TSetEnvironment {
   public <K, V> KeyedSourceTSet<K, V> createKeyedSource(String name, SourceFunc<Tuple<K, V>> source,
                                                         int parallelism) {
     KeyedSourceTSet<K, V> sourceT = new KeyedSourceTSet<>(this, name, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
+  public RowSourceTSet createRowSource(String name, SourceFunc<Row> source,
+                                       int parallelism, Schema schema) {
+    RowSourceTSet sourceT = new RowSourceTSet(this, name, source, parallelism, schema);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
