@@ -11,44 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.worker;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.ClusterUnstableException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-import edu.iu.dsc.tws.api.faulttolerance.Fault;
-import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
-import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
  * Keep information about a managed environment where workers can get restarted.
- * todo: handle multiple worker failures.
- *       one worker fails, before it restarts, another worker fails
  */
-public class WorkerManager implements IManagedFailureListener, IAllJoinedListener {
+public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener {
   private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
-
-  /**
-   * Keep track of the components that have the ability to deal with faults
-   */
-  private List<FaultAcceptable> faultComponents = new ArrayList<>();
 
   /**
    * The IWorker we are working with
@@ -194,15 +182,6 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
   }
 
   /**
-   * Register a fault component to this managed envrionment
-   *
-   * @param fa the fault accepted component
-   */
-  public void registerFaultComponent(FaultAcceptable fa) {
-    faultComponents.add(fa);
-  }
-
-  /**
    * todo: if a worker in the job fails before getting allWorkersJoined event,
    *       there is nothing to be done
    *       that worker should be restarted and it should rejoin.
@@ -250,24 +229,6 @@ public class WorkerManager implements IManagedFailureListener, IAllJoinedListene
     LOG.warning("A fault occurred. Job moves into the FAULTY stage.");
     restartedWorkers.clear();
 
-    // lets tell everyone that there is a fault
-    for (FaultAcceptable fa : faultComponents) {
-      try {
-        fa.onFault(new Fault(wID));
-      } catch (Twister2Exception e) {
-        LOG.log(Level.WARNING, "Cannot propagate the failure", e);
-      }
-    }
-  }
-
-  @Override
-  public void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
-    LOG.info("registered FaultAcceptable");
-    faultComponents.add(faultAcceptable);
-  }
-
-  @Override
-  public void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
-    faultComponents.remove(faultAcceptable);
+    JobProgressImpl.faultOccurred(wID);
   }
 }

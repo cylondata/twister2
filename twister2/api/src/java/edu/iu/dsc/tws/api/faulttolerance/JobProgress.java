@@ -11,16 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.faulttolerance;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * This class is used to monitor the status of the running job
+ * Extended class modifies members
  */
 @SuppressWarnings("HideUtilityClassConstructor")
 public class JobProgress {
+
+  private static final Logger LOG = Logger.getLogger(JobProgress.class.getName());
 
   /**
    * Job state
@@ -37,6 +42,12 @@ public class JobProgress {
   protected static int workerExecuteCount;
 
   protected static List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
+
+  /**
+   * Keep track of the components that have the ability to deal with faults
+   */
+  protected static List<FaultAcceptable> faultAcceptors = new ArrayList<>();
+
 
   public JobProgress() {
   }
@@ -60,4 +71,14 @@ public class JobProgress {
   public static List<JobMasterAPI.WorkerInfo> getRestartedWorkers() {
     return restartedWorkers;
   }
+
+  public static void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
+    LOG.info("registered FaultAcceptable");
+    faultAcceptors.add(faultAcceptable);
+  }
+
+  public static void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
+    faultAcceptors.remove(faultAcceptable);
+  }
+
 }
