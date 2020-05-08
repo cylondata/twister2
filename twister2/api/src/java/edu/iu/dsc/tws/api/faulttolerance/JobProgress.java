@@ -32,7 +32,6 @@ public class JobProgress {
    */
   public enum JobStatus {
     STARTING,
-    RESTARTING,
     EXECUTING,
     FAULTY
   }

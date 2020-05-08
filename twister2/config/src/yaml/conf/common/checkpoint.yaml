@@ -30,6 +30,6 @@ twister2.fault.tolerant: false
 # It is assumed failed
 twister2.fault.tolerance.failure.timeout: 10000
 
-# the amount of time to wait for failed workers to be restarted
-# default time is 3 minutes
-twister2.fault.tolerance.wait.time.for.failed.workers: 600000
+# maximum number of times to re-execute IWorker after some other workers failed in the job
+# default value is 5
+twister2.fault.tolerance.max.retries: 5

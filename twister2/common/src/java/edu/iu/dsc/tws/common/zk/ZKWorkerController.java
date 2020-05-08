@@ -922,8 +922,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       return;
     }
 
-    // wait until all workers joined or time limit is reached
-    long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
+    // wait until all workers joined or the time limit is reached
+    long timeLimit = ControllerContext.maxWaitTimeOnInitBarrier(config);
     long startTime = System.currentTimeMillis();
 
     long delay = 0;

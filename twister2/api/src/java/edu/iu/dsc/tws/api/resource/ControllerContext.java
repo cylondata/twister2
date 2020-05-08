@@ -27,12 +27,20 @@ public final class ControllerContext {
   public static final String MAX_WAIT_TIME_ON_BARRIER =
       "twister2.worker.controller.max.wait.time.on.barrier";
 
+  public static final String MAX_WAIT_TIME_ON_INIT_BARRIER =
+      "twister2.worker.controller.max.wait.time.on.init.barrier";
+  public static final long MAX_WAIT_TIME_ON_INIT_BARRIER_DEFAULT = 600000;
+
   public static long maxWaitTimeForAllToJoin(Config cfg) {
     return cfg.getLongValue(MAX_WAIT_TIME_FOR_ALL_TO_JOIN, MAX_WAIT_TIME_DEFAULT);
   }
 
   public static long maxWaitTimeOnBarrier(Config cfg) {
     return cfg.getLongValue(MAX_WAIT_TIME_ON_BARRIER, MAX_WAIT_TIME_DEFAULT);
+  }
+
+  public static long maxWaitTimeOnInitBarrier(Config cfg) {
+    return cfg.getLongValue(MAX_WAIT_TIME_ON_INIT_BARRIER, MAX_WAIT_TIME_ON_INIT_BARRIER_DEFAULT);
   }
 
 }

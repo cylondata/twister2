@@ -96,7 +96,7 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
     this.managedWorker = worker;
 
     // we default to three retries
-    this.maxRetries = FaultToleranceContext.failureRetries(config);
+    this.maxRetries = FaultToleranceContext.maxFailureRetries(config);
 
     WorkerRuntime.addWorkerFailureListener(this);
     WorkerRuntime.addAllJoinedListener(this);
@@ -107,87 +107,45 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
    * Start the worker manager
    */
   public void start() {
-    while (retries < maxRetries) {
+    while (JobProgress.getWorkerExecuteCount() < maxRetries) {
 
-      // if the job is faulty, wait failed workers to restart
-      if (JobProgress.isJobFaulty()) {
-        waitFailedWorkersToRestart();
-        if (failedWorkers.isEmpty()) {
-          JobProgressImpl.setJobStatus(JobProgress.JobStatus.RESTARTING);
-          LOG.warning("Job moves into RESTARTING stage after a fault.");
-        } else {
-          // if timed out and not all workers restarted, finish execution
-          return;
-        }
+      LOG.info("Waiting on the init barrier before starting IWorker: " + workerID
+          + " with restartCount: " + workerController.workerRestartCount()
+          + " and with re-executionCount: " + JobProgress.getWorkerExecuteCount());
+      try {
+        workerController.waitOnInitBarrier();
+      } catch (TimeoutException e) {
+        throw new Twister2RuntimeException("Could not pass through the init barrier", e);
       }
 
+      LOG.fine("Proceeded through INIT barrier. Starting Worker: " + workerID);
+      JobProgressImpl.setJobStatus(JobProgress.JobStatus.EXECUTING);
+      JobProgressImpl.increaseWorkerExecuteCount();
+      JobProgressImpl.setRestartedWorkers(restartedWorkers);
+      try {
+        managedWorker.execute(
+            config, workerID, workerController, persistentVolume, volatileVolume);
+      } catch (JobFaultyException cue) {
+        // a worker in the cluster should have failed
+        // we will try to re-execute this worker
+        JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
+        LOG.warning("thrown JobFaultyException. Some workers should have failed.");
+      }
+
+      // we are still in a good state, so we can stop
       if (JobProgress.isJobHealthy()) {
-
-        LOG.info("Waiting on the init barrier before starting IWorker: " + workerID
-            + " with restartCount: " + workerController.workerRestartCount());
-        try {
-          workerController.waitOnInitBarrier();
-        } catch (TimeoutException e) {
-          throw new Twister2RuntimeException("Could not pass through the init barrier", e);
-        }
-
-        LOG.info("StartingWorker: " + workerID
-            + " with restartCount: " + workerController.workerRestartCount());
-        JobProgressImpl.setJobStatus(JobProgress.JobStatus.EXECUTING);
-        JobProgressImpl.increaseWorkerExecuteCount();
-        JobProgressImpl.setRestartedWorkers(restartedWorkers);
-        try {
-          managedWorker.execute(
-              config, workerID, workerController, persistentVolume, volatileVolume);
-          retries++;
-        } catch (JobFaultyException cue) {
-          // a worker in the cluster should have failed
-          // we will try to re-execute this worker
-          JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
-          LOG.warning("thrown JobFaultyException. Some workers should have failed.");
-        }
-
-        // we are still in a good state, so we can stop
-        if (JobProgress.isJobHealthy()) {
-          LOG.info("Worker finished successfully");
-          break;
-        }
-      }
-
-      // we break here
-      if (retries >= maxRetries) {
-        LOG.info(String.format("Retried %d times and failed, we are exiting", retries));
-        break;
-      }
-    }
-  }
-
-  private void waitFailedWorkersToRestart() {
-
-    long startTime = System.currentTimeMillis();
-    long maxWaitTime = FaultToleranceContext.waitTimeForFailedWorkers(config);
-
-    while (!failedWorkers.isEmpty()) {
-
-      long elapsedTime = System.currentTimeMillis() - startTime;
-      if (elapsedTime > maxWaitTime) {
-        LOG.warning("Waited " + maxWaitTime / 60000
-            + " minutes to recover the workers from failure, giving up");
+        LOG.info("Worker finished successfully");
         return;
       }
-      // lets sleep a little for avoid spinning
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException ignore) {
-      }
     }
+
+    LOG.info(String.format("Re-executed IWorker %d times and failed, we are exiting", maxRetries));
   }
 
   /**
    * todo: if a worker in the job fails before getting allWorkersJoined event,
-   *       there is nothing to be done
-   *       that worker should be restarted and it should rejoin.
-   * @param workerList
+   * there is nothing to be done
+   * that worker should be restarted and it should rejoin.
    */
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
