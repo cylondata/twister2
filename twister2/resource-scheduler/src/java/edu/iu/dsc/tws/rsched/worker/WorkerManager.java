@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.rsched.worker;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -23,7 +21,6 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
-import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -35,7 +32,7 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 /**
  * Keep information about a managed environment where workers can get restarted.
  */
-public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener {
+public class WorkerManager implements IWorkerFailureListener {
   private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
 
   /**
@@ -68,17 +65,13 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
    */
   private IVolatileVolume volatileVolume;
 
-  /**
-   * The current retries
-   */
-  private int retries = 0;
+  // job does not become faulty, if faults occur before proceeding the first barrier
+  private boolean firstInitBarrierProceeded = false;
 
   /**
    * Maximum retries
    */
   private final int maxRetries;
-
-  private Set<Integer> failedWorkers = new TreeSet<>();
 
   private List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
 
@@ -99,7 +92,6 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
     this.maxRetries = FaultToleranceContext.maxFailureRetries(config);
 
     WorkerRuntime.addWorkerFailureListener(this);
-    WorkerRuntime.addAllJoinedListener(this);
     JobProgressImpl.init();
   }
 
@@ -114,6 +106,7 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
           + " and with re-executionCount: " + JobProgress.getWorkerExecuteCount());
       try {
         workerController.waitOnInitBarrier();
+        firstInitBarrierProceeded = true;
       } catch (TimeoutException e) {
         throw new Twister2RuntimeException("Could not pass through the init barrier", e);
       }
@@ -142,24 +135,16 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
     LOG.info(String.format("Re-executed IWorker %d times and failed, we are exiting", maxRetries));
   }
 
-  /**
-   * todo: if a worker in the job fails before getting allWorkersJoined event,
-   * there is nothing to be done
-   * that worker should be restarted and it should rejoin.
-   */
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
-
   @Override
   public void failed(int wID) {
 
-    // set the status to fail and notify
-    JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
-    failedWorkers.add(wID);
+    // ignore failure events if the first INIT barrier is not proceeded
+    if (!firstInitBarrierProceeded) {
+      LOG.fine("Worker failure event received before first init barrier. Failed worker: " + wID);
+      return;
+    }
 
-    // job is becoming faulty, clear restartedWorkers set
+    // job is becoming faulty
     if (JobProgress.isJobHealthy()) {
       faultOccurred(wID);
     }
@@ -167,10 +152,15 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
 
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
-    failedWorkers.remove(workerInfo.getWorkerID());
-    JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
 
-    // job is becoming faulty, clear restartedWorkers set
+    // ignore failure events if the first INIT barrier is not proceeded
+    if (!firstInitBarrierProceeded) {
+      LOG.fine("Worker restarted event received before first init barrier. Restarted worker: "
+          + workerInfo.getWorkerID());
+      return;
+    }
+
+    // job is becoming faulty
     if (JobProgress.isJobHealthy()) {
       faultOccurred(workerInfo.getWorkerID());
     }
@@ -184,6 +174,9 @@ public class WorkerManager implements IWorkerFailureListener, IAllJoinedListener
    * it must be called once only
    */
   private void faultOccurred(int wID) {
+
+    // set the status to FAULTY
+    JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
 
     // job is becoming faulty, clear restartedWorkers set
     LOG.warning("A fault occurred. Job moves into the FAULTY stage.");

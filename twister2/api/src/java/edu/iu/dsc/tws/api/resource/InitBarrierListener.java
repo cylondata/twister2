@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
-public interface IBarrierListener {
+public interface InitBarrierListener {
 
   /**
    * invoked when all workers in a job arrived at the barrier

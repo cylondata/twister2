@@ -11,40 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.faulttolerance.JobFaultListener;
-import edu.iu.dsc.tws.api.resource.IBarrierListener;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.resource.InitBarrierListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListener {
+public class JobFailureWatcher implements IWorkerFailureListener, InitBarrierListener {
   private static final Logger LOG = Logger.getLogger(JobFailureWatcher.class.getName());
 
   private JobFaultListener jobFaultListener;
 
-  // i keep workerIDs as String
-  // not to perform accidentally index based operations in the list such as remove
-  private List<String> failedWorkers = new ArrayList<>();
-
   // job becomes faulty when worker(s) fail
-  // after failures, all workers need to be restarted and they all arrive at the next barrier
+  // after failures, all workers need to be restarted and
+  // they all need to arrive at the next init barrier
   private boolean jobFaulty = false;
+
+  // job does not become faulty, if faults occur before proceeding the first barrier
+  // todo: we need to set this properly when JM restarted
+  private boolean firstInitBarrierProceeded = false;
+
+  public boolean isJobFaulty() {
+    return jobFaulty;
+  }
 
   public void setJobFaultListener(JobFaultListener jobFaultListener) {
     this.jobFaultListener = jobFaultListener;
   }
 
+  /**
+   * this is only called for INIT barrier
+   */
   @Override
   public void allArrived() {
-    if (jobFaultListener == null) {
-      return;
-    }
+    firstInitBarrierProceeded = true;
+    jobFaulty = false;
 
-    if (jobFaulty && failedWorkers.isEmpty()) {
-      jobFaulty = false;
+    if (jobFaultListener != null) {
       LOG.fine("Calling faultRestored()");
       jobFaultListener.faultRestored();
     }
@@ -52,33 +56,35 @@ public class JobFailureWatcher implements IWorkerFailureListener, IBarrierListen
 
   @Override
   public void failed(int workerID) {
-    if (jobFaultListener == null) {
+    // ignore fault events if first INIT barrier is not proceeded
+    if (!firstInitBarrierProceeded) {
       return;
     }
 
-    if (!jobFaulty) {
-      jobBecomesFaulty();
-    }
-
-    failedWorkers.add(Integer.toString(workerID));
+    jobBecomesFaulty();
   }
 
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
-    if (jobFaultListener == null) {
+    // ignore fault events if first INIT barrier is not proceeded
+    if (!firstInitBarrierProceeded) {
       return;
     }
 
-    if (!jobFaulty) {
-      jobBecomesFaulty();
-    }
-
-    failedWorkers.remove(Integer.toString(workerInfo.getWorkerID()));
+    jobBecomesFaulty();
   }
 
   private void jobBecomesFaulty() {
-    jobFaulty = true;
-    LOG.fine("Calling faultOccurred()");
-    jobFaultListener.faultOccurred();
+
+    // we need to inform the listener only once for each fault
+    // so, we have this condition
+    if (!jobFaulty) {
+      jobFaulty = true;
+
+      if (jobFaultListener != null) {
+        LOG.fine("Calling faultOccurred()");
+        jobFaultListener.faultOccurred();
+      }
+    }
   }
 }

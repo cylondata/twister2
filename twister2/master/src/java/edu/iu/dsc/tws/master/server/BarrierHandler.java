@@ -32,7 +32,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
-import edu.iu.dsc.tws.api.resource.IBarrierListener;
+import edu.iu.dsc.tws.api.resource.InitBarrierListener;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -52,12 +52,12 @@ public class BarrierHandler implements MessageHandler {
   private HashMap<Integer, RequestID> defaultWaitList;
   private HashMap<Integer, RequestID> initWaitList;
   private RRServer rrServer;
-  private IBarrierListener barrierListener;
+  private InitBarrierListener initBarrierListener;
 
-  public BarrierHandler(WorkerMonitor workerMonitor, RRServer rrServer, IBarrierListener bl) {
+  public BarrierHandler(WorkerMonitor workerMonitor, RRServer rrServer, InitBarrierListener bl) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
-    this.barrierListener = bl;
+    this.initBarrierListener = bl;
     defaultWaitList = new HashMap<>();
     initWaitList = new HashMap<>();
   }
@@ -132,8 +132,8 @@ public class BarrierHandler implements MessageHandler {
     if (initWaitList.size() == numberOfWorkersOnInitBarrier) {
 
       // first let the barrier listener know
-      if (barrierListener != null) {
-        barrierListener.allArrived();
+      if (initBarrierListener != null) {
+        initBarrierListener.allArrived();
       }
 
       // send response messages to all workers

@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
-import edu.iu.dsc.tws.api.resource.IBarrierListener;
+import edu.iu.dsc.tws.api.resource.InitBarrierListener;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
@@ -505,7 +505,7 @@ public class JobMaster {
   /**
    * initialize ZKMasterController if ZooKeeper used
    */
-  private void initZKMasterController(WorkerMonitor wMonitor, IBarrierListener barrierListener)
+  private void initZKMasterController(WorkerMonitor wMonitor, InitBarrierListener barrierListener)
       throws Twister2Exception {
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
