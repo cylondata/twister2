@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.sets.batch;
+package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -24,14 +24,23 @@ import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.api.tset.table.TableSchema;
-import edu.iu.dsc.tws.tset.ops.RowSinkOp;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 
-public class RowStoredTSet extends BatchRowTSetImpl implements StorableTBase<Row> {
+public abstract class RowStoredTSet extends BatchRowTSetImpl implements StorableTBase<Row> {
   // batch keyed comms only output iterators
   private String storedSourcePrefix;
-  private SinkFunc<Row> storingSinkFunc;
+  private SinkFunc<?> storingSinkFunc;
   protected RowSourceTSet storedSource;
+
+  RowStoredTSet(BatchTSetEnvironment tSetEnv, String name,
+                  SinkFunc<?> storingSinkFn, int parallelism,
+                  TableSchema inputSchema) {
+    super(tSetEnv, name, parallelism, inputSchema);
+    this.storingSinkFunc = storingSinkFn;
+    this.storedSourcePrefix = "kstored(" + getId() + ")";
+  }
 
   @Override
   public BatchTLink<Iterator<Row>, Row> partition(PartitionFunc<Row> partitionFn,
@@ -70,12 +79,12 @@ public class RowStoredTSet extends BatchRowTSetImpl implements StorableTBase<Row
   }
 
   @Override
-  public INode getINode() {
-    return new RowSinkOp(storingSinkFunc, this, getInputs());
+  public TableSchema getInputSchema() {
+    return (TableSchema) super.getInputSchema();
   }
 
   @Override
-  public TableSchema getInputSchema() {
-    return (TableSchema) super.getInputSchema();
+  public INode getINode() {
+    return new RowSinkOp();
   }
 }

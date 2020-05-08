@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.examples.tset.batch.AllGatherExample;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.RowSourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.row.RowSourceTSet;
 
 public class RowTSetExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(RowTSetExample.class.getName());
