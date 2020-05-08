@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.worker;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,7 +41,7 @@ public class JobProgressImpl extends JobProgress {
     workerExecuteCount++;
   }
 
-  public static void setRestartedWorkers(List<JobMasterAPI.WorkerInfo> restartedWorkers1) {
+  public static void setRestartedWorkers(Collection<JobMasterAPI.WorkerInfo> restartedWorkers1) {
     restartedWorkers.clear();
     restartedWorkers.addAll(restartedWorkers1);
   }

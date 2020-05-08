@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.worker;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -73,7 +73,7 @@ public class WorkerManager implements IWorkerFailureListener {
    */
   private final int maxRetries;
 
-  private List<JobMasterAPI.WorkerInfo> restartedWorkers = new LinkedList<>();
+  private Map<Integer, JobMasterAPI.WorkerInfo> restartedWorkers = new TreeMap<>();
 
   public WorkerManager(Config config,
                        int workerID,
@@ -114,7 +114,7 @@ public class WorkerManager implements IWorkerFailureListener {
       LOG.fine("Proceeded through INIT barrier. Starting Worker: " + workerID);
       JobProgressImpl.setJobStatus(JobProgress.JobStatus.EXECUTING);
       JobProgressImpl.increaseWorkerExecuteCount();
-      JobProgressImpl.setRestartedWorkers(restartedWorkers);
+      JobProgressImpl.setRestartedWorkers(restartedWorkers.values());
       try {
         managedWorker.execute(
             config, workerID, workerController, persistentVolume, volatileVolume);
@@ -165,7 +165,7 @@ public class WorkerManager implements IWorkerFailureListener {
       faultOccurred(workerInfo.getWorkerID());
     }
 
-    restartedWorkers.add(workerInfo);
+    restartedWorkers.put(workerInfo.getWorkerID(), workerInfo);
   }
 
   /**
