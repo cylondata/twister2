@@ -34,14 +34,14 @@ public abstract class BaseOp implements Receptor, Serializable {
   // map (TSetID --> input Name)
   private Map<String, String> rcvTSets;
 
-  BaseOp() {
+  protected BaseOp() {
   }
 
-  BaseOp(BaseTSet originTSet) {
+  protected BaseOp(BaseTSet originTSet) {
     this(originTSet, Collections.emptyMap());
   }
 
-  BaseOp(BaseTSet originTSet, Map<String, String> receivableTSets) {
+  protected BaseOp(BaseTSet originTSet, Map<String, String> receivableTSets) {
     this.receivables = IONames.declare(receivableTSets.keySet());
     this.rcvTSets = receivableTSets;
 
@@ -64,7 +64,7 @@ public abstract class BaseOp implements Receptor, Serializable {
     return receivables;
   }
 
-  TSetContext gettSetContext() {
+  protected TSetContext gettSetContext() {
     return tSetContext;
   }
 }

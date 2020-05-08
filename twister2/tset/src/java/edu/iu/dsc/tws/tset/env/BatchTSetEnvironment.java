@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.TextBasedSourceFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
-import edu.iu.dsc.tws.tset.sets.batch.RowSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.row.RowSourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
 

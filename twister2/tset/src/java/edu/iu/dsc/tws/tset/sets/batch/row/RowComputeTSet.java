@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.sets.batch;
+package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.tset.ops.RowComputeOp;
+import edu.iu.dsc.tws.tset.ops.row.RowComputeOp;
 
 public class RowComputeTSet extends BatchRowTSetImpl {
   private TFunction<Row, Row> computeFunc;

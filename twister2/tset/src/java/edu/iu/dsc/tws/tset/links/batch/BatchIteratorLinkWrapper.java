@@ -27,11 +27,12 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
  * @param <T> type
  */
 public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  protected BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n,
+                                     int sourceP, Schema schema) {
     super(env, n, sourceP, schema);
   }
 
-  BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  protected BatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
                            Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

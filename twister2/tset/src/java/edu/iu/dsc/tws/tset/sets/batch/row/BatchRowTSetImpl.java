@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.sets.batch;
+package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -23,13 +23,14 @@ import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.batch.RowDirectLink;
-import edu.iu.dsc.tws.tset.links.batch.RowPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.row.RowDirectLink;
+import edu.iu.dsc.tws.tset.links.batch.row.RowPartitionTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implements BatchRowTSet {
 
-  BatchRowTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism, Schema inputSchema) {
+  protected BatchRowTSetImpl(BatchTSetEnvironment tSetEnv, String name,
+                             int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
   }
 

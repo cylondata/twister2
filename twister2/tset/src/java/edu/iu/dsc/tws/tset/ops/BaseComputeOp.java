@@ -27,10 +27,10 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
 
-  BaseComputeOp() {
+  protected BaseComputeOp() {
   }
 
-  BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
+  protected BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
     super(originTSet, receivablesTSets);
   }
 
@@ -44,11 +44,11 @@ public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
 
   public abstract TFunction getFunction();
 
-  <T> void writeToEdges(T output) {
+  protected <T> void writeToEdges(T output) {
     multiEdgeOpAdapter.writeToEdges(output);
   }
 
-  void writeEndToEdges() {
+  protected void writeEndToEdges() {
     multiEdgeOpAdapter.writeEndToEdges();
   }
 

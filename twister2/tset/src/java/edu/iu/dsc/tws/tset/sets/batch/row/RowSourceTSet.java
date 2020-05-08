@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.sets.batch;
+package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.ops.RowSourceOp;
+import edu.iu.dsc.tws.tset.ops.row.RowSourceOp;
 
 public class RowSourceTSet extends BatchRowTSetImpl {
   private SourceFunc<Row> source;

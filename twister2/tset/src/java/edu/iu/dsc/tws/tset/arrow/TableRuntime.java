@@ -18,7 +18,7 @@ import org.apache.arrow.memory.RootAllocator;
  * worker environment and accessible through it.
  */
 public class TableRuntime {
-  public static final String TABLE_RUNTIME = "__table_runtime__";
+  public static final String TABLE_RUNTIME_CONF = "__table_runtime__";
 
   private RootAllocator rootAllocator;
 
