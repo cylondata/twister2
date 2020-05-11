@@ -28,8 +28,12 @@ public class FaultToleranceContext extends Context {
   public static final int FAILURE_TIMEOUT_DEFAULT = 10 * 1000;
 
   // maximum number of times to re-execute IWorker after some other workers failed in the job
-  public static final String MAX_FAILURE_RETRIES = "twister2.fault.tolerance.max.retries";
-  public static final int MAX_FAILURE_RETRIES_DEFAULT = 5;
+  public static final String MAX_REEXECUTES = "twister2.fault.tolerance.max.reexecutes";
+  public static final int MAX_REEXECUTES_DEFAULT = 5;
+
+  // maximum number of times to re-start worker JVMs after failures
+  public static final String MAX_RESTARTS = "twister2.fault.tolerance.max.restarts";
+  public static final int MAX_RESTARTS_DEFAULT = 5;
 
   public static boolean faultTolerant(Config cfg) {
     return cfg.getBooleanValue(FAULT_TOLERANT, FAULT_TOLERANT_DEFAULT);
@@ -39,8 +43,12 @@ public class FaultToleranceContext extends Context {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);
   }
 
-  public static int maxFailureRetries(Config cfg) {
-    return cfg.getIntegerValue(MAX_FAILURE_RETRIES, MAX_FAILURE_RETRIES_DEFAULT);
+  public static int maxReExecutes(Config cfg) {
+    return cfg.getIntegerValue(MAX_REEXECUTES, MAX_REEXECUTES_DEFAULT);
+  }
+
+  public static int maxRestarts(Config cfg) {
+    return cfg.getIntegerValue(MAX_RESTARTS, MAX_RESTARTS_DEFAULT);
   }
 
 }

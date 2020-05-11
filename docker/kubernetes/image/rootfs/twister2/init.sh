@@ -31,7 +31,7 @@ java -Xms${JVM_MEMORY_MB}m -Xmx${JVM_MEMORY_MB}m \
 result=$?
 
 if [ $result -eq 0 ]; then
-  echo "$CLASS_TO_RUN completed successfully. Waiting the pod to be deleted."
+  echo "$CLASS_TO_RUN completed. Waiting the pod to be deleted."
   sleep infinity
 else
   echo "$CLASS_TO_RUN has not completed successfully. return code: $result"

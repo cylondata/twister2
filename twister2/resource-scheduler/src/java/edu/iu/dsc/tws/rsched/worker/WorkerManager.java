@@ -89,16 +89,18 @@ public class WorkerManager implements IWorkerFailureListener {
     this.managedWorker = worker;
 
     // we default to three retries
-    this.maxRetries = FaultToleranceContext.maxFailureRetries(config);
+    this.maxRetries = FaultToleranceContext.maxReExecutes(config);
 
     WorkerRuntime.addWorkerFailureListener(this);
     JobProgressImpl.init();
   }
 
   /**
-   * Start the worker manager
+   * Execute IWorker
+   * return false if IWorker fails after retries
+   * return true otherwise
    */
-  public void start() {
+  public boolean execute() {
     while (JobProgress.getWorkerExecuteCount() < maxRetries) {
 
       LOG.info("Waiting on the init barrier before starting IWorker: " + workerID
@@ -128,11 +130,12 @@ public class WorkerManager implements IWorkerFailureListener {
       // we are still in a good state, so we can stop
       if (JobProgress.isJobHealthy()) {
         LOG.info("Worker finished successfully");
-        return;
+        return true;
       }
     }
 
     LOG.info(String.format("Re-executed IWorker %d times and failed, we are exiting", maxRetries));
+    return false;
   }
 
   @Override

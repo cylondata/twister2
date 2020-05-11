@@ -1,6 +1,6 @@
 # Enable or disable checkpointing
 twister2.checkpointing.enable: false
-
+s
 # The implementation of the store to be used
 #twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore
 twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore
@@ -32,4 +32,8 @@ twister2.fault.tolerance.failure.timeout: 10000
 
 # maximum number of times to re-execute IWorker after some other workers failed in the job
 # default value is 5
-twister2.fault.tolerance.max.retries: 5
+twister2.fault.tolerance.max.reexecutes: 5
+
+# maximum number of times to re-start a worker from JVM
+# default value is 5
+twister2.fault.tolerance.max.restarts: 5

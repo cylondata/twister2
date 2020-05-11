@@ -589,6 +589,10 @@ public class ZKMasterController {
     if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
       workerMonitor.completed(workerID);
     }
+
+    if (workerWithState.getState() == JobMasterAPI.WorkerState.FULLY_FAILED) {
+      workerMonitor.fullyFailed(workerID);
+    }
   }
 
   /**

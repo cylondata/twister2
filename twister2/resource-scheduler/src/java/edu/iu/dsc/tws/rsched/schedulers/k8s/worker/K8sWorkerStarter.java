@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
@@ -164,6 +165,15 @@ public final class K8sWorkerStarter {
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
+    // if this worker is restarted equal or more times than max restart config paramter,
+    // finish up this worker
+    if (restartCount >= FaultToleranceContext.maxRestarts(config)) {
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+      WorkerRuntime.close();
+      externallyKilled = false;
+      return;
+    }
+
     // add shut down hook
     addShutdownHook(workerStatusUpdater);
 
@@ -180,11 +190,15 @@ public final class K8sWorkerStarter {
     });
 
     // start the worker
-    startWorker(workerController, pv);
+    boolean completed = startWorker(workerController, pv);
 
-    // update worker status to COMPLETED
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
-
+    if (completed) {
+      // update worker status to COMPLETED
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+    } else {
+      // if not successfully completed, it means it is fully failed
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+    }
     WorkerRuntime.close();
     externallyKilled = false;
 
@@ -243,7 +257,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static boolean startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = job.getWorkerClassName();
@@ -263,7 +277,7 @@ public final class K8sWorkerStarter {
     }
     WorkerManager workerManager = new WorkerManager(config, workerID,
         workerController, pv, volatileVolume, worker);
-    workerManager.start();
+    return workerManager.execute();
   }
 
   /**

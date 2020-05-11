@@ -177,6 +177,13 @@ public class WorkerHandler implements MessageHandler {
       workerMonitor.failed(message.getWorkerID());
       return;
 
+    } else if (message.getState() == JobMasterAPI.WorkerState.FULLY_FAILED) {
+
+      LOG.fine("Worker [" + message.getWorkerID() + "] fully Failed. ");
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
+      workerMonitor.fullyFailed(message.getWorkerID());
+      return;
+
     } else {
       LOG.warning("Unrecognized WorkerStateChange message received. Ignoring and sending reply: \n"
           + message);

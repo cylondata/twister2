@@ -376,6 +376,21 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
+  public void fullyFailed(int workerID) {
+
+    LOG.severe("Worker: " + workerID + " FULLY_FAILED.");
+
+    // send worker state change message to dashboard
+    // todo: need to send FULLY_FAILED to dash
+    if (dashClient != null) {
+      dashClient.workerStateChange(workerID, JobMasterAPI.WorkerState.FAILED);
+    }
+
+    // the job shall fail
+    LOG.severe("The job is completing with failure.");
+    jobStateChanged(JobAPI.JobState.FAILED);
+  }
+
   public void workersScaledDown(int instancesRemoved) {
 
     // modify numberOfWorkers

@@ -37,6 +37,7 @@ enum WorkerState {
     ERROR = 4;
     UNASSIGNED = 5;
     KILLED = 6;
+    FULLY_FAILED = 7; // fully failed. will not try to restart. job should fail.
 }
 
 message NodeInfo {
