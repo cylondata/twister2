@@ -53,6 +53,7 @@ public class TWSTCPChannel implements TWSChannel {
 
   private TCPChannel channel;
   private IWorkerController workerController;
+  private long maxConnEstTime;
 
   @SuppressWarnings("VisibilityModifier")
   private class Request {
@@ -140,6 +141,7 @@ public class TWSTCPChannel implements TWSChannel {
     String localIp = wController.getWorkerInfo().getWorkerIP();
 
     workerController = wController;
+    maxConnEstTime = TCPContext.maxConnEstTime(config);
 
     channel = createChannel(config, localIp, workerPort, index);
     // now lets start listening before sending the ports to master,
@@ -169,7 +171,7 @@ public class TWSTCPChannel implements TWSChannel {
     // start the connections
     channel.startConnections(nInfos);
     // now lets wait for connections to be established
-    channel.waitForConnections();
+    channel.waitForConnections(maxConnEstTime);
 
     int pendingSize = CommunicationContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
@@ -207,8 +209,7 @@ public class TWSTCPChannel implements TWSChannel {
     // start the connections
     channel.startConnections(nInfos);
     // now lets wait for connections to be established
-    channel.waitForConnections();
-
+    channel.waitForConnections(maxConnEstTime);
   }
   /**
    * Start the TCP servers here

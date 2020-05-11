@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBiMap;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 
@@ -229,15 +230,30 @@ public class TCPChannel {
   /**
    * Wait for handshakes to happen between servers and clients
    */
-  public void waitForConnections() {
+  public void waitForConnections(long timeLimit) {
+    long start = System.currentTimeMillis();
+    long delay = 0;
+
     //now wait for the handshakes to happen
     while (clientsConnected != (networkInfoMap.size() - 1)
         || (clientsCompleted != networkInfoMap.size() - 1)) {
       looper.loop();
+
+      delay = System.currentTimeMillis() - start;
+      if (delay > timeLimit) {
+        throw new Twister2RuntimeException("Can not connect to all workers on the timeLimit: "
+            + timeLimit + " ms");
+      }
     }
 
     while (serverChannels.size() != networkInfoMap.size() - 1) {
       looper.loop();
+
+      delay = System.currentTimeMillis() - start;
+      if (delay > timeLimit) {
+        throw new Twister2RuntimeException("Not all workers connected on the timeLimit: "
+            + timeLimit + " ms");
+      }
     }
 
     LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
