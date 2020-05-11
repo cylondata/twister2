@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -166,16 +167,20 @@ public final class K8sWorkerStarter {
     // add shut down hook
     addShutdownHook(workerStatusUpdater);
 
-    // start the worker
-    try {
-      startWorker(workerController, pv);
-    } catch (Throwable t) {
-      // update worker status to FAILED
+    // on any uncaught exception, we will label the worker as FAILED and throw a RuntimeException
+    // JVM will be restarted by K8s
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      LOG.log(Level.SEVERE, "Uncaught exception in the thread "
+          + thread + ". Worker FAILED...", throwable);
+
       workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
       WorkerRuntime.close();
       externallyKilled = false;
-      throw t;
-    }
+      throw new RuntimeException("Worker failed with the exception", throwable);
+    });
+
+    // start the worker
+    startWorker(workerController, pv);
 
     // update worker status to COMPLETED
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
@@ -184,7 +189,8 @@ public final class K8sWorkerStarter {
     externallyKilled = false;
 
     // wait to be deleted by Job master
-    K8sWorkerUtils.waitIndefinitely();
+    // starting bash script waits for deletion after successful completion
+    // K8sWorkerUtils.waitIndefinitely();
   }
 
   /**

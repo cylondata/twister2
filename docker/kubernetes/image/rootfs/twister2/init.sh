@@ -29,7 +29,14 @@ java -Xms${JVM_MEMORY_MB}m -Xmx${JVM_MEMORY_MB}m \
   $CLASS_TO_RUN
 
 result=$?
-echo "$CLASS_TO_RUN is done. return code: $result"
-# return the exit code of twister2-worker or jm,
-# so that they will be restarted in case of failure
-exit $result
+
+if [ $result -eq 0 ]; then
+  echo "$CLASS_TO_RUN completed successfully. Waiting the pod to be deleted."
+  sleep infinity
+else
+  echo "$CLASS_TO_RUN has not completed successfully. return code: $result"
+  # return the exit code of twister2-worker or jm,
+  # so that they will be restarted in case of failure
+  exit $result
+fi
+
