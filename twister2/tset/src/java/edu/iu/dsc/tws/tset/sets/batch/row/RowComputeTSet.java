@@ -11,48 +11,50 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sets.batch.row;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.tset.ops.row.RowComputeOp;
+import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
 
 public class RowComputeTSet extends BatchRowTSetImpl {
-  private TFunction<Row, Row> computeFunc;
+  private TFunction<Row, Iterator<Row>> computeFunc;
 
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<Row, Row> computeFn,
-                     int parallelism, Schema inputSchema) {
+  public RowComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<Row, Iterator<Row>> computeFn,
+                     int parallelism, TableSchema inputSchema) {
     this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
   }
 
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorFunc<Row, Row> computeFn,
-                     int parallelism, Schema inputSchema) {
+  public RowComputeTSet(BatchTSetEnvironment tSetEnv,
+                        ComputeCollectorFunc<Row, Iterator<Row>> computeFn, int parallelism,
+                        TableSchema inputSchema) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
   }
 
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeFunc<Row, Row> computeFn,
-                     int parallelism, Schema inputSchema) {
+  public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
+                        ComputeFunc<Row, Iterator<Row>> computeFn,
+                     int parallelism, TableSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
-                        ComputeCollectorFunc<Row, Row> computeFn,
-                        int parallelism, Schema inputSchema) {
+                        ComputeCollectorFunc<Row, Iterator<Row>> computeFn,
+                        int parallelism, TableSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
+
   @Override
   public INode getINode() {
-    if (computeFunc instanceof ComputeFunc) {
-      return new RowComputeOp((ComputeFunc<Row, Row>) computeFunc, this, getInputs());
-    } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<Row, Row>) computeFunc, this,
-          getInputs());
+    if (computeFunc instanceof ComputeCollectorFunc) {
+      return new RowComupteCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
+          this, getInputs());
     }
 
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);
@@ -63,7 +65,7 @@ public class RowComputeTSet extends BatchRowTSetImpl {
    *
    * @return the compute function
    */
-  public TFunction<Row, Row> getComputeFunc() {
+  public TFunction<Row, Iterator<Row>> getComputeFunc() {
     return computeFunc;
   }
 }

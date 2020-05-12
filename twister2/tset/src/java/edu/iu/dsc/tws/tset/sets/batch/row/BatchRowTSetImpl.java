@@ -12,16 +12,16 @@
 package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.row.RowDirectLink;
 import edu.iu.dsc.tws.tset.links.batch.row.RowPartitionTLink;
@@ -39,16 +39,16 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> partition(PartitionFunc<Row> partitionFn,
-                                                  int targetParallelism) {
+  public BatchRowTLink partition(PartitionFunc<Row> partitionFn,
+                                                     int targetParallelism) {
     RowPartitionTLink partition = new RowPartitionTLink(getTSetEnv(), partitionFn,
-        getParallelism(), targetParallelism, getOutputSchema());
+        getParallelism(), targetParallelism, (TableSchema) getOutputSchema());
     addChildToGraph(partition);
     return partition;
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> join(BatchRowTSet rightTSet,
+  public BatchRowTLink join(BatchRowTSet rightTSet,
                                              CommunicationContext.JoinType type,
                                              Comparator<Row> keyComparator) {
     return null;
@@ -60,9 +60,9 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> direct() {
+  public BatchRowTLink direct() {
     RowDirectLink direct = new RowDirectLink(getTSetEnv(),
-        getParallelism(), getOutputSchema());
+        getParallelism(), (TableSchema) getOutputSchema());
     addChildToGraph(direct);
     return direct;
   }
@@ -100,7 +100,7 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
   }
 
   @Override
-  public BatchRowTSet withSchema(Schema schema) {
+  public BatchRowTSet withSchema(TableSchema schema) {
     this.setOutputSchema(schema);
     return this;
   }

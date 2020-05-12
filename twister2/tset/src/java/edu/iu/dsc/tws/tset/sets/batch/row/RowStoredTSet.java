@@ -12,14 +12,13 @@
 package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
@@ -31,11 +30,11 @@ import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 public abstract class RowStoredTSet extends BatchRowTSetImpl implements StorableTBase<Row> {
   // batch keyed comms only output iterators
   private String storedSourcePrefix;
-  private SinkFunc<?> storingSinkFunc;
+  private SinkFunc<Row> storingSinkFunc;
   protected RowSourceTSet storedSource;
 
   RowStoredTSet(BatchTSetEnvironment tSetEnv, String name,
-                  SinkFunc<?> storingSinkFn, int parallelism,
+                  SinkFunc<Row> storingSinkFn, int parallelism,
                   TableSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = storingSinkFn;
@@ -43,20 +42,20 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> partition(PartitionFunc<Row> partitionFn,
-                                                  int targetParallelism) {
+  public BatchRowTLink partition(PartitionFunc<Row> partitionFn,
+                                                     int targetParallelism) {
     return getStoredSourceTSet().partition(partitionFn, targetParallelism);
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> join(BatchRowTSet rightTSet,
+  public BatchRowTLink join(BatchRowTSet rightTSet,
                                              CommunicationContext.JoinType type,
                                              Comparator<Row> keyComparator) {
     return getStoredSourceTSet().join(rightTSet, type, keyComparator);
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> direct() {
+  public BatchRowTLink direct() {
     return getStoredSourceTSet().direct();
   }
 
@@ -85,6 +84,6 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
 
   @Override
   public INode getINode() {
-    return new RowSinkOp();
+    return new RowSinkOp(storingSinkFunc, this, getInputs());
   }
 }

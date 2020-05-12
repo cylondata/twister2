@@ -14,11 +14,12 @@ package edu.iu.dsc.tws.tset.sets.batch.row;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
+import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class RowCachedTSet extends RowStoredTSet {
-  public RowCachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc,
+  public RowCachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Row> sinkFunc,
                          int parallelism, TableSchema inputSchema) {
     super(tSetEnv, "kcached", sinkFunc, parallelism, inputSchema);
   }
@@ -29,7 +30,7 @@ public class RowCachedTSet extends RowStoredTSet {
   }
 
   public RowCachedTSet withSchema(TupleSchema schema) {
-    return (RowCachedTSet) super.withSchema(schema);
+    return (RowCachedTSet) super.withSchema((TableSchema) schema);
   }
 
   @Override

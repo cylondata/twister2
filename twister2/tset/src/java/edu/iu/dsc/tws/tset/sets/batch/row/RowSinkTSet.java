@@ -17,12 +17,13 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
-public class RowSinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingData<T> {
-  private SinkFunc<T> sinkFunc;
+public class RowSinkTSet extends BaseTSetWithSchema<Row> implements AcceptingData<Row> {
+  private SinkFunc<Row> sinkFunc;
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
@@ -30,7 +31,7 @@ public class RowSinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingDa
    * @param tSetEnv The TSetEnv used for execution
    * @param s       The Sink function to be used
    */
-  public RowSinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s, Schema inputSchema) {
+  public RowSinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Row> s, Schema inputSchema) {
     this(tSetEnv, s, 1, inputSchema);
   }
 
@@ -41,7 +42,7 @@ public class RowSinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingDa
    * @param sinkFn      The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public RowSinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism,
+  public RowSinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Row> sinkFn, int parallelism,
                   Schema inputSchema) {
     super(tSetEnv, "sink", parallelism, inputSchema);
     this.sinkFunc = sinkFn;
