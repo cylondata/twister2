@@ -57,21 +57,13 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     PersistedTSet<String> persisted = source.direct().persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted initial raw data");
 
-    if (env.getWorkerID() == 2 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-      }
-      throw new RuntimeException("intentionally killed");
-    }
-
-    if (env.getWorkerID() == 1 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
-      try {
-        Thread.sleep(20000);
-      } catch (InterruptedException e) {
-      }
-      throw new RuntimeException("intentionally killed");
-    }
+//    if (env.getWorkerID() == 1 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
+//      try {
+//        Thread.sleep(6000);
+//      } catch (InterruptedException e) {
+//      }
+//      throw new RuntimeException("intentionally killed");
+//    }
 
     // map the words to a tuple, with <word, 1>, 1 is the count
     KeyedTSet<String, Integer> groupedWords = persisted.mapToTuple(w -> new Tuple<>(w, 1));
@@ -84,6 +76,15 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
 
     // write to log for testing
     persistedKeyedReduced.keyedDirect().forEach(c -> LOG.info(c.toString()));
+
+    if (env.getWorkerID() == 2 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
+      try {
+        Thread.sleep(10000);
+      } catch (InterruptedException e) {
+      }
+      throw new RuntimeException("intentionally killed");
+    }
+
   }
 
   /**
