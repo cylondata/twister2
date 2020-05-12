@@ -11,37 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch.row;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
-import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
-import edu.iu.dsc.tws.tset.links.batch.BatchIteratorLinkWrapper;
 
-public class RowDirectLink extends BatchIteratorLinkWrapper<Row> {
+public class RowDirectLink extends RowBatchTLinkImpl {
   private boolean useDisk = false;
 
   private RowDirectLink() {
     //non arg constructor for kryp
   }
 
-  public RowDirectLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+  public RowDirectLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, TableSchema schema) {
     super(tSetEnv, "direct", sourceParallelism, schema);
   }
 
   public RowDirectLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism,
-                     Schema schema) {
+                     TableSchema schema) {
     super(tSetEnv, name, sourceParallelism, schema);
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> setName(String name) {
+  public RowDirectLink setName(String name) {
     rename(name);
     return this;
   }

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -20,11 +19,11 @@ import edu.iu.dsc.tws.api.tset.StoringData;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
-import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
 
 public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row> {
   /**
@@ -32,13 +31,29 @@ public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row
    *
    * @return Keyed Direct TLink
    */
-  BatchTLink<Iterator<Row>, Row> direct();
+  BatchRowTLink direct();
 
-  BatchTLink<Iterator<Row>, Row> partition(PartitionFunc<Row> partitionFn, int targetParallelism);
+  /**
+   * Returns a Partition {@link TLink} that would partition data according based on a function
+   * provided. The parallelism of the target {@link TSet} can also be specified.
+   *
+   * @param partitionFn       Partition function
+   * @param targetParallelism Target parallelism
+   * @return Partition TLink
+   */
+  BatchRowTLink partition(PartitionFunc<Row> partitionFn, int targetParallelism);
 
-  BatchTLink<Iterator<Row>, Row> join(BatchRowTSet rightTSet,
-                                             CommunicationContext.JoinType type,
-                                             Comparator<Row> keyComparator);
+  /**
+   * Joins with another {@link BatchTupleTSet}. Note that this TSet will be considered the left
+   * TSet
+   *
+   * @param rightTSet     right tset
+   * @param type          {@link edu.iu.dsc.tws.api.comms.CommunicationContext.JoinType}
+   * @param keyComparator key comparator
+   * @return Joined TLink
+   */
+  BatchRowTLink join(BatchRowTSet rightTSet, CommunicationContext.JoinType type,
+                     Comparator<Row> keyComparator);
 
   /**
    * Sets the data type of the {@link TSet} output. This will be used in the packers for efficient
@@ -47,5 +62,5 @@ public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row
    * @param dataType data type as a {@link MessageType}
    * @return this {@link TSet}
    */
-  BatchRowTSet withSchema(Schema dataType);
+  BatchRowTSet withSchema(TableSchema dataType);
 }

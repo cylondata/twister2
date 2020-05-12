@@ -19,9 +19,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.examples.tset.batch.AllGatherExample;
@@ -49,7 +52,7 @@ public class RowTSetExample extends BatchTsetExample {
       }
     }, 4, TableSchema.make());
 
-    BatchTLink<Iterator<Row>, Row> partition = src.partition(new PartitionFunc<Row>() {
+    BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
       @Override
       public void prepare(Set<Integer> sources, Set<Integer> destinations) {
 
@@ -66,12 +69,19 @@ public class RowTSetExample extends BatchTsetExample {
       }
     }, 4);
 
-    partition.forEach(new ApplyFunc<Row>() {
+    BatchRowTSet compute = partition.compute(new ComputeCollectorFunc<Row, Iterator<Row>>() {
       @Override
-      public void apply(Row data) {
+      public void compute(Iterator<Row> input, RecordCollector<Row> output) {
 
       }
     });
+
+    partition.forEach(new ApplyFunc<Row>() {
+          @Override
+          public void apply(Row data) {
+
+          }
+        });
   }
 
 

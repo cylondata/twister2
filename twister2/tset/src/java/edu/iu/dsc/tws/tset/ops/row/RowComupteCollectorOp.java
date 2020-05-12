@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tset.ops.row;
 
 import java.util.Iterator;
@@ -46,7 +34,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
-  private ComputeCollectorFunc<Row, Row> computeFunction;
+  private ComputeCollectorFunc<Row, Iterator<Row>> computeFunction;
 
   private TableBuilder builder;
 
@@ -68,8 +56,8 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
   public RowComupteCollectorOp() {
   }
 
-  public RowComupteCollectorOp(ComputeCollectorFunc<Row, Row> computeFunction, BaseTSet origin,
-                               Map<String, String> receivables) {
+  public RowComupteCollectorOp(ComputeCollectorFunc<Row, Iterator<Row>> computeFunction,
+                               BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }
@@ -91,12 +79,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
   @Override
   public boolean execute(IMessage<Table> content) {
     CollectorImp collectorImp = new CollectorImp();
-
-    for (Iterator<Row> it = content.getContent().getRowIterator(); it.hasNext();) {
-      Row r = it.next();
-      computeFunction.compute(r, collectorImp);
-    }
-
+    computeFunction.compute(content.getContent().getRowIterator(), collectorImp);
     collectorImp.close();
     writeEndToEdges();
     computeFunction.close();

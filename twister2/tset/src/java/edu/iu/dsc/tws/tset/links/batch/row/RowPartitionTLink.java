@@ -11,48 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch.row;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
-import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TableSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
-import edu.iu.dsc.tws.tset.links.batch.BatchIteratorLinkWrapper;
 
-public class RowPartitionTLink extends BatchIteratorLinkWrapper<Row> {
+public class RowPartitionTLink extends RowBatchTLinkImpl {
   private boolean useDisk = false;
 
   private PartitionFunc<Row> partitionFunction;
 
-  public RowPartitionTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+  public RowPartitionTLink(BatchTSetEnvironment tSetEnv,
+                           int sourceParallelism, TableSchema schema) {
     this(tSetEnv, null, sourceParallelism, schema);
   }
 
   public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
-                        int sourceParallelism, Schema schema) {
+                        int sourceParallelism, TableSchema schema) {
     this(tSetEnv, parFn, sourceParallelism, sourceParallelism, schema);
   }
 
   public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
-                        int sourceParallelism, int targetParallelism, Schema schema) {
+                        int sourceParallelism, int targetParallelism, TableSchema schema) {
     super(tSetEnv, "partition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;
   }
 
   @Override
-  public BatchTLink<Iterator<Row>, Row> setName(String name) {
-    return null;
-  }
-
-  @Override
   public Edge getEdge() {
     Edge e = new Edge(getId(), OperationNames.PARTITION, MessageTypes.ARROW_TABLE);
+    if (partitionFunction != null) {
+      e.setPartitioner(partitionFunction);
+    }
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;
@@ -60,6 +56,12 @@ public class RowPartitionTLink extends BatchIteratorLinkWrapper<Row> {
 
   public RowPartitionTLink useDisk() {
     this.useDisk = true;
+    return this;
+  }
+
+  @Override
+  public TBase setName(String name) {
+    rename(name);
     return this;
   }
 }
