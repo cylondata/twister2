@@ -1,6 +1,6 @@
 # Enable or disable checkpointing
 twister2.checkpointing.enable: false
-s
+
 # The implementation of the store to be used
 #twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore
 twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore
