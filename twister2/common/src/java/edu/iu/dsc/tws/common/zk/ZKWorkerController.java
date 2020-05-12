@@ -834,6 +834,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
   }
 
+  @Override
+  public void waitOnBarrier() throws TimeoutException {
+    waitOnBarrier(ControllerContext.maxWaitTimeOnBarrier(config));
+  }
+
   /**
    * All workers create a znode on the barrier directory
    * Job master watches znode creations/removals on this directory
@@ -849,7 +854,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * if timeout is reached, throws TimeoutException.
    */
   @Override
-  public void waitOnBarrier() throws TimeoutException {
+  public void waitOnBarrier(long timeLimit) throws TimeoutException {
 
     // if the cluster is in a faulty state,
     // do not wait on the barrier
@@ -869,7 +874,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     // wait until all workers joined or time limit is reached
-    long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
     long startTime = System.currentTimeMillis();
 
     long delay = 0;

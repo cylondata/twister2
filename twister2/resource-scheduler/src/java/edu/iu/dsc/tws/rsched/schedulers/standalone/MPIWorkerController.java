@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
@@ -75,6 +76,11 @@ public class MPIWorkerController implements IWorkerController {
     } catch (MPIException e) {
       throw new Twister2RuntimeException("Failed to wait on barrier");
     }
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    waitOnBarrier();
   }
 
   @Override

@@ -74,6 +74,13 @@ public interface IWorkerController {
   void waitOnBarrier() throws TimeoutException, JobFaultyException;
 
   /**
+   * wait for all workers in the job to arrive at this barrier
+   * After waiting for the timeLimit,
+   * if some workers still could not arrive at the barrier, throw an exception
+   */
+  void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException;
+
+  /**
    * this barrier is used when initializing the workers.
    * when there is a failure in the job,
    * workers synchronize with this barrier

@@ -180,16 +180,26 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
+  @Override
   public void waitOnBarrier() throws TimeoutException {
-    sendBarrierRequest(JobMasterAPI.BarrierType.DEFAULT);
+    sendBarrierRequest(
+        JobMasterAPI.BarrierType.DEFAULT, ControllerContext.maxWaitTimeOnBarrier(config));
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException {
+    sendBarrierRequest(JobMasterAPI.BarrierType.DEFAULT, timeLimit);
   }
 
   @Override
   public void waitOnInitBarrier() throws TimeoutException {
-    sendBarrierRequest(JobMasterAPI.BarrierType.INIT);
+    sendBarrierRequest(
+        JobMasterAPI.BarrierType.INIT, ControllerContext.maxWaitTimeOnInitBarrier(config));
   }
 
-  private void sendBarrierRequest(JobMasterAPI.BarrierType barrierType) throws TimeoutException {
+  private void sendBarrierRequest(JobMasterAPI.BarrierType barrierType, long timeLimit)
+      throws TimeoutException {
+
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(workerInfo.getWorkerID())
         .setBarrierType(barrierType)
@@ -197,8 +207,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
     LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
-      Tuple<RequestID, Message> response = rrClient.sendRequestWaitResponse(barrierRequest,
-          ControllerContext.maxWaitTimeOnBarrier(config));
+      Tuple<RequestID, Message> response =
+          rrClient.sendRequestWaitResponse(barrierRequest, timeLimit);
       JobMasterAPI.BarrierResponse barrierResponse =
           (JobMasterAPI.BarrierResponse) response.getValue();
 

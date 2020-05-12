@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
@@ -159,6 +160,11 @@ public class MesosWorkerController implements IWorkerController {
   @Override
   public void waitOnBarrier() throws TimeoutException {
     zkWorkerController.waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    zkWorkerController.waitOnBarrier(timeLimit);
   }
 
   @Override

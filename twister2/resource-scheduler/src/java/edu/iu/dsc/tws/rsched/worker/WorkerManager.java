@@ -97,8 +97,9 @@ public class WorkerManager implements IWorkerFailureListener {
 
   /**
    * Execute IWorker
-   * return false if IWorker fails after retries
-   * return true otherwise
+   * return false if IWorker fails fully after retries
+   * return true if execution successful
+   * throw an exception if execution fails and the worker needs to be restarted from jvm
    */
   public boolean execute() {
     while (JobProgress.getWorkerExecuteCount() < maxRetries) {
@@ -127,10 +128,25 @@ public class WorkerManager implements IWorkerFailureListener {
         LOG.warning("thrown JobFaultyException. Some workers should have failed.");
       }
 
-      // we are still in a good state, so we can stop
+      // if the job is healthy, it means the worker finished successfully.
+      // we need to make sure whether all workers finish successfully also
       if (JobProgress.isJobHealthy()) {
-        LOG.info("Worker finished successfully");
-        return true;
+
+        try {
+          // wait on the barrier indefinitely until all workers arrive
+          // or the barrier is broken with with a job fault
+          LOG.info("Worker completed, waiting for other workers to finish at the final barrier.");
+          workerController.waitOnBarrier(Long.MAX_VALUE);
+          LOG.info("Worker finished successfully");
+          return true;
+        } catch (TimeoutException e) {
+          // this should never happen
+          throw new Twister2RuntimeException("Could not pass through the final barrier", e);
+        } catch (JobFaultyException e) {
+          JobProgressImpl.setJobStatus(JobProgress.JobStatus.FAULTY);
+          LOG.warning("thrown JobFaultyException. Some workers failed before finishing.");
+        }
+
       }
     }
 
