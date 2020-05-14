@@ -19,14 +19,14 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 
-public class TableSchema implements Schema {
+public class RowSchema implements Schema {
   private List<Field> types;
 
-  public static TableSchema make(Field... t) {
-    return new TableSchema(new ArrayList<>(Arrays.<Field>asList(t)));
+  public static RowSchema make(Field... t) {
+    return new RowSchema(new ArrayList<>(Arrays.<Field>asList(t)));
   }
 
-  public TableSchema(List<Field> types) {
+  public RowSchema(List<Field> types) {
     this.types = types;
   }
 

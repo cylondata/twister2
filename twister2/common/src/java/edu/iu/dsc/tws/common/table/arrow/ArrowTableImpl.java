@@ -9,33 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import org.apache.arrow.vector.IntVector;
+import java.util.List;
 
-public class Int4Column implements ArrowColumn<Integer> {
-  private IntVector vector;
+import org.apache.arrow.vector.types.pojo.Schema;
 
-  private int currentIndex;
+public class ArrowTableImpl {
+  private List<ArrowColumn> columns;
 
-  public Int4Column(IntVector intVector) {
-    this.vector = intVector;
-    this.currentIndex = 0;
+  private org.apache.arrow.vector.types.pojo.Schema schema;
+
+  public ArrowTableImpl(List<ArrowColumn> columns) {
+    this.columns = columns;
   }
 
-  @Override
-  public void addValue(Integer value) {
-    vector.setSafe(currentIndex, value);
-    currentIndex++;
+  public ArrowTableImpl(Schema schema, List<ArrowColumn> columns) {
+    this.columns = columns;
+    this.schema = schema;
   }
 
-  @Override
-  public Integer get(int index) {
-    return vector.get(index);
+  public Schema getSchema() {
+    return schema;
   }
 
-  @Override
-  public long currentSize() {
-    return vector.getBufferSize();
+  public List<ArrowColumn> getColumns() {
+    return columns;
   }
 }

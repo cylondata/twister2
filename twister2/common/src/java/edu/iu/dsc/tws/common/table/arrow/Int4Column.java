@@ -9,23 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import java.util.Iterator;
-import java.util.List;
+import org.apache.arrow.vector.IntVector;
 
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.Table;
+public class Int4Column implements ArrowColumn<Integer> {
+  private IntVector vector;
 
-public class ArrowTableImpl implements Table {
-  private List<ArrowColumn> columns;
+  private int currentIndex;
 
-  public ArrowTableImpl(List<ArrowColumn> columns) {
-    this.columns = columns;
+  public Int4Column(IntVector intVector) {
+    this.vector = intVector;
+    this.currentIndex = 0;
   }
 
   @Override
-  public Iterator<Row> getRowIterator() {
-    return null;
+  public void addValue(Integer value) {
+    vector.setSafe(currentIndex, value);
+    currentIndex++;
+  }
+
+  @Override
+  public Integer get(int index) {
+    return vector.get(index);
+  }
+
+  @Override
+  public long currentSize() {
+    return vector.getBufferSize();
   }
 }

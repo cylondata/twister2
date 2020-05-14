@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
 import edu.iu.dsc.tws.tset.fn.row.RowFlatMapCompute;
@@ -42,11 +42,11 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
     implements BatchRowTLink {
   RowBatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP,
-                    int targetP, TableSchema schema) {
+                    int targetP, RowSchema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
-  RowBatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, TableSchema schema) {
+  RowBatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, RowSchema schema) {
     super(env, n, sourceP, schema);
   }
 
@@ -63,10 +63,10 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
     RowComputeTSet set;
     if (n != null && !n.isEmpty()) {
       set = new RowComputeTSet(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          (TableSchema) getSchema());
+          (RowSchema) getSchema());
     } else {
       set = new RowComputeTSet(getTSetEnv(), computeFunction, getTargetParallelism(),
-          (TableSchema) getSchema());
+          (RowSchema) getSchema());
     }
     addChildToGraph(set);
 
@@ -102,7 +102,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
   @Override
   public StorableTBase<Row> lazyCache() {
     RowCachedTSet cacheTSet = new RowCachedTSet(getTSetEnv(), new CacheSingleSink<Row>(),
-        getTargetParallelism(), (TableSchema) getSchema());
+        getTargetParallelism(), (RowSchema) getSchema());
     addChildToGraph(cacheTSet);
     return cacheTSet;
   }
@@ -113,7 +113,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
         this.getId()
     );
     RowPersistedTSet persistedTSet = new RowPersistedTSet(getTSetEnv(),
-        diskPersistSingleSink, getTargetParallelism(), (TableSchema) getSchema());
+        diskPersistSingleSink, getTargetParallelism(), (RowSchema) getSchema());
     addChildToGraph(persistedTSet);
     return persistedTSet;
   }

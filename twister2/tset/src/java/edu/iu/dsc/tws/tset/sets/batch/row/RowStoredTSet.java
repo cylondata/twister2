@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
@@ -35,7 +35,7 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
 
   RowStoredTSet(BatchTSetEnvironment tSetEnv, String name,
                   SinkFunc<Row> storingSinkFn, int parallelism,
-                  TableSchema inputSchema) {
+                  RowSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = storingSinkFn;
     this.storedSourcePrefix = "kstored(" + getId() + ")";
@@ -70,7 +70,7 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
       // this cache source will consume the data object created by the execution of this tset.
       // hence this tset ID needs to be set as an input to the cache source
       this.storedSource = getTSetEnv().createRowSource(storedSourcePrefix,
-          new DataPartitionSourceFunc<>(storedSourcePrefix), getParallelism(), TableSchema.make());
+          new DataPartitionSourceFunc<>(storedSourcePrefix), getParallelism(), RowSchema.make());
       this.storedSource.addInput(storedSourcePrefix, this);
     }
 
@@ -78,8 +78,8 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
   }
 
   @Override
-  public TableSchema getInputSchema() {
-    return (TableSchema) super.getInputSchema();
+  public RowSchema getInputSchema() {
+    return (RowSchema) super.getInputSchema();
   }
 
   @Override

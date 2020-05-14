@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
 
@@ -26,26 +26,26 @@ public class RowComputeTSet extends BatchRowTSetImpl {
   private TFunction<Row, Iterator<Row>> computeFunc;
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<Row, Iterator<Row>> computeFn,
-                     int parallelism, TableSchema inputSchema) {
+                     int parallelism, RowSchema inputSchema) {
     this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
   }
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn, int parallelism,
-                        TableSchema inputSchema) {
+                        RowSchema inputSchema) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
   }
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
                         ComputeFunc<Row, Iterator<Row>> computeFn,
-                     int parallelism, TableSchema inputSchema) {
+                     int parallelism, RowSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn,
-                        int parallelism, TableSchema inputSchema) {
+                        int parallelism, RowSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }

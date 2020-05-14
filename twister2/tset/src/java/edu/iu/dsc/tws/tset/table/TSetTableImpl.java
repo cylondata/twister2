@@ -9,34 +9,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.tset.table;
 
-import org.apache.arrow.vector.VarCharVector;
-import org.apache.arrow.vector.util.Text;
+import java.util.Iterator;
+import java.util.List;
 
-public class StringColumn implements ArrowColumn<Text> {
-  private VarCharVector vector;
+import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.TSetTable;
+import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.arrow.ArrowColumn;
 
-  private int currentIndex;
+public class TSetTableImpl implements TSetTable {
+  private Table table;
 
-  public StringColumn(VarCharVector stringVector) {
-    this.vector = stringVector;
-    this.currentIndex = 0;
+  public TSetTableImpl(List<ArrowColumn> columns) {
+
+  }
+
+  public TSetTableImpl(Table table) {
+    this.table = table;
   }
 
   @Override
-  public void addValue(Text value) {
-    vector.setSafe(currentIndex, value);
-    currentIndex++;
+  public Table table() {
+    return null;
   }
 
   @Override
-  public Text get(int index) {
-    return new Text(vector.get(index));
-  }
-
-  @Override
-  public long currentSize() {
-    return vector.sizeOfValueBuffer();
+  public Iterator<Row> getRowIterator() {
+    return null;
   }
 }

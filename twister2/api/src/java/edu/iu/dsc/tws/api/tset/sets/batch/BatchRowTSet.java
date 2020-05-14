@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 
 public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row> {
   /**
@@ -62,5 +62,5 @@ public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row
    * @param dataType data type as a {@link MessageType}
    * @return this {@link TSet}
    */
-  BatchRowTSet withSchema(TableSchema dataType);
+  BatchRowTSet withSchema(RowSchema dataType);
 }

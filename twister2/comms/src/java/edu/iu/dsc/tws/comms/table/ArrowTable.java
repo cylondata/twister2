@@ -21,5 +21,4 @@ import org.apache.arrow.vector.FieldVector;
 public class ArrowTable {
   private List<FieldVector> fieldVectors;
 
-
 }

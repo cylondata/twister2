@@ -9,7 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.table.ops;
+package edu.iu.dsc.tws.common.table.arrow;
 
-public class Partition {
+import org.apache.arrow.vector.Float8Vector;
+
+public class Float8Column implements ArrowColumn<Double> {
+  private Float8Vector vector;
+
+  private int currentIndex;
+
+  public Float8Column(Float8Vector vector) {
+    this.vector = vector;
+  }
+
+  @Override
+  public void addValue(Double value) {
+    vector.setSafe(currentIndex, value);
+    currentIndex++;
+  }
+
+  public Double get(int index) {
+    return vector.get(index);
+  }
+
+  @Override
+  public long currentSize() {
+    return vector.getBufferSize();
+  }
 }

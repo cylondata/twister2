@@ -9,33 +9,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import org.apache.arrow.vector.UInt2Vector;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.util.Text;
 
-public class UInt2Column implements ArrowColumn<Character> {
-  private UInt2Vector vector;
+public class StringColumn implements ArrowColumn<Text> {
+  private VarCharVector vector;
 
   private int currentIndex;
 
-  public UInt2Column(UInt2Vector vector) {
-    this.vector = vector;
+  public StringColumn(VarCharVector stringVector) {
+    this.vector = stringVector;
     this.currentIndex = 0;
   }
 
   @Override
-  public void addValue(Character value) {
+  public void addValue(Text value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
   }
 
   @Override
-  public Character get(int index) {
-    return vector.get(index);
+  public Text get(int index) {
+    return new Text(vector.get(index));
   }
 
   @Override
   public long currentSize() {
-    return vector.getBufferSize();
+    return vector.sizeOfValueBuffer();
   }
 }

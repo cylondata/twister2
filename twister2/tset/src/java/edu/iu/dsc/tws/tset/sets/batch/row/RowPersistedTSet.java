@@ -16,14 +16,14 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class RowPersistedTSet extends RowStoredTSet {
 
   public RowPersistedTSet(BatchTSetEnvironment tSetEnv,
                           SinkFunc<Row> storingSinkFn, int parallelism,
-                          TableSchema inputSchema) {
+                          RowSchema inputSchema) {
     super(tSetEnv, "kpersisted", storingSinkFn, parallelism, inputSchema);
   }
 
@@ -38,7 +38,7 @@ public class RowPersistedTSet extends RowStoredTSet {
   }
 
   public RowPersistedTSet withSchema(TupleSchema schema) {
-    return (RowPersistedTSet) super.withSchema((TableSchema) schema);
+    return (RowPersistedTSet) super.withSchema((RowSchema) schema);
   }
 
   @Override
