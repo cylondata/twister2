@@ -171,10 +171,9 @@ public class KubernetesController {
   public boolean createStatefulSet(V1StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
-    try {
-      okhttp3.Response response = appsApi.createNamespacedStatefulSetCall(
-          namespace, statefulSet, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.createNamespacedStatefulSetCall(
+        namespace, statefulSet, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
@@ -200,13 +199,12 @@ public class KubernetesController {
    */
   public boolean deleteStatefulSet(String statefulSetName) {
 
-    try {
-      Integer gracePeriodSeconds = 0;
+    Integer gracePeriodSeconds = 0;
 
-      okhttp3.Response response = appsApi.deleteNamespacedStatefulSetCall(
-          statefulSetName, namespace, null, null, gracePeriodSeconds, null,
-          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.deleteNamespacedStatefulSetCall(
+        statefulSetName, namespace, null, null, gracePeriodSeconds, null,
+        KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is deleted.");
@@ -270,10 +268,9 @@ public class KubernetesController {
   public boolean createService(V1Service service) {
 
     String serviceName = service.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createNamespacedServiceCall(
-          namespace, service, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createNamespacedServiceCall(
+        namespace, service, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "Service [" + serviceName + "] created.");
@@ -323,11 +320,10 @@ public class KubernetesController {
 
     Integer gracePeriodsSeconds = 0;
 
-    try {
-      okhttp3.Response response = coreApi.deleteNamespacedServiceCall(
-          serviceName, namespace, null, null, gracePeriodsSeconds, null,
-          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.deleteNamespacedServiceCall(
+        serviceName, namespace, null, null, gracePeriodsSeconds, null,
+        KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.info("Service [" + serviceName + "] is deleted.");
@@ -420,10 +416,9 @@ public class KubernetesController {
   public boolean createPersistentVolumeClaim(V1PersistentVolumeClaim pvc) {
 
     String pvcName = pvc.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
-          namespace, pvc, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
+        namespace, pvc, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is created.");
@@ -445,10 +440,9 @@ public class KubernetesController {
 
   public boolean deletePersistentVolumeClaim(String pvcName) {
 
-    try {
-      okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
-          pvcName, namespace, null, null, null, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
+        pvcName, namespace, null, null, null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is deleted.");
@@ -499,9 +493,8 @@ public class KubernetesController {
   public boolean createPersistentVolume(V1PersistentVolume pv) {
 
     String pvName = pv.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createPersistentVolumeCall(pv, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createPersistentVolumeCall(pv, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is created.");
@@ -525,10 +518,9 @@ public class KubernetesController {
 
   public boolean deletePersistentVolume(String pvName) {
 
-    try {
-      okhttp3.Response response = coreApi.deletePersistentVolumeCall(
-          pvName, null, null, null, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.deletePersistentVolumeCall(
+        pvName, null, null, null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is deleted.");
