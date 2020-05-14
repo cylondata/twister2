@@ -235,6 +235,7 @@ public final class K8sWorkerStarter {
       if (jobMasterIP == null) {
         jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
           KubernetesContext.namespace(config), jobID, 100);
+        PodWatchUtils.close();
       }
 
       if (jobMasterIP == null) {

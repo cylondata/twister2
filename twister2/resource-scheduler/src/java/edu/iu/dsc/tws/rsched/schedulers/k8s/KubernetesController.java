@@ -108,7 +108,9 @@ public class KubernetesController {
   }
 
   public static void close() {
-    if (client != null && client.getHttpClient() != null) {
+    if (client != null && client.getHttpClient() != null
+        && client.getHttpClient().connectionPool() != null) {
+
       client.getHttpClient().connectionPool().evictAll();
     }
   }

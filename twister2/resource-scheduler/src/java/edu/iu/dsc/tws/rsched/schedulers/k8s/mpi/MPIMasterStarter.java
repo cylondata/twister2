@@ -131,6 +131,7 @@ public final class MPIMasterStarter {
 
     ArrayList<String> podIPs = PodWatchUtils.getWorkerIPsByWatchingPodsToRunning(
         namespace, jobID, numberOfPods, timeoutSeconds);
+    PodWatchUtils.close();
 
     if (podIPs == null) {
       LOG.severe("Could not get IPs of all pods running. Aborting. "
