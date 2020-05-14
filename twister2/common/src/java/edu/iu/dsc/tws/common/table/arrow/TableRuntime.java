@@ -9,24 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.table.ops;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import edu.iu.dsc.tws.comms.table.ArrowTable;
+import org.apache.arrow.memory.RootAllocator;
 
-public class Join {
-  public boolean insert(ArrowTable table, int target) {
-    return false;
+/**
+ * Table runtime holds objects that are common to the table runtime. This object is set to
+ * worker environment and accessible through it.
+ */
+public class TableRuntime {
+  public static final String TABLE_RUNTIME_CONF = "__table_runtime__";
+
+  private RootAllocator rootAllocator;
+
+  public TableRuntime(RootAllocator rootAllocator) {
+    this.rootAllocator = rootAllocator;
   }
 
-  public boolean isComplete() {
-    return false;
-  }
-
-  public void finish(int source) {
-
-  }
-
-  public void close() {
-
+  public RootAllocator getRootAllocator() {
+    return rootAllocator;
   }
 }

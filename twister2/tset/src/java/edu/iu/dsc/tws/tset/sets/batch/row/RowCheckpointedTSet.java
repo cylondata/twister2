@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
@@ -24,7 +24,7 @@ public class RowCheckpointedTSet extends RowPersistedTSet {
 
   public RowCheckpointedTSet(BatchTSetEnvironment tSetEnv,
                              DiskPartitionBackedSource<Row> sourceFn, int parallelism,
-                             TableSchema inputSchema) {
+                             RowSchema inputSchema) {
     super(tSetEnv, null, parallelism, inputSchema);
     this.sourceFunc = sourceFn;
   }
@@ -33,7 +33,7 @@ public class RowCheckpointedTSet extends RowPersistedTSet {
   public RowSourceTSet getStoredSourceTSet() {
     if (storedSource == null) {
       storedSource = getTSetEnv().createRowSource(getName(), sourceFunc,
-          getParallelism(), TableSchema.make());
+          getParallelism(), RowSchema.make());
     }
     return storedSource;
   }

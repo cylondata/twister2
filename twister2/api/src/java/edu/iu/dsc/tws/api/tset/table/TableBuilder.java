@@ -22,7 +22,7 @@ public interface TableBuilder {
    * Build the table at the end
    * @return the built table
    */
-  Table build();
+  TSetTable build();
 
   /**
    * Get the current size of the table

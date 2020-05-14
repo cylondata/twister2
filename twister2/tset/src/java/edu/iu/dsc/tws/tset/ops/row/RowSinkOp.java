@@ -24,9 +24,11 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.Table;
+import edu.iu.dsc.tws.api.tset.table.TSetTable;
+import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.tset.ops.BaseOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.table.TSetTableImpl;
 
 public class RowSinkOp extends BaseOp implements ICompute<Table>, Closable, Collector {
   private static final long serialVersionUID = -9398832570L;
@@ -52,7 +54,8 @@ public class RowSinkOp extends BaseOp implements ICompute<Table>, Closable, Coll
 
   @Override
   public boolean execute(IMessage<Table> content) {
-    Iterator<Row> rowIterator = content.getContent().getRowIterator();
+    TSetTable table = new TSetTableImpl(content.getContent());
+    Iterator<Row> rowIterator = table.getRowIterator();
     while (rowIterator.hasNext()) {
       sink.add(rowIterator.next());
     }

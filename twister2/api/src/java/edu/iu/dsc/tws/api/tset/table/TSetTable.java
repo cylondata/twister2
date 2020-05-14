@@ -9,17 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.api.tset.table;
 
-/**
- * We are going to represent and arrow vector as a column to facilitate
- * easy access and building of vectors
- * @param <T>
- */
-public interface ArrowColumn<T> {
-  void addValue(T value);
+import java.util.Iterator;
 
-  T get(int index);
+import edu.iu.dsc.tws.common.table.Table;
 
-  long currentSize();
+public interface TSetTable {
+  /**
+   * Return the underlying table
+   * @return the underying table
+   */
+  Table table();
+
+  /**
+   * Get the row iterator
+   *
+   * @return the row iterator
+   */
+  Iterator<Row> getRowIterator();
 }

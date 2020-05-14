@@ -24,13 +24,15 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.Table;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.api.tset.table.TSetTable;
 import edu.iu.dsc.tws.api.tset.table.TableBuilder;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
-import edu.iu.dsc.tws.tset.arrow.ArrowTableBuilder;
-import edu.iu.dsc.tws.tset.arrow.TableRuntime;
+import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.tset.table.TSetTableImpl;
 
 public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
@@ -51,7 +53,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
   /**
    * The output schema
    */
-  private TableSchema schema;
+  private RowSchema schema;
 
   public RowComupteCollectorOp() {
   }
@@ -71,7 +73,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
       throw new Twister2RuntimeException("Table runtime must be set");
     }
 
-    schema = (TableSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
+    schema = (RowSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
     tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
     builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
   }
@@ -79,7 +81,8 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
   @Override
   public boolean execute(IMessage<Table> content) {
     CollectorImp collectorImp = new CollectorImp();
-    computeFunction.compute(content.getContent().getRowIterator(), collectorImp);
+    TSetTable table = new TSetTableImpl(content.getContent());
+    computeFunction.compute(table.getRowIterator(), collectorImp);
     collectorImp.close();
     writeEndToEdges();
     computeFunction.close();

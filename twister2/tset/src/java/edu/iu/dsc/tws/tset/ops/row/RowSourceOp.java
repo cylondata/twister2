@@ -20,12 +20,12 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.api.tset.table.TableBuilder;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
-import edu.iu.dsc.tws.tset.arrow.ArrowTableBuilder;
-import edu.iu.dsc.tws.tset.arrow.TableRuntime;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.table.ArrowTableBuilder;
 
 public class RowSourceOp extends SourceOp<Row> {
   private TableBuilder builder;
@@ -43,7 +43,7 @@ public class RowSourceOp extends SourceOp<Row> {
   /**
    * The output schema
    */
-  private TableSchema schema;
+  private RowSchema schema;
 
 
   public RowSourceOp() {
@@ -63,7 +63,7 @@ public class RowSourceOp extends SourceOp<Row> {
       throw new Twister2RuntimeException("Table runtime must be set");
     }
 
-    schema = (TableSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
+    schema = (RowSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
     tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
     builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
   }

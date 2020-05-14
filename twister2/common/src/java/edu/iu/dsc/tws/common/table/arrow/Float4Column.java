@@ -9,28 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.Float4Vector;
 
-public class Int8Column implements ArrowColumn<Long> {
-  private UInt8Vector vector;
+public class Float4Column implements ArrowColumn<Float> {
+  private Float4Vector vector;
 
   private int currentIndex;
 
-  public Int8Column(UInt8Vector intVector) {
-    this.vector = intVector;
-    this.currentIndex = 0;
+  public Float4Column(Float4Vector vector) {
+    this.vector = vector;
   }
 
   @Override
-  public void addValue(Long value) {
+  public void addValue(Float value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
   }
 
-  @Override
-  public Long get(int index) {
+  public Float get(int index) {
     return vector.get(index);
   }
 

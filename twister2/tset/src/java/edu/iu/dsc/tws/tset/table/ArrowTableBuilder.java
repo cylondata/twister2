@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.tset.table;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,15 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.table.Field;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.Table;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.api.tset.table.TSetTable;
 import edu.iu.dsc.tws.api.tset.table.TableBuilder;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.common.table.arrow.ArrowColumn;
+import edu.iu.dsc.tws.common.table.arrow.Float4Column;
+import edu.iu.dsc.tws.common.table.arrow.Float8Column;
+import edu.iu.dsc.tws.common.table.arrow.Int4Column;
+import edu.iu.dsc.tws.common.table.arrow.Int8Column;
+import edu.iu.dsc.tws.common.table.arrow.StringColumn;
 
 public class ArrowTableBuilder implements TableBuilder {
 
@@ -35,7 +41,7 @@ public class ArrowTableBuilder implements TableBuilder {
 
   private long currentSize = 0;
 
-  public ArrowTableBuilder(TableSchema schema, BufferAllocator allocator) {
+  public ArrowTableBuilder(RowSchema schema, BufferAllocator allocator) {
     for (Field t : schema.getFields()) {
       if (t.getType().equals(MessageTypes.INTEGER)) {
         IntVector vector = new IntVector(t.getName(), allocator);
@@ -69,8 +75,8 @@ public class ArrowTableBuilder implements TableBuilder {
   }
 
   @Override
-  public Table build() {
-    return new ArrowTableImpl(columns);
+  public TSetTable build() {
+    return new TSetTableImpl(columns);
   }
 
   @Override

@@ -9,17 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
-
-import java.util.Iterator;
+package edu.iu.dsc.tws.common.table;
 
 public interface Table {
 
-
-  /**
-   * Get the row iterator
-   *
-   * @return the row iterator
-   */
-  Iterator<Row> getRowIterator();
 }

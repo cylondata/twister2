@@ -9,24 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
-
-import org.apache.arrow.memory.RootAllocator;
+package edu.iu.dsc.tws.common.table.arrow;
 
 /**
- * Table runtime holds objects that are common to the table runtime. This object is set to
- * worker environment and accessible through it.
+ * We are going to represent and arrow vector as a column to facilitate
+ * easy access and building of vectors
+ * @param <T>
  */
-public class TableRuntime {
-  public static final String TABLE_RUNTIME_CONF = "__table_runtime__";
+public interface ArrowColumn<T> {
+  void addValue(T value);
 
-  private RootAllocator rootAllocator;
+  T get(int index);
 
-  public TableRuntime(RootAllocator rootAllocator) {
-    this.rootAllocator = rootAllocator;
-  }
-
-  public RootAllocator getRootAllocator() {
-    return rootAllocator;
-  }
+  long currentSize();
 }

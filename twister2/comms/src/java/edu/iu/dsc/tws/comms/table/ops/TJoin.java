@@ -9,31 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.arrow;
+package edu.iu.dsc.tws.comms.table.ops;
 
-import org.apache.arrow.vector.Float4Vector;
+import edu.iu.dsc.tws.api.comms.BaseOperation;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.comms.table.ArrowTable;
 
-public class Float4Column implements ArrowColumn<Float> {
-  private Float4Vector vector;
-
-  private int currentIndex;
-
-  public Float4Column(Float4Vector vector) {
-    this.vector = vector;
+public class TJoin extends BaseOperation {
+  /**
+   * Create the base operation
+   */
+  public TJoin(Communicator comm, boolean stream, String opName) {
+    super(comm, stream, opName);
   }
 
-  @Override
-  public void addValue(Float value) {
-    vector.setSafe(currentIndex, value);
-    currentIndex++;
+  public boolean insert(ArrowTable table, int target) {
+    return false;
   }
 
-  public Float get(int index) {
-    return vector.get(index);
+  public boolean isComplete() {
+    return false;
   }
 
-  @Override
-  public long currentSize() {
-    return vector.getBufferSize();
+  public void finish(int source) {
+
+  }
+
+  public void close() {
+
   }
 }

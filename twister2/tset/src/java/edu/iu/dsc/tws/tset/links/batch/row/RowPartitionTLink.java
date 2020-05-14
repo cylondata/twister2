@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.TableSchema;
+import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
@@ -28,17 +28,17 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
   private PartitionFunc<Row> partitionFunction;
 
   public RowPartitionTLink(BatchTSetEnvironment tSetEnv,
-                           int sourceParallelism, TableSchema schema) {
+                           int sourceParallelism, RowSchema schema) {
     this(tSetEnv, null, sourceParallelism, schema);
   }
 
   public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
-                        int sourceParallelism, TableSchema schema) {
+                        int sourceParallelism, RowSchema schema) {
     this(tSetEnv, parFn, sourceParallelism, sourceParallelism, schema);
   }
 
   public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
-                        int sourceParallelism, int targetParallelism, TableSchema schema) {
+                        int sourceParallelism, int targetParallelism, RowSchema schema) {
     super(tSetEnv, "partition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;
   }
