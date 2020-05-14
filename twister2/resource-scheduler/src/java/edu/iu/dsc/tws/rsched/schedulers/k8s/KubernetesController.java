@@ -32,6 +32,8 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapList;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
@@ -70,9 +72,10 @@ public class KubernetesController {
     if (client != null) {
       return client;
     }
-
     try {
-      client = io.kubernetes.client.util.Config.defaultClient();
+      client = ClientBuilder.standard()
+          .setOverridePatchFormat(V1Patch.PATCH_FORMAT_JSON_PATCH)
+          .build();
       return client;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
@@ -92,7 +95,6 @@ public class KubernetesController {
 
   /**
    * create CoreV1Api that does not time out
-   * @return
    */
   public static CoreV1Api createCoreV1Api() {
     if (client == null) {
@@ -103,6 +105,12 @@ public class KubernetesController {
     client.setHttpClient(httpClient);
     Configuration.setDefaultApiClient(client);
     return new CoreV1Api(client);
+  }
+
+  public static void close() {
+    if (client != null && client.getHttpClient() != null) {
+      client.getHttpClient().connectionPool().evictAll();
+    }
   }
 
   /**
@@ -234,22 +242,9 @@ public class KubernetesController {
     String jsonPatchStr =
         "[{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}]";
 
-    // json-patch a deployment
-    ApiClient jsonPatchClient;
-    try {
-      jsonPatchClient =
-          ClientBuilder.standard().setOverridePatchFormat(V1Patch.PATCH_FORMAT_JSON_PATCH).build();
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Error when creating patch client: " + ssName, e);
-      return false;
-    }
-
-    AppsV1Api patchApi = new AppsV1Api(jsonPatchClient);
-
-    try {
-      okhttp3.Response response = patchApi.patchNamespacedStatefulSetScaleCall(
-          ssName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.patchNamespacedStatefulSetScaleCall(
+        ssName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + ssName + "] is patched.");
@@ -702,6 +697,228 @@ public class KubernetesController {
     }
 
     return allDeleted;
+  }
+
+  /**
+   * create the given ConfigMap on Kubernetes master
+   */
+  public boolean createConfigMap(V1ConfigMap configMap) {
+
+    String configMapName = configMap.getMetadata().getName();
+
+    try (okhttp3.Response response = coreApi.createNamespacedConfigMapCall(
+        namespace, configMap, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "ConfigMap [" + configMapName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the ConfigMap [" + configMapName
+            + "]: Response: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * delete the given ConfigMap from Kubernetes master
+   */
+  public boolean deleteConfigMap(String configMapName) {
+
+    int gracePeriodSeconds = 0;
+    String propagationPolicy = KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY;
+
+    try (okhttp3.Response response = coreApi.deleteNamespacedConfigMapCall(
+        configMapName, namespace, null, null, gracePeriodSeconds, null, propagationPolicy,
+        null, null).execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.info("ConfigMap [" + configMapName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.warning("There is no ConfigMap [" + configMapName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.severe("Error when deleting the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * return true if there is already a ConfigMap object with the same name on Kubernetes master,
+   * otherwise return false
+   */
+  public boolean existConfigMap(String configMapName) {
+    if (getConfigMap(configMapName) == null) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * return the ConfigMap object if it exists,
+   * otherwise return null
+   */
+  public V1ConfigMap getConfigMap(String configMapName) {
+
+    String labelSelector = "t2-cm=" + configMapName;
+    V1ConfigMapList configMapList = null;
+    try {
+      configMapList = coreApi.listNamespacedConfigMap(namespace,
+          null, null, null, null, labelSelector, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1ConfigMap configMap : configMapList.getItems()) {
+      if (configMapName.equals(configMap.getMetadata().getName())) {
+        return configMap;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * return restart count for the given workerID
+   * if there is no key for the given workerID, return -1
+   */
+  public int getRestartCount(String jobID, String keyName) {
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    V1ConfigMap configMap = getConfigMap(configMapName);
+    if (configMap == null) {
+      throw new RuntimeException("Could not get ConfigMap from K8s master: " + configMapName);
+    }
+
+    Map<String, String> pairs = configMap.getData();
+    if (pairs == null) {
+      throw new RuntimeException("Could not get data from ConfigMap");
+    }
+
+    String countStr = pairs.get(keyName);
+    if (countStr == null) {
+      return -1;
+    } else {
+      return Integer.parseInt(countStr);
+    }
+  }
+
+  /**
+   * add a new restart count to the job ConfigMap
+   */
+  public boolean addRestartCount(String jobID, String keyName, int restartCount) {
+
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String countStr = "\"" + restartCount + "\"";
+
+    String jsonPatchStr =
+        "[{\"op\":\"add\",\"path\":\"/data/" + keyName + "\",\"value\":" + countStr + "}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter added " + keyName + " = " + restartCount);
+        return true;
+
+      } else {
+        LOG.severe("Error when patching the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * update a restart count in the job ConfigMap
+   */
+  public boolean updateRestartCount(String jobID, String keyName, int restartCount) {
+
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String countStr = "\"" + restartCount + "\"";
+
+    String jsonPatchStr =
+        "[{\"op\":\"replace\",\"path\":\"/data/" + keyName + "\",\"value\":" + countStr + "}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter updated " + keyName + " = " + restartCount);
+        return true;
+
+      } else {
+        LOG.severe("Error when patching the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * remove a restart count from the job ConfigMap
+   * this is used when the job is scaled down
+   */
+  public boolean removeRestartCount(String jobID, String keyName) {
+
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+
+    String jsonPatchStr =
+        "[{\"op\":\"remove\",\"path\":\"/data/" + keyName + "\"}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter removed " + keyName);
+        return true;
+
+      } else {
+        LOG.severe("Error removing restartCount from the ConfigMap ["
+            + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    }
+    return false;
   }
 
 }

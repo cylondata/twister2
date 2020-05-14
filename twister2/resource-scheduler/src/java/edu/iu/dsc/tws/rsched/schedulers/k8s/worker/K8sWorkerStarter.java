@@ -156,7 +156,7 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    int restartCount = K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, jobID, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**

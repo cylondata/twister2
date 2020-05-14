@@ -15,7 +15,6 @@ import java.util.ArrayList;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.master.IJobTerminator;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
@@ -24,12 +23,9 @@ public class JobTerminator implements IJobTerminator {
   private KubernetesController controller;
   private Config config;
 
-  public JobTerminator(Config config) {
+  public JobTerminator(Config config, KubernetesController controller) {
     this.config = config;
-
-    controller = new KubernetesController();
-    String namespace = KubernetesContext.namespace(config);
-    controller.init(namespace);
+    this.controller = controller;
   }
 
   @Override
@@ -59,10 +55,20 @@ public class JobTerminator implements IJobTerminator {
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
     boolean serviceForJobMasterDeleted = controller.deleteService(jobMasterServiceName);
 
+    boolean configMapDeleted = true;
+    String cmName = KubernetesUtils.createConfigMapName(jobID);
+    if (controller.existConfigMap(cmName)) {
+      configMapDeleted = controller.deleteConfigMap(cmName);
+    }
+
+    // close the controller
+    controller.close();
+
     return ssForWorkersDeleted
         && serviceForWorkersDeleted
         && serviceForJobMasterDeleted
         && pvcDeleted
-        && ssForJobMasterDeleted;
+        && ssForJobMasterDeleted
+        && configMapDeleted;
   }
 }

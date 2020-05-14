@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -36,6 +37,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.logger.JobLogger;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
@@ -104,6 +106,20 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!servicesCreated) {
       clearupWhenSubmissionFails(jobID);
       return state;
+    }
+
+    // create the ConfigMap if ZK is not used
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      V1ConfigMap configMap = RequestObjectBuilder.createConfigMap(job.getNumberOfWorkers());
+      boolean cmCreated = controller.createConfigMap(configMap);
+      if (cmCreated) {
+        jobSubmissionStatus.setConfigMapCreated(true);
+      } else {
+        LOG.severe("Following ConfigMap could not be created: " + configMap.getMetadata().getName()
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        clearupWhenSubmissionFails(jobID);
+        return state;
+      }
     }
 
     // if persistent volume is requested, create a persistent volume claim
@@ -264,6 +280,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
           + "\nFirst terminate that job or create a job with a different name."
           + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
       return false;
+    }
+
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      String cmName = KubernetesUtils.createConfigMapName(jobID);
+      boolean cmExists = controller.existConfigMap(cmName);
+      if (cmExists) {
+        LOG.severe("There is already a ConfigMap with the name: " + cmName
+            + "\nAnother job might be running. "
+            + "\nFirst terminate that job or create a job with a different name."
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        return false;
+      }
     }
 
     // if persistent volume is requested,
@@ -529,6 +557,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   @Override
   public void close() {
+    if (!KubernetesContext.logInClient(config)) {
+      controller.close();
+    }
   }
 
   /**
@@ -551,6 +582,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (jobSubmissionStatus.isServiceForJobMasterCreated()) {
       String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
       controller.deleteService(jobMasterServiceName);
+    }
+
+    // delete the job master service
+    if (jobSubmissionStatus.isConfigMapCreated()) {
+      String cmName = KubernetesUtils.createConfigMapName(jobID);
+      controller.deleteConfigMap(cmName);
     }
 
     // delete created StatefulSet objects
@@ -593,6 +630,13 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
+
+    String cmName = KubernetesUtils.createConfigMapName(jobID);
+    if (controller.existConfigMap(cmName)) {
+      controller.deleteConfigMap(cmName);
+    }
+
+    controller.close();
 
     return true;
   }

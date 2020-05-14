@@ -28,6 +28,8 @@ import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Affinity;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
@@ -688,4 +690,32 @@ public final class RequestObjectBuilder {
     pvc.setSpec(pvcSpec);
     return pvc;
   }
+
+  /**
+   * create a ConfigMap object
+   * It will have start counts for workers
+   * @return
+   */
+  public static V1ConfigMap createConfigMap(int numberOfWorkers) {
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+
+    // set a label for ConfigMap
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+    labels.put("t2-cm", configMapName);
+
+    // data pairs
+    HashMap<String, String> dataMap = new HashMap<>();
+    dataMap.put("NUMBER_OF_WORKERS", "" + numberOfWorkers);
+
+    V1ConfigMap cm = new V1ConfigMapBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata().withName(configMapName).withLabels(labels).endMetadata()
+        .withData(dataMap)
+        .build();
+
+    return cm;
+  }
+
 }

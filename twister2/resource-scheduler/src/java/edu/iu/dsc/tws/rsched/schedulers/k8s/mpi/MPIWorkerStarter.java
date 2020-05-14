@@ -184,7 +184,7 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    int restartCount = K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, jobID, workerInfo);
     WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**

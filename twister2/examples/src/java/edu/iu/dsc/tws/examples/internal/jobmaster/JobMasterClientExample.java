@@ -114,7 +114,7 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
-    int restartCount = K8sWorkerUtils.initialStateAndUpdate(config, job.getJobId(), workerInfo);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, job.getJobId(), workerInfo);
 
     long start = System.currentTimeMillis();
     WorkerRuntime.init(config, job, workerInfo, restartCount);

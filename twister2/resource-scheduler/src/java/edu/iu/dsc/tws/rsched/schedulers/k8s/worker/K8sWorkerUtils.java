@@ -27,6 +27,7 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
@@ -40,6 +41,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
@@ -308,43 +310,97 @@ public final class K8sWorkerUtils {
     }
   }
 
+  public static int getAndInitRestartCount(Config cnfg,
+                                           String jbID,
+                                           JobMasterAPI.WorkerInfo wInfo) {
+    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
+      return initRestartFromZK(cnfg, jbID, wInfo);
+    } else {
+      // initialize the controller to talk to Kubernetes master
+      KubernetesController controller = new KubernetesController();
+      controller.init(KubernetesContext.namespace(cnfg));
+
+      String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
+
+      int restartCount = initRestartFromCM(controller, jbID, keyName);
+      LOG.info("Worker restartCount: " + restartCount);
+
+      // close the controller
+      controller.close();
+
+      return restartCount;
+    }
+  }
+
   /**
    * worker is either starting for the first time, or it is coming from failure
    * We return restartCount. If it is 0, it is WorkerState.STARTED
    * If it is more than zero, it is WorkerState.RESTARTED
-   * <p>
-   * TODO: If ZooKeeper is not used,
-   * currently we just return zero. We do not determine real initial status.
    */
-  public static int initialStateAndUpdate(Config cnfg,
-                                          String jbID,
-                                          JobMasterAPI.WorkerInfo wInfo) {
+  public static int initRestartFromZK(Config cnfg,
+                                      String jbID,
+                                      JobMasterAPI.WorkerInfo wInfo) {
 
-    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
-      String zkServerAddresses = ZKContext.serverAddresses(cnfg);
-      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
-      CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
-      String rootPath = ZKContext.rootNode(cnfg);
+    String zkServerAddresses = ZKContext.serverAddresses(cnfg);
+    int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
+    CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+    String rootPath = ZKContext.rootNode(cnfg);
 
-      try {
-        int restartCount = ZKPersStateManager.initAndGetRestartCount(client, rootPath, jbID, wInfo);
-        if (restartCount > 0) {
-          return restartCount;
-        }
+    try {
+      int restartCount = ZKPersStateManager.initAndGetRestartCount(client, rootPath, jbID, wInfo);
+      if (restartCount > 0) {
+        return restartCount;
+      }
 
-        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
-          ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
-        }
+      if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
+        ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
+      }
 
-        return 0;
+      return 0;
 
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE,
-            "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
-        return 0;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
+      return 0;
+    }
+  }
+
+  /**
+   * get restartCount from a ConfigMap in K8s master
+   * if the worker/jm is starting for the first time,
+   * we need to add the config restart count key to the config map
+   * otherwise, we need to increase the restart count at the configmap
+   *
+   * restartCount is returned as zero if the worker/jm is starting for the first time,
+   * if it is more than zero, the worker is restarting
+   */
+  public static int initRestartFromCM(KubernetesController controller,
+                                      String jbID,
+                                      String keyName) {
+
+    int restartCount = controller.getRestartCount(jbID, keyName);
+
+    // increase the count by 1 for the new value
+    restartCount++;
+
+    // if restartCount is 0 after the increase, worker/jm is starting for the first time
+    // add the key to configmap and set its value as zero
+    if (restartCount == 0) {
+      boolean added = controller.addRestartCount(jbID, keyName, 0);
+      if (!added) {
+        throw new Twister2RuntimeException("Could not add the restartCount to ConfigMap");
+      }
+
+      // if restartCount is more than 0 after the increase, the worker has started before,
+      // it is coming from failure, set new count
+    } else if (restartCount > 0) {
+      boolean updated = controller.updateRestartCount(jbID, keyName, restartCount);
+      if (!updated) {
+        throw new Twister2RuntimeException("Could not update the restartCount in ConfigMap");
       }
     }
 
-    return 0;
+    return restartCount;
   }
+
 }
