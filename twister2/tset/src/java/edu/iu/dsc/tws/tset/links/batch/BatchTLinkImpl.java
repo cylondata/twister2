@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -29,6 +31,7 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     implements BatchTLink<T1, T0> {
+  private static final Logger LOG = Logger.getLogger(BatchTLinkImpl.class.getName());
 
   BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP, Schema schema) {
     super(env, n, sourceP, targetP, schema);
@@ -105,10 +108,13 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
   public StorableTBase<T0> persist() {
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
+      LOG.info("### checkpointing en");
       String persistVariableName = this.getId() + "-persisted";
       CheckpointingTSetEnv chkEnv = (CheckpointingTSetEnv) getTSetEnv();
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
       if (persisted) {
+        LOG.info("### found persisted " + persistVariableName);
+
         // create a source function with the capability to read from disk
         DiskPartitionBackedSource<T0> sourceFn = new DiskPartitionBackedSource<>(this.getId());
 
@@ -126,6 +132,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
 
         return checkTSet;
       } else {
+        LOG.info("### no persisted variable");
         StorableTBase<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
         chkEnv.commit();

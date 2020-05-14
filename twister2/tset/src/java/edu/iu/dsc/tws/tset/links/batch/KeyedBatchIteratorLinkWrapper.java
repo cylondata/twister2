@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
@@ -24,6 +26,8 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
+  private static final Logger LOG = Logger.getLogger(KeyedBatchIteratorLinkWrapper.class.getName());
+
   KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP,
                                 TupleSchema schema) {
     super(env, n, sourceP, schema);
@@ -64,11 +68,13 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
   public KeyedPersistedTSet<K, V> persist() {
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
+      LOG.info("### K checkpointing en");
       String persistVariableName = this.getId() + "-persisted";
       CheckpointingTSetEnv chkEnv = (CheckpointingTSetEnv) getTSetEnv();
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
 
       if (persisted) {
+        LOG.info("### K found persisted " + persistVariableName);
         // create a source function with the capability to read from disk
         DiskPartitionBackedSource<Tuple<K, V>> sourceFn =
             new DiskPartitionBackedSource<>(this.getId());
@@ -87,6 +93,8 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
 
         return checkTSet;
       } else {
+        LOG.info("### K no persisted variable");
+
         KeyedPersistedTSet<K, V> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
         chkEnv.commit();

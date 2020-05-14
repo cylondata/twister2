@@ -147,6 +147,7 @@ public final class CheckpointingWorkerEnv {
         LOG.info("No checkpoints to recover. Starting fresh");
       }
 
+      LOG.info("### checkworkernev latest ver: " + latestVersion);
       return new CheckpointingWorkerEnv(workerId, latestVersion,
           localCheckpoint, localCheckpointStore, workerController.getCheckpointingClient());
     }
