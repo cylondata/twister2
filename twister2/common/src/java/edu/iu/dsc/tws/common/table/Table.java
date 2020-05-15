@@ -11,6 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
-public interface Table {
+import java.util.List;
 
+import edu.iu.dsc.tws.common.table.arrow.ArrowColumn;
+
+public interface Table {
+  int rowCount();
+
+  List<ArrowColumn> getColumns();
 }

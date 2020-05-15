@@ -22,21 +22,39 @@ import edu.iu.dsc.tws.common.table.arrow.ArrowColumn;
 public class TSetTableImpl implements TSetTable {
   private Table table;
 
-  public TSetTableImpl(List<ArrowColumn> columns) {
-
-  }
-
   public TSetTableImpl(Table table) {
     this.table = table;
   }
 
   @Override
   public Table table() {
-    return null;
+    return table;
   }
 
   @Override
   public Iterator<Row> getRowIterator() {
-    return null;
+    return new RowIterator();
+  }
+
+  private class RowIterator implements Iterator<Row> {
+    private int index = 0;
+
+    @Override
+    public boolean hasNext() {
+      return index < table.rowCount();
+    }
+
+    @Override
+    public Row next() {
+      List<ArrowColumn> columns = table.getColumns();
+      Object[] vals = new Object[columns.size()];
+      Row row = new ArrowRow(vals);
+      for (int i = 0; i < columns.size(); i++) {
+        ArrowColumn c = columns.get(i);
+        vals[i] = c.get(index);
+      }
+      index++;
+      return row;
+    }
   }
 }
