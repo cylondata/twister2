@@ -238,6 +238,7 @@ public final class WorkerEnvironment {
     } else {
       //If the worker Env exists reset the config (need to check if complete re-init is needed)
       workerEnv.setConfig(config);
+      workerEnv.getCommunicator().reInit();
       workerEnv.getChannel().reInit(JobProgress.getRestartedWorkers());
     }
     return workerEnv;
