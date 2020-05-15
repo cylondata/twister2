@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.rsched;
 
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -21,6 +23,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 
 public final class K8sControllerExample {
   private static final Logger LOG = Logger.getLogger(K8sControllerExample.class.getName());
@@ -31,20 +34,36 @@ public final class K8sControllerExample {
     KubernetesController controller = new KubernetesController();
     controller.init("default");
 
-    String cmName = KubernetesUtils.createConfigMapName(jobID);
+    String configDir = "";
+    String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
+    Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
+    LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
-    if (!controller.existConfigMap(cmName)) {
-      createCM(controller, jobID);
-    }
+    testPVC(config, controller, jobID);
 //    controller.deleteConfigMap(cmName);
-
-    testWorker(controller, jobID, 0);
-    testWorker(controller, jobID, 1);
-    testWorker(controller, jobID, 3);
-    testJM(controller, jobID);
+//    testWorker(controller, jobID, 0);
+//    testWorker(controller, jobID, 1);
+//    testWorker(controller, jobID, 3);
+//    testJM(controller, jobID);
 
     controller.close();
   }
+
+  public static void testPVC(Config config, KubernetesController controller, String jobID) {
+
+    RequestObjectBuilder.init(config, jobID, 0);
+    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+    V1PersistentVolumeClaim pvc =
+        RequestObjectBuilder.createPersistentVolumeClaimObject(pvcName, 10);
+
+    if (controller.existPersistentVolumeClaim(pvcName)) {
+      controller.deletePersistentVolumeClaim(pvcName);
+    } else {
+      controller.createPersistentVolumeClaim(pvc);
+    }
+
+  }
+
 
   public static void createCM(KubernetesController controller, String jobID) {
     Config cnfg = Config.newBuilder()

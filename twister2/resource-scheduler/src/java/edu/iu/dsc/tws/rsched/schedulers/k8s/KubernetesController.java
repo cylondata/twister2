@@ -393,10 +393,11 @@ public class KubernetesController {
    * check whether the given PersistentVolumeClaim exist on Kubernetes master
    */
   public boolean existPersistentVolumeClaim(String pvcName) {
+    String labelSelector = "t2-pvc=" + pvcName;
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
       throw new RuntimeException(e);
