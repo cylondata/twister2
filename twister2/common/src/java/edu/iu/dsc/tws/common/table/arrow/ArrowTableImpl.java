@@ -15,22 +15,32 @@ import java.util.List;
 
 import org.apache.arrow.vector.types.pojo.Schema;
 
-public class ArrowTableImpl {
+import edu.iu.dsc.tws.common.table.Table;
+
+public class ArrowTableImpl implements Table {
   private List<ArrowColumn> columns;
 
   private org.apache.arrow.vector.types.pojo.Schema schema;
 
-  public ArrowTableImpl(List<ArrowColumn> columns) {
-    this.columns = columns;
+  private int rows;
+
+  public ArrowTableImpl(int rows, List<ArrowColumn> columns) {
+    this(null, rows, columns);
   }
 
-  public ArrowTableImpl(Schema schema, List<ArrowColumn> columns) {
+  public ArrowTableImpl(Schema schema, int rows, List<ArrowColumn> columns) {
     this.columns = columns;
     this.schema = schema;
+    this.rows = rows;
   }
 
   public Schema getSchema() {
     return schema;
+  }
+
+  @Override
+  public int rowCount() {
+    return rows;
   }
 
   public List<ArrowColumn> getColumns() {

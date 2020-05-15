@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.tset.table.RowSchema;
 import edu.iu.dsc.tws.api.tset.table.TSetTable;
 import edu.iu.dsc.tws.api.tset.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.ArrowColumn;
+import edu.iu.dsc.tws.common.table.arrow.ArrowTableImpl;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
 import edu.iu.dsc.tws.common.table.arrow.Int4Column;
@@ -76,7 +77,7 @@ public class ArrowTableBuilder implements TableBuilder {
 
   @Override
   public TSetTable build() {
-    return new TSetTableImpl(columns);
+    return new TSetTableImpl(new ArrowTableImpl((int) columns.get(0).currentSize(), columns));
   }
 
   @Override
