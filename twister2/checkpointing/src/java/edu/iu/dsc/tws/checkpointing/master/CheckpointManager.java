@@ -85,6 +85,8 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
             .setVersion(latestVersion)
             .build()
     );
+
+    LOG.info("discovery done: status \n" + this.statusMap);
   }
 
   private String getStateKey(String family) {
@@ -147,6 +149,7 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
             .setIndex(versionUpdateMsg.getIndex())
             .build()
     );
+    LOG.info("version update done: status \n" + this.statusMap);
   }
 
   @Override
@@ -213,6 +216,8 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
       LOG.fine("Scheduled family init response for family : " + message.getFamily()
           + " for worker id " + message.getContainerIndex());
     }
+
+    LOG.info("family init done: status\n" + this.statusMap);
   }
 
   @Override

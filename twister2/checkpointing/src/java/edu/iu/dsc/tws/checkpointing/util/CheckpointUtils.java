@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.checkpointing.util;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 
 public final class CheckpointUtils {
+  private static final Logger LOG = Logger.getLogger(CheckpointUtils.class.getName());
 
   private static final String JOB_CONFIG_STATE_PREFIX = "JOB_CONFIG_";
   private static final String JOB_META_STATE_PREFIX = "JOB_META_";
@@ -34,6 +36,8 @@ public final class CheckpointUtils {
                                  CheckpointingClient checkpointingClient,
                                  MessageHandler messageHandler) throws IOException {
     saveState(stateStore, snapshot);
+    LOG.info("### sending version update! fam:" + family + " idx: " + componentIndex
+        + " ver: " + snapshot.getVersion());
     checkpointingClient.sendVersionUpdate(
         family,
         componentIndex,

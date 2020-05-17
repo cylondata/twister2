@@ -132,7 +132,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
 
         return checkTSet;
       } else {
-        LOG.info("### no persisted variable");
+        LOG.info("### no persisted variable " + persistVariableName);
         StorableTBase<T0> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
         chkEnv.commit();

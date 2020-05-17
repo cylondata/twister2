@@ -93,7 +93,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
 
         return checkTSet;
       } else {
-        LOG.info("### K no persisted variable");
+        LOG.info("### K no persisted variable " + persistVariableName);
 
         KeyedPersistedTSet<K, V> storable = this.doPersist();
         chkEnv.updateVariable(persistVariableName, true);
