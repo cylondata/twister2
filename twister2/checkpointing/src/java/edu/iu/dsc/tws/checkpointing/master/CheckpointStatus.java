@@ -54,4 +54,10 @@ public class CheckpointStatus {
   public void setLastSyncTime(long lastSyncTime) {
     this.lastSyncTime = lastSyncTime;
   }
+
+  @Override
+  public String toString() {
+    return "checkstatus (fam:" + family + " idx:" + index + " ver:" + version + "  time:"
+        + lastSyncTime + ")";
+  }
 }
