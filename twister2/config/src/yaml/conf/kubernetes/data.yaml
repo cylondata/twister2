@@ -1,0 +1,2 @@
+# checkpointing data directory
+twister2.data.fs.root: "/persistent/data"

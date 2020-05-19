@@ -135,6 +135,12 @@ public class CheckpointManager implements MessageHandler, JobFaultListener {
         );
         //update in memory cache
         this.familyVersionMap.put(versionUpdateMsg.getFamily(), minVersion);
+        // update family init handlers
+        FamilyInitHandler familyInitHandler =
+            this.familyInitHandlers.get(versionUpdateMsg.getFamily());
+        if (familyInitHandler != null) {
+          familyInitHandler.setFamilyVersion(minVersion);
+        }
       } catch (IOException e) {
         LOG.severe(() -> "Failed to persist the version of " + versionUpdateMsg.getFamily());
       }

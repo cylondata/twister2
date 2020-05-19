@@ -91,4 +91,15 @@ public class FamilyInitHandler {
   public long getVersion() {
     return this.familyVersion;
   }
+
+  @Override
+  public String toString() {
+    return "FamilyInitHandler{" + "count=" + count
+        + ", family='" + family + '\''
+        + ", familyVersion=" + familyVersion + '}';
+  }
+
+  public void setFamilyVersion(long minVersion) {
+    this.familyVersion = minVersion;
+  }
 }
