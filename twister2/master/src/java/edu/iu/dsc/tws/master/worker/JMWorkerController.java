@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
@@ -182,12 +183,17 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   @Override
   public void waitOnBarrier() throws TimeoutException {
-    sendBarrierRequest(
-        JobMasterAPI.BarrierType.DEFAULT, ControllerContext.maxWaitTimeOnBarrier(config));
+    waitOnBarrier(ControllerContext.maxWaitTimeOnBarrier(config));
   }
 
   @Override
   public void waitOnBarrier(long timeLimit) throws TimeoutException {
+    // if the cluster is in a faulty state,
+    // do not wait on the barrier
+    if (JobProgress.isJobFaulty()) {
+      throw new JobFaultyException("Can not wait on the barrier, since the job is faulty.");
+    }
+
     sendBarrierRequest(JobMasterAPI.BarrierType.DEFAULT, timeLimit);
   }
 
@@ -203,23 +209,33 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(workerInfo.getWorkerID())
         .setBarrierType(barrierType)
+        .setTimeout(timeLimit)
         .build();
 
     LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
+      // set the local wait time for the barrier response to (2 * timeLimit)
+      // if the requested time limit is more than half of the long max value,
+      // set it to the long max value
+      long tl = timeLimit > Long.MAX_VALUE / 2 ? Long.MAX_VALUE : timeLimit * 2;
+
       Tuple<RequestID, Message> response =
-          rrClient.sendRequestWaitResponse(barrierRequest, timeLimit);
+          rrClient.sendRequestWaitResponse(barrierRequest, tl);
       JobMasterAPI.BarrierResponse barrierResponse =
           (JobMasterAPI.BarrierResponse) response.getValue();
 
-      if (barrierResponse.getSucceeded()) {
+      if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.SUCCESS) {
         return;
-      } else {
-        throw new JobFaultyException("Default Barrier failed.");
+      } else if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.JOB_FAULTY) {
+        throw new JobFaultyException("Job became faulty and Default Barrier failed.");
+      } else if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.TIMED_OUT) {
+        throw new TimeoutException("Barrier timed out. Not all workers arrived at the barrier "
+            + "on the time limit: " + timeLimit + "ms");
       }
+
     } catch (BlockingSendException e) {
-      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
-          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.", e);
+      throw new TimeoutException("Not all workers arrived at the barrier on the time limit: "
+          + timeLimit + "ms.", e);
     }
   }
 

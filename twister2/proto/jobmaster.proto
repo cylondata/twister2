@@ -66,6 +66,13 @@ enum BarrierType {
     INIT = 1;
 }
 
+// possible results for barriers
+enum BarrierResult {
+    SUCCESS = 0;
+    TIMED_OUT = 1;
+    JOB_FAULTY = 2;
+}
+
 /////////////////////////////////////////////////////////////////
 // Message types published to ZooKeeper event queue for workers to consume
 // Job Master informs workers regarding the events in the job
@@ -76,7 +83,7 @@ message JobEvent {
         WorkerFailed failed = 1;
         WorkerRestarted restarted = 2;
         AllWorkersJoined allJoined = 3;
-        AllArrivedOnBarrier allArrived = 4;
+        BarrierDone barrierDone = 4;
         JobMasterRestarted jmRestarted = 5;
     }
 }
@@ -100,11 +107,12 @@ message AllWorkersJoined {
     repeated WorkerInfo workerInfo = 2;
 }
 
-message AllArrivedOnBarrier {
-
-    int32 numberOfWorkers = 1;
+message BarrierDone {
     oneof typeRequired {
-        BarrierType barrierType = 2;
+        BarrierType barrierType = 1;
+    }
+    oneof resultRequired {
+        BarrierResult result = 2;
     }
 }
 
@@ -195,13 +203,19 @@ message ListWorkersResponse {
 // All workers in a job wants to wait in a Barrier point
 // When BarrierRequest message is received from all workers in the job,
 // Job Master will send response messages to all
-// previous request messages are quueed until the last request message is received
+// previous request messages are queued until the last request message is received
+// failures:
+// if the barrier times out, barrier fails
+// if a worker fails in the job, the default barrier fails if there is any
 message BarrierRequest {
-    oneof required{
+    oneof idRequired{
         int32 workerID = 1;
     }
     oneof typeRequired {
         BarrierType barrierType = 2;
+    }
+    oneof timeoutRequired{
+        int64 timeout = 3;
     }
 }
 
@@ -212,8 +226,8 @@ message BarrierResponse {
     oneof typeRequired {
         BarrierType barrierType = 2;
     }
-    oneof succeededRequired {
-        bool succeeded = 3;
+    oneof resultRequired {
+        BarrierResult result = 3;
     }
 }
 

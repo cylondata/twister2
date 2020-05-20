@@ -13,9 +13,7 @@ package edu.iu.dsc.tws.master.server;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +29,6 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.resource.InitBarrierListener;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
@@ -70,20 +67,6 @@ public class ZKMasterController {
   // children cache for persistent worker znodes for watching status changes
   protected PathChildrenCache persChildrenCache;
 
-  // children cache for default barrier directory for determining barrier arrival of all workers
-  protected PathChildrenCache defaultBarrierCache;
-
-  // children cache for default barrier directory for determining barrier arrival of all workers
-  protected PathChildrenCache initBarrierCache;
-
-  // keep the list of workers at the barriers
-  // all workers must arrive at the barrier
-  // and they all have to be removed after allArrived event published
-  private TreeSet<Integer> workersAtDefault = new TreeSet<>();
-  private TreeSet<Integer> toBeRemovedWorkersFromDefault = new TreeSet<>();
-  private TreeSet<Integer> workersAtInit = new TreeSet<>();
-  private TreeSet<Integer> toBeRemovedWorkersFromInit = new TreeSet<>();
-
   // persistent ephemeral znode for the job master for workers to watch the job master
   private PersistentNode masterEphemZNode;
 
@@ -95,20 +78,16 @@ public class ZKMasterController {
 
   private WorkerMonitor workerMonitor;
 
-  private InitBarrierListener initBarrierListener;
-
   public ZKMasterController(Config config,
                             String jobID,
                             int numberOfWorkers,
                             String jmAddress,
-                            WorkerMonitor workerMonitor,
-                            InitBarrierListener initBarrierListener) {
+                            WorkerMonitor workerMonitor) {
     this.config = config;
     this.jobID = jobID;
     this.numberOfWorkers = numberOfWorkers;
     this.jmAddress = jmAddress;
     this.workerMonitor = workerMonitor;
-    this.initBarrierListener = initBarrierListener;
 
     rootPath = ZKContext.rootNode(config);
     persDir = ZKUtils.persDir(rootPath, jobID);
@@ -149,20 +128,6 @@ public class ZKMasterController {
         persChildrenCache = new PathChildrenCache(client, persDir, true);
         addPersChildrenCacheListener(persChildrenCache);
         persChildrenCache.start();
-
-        // We listen for status updates for the default barrier path
-        String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
-        defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
-        addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
-            toBeRemovedWorkersFromDefault, JobMasterAPI.BarrierType.DEFAULT);
-        defaultBarrierCache.start();
-
-        // We listen for status updates for the init barrier path
-        String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
-        initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
-        addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
-            JobMasterAPI.BarrierType.INIT);
-        initBarrierCache.start();
       }
 
       // TODO: we nay need to create ephemeral job master znode so that
@@ -213,26 +178,6 @@ public class ZKMasterController {
       }
     }
 
-    // do not get previous events on barriers
-    // get current snapshots of both barriers at restart
-    String defaultBarrierDir = ZKUtils.defaultBarrierDir(rootPath, jobID);
-    defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
-    addBarrierChildrenCacheListener(defaultBarrierCache, workersAtDefault,
-        toBeRemovedWorkersFromDefault, JobMasterAPI.BarrierType.DEFAULT);
-    defaultBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-    addInitialWorkersAtBarrier(defaultBarrierCache, workersAtDefault);
-    LOG.info("Existing workers at default barrier: " + workersAtDefault.size());
-
-    // do not get previous events on barriers
-    // get current snapshots of both barriers at restart
-    String initBarrierDir = ZKUtils.initBarrierDir(rootPath, jobID);
-    initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
-    addBarrierChildrenCacheListener(initBarrierCache, workersAtInit, toBeRemovedWorkersFromInit,
-        JobMasterAPI.BarrierType.INIT);
-    initBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-    addInitialWorkersAtBarrier(initBarrierCache, workersAtInit);
-    LOG.info("Existing workers at init barrier: " + workersAtInit.size());
-
     // publish jm restarted event
     publishJobMasterRestarted();
 
@@ -241,17 +186,6 @@ public class ZKMasterController {
     if (allJoined && !allJoinedPublished()) {
       LOG.info("Publishing AllJoined event when restarting, since it is not previously published.");
       publishAllJoined();
-    }
-  }
-
-  private void addInitialWorkersAtBarrier(PathChildrenCache childrenCache,
-                                          Set<Integer> workersAtBarrier) {
-
-    List<ChildData> existingWorkerZnodes = childrenCache.getCurrentData();
-    for (ChildData child: existingWorkerZnodes) {
-      String fullPath = child.getPath();
-      int workerID = ZKUtils.getWorkerIDFromPersPath(fullPath);
-      workersAtBarrier.add(workerID);
     }
   }
 
@@ -596,82 +530,11 @@ public class ZKMasterController {
   }
 
   /**
-   * create the listener for barrier event znodes in the barrier directory
-   * to determine whether all workers arrived on the barrier
-   */
-  private void addBarrierChildrenCacheListener(
-      PathChildrenCache cache,
-      Set<Integer> workersAtBarrier,
-      Set<Integer> toBeRemovedWorkers,
-      JobMasterAPI.BarrierType barrierType) {
-
-    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
-
-      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
-
-        String childPath = event.getData().getPath();
-        int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
-
-        switch (event.getType()) {
-          case CHILD_ADDED:
-            workersAtBarrier.add(workerID);
-            if (workersAtBarrier.size() == numberOfWorkers
-                && toBeRemovedWorkers.isEmpty()) {
-
-              allArrivedAtBarrier(barrierType);
-              toBeRemovedWorkers.addAll(workersAtBarrier);
-            }
-            break;
-
-          case CHILD_REMOVED:
-            workersAtBarrier.remove(workerID);
-            toBeRemovedWorkers.remove(workerID);
-            break;
-
-          default:
-            // nothing to do
-        }
-      }
-    };
-    cache.getListenable().addListener(listener);
-  }
-
-  /**
-   * publish all arrived event and let the listener know in the case of init barrier
-   */
-  private void allArrivedAtBarrier(JobMasterAPI.BarrierType barrierType) {
-
-    // first inform barrier listener if there is any
-    if (initBarrierListener != null
-        && barrierType == JobMasterAPI.BarrierType.INIT) {
-
-      initBarrierListener.allArrived();
-    }
-
-    // let all workers know
-    JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
-        .setNumberOfWorkers(numberOfWorkers)
-        .setBarrierType(barrierType)
-        .build();
-
-    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-        .setAllArrived(allArrived)
-        .build();
-    try {
-      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
-  /**
    * close all local entities.
    */
   public void close() {
     CloseableUtils.closeQuietly(ephemChildrenCache);
     CloseableUtils.closeQuietly(persChildrenCache);
-    CloseableUtils.closeQuietly(defaultBarrierCache);
-    CloseableUtils.closeQuietly(initBarrierCache);
 
     if (masterEphemZNode != null) {
       CloseableUtils.closeQuietly(masterEphemZNode);

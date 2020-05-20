@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.zk;
 
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Longs;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
@@ -68,7 +70,7 @@ public final class ZKBarrierManager {
   /**
    * create a worker znode at the barrier directory
    */
-  public static void createWorkerZNode(CuratorFramework client, String workerPath)
+  public static void createWorkerZNode(CuratorFramework client, String workerPath, long timeout)
       throws Twister2Exception {
 
     try {
@@ -76,7 +78,7 @@ public final class ZKBarrierManager {
           .create()
           .creatingParentsIfNeeded()
           .withMode(CreateMode.PERSISTENT)
-          .forPath(workerPath);
+          .forPath(workerPath, Longs.toByteArray(timeout));
 
       LOG.info("Worker Barrier Znode created: " + workerPath);
 
@@ -92,11 +94,12 @@ public final class ZKBarrierManager {
   public static void createWorkerZNodeAtDefault(CuratorFramework client,
                                                 String rootPath,
                                                 String jobID,
-                                                int workerID) throws Twister2Exception {
+                                                int workerID,
+                                                long timeout) throws Twister2Exception {
 
     String barrierPath = ZKUtils.defaultBarrierDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
-    createWorkerZNode(client, workerPath);
+    createWorkerZNode(client, workerPath, timeout);
   }
 
   /**
@@ -105,11 +108,12 @@ public final class ZKBarrierManager {
   public static void createWorkerZNodeAtInit(CuratorFramework client,
                                              String rootPath,
                                              String jobID,
-                                             int workerID) throws Twister2Exception {
+                                             int workerID,
+                                             long timeout) throws Twister2Exception {
 
     String barrierPath = ZKUtils.initBarrierDir(rootPath, jobID);
     String workerPath = ZKUtils.workerPath(barrierPath, workerID);
-    createWorkerZNode(client, workerPath);
+    createWorkerZNode(client, workerPath, timeout);
   }
 
   /**

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.faulttolerance.JobFaultListener;
@@ -21,7 +23,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class JobFailureWatcher implements IWorkerFailureListener, InitBarrierListener {
   private static final Logger LOG = Logger.getLogger(JobFailureWatcher.class.getName());
 
-  private JobFaultListener jobFaultListener;
+  private List<JobFaultListener> jobFaultListeners = new LinkedList<>();
 
   // job becomes faulty when worker(s) fail
   // after failures, all workers need to be restarted and
@@ -36,8 +38,8 @@ public class JobFailureWatcher implements IWorkerFailureListener, InitBarrierLis
     return jobFaulty;
   }
 
-  public void setJobFaultListener(JobFaultListener jobFaultListener) {
-    this.jobFaultListener = jobFaultListener;
+  public void addJobFaultListener(JobFaultListener jobFaultListener) {
+    jobFaultListeners.add(jobFaultListener);
   }
 
   /**
@@ -48,10 +50,7 @@ public class JobFailureWatcher implements IWorkerFailureListener, InitBarrierLis
     firstInitBarrierProceeded = true;
     jobFaulty = false;
 
-    if (jobFaultListener != null) {
-      LOG.fine("Calling faultRestored()");
-      jobFaultListener.faultRestored();
-    }
+    jobFaultListeners.forEach(listener -> listener.faultRestored());
   }
 
   @Override
@@ -81,10 +80,8 @@ public class JobFailureWatcher implements IWorkerFailureListener, InitBarrierLis
     if (!jobFaulty) {
       jobFaulty = true;
 
-      if (jobFaultListener != null) {
-        LOG.fine("Calling faultOccurred()");
-        jobFaultListener.faultOccurred();
-      }
+      LOG.fine("Calling faultOccurred()");
+      jobFaultListeners.forEach(listener -> listener.faultOccurred());
     }
   }
 }
