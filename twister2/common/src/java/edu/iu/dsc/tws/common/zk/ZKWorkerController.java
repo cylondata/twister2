@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.NodeCache;
-import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
@@ -50,7 +48,6 @@ import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class.
@@ -120,9 +117,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   // children cache for events znode
   private PathChildrenCache eventsChildrenCache;
-
-  // job znode cache for watching scaling events
-  private NodeCache jobZnodeCache;
 
   // config object
   private Config config;
@@ -264,19 +258,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       addEventsChildrenCacheListener(eventsChildrenCache);
       eventsChildrenCache.start();
 
-      // We cache job znode data
-      // So we will listen job scaling up/down
-      String jobDir = ZKUtils.jobDir(rootPath, jobID);
-      jobZnodeCache = new NodeCache(client, jobDir);
-      addJobZnodeCacheListener();
-      // start the cache and wait for it to get current data from zk server
-      jobZnodeCache.start(true);
-
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
-      JobAPI.Job job = JobWithState.decode(jobZnodeCache.getCurrentData().getData()).getJob();
-      if (numberOfWorkers != job.getNumberOfWorkers()) {
-        numberOfWorkers = job.getNumberOfWorkers();
+      JobWithState jobWithState = JobZNodeManager.readJobZNode(client, rootPath, jobID);
+      if (numberOfWorkers != jobWithState.getJob().getNumberOfWorkers()) {
+        numberOfWorkers = jobWithState.getJob().getNumberOfWorkers();
         LOG.info("numberOfWorkers updated from persJobZnode as: " + numberOfWorkers);
       }
 
@@ -636,47 +622,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
-   * listen for content changes in the persistent job znode body for scaling events
-   */
-  private void addJobZnodeCacheListener() {
-    NodeCacheListener listener = new NodeCacheListener() {
-
-      @Override
-      public void nodeChanged() throws Exception {
-        byte[] jobZnodeBodyBytes = jobZnodeCache.getCurrentData().getData();
-        JobAPI.Job job = JobWithState.decode(jobZnodeBodyBytes).getJob();
-
-        int change = job.getNumberOfWorkers() - numberOfWorkers;
-        numberOfWorkers = job.getNumberOfWorkers();
-
-        // job scaled up
-        if (change > 0) {
-          allJoined = false;
-          if (scalerListener != null) {
-            scalerListener.workersScaledUp(change);
-          } else {
-            scalingEventBuffer.add(change);
-          }
-          LOG.info("Job scaled up. new numberOfWorkers: " + numberOfWorkers);
-
-          // job scaled down
-        } else if (change < 0) {
-          // remove scaled down workers from worker list
-          workers.removeIf(wInfo -> wInfo.getWorkerID() >= job.getNumberOfWorkers());
-          if (scalerListener != null) {
-            scalerListener.workersScaledDown(Math.abs(change));
-          } else {
-            scalingEventBuffer.add(change);
-          }
-          LOG.info("Job scaled down. new numberOfWorkers: " + numberOfWorkers);
-        }
-
-      }
-    };
-    jobZnodeCache.getListenable().addListener(listener);
-  }
-
-  /**
    * when a new event is published on the events directory by the job master
    * take necessary actions
    */
@@ -786,6 +731,35 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       } else {
         jmRestartedCache = jmRestarted;
       }
+    }
+
+    if (jobEvent.hasJobScaled()) {
+      JobMasterAPI.JobScaled jobScaled = jobEvent.getJobScaled();
+      int change = jobScaled.getChange();
+      numberOfWorkers = jobScaled.getNumberOfWorkers();
+
+      // job scaled up
+      if (change > 0) {
+        allJoined = false;
+        if (scalerListener != null) {
+          scalerListener.workersScaledUp(change);
+        } else {
+          scalingEventBuffer.add(change);
+        }
+        LOG.info("Job scaled up. new numberOfWorkers: " + numberOfWorkers);
+
+        // job scaled down
+      } else if (change < 0) {
+        // remove scaled down workers from worker list
+        workers.removeIf(wInfo -> wInfo.getWorkerID() >= numberOfWorkers);
+        if (scalerListener != null) {
+          scalerListener.workersScaledDown(Math.abs(change));
+        } else {
+          scalingEventBuffer.add(change);
+        }
+        LOG.info("Job scaled down. new numberOfWorkers: " + numberOfWorkers);
+      }
+
     }
   }
 
@@ -988,7 +962,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   public void close() {
     CloseableUtils.closeQuietly(workerEphemZNode);
     CloseableUtils.closeQuietly(eventsChildrenCache);
-    CloseableUtils.closeQuietly(jobZnodeCache);
   }
 
 }
