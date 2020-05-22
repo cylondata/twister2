@@ -9,22 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.worker;
+package edu.iu.dsc.tws.master.server;
 
-import com.google.protobuf.Message;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-import edu.iu.dsc.tws.api.resource.ISenderToDriver;
+public interface IWorkerEventSender {
 
-public class JMSenderToDriver implements ISenderToDriver {
+  /**
+   * the worker with the provided workerID failed
+   * @param workerID
+   */
+  void workerFailed(int workerID);
 
-  private JMWorkerAgent workerAgent;
+  /**
+   * the worker with the provided workerInfo restarted
+   * @param workerInfo
+   */
+  void workerRestarted(JobMasterAPI.WorkerInfo workerInfo);
 
-  public JMSenderToDriver(JMWorkerAgent workerAgent) {
-    this.workerAgent = workerAgent;
-  }
+  /**
+   * all workers joined the job
+   */
+  void allJoined();
 
-  @Override
-  public boolean sendToDriver(Message message) {
-    return workerAgent.sendWorkerToDriverMessage(message);
-  }
+  /**
+   * job scaled up or down
+   */
+  void jobScaled(int change, int numberOfWorkers);
+
 }

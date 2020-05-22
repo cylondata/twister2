@@ -37,9 +37,9 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
  * It sends response messages back to workers
  */
 
-public class WorkerHandler implements MessageHandler {
+public class JMWorkerHandler implements MessageHandler, IWorkerEventSender {
 
-  private static final Logger LOG = Logger.getLogger(WorkerHandler.class.getName());
+  private static final Logger LOG = Logger.getLogger(JMWorkerHandler.class.getName());
 
   private WorkerMonitor workerMonitor;
   private RRServer rrServer;
@@ -52,12 +52,43 @@ public class WorkerHandler implements MessageHandler {
 
   private List<RequestID> waitList;
 
-  public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
+  public JMWorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     this.zkUsed = zkUsed;
 
     waitList = new LinkedList<>();
+    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
+        JobMasterAPI.RegisterWorker.newBuilder();
+    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
+        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
+
+    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
+        JobMasterAPI.WorkerStateChange.newBuilder();
+    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
+        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
+
+    JobMasterAPI.ListWorkersRequest.Builder listWorkersBuilder =
+        JobMasterAPI.ListWorkersRequest.newBuilder();
+    JobMasterAPI.ListWorkersResponse.Builder listResponseBuilder =
+        JobMasterAPI.ListWorkersResponse.newBuilder();
+
+    JobMasterAPI.JobScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.JobScaled.newBuilder();
+
+    JobMasterAPI.AllJoined.Builder joinedBuilder = JobMasterAPI.AllJoined.newBuilder();
+
+    rrServer.registerRequestHandler(registerWorkerBuilder, this);
+    rrServer.registerRequestHandler(registerWorkerResponseBuilder, this);
+
+    rrServer.registerRequestHandler(stateChangeBuilder, this);
+    rrServer.registerRequestHandler(stateChangeResponseBuilder, this);
+
+    rrServer.registerRequestHandler(listWorkersBuilder, this);
+    rrServer.registerRequestHandler(listResponseBuilder, this);
+
+    rrServer.registerRequestHandler(scaledMessageBuilder, this);
+    rrServer.registerRequestHandler(joinedBuilder, this);
   }
 
   public boolean isAllConnected() {
@@ -117,31 +148,33 @@ public class WorkerHandler implements MessageHandler {
 
     if (initialState == JobMasterAPI.WorkerState.RESTARTED) {
       // if it is coming from failure
-      String failMessage = workerMonitor.restarted(workerWithState);
-      if (failMessage != null) {
-        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
-        return;
-      }
+      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+      workerMonitor.restarted(workerWithState);
 
     } else {
 
-      // if it is not coming from failure
-      String failMessage = workerMonitor.started(workerWithState);
-      if (failMessage != null) {
+      // if there is already a worker with this ID, return fail message
+      if (workerMonitor.existWorker(workerWithState.getWorkerID())) {
+        String failMessage = "There is an already registered worker with workerID: "
+            + workerWithState.getWorkerID();
+        LOG.severe(failMessage);
         sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
         return;
       }
-    }
 
-    // send a success response
-    sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+      // send a success response
+      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+
+      // if it is not coming from failure
+      workerMonitor.started(workerWithState);
+    }
 
     // if all workers registered, inform all workers
     if (!initialAllJoined && workerMonitor.isAllJoined()) {
       LOG.info("All workers joined the job. Worker IDs: " + workerMonitor.getWorkerIDs());
       sendListWorkersResponseToWaitList();
 
-      sendWorkersJoinedMessage();
+      allJoined();
     }
 
   }
@@ -219,51 +252,6 @@ public class WorkerHandler implements MessageHandler {
     }
   }
 
-  /**
-   * workerMonitor calls this method when job is scaled down and zk is not used
-   * @param instancesRemoved
-   */
-  public void workersScaledDown(int instancesRemoved) {
-
-    int change = 0 - instancesRemoved;
-    // construct scaled message to send to workers
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(change)
-        .setNumberOfWorkers(workerMonitor.getNumberOfWorkers())
-        .build();
-
-    // let all remaining workers know about the scaled message
-    for (int workerID : workerMonitor.getWorkerIDs()) {
-      rrServer.sendMessage(scaledMessage, workerID);
-    }
-  }
-
-  /**
-   * workerMonitor calls this method when the job is scaled up
-   * @param instancesAdded
-   */
-  public void workersScaledUp(int instancesAdded) {
-
-    unsetAllConnected();
-
-    if (zkUsed) {
-      return;
-    }
-
-    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
-        .setChange(instancesAdded)
-        .setNumberOfWorkers(workerMonitor.getNumberOfWorkers())
-        .build();
-
-    int numberOfWorkersBeforeScaling = workerMonitor.getNumberOfWorkers() - instancesAdded;
-    // let all previous workers know about the scaled message
-    // no need for informing newly added workers
-    for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
-      rrServer.sendMessage(scaledMessage, wID);
-    }
-
-  }
-
   private void sendListWorkersResponse(RequestID requestID) {
 
     List<JobMasterAPI.WorkerInfo> workerList = workerMonitor.getWorkerInfoList();
@@ -289,7 +277,6 @@ public class WorkerHandler implements MessageHandler {
 
     waitList.clear();
   }
-
 
   private void sendRegisterWorkerResponse(RequestID id,
                                           int workerID,
@@ -320,26 +307,6 @@ public class WorkerHandler implements MessageHandler {
     rrServer.sendResponse(id, response);
     LOG.fine("WorkerStateChangeResponse sent:\n" + response);
 
-  }
-
-  /**
-   * send WorkersJoined message to all workers and the driver
-   */
-  public void sendWorkersJoinedMessage() {
-
-    LOG.info("Sending WorkersJoined messages ...");
-
-    List<JobMasterAPI.WorkerInfo> workerInfoList = workerMonitor.getWorkerInfoList();
-
-    JobMasterAPI.WorkersJoined joinedMessage = JobMasterAPI.WorkersJoined.newBuilder()
-        .setNumberOfWorkers(workerInfoList.size())
-        .addAllWorker(workerInfoList)
-        .build();
-
-    // send the message to all workers
-    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
-      rrServer.sendMessage(joinedMessage, workerInfo.getWorkerID());
-    }
   }
 
   /**
@@ -377,6 +344,69 @@ public class WorkerHandler implements MessageHandler {
     }
 
     allConnected = false;
+  }
+
+  @Override
+  public void workerFailed(int workerID) {
+    JobMasterAPI.WorkerFailed workerFailed = JobMasterAPI.WorkerFailed.newBuilder()
+        .setWorkerID(workerID)
+        .build();
+
+    // send the message to all workers
+    for (int wID : workerMonitor.getWorkerIDs()) {
+      rrServer.sendMessage(workerFailed, wID);
+    }
+  }
+
+  @Override
+  public void workerRestarted(JobMasterAPI.WorkerInfo workerInfo) {
+    JobMasterAPI.WorkerRestarted workerRestarted = JobMasterAPI.WorkerRestarted.newBuilder()
+        .setWorkerInfo(workerInfo)
+        .build();
+
+    // send the message to all workers
+    for (int wID : workerMonitor.getWorkerIDs()) {
+      rrServer.sendMessage(workerRestarted, wID);
+    }
+  }
+
+  @Override
+  public void allJoined() {
+    LOG.info("Sending AllJoined messages ...");
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList = workerMonitor.getWorkerInfoList();
+
+    JobMasterAPI.AllJoined joinedMessage = JobMasterAPI.AllJoined.newBuilder()
+        .setNumberOfWorkers(workerInfoList.size())
+        .addAllWorkerInfo(workerInfoList)
+        .build();
+
+    // send the message to all workers
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      rrServer.sendMessage(joinedMessage, workerInfo.getWorkerID());
+    }
+  }
+
+  @Override
+  public void jobScaled(int change, int numberOfWorkers) {
+
+    // if the job is scaled down, send scaled message to workers that will continue to work
+    // if the job is scaled up, send scaled message to previously existing workers only
+    int workersToSend = numberOfWorkers;
+    if (change > 0) {
+      workersToSend = numberOfWorkers - change;
+    }
+
+    // construct scaled message to send to workers
+    JobMasterAPI.JobScaled scaledMessage = JobMasterAPI.JobScaled.newBuilder()
+        .setChange(change)
+        .setNumberOfWorkers(numberOfWorkers)
+        .build();
+
+    // let all remaining workers know about the scaled message
+    for (int workerID = 0; workerID < workersToSend; workerID++) {
+      rrServer.sendMessage(scaledMessage, workerID);
+    }
   }
 
 }

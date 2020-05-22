@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -296,10 +295,7 @@ public final class K8sWorkerStarter {
           return;
         }
 
-        if (workerStatusUpdater instanceof ZKWorkerController) {
-          workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.KILLED);
-        }
-
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.KILLED);
         WorkerRuntime.close();
       }
     };

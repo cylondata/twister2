@@ -60,6 +60,11 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     this.checkpointingClient = checkpointingClient;
     workerList = new ArrayList<>();
     workerList.add(workerInfo);
+
+    rrClient.registerResponseHandler(JobMasterAPI.ListWorkersRequest.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.ListWorkersResponse.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.BarrierRequest.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.BarrierResponse.newBuilder(), this);
   }
 
   @Override

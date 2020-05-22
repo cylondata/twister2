@@ -29,9 +29,7 @@ import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController;
@@ -122,8 +120,8 @@ public final class WorkerRuntime {
       jmWorkerAgent.startThreaded();
 
       workerController = jmWorkerAgent.getJMWorkerController();
-      workerStatusUpdater = new JMWorkerStatusUpdater(jmWorkerAgent);
-      senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+      workerStatusUpdater = jmWorkerAgent.getStatusUpdater();
+      senderToDriver = jmWorkerAgent.getDriverAgent();
     }
 
     // if there is a driver in the job, we need to start JMWorkerAgent
@@ -146,7 +144,7 @@ public final class WorkerRuntime {
         zkWorkerController.setCheckpointingClient(jmWorkerAgent.getCheckpointClient());
 
         // initialize JMSenderToDriver
-        senderToDriver = new JMSenderToDriver(jmWorkerAgent);
+        senderToDriver = jmWorkerAgent.getDriverAgent();
 
         // add listener to renew connection after jm restart
         if (FaultToleranceContext.faultTolerant(config)) {
@@ -200,9 +198,9 @@ public final class WorkerRuntime {
     failureListener = workerFailureListener;
     if (zkWorkerController != null) {
       return zkWorkerController.addFailureListener(workerFailureListener);
+    } else {
+      return jmWorkerAgent.addWorkerFailureListener(workerFailureListener);
     }
-
-    return false;
   }
 
   /**

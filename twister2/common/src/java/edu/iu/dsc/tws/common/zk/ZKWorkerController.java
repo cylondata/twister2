@@ -180,7 +180,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // registering the listener,
   // we keep the last AllWorkersJoined and JobMasterRestarted events
   // to deliver when there is no proper listener
-  private JobMasterAPI.AllWorkersJoined allJoinedEventCache;
+  private JobMasterAPI.AllJoined allJoinedEventCache;
   private JobMasterAPI.JobMasterRestarted jmRestartedCache;
 
   // we keep many fail events in the buffer to deliver later on
@@ -807,7 +807,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   private void processAllJoinedEvent(JobMasterAPI.JobEvent jobEvent) {
 
-    JobMasterAPI.AllWorkersJoined allJoinedEvent = jobEvent.getAllJoined();
+    JobMasterAPI.AllJoined allJoinedEvent = jobEvent.getAllJoined();
     workers.clear();
     workers.addAll(allJoinedEvent.getWorkerInfoList());
     allJoined = true;

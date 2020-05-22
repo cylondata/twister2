@@ -82,9 +82,10 @@ message JobEvent {
     oneof onlyOneEvent {
         WorkerFailed failed = 1;
         WorkerRestarted restarted = 2;
-        AllWorkersJoined allJoined = 3;
+        AllJoined allJoined = 3;
         BarrierDone barrierDone = 4;
         JobMasterRestarted jmRestarted = 5;
+        JobScaled jobScaled = 6;
     }
 }
 
@@ -100,7 +101,7 @@ message WorkerRestarted {
     }
 }
 
-message AllWorkersJoined {
+message AllJoined {
     oneof required {
         int32 numberOfWorkers = 1;
     }
@@ -119,6 +120,19 @@ message BarrierDone {
 message JobMasterRestarted {
     int32 numberOfWorkers = 1;
     string jmAddress = 2;
+}
+
+// the number of workers in the job has hanged
+// if change is positive, new workers added
+// if change is negative, some worker instances removed
+// numberOfWorkers shows the updated numberOfWorkers in the job
+message JobScaled {
+    oneof changeRequired {
+        int32 change = 1;
+    }
+    oneof numberOfWorkersRequired {
+        int32 numberOfWorkers = 2;
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -233,29 +247,6 @@ message BarrierResponse {
 
 // Driver to workers communication related messages
 // let the the workers know that
-// the number of workers in the job has hanged
-// if change is positive, new workers added
-// if change is negative, some worker instances removed
-// numberOfWorkers shows the updated numberOfWorkers in the job
-message WorkersScaled {
-    oneof changeRequired {
-        int32 change = 1;
-    }
-    oneof numberOfWorkersRequired {
-        int32 numberOfWorkers = 2;
-    }
-}
-
-// Job master will send this message to all workers
-// when all workers registered with the job
-//
-// it also sends this message to all workers
-// when all new workers have joined after the scale up
-message WorkersJoined {
-    int32 numberOfWorkers = 2;
-    repeated WorkerInfo worker = 3;
-}
-
 // Driver to worker message
 // Driver can send any byte array to workers including serialized protocol buffer messages
 // It is encoded as a byte array

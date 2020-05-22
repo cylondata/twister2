@@ -41,8 +41,6 @@ import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.Scaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -155,7 +153,7 @@ public class JobMaster {
   /**
    * WorkerHandler object to communicate with workers
    */
-  private WorkerHandler workerHandler;
+  private JMWorkerHandler workerHandler;
 
   private BarrierMonitor barrierMonitor;
 
@@ -287,7 +285,10 @@ public class JobMaster {
         this, rrServer, dashClient, zkJobUpdater, job, driver, jobFailureWatcher, faultTolerant);
 
     workerHandler =
-        new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
+        new JMWorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      workerMonitor.setWorkerEventSender(workerHandler);
+    }
 
     // initialize BarrierMonitor
     barrierMonitor = new BarrierMonitor(workerMonitor, jobFailureWatcher);
@@ -302,49 +303,6 @@ public class JobMaster {
       barrierMonitor.setBarrierResponder(jmBarrierHandler);
     }
     jobFailureWatcher.addJobFaultListener(barrierMonitor);
-
-    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
-        JobMasterAPI.RegisterWorker.newBuilder();
-    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
-        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
-
-    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
-        JobMasterAPI.WorkerStateChange.newBuilder();
-    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
-
-    ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
-    ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-
-    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
-        JobMasterAPI.WorkersScaled.newBuilder();
-
-    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
-        JobMasterAPI.DriverMessage.newBuilder();
-
-    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
-        JobMasterAPI.WorkerMessage.newBuilder();
-    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
-        = JobMasterAPI.WorkerMessageResponse.newBuilder();
-
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
-
-    rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
-    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(stateChangeBuilder, workerHandler);
-    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(listWorkersBuilder, workerHandler);
-    rrServer.registerRequestHandler(listResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(driverMessageBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(workerMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(workerResponseBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
     // if ZoKeeper server is used for this job, initialize that
     try {
@@ -524,6 +482,7 @@ public class JobMaster {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController = new ZKMasterController(
           config, job.getJobId(), job.getNumberOfWorkers(), jmAddress, wMonitor);
+      workerMonitor.setWorkerEventSender(zkMasterController);
 
       try {
         zkMasterController.initialize(initialState);
@@ -538,7 +497,7 @@ public class JobMaster {
     return zkMasterController;
   }
 
-  public WorkerHandler getWorkerHandler() {
+  public JMWorkerHandler getWorkerHandler() {
     return workerHandler;
   }
 
