@@ -15,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
@@ -147,20 +146,18 @@ public final class WorkerRuntime {
         senderToDriver = jmWorkerAgent.getDriverAgent();
 
         // add listener to renew connection after jm restart
-        if (FaultToleranceContext.faultTolerant(config)) {
-          zkWorkerController.addJMFailureListener(new IJobMasterFailureListener() {
-            @Override
-            public void failed() {
+        zkWorkerController.addJMFailureListener(new IJobMasterFailureListener() {
+          @Override
+          public void failed() {
 
-            }
+          }
 
-            @Override
-            public void restarted(String jobMasterAddress) {
-              LOG.info("JobMaster restarted. Worker will try to reconnect and re-register.");
-              jmWorkerAgent.reconnect(jobMasterAddress);
-            }
-          });
-        }
+          @Override
+          public void restarted(String jobMasterAddress) {
+            LOG.info("JobMaster restarted. Worker will try to reconnect and re-register.");
+            jmWorkerAgent.reconnect(jobMasterAddress);
+          }
+        });
       }
     }
 
@@ -205,6 +202,7 @@ public final class WorkerRuntime {
 
   /**
    * Get the failure listener
+   *
    * @return the failure listener
    */
   public static IWorkerFailureListener getFailureListener() {

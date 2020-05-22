@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.driver.DefaultDriver;
 import edu.iu.dsc.tws.api.driver.IDriver;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
@@ -280,9 +279,8 @@ public class JobMaster {
 
     JobFailureWatcher jobFailureWatcher = new JobFailureWatcher();
 
-    boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
     workerMonitor = new WorkerMonitor(
-        this, rrServer, dashClient, zkJobUpdater, job, driver, jobFailureWatcher, faultTolerant);
+        this, rrServer, dashClient, zkJobUpdater, job, driver, jobFailureWatcher);
 
     workerHandler =
         new JMWorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));

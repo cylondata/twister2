@@ -16,11 +16,6 @@ import edu.iu.dsc.tws.api.config.Context;
 
 public class FaultToleranceContext extends Context {
 
-  // A flag to enable/disable fault tolerance in Twister2
-  // By default, it is disabled
-  public static final String FAULT_TOLERANT = "twister2.fault.tolerant";
-  public static final boolean FAULT_TOLERANT_DEFAULT = false;
-
   // FAILURE_TIMEOUT determines worker failures.
   // If workers do not send heartbeat messages for this many milli seconds,
   // they are assumed failed
@@ -34,10 +29,6 @@ public class FaultToleranceContext extends Context {
   // maximum number of times to re-start worker JVMs after failures
   public static final String MAX_RESTARTS = "twister2.fault.tolerance.max.restarts";
   public static final int MAX_RESTARTS_DEFAULT = 5;
-
-  public static boolean faultTolerant(Config cfg) {
-    return cfg.getBooleanValue(FAULT_TOLERANT, FAULT_TOLERANT_DEFAULT);
-  }
 
   public static int sessionTimeout(Config cfg) {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);

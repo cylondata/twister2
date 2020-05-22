@@ -71,9 +71,6 @@ public class WorkerMonitor implements MessageHandler {
   private IDriver driver;
   private IWorkerEventSender workerEventSender;
 
-  // whether this is a fault tolerant job
-  private boolean faultTolerant;
-
   // upto date status of the job
   private JobAPI.JobState jobState;
 
@@ -106,8 +103,7 @@ public class WorkerMonitor implements MessageHandler {
                        ZKJobUpdater zkJobUpdater,
                        JobAPI.Job job,
                        IDriver driver,
-                       IWorkerFailureListener failureListener,
-                       boolean faultTolerant) {
+                       IWorkerFailureListener failureListener) {
 
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
@@ -115,7 +111,6 @@ public class WorkerMonitor implements MessageHandler {
     this.zkJobUpdater = zkJobUpdater;
     this.driver = driver;
     this.numberOfWorkers = job.getNumberOfWorkers();
-    this.faultTolerant = faultTolerant;
     this.failureListener = failureListener;
 
     this.jobState = JobAPI.JobState.STARTING;
