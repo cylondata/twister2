@@ -35,14 +35,12 @@ import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 public class CSVTSetSourceExample implements BatchTSetIWorker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(CSVTSetSourceExample.class.getName());
-  private int count;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     int dsize = 100;
     int parallelism = 2;
     int dimension = 2;
-
     SourceTSet<String[]> pointSource = env.createCSVSource("/tmp/dinput", dsize,
         parallelism, "split");
     ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
