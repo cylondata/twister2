@@ -293,11 +293,10 @@ public class JobMaster {
     // initialize BarrierMonitor
     barrierMonitor = new BarrierMonitor(workerMonitor, jobFailureWatcher);
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      zkBarrierHandler = new ZKBarrierHandler(barrierMonitor, config, job.getJobId());
+      zkBarrierHandler =
+          new ZKBarrierHandler(barrierMonitor, config, job.getJobId(), job.getNumberOfWorkers());
       barrierMonitor.setBarrierResponder(zkBarrierHandler);
       zkBarrierHandler.initialize(initialState);
-      barrierMonitor.addInitialWorkersAtDefault(zkBarrierHandler.getInitialWorkersAtDefault());
-      barrierMonitor.addInitialWorkersAtInit(zkBarrierHandler.getInitialWorkersAtInit());
     } else {
       JMBarrierHandler jmBarrierHandler = new JMBarrierHandler(rrServer, barrierMonitor);
       barrierMonitor.setBarrierResponder(jmBarrierHandler);

@@ -28,7 +28,9 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -40,6 +42,7 @@ public class ZKBarrierHandler implements BarrierResponder {
   private BarrierMonitor barrierMonitor;
   private Config config;
   private String jobID;
+  private int numberOfWorkers;
 
   // the client to connect to ZK server
   private CuratorFramework client;
@@ -52,13 +55,14 @@ public class ZKBarrierHandler implements BarrierResponder {
 
   private String rootPath;
 
-  private TreeSet<Integer> initialWorkersAtDefault = new TreeSet<>();
-  private TreeSet<Integer> initialWorkersAtInit = new TreeSet<>();
-
-  public ZKBarrierHandler(BarrierMonitor barrierMonitor, Config config, String jobID) {
+  public ZKBarrierHandler(BarrierMonitor barrierMonitor,
+                          Config config,
+                          String jobID,
+                          int numberOfWorkers) {
     this.barrierMonitor = barrierMonitor;
     this.config = config;
     this.jobID = jobID;
+    this.numberOfWorkers = numberOfWorkers;
 
     rootPath = ZKContext.rootNode(config);
   }
@@ -90,8 +94,14 @@ public class ZKBarrierHandler implements BarrierResponder {
         defaultBarrierCache = new PathChildrenCache(client, defaultBarrierDir, true);
         addBarrierChildrenCacheListener(defaultBarrierCache, JobMasterAPI.BarrierType.DEFAULT);
         defaultBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-        addInitialWorkersAtBarrier(defaultBarrierCache, initialWorkersAtDefault);
-        LOG.info("Existing workers at default barrier: " + initialWorkersAtDefault.size());
+
+        TreeSet<Integer> existingWorkers = new TreeSet<>();
+        long timeout = getInitialWorkersAtBarrier(defaultBarrierCache, existingWorkers);
+        if (!existingWorkers.isEmpty()) {
+          barrierMonitor.initDefaultAfterRestart(existingWorkers, timeout, numberOfWorkers);
+          LOG.info("Existing workers at default barrier: " + existingWorkers.size());
+          existingWorkers.clear();
+        }
 
         // do not get previous events on barriers
         // get current snapshots of both barriers at restart
@@ -99,8 +109,12 @@ public class ZKBarrierHandler implements BarrierResponder {
         initBarrierCache = new PathChildrenCache(client, initBarrierDir, true);
         addBarrierChildrenCacheListener(initBarrierCache, JobMasterAPI.BarrierType.INIT);
         initBarrierCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-        addInitialWorkersAtBarrier(initBarrierCache, initialWorkersAtInit);
-        LOG.info("Existing workers at init barrier: " + initialWorkersAtInit.size());
+
+        timeout = getInitialWorkersAtBarrier(initBarrierCache, existingWorkers);
+        if (!existingWorkers.isEmpty()) {
+          barrierMonitor.initInitAfterRestart(existingWorkers, timeout, numberOfWorkers);
+          LOG.info("Existing workers at init barrier: " + existingWorkers);
+        }
 
       } else {
 
@@ -124,23 +138,26 @@ public class ZKBarrierHandler implements BarrierResponder {
     }
   }
 
-  public TreeSet<Integer> getInitialWorkersAtDefault() {
-    return initialWorkersAtDefault;
-  }
-
-  public TreeSet<Integer> getInitialWorkersAtInit() {
-    return initialWorkersAtInit;
-  }
-
-  private void addInitialWorkersAtBarrier(PathChildrenCache childrenCache,
+  private long getInitialWorkersAtBarrier(PathChildrenCache childrenCache,
                                           Set<Integer> workersAtBarrier) {
 
+    long timeout = 0;
     List<ChildData> existingWorkerZnodes = childrenCache.getCurrentData();
     for (ChildData child: existingWorkerZnodes) {
       String fullPath = child.getPath();
       int workerID = ZKUtils.getWorkerIDFromPersPath(fullPath);
       workersAtBarrier.add(workerID);
+
+      if (timeout == 0) {
+        try {
+          ZKBarrierManager.readWorkerTimeout(client, fullPath);
+        } catch (Twister2Exception e) {
+          throw new Twister2RuntimeException(e);
+        }
+      }
     }
+
+    return timeout;
   }
 
   /**

@@ -79,12 +79,31 @@ public class BarrierMonitor implements JobFaultListener {
     this.barrierResponder = barrierResponder;
   }
 
-  public void addInitialWorkersAtDefault(Set<Integer> initialWorkers) {
+  public void initDefaultAfterRestart(Set<Integer> initialWorkers,
+                                      long timeout,
+                                      int expectedWorkers) {
+
     defaultWaitList.addAll(initialWorkers);
+    defaultTimeout.number = timeout;
+    expectedWorkersOnDefault.number = expectedWorkers;
+    defaultStartTime.number = System.currentTimeMillis();
   }
 
-  public void addInitialWorkersAtInit(Set<Integer> initialWorkers) {
+  /**
+   * this method is invoked when JM restarts
+   * it gets previous status from ZK
+   * @param initialWorkers
+   * @param timeout
+   * @param expectedWorkers
+   */
+  public void initInitAfterRestart(Set<Integer> initialWorkers,
+                                   long timeout,
+                                   int expectedWorkers) {
+
     initWaitList.addAll(initialWorkers);
+    initTimeout.number = timeout;
+    expectedWorkersOnInit.number = expectedWorkers;
+    initStartTime.number = System.currentTimeMillis();
   }
 
   @Override

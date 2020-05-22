@@ -89,6 +89,20 @@ public final class ZKBarrierManager {
   }
 
   /**
+   * read a worker znode at the barrier directory
+   */
+  public static long readWorkerTimeout(CuratorFramework client, String workerPath)
+      throws Twister2Exception {
+
+    try {
+      byte[] timeoutBytes = client.getData().forPath(workerPath);
+      return Longs.fromByteArray(timeoutBytes);
+    } catch (Exception e) {
+      throw new Twister2Exception("Could not read worker barrier znode body: " + e.getMessage(), e);
+    }
+  }
+
+  /**
    * create a worker znode at the default barrier directory
    */
   public static void createWorkerZNodeAtDefault(CuratorFramework client,
