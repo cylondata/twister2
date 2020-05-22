@@ -200,10 +200,6 @@ public final class K8sWorkerStarter {
     }
     WorkerRuntime.close();
     externallyKilled = false;
-
-    // wait to be deleted by Job master
-    // starting bash script waits for deletion after successful completion
-    // K8sWorkerUtils.waitIndefinitely();
   }
 
   /**

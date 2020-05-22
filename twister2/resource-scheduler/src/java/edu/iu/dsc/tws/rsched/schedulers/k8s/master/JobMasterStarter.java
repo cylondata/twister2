@@ -112,8 +112,14 @@ public final class JobMasterStarter {
     } else {
       String keyName = KubernetesUtils.createRestartJobMasterKey();
       int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
-      initialState = restartCount == 0
-          ? JobMasterAPI.JobMasterState.JM_STARTED : JobMasterAPI.JobMasterState.JM_RESTARTED;
+
+      // if zookeeper is not used, jm can not recover from failure
+      // so, we terminate the job
+      if (restartCount > 0) {
+        jobTerminator.terminateJob(jobID);
+        return;
+      }
+      initialState = JobMasterAPI.JobMasterState.JM_STARTED;
     }
 
     // start JobMaster
@@ -128,9 +134,6 @@ public final class JobMasterStarter {
 
     // close the controller
     controller.close();
-
-    // wait to be deleted by K8s master
-    K8sWorkerUtils.waitIndefinitely();
   }
 
   /**
