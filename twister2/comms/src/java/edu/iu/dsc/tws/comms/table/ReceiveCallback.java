@@ -9,17 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.table.arrow;
+package edu.iu.dsc.tws.comms.table;
 
-/**
- * We are going to represent and arrow vector as a column to facilitate
- * easy access and building of vectors
- * @param <T>
- */
-public interface ArrowColumn<T> {
-  void addValue(T value);
+import java.nio.ByteBuffer;
 
-  T get(int index);
+public interface ReceiveCallback {
+  void onReceive(int source, ByteBuffer buffer, int length);
 
-  long currentSize();
+  void onReceiveHeader(int source, boolean finished, int[] header, int length);
+
+  boolean onSendComplete(int target, ByteBuffer buffer, int length);
 }

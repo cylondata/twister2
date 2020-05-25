@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.table.arrow;
 
 import org.apache.arrow.vector.UInt8Vector;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
+
 public class Int8Column implements ArrowColumn<Long> {
   private UInt8Vector vector;
 

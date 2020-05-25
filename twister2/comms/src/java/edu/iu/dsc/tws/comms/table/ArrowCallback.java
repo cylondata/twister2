@@ -11,14 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table;
 
-import java.util.List;
+import edu.iu.dsc.tws.common.table.Table;
 
-import org.apache.arrow.vector.FieldVector;
-
-/**
- * Represent an table
- */
-public class ArrowTable {
-  private List<FieldVector> fieldVectors;
-
+public interface ArrowCallback {
+  void onReceive(int source, Table table);
 }

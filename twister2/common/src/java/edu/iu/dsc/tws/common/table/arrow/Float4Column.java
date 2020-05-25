@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.table.arrow;
 
 import org.apache.arrow.vector.Float4Vector;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
+
 public class Float4Column implements ArrowColumn<Float> {
   private Float4Vector vector;
 

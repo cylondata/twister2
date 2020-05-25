@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.common.table.arrow;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.util.Text;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
+
 public class StringColumn implements ArrowColumn<Text> {
   private VarCharVector vector;
 

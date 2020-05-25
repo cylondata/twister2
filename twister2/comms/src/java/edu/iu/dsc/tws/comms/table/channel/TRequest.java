@@ -38,4 +38,24 @@ public final class TRequest {
   public TRequest(int tgt) {
     target = tgt;
   }
+
+  public int getLength() {
+    return length;
+  }
+
+  public int getTarget() {
+    return target;
+  }
+
+  public int[] getHeader() {
+    return header;
+  }
+
+  public int getHeaderLength() {
+    return headerLength;
+  }
+
+  public ByteBuffer getBuffer() {
+    return buffer;
+  }
 }

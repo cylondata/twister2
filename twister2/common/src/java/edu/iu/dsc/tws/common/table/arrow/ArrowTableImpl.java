@@ -15,12 +15,13 @@ import java.util.List;
 
 import org.apache.arrow.vector.types.pojo.Schema;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
 
 public class ArrowTableImpl implements Table {
   private List<ArrowColumn> columns;
 
-  private org.apache.arrow.vector.types.pojo.Schema schema;
+  private Schema schema;
 
   private int rows;
 

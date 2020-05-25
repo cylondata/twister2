@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.table.ArrowTable;
+import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.comms.table.ops.TPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
@@ -49,7 +49,7 @@ public class Partition extends AbstractParallelOperation {
   }
 
   public boolean send(int source, IMessage message, int dest) {
-    return op.insert(source, (ArrowTable) message.getContent(), 0);
+    return op.insert(source, (Table) message.getContent(), 0);
   }
 
   public class PartitionReceiver implements BulkReceiver {

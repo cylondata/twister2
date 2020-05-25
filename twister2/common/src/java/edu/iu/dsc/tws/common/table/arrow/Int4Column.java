@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.table.arrow;
 
 import org.apache.arrow.vector.IntVector;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
+
 public class Int4Column implements ArrowColumn<Integer> {
   private IntVector vector;
 

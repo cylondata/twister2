@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.table.arrow;
 
 import org.apache.arrow.vector.UInt2Vector;
 
+import edu.iu.dsc.tws.common.table.ArrowColumn;
+
 public class UInt2Column implements ArrowColumn<Character> {
   private UInt2Vector vector;
 

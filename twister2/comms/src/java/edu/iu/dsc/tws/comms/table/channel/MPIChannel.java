@@ -33,6 +33,7 @@ import mpi.Status;
 public class MPIChannel {
   private static final Logger LOG = Logger.getLogger(MPIChannel.class.getName());
 
+  public static final int TWISTERX_CHANNEL_USER_HEADER = 6;
   private static final int TWISTERX_CHANNEL_HEADER_SIZE = 8;
   private static final int TWISTERX_MSG_FIN = 1;
 
@@ -93,7 +94,8 @@ public class MPIChannel {
   private int rank;
 
   public MPIChannel(Config config,
-                    IWorkerController wController) {
+                    IWorkerController wController, int ed, List<Integer> srcs, List<Integer> tgts,
+                    ChannelReceiveCallback recvCallback, ChannelSendCallback sCallback) {
     this.cfg = config;
     Object commObject = wController.getRuntimeObject("comm");
     if (commObject == null) {
@@ -101,10 +103,7 @@ public class MPIChannel {
     } else {
       this.comm = (Intracomm) commObject;
     }
-  }
 
-  public void init(int ed, List<Integer> srcs, List<Integer> tgts,
-                   ChannelReceiveCallback recvCallback, ChannelSendCallback sCallback) {
     this.edge = ed;
     this.receiveCallback = recvCallback;
     this.sendCallback = sCallback;
