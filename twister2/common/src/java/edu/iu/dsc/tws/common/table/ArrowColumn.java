@@ -11,10 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
-import java.util.List;
+/**
+ * We are going to represent and arrow vector as a column to facilitate
+ * easy access and building of vectors
+ * @param <T>
+ */
+public interface ArrowColumn<T> {
+  void addValue(T value);
 
-public interface Table {
-  int rowCount();
+  T get(int index);
 
-  List<ArrowColumn> getColumns();
+  long currentSize();
 }

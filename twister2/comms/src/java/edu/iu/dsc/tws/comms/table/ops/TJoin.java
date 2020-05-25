@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.table.ops;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.comms.table.ArrowTable;
+import edu.iu.dsc.tws.common.table.Table;
 
 public class TJoin extends BaseOperation {
   /**
@@ -23,7 +23,7 @@ public class TJoin extends BaseOperation {
     super(comm, stream, opName);
   }
 
-  public boolean insert(ArrowTable table, int target) {
+  public boolean insert(Table table, int target) {
     return false;
   }
 
