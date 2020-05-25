@@ -307,12 +307,12 @@ public final class NomadWorkerStarter {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    //should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers, initialState);
+        workerInfo, masterHost, masterPort, numberContainers, restartCount);
     LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
 
     jobMasterAgent.startThreaded();

@@ -9,22 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.worker;
+package edu.iu.dsc.tws.api.exceptions;
 
-import com.google.protobuf.Message;
+public class JobFaultyException extends Twister2RuntimeException {
 
-import edu.iu.dsc.tws.api.resource.ISenderToDriver;
-
-public class JMSenderToDriver implements ISenderToDriver {
-
-  private JMWorkerAgent workerAgent;
-
-  public JMSenderToDriver(JMWorkerAgent workerAgent) {
-    this.workerAgent = workerAgent;
+  public JobFaultyException(String msg) {
+    super(msg);
   }
 
-  @Override
-  public boolean sendToDriver(Message message) {
-    return workerAgent.sendWorkerToDriverMessage(message);
+  public JobFaultyException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+
+  public JobFaultyException(Throwable throwable) {
+    super(throwable);
   }
 }

@@ -34,7 +34,7 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    String reference = referencePrefix + ctx.getIndex();
+    String reference = referencePrefix + "_" + ctx.getIndex();
     partition = new DiskBackedCollectionPartition<>(0,
         ctx.getConfig(), reference);
   }

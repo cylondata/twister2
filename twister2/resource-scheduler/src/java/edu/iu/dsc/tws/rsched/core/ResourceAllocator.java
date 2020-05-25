@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
@@ -338,7 +339,7 @@ public class ResourceAllocator {
       uploader.undo(updatedConfig, job.getJobId());
     }
 
-    if (SchedulerContext.clusterType(updatedConfig).equals("kubernetes")
+    if (Context.isKubernetesCluster(updatedConfig)
         && SchedulerContext.uploaderClass(updatedConfig)
         .equals("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader")
         && RequestObjectBuilder.uploadMethod.equals("client-to-pods")

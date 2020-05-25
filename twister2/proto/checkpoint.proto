@@ -27,6 +27,13 @@ message FamilyInitialize {
 message FamilyInitializeResponse {
     string family = 1;
     int64 version = 2;
+
+    enum Status {
+        OK = 0;
+        REJECTED = 1;
+    }
+
+    Status status = 3;
 }
 
 message ComponentDiscovery {

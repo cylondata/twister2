@@ -25,18 +25,19 @@ import java.util.stream.Collectors;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.NodeCache;
-import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.utils.CloseableUtils;
 
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
@@ -47,7 +48,6 @@ import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class.
@@ -106,6 +106,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // initial state of this worker
   private WorkerState initialState;
 
+  // restart count of this worker
+  private int restartCount;
+
   // the client to connect to ZK server
   private CuratorFramework client;
 
@@ -114,9 +117,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   // children cache for events znode
   private PathChildrenCache eventsChildrenCache;
-
-  // job znode cache for watching scaling events
-  private NodeCache jobZnodeCache;
 
   // config object
   private Config config;
@@ -139,14 +139,24 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private TreeMap<Integer, JobMasterAPI.JobEvent> pastEvents;
 
   // synchronization object for waiting all workers to join the job
-  private Object waitObjectAllJoined = new Object();
+  private Object allJoinedWaitObject = new Object();
 
   // synchronization object for waiting all workers to arrive on the barrier
-  private Object waitObjectBarrier = new Object();
+  private Object defaultBarrierWaitObject = new Object();
 
-  // it is set, when all workers arrived on the barrier
-  // it is set to false, when the worker starts to wait on a new barrier
-  private boolean barrierProceeded = false;
+  // synchronization object for waiting all workers to arrive on the barrier
+  private Object initBarrierWaitObject = new Object();
+
+  // it is set to false, when the worker starts to wait on the default barrier
+  // it is set to true, when all workers arrived on the default barrier
+  private boolean defaultBarrierProceeded = false;
+
+  // it is set to false, when the worker starts to wait on the init barrier
+  // it is set to true, when all workers arrived on the init barrier
+  private boolean initBarrierProceeded = false;
+
+  private JobMasterAPI.BarrierResult defaultBarrierResult = JobMasterAPI.BarrierResult.UNRECOGNIZED;
+  private JobMasterAPI.BarrierResult initBarrierResult = JobMasterAPI.BarrierResult.UNRECOGNIZED;
 
   // Inform worker failure events
   private IWorkerFailureListener failureListener;
@@ -164,12 +174,18 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // registering the listener,
   // we keep the last AllWorkersJoined and JobMasterRestarted events
   // to deliver when there is no proper listener
-  private JobMasterAPI.AllWorkersJoined allJoinedEventCache;
+  private JobMasterAPI.AllJoined allJoinedEventCache;
   private JobMasterAPI.JobMasterRestarted jmRestartedCache;
 
   // we keep many fail events in the buffer to deliver later on
   private List<JobMasterAPI.JobEvent> failEventBuffer = new LinkedList<>();
   private List<Integer> scalingEventBuffer = new LinkedList<>();
+
+  /**
+   * this client is currently implemented through JMWorkerAgent
+   * we don't have ZK based implementation
+   */
+  private CheckpointingClient checkpointingClient;
 
   /**
    * Construct ZKWorkerController but do not initialize yet
@@ -200,13 +216,14 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * The body of the persistent worker znode will be updated as the status of worker changes
    * from STARTED, COMPLETED,
    */
-  public void initialize(WorkerState initState) throws Exception {
+  public void initialize(int restartCount1) throws Exception {
 
-    this.initialState = initState;
+    this.restartCount = restartCount1;
+    this.initialState = restartCount > 0 ? WorkerState.RESTARTED : WorkerState.STARTED;
 
-    if (!(initState == WorkerState.STARTED || initState == WorkerState.RESTARTED)) {
+    if (!(initialState == WorkerState.STARTED || initialState == WorkerState.RESTARTED)) {
       throw new Exception("initialState has to be either WorkerState.STARTED or "
-          + "WorkerState.RESTARTED. Supplied value: " + initState);
+          + "WorkerState.RESTARTED. Supplied value: " + initialState);
     }
 
     try {
@@ -228,8 +245,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
         // if the worker barrier znode exist from the previous run, delete it
         // worker may have crashed during barrier operation
-        if (ZKBarrierManager.existWorkerZNode(client, rootPath, jobID, wID)) {
-          ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, wID);
+        if (ZKBarrierManager.existWorkerZNodeAtDefault(client, rootPath, jobID, wID)) {
+          ZKBarrierManager.deleteWorkerZNodeFromDefault(client, rootPath, jobID, wID);
+        }
+        if (ZKBarrierManager.existWorkerZNodeAtInit(client, rootPath, jobID, wID)) {
+          ZKBarrierManager.deleteWorkerZNodeFromInit(client, rootPath, jobID, wID);
         }
       }
 
@@ -238,19 +258,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       addEventsChildrenCacheListener(eventsChildrenCache);
       eventsChildrenCache.start();
 
-      // We cache job znode data
-      // So we will listen job scaling up/down
-      String jobDir = ZKUtils.jobDir(rootPath, jobID);
-      jobZnodeCache = new NodeCache(client, jobDir);
-      addJobZnodeCacheListener();
-      // start the cache and wait for it to get current data from zk server
-      jobZnodeCache.start(true);
-
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
-      JobAPI.Job job = JobWithState.decode(jobZnodeCache.getCurrentData().getData()).getJob();
-      if (numberOfWorkers != job.getNumberOfWorkers()) {
-        numberOfWorkers = job.getNumberOfWorkers();
+      JobWithState jobWithState = JobZNodeManager.readJobZNode(client, rootPath, jobID);
+      if (numberOfWorkers != jobWithState.getJob().getNumberOfWorkers()) {
+        numberOfWorkers = jobWithState.getJob().getNumberOfWorkers();
         LOG.info("numberOfWorkers updated from persJobZnode as: " + numberOfWorkers);
       }
 
@@ -262,6 +274,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
       throw e;
     }
+  }
+
+  public void setCheckpointingClient(CheckpointingClient checkpointingClient) {
+    this.checkpointingClient = checkpointingClient;
   }
 
   /**
@@ -303,7 +319,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     try {
       return ZKPersStateManager.updateWorkerStatus(
-          client, rootPath, jobID, workerInfo, newStatus);
+          client, rootPath, jobID, workerInfo, restartCount, newStatus);
 
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -392,9 +408,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     long delay = 0;
     while (delay < timeLimit) {
-      synchronized (waitObjectAllJoined) {
+      synchronized (allJoinedWaitObject) {
         try {
-          waitObjectAllJoined.wait(timeLimit - delay);
+          allJoinedWaitObject.wait(timeLimit - delay);
 
           // proceeding with notification or timeout
           if (allJoined) {
@@ -606,47 +622,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
-   * listen for content changes in the persistent job znode body for scaling events
-   */
-  private void addJobZnodeCacheListener() {
-    NodeCacheListener listener = new NodeCacheListener() {
-
-      @Override
-      public void nodeChanged() throws Exception {
-        byte[] jobZnodeBodyBytes = jobZnodeCache.getCurrentData().getData();
-        JobAPI.Job job = JobWithState.decode(jobZnodeBodyBytes).getJob();
-
-        int change = job.getNumberOfWorkers() - numberOfWorkers;
-        numberOfWorkers = job.getNumberOfWorkers();
-
-        // job scaled up
-        if (change > 0) {
-          allJoined = false;
-          if (scalerListener != null) {
-            scalerListener.workersScaledUp(change);
-          } else {
-            scalingEventBuffer.add(change);
-          }
-          LOG.info("Job scaled up. new numberOfWorkers: " + numberOfWorkers);
-
-          // job scaled down
-        } else if (change < 0) {
-          // remove scaled down workers from worker list
-          workers.removeIf(wInfo -> wInfo.getWorkerID() >= job.getNumberOfWorkers());
-          if (scalerListener != null) {
-            scalerListener.workersScaledDown(Math.abs(change));
-          } else {
-            scalingEventBuffer.add(change);
-          }
-          LOG.info("Job scaled down. new numberOfWorkers: " + numberOfWorkers);
-        }
-
-      }
-    };
-    jobZnodeCache.getListenable().addListener(listener);
-  }
-
-  /**
    * when a new event is published on the events directory by the job master
    * take necessary actions
    */
@@ -723,13 +698,28 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       }
     }
 
-    if (jobEvent.hasAllArrived()) {
-      barrierProceeded = true;
-      synchronized (waitObjectBarrier) {
-        waitObjectBarrier.notify();
+    if (jobEvent.hasBarrierDone()) {
+      if (jobEvent.getBarrierDone().getBarrierType() == JobMasterAPI.BarrierType.DEFAULT) {
+
+        defaultBarrierProceeded = true;
+        defaultBarrierResult = jobEvent.getBarrierDone().getResult();
+        synchronized (defaultBarrierWaitObject) {
+          defaultBarrierWaitObject.notify();
+        }
+        LOG.info("Received BarrierDone event on the default Barrier. BarrierResult: "
+            + jobEvent.getBarrierDone().getResult());
+
+      } else if (jobEvent.getBarrierDone().getBarrierType() == JobMasterAPI.BarrierType.INIT) {
+
+        initBarrierResult = jobEvent.getBarrierDone().getResult();
+        initBarrierProceeded = true;
+        synchronized (initBarrierWaitObject) {
+          initBarrierWaitObject.notify();
+        }
+        LOG.info("Received BarrierDone event on the init Barrier. BarrierResult: "
+            + jobEvent.getBarrierDone().getResult());
       }
 
-      LOG.info("AllArrivedOnBarrier event received. Current numberOfWorkers: " + numberOfWorkers);
     }
 
     if (jobEvent.hasJmRestarted()) {
@@ -741,6 +731,35 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       } else {
         jmRestartedCache = jmRestarted;
       }
+    }
+
+    if (jobEvent.hasJobScaled()) {
+      JobMasterAPI.JobScaled jobScaled = jobEvent.getJobScaled();
+      int change = jobScaled.getChange();
+      numberOfWorkers = jobScaled.getNumberOfWorkers();
+
+      // job scaled up
+      if (change > 0) {
+        allJoined = false;
+        if (scalerListener != null) {
+          scalerListener.workersScaledUp(change);
+        } else {
+          scalingEventBuffer.add(change);
+        }
+        LOG.info("Job scaled up. new numberOfWorkers: " + numberOfWorkers);
+
+        // job scaled down
+      } else if (change < 0) {
+        // remove scaled down workers from worker list
+        workers.removeIf(wInfo -> wInfo.getWorkerID() >= numberOfWorkers);
+        if (scalerListener != null) {
+          scalerListener.workersScaledDown(Math.abs(change));
+        } else {
+          scalingEventBuffer.add(change);
+        }
+        LOG.info("Job scaled down. new numberOfWorkers: " + numberOfWorkers);
+      }
+
     }
   }
 
@@ -762,13 +781,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   private void processAllJoinedEvent(JobMasterAPI.JobEvent jobEvent) {
 
-    JobMasterAPI.AllWorkersJoined allJoinedEvent = jobEvent.getAllJoined();
+    JobMasterAPI.AllJoined allJoinedEvent = jobEvent.getAllJoined();
     workers.clear();
     workers.addAll(allJoinedEvent.getWorkerInfoList());
     allJoined = true;
 
-    synchronized (waitObjectAllJoined) {
-      waitObjectAllJoined.notify();
+    synchronized (allJoinedWaitObject) {
+      allJoinedWaitObject.notify();
     }
 
     if (allJoinedListener != null) {
@@ -778,14 +797,19 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
   }
 
+  @Override
+  public void waitOnBarrier() throws TimeoutException {
+    waitOnBarrier(ControllerContext.maxWaitTimeOnBarrier(config));
+  }
+
   /**
-   * All workers create a znode on the job barrier directory
-   * Job master watches for directory creations/removals
-   * when the number of znodes on that directory reaches the number of workers in thr job,
+   * All workers create a znode on the barrier directory
+   * Job master watches znode creations/removals on this directory
+   * when the number of znodes on that directory reaches the number of workers in the job,
    * Job master publishes AllArrivedOnBarrier event
    * Workers proceed when they get this event or when they time out
    * <p>
-   * Worker remove their znodes after they proceed through the barrier
+   * Workers remove their znodes after they proceed through the barrier
    * so that they can wait on the barrier again
    * Workers are responsible for creating and removing znodes on the barrier
    * Job master removes barrier znode after the job completion or scale down.
@@ -793,27 +817,34 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * if timeout is reached, throws TimeoutException.
    */
   @Override
-  public void waitOnBarrier() throws TimeoutException {
+  public void waitOnBarrier(long timeLimit) throws TimeoutException {
 
-    barrierProceeded = false;
+    // if the cluster is in a faulty state,
+    // do not wait on the barrier
+    if (JobProgress.isJobFaulty()) {
+      throw new JobFaultyException("Can not wait on the barrier, since the job is faulty.");
+    }
+
+    defaultBarrierProceeded = false;
 
     try {
-      ZKBarrierManager.createWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
+      ZKBarrierManager.createWorkerZNodeAtDefault(
+          client, rootPath, jobID, workerInfo.getWorkerID(), timeLimit);
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return;
     }
 
     // wait until all workers joined or time limit is reached
-    long timeLimit = ControllerContext.maxWaitTimeOnBarrier(config);
     long startTime = System.currentTimeMillis();
 
+    long tl = timeLimit > Long.MAX_VALUE / 2 ? Long.MAX_VALUE : timeLimit * 2;
     long delay = 0;
-    while (delay < timeLimit) {
-      synchronized (waitObjectBarrier) {
+    while (delay < tl) {
+      synchronized (defaultBarrierWaitObject) {
         try {
-          if (!barrierProceeded) {
-            waitObjectBarrier.wait(timeLimit - delay);
+          if (!defaultBarrierProceeded) {
+            defaultBarrierWaitObject.wait(tl - delay);
             break;
           }
 
@@ -825,22 +856,104 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // delete barrier znode in any case
     try {
-      ZKBarrierManager.deleteWorkerZNode(client, rootPath, jobID, workerInfo.getWorkerID());
+      ZKBarrierManager.deleteWorkerZNodeFromDefault(
+          client, rootPath, jobID, workerInfo.getWorkerID());
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
 
-    if (barrierProceeded) {
+    if (defaultBarrierProceeded) {
+      if (defaultBarrierResult == JobMasterAPI.BarrierResult.SUCCESS) {
+        return;
+      } else if (defaultBarrierResult == JobMasterAPI.BarrierResult.JOB_FAULTY) {
+        throw new JobFaultyException("Barrier broken since a fault occurred in the job.");
+      } else if (defaultBarrierResult == JobMasterAPI.BarrierResult.TIMED_OUT) {
+        throw new TimeoutException("Barrier timed out. Not all workers arrived on the time limit: "
+            + timeLimit + "ms.");
+      }
+      // this should never happen, since we have only these three options
       return;
+
     } else {
-      throw new TimeoutException("Barrier timed out. Not all workers arrived on time limit: "
-          + timeLimit + "ms.");
+      throw new TimeoutException("Barrier timed out on the worker. " + tl + "ms.");
     }
+  }
+
+  /**
+   * init barrier
+   * the same algorithm as the default barrier
+   * @throws TimeoutException
+   */
+  public void waitOnInitBarrier() throws TimeoutException {
+
+    initBarrierProceeded = false;
+    long timeLimit = ControllerContext.maxWaitTimeOnInitBarrier(config);
+
+    try {
+      ZKBarrierManager.createWorkerZNodeAtInit(
+          client, rootPath, jobID, workerInfo.getWorkerID(), timeLimit);
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+
+    // wait until all workers joined or the time limit is reached
+    long startTime = System.currentTimeMillis();
+    long tl = timeLimit > Long.MAX_VALUE / 2 ? Long.MAX_VALUE : timeLimit * 2;
+
+    long delay = 0;
+    while (delay < tl) {
+      synchronized (initBarrierWaitObject) {
+        try {
+          if (!initBarrierProceeded) {
+            initBarrierWaitObject.wait(tl - delay);
+            break;
+          }
+
+        } catch (InterruptedException e) {
+          delay = System.currentTimeMillis() - startTime;
+        }
+      }
+    }
+
+    // delete barrier znode in any case
+    try {
+      ZKBarrierManager.deleteWorkerZNodeFromInit(
+          client, rootPath, jobID, workerInfo.getWorkerID());
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
+
+    if (initBarrierProceeded) {
+      if (initBarrierResult == JobMasterAPI.BarrierResult.SUCCESS) {
+        return;
+      } else if (initBarrierResult == JobMasterAPI.BarrierResult.JOB_FAULTY) {
+        throw new JobFaultyException("Barrier broken since a fault occurred in the job.");
+      } else if (initBarrierResult == JobMasterAPI.BarrierResult.TIMED_OUT) {
+        throw new TimeoutException("Barrier timed out. Not all workers arrived on the time limit: "
+            + timeLimit + "ms.");
+      }
+      // this should never happen, since we have only these three options
+      return;
+
+    } else {
+      throw new TimeoutException("Barrier timed out on the worker. " + tl + "ms.");
+    }
+  }
+
+  @Override
+  public int workerRestartCount() {
+    return restartCount;
   }
 
   @Override
   public IWorkerFailureListener getFailureListener() {
     return failureListener;
+  }
+
+  @Override
+  public CheckpointingClient getCheckpointingClient() {
+    return checkpointingClient;
   }
 
   /**
@@ -849,7 +962,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   public void close() {
     CloseableUtils.closeQuietly(workerEphemZNode);
     CloseableUtils.closeQuietly(eventsChildrenCache);
-    CloseableUtils.closeQuietly(jobZnodeCache);
   }
 
 }

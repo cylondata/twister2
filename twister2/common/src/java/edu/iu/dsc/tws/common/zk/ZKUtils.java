@@ -123,10 +123,17 @@ public final class ZKUtils {
   }
 
   /**
-   * construct barrier directory path for the job
+   * construct default barrier directory path for the job
    */
-  public static String barrierDir(String rootPath, String jobID) {
-    return jobDir(rootPath, jobID) + "/barrier";
+  public static String defaultBarrierDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/defaultBarrier";
+  }
+
+  /**
+   * construct init barrier directory path for the job
+   */
+  public static String initBarrierDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/initBarrier";
   }
 
   /**

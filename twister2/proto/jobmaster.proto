@@ -37,6 +37,7 @@ enum WorkerState {
     ERROR = 4;
     UNASSIGNED = 5;
     KILLED = 6;
+    FULLY_FAILED = 7; // fully failed. will not try to restart. job should fail.
 }
 
 message NodeInfo {
@@ -60,6 +61,18 @@ message WorkerInfo {
     map<string, int32> additionalPort = 6;
 }
 
+enum BarrierType {
+    DEFAULT = 0;
+    INIT = 1;
+}
+
+// possible results for barriers
+enum BarrierResult {
+    SUCCESS = 0;
+    TIMED_OUT = 1;
+    JOB_FAULTY = 2;
+}
+
 /////////////////////////////////////////////////////////////////
 // Message types published to ZooKeeper event queue for workers to consume
 // Job Master informs workers regarding the events in the job
@@ -69,9 +82,10 @@ message JobEvent {
     oneof onlyOneEvent {
         WorkerFailed failed = 1;
         WorkerRestarted restarted = 2;
-        AllWorkersJoined allJoined = 3;
-        AllArrivedOnBarrier allArrived = 4;
+        AllJoined allJoined = 3;
+        BarrierDone barrierDone = 4;
         JobMasterRestarted jmRestarted = 5;
+        JobScaled jobScaled = 6;
     }
 }
 
@@ -87,20 +101,38 @@ message WorkerRestarted {
     }
 }
 
-message AllWorkersJoined {
+message AllJoined {
     oneof required {
         int32 numberOfWorkers = 1;
     }
     repeated WorkerInfo workerInfo = 2;
 }
 
-message AllArrivedOnBarrier {
-    int32 numberOfWorkers = 1;
+message BarrierDone {
+    oneof typeRequired {
+        BarrierType barrierType = 1;
+    }
+    oneof resultRequired {
+        BarrierResult result = 2;
+    }
 }
 
 message JobMasterRestarted {
     int32 numberOfWorkers = 1;
     string jmAddress = 2;
+}
+
+// the number of workers in the job has hanged
+// if change is positive, new workers added
+// if change is negative, some worker instances removed
+// numberOfWorkers shows the updated numberOfWorkers in the job
+message JobScaled {
+    oneof changeRequired {
+        int32 change = 1;
+    }
+    oneof numberOfWorkersRequired {
+        int32 numberOfWorkers = 2;
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -115,9 +147,11 @@ message RegisterWorker {
         int32 workerID = 1;
     }
 
-    //initialState can be either STARTED or RESTARTED
-    oneof initialStateRequired {
-        WorkerState initialState = 2;
+    // how many times this worker is restarted
+    // zero means it is starting for the first time
+    // 1 means it is restarted one time
+    oneof restartCountRequired {
+        int32 restartCount = 2;
     }
 
     oneof workerInfoRequired {
@@ -183,10 +217,19 @@ message ListWorkersResponse {
 // All workers in a job wants to wait in a Barrier point
 // When BarrierRequest message is received from all workers in the job,
 // Job Master will send response messages to all
-// previous request messages are quueed until the last request message is received
+// previous request messages are queued until the last request message is received
+// failures:
+// if the barrier times out, barrier fails
+// if a worker fails in the job, the default barrier fails if there is any
 message BarrierRequest {
-    oneof required{
+    oneof idRequired{
         int32 workerID = 1;
+    }
+    oneof typeRequired {
+        BarrierType barrierType = 2;
+    }
+    oneof timeoutRequired{
+        int64 timeout = 3;
     }
 }
 
@@ -194,33 +237,16 @@ message BarrierResponse {
     oneof required {
         int32 workerID = 1;
     }
+    oneof typeRequired {
+        BarrierType barrierType = 2;
+    }
+    oneof resultRequired {
+        BarrierResult result = 3;
+    }
 }
 
 // Driver to workers communication related messages
 // let the the workers know that
-// the number of workers in the job has hanged
-// if change is positive, new workers added
-// if change is negative, some worker instances removed
-// numberOfWorkers shows the updated numberOfWorkers in the job
-message WorkersScaled {
-    oneof changeRequired {
-        int32 change = 1;
-    }
-    oneof numberOfWorkersRequired {
-        int32 numberOfWorkers = 2;
-    }
-}
-
-// Job master will send this message to all workers
-// when all workers registered with the job
-//
-// it also sends this message to all workers
-// when all new workers have joined after the scale up
-message WorkersJoined {
-    int32 numberOfWorkers = 2;
-    repeated WorkerInfo worker = 3;
-}
-
 // Driver to worker message
 // Driver can send any byte array to workers including serialized protocol buffer messages
 // It is encoded as a byte array

@@ -28,6 +28,8 @@ import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Affinity;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
@@ -44,7 +46,7 @@ import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
-import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimBuilder;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
 import io.kubernetes.client.openapi.models.V1PodAffinity;
@@ -655,37 +657,60 @@ public final class RequestObjectBuilder {
   public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(String pvcName,
                                                                           int numberOfWorkers) {
 
-    V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
-    pvc.setApiVersion("v1");
-
-    // set pvc name
-    V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(pvcName);
-    pvc.setMetadata(meta);
+    // set labels for V1PersistentVolumeClaim
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+    labels.put("t2-pvc", pvcName);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
-
-    // two methods to set StorageClass, we set in pvcSpec
-//    HashMap<String, String> annotations = new HashMap<>();
-//    annotations.put("volume.beta.kubernetes.io/storage-class", storageClass);
-//    meta.setAnnotations(annotations);
-
     String accessMode = KubernetesContext.storageAccessMode(config);
-    V1PersistentVolumeClaimSpec pvcSpec = new V1PersistentVolumeClaimSpec();
-    pvcSpec.setStorageClassName(storageClass);
-    pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
     double storageSize = SchedulerContext.persistentVolumePerWorker(config) * numberOfWorkers;
-
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       storageSize += JobMasterContext.persistentVolumeSize(config);
     }
-
     resources.putRequestsItem("storage", new Quantity(storageSize + "Gi"));
-    pvcSpec.setResources(resources);
 
-    pvc.setSpec(pvcSpec);
+    V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaimBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata().withName(pvcName).withLabels(labels).endMetadata()
+        .withNewSpec()
+        .withStorageClassName(storageClass)
+        .withAccessModes(Arrays.asList(accessMode))
+        .withResources(resources)
+        .endSpec()
+        .build();
+
     return pvc;
   }
+
+  /**
+   * create a ConfigMap object
+   * It will have start counts for workers
+   * @return
+   */
+  public static V1ConfigMap createConfigMap(int numberOfWorkers) {
+    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+
+    // set a label for ConfigMap
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+    labels.put("t2-cm", configMapName);
+
+    // data pairs
+    HashMap<String, String> dataMap = new HashMap<>();
+    dataMap.put("NUMBER_OF_WORKERS", "" + numberOfWorkers);
+
+    V1ConfigMap cm = new V1ConfigMapBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata().withName(configMapName).withLabels(labels).endMetadata()
+        .withData(dataMap)
+        .build();
+
+    return cm;
+  }
+
 }

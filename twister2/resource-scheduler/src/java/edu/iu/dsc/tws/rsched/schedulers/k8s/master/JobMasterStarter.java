@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -100,17 +101,26 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    // TODO: If ZooKeeper is not used,
-    // currently we just return JM_STARTED. We do not determine real initial status.
-    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      initialState = initializeZooKeeper(config, jobID, podIP);
-    }
-
-    JobTerminator jobTerminator = new JobTerminator(config);
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
+    JobTerminator jobTerminator = new JobTerminator(config, controller);
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+
+    JobMasterAPI.JobMasterState initialState;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      initialState = initializeZooKeeper(config, jobID, podIP);
+    } else {
+      String keyName = KubernetesUtils.createRestartJobMasterKey();
+      int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
+
+      // if zookeeper is not used, jm can not recover from failure
+      // so, we terminate the job
+      if (restartCount > 0) {
+        jobTerminator.terminateJob(jobID);
+        return;
+      }
+      initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    }
 
     // start JobMaster
     JobMaster jobMaster =
@@ -122,8 +132,8 @@ public final class JobMasterStarter {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
 
-    // wait to be deleted by K8s master
-    K8sWorkerUtils.waitIndefinitely();
+    // close the controller
+    controller.close();
   }
 
   /**
@@ -163,7 +173,8 @@ public final class JobMasterStarter {
       JobZNodeManager.createJobZNode(client, rootPath, job);
       ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
-      ZKBarrierManager.createBarrierDir(client, rootPath, job.getJobId());
+      ZKBarrierManager.createDefaultBarrierDir(client, rootPath, job.getJobId());
+      ZKBarrierManager.createInitBarrierDir(client, rootPath, job.getJobId());
       ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
 
       // create pers znode for jm

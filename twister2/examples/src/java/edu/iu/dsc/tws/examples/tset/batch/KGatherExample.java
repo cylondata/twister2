@@ -42,9 +42,10 @@ public class KGatherExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
-    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 10, i))
         .keyedGather();
 
     LOG.info("test foreach");

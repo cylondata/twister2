@@ -12,10 +12,7 @@
 
 package edu.iu.dsc.tws.api.resource;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +27,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -113,7 +111,7 @@ public final class WorkerEnvironment {
     // check whether all worker pods are reachable
     // sometimes it takes some time to populate dns ip values in Kubernetes
     // although all workers is started, some workers may be unreachable by ip address
-    if ("kubernetes".equalsIgnoreCase(Context.clusterType(config))
+    if (Context.isKubernetesCluster(config)
         && !SchedulerContext.useOpenMPI(config)
         && SchedulerContext.checkPodsReachable(config)) {
       checkAllPodsReachable();
@@ -193,7 +191,7 @@ public final class WorkerEnvironment {
     final long sleepInterval = 500;
 
     while (!podIPs.isEmpty()) {
-      podIPs.removeIf(this::isReachable);
+      podIPs.removeIf(Network::isReachable);
 
       if (podIPs.isEmpty()) {
         LOG.info("All worker pods are reachable by IP. count: " + count);
@@ -214,21 +212,6 @@ public final class WorkerEnvironment {
     }
 
     return true;
-  }
-
-  private boolean isReachable(String podIP) {
-    InetAddress ip = null;
-    try {
-      ip = InetAddress.getByName(podIP);
-    } catch (UnknownHostException e) {
-      return false;
-    }
-    try {
-      LOG.finest("Checking IP: " + podIP);
-      return ip.isReachable(5000);
-    } catch (IOException e) {
-      return false;
-    }
   }
 
   /**
@@ -255,6 +238,8 @@ public final class WorkerEnvironment {
     } else {
       //If the worker Env exists reset the config (need to check if complete re-init is needed)
       workerEnv.setConfig(config);
+      workerEnv.getCommunicator().reInit();
+      workerEnv.getChannel().reInit(JobProgress.getRestartedWorkers());
     }
     return workerEnv;
   }

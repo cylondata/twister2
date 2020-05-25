@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.driver.DefaultDriver;
 import edu.iu.dsc.tws.api.driver.IDriver;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
@@ -34,12 +33,13 @@ import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.barrier.BarrierMonitor;
+import edu.iu.dsc.tws.master.barrier.JMBarrierHandler;
+import edu.iu.dsc.tws.master.barrier.ZKBarrierHandler;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.Scaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -152,12 +152,9 @@ public class JobMaster {
   /**
    * WorkerHandler object to communicate with workers
    */
-  private WorkerHandler workerHandler;
+  private JMWorkerHandler workerHandler;
 
-  /**
-   * BarrierHandler object
-   */
-  private BarrierHandler barrierHandler;
+  private BarrierMonitor barrierMonitor;
 
   /**
    * to connect to ZooKeeper server and update job object
@@ -167,9 +164,13 @@ public class JobMaster {
 
   /**
    * JobMaster to ZooKeeper connection
-   * TODO: need to close zk connection, need to integrate with zk-con in scaler, job terminator.
    */
   private ZKMasterController zkMasterController;
+
+  /**
+   * barrier handler for zk
+   */
+  private ZKBarrierHandler zkBarrierHandler;
 
   /**
    * a variable that shows whether JobMaster will run jobTerminate
@@ -276,63 +277,29 @@ public class JobMaster {
     // this ha to be done before WorkerMonitor initialization
     initDriver();
 
-    boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
+    JobFailureWatcher jobFailureWatcher = new JobFailureWatcher();
+
     workerMonitor = new WorkerMonitor(
-        this, rrServer, dashClient, zkJobUpdater, job, driver, faultTolerant);
+        this, rrServer, dashClient, zkJobUpdater, job, driver, jobFailureWatcher);
 
     workerHandler =
-        new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
-    barrierHandler = new BarrierHandler(workerMonitor, rrServer);
+        new JMWorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      workerMonitor.setWorkerEventSender(workerHandler);
+    }
 
-    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
-        JobMasterAPI.RegisterWorker.newBuilder();
-    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
-        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
-
-    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
-        JobMasterAPI.WorkerStateChange.newBuilder();
-    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
-
-    ListWorkersRequest.Builder listWorkersBuilder = ListWorkersRequest.newBuilder();
-    ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
-        JobMasterAPI.BarrierRequest.newBuilder();
-    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
-        JobMasterAPI.BarrierResponse.newBuilder();
-
-    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
-        JobMasterAPI.WorkersScaled.newBuilder();
-
-    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
-        JobMasterAPI.DriverMessage.newBuilder();
-
-    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
-        JobMasterAPI.WorkerMessage.newBuilder();
-    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
-        = JobMasterAPI.WorkerMessageResponse.newBuilder();
-
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
-
-    rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
-    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(stateChangeBuilder, workerHandler);
-    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(listWorkersBuilder, workerHandler);
-    rrServer.registerRequestHandler(listResponseBuilder, workerHandler);
-
-    rrServer.registerRequestHandler(barrierRequestBuilder, barrierHandler);
-    rrServer.registerRequestHandler(barrierResponseBuilder, barrierHandler);
-
-    rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(driverMessageBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(workerMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(workerResponseBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
+    // initialize BarrierMonitor
+    barrierMonitor = new BarrierMonitor(workerMonitor, jobFailureWatcher);
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      zkBarrierHandler =
+          new ZKBarrierHandler(barrierMonitor, config, job.getJobId(), job.getNumberOfWorkers());
+      barrierMonitor.setBarrierResponder(zkBarrierHandler);
+      zkBarrierHandler.initialize(initialState);
+    } else {
+      JMBarrierHandler jmBarrierHandler = new JMBarrierHandler(rrServer, barrierMonitor);
+      barrierMonitor.setBarrierResponder(jmBarrierHandler);
+    }
+    jobFailureWatcher.addJobFaultListener(barrierMonitor);
 
     // if ZoKeeper server is used for this job, initialize that
     try {
@@ -350,6 +317,7 @@ public class JobMaster {
           stateStore,
           job.getJobId()
       );
+      jobFailureWatcher.addJobFaultListener(this.checkpointManager);
       LOG.info("Checkpoint manager initialized");
       this.checkpointManager.init();
     }
@@ -412,7 +380,10 @@ public class JobMaster {
         + masterPort);
 
     while (!jobCompleted) {
-      looper.loopBlocking();
+      looper.loopBlocking(300);
+
+      // check for barrier failures periodically
+      barrierMonitor.checkBarrierFailure();
     }
 
     // send the remaining messages if any and stop
@@ -420,6 +391,7 @@ public class JobMaster {
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController.close();
+      zkBarrierHandler.close();
       ZKUtils.closeClient();
     }
 
@@ -501,10 +473,13 @@ public class JobMaster {
   /**
    * initialize ZKMasterController if ZooKeeper used
    */
-  private void initZKMasterController(WorkerMonitor wMonitor) throws Twister2Exception {
+  private void initZKMasterController(WorkerMonitor wMonitor)
+      throws Twister2Exception {
+
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      zkMasterController = new ZKMasterController(config, job.getJobId(),
-          job.getNumberOfWorkers(), jmAddress, workerMonitor);
+      zkMasterController = new ZKMasterController(
+          config, job.getJobId(), job.getNumberOfWorkers(), jmAddress, wMonitor);
+      workerMonitor.setWorkerEventSender(zkMasterController);
 
       try {
         zkMasterController.initialize(initialState);
@@ -519,7 +494,7 @@ public class JobMaster {
     return zkMasterController;
   }
 
-  public WorkerHandler getWorkerHandler() {
+  public JMWorkerHandler getWorkerHandler() {
     return workerHandler;
   }
 
@@ -569,6 +544,7 @@ public class JobMaster {
         if (ZKContext.isZooKeeperServerUsed(config)) {
           zkJobUpdater.updateState(JobAPI.JobState.KILLED);
           zkMasterController.close();
+          zkBarrierHandler.close();
           ZKUtils.closeClient();
         }
 

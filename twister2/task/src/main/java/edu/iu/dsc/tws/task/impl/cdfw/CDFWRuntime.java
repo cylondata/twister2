@@ -30,10 +30,10 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
-import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
@@ -167,7 +167,7 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
   }
 
   private boolean handleExecuteMessage(Any msg) {
-    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+    ISenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getDriverAgent();
     CDFWJobAPI.ExecuteMessage executeMessage;
     ExecutionPlan executionPlan;
     CDFWJobAPI.ExecuteCompletedMessage completedMessage = null;
