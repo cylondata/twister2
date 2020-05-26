@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table.channel;
 
-import java.nio.ByteBuffer;
-
 public interface ChannelReceiveCallback {
-  void receivedData(int receiveId, ByteBuffer buffer, int length);
+  void receivedData(int receiveId, ChannelBuffer buffer, int length);
 
   void receivedHeader(int receiveId, int finished, int[] header, int headerLength);
 }

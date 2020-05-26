@@ -14,11 +14,28 @@ package edu.iu.dsc.tws.comms.table;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
+import io.netty.buffer.ArrowBuf;
 
-public interface ReceiveCallback {
-  void onReceive(int source, ChannelBuffer buffer, int length);
+public class ArrowChannelBuffer implements ChannelBuffer {
+  private ArrowBuf arrowBuf;
 
-  void onReceiveHeader(int source, boolean finished, int[] header, int length);
+  private int length;
 
-  boolean onSendComplete(int target, ByteBuffer buffer, int length);
+  public ArrowChannelBuffer(ArrowBuf arrowBuf, int length) {
+    this.arrowBuf = arrowBuf;
+  }
+
+  @Override
+  public int length() {
+    return length;
+  }
+
+  @Override
+  public ByteBuffer getByteBuffer() {
+    return arrowBuf.nioBuffer();
+  }
+
+  public ArrowBuf getArrowBuf() {
+    return arrowBuf;
+  }
 }

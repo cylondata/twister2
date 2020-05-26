@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table.arrow;
 
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.Float4Vector;
 
 import edu.iu.dsc.tws.common.table.ArrowColumn;
@@ -28,6 +29,11 @@ public class Float4Column implements ArrowColumn<Float> {
   public void addValue(Float value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+  }
+
+  @Override
+  public FieldVector getVector() {
+    return vector;
   }
 
   public Float get(int index) {

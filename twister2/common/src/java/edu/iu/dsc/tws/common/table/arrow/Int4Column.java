@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table.arrow;
 
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 
 import edu.iu.dsc.tws.common.table.ArrowColumn;
@@ -29,6 +30,11 @@ public class Int4Column implements ArrowColumn<Integer> {
   public void addValue(Integer value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+  }
+
+  @Override
+  public FieldVector getVector() {
+    return vector;
   }
 
   @Override

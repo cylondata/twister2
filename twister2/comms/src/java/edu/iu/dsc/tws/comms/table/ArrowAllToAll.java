@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.table;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,10 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
+import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
 import io.netty.buffer.ArrowBuf;
 import static org.apache.arrow.util.Preconditions.checkArgument;
 
@@ -66,18 +69,17 @@ public class ArrowAllToAll implements ReceiveCallback {
     private Table currentTable;
     private ArrowHeader status = ArrowHeader.HEADER_INIT;
     private int columnIndex;
-    private int arrayIndex;
     private int bufferIndex;
   }
 
   private List<Integer> targets;
   private List<Integer> srcs;
   private SimpleAllToAll all;
-  private Map<Integer, PendingSendTable> inputs;
-  private Map<Integer, PendingReceiveTable> receives;
+  private Map<Integer, PendingSendTable> inputs = new HashMap<>();
+  private Map<Integer, PendingReceiveTable> receives = new HashMap<>();
   private ArrowCallback recvCallback;
   private boolean finished = false;
-  private List<Integer> finishedSources;
+  private List<Integer> finishedSources = new ArrayList<>();
   private int receivedBuffers;
   private int workerId;
   private TableRuntime runtime;
@@ -89,12 +91,13 @@ public class ArrowAllToAll implements ReceiveCallback {
                        ArrowCallback callback, Schema schema) {
     this.targets = targets;
     this.srcs = srcs;
-    this.all = new SimpleAllToAll(cfg, controller, srcs, targets, edgeId, this);
     this.workerId = controller.getWorkerInfo().getWorkerID();
     this.recvCallback = callback;
     this.schema = schema;
     this.runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
         TableRuntime.class);
+    assert runtime != null;
+
     for (int t : targets) {
       inputs.put(t, new PendingSendTable());
     }
@@ -102,6 +105,9 @@ public class ArrowAllToAll implements ReceiveCallback {
     for (int s : srcs) {
       receives.put(s, new PendingReceiveTable());
     }
+
+    this.all = new SimpleAllToAll(cfg, controller, srcs, targets, edgeId, this,
+        new ArrowAllocator(this.runtime.getRootAllocator()));
   }
 
   public boolean insert(Table table, int target) {
@@ -111,22 +117,85 @@ public class ArrowAllToAll implements ReceiveCallback {
   }
 
   public boolean isComplete() {
-    return false;
+    boolean isAllEmpty = true;
+
+    for (Map.Entry<Integer, PendingSendTable> t : inputs.entrySet()) {
+      PendingSendTable pst = t.getValue();
+      if (pst.status == ArrowHeader.HEADER_INIT) {
+        if (!pst.pending.isEmpty()) {
+          pst.currentTable = pst.pending.peek();
+          pst.pending.poll();
+          pst.status = ArrowHeader.COLUMN_CONTINUE;
+        }
+      }
+
+      if (pst.status == ArrowHeader.COLUMN_CONTINUE) {
+        int noOfColumns = pst.currentTable.getColumns().size();
+        boolean canContinue = true;
+        while (pst.columnIndex < noOfColumns && canContinue) {
+          ArrowColumn col = pst.currentTable.getColumns().get(pst.columnIndex);
+          FieldVector vector = col.getVector();
+
+          List<ArrowFieldNode> nodes = new ArrayList<>();
+          List<ArrowBuf> bufs = new ArrayList<>();
+          appendNodes(vector, nodes, bufs);
+
+          while (pst.bufferIndex < bufs.size()) {
+            ArrowBuf buf = bufs.get(pst.bufferIndex);
+            int[] hdr = new int[5];
+            hdr[0] = pst.columnIndex;
+            hdr[1] = pst.bufferIndex;
+            hdr[2] = bufs.size();
+            hdr[3] = 1;
+            int length = nodes.get(pst.bufferIndex).getLength();
+            hdr[4] = length;
+
+            boolean accept = all.insert(buf.nioBuffer(), length, hdr, 5, t.getKey());
+            if (!accept) {
+              canContinue = false;
+              break;
+            }
+            pst.bufferIndex++;
+          }
+
+          if (canContinue) {
+            pst.bufferIndex = 0;
+            pst.columnIndex++;
+          }
+        }
+
+        if (canContinue) {
+          pst.columnIndex = 0;
+          pst.bufferIndex = 0;
+          pst.status = ArrowHeader.HEADER_INIT;
+        }
+      }
+
+      if (!pst.pending.isEmpty() || pst.status == ArrowHeader.COLUMN_CONTINUE) {
+        isAllEmpty = false;
+      }
+    }
+
+    if (isAllEmpty && finished) {
+      all.finish(0);
+    }
+    return isAllEmpty && all.isComplete() && finishedSources.size() == srcs.size();
   }
 
   public void finish(int source) {
-
+    finished = true;
   }
 
   public void close() {
-
+    inputs.clear();
+    all.close();
   }
 
   @Override
-  public void onReceive(int source, ByteBuffer buffer, int length) {
+  public void onReceive(int source, ChannelBuffer buffer, int length) {
     PendingReceiveTable table = receives.get(source);
     receivedBuffers++;
-    ArrowBuf buf = runtime.getRootAllocator().buffer(length);
+    ArrowBuf buf = ((ArrowChannelBuffer) buffer).getArrowBuf();
     table.buffers.add(buf);
 
     List<FieldVector> fieldVectors = schemaRoot.getFieldVectors();
@@ -137,9 +206,11 @@ public class ArrowAllToAll implements ReceiveCallback {
           table.fieldNodes.iterator());
 
       table.arrays.add(fieldVector);
+      table.buffers.clear();
 
       if (table.arrays.size() == schemaRoot.getFieldVectors().size()) {
         // create the table
+
       }
     }
   }
@@ -196,6 +267,21 @@ public class ArrowAllToAll implements ReceiveCallback {
         FieldVector fieldVector = childrenFromFields.get(i);
         loadBuffers(fieldVector, child, buffers, nodes);
       }
+    }
+  }
+
+  private void appendNodes(FieldVector vector, List<ArrowFieldNode> nodes, List<ArrowBuf> buffers) {
+    nodes.add(new ArrowFieldNode(vector.getValueCount(), -1));
+    List<ArrowBuf> fieldBuffers = vector.getFieldBuffers();
+    int expectedBufferCount = TypeLayout.getTypeBufferCount(vector.getField().getType());
+    if (fieldBuffers.size() != expectedBufferCount) {
+      throw new IllegalArgumentException(String.format(
+          "wrong number of buffers for field %s in vector %s. found: %s",
+          vector.getField(), vector.getClass().getSimpleName(), fieldBuffers));
+    }
+    buffers.addAll(fieldBuffers);
+    for (FieldVector child : vector.getChildrenFromFields()) {
+      appendNodes(child, nodes, buffers);
     }
   }
 }

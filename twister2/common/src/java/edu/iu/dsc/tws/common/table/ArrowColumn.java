@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
+import org.apache.arrow.vector.FieldVector;
+
 /**
  * We are going to represent and arrow vector as a column to facilitate
  * easy access and building of vectors
@@ -20,6 +22,8 @@ public interface ArrowColumn<T> {
   void addValue(T value);
 
   T get(int index);
+
+  FieldVector getVector();
 
   long currentSize();
 }
