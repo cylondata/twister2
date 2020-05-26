@@ -11,14 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table;
 
-import java.nio.ByteBuffer;
+import org.apache.arrow.memory.RootAllocator;
 
+import edu.iu.dsc.tws.comms.table.channel.Allocator;
 import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
+import io.netty.buffer.ArrowBuf;
 
-public interface ReceiveCallback {
-  void onReceive(int source, ChannelBuffer buffer, int length);
+public class ArrowAllocator implements Allocator {
+  private RootAllocator allocator;
 
-  void onReceiveHeader(int source, boolean finished, int[] header, int length);
+  public ArrowAllocator(RootAllocator allocator) {
+    this.allocator = allocator;
+  }
 
-  boolean onSendComplete(int target, ByteBuffer buffer, int length);
+  @Override
+  public ChannelBuffer allocate(int count) {
+    ArrowBuf buf = allocator.buffer(count);
+    return new ArrowChannelBuffer(buf, count);
+  }
 }

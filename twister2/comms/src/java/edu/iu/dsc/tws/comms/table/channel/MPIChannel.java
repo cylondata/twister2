@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table.channel;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +68,7 @@ public class MPIChannel {
     // we allow upto 8 integer header
     private IntBuffer headerBuf;
     private int receiveId;
-    private ByteBuffer data;
+    private ChannelBuffer data;
     private int length;
     private ReceiveStatus status = ReceiveStatus.RECEIVE_INIT;
     // the current request
@@ -92,10 +91,13 @@ public class MPIChannel {
   private ChannelSendCallback sendCallback;
   // mpi rank
   private int rank;
+  // memory allocator for receive
+  private Allocator allocator;
 
   public MPIChannel(Config config,
                     IWorkerController wController, int ed, List<Integer> srcs, List<Integer> tgts,
-                    ChannelReceiveCallback recvCallback, ChannelSendCallback sCallback) {
+                    ChannelReceiveCallback recvCallback, ChannelSendCallback sCallback,
+                    Allocator allocator) {
     this.cfg = config;
     Object commObject = wController.getRuntimeObject("comm");
     if (commObject == null) {
@@ -107,6 +109,8 @@ public class MPIChannel {
     this.edge = ed;
     this.receiveCallback = recvCallback;
     this.sendCallback = sCallback;
+    this.allocator = allocator;
+
     // we need to post the length buffers
     for (int source : srcs) {
       PendingReceive pendingReceive = new PendingReceive();
@@ -262,9 +266,9 @@ public class MPIChannel {
                     "Un-expected number of bytes expected: 8 or less received: " + count);
               }
               // malloc a buffer
-              pendingReceive.data = MPI.newByteBuffer(count);
+              pendingReceive.data = allocator.allocate(count);
               pendingReceive.length = length;
-              pendingReceive.request = comm.iRecv(pendingReceive.data,
+              pendingReceive.request = comm.iRecv(pendingReceive.data.getByteBuffer(),
                   length, MPI.BYTE, pendingReceive.receiveId, edge);
               // LOG(INFO) << rank << " ** POST RECEIVE " << length << " addr: " << x.second->data;
               pendingReceive.status = ReceiveStatus.RECEIVE_POSTED;

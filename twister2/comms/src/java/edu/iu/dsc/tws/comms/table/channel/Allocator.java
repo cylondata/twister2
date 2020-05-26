@@ -9,16 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.table;
+package edu.iu.dsc.tws.comms.table.channel;
 
-import java.nio.ByteBuffer;
-
-import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
-
-public interface ReceiveCallback {
-  void onReceive(int source, ChannelBuffer buffer, int length);
-
-  void onReceiveHeader(int source, boolean finished, int[] header, int length);
-
-  boolean onSendComplete(int target, ByteBuffer buffer, int length);
+public interface Allocator {
+  ChannelBuffer allocate(int count);
 }
+

@@ -24,6 +24,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.comms.table.channel.Allocator;
+import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
 import edu.iu.dsc.tws.comms.table.channel.ChannelReceiveCallback;
 import edu.iu.dsc.tws.comms.table.channel.ChannelSendCallback;
 import edu.iu.dsc.tws.comms.table.channel.MPIChannel;
@@ -58,11 +60,11 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
 
   public SimpleAllToAll(Config cfg, IWorkerController workerController,
                         List<Integer> sources, List<Integer> targets,
-                        int edgeId, ReceiveCallback callback) {
+                        int edgeId, ReceiveCallback callback, Allocator allocator) {
     this.sources = sources;
     this.targets = targets;
     this.channel = new MPIChannel(cfg, workerController, edgeId, sources,
-        targets, this, this);
+        targets, this, this, allocator);
     this.edgeId = edgeId;
     this.callback = callback;
   }
@@ -136,7 +138,7 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
   }
 
   @Override
-  public void receivedData(int receiveId, ByteBuffer buffer, int length) {
+  public void receivedData(int receiveId, ChannelBuffer buffer, int length) {
     callback.onReceive(receiveId, buffer, length);
   }
 

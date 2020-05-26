@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table.arrow;
 
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.util.Text;
 
@@ -30,6 +31,11 @@ public class StringColumn implements ArrowColumn<Text> {
   public void addValue(Text value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+  }
+
+  @Override
+  public FieldVector getVector() {
+    return vector;
   }
 
   @Override
