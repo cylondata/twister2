@@ -9,25 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.table;
+package edu.iu.dsc.tws.common.table.arrow;
 
-import java.nio.ByteBuffer;
+import org.apache.arrow.vector.FieldVector;
 
-public class MemoryPool {
-  /**
-   * Allocate a bytebuffer
-   * @param size size of the buffer to allocate
-   * @return a bytebuffer, null if we cannot allocate anymore
-   */
-  public ByteBuffer allocate(int size) {
-    return null;
-  }
+import edu.iu.dsc.tws.common.table.ArrowColumn;
 
-  /**
-   * Release a buffer to the pool
-   * @param buffer the buffer to be released
-   */
-  public void release(ByteBuffer buffer) {
+public abstract class BaseArrowColumn<T> implements ArrowColumn<T> {
+  private FieldVector vector;
 
+  public BaseArrowColumn(FieldVector vector) {
+    this.vector = vector;
   }
 }

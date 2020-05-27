@@ -15,14 +15,23 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.arrow.vector.BaseFixedWidthVector;
+import org.apache.arrow.vector.BaseVariableWidthVector;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.Float8Vector;
+import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TypeLayout;
+import org.apache.arrow.vector.UInt2Vector;
+import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -33,8 +42,16 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.arrow.ArrowTableImpl;
+import edu.iu.dsc.tws.common.table.arrow.Float4Column;
+import edu.iu.dsc.tws.common.table.arrow.Float8Column;
+import edu.iu.dsc.tws.common.table.arrow.Int4Column;
+import edu.iu.dsc.tws.common.table.arrow.Int8Column;
+import edu.iu.dsc.tws.common.table.arrow.StringColumn;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
+import edu.iu.dsc.tws.common.table.arrow.UInt2Column;
 import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
+
 import io.netty.buffer.ArrowBuf;
 import static org.apache.arrow.util.Preconditions.checkArgument;
 
@@ -58,14 +75,14 @@ public class ArrowAllToAll implements ReceiveCallback {
     private int noArray;
     private int length;
 
-    private List<ArrowBuf> buffers;
-    private List<ArrowFieldNode> fieldNodes;
-    private List<FieldVector> arrays;
+    private List<ArrowBuf> buffers = new ArrayList<>();
+    private List<ArrowFieldNode> fieldNodes = new ArrayList<>();
+    private List<FieldVector> arrays = new ArrayList<>();
   }
 
   private class PendingSendTable {
     private int target;
-    private Queue<Table> pending;
+    private Queue<Table> pending = new LinkedList<>();
     private Table currentTable;
     private ArrowHeader status = ArrowHeader.HEADER_INIT;
     private int columnIndex;
@@ -82,8 +99,6 @@ public class ArrowAllToAll implements ReceiveCallback {
   private List<Integer> finishedSources = new ArrayList<>();
   private int receivedBuffers;
   private int workerId;
-  private TableRuntime runtime;
-  private Schema schema;
   private VectorSchemaRoot schemaRoot;
 
   public ArrowAllToAll(Config cfg, IWorkerController controller,
@@ -93,8 +108,7 @@ public class ArrowAllToAll implements ReceiveCallback {
     this.srcs = srcs;
     this.workerId = controller.getWorkerInfo().getWorkerID();
     this.recvCallback = callback;
-    this.schema = schema;
-    this.runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
+    TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
         TableRuntime.class);
     assert runtime != null;
 
@@ -106,8 +120,10 @@ public class ArrowAllToAll implements ReceiveCallback {
       receives.put(s, new PendingReceiveTable());
     }
 
+    this.schemaRoot = VectorSchemaRoot.create(schema, runtime.getRootAllocator());
+
     this.all = new SimpleAllToAll(cfg, controller, srcs, targets, edgeId, this,
-        new ArrowAllocator(this.runtime.getRootAllocator()));
+        new ArrowAllocator(runtime.getRootAllocator()));
   }
 
   public boolean insert(Table table, int target) {
@@ -116,6 +132,10 @@ public class ArrowAllToAll implements ReceiveCallback {
     return true;
   }
 
+  /**
+   * Check weather complete
+   * @return true if operation is complete
+   */
   public boolean isComplete() {
     boolean isAllEmpty = true;
 
@@ -209,15 +229,45 @@ public class ArrowAllToAll implements ReceiveCallback {
       table.buffers.clear();
 
       if (table.arrays.size() == schemaRoot.getFieldVectors().size()) {
+        List<ArrowColumn> columns = new ArrayList<>();
         // create the table
+        for (FieldVector v : fieldVectors) {
+          ArrowColumn c;
+          if (v instanceof BaseFixedWidthVector) {
+            if (v instanceof IntVector) {
+              c = new Int4Column((IntVector) v);
+            } else if (v instanceof Float4Vector) {
+              c = new Float4Column((Float4Vector) v);
+            } else if (v instanceof Float8Vector) {
+              c = new Float8Column((Float8Vector) v);
+            } else if (v instanceof UInt8Vector) {
+              c = new Int8Column((UInt8Vector) v);
+            } else if (v instanceof UInt2Vector) {
+              c = new UInt2Column((UInt2Vector) v);
+            } else {
+              throw new RuntimeException("Un-supported type : " + v.getClass().getName());
+            }
+          } else if (v instanceof BaseVariableWidthVector) {
+            if (v instanceof VarCharVector) {
+              c = new StringColumn((VarCharVector) v);
+            } else {
+              throw new RuntimeException("Un-supported type : " + v.getClass().getName());
+            }
+          } else {
+            throw new RuntimeException("Un-supported type : " + v.getClass().getName());
+          }
+          columns.add(c);
+        }
 
+        Table t = new ArrowTableImpl(schemaRoot.getSchema(), 0, columns);
+        recvCallback.onReceive(source, t);
       }
     }
   }
 
   @Override
-  public void onReceiveHeader(int source, boolean finished, int[] header, int length) {
-    if (!finished) {
+  public void onReceiveHeader(int source, boolean fin, int[] header, int length) {
+    if (!fin) {
       if (length != 5) {
         String msg = "Incorrect length on header, expected 5 ints got " + length;
         LOG.log(Level.SEVERE, msg);
@@ -243,7 +293,8 @@ public class ArrowAllToAll implements ReceiveCallback {
       Field field,
       Iterator<ArrowBuf> buffers,
       Iterator<ArrowFieldNode> nodes) {
-    checkArgument(nodes.hasNext(), "no more field nodes for for field %s and vector %s", field, vector);
+    checkArgument(nodes.hasNext(), "no more field nodes for for field %s and vector %s",
+        field, vector);
     ArrowFieldNode fieldNode = nodes.next();
     int bufferLayoutCount = TypeLayout.getTypeBufferCount(field.getType());
     List<ArrowBuf> ownBuffers = new ArrayList<>(bufferLayoutCount);
@@ -253,8 +304,8 @@ public class ArrowAllToAll implements ReceiveCallback {
     try {
       vector.loadFieldBuffers(fieldNode, ownBuffers);
     } catch (RuntimeException e) {
-      throw new IllegalArgumentException("Could not load buffers for field " +
-          field + ". error message: " + e.getMessage(), e);
+      throw new IllegalArgumentException("Could not load buffers for field "
+          + field + ". error message: " + e.getMessage(), e);
     }
     List<Field> children = field.getChildren();
     if (children.size() > 0) {
