@@ -16,8 +16,8 @@ import java.util.List;
 
 import edu.iu.dsc.tws.api.tset.table.Row;
 import edu.iu.dsc.tws.api.tset.table.TSetTable;
-import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
+import edu.iu.dsc.tws.common.table.Table;
 
 public class TSetTableImpl implements TSetTable {
   private Table table;

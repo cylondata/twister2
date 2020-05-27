@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.table;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -95,8 +94,8 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
     boolean allQueuesEmpty = true;
     for (AllToAllSends s : sends) {
       while (!s.requestQueue.isEmpty()) {
-        if (s.sendStatus == AllToAllSendStatus.FINISH_SENT ||
-            s.sendStatus == AllToAllSendStatus.FINISHED) {
+        if (s.sendStatus == AllToAllSendStatus.FINISH_SENT
+            || s.sendStatus == AllToAllSendStatus.FINISHED) {
           String msg = "We cannot have items to send after finish sent";
           LOG.log(Level.SEVERE, msg);
           throw new Twister2RuntimeException(msg);
