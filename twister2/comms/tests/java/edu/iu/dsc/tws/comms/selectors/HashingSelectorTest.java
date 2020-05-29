@@ -31,11 +31,11 @@ public class HashingSelectorTest {
     }
     selector.prepare(null, sources, dests);
 
-    Assert.assertEquals(selector.next(0, 1), 11);
-    Assert.assertEquals(selector.next(0, 2), 12);
+    Assert.assertEquals(selector.next(0, 1), 1);
+    Assert.assertEquals(selector.next(0, 2), 2);
     Assert.assertEquals(selector.next(0, 222), 2);
 
-    int[] ints = {0, 1, 2}; // hash 30817
+    int[] ints = {1, 2, 3}; // hash 30817
     Assert.assertEquals(selector.next(0, ints), 7);
   }
 }
