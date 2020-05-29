@@ -14,9 +14,7 @@ package edu.iu.dsc.tws.comms.selectors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -32,34 +30,30 @@ import edu.iu.dsc.tws.api.comms.messaging.types.ObjectType;
 public class HashingSelector implements DestinationSelector {
   private static final Logger LOG = Logger.getLogger(HashingSelector.class.getName());
 
-  private Map<Integer, List<Integer>> destination = new HashMap<>();
   private MessageType keyType = null;
   private MessageType dataType = null;
+  private List<Integer> destinations;
 
   @Override
-  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
-    prepare(comm, sources, destinations, null, null);
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> dests) {
+    prepare(comm, sources, dests, null, null);
   }
 
   @Override
-  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations,
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> dests,
                       MessageType kType, MessageType dType) {
     this.keyType = kType;
     this.dataType = dType;
-    initialize(sources, destinations);
+    initialize(sources, dests);
   }
 
-  private void initialize(Set<Integer> sources, Set<Integer> destinations) {
-    for (int s : sources) {
-      ArrayList<Integer> destList = new ArrayList<>(destinations);
-      destList.sort(Comparator.comparingInt(o -> o));
-      destination.put(s, destList);
-    }
+  private void initialize(Set<Integer> sources, Set<Integer> dests) {
+    this.destinations = new ArrayList<>(dests);
+    destinations.sort(Comparator.comparingInt(o -> o));
   }
 
   @Override
   public int next(int source, Object key, Object data) {
-    List<Integer> destinations = destination.get(source);
     int next;
     if (key != null && key.getClass().isArray()) {
       next = Math.abs(getArrayHashCode(key, keyType) % destinations.size());
@@ -113,7 +107,6 @@ public class HashingSelector implements DestinationSelector {
 
   @Override
   public int next(int source, Object data) {
-    List<Integer> destinations = destination.get(source);
     int next;
     if (data != null && data.getClass().isArray()) {
       next = Math.abs(getArrayHashCode(data, dataType) % destinations.size());
