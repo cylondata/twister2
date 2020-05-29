@@ -12,13 +12,17 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
 public class JobTerminator implements IJobTerminator {
+  private static final Logger LOG = Logger.getLogger(JobTerminator.class.getName());
 
   private KubernetesController controller;
   private Config config;
@@ -29,10 +33,10 @@ public class JobTerminator implements IJobTerminator {
   }
 
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean terminateJob(String jobID, JobAPI.JobState finalState) {
 
     // delete the StatefulSets for workers
-    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobID);
+    ArrayList<String> ssNameLists = controller.getJobWorkerStatefulSets(jobID);
     boolean ssForWorkersDeleted = true;
     for (String ssName: ssNameLists) {
       ssForWorkersDeleted &= controller.deleteStatefulSet(ssName);
@@ -42,24 +46,40 @@ public class JobTerminator implements IJobTerminator {
     String serviceName = KubernetesUtils.createServiceName(jobID);
     boolean serviceForWorkersDeleted = controller.deleteService(serviceName);
 
-    // delete the persistent volume claim
-    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-    boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
+    // if checkpointing is enabled, pvc is deleted only if the job completes successfully,
+    // if the job is failed or killed, we keep the PVC
+    // because, the user can restart the job from previously checkpointed state
+    //
+    // if the checkpointing is not enabled, we delete PVC in any case
+    boolean pvcDeleted = true;
+    if (CheckpointingContext.isCheckpointingEnabled(config)) {
 
-    // delete the job master StatefulSet
-    String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
-    boolean ssForJobMasterDeleted =
-        controller.deleteStatefulSet(jobMasterStatefulSetName);
+      if (finalState == JobAPI.JobState.COMPLETED) {
+        // delete the persistent volume claim
+        String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+        pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
+      }
 
-    // delete the job master service
-    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
-    boolean serviceForJobMasterDeleted = controller.deleteService(jobMasterServiceName);
+    } else {
+      // delete the persistent volume claim
+      String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+      pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
+    }
 
     boolean configMapDeleted = true;
     String cmName = KubernetesUtils.createConfigMapName(jobID);
     if (controller.existConfigMap(cmName)) {
       configMapDeleted = controller.deleteConfigMap(cmName);
     }
+
+    // delete the job master service
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);
+    boolean serviceForJobMasterDeleted = controller.deleteService(jobMasterServiceName);
+
+    // delete the job master StatefulSet
+    String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
+    boolean ssForJobMasterDeleted =
+        controller.deleteStatefulSet(jobMasterStatefulSetName);
 
     // close the controller
     controller.close();

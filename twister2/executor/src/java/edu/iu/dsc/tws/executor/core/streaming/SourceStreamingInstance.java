@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
@@ -184,8 +184,8 @@ public class SourceStreamingInstance implements INodeInstance {
     this.tasksVersion = tasksVersion;
     this.snapshot = new SnapshotImpl();
     this.checkpointable = this.streamingTask instanceof CheckpointableTask
-        && CheckpointingConfigurations.isCheckpointingEnabled(config);
-    this.checkPointingFrequency = CheckpointingConfigurations.getCheckPointingFrequency(config);
+        && CheckpointingContext.isCheckpointingEnabled(config);
+    this.checkPointingFrequency = CheckpointingContext.getCheckPointingFrequency(config);
   }
 
   public void prepare(Config cfg) {

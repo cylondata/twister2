@@ -52,23 +52,29 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 /**
  * we assume each worker is assigned a unique ID outside of this class.
  * <p>
- * We create following directories for a job by the submitting client.
+ * We create following directories for a job by Job Master:
  *   persistent state znode (directory)
  *   ephemeral state znode (directory)
- *   barrier znode (directory)
+ *   default barrier znode (directory)
+ *   init barrier znode (directory)
  *   events znode (directory)
  *
  * We create a persistent znode for each worker under the job persistent state znode.
- *   It has WorkerInfo object and the latest WorkerState
+ *   It has WorkerInfo object, the latest WorkerState and worker restart count.
  *   Job Master watches the children of this znode for worker state changes.
- *   We also use these znodes for checking whether workers are coming from failure.
  *
  * We create an ephemeral znode for each worker under the job ephemeral state znode.
  *   The children of this znode is used for watching for worker failures and joins.
  *   Job Master watches the children of this znode.
+ *   Persistent znodes for workers must be created before ephemeral znodes,
+ *   because, JM gets workerInfo from persistent znode
  *
- * We create a barrier znode for each worker under the job barrier znode,
- *   when a barrier operation started.
+ * We have two types of barriers: default and init
+ * Workers wait at the init barrier when they are starting.
+ * They also come back to the init barrier in case of a failure.
+ * They all proceed from the init barrier after a failure
+ *
+ * We create a barrier znode for each worker under the barrier znode,
  *   When all workers created their znodes under this directory, all workers arrived on the barrier.
  *   Job master watches the children of this znode and informs all workers by publishing an event.
  *   Each worker is responsible for deletion of their znodes under the barrier directory,
@@ -76,18 +82,9 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
  *   Job Master deletes the worker barrier znodes in case of scaling down or job termination.
  *
  * <p>
- * When the job completes, job terminator deletes all job znodes.
- * Sometimes, job terminator may not be invoked or it may fail before cleaning up job resources.
- * Therefore, when a job is being submitted,
- * we check whether the directories that will be used by the job exists,
- * if so, job submission will fail.
- * User need to first run job termination or should use another job name.
- *
- * <p>
- * Events
- * All events except the job scaling event is published on the events znode (directory)
+ * Events:
+ * All events are published on the events znode (directory)
  * as new child znodes with sequential numerical names
- * Workers get job scaling events by watching persistent job znode
  */
 
 public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdater {
@@ -230,6 +227,16 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       String zkServerAddresses = ZKContext.serverAddresses(config);
       int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
       client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+
+      // we first create persistent znode for the worker
+      if (initialState == WorkerState.STARTED) {
+        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jobID)) {
+          ZKPersStateManager.createWorkerPersState(client, rootPath, jobID, workerInfo);
+        }
+      } else {
+        ZKPersStateManager.updateWorkerStatus(
+            client, rootPath, jobID, workerInfo, restartCount, WorkerState.RESTARTED);
+      }
 
       // if this worker is started with scaling up, or
       // if it is coming from failure

@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.ConfigSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -48,7 +48,7 @@ public final class Twister2Submitter {
   public static Twister2JobState submitJob(Twister2Job twister2Job, Config config) {
     // if this is a Kubernetes cluster, check the job name,
     // if it does not conform to Kubernetes rules, change it
-    boolean startingFromACheckpoint = CheckpointingConfigurations.startingFromACheckpoint(config);
+    boolean startingFromACheckpoint = CheckpointingContext.startingFromACheckpoint(config);
     if (!startingFromACheckpoint) {
       switch (Context.clusterType(config)) {
         case KubernetesConstants.KUBERNETES_CLUSTER_TYPE:
@@ -104,7 +104,7 @@ public final class Twister2Submitter {
     );
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
-    if (CheckpointingConfigurations.isCheckpointingEnabled(updatedConfig)
+    if (CheckpointingContext.isCheckpointingEnabled(updatedConfig)
         && !Context.isKubernetesCluster(updatedConfig)) {
       LOG.info("Checkpointing has enabled for this job.");
 
@@ -148,7 +148,7 @@ public final class Twister2Submitter {
   public static void terminateJob(String jobID, Config config) {
     // launch the launcher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
-    resourceAllocator.terminateJob(jobID, config);
+    resourceAllocator.killJob(jobID, config);
   }
 
 }

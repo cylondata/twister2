@@ -106,26 +106,36 @@ public final class JobMasterStarter {
     JobTerminator jobTerminator = new JobTerminator(config, controller);
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
 
-    JobMasterAPI.JobMasterState initialState;
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      initialState = initializeZooKeeper(config, jobID, podIP);
-    } else {
-      String keyName = KubernetesUtils.createRestartJobMasterKey();
-      int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
+    // get restart count from job ConfigMap
+    // if jm is running for the first time, initialize restart count at CM
+    String keyName = KubernetesUtils.createRestartJobMasterKey();
+    int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
 
-      // if zookeeper is not used, jm can not recover from failure
-      // so, we terminate the job
-      if (restartCount > 0) {
-        jobTerminator.terminateJob(jobID);
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    // if zookeeper is not used, jm can not recover from failure
+    // so, we terminate the job with failure
+    if (restartCount > 0) {
+      initialState = JobMasterAPI.JobMasterState.JM_RESTARTED;
+
+      if (!ZKContext.isZooKeeperServerUsed(config)) {
+        jobTerminator.terminateJob(jobID, JobAPI.JobState.FAILED);
         return;
       }
-      initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    }
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      initializeZooKeeper(config, jobID, podIP);
     }
 
     // start JobMaster
     JobMaster jobMaster =
         new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler, initialState);
-    jobMaster.addShutdownHook(false);
+
+    // start configMap watcher to watch the kill parameter from twister2 client
+    ConfigMapWatcher cmWatcher =
+        new ConfigMapWatcher(KubernetesContext.namespace(config), jobID, controller, jobMaster);
+    cmWatcher.start();
+
     try {
       jobMaster.startJobMasterBlocking();
     } catch (Twister2Exception e) {

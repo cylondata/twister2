@@ -63,7 +63,7 @@ public final class RuntimeManagerMain {
       case "kill":
         // now load the correct class to terminate the job
         ResourceAllocator resourceAllocator = new ResourceAllocator();
-        resourceAllocator.terminateJob(Context.jobId(cfg), cfg);
+        resourceAllocator.killJob(Context.jobId(cfg), cfg);
     }
   }
 

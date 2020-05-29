@@ -12,10 +12,11 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class NomadTerminator implements IJobTerminator {
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean terminateJob(String jobID, JobAPI.JobState finalState) {
     return false;
   }
 }

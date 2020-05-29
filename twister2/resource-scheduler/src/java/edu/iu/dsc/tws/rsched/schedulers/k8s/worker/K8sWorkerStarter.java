@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -102,7 +102,7 @@ public final class K8sWorkerStarter {
     // if there is a driver or ZK is not used for group management, then we need to connect to JM
     if (!job.getDriverClassName().isEmpty()
         || !(ZKContext.isZooKeeperServerUsed(config))
-        || CheckpointingConfigurations.isCheckpointingEnabled(config)) {
+        || CheckpointingContext.isCheckpointingEnabled(config)) {
       jobMasterIP = updateJobMasterIp(jobMasterIP);
     }
 

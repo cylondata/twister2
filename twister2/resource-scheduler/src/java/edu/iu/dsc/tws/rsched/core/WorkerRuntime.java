@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
@@ -130,7 +130,7 @@ public final class WorkerRuntime {
     if (ZKContext.isZooKeeperServerUsed(config)) {
 
       if (!job.getDriverClassName().isEmpty()
-          || CheckpointingConfigurations.isCheckpointingEnabled(config)) {
+          || CheckpointingContext.isCheckpointingEnabled(config)) {
 
         // construct JMWorkerAgent
         jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,

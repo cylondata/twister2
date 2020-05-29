@@ -42,7 +42,7 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean killJob(String jobID) {
     LOG.log(Level.INFO, "Terminating job for cluster: ",
         NomadContext.clusterType(config));
 
@@ -73,7 +73,7 @@ public class NomadLauncher implements ILauncher {
     master.initialize(job, config);
     boolean start = master.launch();
     // now we need to terminate the job
-    if (!terminateJob(job.getJobId())) {
+    if (!killJob(job.getJobId())) {
       LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobId());
     }
     state.setRequestGranted(start);

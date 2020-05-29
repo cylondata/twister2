@@ -80,10 +80,17 @@ public final class JobMasterRequestObject {
     encodedNodeInfoList = nodeInfoListStr;
 
     V1StatefulSet statefulSet = new V1StatefulSet();
+    String statefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
+
+    // set labels for the jm stateful set
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
 
     // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(KubernetesUtils.createJobMasterStatefulSetName(jobID));
+    meta.setName(statefulSetName);
+    meta.setLabels(labels);
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
@@ -114,6 +121,8 @@ public final class JobMasterRequestObject {
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
         KubernetesUtils.createJobMasterServiceLabel(jobID));
 
@@ -306,9 +315,15 @@ public final class JobMasterRequestObject {
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the jm service
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec
@@ -342,9 +357,15 @@ public final class JobMasterRequestObject {
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the jm service
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec

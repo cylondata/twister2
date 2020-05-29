@@ -332,7 +332,7 @@ public class ResourceAllocator {
       if (!transferred) {
         LOG.log(Level.SEVERE, "Transferring the job package failed."
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
-        launcher.terminateJob(job.getJobId());
+        launcher.killJob(job.getJobId());
         state.setRequestGranted(false);
       }
     } else {
@@ -377,13 +377,12 @@ public class ResourceAllocator {
     LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
   }
 
-
   /**
-   * Terminate a job
+   * Kill the job
    *
-   * @param jobID the name of the job to terminate
+   * @param jobID the name of the job to kill
    */
-  public void terminateJob(String jobID, Config config) {
+  public void killJob(String jobID, Config config) {
 
     String launcherClass = SchedulerContext.launcherClass(config);
     if (launcherClass == null) {
@@ -403,9 +402,9 @@ public class ResourceAllocator {
 
     // initialize the launcher and terminate the job
     launcher.initialize(config);
-    boolean terminated = launcher.terminateJob(jobID);
-    if (!terminated) {
-      LOG.log(Level.SEVERE, "Could not terminate the job");
+    boolean killed = launcher.killJob(jobID);
+    if (!killed) {
+      LOG.log(Level.SEVERE, "Could not kill the job");
     }
 
     launcher.close();

@@ -120,9 +120,15 @@ public final class RequestObjectBuilder {
 
     V1StatefulSet statefulSet = new V1StatefulSet();
 
+    // set labels for the worker stateful set
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+
     // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(statefulSetName);
+    meta.setLabels(labels);
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
@@ -162,6 +168,8 @@ public final class RequestObjectBuilder {
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
     HashMap<String, String> labels = new HashMap<String, String>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
 
     String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
@@ -555,9 +563,15 @@ public final class RequestObjectBuilder {
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the worker services
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec
@@ -574,6 +588,10 @@ public final class RequestObjectBuilder {
     return service;
   }
 
+  /**
+   * create service for NodePort
+   * @return
+   */
   public static V1Service createNodePortServiceObject() {
 
     String serviceName = KubernetesUtils.createServiceName(jobID);
@@ -586,9 +604,15 @@ public final class RequestObjectBuilder {
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the worker services
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec
@@ -661,7 +685,6 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
-    labels.put("t2-pvc", pvcName);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
     String accessMode = KubernetesContext.storageAccessMode(config);
@@ -698,7 +721,6 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
-    labels.put("t2-cm", configMapName);
 
     // data pairs
     HashMap<String, String> dataMap = new HashMap<>();

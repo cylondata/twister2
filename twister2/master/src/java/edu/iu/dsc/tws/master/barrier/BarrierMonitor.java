@@ -176,6 +176,8 @@ public class BarrierMonitor implements JobFaultListener {
     if (faultOccurred) {
       faultOccurred = false;
       if (!defaultWaitList.isEmpty()) {
+        LOG.info("number of workers at DEFAULT barrier when the fault occurred: "
+            + defaultWaitList.size());
         barrierResponder.barrierFailed(BarrierType.DEFAULT, BarrierResult.JOB_FAULTY);
         barrierCompleted(
             defaultWaitList, expectedWorkersOnDefault, defaultStartTime, defaultTimeout);

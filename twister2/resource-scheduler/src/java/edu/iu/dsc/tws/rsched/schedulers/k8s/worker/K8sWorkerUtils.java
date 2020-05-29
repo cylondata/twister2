@@ -313,23 +313,19 @@ public final class K8sWorkerUtils {
   public static int getAndInitRestartCount(Config cnfg,
                                            String jbID,
                                            JobMasterAPI.WorkerInfo wInfo) {
-    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
-      return initRestartFromZK(cnfg, jbID, wInfo);
-    } else {
-      // initialize the controller to talk to Kubernetes master
-      KubernetesController controller = new KubernetesController();
-      controller.init(KubernetesContext.namespace(cnfg));
+    // initialize the controller to talk to Kubernetes master
+    KubernetesController controller = new KubernetesController();
+    controller.init(KubernetesContext.namespace(cnfg));
 
-      String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
+    String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
 
-      int restartCount = initRestartFromCM(controller, jbID, keyName);
-      LOG.info("Worker restartCount: " + restartCount);
+    int restartCount = initRestartFromCM(controller, jbID, keyName);
+    LOG.info("Worker restartCount: " + restartCount);
 
-      // close the controller
-      controller.close();
+    // close the controller
+    controller.close();
 
-      return restartCount;
-    }
+    return restartCount;
   }
 
   /**
@@ -370,7 +366,7 @@ public final class K8sWorkerUtils {
    * if the worker/jm is starting for the first time,
    * we need to add the config restart count key to the config map
    * otherwise, we need to increase the restart count at the configmap
-   *
+   * <p>
    * restartCount is returned as zero if the worker/jm is starting for the first time,
    * if it is more than zero, the worker is restarting
    */

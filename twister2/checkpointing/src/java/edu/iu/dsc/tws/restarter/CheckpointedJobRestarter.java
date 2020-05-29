@@ -41,7 +41,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ID;
@@ -65,7 +65,7 @@ public final class CheckpointedJobRestarter {
     LOG.info("Restarting job " + args[0]);
     Map<String, Object> configMap = new HashMap<>();
     configMap.put(JOB_ID, args[0]);
-    configMap.put(CheckpointingConfigurations.RESTORING_CHECKPOINTED_JOB, true);
+    configMap.put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, true);
 
     Config config = ResourceAllocator.loadConfig(configMap);
     Twister2Job twister2Job;

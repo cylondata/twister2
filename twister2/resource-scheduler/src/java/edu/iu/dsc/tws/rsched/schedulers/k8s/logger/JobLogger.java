@@ -68,12 +68,30 @@ public class JobLogger extends Thread {
   public void run() {
     v1Api = KubernetesController.createCoreV1Api();
     logsDir = System.getProperty("user.home") + "/.twister2/" + job.getJobId();
-    if (!FileUtils.isDirectoryExists(logsDir)) {
-      FileUtils.createDirectory(logsDir);
+    if (FileUtils.isDirectoryExists(logsDir)) {
+      logsDir = getAvailableLogDir(logsDir);
     }
+    FileUtils.createDirectory(logsDir);
     LOG.info("Job logs directory: " + logsDir);
 
     watchPodsToRunningStartLoggers();
+  }
+
+  /**
+   * if there is already a directory with the same name
+   * get an available directory name with a numerical suffix added
+   * if there is also a directory with the same numerical suffix,
+   * increase the suffix value until finding an available one
+   * @param existingDir
+   */
+  private String getAvailableLogDir(String existingDir) {
+    int suffix = 1;
+    String dirName = existingDir + "-" + suffix;
+    while (FileUtils.isDirectoryExists(dirName)) {
+      suffix++;
+      dirName = existingDir + "-" + suffix;
+    }
+    return dirName;
   }
 
   /**
