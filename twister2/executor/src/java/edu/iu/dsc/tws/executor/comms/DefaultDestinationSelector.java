@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,8 +26,6 @@ public class DefaultDestinationSelector implements DestinationSelector {
 
   private Map<Integer, Integer> srcGlobalToIndex;
   private Map<Integer, Integer> tgtsGlobaToIndex;
-  private List<Integer> globalSources = new ArrayList<>();
-  private List<Integer> globalTargets = new ArrayList<>();
   private Set<Integer> srcIndexes = new HashSet<>();
   private Set<Integer> tgtIndexes = new HashSet<>();
   private Map<Integer, Integer> indexToGlobal = new HashMap<>();
@@ -50,10 +46,10 @@ public class DefaultDestinationSelector implements DestinationSelector {
 
   @Override
   public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
-    if (!sources.equals(srcIndexes)) {
+    if (!sources.equals(new HashSet<>(srcGlobalToIndex.keySet()))) {
       throw new RuntimeException("Sources should be equal");
     }
-    if (!destinations.equals(tgtIndexes)) {
+    if (!destinations.equals(new HashSet<>(tgtsGlobaToIndex.keySet()))) {
       throw new RuntimeException("Targets should be equal");
     }
 
