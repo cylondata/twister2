@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.selectors;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
