@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
@@ -34,7 +35,9 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   protected BPartition op;
 
   public PartitionBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                 Set<Integer> sources, Set<Integer> targets, Edge edge) {
+                                 Set<Integer> sources, Set<Integer> targets, Edge edge,
+                                 Map<Integer, Integer> srcGlobalToIndex,
+                                 Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
     MessageType dataType = edge.getDataType();
     String edgeName = edge.getName();
@@ -42,7 +45,8 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }

@@ -11,20 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 /**
  * The streaming operation.
@@ -34,7 +37,9 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   protected SPartition op;
 
   public PartitionStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                     Set<Integer> srcs, Set<Integer> dests, Edge edge) {
+                                     Set<Integer> srcs, Set<Integer> dests, Edge edge,
+                                     Map<Integer, Integer> srcGlobalToIndex,
+                                     Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
     if (srcs.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -44,11 +49,19 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
+    DestinationSelector destSelector;
+    if (edge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
+    } else {
+      destSelector = new HashingSelector();
+    }
+
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SPartition(newComm, logicalPlan, srcs, dests,
         edge.getDataType(),
         new PartitionBulkReceiver(),
-        new LoadBalanceSelector(), edge.getEdgeID().nextId(), edge.getMessageSchema());
+        destSelector, edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   public boolean send(int source, IMessage message, int flags) {
