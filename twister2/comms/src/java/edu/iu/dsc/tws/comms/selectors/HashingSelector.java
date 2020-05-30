@@ -107,13 +107,7 @@ public class HashingSelector implements DestinationSelector {
 
   @Override
   public int next(int source, Object data) {
-    int next;
-    if (data != null && data.getClass().isArray()) {
-      next = Math.abs(getArrayHashCode(data, dataType) % destinations.size());
-    } else {
-      next = data.hashCode() % destinations.size();
-    }
-    return destinations.get(next);
+    return next(source, data, null);
   }
 
   public void commit(int source, int dest) {
