@@ -280,6 +280,8 @@ public class ArrowAllToAll implements ReceiveCallback {
       table.noBuffers = header[2];
       table.noArray = header[3];
       table.length = header[4];
+    } else {
+      finishedSources.add(source);
     }
   }
 

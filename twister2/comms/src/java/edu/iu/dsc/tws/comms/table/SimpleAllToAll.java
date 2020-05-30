@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.table;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -41,8 +42,8 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
 
   private class AllToAllSends {
     private int target;
-    private Queue<TRequest> requestQueue;
-    private Queue<TRequest> pendingQueue;
+    private Queue<TRequest> requestQueue = new LinkedList<>();
+    private Queue<TRequest> pendingQueue = new LinkedList<>();
     private int messageSizes;
     private AllToAllSendStatus sendStatus = AllToAllSendStatus.SENDING;
   }
