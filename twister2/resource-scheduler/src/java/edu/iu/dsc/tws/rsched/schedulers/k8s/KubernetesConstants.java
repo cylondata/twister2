@@ -20,15 +20,6 @@ public final class KubernetesConstants {
   public static final String POD_VOLATILE_VOLUME = "/twister2-volatile";
   public static final String CONTAINER_NAME_PREFIX = "twister2-container-";
 
-  public static final String TWISTER2_SERVICE_PREFIX = "t2s-";
-  public static final String SERVICE_LABEL_PREFIX = "t2s-lb-";
-  public static final String TWISTER2_JOB_PODS_LABEL_PREFIX = "t2pod-lb-";
-  public static final String TWISTER2_STORAGE_CLAIM_PREFIX = "t2strg-";
-
-  public static final String SERVICE_LABEL_KEY = "app";
-  public static final String TWISTER2_JOB_PODS_KEY = "twister2-job-pods";
-  public static final String TWISTER2_PODS_ROLE_KEY = "twister2-role";
-
   public static final String PERSISTENT_VOLUME_NAME = "persistent-volume";
   public static final String PERSISTENT_VOLUME_MOUNT = "/persistent";
   public static final String SECRET_VOLUME_NAME = "kube-openmpi-ssh-key";

@@ -11,11 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -70,21 +67,21 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create service name from job name
+   * create service name for workers
    * @param jobID
    * @return
    */
   public static String createServiceName(String jobID) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID;
+    return jobID;
   }
 
   /**
-   * create service name from job name
+   * create service name for the job master
    * @param jobID
    * @return
    */
   public static String createJobMasterServiceName(String jobID) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID + "-jm";
+    return jobID + "-jm";
   }
 
   /**
@@ -93,7 +90,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createPersistentVolumeClaimName(String jobID) {
-    return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobID;
+    return jobID;
   }
 
   /**
@@ -105,66 +102,16 @@ public final class KubernetesUtils {
     return "persistent-volume-" + jobID;
   }
 
-  /**
-   * create service label from job name
-   * this label is used when constructing statefulset
-   * @param jobID
-   * @return
-   */
-  public static String createServiceLabel(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID;
-  }
-
-  /**
-   * create service label from job name
-   * this label is used when constructing statefulset
-   * @param jobID
-   * @return
-   */
-  public static String createJobMasterServiceLabel(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID + "-jm";
-  }
-
-  public static String createJobMasterRoleLabel(String jobID) {
-    return jobID + "-jm";
-  }
-
-  public static String createWorkerRoleLabel(String jobID) {
-    return jobID + "-worker";
-  }
-
-  public static String createJobPodsLabel(String jobID) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_LABEL_PREFIX + jobID;
-  }
-
-  /**
-   * this label is used when submitting queries to kubernetes master
-   * @param jobID
-   * @return
-   */
-  public static String createServiceLabelWithKey(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobID);
-  }
-
-  /**
-   * this label is used when submitting queries to kubernetes master
-   * @param jobID
-   * @return
-   */
-  public static String createJobMasterServiceLabelWithKey(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobID);
-  }
-
   public static String createJobPodsLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobID);
+    return "t2-job=" + jobID;
   }
 
-  public static String createJobMasterRoleLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createJobMasterRoleLabel(jobID);
+  public static String createJobMasterPodLabelWithKey(String jobID) {
+    return "t2-mp=" + jobID;
   }
 
-  public static String createWorkerRoleLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createWorkerRoleLabel(jobID);
+  public static String createWorkerPodLabelWithKey(String jobID) {
+    return "t2-wp=" + jobID;
   }
 
   /**
@@ -211,7 +158,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createConfigMapName(String jobID) {
-    return jobID + "-cm";
+    return jobID;
   }
 
   /**
@@ -234,24 +181,6 @@ public final class KubernetesUtils {
     String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
     String jobPackageFullPath = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
     return jobPackageFullPath;
-  }
-
-  public static String getLocalAddress() {
-    try {
-      return InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-      return null;
-    }
-  }
-
-  public static InetAddress convertToIPAddress(String ipStr) {
-    try {
-      return InetAddress.getByName(ipStr);
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when converting to IP adress: ", e);
-      return null;
-    }
   }
 
   /**

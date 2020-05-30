@@ -124,6 +124,7 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
+    labels.put("t2-wss", jobID); // worker statefulset
 
     // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -143,13 +144,11 @@ public final class RequestObjectBuilder {
 
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
-    selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selector.putMatchLabelsItem("t2-wp", jobID);
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template = constructPodTemplate(
-        computeResource, serviceLabel, encodedNodeInfoList);
+    V1PodTemplateSpec template = constructPodTemplate(computeResource, encodedNodeInfoList);
 
     setSpec.setTemplate(template);
 
@@ -162,7 +161,6 @@ public final class RequestObjectBuilder {
    * construct pod template
    */
   public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
-                                                       String serviceLabel,
                                                        String encodedNodeInfoList) {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
@@ -170,13 +168,7 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
-    labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
-
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, workerRoleLabel);
+    labels.put("t2-wp", jobID); // worker pod
 
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
@@ -520,9 +512,9 @@ public final class RequestObjectBuilder {
   public static void setUniformMappingAffinity(V1Affinity affinity) {
 
     String mappingType = KubernetesContext.workerMappingUniform(config);
-    String key = KubernetesConstants.SERVICE_LABEL_KEY;
+    String key = "t2-wp";
     String operator = "In";
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
+    String serviceLabel = jobID;
     List<String> values = Arrays.asList(serviceLabel);
 
     V1LabelSelectorRequirement labelRequirement = new V1LabelSelectorRequirement();
@@ -550,14 +542,11 @@ public final class RequestObjectBuilder {
   }
 
   public static V1Service createJobServiceObject() {
-
     String serviceName = KubernetesUtils.createServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
-
-    return createHeadlessServiceObject(serviceName, serviceLabel);
+    return createHeadlessServiceObject(serviceName);
   }
 
-  public static V1Service createHeadlessServiceObject(String serviceName, String serviceLabel) {
+  public static V1Service createHeadlessServiceObject(String serviceName) {
 
     V1Service service = new V1Service();
     service.setKind("Service");
@@ -580,7 +569,7 @@ public final class RequestObjectBuilder {
     serviceSpec.setClusterIP("None");
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-wp", jobID);
     serviceSpec.setSelector(selectors);
 
     service.setSpec(serviceSpec);
@@ -595,7 +584,6 @@ public final class RequestObjectBuilder {
   public static V1Service createNodePortServiceObject() {
 
     String serviceName = KubernetesUtils.createServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createServiceLabel(jobID);
     int workerPort = KubernetesContext.workerBasePort(config);
     int nodePort = KubernetesContext.serviceNodePort(config);
     String protocol = KubernetesContext.workerTransportProtocol(config);
@@ -621,7 +609,7 @@ public final class RequestObjectBuilder {
     serviceSpec.setType("NodePort");
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-wp", jobID);
     serviceSpec.setSelector(selectors);
 
     ArrayList<V1ServicePort> ports = new ArrayList<V1ServicePort>();

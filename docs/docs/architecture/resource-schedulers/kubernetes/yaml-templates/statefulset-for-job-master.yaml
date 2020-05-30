@@ -7,25 +7,26 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: <job-name>-<job-master>
+  name: <job-id>-jm
   namespace: <kubernetes.namespace>
   labels:
-    app: t2-srv-lb-<job-name>-<job-master>
-    twister2-job-pods: twister2-<job-name>
-    twister2-role: <job-name>-job-master
-
+    app: twister2
+    t2-job: <job-id>
+    t2-mss: <job-id>
 spec:
   replicas: 1
-  serviceName: t2-srv-<jobname>-<jm>
+  serviceName: <job-id>-jm
 
   selector:
     matchLabels:
-      app: t2-srv-lb-<job-name>-<job-master>
+      t2-mp: <job-id>
 
   template:
     metadata:
       labels:
-        app: t2-srv-lb-<job-name>-<job-master>
+        app: twister2
+        t2-job: <job-id>
+        t2-mp: <job-id>
 
     spec:
       terminationGracePeriodSeconds: 0

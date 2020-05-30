@@ -173,7 +173,7 @@ public final class PodWatchUtils {
     }
 
     String phase = "Running";
-    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobID);
+    String serviceLabel = "t2-wp=" + jobID;
     Integer timeoutSeconds = timeout;
     Watch<V1Pod> watch = null;
 
@@ -249,7 +249,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
+    String workerRoleLabel = KubernetesUtils.createWorkerPodLabelWithKey(jobID);
     String reason = "Started";
     Integer timeoutSeconds = timeout;
     Watch<V1Event> watch = null;
@@ -306,7 +306,7 @@ public final class PodWatchUtils {
 
     // this is better but it does not work with another installation
 //    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
+    String workerRoleLabel = KubernetesUtils.createWorkerPodLabelWithKey(jobID);
 
     V1PodList podList = null;
     try {
@@ -488,7 +488,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobID);
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterPodLabelWithKey(jobID);
     String podPhase = "Running";
 
     LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobID
@@ -561,7 +561,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobID);
+    String workerRoleLabel = KubernetesUtils.createWorkerPodLabelWithKey(jobID);
     String podPhase = "Running";
 
     LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobID

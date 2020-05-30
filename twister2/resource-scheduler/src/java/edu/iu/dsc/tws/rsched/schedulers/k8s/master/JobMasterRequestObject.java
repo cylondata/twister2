@@ -86,6 +86,7 @@ public final class JobMasterRequestObject {
     HashMap<String, String> labels = new HashMap<>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
+    labels.put("t2-mss", jobID); // job master statefulset
 
     // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -100,8 +101,7 @@ public final class JobMasterRequestObject {
 
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
-    String jobMasterServiceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
-    selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, jobMasterServiceLabel);
+    selector.putMatchLabelsItem("t2-mp", jobID);
     setSpec.setSelector(selector);
 
     // construct the pod template
@@ -123,20 +123,13 @@ public final class JobMasterRequestObject {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put("app", "twister2");
     labels.put("t2-job", jobID);
-    labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
-        KubernetesUtils.createJobMasterServiceLabel(jobID));
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
-
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, jobMasterRoleLabel);
+    labels.put("t2-mp", jobID); // job master pod
 
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
     V1PodSpec podSpec = new V1PodSpec();
-    podSpec.setTerminationGracePeriodSeconds(1L);
+    podSpec.setTerminationGracePeriodSeconds(0L);
 
     ArrayList<V1Volume> volumes = new ArrayList<>();
     V1Volume memoryVolume = new V1Volume();
@@ -309,7 +302,6 @@ public final class JobMasterRequestObject {
   public static V1Service createJobMasterServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
@@ -330,7 +322,7 @@ public final class JobMasterRequestObject {
     V1ServiceSpec serviceSpec = new V1ServiceSpec();
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-mp", jobID);
     serviceSpec.setSelector(selectors);
     // set port
     V1ServicePort servicePort = new V1ServicePort();
@@ -351,7 +343,6 @@ public final class JobMasterRequestObject {
   public static V1Service createJobMasterHeadlessServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
@@ -374,7 +365,7 @@ public final class JobMasterRequestObject {
 
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-mp", jobID);
     serviceSpec.setSelector(selectors);
 
     service.setSpec(serviceSpec);
