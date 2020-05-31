@@ -33,6 +33,7 @@ public class CommunicationContext extends Context {
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String DIRECT = "direct";
   public static final String JOIN = "join";
+  public static final String TABLE_PARTITION = "table_partition";
 
   public static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
   public static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
