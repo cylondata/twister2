@@ -205,6 +205,31 @@ public final class KubernetesUtils {
     return createJobMasterStatefulSetName(jobID) + "-0";
   }
 
+  /**
+   * create ConfigMap name for the given job name
+   * add a suffix to job name
+   * @return
+   */
+  public static String createConfigMapName(String jobID) {
+    return jobID + "-cm";
+  }
+
+  /**
+   * create the key for worker restart count to be used in ConfigMap
+   * @return
+   */
+  public static String createRestartWorkerKey(int workerID) {
+    return "RESTART_COUNT_FOR_WORKER_" + workerID;
+  }
+
+  /**
+   * create the key for job master restart count to be used in ConfigMap
+   * @return
+   */
+  public static String createRestartJobMasterKey() {
+    return "RESTART_COUNT_FOR_JOB_MASTER";
+  }
+
   public static String jobPackageFullPath(Config config, String jobID) {
     String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
     String jobPackageFullPath = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);

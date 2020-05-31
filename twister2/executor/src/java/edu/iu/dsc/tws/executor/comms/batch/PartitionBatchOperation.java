@@ -12,11 +12,13 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -24,19 +26,30 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BPartition;
-import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
 
   protected BPartition op;
 
   public PartitionBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                 Set<Integer> sources, Set<Integer> targets, Edge edge) {
+                                 Set<Integer> sources, Set<Integer> targets, Edge edge,
+                                 Map<Integer, Integer> srcGlobalToIndex,
+                                 Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
     MessageType dataType = edge.getDataType();
     String edgeName = edge.getName();
     boolean shuffle = false;
+
+    DestinationSelector destSelector;
+    if (edge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
+    } else {
+      destSelector = new HashingSelector();
+    }
 
     Object shuffleProp = edge.getProperty("shuffle");
     if (shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
@@ -47,14 +60,10 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(newComm, logicalPlan, sources, targets,
         dataType, new PartitionReceiver(),
-        new LoadBalanceSelector(), shuffle, edge.getEdgeID().nextId(), edge.getMessageSchema());
+        destSelector, shuffle, edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
-  public void send(int source, IMessage message) {
-    op.partition(source, message.getContent(), 0);
-  }
-
-  public boolean send(int source, IMessage message, int dest) {
+  public boolean send(int source, IMessage message, int flags) {
     return op.partition(source, message.getContent(), 0);
   }
 

@@ -39,12 +39,15 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   private BKeyedReduce op;
 
   public KeyedReduceBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
+                                   Set<Integer> sources, Set<Integer> dests, Edge edge,
+                                   Map<Integer, Integer> srcGlobalToIndex,
+                                   Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }

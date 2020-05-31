@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
@@ -21,7 +22,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.HashBiMap;
+
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 
@@ -54,11 +58,6 @@ public class TCPChannel {
   /**
    * Network information
    */
-  private List<NetworkInfo> networkInfos;
-
-  /**
-   * Network information
-   */
   private NetworkInfo thisInfo;
 
   /**
@@ -67,33 +66,14 @@ public class TCPChannel {
   private Map<Integer, NetworkInfo> networkInfoMap;
 
   /**
-   * The client channels
+   * client channels with workerIDs
    */
-  private Map<Integer, SocketChannel> clientChannel;
+  protected HashBiMap<Integer, SocketChannel> clientChannels = HashBiMap.create();
 
   /**
-   * Channel to id
+   * server channels with workerIDs
    */
-  private Map<SocketChannel, Integer> invertedClientChannels;
-  /**
-   * Channel to id
-   */
-  private Map<SocketChannel, Integer> invertedServerChannels;
-
-  /**
-   * Channels connected to server
-   */
-  private Map<Integer, SocketChannel> serverChannel;
-
-  /**
-   * The channels connected to server
-   */
-  private List<SocketChannel> serverSocketChannels;
-
-  /**
-   * The client channels
-   */
-  private List<SocketChannel> clientSocketChannels;
+  protected HashBiMap<Integer, SocketChannel> serverChannels = HashBiMap.create();
 
   // we use a pre-allocated set of buffers to send the hello messages to
   // the servers connected to by the client, so each client will send this message
@@ -112,14 +92,7 @@ public class TCPChannel {
     config = cfg;
     thisInfo = info;
 
-    clientChannel = new HashMap<>();
-    serverChannel = new HashMap<>();
-    invertedClientChannels = new HashMap<>();
-    invertedServerChannels = new HashMap<>();
-
     clients = new HashMap<>();
-    serverSocketChannels = new ArrayList<>();
-    clientSocketChannels = new ArrayList<>();
     looper = new Progress();
 
     networkInfoMap = new HashMap<>();
@@ -143,12 +116,11 @@ public class TCPChannel {
 
   /**
    * Start the connections to the servers
-   * @param workerInfo information about all the workers
+   * @param workerInfos information about all the workers
    */
-  public void startConnections(List<NetworkInfo> workerInfo) {
-    this.networkInfos = workerInfo;
+  public void startConnections(List<NetworkInfo> workerInfos) {
 
-    for (NetworkInfo ni : workerInfo) {
+    for (NetworkInfo ni : workerInfos) {
       networkInfoMap.put(ni.getProcId(), ni);
       helloSendByteBuffers.add(ByteBuffer.allocate(4));
       helloReceiveByteBuffers.add(ByteBuffer.allocate(4));
@@ -158,7 +130,7 @@ public class TCPChannel {
     }
 
     // after sync we need to connect to all the servers
-    for (NetworkInfo info : networkInfos) {
+    for (NetworkInfo info : workerInfos) {
       if (info.getProcId() == thisInfo.getProcId()) {
         continue;
       }
@@ -171,7 +143,7 @@ public class TCPChannel {
             looper, new ClientChannelChannelHandler());
         client.connect();
         clients.put(info.getProcId(), client);
-        invertedClientChannels.put(client.getSocketChannel(), info.getProcId());
+        clientChannels.put(info.getProcId(), client.getSocketChannel());
       } catch (UnresolvedAddressException e) {
         throw new RuntimeException("Failed to create client", e);
       }
@@ -182,17 +154,17 @@ public class TCPChannel {
    * Send a buffer
    * @param buffer buffer
    * @param size size of the buffer, we assume start from 0th position
-   * @param procId the worker id
+   * @param workerID the worker id
    * @param edge the edg
    * @return the reference message created
    */
-  public TCPMessage iSend(ByteBuffer buffer, int size, int procId, int edge) {
-    SocketChannel ch = clientChannel.get(procId);
+  public TCPMessage iSend(ByteBuffer buffer, int size, int workerID, int edge) {
+    SocketChannel ch = clientChannels.get(workerID);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + procId);
+      LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + workerID);
       return null;
     }
-    Client client = clients.get(procId);
+    Client client = clients.get(workerID);
     return client.send(ch, buffer, size, edge);
   }
 
@@ -201,14 +173,14 @@ public class TCPChannel {
    *
    * @param buffer buffer
    * @param size size of the buffer, we assume start from 0th position
-   * @param procId the worker id
+   * @param workerID the worker id
    * @param edge the edg
    * @return the reference message created
    */
-  public TCPMessage iRecv(ByteBuffer buffer, int size, int procId, int edge) {
-    SocketChannel ch = serverChannel.get(procId);
+  public TCPMessage iRecv(ByteBuffer buffer, int size, int workerID, int edge) {
+    SocketChannel ch = serverChannels.get(workerID);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + procId);
+      LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + workerID);
       return null;
     }
     return server.receive(ch, buffer, size, edge);
@@ -258,18 +230,50 @@ public class TCPChannel {
   /**
    * Wait for handshakes to happen between servers and clients
    */
-  public void waitForConnections() {
+  public void waitForConnections(long timeLimit) {
+    long start = System.currentTimeMillis();
+    long delay = 0;
+
     //now wait for the handshakes to happen
-    while (clientsConnected != (networkInfos.size() - 1)
-        || (clientsCompleted != networkInfos.size() - 1)) {
+    while (clientsConnected != (networkInfoMap.size() - 1)
+        || (clientsCompleted != networkInfoMap.size() - 1)) {
       looper.loop();
+
+      delay = System.currentTimeMillis() - start;
+      if (delay > timeLimit) {
+        throw new Twister2RuntimeException("Can not connect to all workers on the timeLimit: "
+            + timeLimit + " ms");
+      }
     }
 
-    while (serverChannel.size() != networkInfos.size() - 1) {
+    while (serverChannels.size() != networkInfoMap.size() - 1) {
       looper.loop();
+
+      delay = System.currentTimeMillis() - start;
+      if (delay > timeLimit) {
+        throw new Twister2RuntimeException("Not all workers connected on the timeLimit: "
+            + timeLimit + " ms");
+      }
     }
 
     LOG.log(Level.FINEST, "Everybody connected: " + clientsConnected + " " + clientsCompleted);
+  }
+
+  public void closeConnection(int workerID) {
+    Client client = clients.get(workerID);
+    client.disconnect();
+    clients.remove(workerID);
+    networkInfoMap.remove(workerID);
+
+    clientChannels.remove(workerID);
+
+    SocketChannel serverChannel = serverChannels.remove(workerID);
+    if (serverChannel != null) {
+      try {
+        serverChannel.close();
+      } catch (IOException e) {
+      }
+    }
   }
 
   private class ServerChannelHandler implements ChannelHandler {
@@ -281,26 +285,22 @@ public class TCPChannel {
     @Override
     public void onConnect(SocketChannel channel) {
       LOG.finest("Server connected to client");
-      serverSocketChannels.add(channel);
       postHelloMessage(channel);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-      if (!serverSocketChannels.remove(channel)) {
-        LOG.warning("Removing an un-exsting channel: " + channel);
-      }
+      serverChannels.inverse().remove(channel);
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       if (readRequest.getEdge() == -1) {
         ByteBuffer buffer = readRequest.getByteBuffer();
-        int destProc = buffer.getInt();
+        int workerID = buffer.getInt();
         // add this to
-        invertedServerChannels.put(channel, destProc);
-        serverChannel.put(destProc, channel);
-        LOG.finest("Server received hello message from: " + destProc);
+        serverChannels.put(workerID, channel);
+        LOG.finest("Server received hello message from: " + workerID);
         buffer.clear();
         helloReceiveByteBuffers.add(buffer);
         clientsConnected++;
@@ -324,18 +324,14 @@ public class TCPChannel {
     @Override
     public void onConnect(SocketChannel channel) {
       LOG.finest("Client connected to server: " + channel);
-      clientSocketChannels.add(channel);
-      Integer key = invertedClientChannels.get(channel);
+      Integer workerID = clientChannels.inverse().get(channel);
       // we need to send a hello message to server
-      sendHelloMessage(key, channel);
-      clientChannel.put(key, channel);
+      sendHelloMessage(workerID, channel);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-      if (!clientSocketChannels.remove(channel)) {
-        LOG.warning("Removing an un-exsting channel: " + channel);
-      }
+      clientChannels.inverse().remove(channel);
     }
 
     @Override

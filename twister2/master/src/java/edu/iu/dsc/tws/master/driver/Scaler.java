@@ -83,7 +83,8 @@ public class Scaler implements IScaler {
       return false;
     }
 
-    boolean scaledDown = clusterScaler.scaleDownWorkers(instancesToRemove);
+    boolean scaledDown =
+        clusterScaler.scaleDownWorkers(instancesToRemove, workerMonitor.getNumberOfWorkers());
     if (!scaledDown) {
       return false;
     }

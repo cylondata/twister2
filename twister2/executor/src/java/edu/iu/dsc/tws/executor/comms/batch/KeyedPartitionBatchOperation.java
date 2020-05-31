@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
@@ -34,12 +35,15 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   private BKeyedPartition op;
 
   public KeyedPartitionBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                      Set<Integer> srcs, Set<Integer> dests, Edge edge) {
+                                      Set<Integer> srcs, Set<Integer> dests, Edge edge,
+                                      Map<Integer, Integer> srcGlobalToIndex,
+                                      Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }

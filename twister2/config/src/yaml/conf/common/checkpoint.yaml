@@ -16,3 +16,20 @@ twister2.checkpointing.source.frequency: 1000
 
 # Checkpointing message request timeout
 twister2.checkpointing.request.timeout: 10000
+
+###################################################################
+# Fault Tolerance configurations
+###################################################################
+
+# a timeout value to determine whether a worker failed
+# If a worker does not send heartbeat messages for this duration in milli seconds,
+# It is assumed failed
+twister2.fault.tolerance.failure.timeout: 10000
+
+# maximum number of times to re-execute IWorker after some other workers failed in the job
+# default value is 5
+twister2.fault.tolerance.max.reexecutes: 5
+
+# maximum number of times to re-start a worker from JVM
+# default value is 5
+twister2.fault.tolerance.max.restarts: 5

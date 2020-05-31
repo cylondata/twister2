@@ -75,6 +75,14 @@ public final class PodWatchUtils {
     return apiClient;
   }
 
+  public static void close() {
+    if (apiClient != null && apiClient.getHttpClient() != null
+        && apiClient.getHttpClient().connectionPool() != null) {
+
+      apiClient.getHttpClient().connectionPool().evictAll();
+    }
+  }
+
   /**
    * watch pods until getting the Running event for all the pods in the given list
    * return pod names and IP addresses as a HashMap

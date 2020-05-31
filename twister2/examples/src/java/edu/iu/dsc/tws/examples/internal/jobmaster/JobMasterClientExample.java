@@ -114,11 +114,10 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, job.getJobId(), workerInfo);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, job.getJobId(), workerInfo);
 
     long start = System.currentTimeMillis();
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
     long delay = System.currentTimeMillis() - start;
     LOG.severe("worker-" + workerID + " startupDelay " + delay);
 
@@ -174,16 +173,16 @@ public final class JobMasterClientExample {
     sleeeep((long) (Math.random() * 10 * 1000));
 
     // start the worker
-//    try {
-//      throwException(workerID);
-//    } catch (Throwable t) {
-//      // update worker status to FAILED
-//      statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
-//      WorkerRuntime.close();
-////      properShutDown = true;
-////      System.exit(1);
-//      throw t;
-//    }
+    try {
+      throwException(workerID);
+    } catch (Throwable t) {
+      // update worker status to FAILED
+      statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      WorkerRuntime.close();
+//      properShutDown = true;
+//      System.exit(1);
+      throw t;
+    }
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 

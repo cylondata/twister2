@@ -48,10 +48,12 @@
 package edu.iu.dsc.tws.api.comms.channel;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Queue;
 
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * Represent a communication channel. A MPI channel or a TCP channel.
@@ -115,4 +117,11 @@ public interface TWSChannel {
    * @param e edge
    */
   void releaseBuffers(int wId, int e);
+
+  /**
+   * re-initialize the channel with restarted workers
+   * @param restartedWorkers
+   */
+  void reInit(List<JobMasterAPI.WorkerInfo> restartedWorkers);
+
 }
