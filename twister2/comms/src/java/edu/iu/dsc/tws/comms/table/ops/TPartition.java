@@ -11,55 +11,71 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table.ops;
 
+import java.util.Set;
+
+import org.apache.arrow.vector.types.pojo.Schema;
+
 import edu.iu.dsc.tws.api.comms.BaseOperation;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
+import edu.iu.dsc.tws.comms.table.ArrowCallback;
 
 public class TPartition extends BaseOperation {
+  private ArrowAllToAll allToAll;
+
   /**
    * Create the base operation
    */
-  public TPartition(Communicator comm, boolean stream, String opName) {
-    super(comm, stream, opName);
+  public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
+                    Set<Integer> targets, LogicalPlan plan, int edge,
+                    Schema schema, ArrowCallback receiver) {
+    super(comm, false, CommunicationContext.TABLE_PARTITION);
+    this.allToAll = new ArrowAllToAll(comm.getConfig(), controller,
+        sources, targets, edge, receiver, schema);
   }
 
   public boolean insert(int source, Table t, int destination) {
-    return true;
+    return allToAll.insert(t, destination);
   }
 
   @Override
   public boolean isComplete() {
-    return super.isComplete();
+    return allToAll.isComplete();
   }
 
   @Override
   public void finish(int src) {
-    super.finish(src);
+    allToAll.finish(src);
   }
 
   @Override
   public boolean progress() {
-    return super.progress();
+    return allToAll.isComplete();
   }
 
   @Override
   public void close() {
-    super.close();
+    allToAll.close();
   }
 
   @Override
   public void reset() {
-    super.reset();
+    throw new Twister2RuntimeException("Not-implemented");
   }
 
   @Override
   public boolean progressChannel() {
-    return super.progressChannel();
+    return allToAll.isComplete();
   }
 
   @Override
   public boolean sendBarrier(int src, byte[] barrierId) {
-    return super.sendBarrier(src, barrierId);
+    throw new Twister2RuntimeException("Not-implemented");
   }
 
   @Override

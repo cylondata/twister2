@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -102,10 +103,10 @@ public class ArrowAllToAll implements ReceiveCallback {
   private VectorSchemaRoot schemaRoot;
 
   public ArrowAllToAll(Config cfg, IWorkerController controller,
-                       List<Integer> srcs, List<Integer> targets, int edgeId,
+                       Set<Integer> srcs, Set<Integer> targets, int edgeId,
                        ArrowCallback callback, Schema schema) {
-    this.targets = targets;
-    this.srcs = srcs;
+    this.targets = new ArrayList<>(targets);
+    this.srcs = new ArrayList<>(srcs);
     this.workerId = controller.getWorkerInfo().getWorkerID();
     this.recvCallback = callback;
     TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
@@ -122,7 +123,7 @@ public class ArrowAllToAll implements ReceiveCallback {
 
     this.schemaRoot = VectorSchemaRoot.create(schema, runtime.getRootAllocator());
 
-    this.all = new SimpleAllToAll(cfg, controller, srcs, targets, edgeId, this,
+    this.all = new SimpleAllToAll(cfg, controller, this.srcs, this.targets, edgeId, this,
         new ArrowAllocator(runtime.getRootAllocator()));
   }
 

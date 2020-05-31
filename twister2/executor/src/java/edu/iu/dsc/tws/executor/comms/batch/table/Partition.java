@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch.table;
 
-import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.arrow.vector.types.pojo.Schema;
+
 import edu.iu.dsc.tws.api.comms.BaseOperation;
-import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.table.ops.TPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
@@ -42,30 +43,23 @@ public class Partition extends AbstractParallelOperation {
     if (shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
       shuffle = true;
     }
-    Communicator newComm = channel.newWithConfig(edge.getProperties());
 
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    Schema schema = (Schema) edge.getProperty("schema");
     //LOG.info("ParitionOperation Prepare 1");
-    op = new TPartition(newComm, false, edgeName);
+    op = new TPartition(newComm, null, sources, targets, tPlan, edge.getEdgeID().nextId(),
+        schema, new PartitionReceiver());
   }
 
   public boolean send(int source, IMessage message, int dest) {
     return op.insert(source, (Table) message.getContent(), 0);
   }
 
-  public class PartitionReceiver implements BulkReceiver {
+  public class PartitionReceiver implements ArrowCallback {
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
-    }
-
-    @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
-      return outMessages.get(target).offer(msg);
-    }
-
-    @Override
-    public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(inEdge, message);
+    public void onReceive(int source, Table table) {
+      TaskMessage msg = new TaskMessage<>(table, inEdge, source);
+      outMessages.get(source).offer(msg);
     }
   }
 
