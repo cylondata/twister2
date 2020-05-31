@@ -58,14 +58,16 @@ public final class JobMasterRequestObject {
   private static String jobID;
   private static String encodedNodeInfoList;
   private static long jobPackageFileSize;
+  private static long jobSubmissionTime;
 
   private JobMasterRequestObject() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize) {
+  public static void init(Config cnfg, String jID, long jpFileSize, long jobSubmitTime) {
     config = cnfg;
     jobID = jID;
     jobPackageFileSize = jpFileSize;
+    jobSubmissionTime = jobSubmitTime;
   }
 
   /**
@@ -83,9 +85,7 @@ public final class JobMasterRequestObject {
     String statefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
 
     // set labels for the jm stateful set
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
     labels.put("t2-mss", jobID); // job master statefulset
 
     // construct metadata and set for jobID setting
@@ -120,9 +120,7 @@ public final class JobMasterRequestObject {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
-    HashMap<String, String> labels = new HashMap<String, String>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
     labels.put("t2-mp", jobID); // job master pod
 
     templateMetaData.setLabels(labels);
@@ -293,6 +291,10 @@ public final class JobMasterRequestObject {
         .name(K8sEnvVariables.JVM_MEMORY_MB + "")
         .value(jvmMem + ""));
 
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_SUBMISSION_TIME + "")
+        .value(jobSubmissionTime + ""));
+
     return envVars;
   }
 
@@ -308,9 +310,7 @@ public final class JobMasterRequestObject {
     service.setApiVersion("v1");
 
     // set labels for the jm service
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -349,9 +349,7 @@ public final class JobMasterRequestObject {
     service.setApiVersion("v1");
 
     // set labels for the jm service
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();

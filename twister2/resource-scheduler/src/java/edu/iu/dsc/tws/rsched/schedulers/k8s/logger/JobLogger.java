@@ -115,7 +115,7 @@ public class JobLogger extends Thread {
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(job.getJobId());
+    String jobPodsLabel = KubernetesUtils.jobLabelSelector(job.getJobId());
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
     String podPhase = "Running";

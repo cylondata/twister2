@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -335,7 +336,8 @@ public final class K8sWorkerUtils {
    */
   public static int initRestartFromZK(Config cnfg,
                                       String jbID,
-                                      JobMasterAPI.WorkerInfo wInfo) {
+                                      JobMasterAPI.WorkerInfo wInfo,
+                                      long jstTime) {
 
     String zkServerAddresses = ZKContext.serverAddresses(cnfg);
     int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
@@ -348,7 +350,7 @@ public final class K8sWorkerUtils {
         return restartCount;
       }
 
-      if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
+      if (JobZNodeManager.checkJstZNodeWaitIfNeeded(client, rootPath, jbID, jstTime)) {
         ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
       }
 

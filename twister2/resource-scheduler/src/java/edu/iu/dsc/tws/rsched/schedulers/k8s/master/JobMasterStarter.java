@@ -21,8 +21,8 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKBarrierManager;
@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -111,11 +112,11 @@ public final class JobMasterStarter {
     String keyName = KubernetesUtils.createRestartJobMasterKey();
     int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
 
-    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    JobMasterState initialState = JobMasterState.JM_STARTED;
     // if zookeeper is not used, jm can not recover from failure
     // so, we terminate the job with failure
     if (restartCount > 0) {
-      initialState = JobMasterAPI.JobMasterState.JM_RESTARTED;
+      initialState = JobMasterState.JM_RESTARTED;
 
       if (!ZKContext.isZooKeeperServerUsed(config)) {
         jobTerminator.terminateJob(jobID, JobAPI.JobState.FAILED);
@@ -124,7 +125,11 @@ public final class JobMasterStarter {
     }
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      initializeZooKeeper(config, jobID, podIP);
+      boolean zkInitialized = initializeZooKeeper(config, jobID, podIP, initialState);
+      if (!zkInitialized) {
+        jobTerminator.terminateJob(jobID, JobAPI.JobState.FAILED);
+        return;
+      }
     }
 
     // start JobMaster
@@ -156,45 +161,68 @@ public final class JobMasterStarter {
    * if it is starting for the first time,
    * create job directories at zk, create pers state znode for jm, return JobMasterState.JM_STARTED
    */
-  public static JobMasterAPI.JobMasterState initializeZooKeeper(Config config,
-                                                                String jobID,
-                                                                String jmAddress) {
+  public static boolean initializeZooKeeper(Config config,
+                                            String jobID,
+                                            String jmAddress,
+                                            JobMasterState initialState) {
 
     String zkServerAddresses = ZKContext.serverAddresses(config);
     int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
     CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
     String rootPath = ZKContext.rootNode(config);
 
-    try {
-      if (ZKPersStateManager.isJobMasterRestarting(client, rootPath, jobID, jmAddress)) {
-        ZKEventsManager.initEventCounter(client, rootPath, jobID);
-        job = JobZNodeManager.readJobZNode(client, rootPath, jobID).getJob();
-        return JobMasterAPI.JobMasterState.JM_RESTARTED;
+    // check whether the job znode exists
+    boolean jobZNodeExists = JobZNodeManager.isThereJobZNode(client, rootPath, jobID);
+
+    // handle the jm restart case
+    if (initialState == JobMasterState.JM_RESTARTED) {
+      // if the job is restarting and job znode does not exist, that is a failure
+
+      if (!jobZNodeExists) {
+        LOG.severe("Job is restarting but job znode does not exists at ZK server at: "
+            + ZKUtils.jobDir(rootPath, jobID));
+        return false;
       }
 
-      // check if there is a job directory,
-      // if so, that is a problem
-      if (JobZNodeManager.isThereJobZNode(client, rootPath, jobID)) {
-        throw new Twister2RuntimeException("There is already a job znode at zookeeper for this job."
-            + "Can not run this job.");
-      }
-
-      // if jm is not restarting, create job directories
-      JobZNodeManager.createJobZNode(client, rootPath, job);
-      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
-      ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
-      ZKBarrierManager.createDefaultBarrierDir(client, rootPath, job.getJobId());
-      ZKBarrierManager.createInitBarrierDir(client, rootPath, job.getJobId());
-      ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
-
-      // create pers znode for jm
-      ZKPersStateManager.createJobMasterPersState(client, rootPath, jobID, jmAddress);
-
-      return JobMasterAPI.JobMasterState.JM_STARTED;
-
-    } catch (Exception e) {
-      throw new Twister2RuntimeException(e);
+      ZKPersStateManager.updateJobMasterStatus(
+          client, rootPath, jobID, jmAddress, JobMasterState.JM_RESTARTED);
+      ZKEventsManager.initEventCounter(client, rootPath, jobID);
+      job = JobZNodeManager.readJobZNode(client, rootPath, jobID).getJob();
+      return true;
     }
+
+    // handle JM first start case
+
+    // if the job is not going to continue from a checkpoint,
+    // there can not be an existing job znode for this job,
+    // if there is, that is a reason for failure
+    if (!CheckpointingContext.startingFromACheckpoint(config)
+        && jobZNodeExists) {
+      LOG.severe("Job is starting for the first time, but there is an existing znode at ZK server: "
+          + ZKUtils.jobDir(rootPath, jobID));
+      return false;
+    }
+
+    if (CheckpointingContext.startingFromACheckpoint(config) && jobZNodeExists) {
+      // delete existing jobZnode
+      // write a flag to znodes for workers to be notified about znode initialization by jm
+      JobZNodeManager.deleteJobZNode(client, rootPath, jobID);
+    }
+
+    // if jm is not restarting, create job directories
+    JobZNodeManager.createJobZNode(client, rootPath, job);
+    ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobId());
+    ZKEventsManager.createEventsZNode(client, rootPath, job.getJobId());
+    ZKBarrierManager.createDefaultBarrierDir(client, rootPath, job.getJobId());
+    ZKBarrierManager.createInitBarrierDir(client, rootPath, job.getJobId());
+    ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
+
+    long jsTime = Long.parseLong(System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME + ""));
+    JobZNodeManager.createJstZNode(client, rootPath, jobID, jsTime);
+
+    // create pers znode for jm
+    ZKPersStateManager.createJobMasterPersState(client, rootPath, jobID, jmAddress);
+    return true;
   }
 
 }

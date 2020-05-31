@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -398,6 +399,8 @@ public class JobMaster {
     // if the job has completed successfully, killed or failed,
     // we need to cleanup
     if (ZKContext.isZooKeeperServerUsed(config)) {
+      JobZNodeManager.createJobEndTimeZNode(
+          ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
       zkMasterController.close();
       zkBarrierHandler.close();
       ZKUtils.closeClient();
@@ -551,6 +554,8 @@ public class JobMaster {
 
         if (ZKContext.isZooKeeperServerUsed(config)) {
           zkJobUpdater.updateState(finalState);
+          JobZNodeManager.createJobEndTimeZNode(
+              ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
           zkMasterController.close();
           zkBarrierHandler.close();
           ZKUtils.closeClient();

@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController;
 
 public final class WorkerRuntime {
@@ -99,7 +100,8 @@ public final class WorkerRuntime {
       zkWorkerController =
           new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
       try {
-        zkWorkerController.initialize(restartCount);
+        long jsTime = Long.parseLong(System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME + ""));
+        zkWorkerController.initialize(restartCount, jsTime);
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
         throw new RuntimeException(e);

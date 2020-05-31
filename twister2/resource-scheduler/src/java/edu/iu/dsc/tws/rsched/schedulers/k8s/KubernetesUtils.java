@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -102,15 +103,28 @@ public final class KubernetesUtils {
     return "persistent-volume-" + jobID;
   }
 
-  public static String createJobPodsLabelWithKey(String jobID) {
+  /**
+   * all twister2 resources have these two labels
+   * One is to distinguish twister2 resources from others
+   * the other is to distinguish job resources from others
+   * @param jobID
+   */
+  public static HashMap<String, String> createJobLabels(String jobID) {
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+    return labels;
+  }
+
+  public static String jobLabelSelector(String jobID) {
     return "t2-job=" + jobID;
   }
 
-  public static String createJobMasterPodLabelWithKey(String jobID) {
+  public static String jobMasterPodLabelSelector(String jobID) {
     return "t2-mp=" + jobID;
   }
 
-  public static String createWorkerPodLabelWithKey(String jobID) {
+  public static String workerPodLabelSelector(String jobID) {
     return "t2-wp=" + jobID;
   }
 

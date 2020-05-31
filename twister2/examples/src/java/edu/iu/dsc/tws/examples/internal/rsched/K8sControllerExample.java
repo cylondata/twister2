@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.ConfigMapWatcher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 import io.kubernetes.client.openapi.models.V1ConfigMap;
@@ -29,7 +30,7 @@ public final class K8sControllerExample {
   private static final Logger LOG = Logger.getLogger(K8sControllerExample.class.getName());
 
   private K8sControllerExample() { }
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
     String jobID = "ft-job";
     KubernetesController controller = new KubernetesController();
     controller.init("default");
@@ -39,19 +40,31 @@ public final class K8sControllerExample {
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
-    testPVC(config, controller, jobID);
-//    controller.deleteConfigMap(cmName);
+    V1ConfigMap cm  = controller.getJobConfigMap(jobID);
+    if (cm == null) {
+      LOG.info("there is no cm for this job on k8s");
+    } else {
+      LOG.info("cm: " + cm.getMetadata().getName());
+    }
+
+//    testPVC(config, controller, jobID);
+//    createCM(controller, jobID);
 //    testWorker(controller, jobID, 0);
 //    testWorker(controller, jobID, 1);
 //    testWorker(controller, jobID, 3);
 //    testJM(controller, jobID);
+//    controller.addParamToConfigMap(jobID, "KILL_JOB", "true");
+//    Thread.sleep(5000);
+//    createCMWatcher(controller, jobID);
+//    Thread.sleep(5000);
+//    controller.deleteConfigMap(KubernetesUtils.createConfigMapName(jobID));
 
     controller.close();
   }
 
   public static void testPVC(Config config, KubernetesController controller, String jobID) {
 
-    RequestObjectBuilder.init(config, jobID, 0);
+    RequestObjectBuilder.init(config, jobID, 0, 0);
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     V1PersistentVolumeClaim pvc =
         RequestObjectBuilder.createPersistentVolumeClaimObject(pvcName, 10);
@@ -61,19 +74,22 @@ public final class K8sControllerExample {
     } else {
       controller.createPersistentVolumeClaim(pvc);
     }
-
   }
-
 
   public static void createCM(KubernetesController controller, String jobID) {
     Config cnfg = Config.newBuilder()
         .put("nothing", "nothing")
         .build();
 
-    RequestObjectBuilder.init(cnfg, jobID, 0);
+    RequestObjectBuilder.init(cnfg, jobID, 0, 0);
     V1ConfigMap cm = RequestObjectBuilder.createConfigMap(10);
 
     controller.createConfigMap(cm);
+  }
+
+  public static void createCMWatcher(KubernetesController controller, String jobID) {
+    ConfigMapWatcher cmWatcher = new ConfigMapWatcher("default", jobID, controller, null);
+    cmWatcher.start();
   }
 
   public static void testWorker(KubernetesController controller, String jobID, int wID) {
@@ -105,10 +121,10 @@ public final class K8sControllerExample {
         .put("nothing", "nothing")
         .build();
 
-    RequestObjectBuilder.init(cnfg, jobID, 0);
+    RequestObjectBuilder.init(cnfg, jobID, 0, 0);
     V1ConfigMap cm = RequestObjectBuilder.createConfigMap(10);
 
-    RequestObjectBuilder.init(cnfg, jobID2, 0);
+    RequestObjectBuilder.init(cnfg, jobID2, 0, 0);
     V1ConfigMap cm2 = RequestObjectBuilder.createConfigMap(10);
 
     KubernetesController controller = new KubernetesController();

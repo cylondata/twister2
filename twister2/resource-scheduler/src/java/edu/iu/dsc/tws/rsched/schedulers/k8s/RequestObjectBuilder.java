@@ -75,14 +75,16 @@ public final class RequestObjectBuilder {
   private static long jobPackageFileSize;
   private static String jobMasterIP = null;
   public static String uploadMethod = "webserver";
+  private static long jobSubmissionTime;
 
   private RequestObjectBuilder() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize) {
+  public static void init(Config cnfg, String jID, long jpFileSize, long jobSubmitTime) {
     config = cnfg;
     jobID = jID;
     jobPackageFileSize = jpFileSize;
+    jobSubmissionTime = jobSubmitTime;
 
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       jobMasterIP = ResourceSchedulerUtils.getHostIP();
@@ -121,9 +123,7 @@ public final class RequestObjectBuilder {
     V1StatefulSet statefulSet = new V1StatefulSet();
 
     // set labels for the worker stateful set
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
     labels.put("t2-wss", jobID); // worker statefulset
 
     // construct metadata and set for jobID setting
@@ -165,9 +165,7 @@ public final class RequestObjectBuilder {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
-    HashMap<String, String> labels = new HashMap<String, String>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
     labels.put("t2-wp", jobID); // worker pod
 
     templateMetaData.setLabels(labels);
@@ -483,6 +481,10 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.JVM_MEMORY_MB + "")
         .value(jvmMem + ""));
 
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_SUBMISSION_TIME + "")
+        .value(jobSubmissionTime + ""));
+
     return envVars;
   }
 
@@ -553,9 +555,7 @@ public final class RequestObjectBuilder {
     service.setApiVersion("v1");
 
     // set labels for the worker services
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -593,9 +593,7 @@ public final class RequestObjectBuilder {
     service.setApiVersion("v1");
 
     // set labels for the worker services
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -670,9 +668,7 @@ public final class RequestObjectBuilder {
                                                                           int numberOfWorkers) {
 
     // set labels for V1PersistentVolumeClaim
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
     String accessMode = KubernetesContext.storageAccessMode(config);
@@ -706,9 +702,7 @@ public final class RequestObjectBuilder {
     String configMapName = KubernetesUtils.createConfigMapName(jobID);
 
     // set a label for ConfigMap
-    HashMap<String, String> labels = new HashMap<>();
-    labels.put("app", "twister2");
-    labels.put("t2-job", jobID);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
 
     // data pairs
     HashMap<String, String> dataMap = new HashMap<>();

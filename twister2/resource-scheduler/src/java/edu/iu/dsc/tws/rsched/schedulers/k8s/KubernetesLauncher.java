@@ -98,8 +98,9 @@ public class KubernetesLauncher implements ILauncher {
       return state;
     }
 
-    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize);
-    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize);
+    long jobSubmitTime = System.currentTimeMillis();
+    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize, jobSubmitTime);
+    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize, jobSubmitTime);
 
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobID);

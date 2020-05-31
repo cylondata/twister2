@@ -33,6 +33,7 @@ import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public final class ZKEphemStateManager {
   public static final Logger LOG = Logger.getLogger(ZKEphemStateManager.class.getName());
@@ -45,8 +46,7 @@ public final class ZKEphemStateManager {
   /**
    * create parent directory for ephemeral worker znodes
    */
-  public static void createEphemDir(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
+  public static void createEphemDir(CuratorFramework client, String rootPath, String jobID) {
 
     String ephemDirPath = ZKUtils.ephemDir(rootPath, jobID);
 
@@ -60,7 +60,7 @@ public final class ZKEphemStateManager {
       LOG.info("Job EphemStateDir created: " + ephemDirPath);
 
     } catch (Exception e) {
-      throw new Twister2Exception("EphemStateDir can not be created for the path: "
+      throw new Twister2RuntimeException("EphemStateDir can not be created for the path: "
           + ephemDirPath, e);
     }
   }

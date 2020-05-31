@@ -121,7 +121,7 @@ public class KubernetesController {
    * otherwise return null
    */
   public List<V1StatefulSet> getJobStatefulSets(String jobID) {
-    String labelSelector = "t2-job=" + jobID;
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
     try {
       V1StatefulSetList setList = appsApi.listNamespacedStatefulSet(
           namespace, null, null, null, null, labelSelector, null, null, null, null);
@@ -303,7 +303,7 @@ public class KubernetesController {
    * otherwise return an empty list
    */
   public List<V1Service> getJobServices(String jobID) {
-    String labelSelector = "t2-job=" + jobID;
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
     try {
       V1ServiceList serviceList = coreApi.listNamespacedService(
           namespace, null, null, null, null, labelSelector, null, null, null, null);
@@ -438,7 +438,7 @@ public class KubernetesController {
    * get PersistentVolumeClaim object for this job
    */
   public V1PersistentVolumeClaim getJobPersistentVolumeClaim(String jobID) {
-    String labelSelector = "t2-job=" + jobID;
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
     try {
       V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
           namespace, null, null, null, null, labelSelector, null, null, null, null);
@@ -832,7 +832,7 @@ public class KubernetesController {
    */
   public V1ConfigMap getJobConfigMap(String jobID) {
 
-    String labelSelector = "t2-job=" + jobID;
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
     try {
       V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(namespace,
           null, null, null, null, labelSelector, null, null, null, null);

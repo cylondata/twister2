@@ -99,17 +99,13 @@ public final class JobMasterExample {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       if ("start".equalsIgnoreCase(args[0])) {
 
-        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
 
       } else if ("restart".equalsIgnoreCase(args[0])) {
 
-        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        initialState = JobMasterAPI.JobMasterState.JM_RESTARTED;
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
         job = JobMasterStarter.job;
-
-        if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
-          LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
-          return;
-        }
 
       } else {
         LOG.info("usage: java JobMasterExample start/restart");

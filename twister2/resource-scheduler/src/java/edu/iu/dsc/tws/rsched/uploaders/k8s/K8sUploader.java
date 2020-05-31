@@ -235,7 +235,7 @@ public class K8sUploader extends Thread implements IUploader {
       podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobId()));
     }
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobID);
+    String jobPodsLabel = KubernetesUtils.jobLabelSelector(jobID);
     String targetFile = KubernetesConstants.POD_MEMORY_VOLUME
         + "/" + JobUtils.createJobPackageFileName(jobID);
 

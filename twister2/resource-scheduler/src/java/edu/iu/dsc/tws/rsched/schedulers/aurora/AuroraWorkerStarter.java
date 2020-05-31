@@ -179,7 +179,8 @@ public final class AuroraWorkerStarter {
         new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
     try {
       int restartCount = 0;
-      zkWorkerController.initialize(restartCount);
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

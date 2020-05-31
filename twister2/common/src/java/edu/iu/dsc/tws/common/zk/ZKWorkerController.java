@@ -213,7 +213,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * The body of the persistent worker znode will be updated as the status of worker changes
    * from STARTED, COMPLETED,
    */
-  public void initialize(int restartCount1) throws Exception {
+  public void initialize(int restartCount1, long jsTime) throws Exception {
 
     this.restartCount = restartCount1;
     this.initialState = restartCount > 0 ? WorkerState.RESTARTED : WorkerState.STARTED;
@@ -230,7 +230,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       // we first create persistent znode for the worker
       if (initialState == WorkerState.STARTED) {
-        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jobID)) {
+
+        if (JobZNodeManager.checkJstZNodeWaitIfNeeded(client, rootPath, jobID, jsTime)) {
           ZKPersStateManager.createWorkerPersState(client, rootPath, jobID, workerInfo);
         }
       } else {
