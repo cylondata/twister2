@@ -57,6 +57,8 @@ public class Client implements SelectHandler {
 
   private boolean connecting = false;
 
+  private boolean tryToConnect = false;
+
   /**
    * The channel callback
    */
@@ -98,8 +100,10 @@ public class Client implements SelectHandler {
       socketChannel.configureBlocking(false);
       socketChannel.socket().setTcpNoDelay(true);
 
-      LOG.log(Level.INFO, String.format("Connecting to the server on %s:%d",
-          address.getHostName(), address.getPort()));
+      if (!tryToConnect) {
+        LOG.log(Level.INFO, String.format("Connecting to the server on %s:%d",
+            address.getHostName(), address.getPort()));
+      }
 
       if (socketChannel.connect(address)) {
         handleConnect(socketChannel);
@@ -108,6 +112,10 @@ public class Client implements SelectHandler {
         progress.registerConnect(socketChannel, this);
       }
     } catch (IOException e) {
+      if (tryToConnect) {
+        tryToConnect = false;
+        return false;
+      }
       LOG.log(Level.SEVERE, "Error connecting to remote endpoint: " + address, e);
       channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
       return false;
@@ -119,12 +127,15 @@ public class Client implements SelectHandler {
   /**
    * this method may be called when the target machine may not be up yet
    * this method may be called repeatedly, until it connects
-   * the exception message, that is thrown in case the other endpoint is not up, is ignored
+   * connection exceptions are ignored, they are not propagated to connection handler
+   * connection attempt fails silently
    */
   public void tryConnecting() {
     if (connecting) {
       return;
     }
+
+    tryToConnect = true;
 
     connect();
   }
@@ -180,6 +191,7 @@ public class Client implements SelectHandler {
         channelHandler.onClose(socketChannel);
         isConnected = false;
         connecting = false;
+        tryToConnect = false;
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to stop Client", e);
       }
@@ -239,29 +251,26 @@ public class Client implements SelectHandler {
 
         isConnected = true;
         connecting = false;
+        tryToConnect = false;
         channelHandler.onConnect(socketChannel);
       } else {
-        LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address);
-        channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
-        connecting = false;
-        return;
+        if (!tryToConnect) {
+          LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address);
+          channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
+        }
       }
     } catch (java.net.ConnectException e) {
-      if ("Connection refused".equalsIgnoreCase(e.getMessage())) {
-        LOG.info(e.getMessage());
-        channelHandler.onError(socketChannel, StatusCode.CONNECTION_REFUSED);
-        return;
+      if (!tryToConnect) {
+        channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
       }
-      channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
-      return;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
-      channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
-      return;
-    } finally {
-      // connection attempt completed
-      connecting = false;
+      if (!tryToConnect) {
+        LOG.log(Level.SEVERE, "Failed to FinishConnect to endpoint: " + address, e);
+        channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
+      }
     }
+    connecting = false;
+    tryToConnect = false;
   }
 
   @Override
@@ -279,6 +288,7 @@ public class Client implements SelectHandler {
 
     isConnected = false;
     connecting = false;
+    tryToConnect = false;
     channelHandler.onError(socketChannel, StatusCode.ERROR_CONN);
   }
 
