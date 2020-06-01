@@ -140,7 +140,7 @@ public class TCPChannel {
         int remotePort = TCPContext.getPort(info);
 
         Client client = new Client(remoteHost, remotePort, config,
-            looper, new ClientChannelChannelHandler());
+            looper, new ClientChannelHandler());
         client.connect();
         clients.put(info.getProcId(), client);
         clientChannels.put(info.getProcId(), client.getSocketChannel());
@@ -161,8 +161,7 @@ public class TCPChannel {
   public TCPMessage iSend(ByteBuffer buffer, int size, int workerID, int edge) {
     SocketChannel ch = clientChannels.get(workerID);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot send on an un-connected channel to: " + workerID);
-      return null;
+      throw new Twister2RuntimeException("Can not send to an un-connected worker: " + workerID);
     }
     Client client = clients.get(workerID);
     return client.send(ch, buffer, size, edge);
@@ -180,8 +179,7 @@ public class TCPChannel {
   public TCPMessage iRecv(ByteBuffer buffer, int size, int workerID, int edge) {
     SocketChannel ch = serverChannels.get(workerID);
     if (ch == null) {
-      LOG.log(Level.INFO, "Cannot receive on an un-connected channel to: " + workerID);
-      return null;
+      throw new Twister2RuntimeException("Can not receive from an unconnected worker: " + workerID);
     }
     return server.receive(ch, buffer, size, edge);
   }
@@ -305,17 +303,17 @@ public class TCPChannel {
         helloReceiveByteBuffers.add(buffer);
         clientsConnected++;
       }
-      readRequest.setComplete(true);
+      readRequest.setComplete();
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
       LOG.finest("Server send complete");
-      writeRequest.setComplete(true);
+      writeRequest.setComplete();
     }
   }
 
-  private class ClientChannelChannelHandler implements ChannelHandler {
+  private class ClientChannelHandler implements ChannelHandler {
 
     @Override
     public void onError(SocketChannel channel, StatusCode status) {
@@ -337,13 +335,13 @@ public class TCPChannel {
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
       LOG.finest("Client received message");
-      readRequest.setComplete(true);
+      readRequest.setComplete();
     }
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
       LOG.finest("Client send complete");
-      writeRequest.setComplete(true);
+      writeRequest.setComplete();
       if (writeRequest.getEdge() == -1) {
         ByteBuffer buffer = writeRequest.getByteBuffer();
         buffer.clear();
