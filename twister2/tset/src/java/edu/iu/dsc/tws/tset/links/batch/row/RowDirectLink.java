@@ -43,7 +43,7 @@ public class RowDirectLink extends RowBatchTLinkImpl {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, MessageTypes.ARROW_TABLE);
+    Edge e = new Edge(getId(), OperationNames.TABLE_DIRECT, MessageTypes.ARROW_TABLE);
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;

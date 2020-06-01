@@ -45,7 +45,7 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.PARTITION, MessageTypes.ARROW_TABLE);
+    Edge e = new Edge(getId(), OperationNames.TABLE_PARTITION, MessageTypes.ARROW_TABLE);
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }

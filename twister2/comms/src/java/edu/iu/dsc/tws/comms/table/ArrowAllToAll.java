@@ -75,14 +75,28 @@ public class ArrowAllToAll implements ReceiveCallback {
     private int noBuffers;
     private int noArray;
     private int length;
+    private int target;
 
     private List<ArrowBuf> buffers = new ArrayList<>();
     private List<ArrowFieldNode> fieldNodes = new ArrayList<>();
     private List<FieldVector> arrays = new ArrayList<>();
+
+    public void clear() {
+      source = 0;
+      columnIndex = 0;
+      bufferIndex = 0;
+      noBuffers = 0;
+      noArray = 0;
+      length = 0;
+      target = 0;
+      buffers.clear();
+      fieldNodes.clear();
+      arrays.clear();
+    }
   }
 
   private class PendingSendTable {
-    private int target;
+    private int source;
     private Queue<Table> pending = new LinkedList<>();
     private Table currentTable;
     private ArrowHeader status = ArrowHeader.HEADER_INIT;
@@ -101,6 +115,8 @@ public class ArrowAllToAll implements ReceiveCallback {
   private int receivedBuffers;
   private int workerId;
   private VectorSchemaRoot schemaRoot;
+  // mapping from target to worker id
+  private Map<Integer, Integer> targetToWorker = new HashMap<>();
 
   public ArrowAllToAll(Config cfg, IWorkerController controller,
                        Set<Integer> srcs, Set<Integer> targets, int edgeId,
@@ -218,6 +234,7 @@ public class ArrowAllToAll implements ReceiveCallback {
     receivedBuffers++;
     ArrowBuf buf = ((ArrowChannelBuffer) buffer).getArrowBuf();
     table.buffers.add(buf);
+    table.fieldNodes.add(new ArrowFieldNode(length, -1));
 
     List<FieldVector> fieldVectors = schemaRoot.getFieldVectors();
     // we received everything for this array
@@ -261,7 +278,7 @@ public class ArrowAllToAll implements ReceiveCallback {
         }
 
         Table t = new ArrowTableImpl(schemaRoot.getSchema(), 0, columns);
-        recvCallback.onReceive(source, t);
+        recvCallback.onReceive(source, table.target, t);
       }
     }
   }
@@ -281,6 +298,7 @@ public class ArrowAllToAll implements ReceiveCallback {
       table.noBuffers = header[2];
       table.noArray = header[3];
       table.length = header[4];
+      table.target = header[5];
     } else {
       finishedSources.add(source);
     }

@@ -14,5 +14,5 @@ package edu.iu.dsc.tws.comms.table;
 import edu.iu.dsc.tws.common.table.Table;
 
 public interface ArrowCallback {
-  void onReceive(int source, Table table);
+  void onReceive(int source, int target, Table table);
 }

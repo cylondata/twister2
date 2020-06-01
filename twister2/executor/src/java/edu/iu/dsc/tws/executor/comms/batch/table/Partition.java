@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch.table;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -33,7 +34,9 @@ public class Partition extends AbstractParallelOperation {
   protected TPartition op;
 
   public Partition(Config config, Communicator network, LogicalPlan tPlan,
-                                 Set<Integer> sources, Set<Integer> targets, Edge edge) {
+                   Set<Integer> sources, Set<Integer> targets, Edge edge,
+                   Map<Integer, Integer> srcGlobalToIndex,
+                   Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
     MessageType dataType = edge.getDataType();
     String edgeName = edge.getName();
@@ -52,14 +55,14 @@ public class Partition extends AbstractParallelOperation {
   }
 
   public boolean send(int source, IMessage message, int dest) {
-    return op.insert(source, (Table) message.getContent(), 0);
+    return op.insert((Table) message.getContent(), dest);
   }
 
   public class PartitionReceiver implements ArrowCallback {
     @Override
-    public void onReceive(int source, Table table) {
+    public void onReceive(int source, int target, Table table) {
       TaskMessage msg = new TaskMessage<>(table, inEdge, source);
-      outMessages.get(source).offer(msg);
+      outMessages.get(target).offer(msg);
     }
   }
 
