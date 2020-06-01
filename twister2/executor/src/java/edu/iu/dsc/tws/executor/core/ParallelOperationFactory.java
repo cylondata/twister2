@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.table.Partition;
 import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
@@ -113,6 +114,9 @@ public class ParallelOperationFactory {
               dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, logicalPlan, sources,
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
+        } else if (OperationNames.TABLE_PARTITION.equals(edge.getOperation())) {
+          return new Partition(config, channel, logicalPlan, sources,
               dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       }

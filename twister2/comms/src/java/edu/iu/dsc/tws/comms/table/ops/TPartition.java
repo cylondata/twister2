@@ -39,7 +39,7 @@ public class TPartition extends BaseOperation {
         sources, targets, edge, receiver, schema);
   }
 
-  public boolean insert(int source, Table t, int destination) {
+  public boolean insert(Table t, int destination) {
     return allToAll.insert(t, destination);
   }
 
