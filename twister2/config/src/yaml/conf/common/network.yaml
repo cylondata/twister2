@@ -42,7 +42,7 @@ twister2.network.message.grouping.size: 10
 # For disk based operations, this directory list will be used to persist incoming messages.
 # This can be used to balance the load between multiple devices, by specifying directory locations
 # from different devices.
-twister2.network.ops.persistent.dirs: ["${TWISTER2_HOME}/persistent/"]
+twister2.network.ops.persistent.dirs: ["/mnt/data/persistent/"]
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
 twister2.network.shuffle.memory.bytes.max: 102400000

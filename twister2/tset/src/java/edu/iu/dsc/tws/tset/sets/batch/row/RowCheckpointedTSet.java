@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.tset.sets.batch.row;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;

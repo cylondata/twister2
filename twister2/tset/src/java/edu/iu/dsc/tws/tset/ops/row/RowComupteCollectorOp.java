@@ -23,16 +23,14 @@ import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
-import edu.iu.dsc.tws.api.tset.table.TSetTable;
-import edu.iu.dsc.tws.api.tset.table.TableBuilder;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
+import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.tset.table.ArrowTableBuilder;
-import edu.iu.dsc.tws.tset.table.TSetTableImpl;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
 
 public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
@@ -75,13 +73,13 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
     schema = (RowSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
     tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
-    builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+    builder = new ArrowTableBuilder(schema.toArrowSchema(), runtime.getRootAllocator());
   }
 
   @Override
   public boolean execute(IMessage<Table> content) {
     CollectorImp collectorImp = new CollectorImp();
-    TSetTable table = new TSetTableImpl(content.getContent());
+    Table table = content.getContent();
     computeFunction.compute(table.getRowIterator(), collectorImp);
     collectorImp.close();
     writeEndToEdges();
@@ -96,7 +94,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
       if (builder.currentSize() > tableMaxSize) {
         writeToEdges(builder.build());
-        builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+        builder = new ArrowTableBuilder(schema.toArrowSchema(), runtime.getRootAllocator());
       }
     }
 

@@ -19,13 +19,13 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
-import edu.iu.dsc.tws.api.tset.table.TableBuilder;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
+import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.tset.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
 
 public class RowSourceOp extends SourceOp<Row> {
   private TableBuilder builder;
@@ -65,7 +65,7 @@ public class RowSourceOp extends SourceOp<Row> {
 
     schema = (RowSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
     tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
-    builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+    builder = new ArrowTableBuilder(schema.toArrowSchema(), runtime.getRootAllocator());
   }
 
   @Override
@@ -78,7 +78,7 @@ public class RowSourceOp extends SourceOp<Row> {
 
       if (builder.currentSize() > tableMaxSize) {
         multiEdgeOpAdapter.writeToEdges(builder.build());
-        builder = new ArrowTableBuilder(schema, runtime.getRootAllocator());
+        builder = new ArrowTableBuilder(schema.toArrowSchema(), runtime.getRootAllocator());
       }
     } else {
       multiEdgeOpAdapter.writeToEdges(builder.build());

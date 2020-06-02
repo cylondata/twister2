@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch.table;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +20,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -25,9 +28,11 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.table.ops.TPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class Partition extends AbstractParallelOperation {
 
@@ -47,15 +52,29 @@ public class Partition extends AbstractParallelOperation {
       shuffle = true;
     }
 
+    List<Integer> indexes = null;
+    Object indexesProp = edge.getProperty("indexes");
+    if (indexesProp instanceof List) {
+      indexes = (List<Integer>) indexesProp;
+    }
+
+    DestinationSelector destSelector;
+    if (edge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
+    } else {
+      destSelector = new HashingSelector();
+    }
+
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     Schema schema = (Schema) edge.getProperty("schema");
     //LOG.info("ParitionOperation Prepare 1");
     op = new TPartition(newComm, null, sources, targets, tPlan, edge.getEdgeID().nextId(),
-        schema, new PartitionReceiver());
+        destSelector, indexes, schema, new PartitionReceiver());
   }
 
   public boolean send(int source, IMessage message, int dest) {
-    return op.insert((Table) message.getContent(), dest);
+    return op.insert(source, (Table) message.getContent());
   }
 
   public class PartitionReceiver implements ArrowCallback {

@@ -11,11 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table.arrow;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.common.table.ArrowColumn;
+import edu.iu.dsc.tws.common.table.ArrowRow;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
 
 public class ArrowTableImpl implements Table {
@@ -46,5 +49,32 @@ public class ArrowTableImpl implements Table {
 
   public List<ArrowColumn> getColumns() {
     return columns;
+  }
+
+  @Override
+  public Iterator<Row> getRowIterator() {
+    return new RowIterator();
+  }
+
+  private class RowIterator implements Iterator<Row> {
+    private int index = 0;
+
+    @Override
+    public boolean hasNext() {
+      return index < rowCount();
+    }
+
+    @Override
+    public Row next() {
+      List<ArrowColumn> cols = getColumns();
+      Object[] vals = new Object[cols.size()];
+      Row row = new ArrowRow(vals);
+      for (int i = 0; i < cols.size(); i++) {
+        ArrowColumn c = cols.get(i);
+        vals[i] = c.get(index);
+      }
+      index++;
+      return row;
+    }
   }
 }

@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.row.RowDirectLink;
 import edu.iu.dsc.tws.tset.links.batch.row.RowPartitionTLink;
@@ -40,7 +40,7 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
 
   @Override
   public BatchRowTLink partition(PartitionFunc<Row> partitionFn,
-                                                     int targetParallelism) {
+                                 int targetParallelism, int column) {
     RowPartitionTLink partition = new RowPartitionTLink(getTSetEnv(), partitionFn,
         getParallelism(), targetParallelism, (RowSchema) getOutputSchema());
     addChildToGraph(partition);

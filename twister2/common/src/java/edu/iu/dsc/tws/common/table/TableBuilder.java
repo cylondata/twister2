@@ -9,29 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.table;
+package edu.iu.dsc.tws.common.table;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import java.util.List;
 
-public class Field {
-  private String name;
+public interface TableBuilder {
+  /**
+   * Add a row to build the tbale
+   * @param row row
+   */
+  void add(Row row);
 
-  private MessageType type;
+  /**
+   * Get the current columns
+   * @return the columns
+   */
+  List<ArrowColumn> getColumns();
 
-  public Field(String name, MessageType type) {
-    this.name = name;
-    this.type = type;
-  }
+  /**
+   * Build the table at the end
+   * @return the built table
+   */
+  Table build();
 
-  public Field(MessageType type) {
-    this.type = type;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public MessageType getType() {
-    return type;
-  }
+  /**
+   * Get the current size of the table
+   */
+  long currentSize();
 }

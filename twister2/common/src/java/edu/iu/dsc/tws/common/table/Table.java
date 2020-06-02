@@ -11,10 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
+import java.util.Iterator;
 import java.util.List;
 
 public interface Table {
   int rowCount();
 
   List<ArrowColumn> getColumns();
+
+  /**
+   * Get the row iterator
+   *
+   * @return the row iterator
+   */
+  Iterator<Row> getRowIterator();
 }
