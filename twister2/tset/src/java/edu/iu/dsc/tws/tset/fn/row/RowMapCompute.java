@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.common.table.Row;
 
 public class RowMapCompute implements ComputeCollectorFunc<Row, Iterator<Row>> {
   private MapFunc<Row, Row> mapFn;

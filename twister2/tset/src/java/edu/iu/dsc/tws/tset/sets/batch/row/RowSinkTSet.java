@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;

@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.common.table.Row;
 
 /**
  * Table based communication links.

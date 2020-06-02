@@ -15,8 +15,8 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class RowPersistedTSet extends RowStoredTSet {

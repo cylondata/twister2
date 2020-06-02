@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.common.table.Row;
 
 public class RowFlatMapCompute implements ComputeCollectorFunc<Row, Iterator<Row>> {
   private FlatMapFunc<Row, Row> mapFn;

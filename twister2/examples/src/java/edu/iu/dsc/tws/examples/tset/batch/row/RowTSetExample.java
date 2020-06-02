@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.examples.tset.batch.AllGatherExample;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -67,7 +67,7 @@ public class RowTSetExample extends BatchTsetExample {
       public void commit(int source, int partition) {
 
       }
-    }, 4);
+    }, 4, 0);
 
     BatchRowTSet compute = partition.compute(new ComputeCollectorFunc<Row, Iterator<Row>>() {
       @Override

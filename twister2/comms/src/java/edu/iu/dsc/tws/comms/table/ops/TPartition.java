@@ -11,41 +11,102 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.table.ops;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.commons.lang3.ArrayUtils;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.common.table.TableBuilder;
+import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
+import edu.iu.dsc.tws.common.table.OneRow;
 
 public class TPartition extends BaseOperation {
   private ArrowAllToAll allToAll;
+
+  private DestinationSelector selector;
+  private int[] indexes;
+  private Map<Integer, TableBuilder> partitionedTables = new HashMap<>();
+  private Map<Integer, Queue<Table>> inputs = new HashMap<>();
 
   /**
    * Create the base operation
    */
   public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
                     Set<Integer> targets, LogicalPlan plan, int edge,
+                    DestinationSelector selector, List<Integer> indexes,
                     Schema schema, ArrowCallback receiver) {
     super(comm, false, CommunicationContext.TABLE_PARTITION);
+    this.selector = selector;
+    if (indexes == null) {
+      this.indexes = new int[]{0};
+    } else {
+      this.indexes = ArrayUtils.toPrimitive(indexes.toArray(new Integer[0]));
+    }
+
+    TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
+        TableRuntime.class);
+    assert runtime != null;
+
+    for (int t : targets) {
+      partitionedTables.put(t, new ArrowTableBuilder(schema, runtime.getRootAllocator()));
+    }
+
+    for (int s : sources) {
+      inputs.put(s, new LinkedList<>());
+    }
+
     this.allToAll = new ArrowAllToAll(comm.getConfig(), controller,
         sources, targets, edge, receiver, schema);
   }
 
-  public boolean insert(Table t, int destination) {
-    return allToAll.insert(t, destination);
+  public boolean insert(int source, Table t) {
+    // partition the table, default
+    return inputs.get(source).offer(t);
   }
 
   @Override
   public boolean isComplete() {
-    return allToAll.isComplete();
+    boolean allEmpty = true;
+    for (Map.Entry<Integer, Queue<Table>> e : inputs.entrySet()) {
+      if (e.getValue().isEmpty()) {
+        continue;
+      }
+      // partition the table, default
+      Table t = e.getValue().poll();
+
+      List<ArrowColumn> columns = t.getColumns();
+      ArrowColumn col = columns.get(indexes[0]);
+      for (int i = 0; i < col.getVector().getValueCount(); i++) {
+        Row row = new OneRow(col.get(i));
+        int target = selector.next(e.getKey(), row);
+
+        TableBuilder builder = partitionedTables.get(target);
+        for (int j = 0; j < columns.size(); j++) {
+          builder.getColumns().get(j).addValue(columns.get(j));
+        }
+      }
+    }
+
+    return allToAll.isComplete() && allEmpty;
   }
 
   @Override

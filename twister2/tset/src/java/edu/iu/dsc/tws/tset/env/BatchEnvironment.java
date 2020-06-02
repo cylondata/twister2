@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.api.tset.table.Row;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;

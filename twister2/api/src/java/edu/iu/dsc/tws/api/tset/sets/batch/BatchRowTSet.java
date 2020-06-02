@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 
 public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row> {
   /**
@@ -38,10 +38,11 @@ public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row
    * provided. The parallelism of the target {@link TSet} can also be specified.
    *
    * @param partitionFn       Partition function
+   * @param columnIndex       column index to use
    * @param targetParallelism Target parallelism
    * @return Partition TLink
    */
-  BatchRowTLink partition(PartitionFunc<Row> partitionFn, int targetParallelism);
+  BatchRowTLink partition(PartitionFunc<Row> partitionFn, int columnIndex, int targetParallelism);
 
   /**
    * Joins with another {@link BatchTupleTSet}. Note that this TSet will be considered the left

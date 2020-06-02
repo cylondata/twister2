@@ -9,26 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tset.table;
+package edu.iu.dsc.tws.common.table;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.Float4Vector;
 import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.UInt8Vector;
 import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-import edu.iu.dsc.tws.api.tset.table.Field;
-import edu.iu.dsc.tws.api.tset.table.Row;
-import edu.iu.dsc.tws.api.tset.table.RowSchema;
-import edu.iu.dsc.tws.api.tset.table.TSetTable;
-import edu.iu.dsc.tws.api.tset.table.TableBuilder;
-import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.arrow.ArrowTableImpl;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
@@ -42,23 +39,19 @@ public class ArrowTableBuilder implements TableBuilder {
 
   private long currentSize = 0;
 
-  public ArrowTableBuilder(RowSchema schema, BufferAllocator allocator) {
+  public ArrowTableBuilder(Schema schema, BufferAllocator allocator) {
     for (Field t : schema.getFields()) {
-      if (t.getType().equals(MessageTypes.INTEGER)) {
-        IntVector vector = new IntVector(t.getName(), allocator);
-        columns.add(new Int4Column(vector));
-      } else if (t.getType().equals(MessageTypes.FLOAT)) {
-        Float4Vector vector = new Float4Vector(t.getName(), allocator);
-        columns.add(new Float4Column(vector));
+      FieldVector vector = t.createVector(allocator);
+      if (vector instanceof IntVector) {
+        columns.add(new Int4Column((IntVector) vector));
+      } else if (vector instanceof Float4Vector) {
+        columns.add(new Float4Column((Float4Vector) vector));
       } else if (t.getType().equals(MessageTypes.DOUBLE)) {
-        Float8Vector vector = new Float8Vector(t.getName(), allocator);
-        columns.add(new Float8Column(vector));
+        columns.add(new Float8Column((Float8Vector) vector));
       } else if (t.getType().equals(MessageTypes.LONG)) {
-        UInt8Vector vector = new UInt8Vector(t.getName(), allocator);
-        columns.add(new Int8Column(vector));
+        columns.add(new Int8Column((UInt8Vector) vector));
       } else if (t.getType().equals(MessageTypes.STRING)) {
-        VarCharVector vector = new VarCharVector(t.getName(), allocator);
-        columns.add(new StringColumn(vector));
+        columns.add(new StringColumn((VarCharVector) vector));
       } else {
         throw new Twister2RuntimeException("Un-recognized message type");
       }
@@ -76,8 +69,8 @@ public class ArrowTableBuilder implements TableBuilder {
   }
 
   @Override
-  public TSetTable build() {
-    return new TSetTableImpl(new ArrowTableImpl((int) columns.get(0).currentSize(), columns));
+  public Table build() {
+    return new ArrowTableImpl((int) columns.get(0).currentSize(), columns);
   }
 
   @Override
