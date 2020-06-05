@@ -20,10 +20,10 @@ import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 
 public interface BatchRowTSet extends TBase, AcceptingData<Row>, StoringData<Row> {
   /**

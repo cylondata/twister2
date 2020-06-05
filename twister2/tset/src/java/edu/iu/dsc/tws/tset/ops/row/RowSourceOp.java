@@ -19,13 +19,13 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
 
 public class RowSourceOp extends SourceOp<Row> {
   private TableBuilder builder;

@@ -17,8 +17,8 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
 
