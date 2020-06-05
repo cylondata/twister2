@@ -139,7 +139,7 @@ public class TPartition extends BaseOperation {
 
   @Override
   public boolean progress() {
-    return allToAll.isComplete();
+    return !finished || !allToAll.isComplete();
   }
 
   @Override
@@ -154,7 +154,7 @@ public class TPartition extends BaseOperation {
 
   @Override
   public boolean progressChannel() {
-    return !finished || !allToAll.isComplete();
+    return progress();
   }
 
   @Override
