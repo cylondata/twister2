@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.table.ops;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +30,16 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
-import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.common.table.OneRow;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
-import edu.iu.dsc.tws.common.table.OneRow;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class TPartition extends BaseOperation {
   private ArrowAllToAll allToAll;
@@ -46,6 +48,9 @@ public class TPartition extends BaseOperation {
   private int[] indexes;
   private Map<Integer, TableBuilder> partitionedTables = new HashMap<>();
   private Map<Integer, Queue<Table>> inputs = new HashMap<>();
+  private boolean finished = false;
+  private Set<Integer> finishedSources = new HashSet<>();
+  private Set<Integer> thisWorkerSources;
 
   /**
    * Create the base operation
@@ -67,12 +72,13 @@ public class TPartition extends BaseOperation {
     assert runtime != null;
 
     for (int t : targets) {
-      partitionedTables.put(t, new ArrowTableBuilder(schema, runtime.getRootAllocator()));
+      this.partitionedTables.put(t, new ArrowTableBuilder(schema, runtime.getRootAllocator()));
     }
 
     for (int s : sources) {
-      inputs.put(s, new LinkedList<>());
+      this.inputs.put(s, new LinkedList<>());
     }
+    this.thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
 
     this.allToAll = new ArrowAllToAll(comm.getConfig(), controller,
         sources, targets, edge, receiver, schema);
@@ -85,7 +91,6 @@ public class TPartition extends BaseOperation {
 
   @Override
   public boolean isComplete() {
-    boolean allEmpty = true;
     for (Map.Entry<Integer, Queue<Table>> e : inputs.entrySet()) {
       if (e.getValue().isEmpty()) {
         continue;
@@ -106,12 +111,30 @@ public class TPartition extends BaseOperation {
       }
     }
 
-    return allToAll.isComplete() && allEmpty;
+    if (finished) {
+      for (Map.Entry<Integer, TableBuilder> e : partitionedTables.entrySet()) {
+        Table t = e.getValue().build();
+        allToAll.insert(t, e.getKey());
+      }
+
+      // clear the tables, so we won't build the tables again
+      partitionedTables.clear();
+      for (int s : finishedSources) {
+        allToAll.finish(s);
+      }
+      // clear so, we won't call finish again
+      finishedSources.clear();
+      return allToAll.isComplete();
+    }
+    return false;
   }
 
   @Override
   public void finish(int src) {
-    allToAll.finish(src);
+    finishedSources.add(src);
+    if (finishedSources.size() == thisWorkerSources.size()) {
+      finished = true;
+    }
   }
 
   @Override

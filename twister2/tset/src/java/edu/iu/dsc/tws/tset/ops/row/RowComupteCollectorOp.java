@@ -23,14 +23,14 @@ import edu.iu.dsc.tws.api.tset.TSetConstants;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
-import edu.iu.dsc.tws.common.table.TableBuilder;
+import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
+import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
 
 public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 

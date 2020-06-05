@@ -69,6 +69,11 @@ public class ArrowTableBuilder implements TableBuilder {
   }
 
   @Override
+  public List<ArrowColumn> getColumns() {
+    return columns;
+  }
+
+  @Override
   public Table build() {
     return new ArrowTableImpl((int) columns.get(0).currentSize(), columns);
   }

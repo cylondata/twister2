@@ -19,10 +19,10 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
@@ -43,8 +43,8 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
 
   @Override
   public BatchRowTLink partition(PartitionFunc<Row> partitionFn,
-                                                     int targetParallelism) {
-    return getStoredSourceTSet().partition(partitionFn, targetParallelism);
+                                                     int targetParallelism, int columnIndex) {
+    return getStoredSourceTSet().partition(partitionFn, targetParallelism, columnIndex);
   }
 
   @Override
