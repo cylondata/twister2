@@ -154,7 +154,7 @@ public class TPartition extends BaseOperation {
 
   @Override
   public boolean progressChannel() {
-    return allToAll.isComplete();
+    return !finished || !allToAll.isComplete();
   }
 
   @Override
@@ -164,6 +164,8 @@ public class TPartition extends BaseOperation {
 
   @Override
   public void waitForCompletion() {
-    super.waitForCompletion();
+    while (!isComplete()) {
+      progress();
+    }
   }
 }
