@@ -12,10 +12,11 @@
 package edu.iu.dsc.tws.comms.table;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
@@ -44,17 +45,19 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
     private int target;
     private Queue<TRequest> requestQueue = new LinkedList<>();
     private Queue<TRequest> pendingQueue = new LinkedList<>();
-    private int messageSizes;
     private AllToAllSendStatus sendStatus = AllToAllSendStatus.SENDING;
+
+    AllToAllSends(int target) {
+      this.target = target;
+    }
   }
 
   private List<Integer> sources;
   private List<Integer> targets;
-  private List<AllToAllSends> sends = new ArrayList<>();
+  private Map<Integer, AllToAllSends> sends = new HashMap<>();
   private Set<Integer> finishedSources = new HashSet<>();
   private Set<Integer> finishedTargets = new HashSet<>();
   private MPIChannel channel;
-  private int edgeId;
   private boolean finishFlag = false;
   private ReceiveCallback callback;
 
@@ -65,8 +68,11 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
     this.targets = targets;
     this.channel = new MPIChannel(cfg, workerController, edgeId, sources,
         targets, this, this, allocator);
-    this.edgeId = edgeId;
     this.callback = callback;
+
+    for (int t : targets) {
+      sends.put(t, new AllToAllSends(t));
+    }
   }
 
   public boolean insert(ByteBuffer buf, int length, int target) {
@@ -87,13 +93,12 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
     AllToAllSends s = sends.get(target);
     TRequest request = new TRequest(target, buf, length, header, headerLength);
     s.requestQueue.offer(request);
-    s.messageSizes += length;
-    return false;
+    return true;
   }
 
   public boolean isComplete() {
     boolean allQueuesEmpty = true;
-    for (AllToAllSends s : sends) {
+    for (AllToAllSends s : sends.values()) {
       while (!s.requestQueue.isEmpty()) {
         if (s.sendStatus == AllToAllSendStatus.FINISH_SENT
             || s.sendStatus == AllToAllSendStatus.FINISHED) {
@@ -160,7 +165,6 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
   public void sendComplete(TRequest request) {
     AllToAllSends s = sends.get(request.getTarget());
     s.pendingQueue.poll();
-    s.messageSizes -= request.getLength();
     callback.onSendComplete(request.getTarget(), request.getBuffer(), request.getLength());
   }
 

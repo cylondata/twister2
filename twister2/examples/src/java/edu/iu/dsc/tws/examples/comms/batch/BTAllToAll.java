@@ -84,7 +84,7 @@ public class BTAllToAll implements IWorker {
       allToAll.finish(s);
     }
 
-    while (allToAll.isComplete()) {
+    while (!allToAll.isComplete()) {
       // wait
     }
   }
