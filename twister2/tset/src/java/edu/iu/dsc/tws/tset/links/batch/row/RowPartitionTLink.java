@@ -49,6 +49,7 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }
+    e.addProperty(CommunicationContext.ROW_SCHEMA, ((RowSchema) getSchema()).toArrowSchema());
     e.addProperty(CommunicationContext.USE_DISK, this.useDisk);
     TLinkUtils.generateCommsSchema(getSchema(), e);
     return e;

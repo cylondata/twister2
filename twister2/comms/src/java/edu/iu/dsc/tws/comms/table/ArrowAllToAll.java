@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.table;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BaseFixedWidthVector;
 import org.apache.arrow.vector.BaseVariableWidthVector;
 import org.apache.arrow.vector.FieldVector;
@@ -38,20 +40,20 @@ import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
-import edu.iu.dsc.tws.common.table.arrow.ArrowTableImpl;
+import edu.iu.dsc.tws.common.table.arrow.ArrowTable;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
 import edu.iu.dsc.tws.common.table.arrow.Int4Column;
 import edu.iu.dsc.tws.common.table.arrow.Int8Column;
 import edu.iu.dsc.tws.common.table.arrow.StringColumn;
-import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.common.table.arrow.UInt2Column;
 import edu.iu.dsc.tws.comms.table.channel.ChannelBuffer;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import io.netty.buffer.ArrowBuf;
 import static org.apache.arrow.util.Preconditions.checkArgument;
@@ -98,7 +100,9 @@ public class ArrowAllToAll implements ReceiveCallback {
   private class PendingSendTable {
     private int source;
     private Queue<Table> pending = new LinkedList<>();
+    private Queue<Integer> target = new LinkedList<>();
     private Table currentTable;
+    private int currentTarget;
     private ArrowHeader status = ArrowHeader.HEADER_INIT;
     private int columnIndex;
     private int bufferIndex;
@@ -117,35 +121,44 @@ public class ArrowAllToAll implements ReceiveCallback {
   private VectorSchemaRoot schemaRoot;
   // mapping from target to worker id
   private Map<Integer, Integer> targetToWorker = new HashMap<>();
+  private List<Integer> finishedCalledSources = new ArrayList<>();
+  private Set<Integer> sourcesOfThisWorker;
 
   public ArrowAllToAll(Config cfg, IWorkerController controller,
-                       Set<Integer> srcs, Set<Integer> targets, int edgeId,
-                       ArrowCallback callback, Schema schema) {
+                       Set<Integer> sources, Set<Integer> targets,
+                       LogicalPlan plan, int edgeId,
+                       ArrowCallback callback, Schema schema, RootAllocator allocator) {
     this.targets = new ArrayList<>(targets);
-    this.srcs = new ArrayList<>(srcs);
+    this.srcs = new ArrayList<>(sources);
     this.workerId = controller.getWorkerInfo().getWorkerID();
     this.recvCallback = callback;
-    TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
-        TableRuntime.class);
-    assert runtime != null;
 
-    for (int t : targets) {
+    Set<Integer> targetWorkers = new HashSet<>();
+    for (int t : this.targets) {
+      int workerForForLogicalId = plan.getWorkerForForLogicalId(t);
+      this.targetToWorker.put(t, workerForForLogicalId);
+      targetWorkers.add(workerForForLogicalId);
+    }
+
+    for (int t : targetWorkers) {
       inputs.put(t, new PendingSendTable());
     }
 
-    for (int s : srcs) {
-      receives.put(s, new PendingReceiveTable());
+    for (int s : this.srcs) {
+      this.receives.put(s, new PendingReceiveTable());
     }
 
-    this.schemaRoot = VectorSchemaRoot.create(schema, runtime.getRootAllocator());
-
+    this.sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
+    this.schemaRoot = VectorSchemaRoot.create(schema, allocator);
     this.all = new SimpleAllToAll(cfg, controller, this.srcs, this.targets, edgeId, this,
-        new ArrowAllocator(runtime.getRootAllocator()));
+        new ArrowAllocator(allocator));
   }
 
   public boolean insert(Table table, int target) {
-    PendingSendTable st = inputs.get(target);
+    int worker = targetToWorker.get(target);
+    PendingSendTable st = inputs.get(worker);
     st.pending.offer(table);
+    st.target.offer(target);
     return true;
   }
 
@@ -160,8 +173,9 @@ public class ArrowAllToAll implements ReceiveCallback {
       PendingSendTable pst = t.getValue();
       if (pst.status == ArrowHeader.HEADER_INIT) {
         if (!pst.pending.isEmpty()) {
-          pst.currentTable = pst.pending.peek();
-          pst.pending.poll();
+          pst.currentTable = pst.pending.poll();
+          assert !pst.target.isEmpty();
+          pst.currentTarget = pst.target.poll();
           pst.status = ArrowHeader.COLUMN_CONTINUE;
         }
       }
@@ -179,15 +193,17 @@ public class ArrowAllToAll implements ReceiveCallback {
 
           while (pst.bufferIndex < bufs.size()) {
             ArrowBuf buf = bufs.get(pst.bufferIndex);
-            int[] hdr = new int[5];
+            int[] hdr = new int[6];
             hdr[0] = pst.columnIndex;
             hdr[1] = pst.bufferIndex;
             hdr[2] = bufs.size();
             hdr[3] = 1;
             int length = nodes.get(pst.bufferIndex).getLength();
             hdr[4] = length;
+            hdr[5] = pst.currentTarget; // target
 
-            boolean accept = all.insert(buf.nioBuffer(), length, hdr, 5, t.getKey());
+            boolean accept = all.insert(buf.nioBuffer(), length, hdr,
+                6, t.getKey());
             if (!accept) {
               canContinue = false;
               break;
@@ -219,8 +235,15 @@ public class ArrowAllToAll implements ReceiveCallback {
     return isAllEmpty && all.isComplete() && finishedSources.size() == srcs.size();
   }
 
-  public void finish(int source) {
+  public void finish() {
     finished = true;
+  }
+
+  public void finish(int source) {
+    finishedCalledSources.add(source);
+    if (finishedCalledSources.size() == sourcesOfThisWorker.size()) {
+      finished = true;
+    }
   }
 
   public void close() {
@@ -277,7 +300,7 @@ public class ArrowAllToAll implements ReceiveCallback {
           columns.add(c);
         }
 
-        Table t = new ArrowTableImpl(schemaRoot.getSchema(), 0, columns);
+        Table t = new ArrowTable(schemaRoot.getSchema(), 0, columns);
         recvCallback.onReceive(source, table.target, t);
       }
     }
@@ -286,8 +309,8 @@ public class ArrowAllToAll implements ReceiveCallback {
   @Override
   public void onReceiveHeader(int source, boolean fin, int[] header, int length) {
     if (!fin) {
-      if (length != 5) {
-        String msg = "Incorrect length on header, expected 5 ints got " + length;
+      if (length != 6) {
+        String msg = "Incorrect length on header, expected 6 ints got " + length;
         LOG.log(Level.SEVERE, msg);
         throw new RuntimeException(msg);
       }

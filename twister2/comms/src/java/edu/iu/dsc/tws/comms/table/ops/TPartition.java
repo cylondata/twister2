@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.common.table.TableBuilder;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class TPartition extends BaseOperation {
@@ -52,13 +54,23 @@ public class TPartition extends BaseOperation {
   private Set<Integer> finishedSources = new HashSet<>();
   private Set<Integer> thisWorkerSources;
 
+
+  /**
+   * Create the base operation
+   */
+  public TPartition(Communicator comm, IWorkerController controller, LogicalPlanBuilder builder,
+                    DestinationSelector selector, List<Integer> indexes,
+                    Schema schema, ArrowCallback receiver, RootAllocator allocator) {
+    this(comm, controller, builder.getSources(), builder.getTargets(), builder.build(),
+        selector, indexes, schema, receiver, allocator);
+  }
   /**
    * Create the base operation
    */
   public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
-                    Set<Integer> targets, LogicalPlan plan, int edge,
+                    Set<Integer> targets, LogicalPlan plan,
                     DestinationSelector selector, List<Integer> indexes,
-                    Schema schema, ArrowCallback receiver) {
+                    Schema schema, ArrowCallback receiver, RootAllocator allocator) {
     super(comm, false, CommunicationContext.TABLE_PARTITION);
     this.selector = selector;
     if (indexes == null) {
@@ -80,8 +92,8 @@ public class TPartition extends BaseOperation {
     }
     this.thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
 
-    this.allToAll = new ArrowAllToAll(comm.getConfig(), controller,
-        sources, targets, edge, receiver, schema);
+    this.allToAll = new ArrowAllToAll(comm.getConfig(), controller, sources, targets,
+        plan, comm.nextEdge(), receiver, schema, allocator);
   }
 
   public boolean insert(int source, Table t) {

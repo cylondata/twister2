@@ -18,6 +18,7 @@ import java.util.Set;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -26,7 +27,9 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.Table;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.table.ops.TPartition;
@@ -65,11 +68,15 @@ public class Partition extends AbstractParallelOperation {
       destSelector = new HashingSelector();
     }
 
+    TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
+        TableRuntime.class);
+    assert runtime != null;
+
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    Schema schema = (Schema) edge.getProperty("schema");
+    Schema schema = (Schema) edge.getProperty(CommunicationContext.ROW_SCHEMA);
     //LOG.info("ParitionOperation Prepare 1");
-    op = new TPartition(newComm, null, sources, targets, tPlan, edge.getEdgeID().nextId(),
-        destSelector, indexes, schema, new PartitionReceiver());
+    op = new TPartition(newComm, null, sources, targets, tPlan,
+        destSelector, indexes, schema, new PartitionReceiver(), runtime.getRootAllocator());
   }
 
   public boolean send(int source, IMessage message, int dest) {
