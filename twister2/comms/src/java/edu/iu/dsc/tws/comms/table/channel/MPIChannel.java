@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.table.channel;
 
 import java.nio.IntBuffer;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -56,8 +57,8 @@ public class MPIChannel {
   };
 
   private class PendingSend {
-    private IntBuffer headerBuf;
-    private Queue<TRequest> pendingData;
+    private IntBuffer headerBuf = MPI.newIntBuffer(8);
+    private Queue<TRequest> pendingData = new LinkedList<>();
     private SendStatus status = SendStatus.SEND_INIT;
     // the current send, if it is a actual send
     private TRequest currentSend;
@@ -74,7 +75,7 @@ public class MPIChannel {
     // the current request
     private Request request;
     // the user header
-    private int[] userHeader;
+    private int[] userHeader = new int[9];
   };
 
 
@@ -197,6 +198,7 @@ public class MPIChannel {
           if (!pendSend.pendingData.isEmpty()) {
             sendHeader(x.getValue());
           } else if (finishRequests.containsKey(x.getKey())) {
+            pendSend.currentSend = finishRequests.get(x.getKey());
             // if there are finish requests lets send them
             sendFinishHeader(x.getValue());
           }
@@ -216,6 +218,7 @@ public class MPIChannel {
               pendSend.currentSend = null;
               // now check weather finish request is there
               if (finishRequests.containsKey(x.getKey())) {
+                pendSend.currentSend = finishRequests.get(x.getKey());
                 sendFinishHeader(x.getValue());
               } else {
                 pendSend.status = SendStatus.SEND_INIT;
@@ -342,6 +345,7 @@ public class MPIChannel {
     send.headerBuf.put(1, TWISTERX_MSG_FIN);
     // LOG(INFO) << rank << " Sent finish to " << x.first;
     send.request = comm.iSend(send.headerBuf, 2, MPI.INT, send.currentSend.target, edge);
+    send.status = SendStatus.SEND_FINISH;
   }
 
   /**

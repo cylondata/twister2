@@ -93,6 +93,12 @@ public class BTAllToAll implements IWorker {
     @Override
     public void onReceive(int source, int target, Table table) {
       LOG.info("Received table to source " + source);
+
+      IntVector intVector = (IntVector) table.getColumns().get(0).getVector();
+      Float8Vector float8Vector = (Float8Vector) table.getColumns().get(1).getVector();
+      for (int i = 0; i < intVector.getValueCount(); i++) {
+        LOG.info(intVector.get(i) + ", " + float8Vector.get(i));
+      }
     }
   }
 }

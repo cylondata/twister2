@@ -133,7 +133,7 @@ public class SimpleAllToAll implements ChannelReceiveCallback, ChannelSendCallba
         && finishedSources.size() == sources.size();
   }
 
-  public void finish(int source) {
+  public void finish() {
     finishFlag = true;
   }
 
