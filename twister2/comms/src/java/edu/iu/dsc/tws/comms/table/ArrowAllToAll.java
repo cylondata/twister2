@@ -202,7 +202,7 @@ public class ArrowAllToAll implements ReceiveCallback {
             hdr[1] = pst.bufferIndex;
             hdr[2] = bufs.size();
             hdr[3] = 1;
-            int length = nodes.get(pst.bufferIndex).getLength();
+            int length = (int) buf.capacity();
             hdr[4] = length;
             hdr[5] = pst.currentTarget; // target
 
@@ -234,7 +234,7 @@ public class ArrowAllToAll implements ReceiveCallback {
     }
 
     if (isAllEmpty && finished) {
-      all.finish(0);
+      all.finish();
     }
     return isAllEmpty && all.isComplete() && finishedSources.size() == srcs.size();
   }
