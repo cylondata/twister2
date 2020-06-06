@@ -66,7 +66,7 @@ public class MPIChannel {
 
   private class PendingReceive {
     // we allow upto 8 integer header
-    private IntBuffer headerBuf;
+    private IntBuffer headerBuf = MPI.newIntBuffer(8);
     private int receiveId;
     private ChannelBuffer data;
     private int length;

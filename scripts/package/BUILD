@@ -87,6 +87,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-checkpointing",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
@@ -115,6 +116,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-beam",
         ":twister2-checkpointing",
         ":twister2-core-lib-api",
