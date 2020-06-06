@@ -24,9 +24,8 @@ import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-import edu.iu.dsc.tws.common.table.arrow.ArrowTableImpl;
+import edu.iu.dsc.tws.common.table.arrow.ArrowTable;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
 import edu.iu.dsc.tws.common.table.arrow.Int4Column;
@@ -46,11 +45,11 @@ public class ArrowTableBuilder implements TableBuilder {
         columns.add(new Int4Column((IntVector) vector));
       } else if (vector instanceof Float4Vector) {
         columns.add(new Float4Column((Float4Vector) vector));
-      } else if (t.getType().equals(MessageTypes.DOUBLE)) {
+      } else if (vector instanceof Float8Vector) {
         columns.add(new Float8Column((Float8Vector) vector));
-      } else if (t.getType().equals(MessageTypes.LONG)) {
+      } else if (vector instanceof UInt8Vector) {
         columns.add(new Int8Column((UInt8Vector) vector));
-      } else if (t.getType().equals(MessageTypes.STRING)) {
+      } else if (vector instanceof VarCharVector) {
         columns.add(new StringColumn((VarCharVector) vector));
       } else {
         throw new Twister2RuntimeException("Un-recognized message type");
@@ -75,7 +74,7 @@ public class ArrowTableBuilder implements TableBuilder {
 
   @Override
   public Table build() {
-    return new ArrowTableImpl((int) columns.get(0).currentSize(), columns);
+    return new ArrowTable((int) columns.get(0).currentSize(), columns);
   }
 
   @Override

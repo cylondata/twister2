@@ -14,28 +14,53 @@ package edu.iu.dsc.tws.common.table.arrow;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.Float8Vector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.types.pojo.Schema;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.ArrowRow;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
 
-public class ArrowTableImpl implements Table {
+public class ArrowTable implements Table {
   private List<ArrowColumn> columns;
 
   private Schema schema;
 
   private int rows;
 
-  public ArrowTableImpl(int rows, List<ArrowColumn> columns) {
+  public ArrowTable(int rows, List<ArrowColumn> columns) {
     this(null, rows, columns);
   }
 
-  public ArrowTableImpl(Schema schema, int rows, List<ArrowColumn> columns) {
+  public ArrowTable(Schema schema, int rows, List<ArrowColumn> columns) {
     this.columns = columns;
     this.schema = schema;
     this.rows = rows;
+  }
+
+  public ArrowTable(Schema schema, List<FieldVector> vectors) {
+    for (FieldVector vector : vectors) {
+      if (vector instanceof IntVector) {
+        columns.add(new Int4Column((IntVector) vector));
+      } else if (vector instanceof Float4Vector) {
+        columns.add(new Float4Column((Float4Vector) vector));
+      } else if (vector instanceof Float8Vector) {
+        columns.add(new Float8Column((Float8Vector) vector));
+      } else if (vector instanceof UInt8Vector) {
+        columns.add(new Int8Column((UInt8Vector) vector));
+      } else if (vector instanceof VarCharVector) {
+        columns.add(new StringColumn((VarCharVector) vector));
+      } else {
+        throw new Twister2RuntimeException("Un-recognized message type");
+      }
+    }
   }
 
   public Schema getSchema() {

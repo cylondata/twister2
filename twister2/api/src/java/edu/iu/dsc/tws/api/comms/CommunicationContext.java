@@ -83,6 +83,7 @@ public class CommunicationContext extends Context {
    * not applicable for all the operations and not intended to use directly.
    */
   public static final String USE_DISK = "use-disk";
+  public static final String ROW_SCHEMA = "row-schema";
 
   /**
    * Twister2 keyed operations sometimes requires to compare keys. This property
