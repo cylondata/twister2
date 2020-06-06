@@ -269,7 +269,7 @@ public class MPIChannel {
                     "Un-expected number of bytes expected: 8 or less received: " + count);
               }
               // malloc a buffer
-              pendingReceive.data = allocator.allocate(count);
+              pendingReceive.data = allocator.allocate(length);
               pendingReceive.length = length;
               pendingReceive.request = comm.iRecv(pendingReceive.data.getByteBuffer(),
                   length, MPI.BYTE, pendingReceive.receiveId, edge);
