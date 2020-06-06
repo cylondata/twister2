@@ -66,6 +66,8 @@ public class BTAllToAll implements IWorker {
       intVector.setSafe(i, i);
       float8Vector.setSafe(i, i);
     }
+    intVector.setValueCount(1000);
+    float8Vector.setValueCount(1000);
 
     List<Field> fieldList = Arrays.asList(intVector.getField(), float8Vector.getField());
     Schema schema = new Schema(fieldList);

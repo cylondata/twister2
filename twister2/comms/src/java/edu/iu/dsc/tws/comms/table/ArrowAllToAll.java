@@ -201,7 +201,7 @@ public class ArrowAllToAll implements ReceiveCallback {
             hdr[0] = pst.columnIndex;
             hdr[1] = pst.bufferIndex;
             hdr[2] = bufs.size();
-            hdr[3] = 1;
+            hdr[3] = vector.getValueCount();
             int length = (int) buf.capacity();
             hdr[4] = length;
             hdr[5] = pst.currentTarget; // target
@@ -261,7 +261,9 @@ public class ArrowAllToAll implements ReceiveCallback {
     receivedBuffers++;
     ArrowBuf buf = ((ArrowChannelBuffer) buffer).getArrowBuf();
     table.buffers.add(buf);
-    table.fieldNodes.add(new ArrowFieldNode(length, -1));
+    if (table.bufferIndex == 1) {
+      table.fieldNodes.add(new ArrowFieldNode(table.noArray, 0));
+    }
 
     List<FieldVector> fieldVectors = schemaRoot.getFieldVectors();
     // we received everything for this array
@@ -370,7 +372,7 @@ public class ArrowAllToAll implements ReceiveCallback {
   }
 
   private void appendNodes(FieldVector vector, List<ArrowFieldNode> nodes, List<ArrowBuf> buffers) {
-    nodes.add(new ArrowFieldNode(vector.getValueCount(), -1));
+    nodes.add(new ArrowFieldNode(vector.getValueCount(), 0));
     List<ArrowBuf> fieldBuffers = vector.getFieldBuffers();
     int expectedBufferCount = TypeLayout.getTypeBufferCount(vector.getField().getType());
     if (fieldBuffers.size() != expectedBufferCount) {
