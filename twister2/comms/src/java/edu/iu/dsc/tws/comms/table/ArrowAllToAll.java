@@ -139,18 +139,22 @@ public class ArrowAllToAll implements ReceiveCallback {
       this.targetToWorker.put(t, workerForForLogicalId);
       targetWorkers.add(workerForForLogicalId);
     }
+    List<Integer> targetWorkerList = new ArrayList<>(targetWorkers);
 
     for (int t : targetWorkers) {
       inputs.put(t, new PendingSendTable());
     }
 
+    Set<Integer> sourceWorkers = new HashSet<>();
     for (int s : this.srcs) {
       this.receives.put(s, new PendingReceiveTable());
+      sourceWorkers.add(plan.getWorkerForForLogicalId(s));
     }
+    List<Integer> sourceWorkerList = new ArrayList<>(sourceWorkers);
 
     this.sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
     this.schemaRoot = VectorSchemaRoot.create(schema, allocator);
-    this.all = new SimpleAllToAll(cfg, controller, this.srcs, this.targets, edgeId, this,
+    this.all = new SimpleAllToAll(cfg, controller, sourceWorkerList, targetWorkerList, edgeId, this,
         new ArrowAllocator(allocator));
   }
 

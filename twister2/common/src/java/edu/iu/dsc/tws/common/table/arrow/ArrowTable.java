@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table.arrow;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class ArrowTable implements Table {
   }
 
   public ArrowTable(Schema schema, List<FieldVector> vectors) {
+    columns = new ArrayList<>();
     for (FieldVector vector : vectors) {
       if (vector instanceof IntVector) {
         columns.add(new Int4Column((IntVector) vector));

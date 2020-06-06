@@ -63,8 +63,8 @@ public class BTAllToAll implements IWorker {
     IntVector intVector = new IntVector("fist", rootAllocator);
     Float8Vector float8Vector = new Float8Vector("second", rootAllocator);
     for (int i = 0; i < 1000; i++) {
-      intVector.set(i, i);
-      float8Vector.set(i, i);
+      intVector.setSafe(i, i);
+      float8Vector.setSafe(i, i);
     }
 
     List<Field> fieldList = Arrays.asList(intVector.getField(), float8Vector.getField());
