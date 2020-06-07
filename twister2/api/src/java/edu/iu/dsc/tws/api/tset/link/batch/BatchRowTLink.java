@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.common.table.Row;
 /**
  * Table based communication links.
  */
-public interface BatchRowTLink extends StoringData<Row> {
+public interface BatchRowTLink extends StoringData<Row>, TBase {
   BatchRowTSet compute(ComputeCollectorFunc<Row, Iterator<Row>> computeFunction);
 
   BatchRowTSet map(MapFunc<Row, Row> mapFn);

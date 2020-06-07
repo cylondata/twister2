@@ -30,14 +30,12 @@ import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.ArrowTableBuilder;
 import edu.iu.dsc.tws.common.table.OneRow;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.TableBuilder;
-import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
@@ -79,12 +77,8 @@ public class TPartition extends BaseOperation {
       this.indexes = ArrayUtils.toPrimitive(indexes.toArray(new Integer[0]));
     }
 
-    TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
-        TableRuntime.class);
-    assert runtime != null;
-
     for (int t : targets) {
-      this.partitionedTables.put(t, new ArrowTableBuilder(schema, runtime.getRootAllocator()));
+      this.partitionedTables.put(t, new ArrowTableBuilder(schema, allocator));
     }
 
     for (int s : sources) {

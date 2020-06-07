@@ -11,23 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.batch.row;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
-import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.examples.tset.batch.AllGatherExample;
+import edu.iu.dsc.tws.common.table.TField;
+import edu.iu.dsc.tws.common.table.TwoRow;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -40,17 +40,22 @@ public class RowTSetExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+    List<TField> fieldList = new ArrayList<>();
+    fieldList.add(new TField("first", MessageTypes.INTEGER));
+    fieldList.add(new TField("second", MessageTypes.DOUBLE));
+
     RowSourceTSet src = env.createRowSource("row", new SourceFunc<Row>() {
+      private int count = 0;
       @Override
       public boolean hasNext() {
-        return false;
+        return count < 1000;
       }
 
       @Override
       public Row next() {
-        return null;
+        return new TwoRow(1, 4.1);
       }
-    }, 4, RowSchema.make());
+    }, 4, RowSchema.make()).withSchema(new RowSchema(fieldList));
 
     BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
       @Override
@@ -69,17 +74,10 @@ public class RowTSetExample extends BatchTsetExample {
       }
     }, 4, 0);
 
-    BatchRowTSet compute = partition.compute(new ComputeCollectorFunc<Row, Iterator<Row>>() {
-      @Override
-      public void compute(Iterator<Row> input, RecordCollector<Row> output) {
-
-      }
-    });
-
     partition.forEach(new ApplyFunc<Row>() {
           @Override
           public void apply(Row data) {
-
+            LOG.info("Data " + data.get(0) + ", " + data.get(1));
           }
         });
   }
@@ -89,6 +87,6 @@ public class RowTSetExample extends BatchTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, AllGatherExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, RowTSetExample.class.getName());
   }
 }

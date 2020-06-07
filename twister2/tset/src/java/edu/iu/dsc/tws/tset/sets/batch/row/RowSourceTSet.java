@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset.sets.batch.row;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
+import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -35,5 +36,11 @@ public class RowSourceTSet extends BatchRowTSetImpl {
   @Override
   public INode getINode() {
     return new RowSourceOp(source, this, getInputs());
+  }
+
+  @Override
+  public RowSourceTSet withSchema(RowSchema schema) {
+    this.setOutputSchema(schema);
+    return this;
   }
 }

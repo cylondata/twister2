@@ -55,15 +55,15 @@ public class RowSchema implements Schema {
       if (f.getType().equals(MessageTypes.INTEGER)) {
         field = new Field(f.getName(),
                 new FieldType(false,
-                    new ArrowType.Int(32, false), null), null);
+                    new ArrowType.Int(32, true), null), null);
       } else if (f.getType().equals(MessageTypes.LONG)) {
         field = new Field(f.getName(),
             new FieldType(false,
-                new ArrowType.Int(64, false), null), null);
+                new ArrowType.Int(64, true), null), null);
       } else if (f.getType().equals(MessageTypes.SHORT)) {
         field = new Field(f.getName(),
             new FieldType(false,
-                new ArrowType.Int(16, false), null), null);
+                new ArrowType.Int(16, true), null), null);
       } else if (f.getType().equals(MessageTypes.FLOAT)) {
         field = new Field(f.getName(),
             new FieldType(false,

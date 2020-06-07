@@ -104,6 +104,9 @@ public class ParallelOperationFactory {
               channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
           return new DirectBatchOperation(config, channel, logicalPlan, sources, dests, edge);
+        } else if (OperationNames.TABLE_PARTITION.equals(edge.getOperation())) {
+          return new Partition(config, channel, logicalPlan, sources,
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
@@ -114,9 +117,6 @@ public class ParallelOperationFactory {
               dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, logicalPlan, sources,
-              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
-        } else if (OperationNames.TABLE_PARTITION.equals(edge.getOperation())) {
-          return new Partition(config, channel, logicalPlan, sources,
               dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       }

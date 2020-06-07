@@ -75,8 +75,9 @@ public class Partition extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     Schema schema = (Schema) edge.getProperty(CommunicationContext.ROW_SCHEMA);
     //LOG.info("ParitionOperation Prepare 1");
-    op = new TPartition(newComm, null, sources, targets, tPlan,
-        destSelector, indexes, schema, new PartitionReceiver(), runtime.getRootAllocator());
+    op = new TPartition(newComm, WorkerEnvironment.getWorkerEnv().getWorkerController(),
+        sources, targets, tPlan, destSelector, indexes, schema,
+        new PartitionReceiver(), runtime.getRootAllocator());
   }
 
   public boolean send(int source, IMessage message, int dest) {
