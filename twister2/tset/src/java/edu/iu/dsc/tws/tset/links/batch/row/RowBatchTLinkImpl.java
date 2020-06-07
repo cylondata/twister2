@@ -90,7 +90,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
 
   @Override
   public void forEach(ApplyFunc<Row> applyFunction) {
-    BatchRowTSet lazyPersist = lazyForEach(applyFunction);
+    BatchRowTSet lazyPersist = lazyForEach(applyFunction).withSchema((RowSchema) getSchema());
     getTSetEnv().run((BaseTSet) lazyPersist);
   }
 

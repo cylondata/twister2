@@ -29,6 +29,7 @@ public class Float4Column implements ArrowColumn<Float> {
   public void addValue(Float value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override

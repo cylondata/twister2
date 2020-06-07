@@ -110,6 +110,7 @@ public class ArrowAllToAll implements ReceiveCallback {
 
   private List<Integer> targets;
   private List<Integer> srcs;
+  private List<Integer> sourceWorkerList;
   private SimpleAllToAll all;
   private Map<Integer, PendingSendTable> inputs = new HashMap<>();
   private Map<Integer, PendingReceiveTable> receives = new HashMap<>();
@@ -147,10 +148,12 @@ public class ArrowAllToAll implements ReceiveCallback {
 
     Set<Integer> sourceWorkers = new HashSet<>();
     for (int s : this.srcs) {
-      this.receives.put(s, new PendingReceiveTable());
       sourceWorkers.add(plan.getWorkerForForLogicalId(s));
     }
-    List<Integer> sourceWorkerList = new ArrayList<>(sourceWorkers);
+    this.sourceWorkerList = new ArrayList<>(sourceWorkers);
+    for (int s : sourceWorkers) {
+      this.receives.put(s, new PendingReceiveTable());
+    }
 
     this.sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
     this.schemaRoot = VectorSchemaRoot.create(schema, allocator);
@@ -236,7 +239,7 @@ public class ArrowAllToAll implements ReceiveCallback {
     if (isAllEmpty && finished) {
       all.finish();
     }
-    return isAllEmpty && all.isComplete() && finishedSources.size() == srcs.size();
+    return isAllEmpty && all.isComplete() && finishedSources.size() == sourceWorkerList.size();
   }
 
   public void finish() {
@@ -306,7 +309,7 @@ public class ArrowAllToAll implements ReceiveCallback {
           columns.add(c);
         }
 
-        Table t = new ArrowTable(schemaRoot.getSchema(), 0, columns);
+        Table t = new ArrowTable(schemaRoot.getSchema(), table.noArray, columns);
         recvCallback.onReceive(source, table.target, t);
       }
     }

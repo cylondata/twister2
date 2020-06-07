@@ -30,6 +30,7 @@ public class Int8Column implements ArrowColumn<Long> {
   public void addValue(Long value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override

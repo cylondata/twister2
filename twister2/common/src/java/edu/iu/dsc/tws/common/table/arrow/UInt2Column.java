@@ -30,6 +30,7 @@ public class UInt2Column implements ArrowColumn<Character> {
   public void addValue(Character value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override

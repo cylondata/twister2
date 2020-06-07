@@ -29,6 +29,7 @@ public class Float8Column implements ArrowColumn<Double> {
   public void addValue(Double value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override
