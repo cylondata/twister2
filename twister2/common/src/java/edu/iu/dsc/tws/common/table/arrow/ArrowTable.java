@@ -43,7 +43,7 @@ public class ArrowTable implements Table {
   public ArrowTable(Schema schema, int rows, List<ArrowColumn> columns) {
     this.columns = columns;
     this.schema = schema;
-    this.rows = rows;
+    this.rows = (int) columns.get(0).getVector().getValueCount();
   }
 
   public ArrowTable(Schema schema, List<FieldVector> vectors) {

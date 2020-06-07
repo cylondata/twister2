@@ -33,12 +33,17 @@ import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.table.ops.TPartition;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class Partition extends AbstractParallelOperation {
 
   protected TPartition op;
+
+  private boolean syncCalled = false;
+
+  private Set<Integer> thisTargets;
 
   public Partition(Config config, Communicator network, LogicalPlan tPlan,
                    Set<Integer> sources, Set<Integer> targets, Edge edge,
@@ -68,6 +73,8 @@ public class Partition extends AbstractParallelOperation {
       destSelector = new HashingSelector();
     }
 
+    thisTargets = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
+
     TableRuntime runtime = WorkerEnvironment.getSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
         TableRuntime.class);
     assert runtime != null;
@@ -90,6 +97,22 @@ public class Partition extends AbstractParallelOperation {
       TaskMessage msg = new TaskMessage<>(table, inEdge, source);
       outMessages.get(target).offer(msg);
     }
+  }
+
+  @Override
+  public boolean isComplete() {
+    // first progress
+    this.progress();
+
+    // then check isComplete
+    boolean complete = this.getOp().isComplete();
+    if (complete && !syncCalled) {
+      for (int target : thisTargets) {
+        syncs.get(target).sync(inEdge, null);
+      }
+      syncCalled = true;
+    }
+    return complete;
   }
 
   @Override

@@ -31,6 +31,7 @@ public class StringColumn implements ArrowColumn<Text> {
   public void addValue(Text value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override

@@ -112,7 +112,7 @@ public class TPartition extends BaseOperation {
 
         TableBuilder builder = partitionedTables.get(target);
         for (int j = 0; j < columns.size(); j++) {
-          builder.getColumns().get(j).addValue(columns.get(j));
+          builder.getColumns().get(j).addValue(columns.get(j).get(i));
         }
       }
     }
@@ -155,7 +155,6 @@ public class TPartition extends BaseOperation {
 
   @Override
   public void reset() {
-    throw new Twister2RuntimeException("Not-implemented");
   }
 
   @Override

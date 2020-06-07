@@ -48,7 +48,7 @@ public class RowTSetExample extends BatchTsetExample {
       private int count = 0;
       @Override
       public boolean hasNext() {
-        return count < 1000;
+        return count++ < 1000;
       }
 
       @Override
@@ -60,7 +60,6 @@ public class RowTSetExample extends BatchTsetExample {
     BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
       @Override
       public void prepare(Set<Integer> sources, Set<Integer> destinations) {
-
       }
 
       @Override

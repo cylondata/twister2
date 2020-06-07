@@ -30,6 +30,7 @@ public class Int4Column implements ArrowColumn<Integer> {
   public void addValue(Integer value) {
     vector.setSafe(currentIndex, value);
     currentIndex++;
+    vector.setValueCount(currentIndex);
   }
 
   @Override
