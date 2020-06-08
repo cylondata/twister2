@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comms.batch.table;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.arrow.vector.types.pojo.Schema;
 
@@ -38,6 +39,7 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class Partition extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(Partition.class.getName());
 
   protected TPartition op;
 
@@ -94,6 +96,7 @@ public class Partition extends AbstractParallelOperation {
   public class PartitionReceiver implements ArrowCallback {
     @Override
     public void onReceive(int source, int target, Table table) {
+      LOG.info(String.format("Received table to %d -> %d", source, target));
       TaskMessage msg = new TaskMessage<>(table, inEdge, source);
       outMessages.get(target).offer(msg);
     }

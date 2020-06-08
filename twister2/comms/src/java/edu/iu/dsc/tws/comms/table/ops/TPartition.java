@@ -51,7 +51,8 @@ public class TPartition extends BaseOperation {
   private boolean finished = false;
   private Set<Integer> finishedSources = new HashSet<>();
   private Set<Integer> thisWorkerSources;
-
+  private Schema schema;
+  private RootAllocator allocator;
 
   /**
    * Create the base operation
@@ -77,10 +78,8 @@ public class TPartition extends BaseOperation {
       this.indexes = ArrayUtils.toPrimitive(indexes.toArray(new Integer[0]));
     }
 
-    for (int t : targets) {
-      this.partitionedTables.put(t, new ArrowTableBuilder(schema, allocator));
-    }
-
+    this.schema = schema;
+    this.allocator = allocator;
     for (int s : sources) {
       this.inputs.put(s, new LinkedList<>());
     }
@@ -111,6 +110,10 @@ public class TPartition extends BaseOperation {
         int target = selector.next(e.getKey(), row);
 
         TableBuilder builder = partitionedTables.get(target);
+        if (builder == null) {
+          builder = new ArrowTableBuilder(schema, allocator);
+          this.partitionedTables.put(target, builder);
+        }
         for (int j = 0; j < columns.size(); j++) {
           builder.getColumns().get(j).addValue(columns.get(j).get(i));
         }

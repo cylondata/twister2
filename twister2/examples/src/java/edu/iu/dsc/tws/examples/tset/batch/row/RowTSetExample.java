@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
@@ -74,11 +75,21 @@ public class RowTSetExample extends BatchTsetExample {
     }, 4, 0);
 
     partition.forEach(new ApplyFunc<Row>() {
-          @Override
-          public void apply(Row data) {
-            LOG.info("Data " + data.get(0) + ", " + data.get(1));
-          }
-        });
+      private TSetContext ctx;
+
+      private int count;
+
+      @Override
+      public void prepare(TSetContext context) {
+        ctx = context;
+      }
+
+      @Override
+      public void apply(Row data) {
+        LOG.info(ctx.getIndex() + " Data " + data.get(0) + ", " + data.get(1)
+            + ", count " + count++);
+      }
+    });
   }
 
 
