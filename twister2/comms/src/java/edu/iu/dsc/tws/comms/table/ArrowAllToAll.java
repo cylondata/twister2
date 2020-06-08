@@ -164,6 +164,7 @@ public class ArrowAllToAll implements ReceiveCallback {
   public boolean insert(Table table, int target) {
     int worker = targetToWorker.get(target);
     PendingSendTable st = inputs.get(worker);
+    LOG.info("Sending table to " + target);
     st.pending.offer(table);
     st.target.offer(target);
     return true;
@@ -310,6 +311,7 @@ public class ArrowAllToAll implements ReceiveCallback {
         }
 
         Table t = new ArrowTable(schemaRoot.getSchema(), table.noArray, columns);
+        LOG.info("RECEIVED table from source " + source + " to " + table.target);
         recvCallback.onReceive(source, table.target, t);
       }
     }

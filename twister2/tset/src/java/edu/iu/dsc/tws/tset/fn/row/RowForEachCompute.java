@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tset.fn.row;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
@@ -20,7 +21,11 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.common.table.Row;
 
 public class RowForEachCompute implements ComputeCollectorFunc<Row, Iterator<Row>> {
+  private static final Logger LOG = Logger.getLogger(RowForEachCompute.class.getName());
+
   private ApplyFunc<Row> applyFn;
+
+  private TSetContext ctx;
 
   public RowForEachCompute(ApplyFunc<Row> applyFunction) {
     this.applyFn = applyFunction;
@@ -28,6 +33,7 @@ public class RowForEachCompute implements ComputeCollectorFunc<Row, Iterator<Row
 
   @Override
   public void prepare(TSetContext context) {
+    ctx = context;
     applyFn.prepare(context);
   }
 
@@ -38,8 +44,13 @@ public class RowForEachCompute implements ComputeCollectorFunc<Row, Iterator<Row
 
   @Override
   public void compute(Iterator<Row> input, RecordCollector<Row> output) {
-    while (input.hasNext()) {
-      applyFn.apply(input.next());
+    try {
+      while (input.hasNext()) {
+        applyFn.apply(input.next());
+      }
+    } catch (IndexOutOfBoundsException e) {
+      LOG.info("Apply function index " + ctx.getIndex() + " id " + ctx.getWorkerId());
+      throw e;
     }
   }
 }

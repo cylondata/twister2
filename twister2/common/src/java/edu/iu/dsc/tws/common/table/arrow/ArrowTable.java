@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.common.table.arrow;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.Float4Vector;
@@ -30,6 +31,8 @@ import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.common.table.Table;
 
 public class ArrowTable implements Table {
+  private static final Logger LOG = Logger.getLogger(ArrowTable.class.getName());
+
   private List<ArrowColumn> columns;
 
   private Schema schema;
@@ -93,15 +96,20 @@ public class ArrowTable implements Table {
 
     @Override
     public Row next() {
-      List<ArrowColumn> cols = getColumns();
-      Object[] vals = new Object[cols.size()];
-      Row row = new ArrowRow(vals);
-      for (int i = 0; i < cols.size(); i++) {
-        ArrowColumn c = cols.get(i);
-        vals[i] = c.get(index);
+      try {
+        List<ArrowColumn> cols = getColumns();
+        Object[] vals = new Object[cols.size()];
+        Row row = new ArrowRow(vals);
+        for (int i = 0; i < cols.size(); i++) {
+          ArrowColumn c = cols.get(i);
+          vals[i] = c.get(index);
+        }
+        index++;
+        return row;
+      } catch (IndexOutOfBoundsException e) {
+        LOG.severe("Index out of bounds " + index + " row count " + rowCount());
+        throw e;
       }
-      index++;
-      return row;
     }
   }
 }
