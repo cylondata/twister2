@@ -77,4 +77,14 @@ public class OneRow implements Row {
   public float getFloat4(int column) {
     return (float) val;
   }
+
+  @Override
+  public short getInt2(int column) {
+    return (short) val;
+  }
+
+  @Override
+  public byte[] getByte(int column) {
+    return (byte[]) val;
+  }
 }

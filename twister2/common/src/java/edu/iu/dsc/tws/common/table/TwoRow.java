@@ -98,4 +98,26 @@ public class TwoRow implements Row {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
   }
+
+  @Override
+  public short getInt2(int column) {
+    if (column == 0) {
+      return (short) val1;
+    } else if (column == 1) {
+      return (short) val2;
+    } else {
+      throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
+    }
+  }
+
+  @Override
+  public byte[] getByte(int column) {
+    if (column == 0) {
+      return (byte[]) val1;
+    } else if (column == 1) {
+      return (byte[]) val2;
+    } else {
+      throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
+    }
+  }
 }

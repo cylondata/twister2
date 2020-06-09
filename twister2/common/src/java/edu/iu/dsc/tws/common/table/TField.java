@@ -25,6 +25,9 @@ package edu.iu.dsc.tws.common.table;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
+/**
+ * A filed in the table
+ */
 public class TField {
   private String name;
 

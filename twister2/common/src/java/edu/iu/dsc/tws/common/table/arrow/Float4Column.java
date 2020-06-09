@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.common.table.ArrowColumn;
 
 public class Float4Column implements ArrowColumn<Float> {
   private Float4Vector vector;
-
   private int currentIndex;
 
   public Float4Column(Float4Vector vector) {
