@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class TPartition extends BaseOperation {
   private ArrowAllToAll allToAll;
-
   private DestinationSelector selector;
   private int[] indexes;
   private Map<Integer, TableBuilder> partitionedTables = new HashMap<>();
@@ -77,14 +76,13 @@ public class TPartition extends BaseOperation {
     } else {
       this.indexes = ArrayUtils.toPrimitive(indexes.toArray(new Integer[0]));
     }
-
+    this.selector.prepare(comm, sources, targets);
     this.schema = schema;
     this.allocator = allocator;
     for (int s : sources) {
       this.inputs.put(s, new LinkedList<>());
     }
     this.thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
-
     this.allToAll = new ArrowAllToAll(comm.getConfig(), controller, sources, targets,
         plan, comm.nextEdge(), receiver, schema, allocator);
   }

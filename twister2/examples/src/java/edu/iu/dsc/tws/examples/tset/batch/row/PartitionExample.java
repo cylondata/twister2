@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset.batch.row;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -34,9 +35,8 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.row.RowSourceTSet;
 
-public class RowTSetExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(RowTSetExample.class.getName());
-
+public class PartitionExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(PartitionExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
@@ -59,31 +59,27 @@ public class RowTSetExample extends BatchTsetExample {
     }, 4, RowSchema.make()).withSchema(new RowSchema(fieldList));
 
     BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
+      private List<Integer> targets;
+      private Random random;
       @Override
       public void prepare(Set<Integer> sources, Set<Integer> destinations) {
+        targets = new ArrayList<>(destinations);
+        random = new Random();
       }
 
       @Override
       public int partition(int sourceIndex, Row val) {
-        return 0;
-      }
-
-      @Override
-      public void commit(int source, int partition) {
-
+        return targets.get(random.nextInt(targets.size()));
       }
     }, 4, 0);
 
     partition.forEach(new ApplyFunc<Row>() {
       private TSetContext ctx;
-
       private int count;
-
       @Override
       public void prepare(TSetContext context) {
         ctx = context;
       }
-
       @Override
       public void apply(Row data) {
         LOG.info(ctx.getIndex() + " Data " + data.get(0) + ", " + data.get(1)
@@ -95,8 +91,7 @@ public class RowTSetExample extends BatchTsetExample {
 
   public static void main(String[] args) {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, RowTSetExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, PartitionExample.class.getName());
   }
 }

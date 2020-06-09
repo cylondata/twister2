@@ -20,12 +20,14 @@ import org.apache.arrow.vector.Float4Vector;
 import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.common.table.arrow.ArrowTable;
+import edu.iu.dsc.tws.common.table.arrow.BinaryColumn;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
 import edu.iu.dsc.tws.common.table.arrow.Int4Column;
@@ -51,6 +53,8 @@ public class ArrowTableBuilder implements TableBuilder {
         columns.add(new Int8Column((UInt8Vector) vector));
       } else if (vector instanceof VarCharVector) {
         columns.add(new StringColumn((VarCharVector) vector));
+      } else if (vector instanceof VarBinaryVector) {
+        columns.add(new BinaryColumn((VarBinaryVector) vector));
       } else {
         throw new Twister2RuntimeException("Un-recognized message type");
       }

@@ -38,19 +38,17 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
-public class Partition extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(Partition.class.getName());
+public class PartitionOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
 
   protected TPartition op;
-
   private boolean syncCalled = false;
-
   private Set<Integer> thisTargets;
 
-  public Partition(Config config, Communicator network, LogicalPlan tPlan,
-                   Set<Integer> sources, Set<Integer> targets, Edge edge,
-                   Map<Integer, Integer> srcGlobalToIndex,
-                   Map<Integer, Integer> tgtsGlobalToIndex) {
+  public PartitionOperation(Config config, Communicator network, LogicalPlan tPlan,
+                            Set<Integer> sources, Set<Integer> targets, Edge edge,
+                            Map<Integer, Integer> srcGlobalToIndex,
+                            Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
     MessageType dataType = edge.getDataType();
     String edgeName = edge.getName();
