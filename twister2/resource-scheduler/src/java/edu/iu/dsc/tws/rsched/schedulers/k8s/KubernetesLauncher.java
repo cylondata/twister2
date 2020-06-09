@@ -99,8 +99,9 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     long jobSubmitTime = System.currentTimeMillis();
-    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize, jobSubmitTime);
-    JobMasterRequestObject.init(config, job.getJobId(), jobFileSize, jobSubmitTime);
+    String encodedNodeList = getNodeInfoList();
+    RequestObjectBuilder.init(config, job.getJobId(), jobFileSize, jobSubmitTime, encodedNodeList);
+    JobMasterRequestObject.init(config, job.getJobId());
 
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobID);
@@ -110,7 +111,7 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     // create the ConfigMap
-    V1ConfigMap configMap = RequestObjectBuilder.createConfigMap(job.getNumberOfWorkers());
+    V1ConfigMap configMap = RequestObjectBuilder.createConfigMap(job);
     boolean cmCreated = controller.createConfigMap(configMap);
     if (cmCreated) {
       jobSubmissionStatus.setConfigMapCreated(true);
@@ -289,10 +290,9 @@ public class KubernetesLauncher implements ILauncher {
       return false;
     }
 
-    String cmName = KubernetesUtils.createConfigMapName(jobID);
-    boolean cmExists = controller.existConfigMap(cmName);
+    boolean cmExists = controller.existConfigMap(jobID);
     if (cmExists) {
-      LOG.severe("There is already a ConfigMap with the name: " + cmName
+      LOG.severe("There is already a ConfigMap with the name: " + jobID
           + "\nAnother job might be running. "
           + "\nFirst terminate that job or create a job with a different name."
           + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
@@ -424,7 +424,7 @@ public class KubernetesLauncher implements ILauncher {
     return true;
   }
 
-  private boolean initStatefulSets(JobAPI.Job job) {
+  private String getNodeInfoList() {
 
     String encodedNodeInfoList = null;
     // if node locations will be retrieved from Kubernetes master
@@ -439,12 +439,17 @@ public class KubernetesLauncher implements ILauncher {
           + "\n" + NodeInfoUtils.listToString(nodeInfoList));
     }
 
+    return encodedNodeInfoList;
+  }
+
+  private boolean initStatefulSets(JobAPI.Job job) {
+
     // create StatefulSet for the job master
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
       // create the StatefulSet object for this job
       V1StatefulSet jobMasterStatefulSet =
-          JobMasterRequestObject.createStatefulSetObject(encodedNodeInfoList);
+          JobMasterRequestObject.createStatefulSetObject();
       if (jobMasterStatefulSet == null) {
         return false;
       }
@@ -470,8 +475,7 @@ public class KubernetesLauncher implements ILauncher {
       }
 
       // create the StatefulSet object for this job
-      V1StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
-          computeResource, encodedNodeInfoList);
+      V1StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(computeResource);
 
       if (statefulSet == null) {
         return false;
@@ -602,8 +606,7 @@ public class KubernetesLauncher implements ILauncher {
 
     // delete the job master service
     if (jobSubmissionStatus.isConfigMapCreated()) {
-      String cmName = KubernetesUtils.createConfigMapName(jobID);
-      controller.deleteConfigMap(cmName);
+      controller.deleteConfigMap(jobID);
     }
 
     // delete created StatefulSet objects
@@ -636,7 +639,7 @@ public class KubernetesLauncher implements ILauncher {
     jobResources.getInitialState();
 
     // signall kill to JobMaster
-    controller.addParamToConfigMap(jobID, "KILL_JOB", "true");
+    controller.addConfigMapParam(jobID, "KILL_JOB", "true");
     LOG.info("Waiting JobMaster to delete jor resources.");
 
     // check whether they are all killed

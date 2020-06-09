@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -116,6 +117,11 @@ public class S3Uploader extends Thread implements IUploader {
         // start uploader thread
         start();
 
+        // if this is a resubmitted job, wait for the transfer to complete
+        if (CheckpointingContext.startingFromACheckpoint(config)) {
+          waitComplete();
+        }
+
         return uri;
       } catch (URISyntaxException e) {
         throw new UploaderException("Can not generate URI for download link: " + url, e);
@@ -128,15 +134,25 @@ public class S3Uploader extends Thread implements IUploader {
     }
   }
 
+  /**
+   * wait for the uploader thread to complete
+   */
+  private void waitComplete() {
+    boolean done = false;
+    while (!done) {
+      try {
+        this.join();
+        done = true;
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, e.getMessage(), e);
+        done = false;
+      }
+    }
+  }
+
   @Override
   public boolean complete() {
-
-    try {
-      this.join();
-    } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, e.getMessage(), e);
-    }
-
+    waitComplete();
     return uploaded;
   }
 

@@ -81,7 +81,7 @@ public final class MPIMasterStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object

@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -142,6 +143,26 @@ public class K8sUploader extends Thread implements IUploader {
     start();
 
     if (uploadToWebServers) {
+
+      // if this job is a resubmitted job
+      // wait for the uploading to web servers to finish
+      // job package may exist at the web server and when we are uploading
+      // partial files may be served to workers
+      if (CheckpointingContext.startingFromACheckpoint(config)) {
+        // wait for the uploaders to start
+        while (webServerPodNames.size() != uploadersToWebServers.size()) {
+          try {
+            Thread.sleep(50);
+          } catch (InterruptedException e) {
+            // ignore the exception
+          }
+        }
+
+        LOG.fine("Wait uploading to web servers to finish ...");
+        completeFileTransfersToWebServers();
+        LOG.info("Uploading to web servers finished ...");
+      }
+
       String uri = KubernetesContext.uploaderWebServer(config) + "/"
           + JobUtils.createJobPackageFileName(jobID);
       try {

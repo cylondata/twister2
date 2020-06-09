@@ -118,7 +118,7 @@ public final class AuroraWorkerStarter {
   private void readJobDescFile() {
     String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
     jobDescFile = JOB_ARCHIVE_DIRECTORY + "/" + jobDescFile;
-    job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
 
     // printing for testing
     LOG.log(Level.INFO, "Job description file is read: " + jobDescFile);

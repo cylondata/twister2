@@ -39,12 +39,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import static edu.iu.dsc.tws.api.config.Context.JOB_ID;
 
 /**
  * todo bundled as a separate jar due to cyclic dependency issues
@@ -54,7 +51,6 @@ public final class CheckpointedJobRestarter {
   private static final Logger LOG = Logger.getLogger(CheckpointedJobRestarter.class.getName());
 
   private CheckpointedJobRestarter() {
-
   }
 
   public static void main(String[] args) {
@@ -62,18 +58,13 @@ public final class CheckpointedJobRestarter {
       LOG.severe("Job id is not specified.");
       return;
     }
-    LOG.info("Restarting job " + args[0]);
-    Map<String, Object> configMap = new HashMap<>();
-    configMap.put(JOB_ID, args[0]);
-    configMap.put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, true);
+    String jobID = args[0];
+    LOG.info("Restarting job " + jobID);
 
+    Map<String, Object> configMap = new HashMap<>();
     Config config = ResourceAllocator.loadConfig(configMap);
-    Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder()
-        .setWorkerClass("")
-        .addComputeResource(0, 0, 1)
-        .setJobName("Job Restarter").build();
+
     // now submit the job
-    Twister2Submitter.submitJob(twister2Job, config);
+    Twister2Submitter.restartJob(jobID, config);
   }
 }

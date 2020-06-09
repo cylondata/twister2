@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
@@ -59,19 +60,21 @@ public final class JobMasterStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // get environment variables
-    String jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
-    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
-    String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
+    String jobID = System.getenv(K8sEnvVariables.JOB_ID.name());
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST.name());
+    String hostIP = System.getenv(K8sEnvVariables.HOST_IP.name());
+    boolean restoreJob = Boolean.parseBoolean(System.getenv(K8sEnvVariables.RESTORE_JOB.name()));
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
+    String configDir = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY;
 
     Config config = K8sWorkerUtils.loadConfig(configDir);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
+    jobDescFileName = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY
+        + File.separator + jobDescFileName;
+    job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -79,6 +82,9 @@ public final class JobMasterStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = Config.newBuilder().putAll(config)
+        .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, restoreJob)
+        .build();
 
     // init logger
     K8sWorkerUtils.initLogger(config, "jobMaster");
@@ -217,7 +223,7 @@ public final class JobMasterStarter {
     ZKBarrierManager.createInitBarrierDir(client, rootPath, job.getJobId());
     ZKPersStateManager.createPersStateDir(client, rootPath, job.getJobId());
 
-    long jsTime = Long.parseLong(System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME + ""));
+    long jsTime = Long.parseLong(System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME.name()));
     JobZNodeManager.createJstZNode(client, rootPath, jobID, jsTime);
 
     // create pers znode for jm

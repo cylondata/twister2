@@ -14,9 +14,13 @@ package edu.iu.dsc.tws.examples.internal.rsched;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
@@ -29,9 +33,10 @@ import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 public final class K8sControllerExample {
   private static final Logger LOG = Logger.getLogger(K8sControllerExample.class.getName());
 
-  private K8sControllerExample() { }
+  private K8sControllerExample() {
+  }
+
   public static void main(String[] args) throws InterruptedException {
-    String jobID = "ft-job";
     KubernetesController controller = new KubernetesController();
     controller.init("default");
 
@@ -40,7 +45,18 @@ public final class K8sControllerExample {
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
-    V1ConfigMap cm  = controller.getJobConfigMap(jobID);
+    int numberOfWorkers = 4;
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName("hello-world-job")
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(.2, 128, numberOfWorkers)
+        .setConfig(new JobConfig())
+        .build();
+    twister2Job.setUserName("au");
+    JobAPI.Job job = twister2Job.serialize();
+    LOG.info("jobID: " + job.getJobId());
+
+    V1ConfigMap cm = controller.getJobConfigMap(job.getJobId());
     if (cm == null) {
       LOG.info("there is no cm for this job on k8s");
     } else {
@@ -48,7 +64,8 @@ public final class K8sControllerExample {
     }
 
 //    testPVC(config, controller, jobID);
-//    createCM(controller, jobID);
+    createCM(controller, job);
+    getJobFromConfigMap(controller, job.getJobId());
 //    testWorker(controller, jobID, 0);
 //    testWorker(controller, jobID, 1);
 //    testWorker(controller, jobID, 3);
@@ -57,14 +74,14 @@ public final class K8sControllerExample {
 //    Thread.sleep(5000);
 //    createCMWatcher(controller, jobID);
 //    Thread.sleep(5000);
-//    controller.deleteConfigMap(KubernetesUtils.createConfigMapName(jobID));
+    controller.deleteConfigMap(job.getJobId());
 
     controller.close();
   }
 
   public static void testPVC(Config config, KubernetesController controller, String jobID) {
 
-    RequestObjectBuilder.init(config, jobID, 0, 0);
+    RequestObjectBuilder.init(config, jobID, 0, 0, null);
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
     V1PersistentVolumeClaim pvc =
         RequestObjectBuilder.createPersistentVolumeClaimObject(pvcName, 10);
@@ -76,13 +93,13 @@ public final class K8sControllerExample {
     }
   }
 
-  public static void createCM(KubernetesController controller, String jobID) {
+  public static void createCM(KubernetesController controller, JobAPI.Job job) {
     Config cnfg = Config.newBuilder()
         .put("nothing", "nothing")
         .build();
 
-    RequestObjectBuilder.init(cnfg, jobID, 0, 0);
-    V1ConfigMap cm = RequestObjectBuilder.createConfigMap(10);
+    RequestObjectBuilder.init(cnfg, job.getJobId(), 0, 0, null);
+    V1ConfigMap cm = RequestObjectBuilder.createConfigMap(job);
 
     controller.createConfigMap(cm);
   }
@@ -90,6 +107,14 @@ public final class K8sControllerExample {
   public static void createCMWatcher(KubernetesController controller, String jobID) {
     ConfigMapWatcher cmWatcher = new ConfigMapWatcher("default", jobID, controller, null);
     cmWatcher.start();
+  }
+
+  public static void getJobFromConfigMap(KubernetesController controller, String jobID) {
+
+//    JobAPI.Job jb = controller.getJobFromConfigMap(jobID);
+//    LOG.info("job id: " + jb.getJobId());
+//    LOG.info("number of workers: " + jb.getNumberOfWorkers());
+//    LOG.info("job class: " + jb.getWorkerClassName());
   }
 
   public static void testWorker(KubernetesController controller, String jobID, int wID) {
@@ -113,7 +138,7 @@ public final class K8sControllerExample {
   /**
    * test method
    */
-  public static void test1() {
+  public static void test1(JobAPI.Job job) {
 
     String jobID = "ft-job";
     String jobID2 = "ft-job-2";
@@ -121,11 +146,11 @@ public final class K8sControllerExample {
         .put("nothing", "nothing")
         .build();
 
-    RequestObjectBuilder.init(cnfg, jobID, 0, 0);
-    V1ConfigMap cm = RequestObjectBuilder.createConfigMap(10);
+    RequestObjectBuilder.init(cnfg, jobID, 0, 0, null);
+    V1ConfigMap cm = RequestObjectBuilder.createConfigMap(job);
 
-    RequestObjectBuilder.init(cnfg, jobID2, 0, 0);
-    V1ConfigMap cm2 = RequestObjectBuilder.createConfigMap(10);
+    RequestObjectBuilder.init(cnfg, jobID2, 0, 0, null);
+    V1ConfigMap cm2 = RequestObjectBuilder.createConfigMap(job);
 
     KubernetesController controller = new KubernetesController();
     controller.init("default");
@@ -140,16 +165,16 @@ public final class K8sControllerExample {
 
       int restartCount = controller.getRestartCount(jobID2, key0);
       LOG.info("restartCount: " + restartCount);
-      controller.addRestartCount(jobID2, key0, 0);
+      controller.addConfigMapParam(jobID2, key0, 0 + "");
       LOG.info("added restartCount: " + controller.getRestartCount(jobID2, key0));
-      if (controller.updateRestartCount(jobID2, key0, 1)) {
+      if (controller.updateConfigMapParam(jobID2, key0, 1 + "")) {
         LOG.info("updated restartCount: " + controller.getRestartCount(jobID2, key0));
       } else {
         LOG.info("Cannot update restartCount");
         LOG.info("restartCount: " + controller.getRestartCount(jobID2, key0));
       }
 
-      if (controller.updateRestartCount(jobID2, key1, 10)) {
+      if (controller.updateConfigMapParam(jobID2, key1, 10 + "")) {
         LOG.info("updated restartCount: " + controller.getRestartCount(jobID2, key1));
       } else {
         LOG.info("Cannot update restartCount");

@@ -57,7 +57,7 @@ public final class JobUtils {
   /**
    * Read the job file
    */
-  public static JobAPI.Job readJobFile(Config cfg, String fileName) {
+  public static JobAPI.Job readJobFile(String fileName) {
     try {
       byte[] fileBytes = FileUtils.readFromFile(fileName);
       JobAPI.Job.Builder builder = JobAPI.Job.newBuilder();

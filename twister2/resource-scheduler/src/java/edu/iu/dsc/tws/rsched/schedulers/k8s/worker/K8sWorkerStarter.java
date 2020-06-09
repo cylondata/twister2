@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
@@ -66,28 +67,30 @@ public final class K8sWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // all environment variables
-    int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
-    String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
-    String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
-    String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
-    String hostName = System.getenv(K8sEnvVariables.HOST_NAME + "");
-    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
-    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
-    jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
+    int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT.name()));
+    String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME.name());
+    String podName = System.getenv(K8sEnvVariables.POD_NAME.name());
+    String hostIP = System.getenv(K8sEnvVariables.HOST_IP.name());
+    String hostName = System.getenv(K8sEnvVariables.HOST_NAME.name());
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP.name());
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST.name());
+    jobID = System.getenv(K8sEnvVariables.JOB_ID.name());
+    boolean restoreJob = Boolean.parseBoolean(System.getenv(K8sEnvVariables.RESTORE_JOB.name()));
 
     if (jobID == null) {
       throw new RuntimeException("JobID is null");
     }
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
+    String configDir = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
+    jobDescFileName = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY
+        + File.separator + jobDescFileName;
+    job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -95,6 +98,9 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = Config.newBuilder().putAll(config)
+        .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, restoreJob)
+        .build();
 
     // if there is no Driver in the job or checkpointing is not enabled,
     // and ZK is used for group management,

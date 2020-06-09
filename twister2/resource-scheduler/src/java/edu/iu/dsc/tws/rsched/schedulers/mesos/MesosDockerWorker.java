@@ -80,8 +80,7 @@ public class MesosDockerWorker {
 
     MesosWorkerController workerController = null;
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-        + jobID + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
     try {
 
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
@@ -141,7 +140,7 @@ public class MesosDockerWorker {
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
     String workerClass = job.getWorkerClassName();
     LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;

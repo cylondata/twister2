@@ -384,7 +384,7 @@ public final class K8sWorkerUtils {
     // if restartCount is 0 after the increase, worker/jm is starting for the first time
     // add the key to configmap and set its value as zero
     if (restartCount == 0) {
-      boolean added = controller.addRestartCount(jbID, keyName, 0);
+      boolean added = controller.addConfigMapParam(jbID, keyName, 0 + "");
       if (!added) {
         throw new Twister2RuntimeException("Could not add the restartCount to ConfigMap");
       }
@@ -392,7 +392,7 @@ public final class K8sWorkerUtils {
       // if restartCount is more than 0 after the increase, the worker has started before,
       // it is coming from failure, set new count
     } else if (restartCount > 0) {
-      boolean updated = controller.updateRestartCount(jbID, keyName, restartCount);
+      boolean updated = controller.updateConfigMapParam(jbID, keyName, restartCount + "");
       if (!updated) {
         throw new Twister2RuntimeException("Could not update the restartCount in ConfigMap");
       }

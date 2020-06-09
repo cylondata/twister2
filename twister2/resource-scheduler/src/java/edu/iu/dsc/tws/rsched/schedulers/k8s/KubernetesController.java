@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -771,8 +773,9 @@ public class KubernetesController {
   /**
    * delete the given ConfigMap from Kubernetes master
    */
-  public boolean deleteConfigMap(String configMapName) {
+  public boolean deleteConfigMap(String jobID) {
 
+    String configMapName = jobID;
     int gracePeriodSeconds = 0;
     String propagationPolicy = KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY;
 
@@ -807,7 +810,8 @@ public class KubernetesController {
    * return true if there is already a ConfigMap object with the same name on Kubernetes master,
    * otherwise return false
    */
-  public boolean existConfigMap(String configMapName) {
+  public boolean existConfigMap(String jobID) {
+    String configMapName = jobID;
     V1ConfigMapList configMapList = null;
     try {
       configMapList = coreApi.listNamespacedConfigMap(namespace,
@@ -853,10 +857,19 @@ public class KubernetesController {
   }
 
   /**
-   * return restart count for the given workerID
-   * if there is no key for the given workerID, return -1
+   * return configMap parameter value for the given jobID
+   * if there is no value for the key, return null
    */
-  public int getRestartCount(String jobID, String keyName) {
+  public String getConfigMapParam(String jobID, String keyName) {
+    Map<String, String> pairs = getConfigMapParams(jobID);
+    return pairs.get(keyName);
+  }
+
+  /**
+   * return all configMap parameters for the given jobID
+   * if there is no ConfigMap, throw an exception
+   */
+  public Map<String, String> getConfigMapParams(String jobID) {
     String configMapName = KubernetesUtils.createConfigMapName(jobID);
     V1ConfigMap configMap = getJobConfigMap(jobID);
     if (configMap == null) {
@@ -868,7 +881,15 @@ public class KubernetesController {
       throw new RuntimeException("Could not get data from ConfigMap");
     }
 
-    String countStr = pairs.get(keyName);
+    return pairs;
+  }
+
+  /**
+   * return restart count for the given workerID
+   * if there is no key for the given workerID, return -1
+   */
+  public int getRestartCount(String jobID, String keyName) {
+    String countStr = getConfigMapParam(jobID, keyName);
     if (countStr == null) {
       return -1;
     } else {
@@ -879,7 +900,7 @@ public class KubernetesController {
   /**
    * add a new parameter the job ConfigMap
    */
-  public boolean addParamToConfigMap(String jobID, String keyName, String value) {
+  public boolean addConfigMapParam(String jobID, String keyName, String value) {
 
     String configMapName = KubernetesUtils.createConfigMapName(jobID);
     String valueStr = "\"" + value + "\"";
@@ -909,29 +930,22 @@ public class KubernetesController {
   }
 
   /**
-   * add a new restart count to the job ConfigMap
+   * update a parameter value in the job ConfigMap
    */
-  public boolean addRestartCount(String jobID, String keyName, int restartCount) {
-    return addParamToConfigMap(jobID, keyName, restartCount + "");
-  }
-
-  /**
-   * update a restart count in the job ConfigMap
-   */
-  public boolean updateRestartCount(String jobID, String keyName, int restartCount) {
+  public boolean updateConfigMapParam(String jobID, String paramName, String paramValue) {
 
     String configMapName = KubernetesUtils.createConfigMapName(jobID);
-    String countStr = "\"" + restartCount + "\"";
+    String countStr = "\"" + paramValue + "\"";
 
     String jsonPatchStr =
-        "[{\"op\":\"replace\",\"path\":\"/data/" + keyName + "\",\"value\":" + countStr + "}]";
+        "[{\"op\":\"replace\",\"path\":\"/data/" + paramName + "\",\"value\":" + countStr + "}]";
 
     try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
         configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
         .execute()) {
 
       if (response.isSuccessful()) {
-        LOG.fine("ConfigMap parameter updated " + keyName + " = " + restartCount);
+        LOG.fine("ConfigMap parameter updated " + paramName + " = " + paramValue);
         return true;
 
       } else {
@@ -945,6 +959,12 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
     }
     return false;
+  }
+
+  public boolean updateConfigMapJobParam(JobAPI.Job job) {
+    String jobAsEncodedStr = Base64.getEncoder().encodeToString(job.toByteArray());
+    return updateConfigMapParam(
+        job.getJobId(), KubernetesConstants.JOB_OBJECT_CM_PARAM, jobAsEncodedStr);
   }
 
   /**

@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
@@ -76,8 +77,9 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
 
     // write to log for testing
     persistedKeyedReduced.keyedDirect().forEach(c -> LOG.info(c.toString()));
-
-    if (env.getWorkerID() == 2 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
+    if (env.getWorkerID() == 2
+        && WorkerRuntime.getWorkerController().workerRestartCount() == 0
+        && !CheckpointingContext.startingFromACheckpoint(config)) {
       try {
         Thread.sleep(10000);
       } catch (InterruptedException e) {

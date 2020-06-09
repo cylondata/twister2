@@ -46,15 +46,15 @@ public class JobTerminator implements IJobTerminator {
     String serviceName = KubernetesUtils.createServiceName(jobID);
     boolean serviceForWorkersDeleted = controller.deleteService(serviceName);
 
-    // if checkpointing is enabled, pvc is deleted only if the job completes successfully,
-    // if the job is failed or killed, we keep the PVC
+    // if checkpointing is enabled, pvc is not deleted when the job fails
+    // if the job is failed, we keep the PVC
     // because, the user can restart the job from previously checkpointed state
     //
     // if the checkpointing is not enabled, we delete PVC in any case
     boolean pvcDeleted = true;
     if (CheckpointingContext.isCheckpointingEnabled(config)) {
 
-      if (finalState == JobAPI.JobState.COMPLETED) {
+      if (finalState != JobAPI.JobState.FAILED) {
         // delete the persistent volume claim
         String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
         pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
@@ -66,11 +66,8 @@ public class JobTerminator implements IJobTerminator {
       pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
     }
 
-    boolean configMapDeleted = true;
-    String cmName = KubernetesUtils.createConfigMapName(jobID);
-    if (controller.existConfigMap(cmName)) {
-      configMapDeleted = controller.deleteConfigMap(cmName);
-    }
+    // delete ConfigMap
+    boolean configMapDeleted = controller.deleteConfigMap(jobID);
 
     // delete the job master service
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobID);

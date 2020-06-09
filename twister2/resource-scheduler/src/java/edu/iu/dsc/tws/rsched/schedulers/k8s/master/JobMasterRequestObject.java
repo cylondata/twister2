@@ -19,16 +19,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.config.SchedulerContext;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
@@ -36,9 +32,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1EnvVarSource;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
-import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
@@ -56,30 +50,24 @@ public final class JobMasterRequestObject {
 
   private static Config config;
   private static String jobID;
-  private static String encodedNodeInfoList;
-  private static long jobPackageFileSize;
-  private static long jobSubmissionTime;
 
   private JobMasterRequestObject() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize, long jobSubmitTime) {
+  public static void init(Config cnfg, String jID) {
     config = cnfg;
     jobID = jID;
-    jobPackageFileSize = jpFileSize;
-    jobSubmissionTime = jobSubmitTime;
   }
 
   /**
    * create StatefulSet object for a job
    */
-  public static V1StatefulSet createStatefulSetObject(String nodeInfoListStr) {
+  public static V1StatefulSet createStatefulSetObject() {
 
     if (config == null) {
       LOG.severe("JobMasterRequestObject.init method has not been called.");
       return null;
     }
-    encodedNodeInfoList = nodeInfoListStr;
 
     V1StatefulSet statefulSet = new V1StatefulSet();
     String statefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
@@ -222,78 +210,19 @@ public final class JobMasterRequestObject {
    * set environment variables for containers
    */
   public static List<V1EnvVar> constructEnvironmentVariables(int jvmMem) {
-    ArrayList<V1EnvVar> envVars = new ArrayList<>();
+    ArrayList<V1EnvVar> envVars = RequestObjectBuilder.getCommonEnvVars();
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_ID + "")
-        .value(jobID));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
-        .value(encodedNodeInfoList));
-
-    // HOST_IP (node-ip) with downward API
-    V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
-    fieldSelector.setFieldPath("status.hostIP");
-    V1EnvVarSource varSource = new V1EnvVarSource();
-    varSource.setFieldRef(fieldSelector);
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.HOST_IP + "")
-        .valueFrom(varSource));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
-        .value(jobPackageFileSize + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.CONTAINER_NAME + "")
+        .name(K8sEnvVariables.CONTAINER_NAME.name())
         .value("twister2-job-master-0"));
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
-        .value(SchedulerContext.userJobJarFile(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.CLASS_TO_RUN + "")
+        .name(K8sEnvVariables.CLASS_TO_RUN.name())
         .value("edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter"));
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.POD_MEMORY_VOLUME + "")
-        .value(KubernetesConstants.POD_MEMORY_VOLUME));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_ARCHIVE_DIRECTORY + "")
-        .value(Context.JOB_ARCHIVE_DIRECTORY));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
-        .value(JobUtils.createJobPackageFileName(jobID)));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(RequestObjectBuilder.uploadMethod));
-
-    String uri = null;
-    if (SchedulerContext.jobPackageUri(config) != null) {
-      uri = SchedulerContext.jobPackageUri(config).toString();
-    }
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_URI + "")
-        .value(uri));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
-        .value(LoggingContext.LOGGER_PROPERTIES_FILE));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JVM_MEMORY_MB + "")
+        .name(K8sEnvVariables.JVM_MEMORY_MB.name())
         .value(jvmMem + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_SUBMISSION_TIME + "")
-        .value(jobSubmissionTime + ""));
 
     return envVars;
   }

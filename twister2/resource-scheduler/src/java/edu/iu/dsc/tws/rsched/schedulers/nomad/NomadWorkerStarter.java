@@ -179,7 +179,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -247,7 +247,7 @@ public final class NomadWorkerStarter {
 
     String jobID = NomadContext.jobId(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);

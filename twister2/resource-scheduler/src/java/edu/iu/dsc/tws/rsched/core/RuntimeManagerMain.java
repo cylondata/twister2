@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public final class RuntimeManagerMain {
   private static final Logger LOG = Logger.getLogger(RuntimeManagerMain.class.getName());
@@ -62,8 +63,12 @@ public final class RuntimeManagerMain {
     switch (command) {
       case "kill":
         // now load the correct class to terminate the job
-        ResourceAllocator resourceAllocator = new ResourceAllocator();
-        resourceAllocator.killJob(Context.jobId(cfg), cfg);
+        ResourceAllocator.killJob(Context.jobId(cfg), cfg);
+        break;
+
+      case "restart":
+        Twister2Submitter.restartJob(Context.jobId(cfg), cfg);
+        break;
     }
   }
 

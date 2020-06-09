@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 public final class KubernetesConstants {
 
   public static final String KUBERNETES_CLUSTER_TYPE = "kubernetes";
+  public static final String JOB_OBJECT_CM_PARAM = "TWISTER2_JOB_OBJECT";
+
   public static final String POD_MEMORY_VOLUME_NAME = "twister2-memory-dir";
   public static final String POD_MEMORY_VOLUME = "/twister2-memory-dir";
   public static final String POD_VOLATILE_VOLUME_NAME = "twister2-volatile-dir";

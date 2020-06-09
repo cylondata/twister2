@@ -1,10 +1,6 @@
 # Enable or disable checkpointing
 twister2.checkpointing.enable: false
 
-# Restore a checkpointed job
-# jobID of that job has to be specified in core.yaml file with following parameter: twister2.job.id
-twister2.checkpointing.restore.job: false
-
 # The implementation of the store to be used
 #twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore
 twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore

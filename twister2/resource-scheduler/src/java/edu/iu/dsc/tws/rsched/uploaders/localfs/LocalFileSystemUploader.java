@@ -55,8 +55,8 @@ public class LocalFileSystemUploader implements IUploader {
 
     // if the dest directory does not exist, create it.
     if (!parentDirectory.exists()) {
-      LOG.log(Level.INFO, String.format(
-          "Working directory does not exist. Creating it now at %s", parentDirectory.getPath()));
+      LOG.log(Level.FINE, String.format(
+          "Target directory does not exist. Creating it now at %s", parentDirectory.getPath()));
       if (!parentDirectory.mkdirs()) {
         throw new UploaderException(
             String.format("Failed to create directory for topology package at %s",
@@ -71,9 +71,9 @@ public class LocalFileSystemUploader implements IUploader {
           filePath.toString()));
     }
 
-    // copy the topology package to target working directory
-    LOG.log(Level.INFO, String.format("Copying job directory at '%s' to target "
-        + "working directory '%s'", sourceLocation, filePath.toString()));
+    // copy the job package to target working directory
+    LOG.log(Level.FINE, String.format("Copying job directory at '%s' to target directory '%s'",
+        sourceLocation, filePath.toString()));
     try {
       FileUtils.copyDirectory(sourceLocation, destinationDirectory);
       return new URI(destinationDirectory);

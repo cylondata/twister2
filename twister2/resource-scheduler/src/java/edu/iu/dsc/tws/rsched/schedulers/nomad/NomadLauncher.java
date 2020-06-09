@@ -57,7 +57,7 @@ public class NomadLauncher implements ILauncher {
 
     jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobID).toAbsolutePath().toString();
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
     return controller.kill(job);
   }
