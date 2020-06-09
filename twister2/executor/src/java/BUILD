@@ -18,6 +18,8 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
     "//twister2/master/src/java:master-java",
     "//twister2/proto:proto-java",
+    "@maven//:org_apache_arrow_arrow_vector",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
     "@com_google_guava_guava//jar",
 ]
 
