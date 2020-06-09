@@ -87,7 +87,7 @@ public class PartitionOperation extends AbstractParallelOperation {
         new PartitionReceiver(), runtime.getRootAllocator());
   }
 
-  public boolean send(int source, IMessage message, int dest) {
+  public synchronized boolean send(int source, IMessage message, int dest) {
     return op.insert(source, (Table) message.getContent());
   }
 
@@ -101,7 +101,7 @@ public class PartitionOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean isComplete() {
+  public synchronized boolean isComplete() {
     // first progress
     this.progress();
 
