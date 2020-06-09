@@ -12,13 +12,37 @@
 package edu.iu.dsc.tws.common.table.arrow;
 
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.VarBinaryVector;
 
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 
-public abstract class BaseArrowColumn<T> implements ArrowColumn<T> {
-  private FieldVector vector;
+public class BinaryColumn implements ArrowColumn<byte[]> {
+  private VarBinaryVector vector;
+  private int currentIndex;
 
-  public BaseArrowColumn(FieldVector vector) {
+  public BinaryColumn(VarBinaryVector vector) {
     this.vector = vector;
+  }
+
+  @Override
+  public void addValue(byte[] value) {
+    vector.setSafe(currentIndex, value);
+    currentIndex++;
+    vector.setValueCount(currentIndex);
+  }
+
+  @Override
+  public byte[] get(int index) {
+    return vector.get(index);
+  }
+
+  @Override
+  public FieldVector getVector() {
+    return vector;
+  }
+
+  @Override
+  public long currentSize() {
+    return vector.getBufferSize();
   }
 }

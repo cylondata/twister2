@@ -34,6 +34,7 @@ import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TypeLayout;
 import org.apache.arrow.vector.UInt2Vector;
 import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
@@ -46,6 +47,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.table.ArrowColumn;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.arrow.ArrowTable;
+import edu.iu.dsc.tws.common.table.arrow.BinaryColumn;
 import edu.iu.dsc.tws.common.table.arrow.Float4Column;
 import edu.iu.dsc.tws.common.table.arrow.Float8Column;
 import edu.iu.dsc.tws.common.table.arrow.Int4Column;
@@ -301,6 +303,8 @@ public class ArrowAllToAll implements ReceiveCallback {
           } else if (v instanceof BaseVariableWidthVector) {
             if (v instanceof VarCharVector) {
               c = new StringColumn((VarCharVector) v);
+            } else if (v instanceof VarBinaryVector) {
+              c = new BinaryColumn((VarBinaryVector) v);
             } else {
               throw new RuntimeException("Un-supported type : " + v.getClass().getName());
             }
