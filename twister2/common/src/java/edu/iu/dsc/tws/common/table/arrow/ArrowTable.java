@@ -35,9 +35,7 @@ public class ArrowTable implements Table {
   private static final Logger LOG = Logger.getLogger(ArrowTable.class.getName());
 
   private List<ArrowColumn> columns;
-
   private Schema schema;
-
   private int rows;
 
   public ArrowTable(int rows, List<ArrowColumn> columns) {

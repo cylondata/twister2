@@ -73,4 +73,14 @@ public class ArrowRow implements Row {
   public long getInt8(int column) {
     return (long) get(column);
   }
+
+  @Override
+  public short getInt2(int column) {
+    return (short) get(column);
+  }
+
+  @Override
+  public byte[] getByte(int column) {
+    return (byte[]) get(column);
+  }
 }
