@@ -56,7 +56,7 @@ public class PartitionExample extends BatchTsetExample {
       public Row next() {
         return new TwoRow(1, 4.1);
       }
-    }, 4, RowSchema.make()).withSchema(new RowSchema(fieldList));
+    }, 4).withSchema(new RowSchema(fieldList));
 
     BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
       private List<Integer> targets;

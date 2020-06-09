@@ -70,7 +70,7 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
       // this cache source will consume the data object created by the execution of this tset.
       // hence this tset ID needs to be set as an input to the cache source
       this.storedSource = getTSetEnv().createRowSource(storedSourcePrefix,
-          new DataPartitionSourceFunc<>(storedSourcePrefix), getParallelism(), RowSchema.make());
+          new DataPartitionSourceFunc<>(storedSourcePrefix), getParallelism());
       this.storedSource.addInput(storedSourcePrefix, this);
     }
 

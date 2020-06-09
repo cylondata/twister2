@@ -33,7 +33,7 @@ public class RowCheckpointedTSet extends RowPersistedTSet {
   public RowSourceTSet getStoredSourceTSet() {
     if (storedSource == null) {
       storedSource = getTSetEnv().createRowSource(getName(), sourceFunc,
-          getParallelism(), RowSchema.make());
+          getParallelism());
     }
     return storedSource;
   }
