@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.TSetUtils;
@@ -131,8 +130,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   public RowSourceTSet createRowSource(String name, SourceFunc<Row> source,
-                                       int parallelism, Schema schema) {
-    RowSourceTSet sourceT = new RowSourceTSet(this, name, source, parallelism, schema);
+                                       int parallelism) {
+    RowSourceTSet sourceT = new RowSourceTSet(this, name, source, parallelism, null);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;

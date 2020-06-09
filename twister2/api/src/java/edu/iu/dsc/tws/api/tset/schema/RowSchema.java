@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.common.table.TField;
+import edu.iu.dsc.tws.common.table.arrow.ArrowTypes;
 
 public class RowSchema implements Schema {
   private List<TField> types;
@@ -51,7 +52,7 @@ public class RowSchema implements Schema {
   public org.apache.arrow.vector.types.pojo.Schema toArrowSchema() {
     List<Field> fields = new ArrayList<>();
     for (TField f : types) {
-      Field field = null;
+      Field field;
       if (f.getType().equals(MessageTypes.INTEGER)) {
         field = new Field(f.getName(),
                 new FieldType(false,
@@ -76,12 +77,43 @@ public class RowSchema implements Schema {
         field = new Field(f.getName(),
             new FieldType(false,
                 new ArrowType.Binary(), null), null);
+      } else if (f.getType().equals(MessageTypes.BYTE)) {
+        field = new Field(f.getName(),
+            new FieldType(false,
+                new ArrowType.Binary(), null), null);
       } else {
         throw new Twister2RuntimeException("Un-known type");
       }
       fields.add(field);
     }
     return new org.apache.arrow.vector.types.pojo.Schema(fields);
+  }
+
+  public static RowSchema fromArrow(org.apache.arrow.vector.types.pojo.Schema schema) {
+    List<Field> fields = schema.getFields();
+    List<TField> tFields = new ArrayList<>();
+    for (Field f : fields) {
+      TField tField;
+      if (f.getFieldType().equals(ArrowTypes.INT_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.INTEGER);
+      } else if (f.getFieldType().equals(ArrowTypes.LONG_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.LONG);
+      } else if (f.getFieldType().equals(ArrowTypes.SHORT_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.SHORT);
+      } else if (f.getFieldType().equals(ArrowTypes.FLOAT_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.FLOAT);
+      } else if (f.getFieldType().equals(ArrowTypes.DOUBLE_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.DOUBLE);
+      } else if (f.getFieldType().equals(ArrowTypes.STRING_FIELD_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.STRING);
+      } else if (f.getFieldType().equals(ArrowTypes.BINARY_FILED_TYPE)) {
+        tField = new TField(f.getName(), MessageTypes.BYTE);
+      } else {
+        throw new Twister2RuntimeException("Unknown type");
+      }
+      tFields.add(tField);
+    }
+    return new RowSchema(tFields);
   }
 
   @Override

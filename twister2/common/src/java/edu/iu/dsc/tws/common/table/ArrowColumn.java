@@ -15,7 +15,8 @@ import org.apache.arrow.vector.FieldVector;
 
 /**
  * We are going to represent and arrow vector as a column to facilitate
- * easy access and building of vectors
+ * easy access and building of vectors, this class is only for internal use
+ * and should not be exposed to the users
  * @param <T>
  */
 public interface ArrowColumn<T> {
