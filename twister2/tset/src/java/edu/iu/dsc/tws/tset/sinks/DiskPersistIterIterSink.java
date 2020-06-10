@@ -9,30 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tset.sinks;
 
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
-
 /**
- * An in-memory cached TSet
+ * A disk based persisted TSet
  *
  * @param <T> TSet data type
  */
-public class CacheIterSink<T> extends StoreIterSink<T, T> {
+public class DiskPersistIterIterSink<T> extends BaseDiskPersistIterSink<T, T> {
 
-  private CollectionPartition<T> partition;
-
-  @Override
-  public void prepare(TSetContext ctx) {
-    super.prepare(ctx);
-    this.partition = new CollectionPartition<>();
-  }
-
-  @Override
-  public CollectionPartition<T> get() {
-    return partition;
+  /**
+   * Creates an instance of {@link DiskPersistIterIterSink} with a referencePrefix
+   *
+   * @param referencePrefix referencePrefix will be used to uniquely identify the set of
+   *                        disk partitions created with this function
+   */
+  public DiskPersistIterIterSink(String referencePrefix) {
+    super(referencePrefix);
   }
 
   @Override
