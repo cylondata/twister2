@@ -20,16 +20,13 @@ import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.ConfigSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -89,25 +86,6 @@ public final class Twister2Submitter {
 
     writeJobIdToFile(jobId);
     printJobInfo(job, updatedConfig);
-
-    //if checkpointing is enabled, twister2Job and config will be saved to the state backend
-    if (CheckpointingContext.isCheckpointingEnabled(updatedConfig)
-        && !Context.isKubernetesCluster(updatedConfig)) {
-      LOG.info("Checkpointing has been enabled for this job.");
-
-      StateStore stateStore = CheckpointUtils.getStateStore(updatedConfig);
-      stateStore.init(updatedConfig, job.getJobId());
-
-      try {
-        // first time running or re-running the job, backup configs
-        LOG.info("Saving job object and config");
-        CheckpointUtils.saveJobConfigAndMeta(
-            jobId, job.toByteArray(), ConfigSerializer.serialize(updatedConfig), stateStore);
-      } catch (IOException e) {
-        LOG.severe("Failed to submit th checkpointing enabled job");
-        throw new RuntimeException(e);
-      }
-    }
 
     // launch the launcher
     ResourceAllocator resourceAllocator = new ResourceAllocator(updatedConfig, job);

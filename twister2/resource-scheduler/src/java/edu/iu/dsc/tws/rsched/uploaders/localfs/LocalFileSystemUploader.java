@@ -88,8 +88,9 @@ public class LocalFileSystemUploader implements IUploader {
 
   @Override
   public boolean undo(Config cnfg, String jobID) {
-    LOG.info("Cleaning upload directory: " + destinationDirectory);
-    return FileUtils.deleteDir(destinationDirectory);
+    String destDirectory = FsContext.uploaderJobDirectory(cnfg) + File.separator + jobID;
+    LOG.info("Cleaning upload directory: " + destDirectory);
+    return FileUtils.deleteDir(destDirectory);
   }
 
   @Override

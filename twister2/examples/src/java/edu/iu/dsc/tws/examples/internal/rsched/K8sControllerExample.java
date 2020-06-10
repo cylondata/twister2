@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.internal.rsched;
 
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -21,6 +22,7 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
@@ -40,10 +42,22 @@ public final class K8sControllerExample {
     KubernetesController controller = new KubernetesController();
     controller.init("default");
 
+    if (args.length != 1) {
+      LOG.severe("Provide jobID as a parameter.");
+      return;
+    }
+    String jobID = args[0];
+
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
+
+    testUploader(config, controller, jobID);
+    if (config != null) {
+      controller.close();
+      return;
+    }
 
     int numberOfWorkers = 4;
     Twister2Job twister2Job = Twister2Job.newBuilder()
@@ -77,6 +91,23 @@ public final class K8sControllerExample {
     controller.deleteConfigMap(job.getJobId());
 
     controller.close();
+  }
+
+  public static void testUploader(Config config, KubernetesController controller, String jobID) {
+    List<String> webServerPodNames = KubernetesController.getUploaderWebServerPods(
+        KubernetesContext.namespace(config), KubernetesContext.uploaderWebServerLabel(config));
+    LOG.info("uploaders: " + webServerPodNames);
+
+    String targetFile = KubernetesUtils.jobPackageFullPath(config, jobID);
+    LOG.info("target file: " + targetFile);
+
+    boolean deleted = controller.deleteJobPackage(
+        KubernetesContext.namespace(config), webServerPodNames, targetFile);
+    if (deleted) {
+      LOG.info("deleted.");
+    } else {
+      LOG.info("not deleted");
+    }
   }
 
   public static void testPVC(Config config, KubernetesController controller, String jobID) {

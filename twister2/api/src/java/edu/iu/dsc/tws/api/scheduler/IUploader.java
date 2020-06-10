@@ -57,8 +57,8 @@ public interface IUploader extends AutoCloseable {
   }
 
   /**
-   * If subsequent stages fail, undo will be called to free resources used by
-   * uploading package. Ideally, this should try to remove the uploaded package.
+   * Undo uploading. Remove uploaded files.
+   * this method must also work in case when initialize method is not called
    * @param cnfg
    * @param jobID
    */

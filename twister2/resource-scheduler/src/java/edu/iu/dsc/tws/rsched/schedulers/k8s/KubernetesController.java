@@ -86,7 +86,7 @@ public class KubernetesController {
     }
   }
 
-  public static void initApiInstances() {
+  private static void initApiInstances() {
     if (client == null) {
       getApiClient();
     }
@@ -111,10 +111,26 @@ public class KubernetesController {
   }
 
   public static void close() {
-    if (client != null && client.getHttpClient() != null
-        && client.getHttpClient().connectionPool() != null) {
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().dispatcher() != null
+        && client.getHttpClient().dispatcher().executorService() != null) {
+      client.getHttpClient().dispatcher().executorService().shutdown();
+    }
 
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().connectionPool() != null) {
       client.getHttpClient().connectionPool().evictAll();
+    }
+
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().cache() != null) {
+      try {
+        client.getHttpClient().cache().close();
+      } catch (IOException e) {
+      }
     }
   }
 
@@ -696,22 +712,23 @@ public class KubernetesController {
    * currently it does not delete job package file from multiple uploader pods
    * so, It is not in use
    */
-  public boolean deleteJobPackage(List<String> uploaderPods, String jobPackageName) {
+  public static boolean deleteJobPackage(String ns,
+                                         List<String> uploaderPods,
+                                         String jobPackageName) {
 
-    // command to execute
-    // if [ -f test.txt ]; then rm -f test.txt; else exit 1; fi
-    // if file exist, remove it. Otherwise exit 1
-//    String command = String.format("if [ -f %s ]; then rm -f %s; else exit 1; fi",
-//        jobPackageName, jobPackageName);
-    String command = String.format("rm -f %s", jobPackageName);
+    if (coreApi == null) {
+      initApiInstances();
+    }
+
+    String command = String.format("rm %s", jobPackageName);
     String[] fullCommand = {"bash", "-c", command};
 
     boolean allDeleted = true;
     for (String uploaderPod : uploaderPods) {
 
       try {
-        Exec exec = new Exec(client);
-        final Process proc = exec.exec(namespace, uploaderPod, fullCommand, false, false);
+        Exec exec = new Exec(getApiClient());
+        final Process proc = exec.exec(ns, uploaderPod, fullCommand, false, false);
         proc.waitFor();
         proc.destroy();
 

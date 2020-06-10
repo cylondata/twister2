@@ -34,6 +34,8 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 import edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
@@ -484,11 +486,11 @@ public class ResourceAllocator {
     }
 
     ILauncher launcher;
+    ClassLoader classLoader = ResourceAllocator.class.getClassLoader();
 
     // create an instance of launcher
     try {
-      launcher = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
-          launcherClass);
+      launcher = ReflectionUtils.newInstance(classLoader, launcherClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new LauncherException(
           String.format("Failed to instantiate launcher class '%s'", launcherClass), e);
@@ -501,8 +503,6 @@ public class ResourceAllocator {
       LOG.log(Level.SEVERE, "Could not kill the job");
     }
 
-    launcher.close();
-
     String uploaderClass = SchedulerContext.uploaderClass(cnfg);
     if (uploaderClass == null) {
       throw new RuntimeException("The uploader class must be specified");
@@ -511,17 +511,27 @@ public class ResourceAllocator {
     IUploader uploader;
     // create an instance of uploader
     try {
-      uploader = ReflectionUtils.newInstance(ResourceAllocator.class.getClassLoader(),
-          uploaderClass);
+      uploader = ReflectionUtils.newInstance(classLoader, uploaderClass);
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
       throw new UploaderException(
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
     uploader.undo(cnfg, jobID);
+
+    launcher.close();
     uploader.close();
 
-    // todo: delete local job package for checkpointed jobs
+    if (KubernetesContext.isKubernetesCluster(cnfg)) {
+      KubernetesController.close();
+    }
+
+    if (CheckpointingContext.isCheckpointingEnabled(cnfg)
+        && !SchedulerContext.uploaderClass(cnfg)
+        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
+      IUploader localUploader = new LocalFileSystemUploader();
+      localUploader.undo(cnfg, jobID);
+    }
   }
 
 }
