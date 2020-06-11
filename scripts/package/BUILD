@@ -44,7 +44,6 @@ load("//tools/rules:twister2_core.bzl", "twister2_storm_files")
 load("//tools/rules:twister2_core.bzl", "twister2_beam_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_checkpointing_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_tset_files")
-load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools/rules:twister2_core.bzl", "twister2_python_support_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_jersey_files")
@@ -337,7 +336,6 @@ pack_tw2(
         ":twister2-master-lib",
         ":twister2-python-examples",
         ":twister2-python-support",
-        ":twister2-restarter",
         ":twister2-tset",
         ":twister2-ucx-native-libs",
         ":twister2-ucx-native-libs-dir"
@@ -390,7 +388,6 @@ pack_tw2(
         ":twister2-ompi-lib",
         ":twister2-python-examples",
         ":twister2-python-support",
-        ":twister2-restarter",
         ":twister2-storm",
         ":twister2-test",
         ":twister2-test-tests",
@@ -635,13 +632,6 @@ pack_tw2(
 pack_tw2(
     name = "twister2-tset",
     srcs = twister2_core_tset_files(),
-    package_dir = "lib",
-    version = T2_VERSION,
-)
-
-pack_tw2(
-    name = "twister2-restarter",
-    srcs = twister2_core_restarter_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
