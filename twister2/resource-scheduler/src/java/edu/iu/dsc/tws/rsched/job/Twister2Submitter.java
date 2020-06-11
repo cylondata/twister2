@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.uploaders.localfs.FsContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -52,23 +51,11 @@ public final class Twister2Submitter {
    */
   public static Twister2JobState submitJob(Twister2Job twister2Job, Config config) {
 
-    boolean startingFromACheckpoint = CheckpointingContext.startingFromACheckpoint(config);
-    if (!startingFromACheckpoint) {
-      switch (Context.clusterType(config)) {
-        case KubernetesConstants.KUBERNETES_CLUSTER_TYPE:
-          break;
-        case "mesos":
-        case "nomad":
-          twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
-          break;
-        default:
-          //do nothing
-      }
-    }
-
     // set jobID if it is set in configuration file,
     // otherwise it will be automatically generated
-    twister2Job.setJobID(Context.jobId(config));
+    if (Context.jobId(config) != null) {
+      twister2Job.setJobID(Context.jobId(config));
+    }
 
     // set username
     String userName = Context.userName(config);
@@ -78,13 +65,11 @@ public final class Twister2Submitter {
     twister2Job.setUserName(userName);
 
     JobAPI.Job job = twister2Job.serialize();
-    LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
 
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);
-    String jobId = job.getJobId();
 
-    writeJobIdToFile(jobId);
+    writeJobIdToFile(job.getJobId());
     printJobInfo(job, updatedConfig);
 
     // launch the launcher
@@ -170,12 +155,12 @@ public final class Twister2Submitter {
         + " / /    \\ V  V /| \\__ \\ ||  __/ |  / __/ \n"
         + " \\/      \\_/\\_/ |_|___/\\__\\___|_| |_____| v0.6.0-SNAPSHOT\n"
         + "                                         \n"
-        + "Job Name\t:\t" + job.getJobName() + "\n"
-        + "Job ID\t\t:\t" + job.getJobId() + "\n"
-        + "# of Workers\t:\t" + job.getNumberOfWorkers() + "\n"
-        + "Worker Class\t:\t" + job.getWorkerClassName() + "\n"
-        + "Cluster Type\t:\t" + Context.clusterType(config) + "\n"
-        + "Runtime\t\t:\t" + System.getProperty("java.vm.name")
+        + "Job ID      \t  :\t" + job.getJobId() + "\n"
+        + "Number of Workers :\t" + job.getNumberOfWorkers() + "\n"
+        + "Worker Class\t  :\t" + job.getWorkerClassName() + "\n"
+        + JobUtils.computeResourcesToPrint(job) + "\n"
+        + "Cluster Type\t  :\t" + Context.clusterType(config) + "\n"
+        + "Runtime     \t  :\t" + System.getProperty("java.vm.name")
         + " " + System.getProperty("java.vm.version") + "\n"
         + "\n"
     );

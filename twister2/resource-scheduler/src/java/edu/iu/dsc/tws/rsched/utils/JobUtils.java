@@ -183,6 +183,15 @@ public final class JobUtils {
     return jobStr;
   }
 
+  public static String computeResourcesToPrint(JobAPI.Job job) {
+    String cmStr = ComputeResourceUtils.toString(job.getComputeResource(0));
+    for (int i = 1; i < job.getComputeResourceList().size(); i++) {
+      cmStr += System.lineSeparator() + ComputeResourceUtils.toString(job.getComputeResource(i));
+    }
+
+    return cmStr;
+  }
+
   public static String createJobPackageFileName(String jobID) {
     return jobID + ".tar.gz";
   }
