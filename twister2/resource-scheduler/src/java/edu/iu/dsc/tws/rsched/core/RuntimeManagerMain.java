@@ -73,6 +73,10 @@ public final class RuntimeManagerMain {
       case "clear":
         Twister2Submitter.clearJob(Context.jobId(cfg), cfg);
         break;
+
+      case "clearall":
+        Twister2Submitter.clearAllJobs(cfg);
+        break;
     }
   }
 
@@ -142,7 +146,6 @@ public final class RuntimeManagerMain {
         .longOpt("job_id")
         .hasArgs()
         .argName("job id")
-        .required()
         .build();
     options.addOption(twister2Home);
     options.addOption(cluster);

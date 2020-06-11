@@ -107,6 +107,10 @@ public final class KubernetesUtils {
     return labels;
   }
 
+  public static String twister2LabelSelector() {
+    return "app=twister2";
+  }
+
   public static String jobLabelSelector(String jobID) {
     return "t2-job=" + jobID;
   }

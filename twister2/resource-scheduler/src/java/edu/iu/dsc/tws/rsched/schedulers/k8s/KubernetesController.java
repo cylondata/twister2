@@ -478,6 +478,27 @@ public class KubernetesController {
   }
 
   /**
+   * return the PersistentVolumeClaim object names that belong to Twister2
+   * otherwise return empty list
+   */
+  public List<String> getTwister2PersistentVolumeClaims() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return pvcList.getItems().stream()
+          .map(pvc -> pvc.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * create the given PersistentVolumeClaim on Kubernetes master
    */
   public boolean createPersistentVolumeClaim(V1PersistentVolumeClaim pvc) {
@@ -848,6 +869,30 @@ public class KubernetesController {
     }
 
     return false;
+  }
+
+  /**
+   * return the ConfigMap object names that belong to Twister2
+   * otherwise return empty list
+   * ConfigMap names correspond to jobIDs
+   * There is a ConfigMap for each running job
+   * So, this list shows the currently running jobs
+   */
+  public List<String> getTwister2ConfigMapNames() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return configMapList.getItems().stream()
+          .map(cm -> cm.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
   }
 
   /**

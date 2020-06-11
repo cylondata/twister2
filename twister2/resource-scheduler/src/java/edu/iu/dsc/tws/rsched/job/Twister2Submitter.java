@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
@@ -175,12 +177,25 @@ public final class Twister2Submitter {
     ResourceAllocator.killJob(jobID, config);
   }
 
-  /**
-   * Clear left over resources for a checkpointed job:
-   *   The Job package for the checkpointed job stored in user home directory
-   *   Checkpointed data that are saved when jobs failed.
-   */
   public static void clearJob(String jobID, Config config) {
+
+    deleteJobDir(jobID, config);
+
+    // close the controller
+    if (KubernetesContext.isKubernetesCluster(config)) {
+      KubernetesController controller = new KubernetesController();
+      controller.init(KubernetesContext.namespace(config));
+      controller.deletePersistentVolumeClaim(jobID);
+      KubernetesController.close();
+    }
+
+    //todo: need to delete checkpointed data in other clusters and on HDFS
+  }
+
+  /**
+   * Delete the directory that has the Job package for the checkpointed job
+   */
+  private static void deleteJobDir(String jobID, Config config) {
     // job package directory
     String jobDir = FsContext.uploaderJobDirectory(config) + File.separator + jobID;
     Path jobPackageFile = Paths.get(jobDir);
@@ -190,17 +205,42 @@ public final class Twister2Submitter {
       LOG.info("Cleaning job directory: " + jobDir);
       FileUtils.deleteDir(jobDir);
     }
+  }
 
-    // delete PVC for the job if exists in Kubernetes
+  /**
+   * Clear left over resources for all checkpointed jobs that are not currently running:
+   *   The Job package for the checkpointed job stored in user home directory
+   *   Checkpointed data that are saved when jobs failed.
+   */
+  public static void clearAllJobs(Config config) {
+
+    // get the list of currently running jobs
+    List<String> runningJobs = new LinkedList<>();
+
+    KubernetesController controller = null;
     if (KubernetesContext.isKubernetesCluster(config)) {
-      KubernetesController controller = new KubernetesController();
+      controller = new KubernetesController();
       controller.init(KubernetesContext.namespace(config));
-      controller.deletePersistentVolumeClaim(jobID);
+      runningJobs = controller.getTwister2ConfigMapNames();
+    }
+    //todo: get running jobs from other clusters
+
+    // get all local job directories
+    List<String> localJobDirs = FileUtils.getDirectories(FsContext.uploaderJobDirectory(config));
+    // remove running jobs
+    localJobDirs.removeIf(runningJobs::contains);
+    // remove local directories
+    localJobDirs.forEach(jd -> deleteJobDir(jd, config));
+
+    // delete PVC for the jobs that have ended in Kubernetes
+    if (KubernetesContext.isKubernetesCluster(config)) {
+      List<String> pvcList = controller.getTwister2PersistentVolumeClaims();
+      pvcList.removeIf(runningJobs::contains);
+      pvcList.forEach(controller::deletePersistentVolumeClaim);
       controller.close();
     }
 
     //todo: need to delete checkpointed data in other clusters and on HDFS
-
   }
 
 
