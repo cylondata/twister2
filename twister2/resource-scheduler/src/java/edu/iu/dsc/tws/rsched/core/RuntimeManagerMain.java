@@ -69,6 +69,10 @@ public final class RuntimeManagerMain {
       case "restart":
         Twister2Submitter.restartJob(Context.jobId(cfg), cfg);
         break;
+
+      case "clear":
+        Twister2Submitter.clearJob(Context.jobId(cfg), cfg);
+        break;
     }
   }
 

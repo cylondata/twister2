@@ -199,7 +199,7 @@ public final class RequestObjectBuilder {
     }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+      String claimName = jobID;
       V1Volume persistentVolume = createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
@@ -679,8 +679,9 @@ public final class RequestObjectBuilder {
     return pv;
   }
 
-  public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(String pvcName,
-                                                                          int numberOfWorkers) {
+  public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(int numberOfWorkers) {
+
+    String pvcName = jobID;
 
     // set labels for V1PersistentVolumeClaim
     HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
@@ -714,7 +715,7 @@ public final class RequestObjectBuilder {
    * @return
    */
   public static V1ConfigMap createConfigMap(JobAPI.Job job) {
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
 
     // set a label for ConfigMap
     HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);

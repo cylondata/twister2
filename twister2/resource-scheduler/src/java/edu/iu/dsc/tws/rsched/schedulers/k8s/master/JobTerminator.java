@@ -56,14 +56,12 @@ public class JobTerminator implements IJobTerminator {
 
       if (finalState != JobAPI.JobState.FAILED) {
         // delete the persistent volume claim
-        String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-        pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
+        pvcDeleted = controller.deletePersistentVolumeClaim(jobID);
       }
 
     } else {
       // delete the persistent volume claim
-      String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-      pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
+      pvcDeleted = controller.deletePersistentVolumeClaim(jobID);
     }
 
     // delete ConfigMap

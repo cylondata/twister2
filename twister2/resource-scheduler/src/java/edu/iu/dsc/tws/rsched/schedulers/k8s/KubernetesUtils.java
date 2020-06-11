@@ -86,15 +86,6 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create persistent volume claim name name from the job name
-   * @param jobID
-   * @return
-   */
-  public static String createPersistentVolumeClaimName(String jobID) {
-    return jobID;
-  }
-
-  /**
    * create storage claim name name from job name
    * @param jobID
    * @return
@@ -164,15 +155,6 @@ public final class KubernetesUtils {
    */
   public static String createJobMasterPodName(String jobID) {
     return createJobMasterStatefulSetName(jobID) + "-0";
-  }
-
-  /**
-   * create ConfigMap name for the given job name
-   * add a suffix to job name
-   * @return
-   */
-  public static String createConfigMapName(String jobID) {
-    return jobID;
   }
 
   /**

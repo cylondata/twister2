@@ -113,9 +113,8 @@ public final class K8sControllerExample {
   public static void testPVC(Config config, KubernetesController controller, String jobID) {
 
     RequestObjectBuilder.init(config, jobID, 0, 0, null);
-    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-    V1PersistentVolumeClaim pvc =
-        RequestObjectBuilder.createPersistentVolumeClaimObject(pvcName, 10);
+    String pvcName = jobID;
+    V1PersistentVolumeClaim pvc = RequestObjectBuilder.createPersistentVolumeClaimObject(10);
 
     if (controller.existPersistentVolumeClaim(pvcName)) {
       controller.deletePersistentVolumeClaim(pvcName);

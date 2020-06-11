@@ -29,6 +29,8 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.uploaders.localfs.FsContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -172,5 +174,34 @@ public final class Twister2Submitter {
   public static void terminateJob(String jobID, Config config) {
     ResourceAllocator.killJob(jobID, config);
   }
+
+  /**
+   * Clear left over resources for a checkpointed job:
+   *   The Job package for the checkpointed job stored in user home directory
+   *   Checkpointed data that are saved when jobs failed.
+   */
+  public static void clearJob(String jobID, Config config) {
+    // job package directory
+    String jobDir = FsContext.uploaderJobDirectory(config) + File.separator + jobID;
+    Path jobPackageFile = Paths.get(jobDir);
+    if (Files.notExists(jobPackageFile)) {
+      LOG.severe("Job Package directory does not exist: " + jobDir);
+    } else {
+      LOG.info("Cleaning job directory: " + jobDir);
+      FileUtils.deleteDir(jobDir);
+    }
+
+    // delete PVC for the job if exists in Kubernetes
+    if (KubernetesContext.isKubernetesCluster(config)) {
+      KubernetesController controller = new KubernetesController();
+      controller.init(KubernetesContext.namespace(config));
+      controller.deletePersistentVolumeClaim(jobID);
+      controller.close();
+    }
+
+    //todo: need to delete checkpointed data in other clusters and on HDFS
+
+  }
+
 
 }

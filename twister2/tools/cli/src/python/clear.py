@@ -1,5 +1,3 @@
-# Copyright 2016 Twitter. All rights reserved.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-''' restart.py '''
+''' clear.py '''
 import twister2.tools.cli.src.python.cli_helper as cli_helper
 
 ################################################################################
@@ -20,7 +18,7 @@ def create_parser(subparsers):
     :param subparsers:
     :return:
     '''
-    return cli_helper.create_parser(subparsers, 'restart', 'restart a checkpointed job')
+    return cli_helper.create_parser(subparsers, 'clear', 'clear leftover resources for a checkpointed job')
 
 
 ################################################################################
@@ -33,4 +31,4 @@ def run(command, parser, cl_args, unknown_args):
     :param unknown_args:
     :return:
     '''
-    return cli_helper.run(command, cl_args, "restart job")
+    return cli_helper.run(command, cl_args, "clear job")

@@ -134,7 +134,7 @@ public final class JobMasterRequestObject {
     }
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+      String claimName = jobID;
       V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }

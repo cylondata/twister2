@@ -302,8 +302,7 @@ public class KubernetesLauncher implements ILauncher {
     // if persistent volume is requested,
     // check whether a PersistentVolumeClaim with the same name exist
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-      boolean pvcExists = controller.existPersistentVolumeClaim(pvcName);
+      boolean pvcExists = controller.existPersistentVolumeClaim(jobID);
 
       // if it is restoring a job from nfs persistent directory, PVC must exist
       // otherwise, it must not exist
@@ -311,7 +310,7 @@ public class KubernetesLauncher implements ILauncher {
           && CheckpointingContext.isNfsUsed(config)) {
 
         if (!pvcExists) {
-          LOG.severe("Previous PersistentVolumeClaim[" + pvcName + "] does not exist. "
+          LOG.severe("Previous PersistentVolumeClaim[" + jobID + "] does not exist. "
               + "It can not restore a job from NFS. "
               + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
           return false;
@@ -408,9 +407,8 @@ public class KubernetesLauncher implements ILauncher {
    */
   private boolean initPersistentVolumeClaim(JobAPI.Job job) {
 
-    String pvcName = KubernetesUtils.createPersistentVolumeClaimName(job.getJobId());
     V1PersistentVolumeClaim pvc =
-        RequestObjectBuilder.createPersistentVolumeClaimObject(pvcName, job.getNumberOfWorkers());
+        RequestObjectBuilder.createPersistentVolumeClaimObject(job.getNumberOfWorkers());
 
     boolean claimCreated = controller.createPersistentVolumeClaim(pvc);
     if (claimCreated) {
@@ -617,8 +615,7 @@ public class KubernetesLauncher implements ILauncher {
 
     // delete the persistent volume claim
     if (jobSubmissionStatus.isPvcCreated()) {
-      String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
-      boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
+      boolean claimDeleted = controller.deletePersistentVolumeClaim(jobID);
     }
   }
 

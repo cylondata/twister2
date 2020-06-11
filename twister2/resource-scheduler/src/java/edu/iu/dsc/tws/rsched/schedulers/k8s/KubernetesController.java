@@ -432,7 +432,8 @@ public class KubernetesController {
   /**
    * check whether the given PersistentVolumeClaim exist on Kubernetes master
    */
-  public boolean existPersistentVolumeClaim(String pvcName) {
+  public boolean existPersistentVolumeClaim(String jobID) {
+    String pvcName = jobID;
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -504,7 +505,9 @@ public class KubernetesController {
     return false;
   }
 
-  public boolean deletePersistentVolumeClaim(String pvcName) {
+  public boolean deletePersistentVolumeClaim(String jobID) {
+
+    String pvcName = jobID;
 
     try (okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
         pvcName, namespace, null, null, null, null, null, null, null)
@@ -887,7 +890,7 @@ public class KubernetesController {
    * if there is no ConfigMap, throw an exception
    */
   public Map<String, String> getConfigMapParams(String jobID) {
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
     V1ConfigMap configMap = getJobConfigMap(jobID);
     if (configMap == null) {
       throw new RuntimeException("Could not get ConfigMap from K8s master: " + configMapName);
@@ -919,7 +922,7 @@ public class KubernetesController {
    */
   public boolean addConfigMapParam(String jobID, String keyName, String value) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
     String valueStr = "\"" + value + "\"";
 
     String jsonPatchStr =
@@ -951,7 +954,7 @@ public class KubernetesController {
    */
   public boolean updateConfigMapParam(String jobID, String paramName, String paramValue) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
     String countStr = "\"" + paramValue + "\"";
 
     String jsonPatchStr =
@@ -990,7 +993,7 @@ public class KubernetesController {
    */
   public boolean removeRestartCount(String jobID, String keyName) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
 
     String jsonPatchStr =
         "[{\"op\":\"remove\",\"path\":\"/data/" + keyName + "\"}]";
