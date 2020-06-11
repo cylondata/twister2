@@ -38,21 +38,25 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
 /**
- * Upload job package to either:
- * uploader web server pods
- * all job pods
+ * Upload the job package to either:
+ *    uploader web server pods with UploaderToWebServers
+ *    all job pods with DirectUploader
  * <p>
- * If there are uploader web server pods in the cluster, job package is uploaded to all those pods.
- * After uploading is finished, uploader completes.
+ * If there are uploader web server pods in the cluster,
+ * upload the job package to all those pods.
+ * Uploader completes after the uploading is finished.
+ * Uploader web server pods must have the label "app=twister2-uploader"
+ * This label can be set from the config with the parameter:
+ *    "twister2.kubernetes.uploader.web.server.label"
  * <p>
  * If there are no uploader web servers,
- * the job package is uploaded to each pod in the job separately.
- * we watch the job pods for both workers and the job master
- * when a pod becomes Running, we transfer the job package to that pod.
+ * The job package is uploaded to each pod in the job directly.
+ * We watch the job pods for both workers and the job master
+ * when a pod becomes Running, a thread transfers the job package to that pod.
+ *
  * This class runs in the submitting client.
- * It needs to run continually in the client to upload the job package in case of scaling up
- * or pod failures. If the job is neither scalable nor fault tolerant,
- * then it can exit after uploading the package to all pods.
+ * Todo: It needs to run continually in the client to upload the job package
+ *       in case of scaling up or pod failures.
  * <p>
  * Note:
  * There is a problem with pod Running state

@@ -304,8 +304,7 @@ public class ResourceAllocator {
 
     // if this is a checkpointed job and the uploader is not LocalFileSystemUploader
     // copy the job package to the local repository
-    if (!CheckpointingContext.startingFromACheckpoint(config)
-        && CheckpointingContext.isCheckpointingEnabled(config)
+    if (CheckpointingContext.isCheckpointingEnabled(config)
         && !SchedulerContext.uploaderClass(config)
         .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
 
