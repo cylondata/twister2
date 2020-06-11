@@ -21,10 +21,15 @@ import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
  * Base classed used by cache/persist sinks that receive an {@link Iterator}.
  *
  * @param <T>  Base type of the input
- * @param <T1> type that is passed to the partition through the {@link ValueExtractor}
+ * @param <T1> type that is passed to the partition through the {@link StoreIterSink}.extractValue
+ *             method
  */
-public abstract class StoreIterSink<T, T1> extends
-    BaseSinkFunc<Iterator<T>> {
+public abstract class StoreIterSink<T, T1> extends BaseSinkFunc<Iterator<T>> {
+
+  /**
+   * Extracts value from an input value of the iterator
+   */
+  protected abstract T1 extractValue(T input);
 
   /**
    * Returns the {@link CollectionPartition} that would accept the values. This could be an in-mem
@@ -32,35 +37,13 @@ public abstract class StoreIterSink<T, T1> extends
    *
    * @return collection partition
    */
-  protected abstract CollectionPartition<T1> getPartition();
-
-  /**
-   * A map function that would extract value type T1 from input type T
-   *
-   * @return value extractor
-   */
-  protected abstract ValueExtractor<T1, T> getValueExtractor();
-
-  /**
-   * Extracts value from an input
-   *
-   * @param <O> output type
-   * @param <I> input type
-   */
-  protected interface ValueExtractor<O, I> {
-    O extract(I input);
-  }
+  public abstract CollectionPartition<T1> get();
 
   @Override
   public boolean add(Iterator<T> value) {
     while (value.hasNext()) {
-      getPartition().add(getValueExtractor().extract(value.next()));
+      this.get().add(extractValue(value.next()));
     }
     return true;
-  }
-
-  @Override
-  public CollectionPartition<T1> get() {
-    return getPartition();
   }
 }
