@@ -452,13 +452,12 @@ public class ResourceAllocator {
    */
   public void clearTemporaryFiles(String jobDirectory) {
 
-    // job package may need to be uploaded to newly scaled workers
+    // job package may need to be uploaded to failed workers or newly scaled workers
     // so, we do not delete the job package
     if (Context.isKubernetesCluster(config)
         && SchedulerContext.uploaderClass(config)
         .equals("edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUploader")
-        && RequestObjectBuilder.uploadMethod.equals("client-to-pods")
-        && JobUtils.isJobScalable(config, job)) {
+        && RequestObjectBuilder.uploadMethod.equals("client-to-pods")) {
 
       return;
     }

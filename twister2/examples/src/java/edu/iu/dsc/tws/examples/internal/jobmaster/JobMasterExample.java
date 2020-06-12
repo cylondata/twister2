@@ -131,7 +131,7 @@ public final class JobMasterExample {
     }
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
-    KubernetesController controller = new KubernetesController();
+    KubernetesController controller = KubernetesController.init("default");
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
     IJobTerminator jobTerminator = null;
 

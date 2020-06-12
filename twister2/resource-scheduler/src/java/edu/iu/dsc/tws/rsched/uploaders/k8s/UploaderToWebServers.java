@@ -123,8 +123,8 @@ public class UploaderToWebServers extends Thread {
 
   public boolean undo(Config cnfg, String jbID) {
     String jobPackageFile = KubernetesUtils.jobPackageFullPath(cnfg, jbID);
-    return KubernetesController.deleteJobPackage(
-        KubernetesContext.namespace(cnfg), webServerPodNames, jobPackageFile);
+    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
+    return controller.deleteJobPackage(webServerPodNames, jobPackageFile);
   }
 
   public void close() {

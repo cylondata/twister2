@@ -183,8 +183,8 @@ public final class Twister2Submitter {
 
     // close the controller
     if (KubernetesContext.isKubernetesCluster(config)) {
-      KubernetesController controller = new KubernetesController();
-      controller.init(KubernetesContext.namespace(config));
+      KubernetesController controller =
+          KubernetesController.init(KubernetesContext.namespace(config));
       controller.deletePersistentVolumeClaim(jobID);
       KubernetesController.close();
     }
@@ -219,8 +219,7 @@ public final class Twister2Submitter {
 
     KubernetesController controller = null;
     if (KubernetesContext.isKubernetesCluster(config)) {
-      controller = new KubernetesController();
-      controller.init(KubernetesContext.namespace(config));
+      controller = KubernetesController.init(KubernetesContext.namespace(config));
       runningJobs = controller.getTwister2ConfigMapNames();
     }
     //todo: get running jobs from other clusters

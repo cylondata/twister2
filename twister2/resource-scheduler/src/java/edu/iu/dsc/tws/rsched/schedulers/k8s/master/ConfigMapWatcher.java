@@ -20,6 +20,7 @@ import com.google.gson.reflect.TypeToken;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -58,7 +59,7 @@ public class ConfigMapWatcher extends Thread {
     String killParam = "KILL_JOB";
 
     String cmName = jobID;
-    String labelSelector = "t2-job=" + jobID;
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
     Integer timeoutSeconds = Integer.MAX_VALUE;
 
     CoreV1Api v1Api = controller.createCoreV1Api();

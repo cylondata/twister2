@@ -68,15 +68,13 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
 
     // map the words to a tuple, with <word, 1>, 1 is the count
     KeyedTSet<String, Integer> groupedWords = persisted.mapToTuple(w -> new Tuple<>(w, 1));
-    // reduce using the sim operation
+    // reduce using the sum operation
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
     // persist the counts
     KeyedPersistedTSet<String, Integer> persistedKeyedReduced = keyedReduce.persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted keyedReduced data");
 
-    // write to log for testing
-    persistedKeyedReduced.keyedDirect().forEach(c -> LOG.info(c.toString()));
     if (env.getWorkerID() == 2
         && WorkerRuntime.getWorkerController().workerRestartCount() == 0
         && !CheckpointingContext.startingFromACheckpoint(config)) {
@@ -87,6 +85,8 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
       throw new RuntimeException("intentionally killed");
     }
 
+    // write to log for testing
+    persistedKeyedReduced.keyedDirect().forEach(c -> LOG.info(c.toString()));
   }
 
   /**

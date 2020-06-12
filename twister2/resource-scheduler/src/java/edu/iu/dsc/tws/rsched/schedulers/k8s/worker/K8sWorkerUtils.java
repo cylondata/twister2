@@ -315,9 +315,7 @@ public final class K8sWorkerUtils {
                                            String jbID,
                                            JobMasterAPI.WorkerInfo wInfo) {
     // initialize the controller to talk to Kubernetes master
-    KubernetesController controller = new KubernetesController();
-    controller.init(KubernetesContext.namespace(cnfg));
-
+    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
     String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
 
     int restartCount = initRestartFromCM(controller, jbID, keyName);

@@ -20,6 +20,9 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
+import io.kubernetes.client.openapi.models.V1ContainerStatus;
+import io.kubernetes.client.openapi.models.V1Pod;
+
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
@@ -224,4 +227,35 @@ public final class KubernetesUtils {
 
     return podNames;
   }
+
+  /**
+   * we assume the pod became running when:
+   *    pod phase is Running
+   *    pod deletion time stamp is null (if not null. it is in the process of being deleted)
+   *    all containers are ready
+   *
+   * Pod Phases: Pending, Running, Succeeded, Failed, Unknown
+   * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+   *
+   * @param pod
+   * @return
+   */
+  public static boolean isPodRunning(V1Pod pod) {
+    if ("Running".equals(pod.getStatus().getPhase())
+        && pod.getMetadata().getDeletionTimestamp() == null
+        && KubernetesUtils.allContainersReady(pod.getStatus().getContainerStatuses())) {
+      return true;
+    }
+    return false;
+  }
+
+  public static boolean allContainersReady(List<V1ContainerStatus> contStatuses) {
+    for (V1ContainerStatus cs : contStatuses) {
+      if (!cs.getReady()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

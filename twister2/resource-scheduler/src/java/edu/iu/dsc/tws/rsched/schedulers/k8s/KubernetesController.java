@@ -58,17 +58,28 @@ import okhttp3.OkHttpClient;
  * a controller class to talk to the Kubernetes Master to manage jobs
  */
 
-public class KubernetesController {
+public final class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
-  private String namespace;
+  private static String namespace;
   private static ApiClient client = null;
   private static CoreV1Api coreApi;
   private static AppsV1Api appsApi;
 
-  public void init(String nspace) {
-    this.namespace = nspace;
+  private static KubernetesController controller;
+
+  private KubernetesController() {
+  }
+
+  public static synchronized KubernetesController init(String nspace) {
+    if (controller != null) {
+      return controller;
+    }
+
+    namespace = nspace;
     initApiInstances();
+    controller = new KubernetesController();
+    return controller;
   }
 
   public static ApiClient getApiClient() {
@@ -132,6 +143,8 @@ public class KubernetesController {
       } catch (IOException e) {
       }
     }
+
+    controller = null;
   }
 
   /**
@@ -707,16 +720,12 @@ public class KubernetesController {
     return nodeInfoList;
   }
 
-  public static List<String> getUploaderWebServerPods(String ns, String uploaderLabel) {
-
-    if (coreApi == null) {
-      initApiInstances();
-    }
+  public List<String> getUploaderWebServerPods(String uploaderLabel) {
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          ns, null, null, null, null, uploaderLabel, null, null, null, null);
+          namespace, null, null, null, null, uploaderLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting uploader pod list.", e);
       throw new RuntimeException(e);
@@ -736,13 +745,8 @@ public class KubernetesController {
    * currently it does not delete job package file from multiple uploader pods
    * so, It is not in use
    */
-  public static boolean deleteJobPackage(String ns,
-                                         List<String> uploaderPods,
+  public boolean deleteJobPackage(List<String> uploaderPods,
                                          String jobPackageName) {
-
-    if (coreApi == null) {
-      initApiInstances();
-    }
 
     String command = String.format("rm %s", jobPackageName);
     String[] fullCommand = {"bash", "-c", command};
@@ -752,7 +756,7 @@ public class KubernetesController {
 
       try {
         Exec exec = new Exec(getApiClient());
-        final Process proc = exec.exec(ns, uploaderPod, fullCommand, false, false);
+        final Process proc = exec.exec(namespace, uploaderPod, fullCommand, false, false);
         proc.waitFor();
         proc.destroy();
 

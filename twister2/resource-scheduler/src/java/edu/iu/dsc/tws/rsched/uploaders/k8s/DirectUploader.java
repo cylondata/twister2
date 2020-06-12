@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.rsched.uploaders.k8s;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +21,6 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -39,7 +36,6 @@ import io.kubernetes.client.util.Watch;
 
 public class DirectUploader extends Thread {
   private static final Logger LOG = Logger.getLogger(DirectUploader.class.getName());
-  public static final long MAX_WAIT_TIME_FOR_POD_START = 300 * 1000L; // in seconds
 
   private CoreV1Api coreApi;
   private ApiClient apiClient;
@@ -50,13 +46,11 @@ public class DirectUploader extends Thread {
   private String jobID;
   private String localJobPackageFile;
 
-  private ArrayList<String> podNames;
-  private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap<>();
   private ArrayList<UploaderToPod> uploaders = new ArrayList<>();
 
   private Watch<V1Pod> watcher;
   private boolean stopUploader = false;
-  private long watcherStartTime = System.currentTimeMillis();
+  private JobEndWatcher jobEndWatcher;
 
   public DirectUploader(Config cnfg, JobAPI.Job jb) {
 
@@ -69,40 +63,41 @@ public class DirectUploader extends Thread {
   public URI uploadPackage(String localJobPackage) throws UploaderException {
 
     localJobPackageFile = localJobPackage;
+    KubernetesController controller = KubernetesController.init(namespace);
     apiClient = KubernetesController.getApiClient();
     coreApi = KubernetesController.createCoreV1Api();
 
     // start uploader thread
     start();
 
+    // initialize job watcher
+    jobEndWatcher = JobEndWatcher.init(config, jobID, controller, this);
+
     return null;
   }
 
-  @Override
-  public void run() {
-    watchPodsStartUploaders();
+  private void printLog() {
+    String logMsg = System.lineSeparator() + System.lineSeparator();
+    logMsg += "Twister2 Client will upload the job package directly to the job pods.\n";
+    logMsg += "Twister2 Client needs to run until the job completes. \n";
+    logMsg += "###########   Please do not kill the Twister2 Client   ###########\n";
+    logMsg += System.lineSeparator();
+    LOG.info(logMsg);
   }
 
   /**
    * watch job pods until they become Running and start an uploader for each pod afterward
    */
-  private void watchPodsStartUploaders() {
+  @Override
+  public void run() {
 
-    /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
-     * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
-
-    podNames = KubernetesUtils.generatePodNames(job);
-    // add job master pod name
-    if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobId()));
-    }
+    printLog();
 
     String jobPodsLabel = KubernetesUtils.jobLabelSelector(jobID);
     String targetFile = KubernetesConstants.POD_MEMORY_VOLUME
         + "/" + JobUtils.createJobPackageFileName(jobID);
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
-    String podPhase = "Running";
 
     try {
       watcher = Watch.createWatch(
@@ -133,26 +128,13 @@ public class DirectUploader extends Thread {
 
         if (item.object != null
             && item.object.getMetadata().getName().startsWith(jobID)
-            && podPhase.equals(item.object.getStatus().getPhase())
-        ) {
+            && KubernetesUtils.isPodRunning(item.object)) {
+
           String podName = item.object.getMetadata().getName();
-
-//        LOG.info(runningCounter++ + " -------------- Pod event: " + podName + ", " + podPhase);
-
-          // if DeletionTimestamp is not null,
-          // it means that the pod is in the process of being deleted
-          if (item.object.getMetadata().getDeletionTimestamp() == null) {
-            UploaderToPod uploader =
-                new UploaderToPod(namespace, podName, localJobPackageFile, targetFile);
-            uploader.start();
-
-            if (podNames.contains(podName)) {
-              podNames.remove(podName);
-              initialPodUploaders.put(podName, uploader);
-            } else {
-              uploaders.add(uploader);
-            }
-          }
+          UploaderToPod uploader =
+              new UploaderToPod(namespace, podName, localJobPackageFile, targetFile);
+          uploader.start();
+          uploaders.add(uploader);
         }
       }
 
@@ -169,62 +151,11 @@ public class DirectUploader extends Thread {
   }
 
   /**
-   * wait for all transfer threads to finish
-   * if any one of them fails, stop all active ones
-   *
-   * When upload method is "client-to-pods" and
-   * dynamic IDriver is used, this thread never finishes
-   * It waits in case a new worker is added by IDriver
-   * User should finish this process with control-C
-   // TODO: may be we can watch the job somehow and exit it when the job completes
-   * @return
+   * DirectUploader should run until the job completes
+   * it should upload the job package in case of failures and job scaling up new workers
    */
   public boolean complete() {
-
-    // wait until all transfer threads to be started
-    while (!podNames.isEmpty()) {
-
-      long duration = System.currentTimeMillis() - watcherStartTime;
-      if (duration > MAX_WAIT_TIME_FOR_POD_START) {
-        LOG.log(Level.SEVERE, "Max wait time limit has been reached and not all pods started.");
-        return false;
-      }
-
-      try {
-        Thread.sleep(300);
-      } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      }
-    }
-
-    // wait all transfer threads to finish up
-    boolean allTransferred = true;
-    for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
-
-      try {
-        entry.getValue().join();
-        if (!entry.getValue().packageTransferred()) {
-          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: " + entry.getKey());
-          allTransferred = false;
-          break;
-        }
-      } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      }
-    }
-
-    // if one transfer fails, tell all transfer threads to stop and return false
-    if (!allTransferred) {
-      for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
-        entry.getValue().cancelTransfer();
-      }
-    }
-
-    if (!JobUtils.isJobScalable(config, job) || !allTransferred) {
-      stopUploader();
-    }
-
-    return allTransferred;
+    return true;
   }
 
   private void closeWatcher() {
@@ -246,18 +177,18 @@ public class DirectUploader extends Thread {
     stopUploader = true;
     closeWatcher();
 
-    for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
-      entry.getValue().cancelTransfer();
+    for (UploaderToPod uploader : uploaders) {
+      uploader.cancelTransfer();
     }
 
-    for (UploaderToPod uploader: uploaders) {
-      uploader.cancelTransfer();
+    if (jobEndWatcher != null) {
+      jobEndWatcher.stopWatcher();
     }
   }
 
   public boolean undo(Config cnfg, String jbID) {
     stopUploader();
-    return false;
+    return true;
   }
 
   public void close() {

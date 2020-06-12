@@ -39,8 +39,7 @@ public final class K8sControllerExample {
   }
 
   public static void main(String[] args) throws InterruptedException {
-    KubernetesController controller = new KubernetesController();
-    controller.init("default");
+    KubernetesController controller = KubernetesController.init("default");
 
     if (args.length != 1) {
       LOG.severe("Provide jobID as a parameter.");
@@ -94,15 +93,14 @@ public final class K8sControllerExample {
   }
 
   public static void testUploader(Config config, KubernetesController controller, String jobID) {
-    List<String> webServerPodNames = KubernetesController.getUploaderWebServerPods(
-        KubernetesContext.namespace(config), KubernetesContext.uploaderWebServerLabel(config));
+    List<String> webServerPodNames =
+        controller.getUploaderWebServerPods(KubernetesContext.uploaderWebServerLabel(config));
     LOG.info("uploaders: " + webServerPodNames);
 
     String targetFile = KubernetesUtils.jobPackageFullPath(config, jobID);
     LOG.info("target file: " + targetFile);
 
-    boolean deleted = controller.deleteJobPackage(
-        KubernetesContext.namespace(config), webServerPodNames, targetFile);
+    boolean deleted = controller.deleteJobPackage(webServerPodNames, targetFile);
     if (deleted) {
       LOG.info("deleted.");
     } else {
@@ -182,8 +180,7 @@ public final class K8sControllerExample {
     RequestObjectBuilder.init(cnfg, jobID2, 0, 0, null);
     V1ConfigMap cm2 = RequestObjectBuilder.createConfigMap(job);
 
-    KubernetesController controller = new KubernetesController();
-    controller.init("default");
+    KubernetesController controller = KubernetesController.init("default");
 
     String key0 = KubernetesUtils.createRestartWorkerKey(0);
     String key1 = KubernetesUtils.createRestartJobMasterKey();

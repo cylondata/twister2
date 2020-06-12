@@ -53,15 +53,14 @@ public class KubernetesLauncher implements ILauncher {
   private JobLogger jobLogger;
 
   public KubernetesLauncher() {
-    controller = new KubernetesController();
-    jobSubmissionStatus = new JobSubmissionStatus();
   }
 
   @Override
   public void initialize(Config conf) {
     this.config = conf;
     namespace = KubernetesContext.namespace(config);
-    controller.init(namespace);
+    controller = KubernetesController.init(namespace);
+    jobSubmissionStatus = new JobSubmissionStatus();
   }
 
   /**

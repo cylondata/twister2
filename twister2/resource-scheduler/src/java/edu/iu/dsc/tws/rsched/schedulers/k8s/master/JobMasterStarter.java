@@ -108,8 +108,8 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    KubernetesController controller = new KubernetesController();
-    controller.init(KubernetesContext.namespace(config));
+    KubernetesController controller =
+        KubernetesController.init(KubernetesContext.namespace(config));
     JobTerminator jobTerminator = new JobTerminator(config, controller);
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
 

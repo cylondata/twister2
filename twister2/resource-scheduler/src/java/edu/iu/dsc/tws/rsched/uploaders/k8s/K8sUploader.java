@@ -88,8 +88,9 @@ public class K8sUploader implements IUploader {
     this.config = cnfg;
     initialized = true;
 
-    webServerPodNames = KubernetesController.getUploaderWebServerPods(
-        KubernetesContext.namespace(cnfg), KubernetesContext.uploaderWebServerLabel(cnfg));
+    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
+    webServerPodNames = controller.getUploaderWebServerPods(
+        KubernetesContext.uploaderWebServerLabel(cnfg));
 
     if (webServerPodNames.size() == 0) {
       uploadToWebServers = false;
@@ -130,8 +131,10 @@ public class K8sUploader implements IUploader {
 
     // if initialize method is not called
     if (!initialized) {
-      webServerPodNames = KubernetesController.getUploaderWebServerPods(
-          KubernetesContext.namespace(cnfg), KubernetesContext.uploaderWebServerLabel(cnfg));
+      KubernetesController controller =
+          KubernetesController.init(KubernetesContext.namespace(cnfg));
+      webServerPodNames =
+          controller.getUploaderWebServerPods(KubernetesContext.uploaderWebServerLabel(cnfg));
 
       if (webServerPodNames.size() == 0) {
         // if it is DirectUploader,

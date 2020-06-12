@@ -151,8 +151,7 @@ public class JobLogger extends Thread {
         // it means that the pod is in the process of being deleted
         if (item.object != null
             && item.object.getMetadata().getName().startsWith(job.getJobId())
-            && podPhase.equals(item.object.getStatus().getPhase())
-            && item.object.getMetadata().getDeletionTimestamp() == null
+            && KubernetesUtils.isPodRunning(item.object)
         ) {
 
           String podName = item.object.getMetadata().getName();
