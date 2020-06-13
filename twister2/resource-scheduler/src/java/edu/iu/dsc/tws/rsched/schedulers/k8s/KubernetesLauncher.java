@@ -639,16 +639,16 @@ public class KubernetesLauncher implements ILauncher {
 
     // signall kill to JobMaster
     controller.addConfigMapParam(jobID, "KILL_JOB", "true");
-    LOG.info("Waiting JobMaster to delete job resources.");
+    LOG.info("Waiting JobMaster to delete job resources........");
 
     // check whether they are all killed
-    long maxWaitTime = 100000; // wait 100 seconds for resources to be deleted
+    long maxWaitTime = 15000; // wait 15 seconds for resources to be deleted by Job Master
     long start = System.currentTimeMillis();
     long duration = 0;
 
     do {
       try {
-        Thread.sleep(500);
+        Thread.sleep(1000);
       } catch (InterruptedException e) {
       }
       duration = System.currentTimeMillis() - start;
@@ -656,9 +656,10 @@ public class KubernetesLauncher implements ILauncher {
 
     // if not all resources are deleted in the time limit
     if (duration > maxWaitTime) {
-      LOG.warning("Time limit is reached for deleting resources: " + maxWaitTime + "ms");
-      jobResources.logUndeletedResources();
-      return false;
+      LOG.warning("Following job resources are not deleted by Job Master in "
+          + (maxWaitTime / 1000) + " seconds. We will delete them now: " + System.lineSeparator()
+          + jobResources.getUndeletedResources());
+      return jobResources.deleteUndeletedResources();
     }
 
     LOG.info("Job is killed in " + duration + "ms");

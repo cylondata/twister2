@@ -125,19 +125,50 @@ public class JobResources {
         .collect(Collectors.toList());
   }
 
-  public void logUndeletedResources() {
+  public boolean deleteUndeletedResources() {
 
-    ssList.forEach(ss -> LOG.warning("StatefulSet not deleted in the time limit: " + ss));
-    serviceList.forEach(ss -> LOG.warning("Service not deleted in the time limit: " + ss));
+    boolean allDeleted = true;
+    for (String ssName: ssList) {
+      if (!controller.deleteStatefulSet(ssName)) {
+        allDeleted = false;
+      }
+    }
+    for (String serviceName: serviceList) {
+      if (!controller.deleteService(serviceName)) {
+        allDeleted = false;
+      }
+    }
 
     if (cm != null) {
-      LOG.warning("ConfigMap not deleted in the time limit: " + cm.getMetadata().getName());
+      if (!controller.deleteConfigMap(cm.getMetadata().getName())) {
+        allDeleted = true;
+      }
     }
 
     if (pvc != null) {
-      LOG.warning("PersistentVolumeClaim not deleted in the time limit: "
-          + pvc.getMetadata().getName());
+      if (!controller.deletePersistentVolumeClaim(pvc.getMetadata().getName())) {
+        allDeleted = true;
+      }
     }
+
+    return allDeleted;
+  }
+
+  public String getUndeletedResources() {
+
+    StringBuffer sb = new StringBuffer();
+    ssList.forEach(ss -> sb.append("StatefulSet: " + ss + System.lineSeparator()));
+    serviceList.forEach(ss -> sb.append("Service: " + ss + System.lineSeparator()));
+
+    if (cm != null) {
+      sb.append("ConfigMap: " + cm.getMetadata().getName() + System.lineSeparator());
+    }
+
+    if (pvc != null) {
+      sb.append("PersistentVolumeClaim: " + pvc.getMetadata().getName() + System.lineSeparator());
+    }
+
+    return sb.toString();
   }
 
 }
