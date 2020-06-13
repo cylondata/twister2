@@ -15,34 +15,32 @@ package edu.iu.dsc.tws.api.scheduler;
 import java.net.URI;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
- * Uploads job package to a shared location. This location must be
- * accessible by runtime environment of job. The uploader will upload
+ * Uploads job package to a shared location.
+ * This location must be accessible by Twister2 workers and the job master.
+ * The uploader will upload:
  * <p>
- * - job jar,
- * - job jar dependencies,
- * - job definition, and
+ * - job package: including user job file, config files, job definition file, and
  * - twister2 core packages and libraries, if required
- * <p>
- * Uploader outputs another context containing the necessary information that
- * will be used by next stages of topology submission.
  * <p>
  * Implementation of IUploader is required to have a no argument constructor
  * that will be called to create an instance of IUploader.
+ *
+ * initialize method must be called after the constructor
+ *
  */
 public interface IUploader extends AutoCloseable {
   /**
    * Initialize the uploader with the incoming context.
    */
-  void initialize(Config config, JobAPI.Job job);
+  void initialize(Config config, String jobID);
 
   /**
-   * UploadPackage will upload the topology package to the given location.
+   * UploadPackage will upload the job package to the given location.
    *
    * @param sourceLocation the source location with all the files
-   * @return destination URI of where the topology package has
+   * @return destination URI of where the job package has
    * been uploaded if successful, or {@code null} if failed.
    */
   URI uploadPackage(String sourceLocation) throws UploaderException;
@@ -58,19 +56,11 @@ public interface IUploader extends AutoCloseable {
 
   /**
    * Undo uploading. Remove uploaded files.
-   * this method must also work in case when initialize method is not called
-   * @param cnfg
-   * @param jobID
    */
-  boolean undo(Config cnfg, String jobID);
+  boolean undo();
 
   /**
-   * This is to for disposing or cleaning up any internal state accumulated by
-   * the uploader
-   * <p>
-   * Closes this stream and releases any system resources associated
-   * with it. If the stream is already closed then invoking this
-   * method has no effect.
+   * This is to for disposing or cleaning up any internal state accumulated by the uploader
    */
   void close();
 }

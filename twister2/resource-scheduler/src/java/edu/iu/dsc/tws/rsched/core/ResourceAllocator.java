@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -41,7 +40,6 @@ import edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 /**
@@ -278,7 +276,7 @@ public class ResourceAllocator {
     // clear job files and return
     if (!launchState.isRequestGranted()) {
       launcher.close();
-      uploader.undo(config, job.getJobId());
+      uploader.undo();
       // clear temporary twister2 files
       clearTemporaryFiles(jobDirectory);
       return launchState;
@@ -309,7 +307,7 @@ public class ResourceAllocator {
         .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
 
       IUploader localUploader = new LocalFileSystemUploader();
-      localUploader.initialize(config, job);
+      localUploader.initialize(config, job.getJobId());
       URI savedPackage = localUploader.uploadPackage(jobDirectory);
       LOG.info("Saved Job Package to Directory: " + savedPackage.getPath());
     }
@@ -318,7 +316,7 @@ public class ResourceAllocator {
         && SchedulerContext.clusterType(config).equals("standalone")
         && SchedulerContext.uploaderClass(config)
         .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
-      uploader.undo(config, job.getJobId());
+      uploader.undo();
     }
 
     // clear temporary twister2 files
@@ -351,7 +349,7 @@ public class ResourceAllocator {
     if (!launchState.isRequestGranted()) {
       launcher.close();
       if (uploader != null) {
-        uploader.undo(config, job.getJobId());
+        uploader.undo();
       }
       return launchState;
     }
@@ -398,7 +396,7 @@ public class ResourceAllocator {
 
     LOG.fine("Initialize uploader");
     // now upload the content of the package
-    uploader.initialize(config, job);
+    uploader.initialize(config, job.getJobId());
     // gives the url of the file to be uploaded
     LOG.fine("Calling uploader to upload the job package");
     long start = System.currentTimeMillis();
@@ -462,13 +460,13 @@ public class ResourceAllocator {
       return;
     }
 
-    String cleaningCommand = "rm -rf " + jobDirectory;
-    System.out.println("cleaning  command:" + cleaningCommand);
-    ProcessUtils.runSyncProcess(false,
-        cleaningCommand.split(" "), new StringBuilder(),
-        new File("."), true);
-
-    LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
+    Path jobPackagePath = Paths.get(jobDirectory);
+    if (Files.notExists(jobPackagePath)) {
+      LOG.severe("Job Package directory does not exist: " + jobDirectory);
+    } else {
+      FileUtils.deleteDir(jobDirectory);
+      LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
+    }
   }
 
   /**
@@ -515,7 +513,8 @@ public class ResourceAllocator {
           String.format("Failed to instantiate uploader class '%s'", uploaderClass), e);
     }
 
-    uploader.undo(cnfg, jobID);
+    uploader.initialize(cnfg, jobID);
+    uploader.undo();
 
     launcher.close();
     uploader.close();
@@ -528,7 +527,8 @@ public class ResourceAllocator {
         && !SchedulerContext.uploaderClass(cnfg)
         .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
       IUploader localUploader = new LocalFileSystemUploader();
-      localUploader.undo(cnfg, jobID);
+      localUploader.initialize(cnfg, jobID);
+      localUploader.undo();
     }
   }
 

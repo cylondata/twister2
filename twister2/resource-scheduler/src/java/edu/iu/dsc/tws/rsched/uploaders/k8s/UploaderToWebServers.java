@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.k8s;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -44,9 +46,10 @@ public class UploaderToWebServers extends Thread {
     this.webServerPodNames = webServerPodNames;
   }
 
-  public URI uploadPackage(String localJobPackage) throws UploaderException {
+  public URI uploadPackage(String sourceLocation) throws UploaderException {
 
-    localJobPackageFile = localJobPackage;
+    localJobPackageFile = sourceLocation + File.separator
+        + SchedulerContext.jobPackageFileName(config);
 
     // start uploader thread
     start();
@@ -121,9 +124,10 @@ public class UploaderToWebServers extends Thread {
     return allTransferred;
   }
 
-  public boolean undo(Config cnfg, String jbID) {
-    String jobPackageFile = KubernetesUtils.jobPackageFullPath(cnfg, jbID);
-    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
+  public boolean undo() {
+    String jobPackageFile = KubernetesUtils.jobPackageFullPath(config, jobID);
+    KubernetesController controller =
+        KubernetesController.init(KubernetesContext.namespace(config));
     return controller.deleteJobPackage(webServerPodNames, jobPackageFile);
   }
 

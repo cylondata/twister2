@@ -24,14 +24,13 @@ import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class S3Uploader extends Thread implements IUploader {
   private static final Logger LOG = Logger.getLogger(S3Uploader.class.getName());
 
   private Config config;
-  private JobAPI.Job job;
+  private String jobID;
 
   private String localJobPackFile;
   private String s3File;
@@ -40,9 +39,9 @@ public class S3Uploader extends Thread implements IUploader {
   private boolean uploaded = false;
 
   @Override
-  public void initialize(Config cnfg, JobAPI.Job jb) {
+  public void initialize(Config cnfg, String jbID) {
     this.config = cnfg;
-    this.job = jb;
+    this.jobID = jbID;
   }
 
   @Override
@@ -81,8 +80,7 @@ public class S3Uploader extends Thread implements IUploader {
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
     localJobPackFile = sourceLocation + "/" + SchedulerContext.jobPackageFileName(config);
-    s3File = S3Context.s3BucketName(config) + "/"
-        + JobUtils.createJobPackageFileName(job.getJobId());
+    s3File = S3Context.s3BucketName(config) + "/" + JobUtils.createJobPackageFileName(jobID);
 
     long linkExpDur = S3Context.linkExpirationDuration(config);
 
@@ -157,9 +155,9 @@ public class S3Uploader extends Thread implements IUploader {
   }
 
   @Override
-  public boolean undo(Config cnfg, String jobID) {
+  public boolean undo() {
 
-    s3File = S3Context.s3BucketName(cnfg) + "/" + JobUtils.createJobPackageFileName(jobID);
+    s3File = S3Context.s3BucketName(config) + "/" + JobUtils.createJobPackageFileName(jobID);
 
     String cmd = "aws s3 rm " + s3File;
     LOG.fine("cmd for s3 Remover: " + cmd);

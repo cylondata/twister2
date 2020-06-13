@@ -639,7 +639,7 @@ public class KubernetesLauncher implements ILauncher {
 
     // signall kill to JobMaster
     controller.addConfigMapParam(jobID, "KILL_JOB", "true");
-    LOG.info("Waiting JobMaster to delete jor resources.");
+    LOG.info("Waiting JobMaster to delete job resources.");
 
     // check whether they are all killed
     long maxWaitTime = 100000; // wait 100 seconds for resources to be deleted

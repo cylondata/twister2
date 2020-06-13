@@ -93,7 +93,7 @@ public final class JobEndWatcher extends Thread {
         if (!KubernetesContext.logInClient(config)) {
           LOG.info("Job has ended.");
         }
-        directUploader.stopUploader();
+        directUploader.jobEnded();
         return;
       }
     }

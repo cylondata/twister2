@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
@@ -50,13 +49,6 @@ public class JobResources {
     serviceList = getServiceList();
     cm = controller.getJobConfigMap(jobID);
     pvc = controller.getJobPersistentVolumeClaim(jobID);
-
-    if (CheckpointingContext.isCheckpointingEnabled(config)) {
-      LOG.warning("Since this is a checkpointed job, PersistentVolumeClaim will not be deleted: "
-          + " Please delete that manually if you like with: "
-          + " kubectl delete pvc " + pvc.getMetadata().getName());
-      pvc = null;
-    }
   }
 
   /**

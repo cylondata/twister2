@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.k8s;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -20,12 +21,13 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -42,8 +44,8 @@ public class DirectUploader extends Thread {
 
   private Config config;
   private String namespace;
-  private JobAPI.Job job;
   private String jobID;
+  private String tempJobDir;
   private String localJobPackageFile;
 
   private ArrayList<UploaderToPod> uploaders = new ArrayList<>();
@@ -52,17 +54,17 @@ public class DirectUploader extends Thread {
   private boolean stopUploader = false;
   private JobEndWatcher jobEndWatcher;
 
-  public DirectUploader(Config cnfg, JobAPI.Job jb) {
+  public DirectUploader(Config cnfg, String jobID) {
 
     this.config = cnfg;
     this.namespace = KubernetesContext.namespace(config);
-    this.job = jb;
-    this.jobID = job.getJobId();
+    this.jobID = jobID;
   }
 
-  public URI uploadPackage(String localJobPackage) throws UploaderException {
-
-    localJobPackageFile = localJobPackage;
+  public URI uploadPackage(String sourceLocation) throws UploaderException {
+    this.tempJobDir = sourceLocation;
+    localJobPackageFile = sourceLocation + File.separator
+        + SchedulerContext.jobPackageFileName(config);
     KubernetesController controller = KubernetesController.init(namespace);
     apiClient = KubernetesController.getApiClient();
     coreApi = KubernetesController.createCoreV1Api();
@@ -180,14 +182,28 @@ public class DirectUploader extends Thread {
     for (UploaderToPod uploader : uploaders) {
       uploader.cancelTransfer();
     }
+  }
+
+  /**
+   * job has ended
+   * stop the uploader
+   * clear temp job package directory
+   */
+  public void jobEnded() {
+    stopUploader();
+
+    // clear job package at temp directory
+    if (FileUtils.deleteDir(tempJobDir)) {
+      LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + tempJobDir);
+    }
+  }
+
+  public boolean undo() {
+    stopUploader();
 
     if (jobEndWatcher != null) {
       jobEndWatcher.stopWatcher();
     }
-  }
-
-  public boolean undo(Config cnfg, String jbID) {
-    stopUploader();
     return true;
   }
 
