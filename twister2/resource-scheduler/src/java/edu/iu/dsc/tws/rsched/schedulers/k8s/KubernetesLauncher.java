@@ -574,9 +574,12 @@ public class KubernetesLauncher implements ILauncher {
    */
   @Override
   public void close() {
-    if (!KubernetesContext.logInClient(config)) {
-      controller.close();
+    if (KubernetesContext.logInClient(config)
+        || RequestObjectBuilder.uploadMethod.equals("client-to-pods")) {
+      return;
     }
+
+    controller.close();
   }
 
   /**
