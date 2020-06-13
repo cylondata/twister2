@@ -40,7 +40,9 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   private SKeyedReduce op;
 
   public KeyedReduceStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                       Set<Integer> sources, Set<Integer> dests, Edge edge) {
+                                       Set<Integer> sources, Set<Integer> dests, Edge edge,
+                                       Map<Integer, Integer> srcGlobalToIndex,
+                                       Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -53,7 +55,8 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }

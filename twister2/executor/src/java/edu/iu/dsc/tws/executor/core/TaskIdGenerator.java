@@ -12,10 +12,11 @@
 
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
@@ -38,13 +39,23 @@ public class TaskIdGenerator {
     return taskId * TASK_OFFSET + taskIndex;
   }
 
-  public Set<Integer> getTaskIds(String taskName, int taskId, ComputeGraph graph) {
-    Vertex v = graph.vertex(taskName);
+  public Set<Integer> getTaskIds(Vertex v, int taskId) {
     int parallel = v.getParallelism();
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < parallel; i++) {
       sources.add(generateGlobalTaskId(taskId, i));
+    }
+    return sources;
+  }
+
+  public Map<Integer, Integer> getGlobalTaskToIndex(Vertex v,
+                                                    int taskId) {
+    int parallel = v.getParallelism();
+
+    Map<Integer, Integer> sources = new HashMap<>();
+    for (int i = 0; i < parallel; i++) {
+      sources.put(generateGlobalTaskId(taskId, i), i);
     }
     return sources;
   }

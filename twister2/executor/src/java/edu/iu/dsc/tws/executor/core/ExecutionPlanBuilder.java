@@ -174,12 +174,17 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         for (Edge e : edges) {
           Vertex child = taskGraph.childOfTask(v, e.getName());
           // lets figure out the parents task id
-          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(v.getName(),
-              ip.getTaskId(), taskGraph);
-          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
-              getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(v, ip.getTaskId());
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child,
+              getTaskIdOfTask(child.getName(), taskSchedule));
 
-          createCommunication(child, e, v, srcTasks, tarTasks);
+          Map<Integer, Integer> srcGlobalToIndex =
+              taskIdGenerator.getGlobalTaskToIndex(v, ip.getTaskId());
+          Map<Integer, Integer> tarGlobaToIndex =
+              taskIdGenerator.getGlobalTaskToIndex(child,
+                  getTaskIdOfTask(child.getName(), taskSchedule));
+
+          createCommunication(child, e, v, srcTasks, tarTasks, srcGlobalToIndex, tarGlobaToIndex);
           outEdges.put(e.getName(), child.getName());
         }
       }
@@ -190,12 +195,18 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         for (Edge e : parentEdges) {
           Vertex parent = taskGraph.getParentOfTask(v, e.getName());
           // lets figure out the parents task id
-          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(parent.getName(),
-              getTaskIdOfTask(parent.getName(), taskSchedule), taskGraph);
-          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
-              ip.getTaskId(), taskGraph);
+          Set<Integer> srcTasks = taskIdGenerator.getTaskIds(parent,
+              getTaskIdOfTask(parent.getName(), taskSchedule));
+          Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v,
+              ip.getTaskId());
 
-          createCommunication(v, e, parent, srcTasks, tarTasks);
+          Map<Integer, Integer> srcGlobalToIndex =
+              taskIdGenerator.getGlobalTaskToIndex(parent,
+                  getTaskIdOfTask(parent.getName(), taskSchedule));
+          Map<Integer, Integer> tarGlobalToIndex =
+              taskIdGenerator.getGlobalTaskToIndex(v, ip.getTaskId());
+
+          createCommunication(v, e, parent, srcTasks, tarTasks, srcGlobalToIndex, tarGlobalToIndex);
           // if we are a grouped edge, we have to use the group name
           String inEdge;
           if (e.getTargetEdge() == null) {
@@ -232,7 +243,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       c.build();
       if (c.getEdge().size() == 1) {
         op = opFactory.build(c.getEdge(0), c.getSourceTasks(), c.getTargetTasks(),
-            operationMode);
+            operationMode, c.srcGlobalToIndex, c.tarGlobalToIndex);
       } else if (c.getEdge().size() > 1) { // just join op for now. Could change in the future
         // here the sources should be separated out for left and right edge
         Set<Integer> sourceTasks = c.getSourceTasks();
@@ -255,7 +266,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         Edge rightEdge = c.getEdge(1);
 
         op = opFactory.build(leftEdge, rightEdge, leftSources, rightSources, c.getTargetTasks(),
-            operationMode);
+            operationMode, c.srcGlobalToIndex, c.tarGlobalToIndex);
       } else {
         throw new RuntimeException("Cannot have communication with 0 edges");
       }
@@ -355,11 +366,13 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   private void createCommunication(Vertex node, Edge e, Vertex parent,
-                                   Set<Integer> srcTasks, Set<Integer> tarTasks) {
+                                   Set<Integer> srcTasks, Set<Integer> tarTasks,
+                                   Map<Integer, Integer> srcGlobalToIndex,
+                                   Map<Integer, Integer> tarGlobalToIndex) {
     if (e.getTargetEdge() == null) {
       if (!parOpTable.contains(parent.getName(), e.getName())) {
         Communication comm = new Communication(node.getName(),
-            srcTasks, tarTasks, e.getNumberOfEdges());
+            srcTasks, tarTasks, e.getNumberOfEdges(), srcGlobalToIndex, tarGlobalToIndex);
         comm.addEdge(e.getEdgeIndex(), e);
         comm.addSourceTask(e.getEdgeIndex(), parent.getName());
         parOpTable.put(parent.getName(), e.getName(), comm);
@@ -374,7 +387,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       } else {
         if (!targetParOpTable.containsKey(e.getTargetEdge())) {
           Communication comm = new Communication(node.getName(),
-              srcTasks, tarTasks, e.getNumberOfEdges());
+              srcTasks, tarTasks, e.getNumberOfEdges(), srcGlobalToIndex, tarGlobalToIndex);
           comm.addEdge(e.getEdgeIndex(), e);
           comm.addSourceTask(e.getEdgeIndex(), parent.getName());
           parOpTable.put(parent.getName(), e.getTargetEdge(), comm);
@@ -485,13 +498,19 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     private int numberOfEdges;
     private Map<Integer, Edge> edgeMap = new HashMap<>();
     private Map<Integer, String> sourceTaskMap = new HashMap<>();
+    private Map<Integer, Integer> srcGlobalToIndex;
+    private Map<Integer, Integer> tarGlobalToIndex;
 
     Communication(String tarTast, Set<Integer> srcTasks,
-                  Set<Integer> tarTasks, int numberOfEdges) {
+                  Set<Integer> tarTasks, int numberOfEdges,
+                  Map<Integer, Integer> srcGlobalToIndex,
+                  Map<Integer, Integer> tarGlobalToIndex) {
       this.targetTasks = tarTasks;
       this.sourceTasks = srcTasks;
       this.targetTask = tarTast;
       this.numberOfEdges = numberOfEdges;
+      this.srcGlobalToIndex = srcGlobalToIndex;
+      this.tarGlobalToIndex = tarGlobalToIndex;
     }
 
     void build() {

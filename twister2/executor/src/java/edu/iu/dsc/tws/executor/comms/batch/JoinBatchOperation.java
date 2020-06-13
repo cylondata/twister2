@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comms.batch;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
@@ -48,14 +49,17 @@ public class JoinBatchOperation extends AbstractParallelOperation {
    */
   public JoinBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                             Set<Integer> sources1, Set<Integer> sources2, Set<Integer> dests,
-                            Edge leftEdge, Edge rightEdge) {
+                            Edge leftEdge, Edge rightEdge,
+                            Map<Integer, Integer> srcGlobalToIndex,
+                            Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, leftEdge.getTargetEdge());
     this.leftEdge = leftEdge;
     this.rightEdge = rightEdge;
 
     DestinationSelector destSelector;
     if (leftEdge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(leftEdge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(leftEdge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }
