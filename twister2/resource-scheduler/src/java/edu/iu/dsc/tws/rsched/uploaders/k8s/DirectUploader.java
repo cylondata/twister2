@@ -22,6 +22,7 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -36,7 +37,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
 
-public class DirectUploader extends Thread {
+public class DirectUploader extends Thread implements IUploader {
   private static final Logger LOG = Logger.getLogger(DirectUploader.class.getName());
 
   private CoreV1Api coreApi;
@@ -54,13 +55,17 @@ public class DirectUploader extends Thread {
   private boolean stopUploader = false;
   private JobEndWatcher jobEndWatcher;
 
-  public DirectUploader(Config cnfg, String jobID) {
-
-    this.config = cnfg;
-    this.namespace = KubernetesContext.namespace(config);
-    this.jobID = jobID;
+  public DirectUploader() {
   }
 
+  @Override
+  public void initialize(Config cnfg, String jbID) {
+    this.config = cnfg;
+    this.namespace = KubernetesContext.namespace(config);
+    this.jobID = jbID;
+  }
+
+  @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
     this.tempJobDir = sourceLocation;
     localJobPackageFile = sourceLocation + File.separator
@@ -156,6 +161,7 @@ public class DirectUploader extends Thread {
    * DirectUploader should run until the job completes
    * it should upload the job package in case of failures and job scaling up new workers
    */
+  @Override
   public boolean complete() {
     return true;
   }
@@ -198,6 +204,7 @@ public class DirectUploader extends Thread {
     }
   }
 
+  @Override
   public boolean undo() {
     stopUploader();
 
@@ -207,6 +214,7 @@ public class DirectUploader extends Thread {
     return true;
   }
 
+  @Override
   public void close() {
   }
 

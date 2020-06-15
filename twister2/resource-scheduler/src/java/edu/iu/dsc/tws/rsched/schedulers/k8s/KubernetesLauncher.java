@@ -642,9 +642,11 @@ public class KubernetesLauncher implements ILauncher {
     LOG.info("Waiting JobMaster to delete job resources........");
 
     // check whether they are all killed
-    long maxWaitTime = 15000; // wait 15 seconds for resources to be deleted by Job Master
-    long start = System.currentTimeMillis();
-    long duration = 0;
+    final long maxWaitTime = 15000; // wait 15 seconds for resources to be deleted by Job Master
+    final long start = System.currentTimeMillis();
+    final long logInterval = 3000; // log every 5 seconds
+    int logCount = 1;
+    long duration;
 
     do {
       try {
@@ -652,6 +654,12 @@ public class KubernetesLauncher implements ILauncher {
       } catch (InterruptedException e) {
       }
       duration = System.currentTimeMillis() - start;
+
+      if (duration > logInterval * logCount) {
+        logCount++;
+        LOG.info("Still waiting for the job master to delete job resources.....");
+      }
+
     } while (!jobResources.allDeleted() && duration < maxWaitTime);
 
     // if not all resources are deleted in the time limit

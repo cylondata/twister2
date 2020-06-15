@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -28,7 +29,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public class UploaderToWebServers extends Thread {
+public class UploaderToWebServers extends Thread implements IUploader {
   private static final Logger LOG = Logger.getLogger(UploaderToWebServers.class.getName());
 
   private Config config;
@@ -39,13 +40,18 @@ public class UploaderToWebServers extends Thread {
   private ArrayList<UploaderToPod> uploadersToWebServers = new ArrayList<>();
   private List<String> webServerPodNames;
 
-  public UploaderToWebServers(Config config, String jobID, List<String> webServerPodNames) {
-    this.config = config;
-    this.jobID = jobID;
-    this.namespace = KubernetesContext.namespace(config);
+  public UploaderToWebServers(List<String> webServerPodNames) {
     this.webServerPodNames = webServerPodNames;
   }
 
+  @Override
+  public void initialize(Config cnfg, String jbID) {
+    this.config = cnfg;
+    this.jobID = jbID;
+    this.namespace = KubernetesContext.namespace(config);
+  }
+
+  @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
 
     localJobPackageFile = sourceLocation + File.separator
@@ -96,6 +102,7 @@ public class UploaderToWebServers extends Thread {
 
   }
 
+  @Override
   public boolean complete() {
     // wait all transfer threads to finish up
     boolean allTransferred = true;
@@ -124,6 +131,7 @@ public class UploaderToWebServers extends Thread {
     return allTransferred;
   }
 
+  @Override
   public boolean undo() {
     String jobPackageFile = KubernetesUtils.jobPackageFullPath(config, jobID);
     KubernetesController controller =
@@ -131,6 +139,7 @@ public class UploaderToWebServers extends Thread {
     return controller.deleteJobPackage(webServerPodNames, jobPackageFile);
   }
 
+  @Override
   public void close() {
   }
 

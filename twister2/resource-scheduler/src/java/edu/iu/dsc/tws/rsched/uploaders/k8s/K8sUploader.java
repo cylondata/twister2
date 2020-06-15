@@ -58,70 +58,45 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 public class K8sUploader implements IUploader {
   private static final Logger LOG = Logger.getLogger(K8sUploader.class.getName());
 
-  private UploaderToWebServers wsUploader;
-  private DirectUploader directUploader;
-
-  private boolean uploadToWebServers;
-  private String jobID;
+  private IUploader uploader;
 
   public K8sUploader() {
   }
 
   @Override
   public void initialize(Config cnfg, String jbID) {
-    this.jobID = jbID;
 
     KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
     List<String> webServerPodNames = controller.getUploaderWebServerPods(
         KubernetesContext.uploaderWebServerLabel(cnfg));
 
     if (webServerPodNames.size() == 0) {
-      uploadToWebServers = false;
       // set upload method in RequestObjectBuilder
       RequestObjectBuilder.setUploadMethod("client-to-pods");
-      directUploader = new DirectUploader(cnfg, jobID);
+      uploader = new DirectUploader();
     } else {
-      uploadToWebServers = true;
-      wsUploader = new UploaderToWebServers(cnfg, jobID, webServerPodNames);
+      uploader = new UploaderToWebServers(webServerPodNames);
     }
+    uploader.initialize(cnfg, jbID);
   }
 
   @Override
   public URI uploadPackage(String sourceLocation) throws UploaderException {
-
-    if (uploadToWebServers) {
-      return wsUploader.uploadPackage(sourceLocation);
-    } else {
-      return directUploader.uploadPackage(sourceLocation);
-    }
+    return uploader.uploadPackage(sourceLocation);
   }
 
   @Override
   public boolean complete() {
-
-    if (uploadToWebServers) {
-      return wsUploader.complete();
-    } else {
-      return directUploader.complete();
-    }
+    return uploader.complete();
   }
 
   @Override
   public boolean undo() {
-
-    if (uploadToWebServers) {
-      return wsUploader.undo();
-    } else {
-      return directUploader.undo();
-    }
+    return uploader.undo();
   }
 
   @Override
   public void close() {
-    if (uploadToWebServers) {
-      wsUploader.close();
-    } else {
-      directUploader.close();
-    }
+    uploader.close();
   }
 }
