@@ -33,18 +33,18 @@ import io.kubernetes.client.util.Watch;
  * it is published when the user kills the job from twister2 client command line
  */
 
-public class ConfigMapWatcher extends Thread {
-  private static final Logger LOG = Logger.getLogger(ConfigMapWatcher.class.getName());
+public class JobKillWatcher extends Thread {
+  private static final Logger LOG = Logger.getLogger(JobKillWatcher.class.getName());
 
   private String namespace;
   private String jobID;
   private KubernetesController controller;
   private JobMaster jobMaster;
 
-  public ConfigMapWatcher(String namespace,
-                          String jobID,
-                          KubernetesController controller,
-                          JobMaster jobMaster) {
+  public JobKillWatcher(String namespace,
+                        String jobID,
+                        KubernetesController controller,
+                        JobMaster jobMaster) {
     this.namespace = namespace;
     this.jobID = jobID;
     this.controller = controller;

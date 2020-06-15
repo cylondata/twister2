@@ -119,11 +119,11 @@ public final class JobMasterStarter {
     int restartCount = K8sWorkerUtils.initRestartFromCM(controller, jobID, keyName);
 
     JobMasterState initialState = JobMasterState.JM_STARTED;
-    // if zookeeper is not used, jm can not recover from failure
-    // so, we terminate the job with failure
     if (restartCount > 0) {
       initialState = JobMasterState.JM_RESTARTED;
 
+      // if zookeeper is not used, jm can not recover from failure
+      // so, we terminate the job with failure
       if (!ZKContext.isZooKeeperServerUsed(config)) {
         jobTerminator.terminateJob(jobID, JobAPI.JobState.FAILED);
         return;
@@ -143,9 +143,9 @@ public final class JobMasterStarter {
         new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler, initialState);
 
     // start configMap watcher to watch the kill parameter from twister2 client
-    ConfigMapWatcher cmWatcher =
-        new ConfigMapWatcher(KubernetesContext.namespace(config), jobID, controller, jobMaster);
-    cmWatcher.start();
+    JobKillWatcher jkWatcher =
+        new JobKillWatcher(KubernetesContext.namespace(config), jobID, controller, jobMaster);
+    jkWatcher.start();
 
     try {
       jobMaster.startJobMasterBlocking();
@@ -211,7 +211,6 @@ public final class JobMasterStarter {
 
     if (CheckpointingContext.startingFromACheckpoint(config) && jobZNodeExists) {
       // delete existing jobZnode
-      // write a flag to znodes for workers to be notified about znode initialization by jm
       JobZNodeManager.deleteJobZNode(client, rootPath, jobID);
     }
 
