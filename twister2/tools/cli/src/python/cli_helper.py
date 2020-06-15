@@ -37,7 +37,7 @@ def create_parser(subparsers, action, help_arg):
 
     args.add_titles(parser)
     args.add_cluster_role_env(parser)
-    args.add_job(parser)
+    args.add_job_id(parser)
 
     args.add_config(parser)
     args.add_verbose(parser)
