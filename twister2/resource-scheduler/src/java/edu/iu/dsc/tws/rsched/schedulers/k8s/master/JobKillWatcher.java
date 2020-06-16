@@ -41,6 +41,9 @@ public class JobKillWatcher extends Thread {
   private KubernetesController controller;
   private JobMaster jobMaster;
 
+  private Watch<V1ConfigMap> watcher = null;
+  private boolean stopWatcher = false;
+
   public JobKillWatcher(String namespace,
                         String jobID,
                         KubernetesController controller,
@@ -64,7 +67,6 @@ public class JobKillWatcher extends Thread {
 
     CoreV1Api v1Api = controller.createCoreV1Api();
 
-    Watch<V1ConfigMap> watcher;
     try {
       watcher = Watch.createWatch(
           controller.getApiClient(),
@@ -97,6 +99,13 @@ public class JobKillWatcher extends Thread {
           return;
         }
       }
+    } catch (RuntimeException e) {
+      if (stopWatcher) {
+        LOG.fine("Watcher is stopped.");
+        return;
+      } else {
+        throw e;
+      }
 
     } finally {
       try {
@@ -104,6 +113,20 @@ public class JobKillWatcher extends Thread {
       } catch (IOException e) {
         LOG.warning("IOException when closing ConfigMapWatcher");
       }
+    }
+  }
+
+  public void close() {
+
+    if (watcher == null) {
+      return;
+    }
+
+    stopWatcher = true;
+
+    try {
+      watcher.close();
+    } catch (IOException e) {
     }
   }
 }

@@ -26,6 +26,7 @@ enum JobMasterState {
     JM_RESTARTED = 1;
     JM_COMPLETED = 2;
     JM_FAILED = 3;
+    JM_KILLED = 4;
 }
 
 // a worker can be any one of these states

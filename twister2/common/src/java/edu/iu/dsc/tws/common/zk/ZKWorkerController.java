@@ -162,17 +162,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private IAllJoinedListener allJoinedListener;
 
   // Inform events related to the job master
-  private List<IJobMasterFailureListener> jmFailureListeners = new LinkedList<>();
+  private List<IJobMasterFailureListener> jmFailureListeners =
+      Collections.synchronizedList(new LinkedList<>());
 
   // Inform scaling events
   private IScalerListener scalerListener;
 
   // some events may arrive after initializing the workerController but before
   // registering the listener,
-  // we keep the last AllWorkersJoined and JobMasterRestarted events
+  // we keep the last AllWorkersJoined events
   // to deliver when there is no proper listener
   private JobMasterAPI.AllJoined allJoinedEventCache;
-  private JobMasterAPI.JobMasterRestarted jmRestartedCache;
 
   // we keep many fail events in the buffer to deliver later on
   private List<JobMasterAPI.JobEvent> failEventBuffer = new LinkedList<>();
@@ -555,20 +555,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * TODO: jm restarted implemented, but jm failed not implemented yet
    * Supports multiple IJobMasterFailureListeners
    */
-  public boolean addJMFailureListener(IJobMasterFailureListener iJobMasterFailureListener) {
-
+  public void addJMFailureListener(IJobMasterFailureListener iJobMasterFailureListener) {
     jmFailureListeners.add(iJobMasterFailureListener);
-    // if allJoinedEventToDeliver is not null, deliver that message in a new thread
-    if (jmRestartedCache != null) {
-      new Thread("Twister2-JMFailedEventSupplier") {
-        @Override
-        public void run() {
-          jmFailureListeners.forEach(l -> l.restarted(jmRestartedCache.getJmAddress()));
-          LOG.fine("JobMasterRestarted event delivered from cache.");
-        }
-      }.start();
-    }
-    return true;
   }
 
   /**
@@ -735,9 +723,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       LOG.info("JobMasterRestarted event received. JM Address: " + jmRestarted.getJmAddress());
 
       if (jmFailureListeners.size() != 0) {
-        jmFailureListeners.forEach(l -> l.restarted(jmRestarted.getJmAddress()));
-      } else {
-        jmRestartedCache = jmRestarted;
+        jmFailureListeners.forEach(l -> l.jmRestarted(jmRestarted.getJmAddress()));
       }
     }
 

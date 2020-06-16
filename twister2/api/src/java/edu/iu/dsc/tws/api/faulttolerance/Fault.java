@@ -16,6 +16,7 @@ import java.util.List;
 
 /**
  * Encapsulate a fault occurred in the system.
+ * -1 in the worker list shows the job master.
  */
 public class Fault {
   /**

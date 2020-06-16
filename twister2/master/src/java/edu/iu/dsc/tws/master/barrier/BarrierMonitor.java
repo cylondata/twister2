@@ -48,6 +48,8 @@ public class BarrierMonitor implements JobFaultListener {
   // it is reset when the default barrier is broken afterwards
   private boolean faultOccurred = false;
 
+  private boolean firstInitProceeded = false;
+
   /**
    * to pass a long variable as a reference parameter to another method
    */
@@ -104,6 +106,10 @@ public class BarrierMonitor implements JobFaultListener {
     initTimeout.number = timeout;
     expectedWorkersOnInit.number = expectedWorkers;
     initStartTime.number = System.currentTimeMillis();
+  }
+
+  public boolean isFirstInitProceeded() {
+    return firstInitProceeded;
   }
 
   @Override
@@ -307,6 +313,10 @@ public class BarrierMonitor implements JobFaultListener {
 
       // clear barrier status data
       barrierCompleted(waitList, expectedWorkers, startTime, barrierTimeout);
+
+      if (barrierType == BarrierType.INIT) {
+        firstInitProceeded = true;
+      }
     }
   }
 

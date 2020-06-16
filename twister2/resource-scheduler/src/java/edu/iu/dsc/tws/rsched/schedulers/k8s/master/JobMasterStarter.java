@@ -147,6 +147,19 @@ public final class JobMasterStarter {
         new JobKillWatcher(KubernetesContext.namespace(config), jobID, controller, jobMaster);
     jkWatcher.start();
 
+    // on any uncaught exception, we will label the job master as FAILED and
+    // throw a RuntimeException
+    // JVM will be restarted by K8s
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      LOG.log(Level.SEVERE, "Uncaught exception in the thread "
+          + thread + ". Job Master FAILED...", throwable);
+
+      jobMaster.jmFailed();
+      jkWatcher.close();
+      controller.close();
+      throw new RuntimeException("Worker failed with the exception", throwable);
+    });
+
     try {
       jobMaster.startJobMasterBlocking();
     } catch (Twister2Exception e) {

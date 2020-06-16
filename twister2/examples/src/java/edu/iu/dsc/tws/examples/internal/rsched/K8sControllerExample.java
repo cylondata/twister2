@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.master.ConfigMapWatcher;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobKillWatcher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 import io.kubernetes.client.openapi.models.V1ConfigMap;
@@ -133,7 +133,7 @@ public final class K8sControllerExample {
   }
 
   public static void createCMWatcher(KubernetesController controller, String jobID) {
-    ConfigMapWatcher cmWatcher = new ConfigMapWatcher("default", jobID, controller, null);
+    JobKillWatcher cmWatcher = new JobKillWatcher("default", jobID, controller, null);
     cmWatcher.start();
   }
 

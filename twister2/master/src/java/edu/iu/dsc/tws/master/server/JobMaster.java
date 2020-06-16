@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -115,6 +116,11 @@ public class JobMaster {
    * when it is set to true, the job master finishes the execution
    */
   private boolean jobEnded = false;
+
+  /**
+   * a flag to show that whether the job master failed
+   */
+  private boolean jobMasterFailed = false;
 
   /**
    * final state of the job
@@ -386,27 +392,47 @@ public class JobMaster {
     LOG.info("JobMaster [" + jmAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
-    while (!jobEnded) {
+    while (!jobEnded && !jobMasterFailed) {
       looper.loopBlocking(300);
 
       // check for barrier failures periodically
       barrierMonitor.checkBarrierFailure();
     }
 
+    if (jobMasterFailed) {
+      return;
+    }
+
+    close();
+  }
+
+  /**
+   * called when the job has ended, or the job master failed
+   */
+  private void close() {
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
 
     // if the job has completed successfully, killed or failed,
     // we need to cleanup
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      JobZNodeManager.createJobEndTimeZNode(
-          ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
+
+      if (jobEnded) {
+        JobZNodeManager.createJobEndTimeZNode(
+            ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
+        ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+            job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_COMPLETED);
+      } else if (jobMasterFailed) {
+        ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+            job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_FAILED);
+      }
+
       zkMasterController.close();
       zkBarrierHandler.close();
       ZKUtils.closeClient();
     }
 
-    if (jobTerminator != null) {
+    if (jobEnded && jobTerminator != null) {
       jobTerminator.terminateJob(job.getJobId(), finalState);
     }
 
@@ -510,6 +536,18 @@ public class JobMaster {
   }
 
   /**
+   * this method is called when JobMaster fails because of some uncaught exception
+   * ıt is called by the JobMasterStarter program
+   *
+   * It closes all threads started by JM
+   * It marks its state at ZK persistent storage as FAILED
+   */
+  public void jmFailed() {
+    jobMasterFailed = true;
+    close();
+  }
+
+  /**
    * this method finishes the job
    * It is executed when the worker completed message received from all workers
    */
@@ -545,7 +583,7 @@ public class JobMaster {
       public void run() {
 
         // if the job is ended, do nothing
-        if (jobEnded) {
+        if (jobEnded || jobMasterFailed) {
           return;
         }
 
@@ -556,6 +594,8 @@ public class JobMaster {
           zkJobUpdater.updateState(finalState);
           JobZNodeManager.createJobEndTimeZNode(
               ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
+          ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+              job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_KILLED);
           zkMasterController.close();
           zkBarrierHandler.close();
           ZKUtils.closeClient();
