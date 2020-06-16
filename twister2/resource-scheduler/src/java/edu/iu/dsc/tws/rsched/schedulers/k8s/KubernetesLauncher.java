@@ -634,8 +634,8 @@ public class KubernetesLauncher implements ILauncher {
     // list undeleted resources and return false
 
     // get job resources from Kubernetes master
-    JobResources jobResources = new JobResources(config, jobID, controller);
-    jobResources.getInitialState();
+    ClientJobKillHandler killHandler = new ClientJobKillHandler(jobID, controller);
+    killHandler.getInitialState();
 
     // signall kill to JobMaster
     controller.addConfigMapParam(jobID, "KILL_JOB", "true");
@@ -660,14 +660,14 @@ public class KubernetesLauncher implements ILauncher {
         LOG.info("Still waiting for the job master to delete job resources.....");
       }
 
-    } while (!jobResources.allDeleted() && duration < maxWaitTime);
+    } while (!killHandler.allDeleted() && duration < maxWaitTime);
 
     // if not all resources are deleted in the time limit
     if (duration > maxWaitTime) {
       LOG.warning("Following job resources are not deleted by Job Master in "
           + (maxWaitTime / 1000) + " seconds. We will delete them now: " + System.lineSeparator()
-          + jobResources.getUndeletedResources());
-      return jobResources.deleteUndeletedResources();
+          + killHandler.getUndeletedResources());
+      return killHandler.deleteUndeletedResources();
     }
 
     LOG.info("Job is killed in " + duration + "ms");

@@ -16,20 +16,17 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.api.config.Config;
-
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 
 /**
- * Kubernetes resources for a job
- * watch when they are cleared by Job Master
+ * Watch whether job resources are killed by Job Master
+ * If necessary, kill the job resources from Twister2 client
  */
 
-public class JobResources {
-  private static final Logger LOG = Logger.getLogger(JobResources.class.getName());
+public class ClientJobKillHandler {
+  private static final Logger LOG = Logger.getLogger(ClientJobKillHandler.class.getName());
 
-  private Config config;
   private String jobID;
   private KubernetesController controller;
 
@@ -38,8 +35,7 @@ public class JobResources {
   private V1ConfigMap cm;
   private V1PersistentVolumeClaim pvc;
 
-  public JobResources(Config config, String jobID, KubernetesController controller) {
-    this.config = config;
+  public ClientJobKillHandler(String jobID, KubernetesController controller) {
     this.jobID = jobID;
     this.controller = controller;
   }
