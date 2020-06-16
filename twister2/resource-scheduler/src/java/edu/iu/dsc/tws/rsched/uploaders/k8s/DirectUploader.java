@@ -28,6 +28,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.client.JobEndListener;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.client.JobEndWatcher;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -37,7 +39,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
 
-public class DirectUploader extends Thread implements IUploader {
+public class DirectUploader extends Thread implements IUploader, JobEndListener {
   private static final Logger LOG = Logger.getLogger(DirectUploader.class.getName());
 
   private CoreV1Api coreApi;
@@ -70,7 +72,8 @@ public class DirectUploader extends Thread implements IUploader {
     this.tempJobDir = sourceLocation;
     localJobPackageFile = sourceLocation + File.separator
         + SchedulerContext.jobPackageFileName(config);
-    KubernetesController controller = KubernetesController.init(namespace);
+
+    KubernetesController.init(namespace);
     apiClient = KubernetesController.getApiClient();
     coreApi = KubernetesController.createCoreV1Api();
 
@@ -78,7 +81,8 @@ public class DirectUploader extends Thread implements IUploader {
     start();
 
     // initialize job watcher
-    jobEndWatcher = JobEndWatcher.init(config, jobID, controller, this);
+    jobEndWatcher = JobEndWatcher.init(namespace, jobID);
+    jobEndWatcher.addJobEndListener(this::jobEnded);
 
     return null;
   }
@@ -195,6 +199,7 @@ public class DirectUploader extends Thread implements IUploader {
    * stop the uploader
    * clear temp job package directory
    */
+  @Override
   public void jobEnded() {
     stopUploader();
 
