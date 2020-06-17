@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -60,7 +60,7 @@ public final class ComputeEnvironment {
     this.taskExecutor = new TaskExecutor(workerEnv);
 
     // if checkpointing enabled lets register for receiving faults
-    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnv.getConfig())) {
+    if (CheckpointingContext.isCheckpointingEnabled(workerEnv.getConfig())) {
       JobProgress.registerFaultAcceptor(taskExecutor);
     }
   }
@@ -148,7 +148,7 @@ public final class ComputeEnvironment {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
     // if checkpointing enabled lets register for receiving faults
-    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
+    if (CheckpointingContext.isCheckpointingEnabled(workerEnvironment.getConfig())) {
       JobProgress.unRegisterFaultAcceptor(taskExecutor);
     }
     // close the task executor

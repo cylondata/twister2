@@ -50,7 +50,7 @@ public class MesosLauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean killJob(String jobID) {
     //Protos.Status status = driver.stop();
     boolean status;
     if (driver == null) {

@@ -25,11 +25,13 @@ import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -110,10 +112,21 @@ public class JobMaster {
   private WorkerMonitor workerMonitor;
 
   /**
-   * a flag to show that whether the job is done
-   * when it is converted to true, the job master exits
+   * a flag to show that whether the job is ended
+   * when it is set to true, the job master finishes the execution
    */
-  private boolean jobCompleted = false;
+  private boolean jobEnded = false;
+
+  /**
+   * a flag to show that whether the job master failed
+   */
+  private boolean jobMasterFailed = false;
+
+  /**
+   * final state of the job
+   * it is set when the job has been ended
+   */
+  private JobAPI.JobState finalState;
 
   /**
    * Job Terminator object.
@@ -176,7 +189,7 @@ public class JobMaster {
    * a variable that shows whether JobMaster will run jobTerminate
    * when it is killed with a shutdown hook
    */
-  private boolean clearResourcesWhenKilled;
+  private boolean clearK8sResourcesWhenKilled;
 
   private CheckpointManager checkpointManager;
 
@@ -309,7 +322,7 @@ public class JobMaster {
     }
 
     //initialize checkpoint manager
-    if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
+    if (CheckpointingContext.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
       stateStore.init(config, job.getJobId());
       this.checkpointManager = new CheckpointManager(
@@ -379,24 +392,48 @@ public class JobMaster {
     LOG.info("JobMaster [" + jmAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
-    while (!jobCompleted) {
+    while (!jobEnded && !jobMasterFailed) {
       looper.loopBlocking(300);
 
       // check for barrier failures periodically
       barrierMonitor.checkBarrierFailure();
     }
 
+    if (jobMasterFailed) {
+      return;
+    }
+
+    close();
+  }
+
+  /**
+   * called when the job has ended, or the job master failed
+   */
+  private void close() {
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
 
+    // if the job has completed successfully, killed or failed,
+    // we need to cleanup
     if (ZKContext.isZooKeeperServerUsed(config)) {
+
+      if (jobEnded) {
+        JobZNodeManager.createJobEndTimeZNode(
+            ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
+        ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+            job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_COMPLETED);
+      } else if (jobMasterFailed) {
+        ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+            job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_FAILED);
+      }
+
       zkMasterController.close();
       zkBarrierHandler.close();
       ZKUtils.closeClient();
     }
 
-    if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobId());
+    if (jobEnded && jobTerminator != null) {
+      jobTerminator.terminateJob(job.getJobId(), finalState);
     }
 
     if (dashClient != null) {
@@ -499,61 +536,83 @@ public class JobMaster {
   }
 
   /**
+   * this method is called when JobMaster fails because of some uncaught exception
+   * ıt is called by the JobMasterStarter program
+   *
+   * It closes all threads started by JM
+   * It marks its state at ZK persistent storage as FAILED
+   */
+  public void jmFailed() {
+    jobMasterFailed = true;
+    close();
+  }
+
+  /**
    * this method finishes the job
    * It is executed when the worker completed message received from all workers
    */
-  public void completeJob() {
-    jobCompleted = true;
+  public void endJob(JobAPI.JobState finalState1) {
+    jobEnded = true;
+    this.finalState = finalState1;
     looper.wakeup();
   }
 
   /**
    * A job can be terminated in two ways:
-   * a) successful completion: all workers complete their work and send a COMPLETED message
-   * to the Job Master. Job master clears all job resources from the cluster and
-   * informs Dashboard. This is handled in the method: completeJob()
-   * b) forced killing: user chooses to terminate the job explicitly by executing job kill command
-   * not all workers successfully complete in this case.
-   * JobMaster does not get COMPLETED message from all workers.
-   * So completeJob() method is not called.
-   * Instead, the JobMaster pod or the JobMaster process in the submitting client is deleted.
-   * ShutDown Hook gets executed.
+   * a) workers end a job: workers either successfully complete or fail
+   *   all workers complete their work and send COMPLETED messages to the Job Master.
+   *   some workers send FULLY_FAILED message to JM
+   * Job master clears all job resources from the cluster and informs Dashboard.
+   * This is handled in the method: endJob()
+   * b) client kills the job: users kill the job explicitly by either
+   * executing job kill command or killing the client process if JM is running on the  client.
+   * JobMaster endJob() method is not called.
+   * JM ShutDown Hook gets executed.
    * <p>
-   * In this case, it can either clear job resources or just send a message to Dashboard
+   * In this case, it can either clear job resources on k8s or does not
    * based on the parameter that is provided when the shut down hook is registered.
-   * If the job master runs in the client, it should clear resources.
+   * If the job master runs in the client, it should clear k8s resources,
+   * because the job is ended by killing JM process.
    * when the job master runs in the cluster, it should not clear resources.
-   * The resources should be cleared by the job killing process.
+   * The resources should be cleared by the twister2 client.
    */
-  public void addShutdownHook(boolean clearJobResourcesOnKill) {
-    clearResourcesWhenKilled = clearJobResourcesOnKill;
+  public void addShutdownHook(boolean clearK8sJobResourcesOnKill) {
+    clearK8sResourcesWhenKilled = clearK8sJobResourcesOnKill;
 
     Thread hookThread = new Thread() {
       public void run() {
 
-        // if Job completed successfully, do nothing
-        if (jobCompleted) {
+        // if the job is ended, do nothing
+        if (jobEnded || jobMasterFailed) {
           return;
         }
 
-        // if Dashboard is used, tell it that the job is killed
-        if (dashClient != null) {
-          dashClient.jobStateChange(JobAPI.JobState.KILLED);
-        }
+        // if the job is not ended, it must have been killed
+        finalState = JobAPI.JobState.KILLED;
 
         if (ZKContext.isZooKeeperServerUsed(config)) {
-          zkJobUpdater.updateState(JobAPI.JobState.KILLED);
+          zkJobUpdater.updateState(finalState);
+          JobZNodeManager.createJobEndTimeZNode(
+              ZKUtils.getClient(), ZKContext.rootNode(config), job.getJobId());
+          ZKPersStateManager.updateJobMasterStatus(ZKUtils.getClient(), ZKContext.rootNode(config),
+              job.getJobId(), jmAddress, JobMasterAPI.JobMasterState.JM_KILLED);
           zkMasterController.close();
           zkBarrierHandler.close();
           ZKUtils.closeClient();
         }
 
-        if (clearResourcesWhenKilled) {
-          jobCompleted = true;
-          looper.wakeup();
+        // if Dashboard is used, tell it that the job is killed
+        if (dashClient != null) {
+          dashClient.jobStateChange(finalState);
+        }
 
+        // let the main jm thread know that the job has been ended by killing
+        jobEnded = true;
+        looper.wakeup();
+
+        if (clearK8sResourcesWhenKilled) {
           if (jobTerminator != null) {
-            jobTerminator.terminateJob(job.getJobId());
+            jobTerminator.terminateJob(job.getJobId(), finalState);
           }
         }
 

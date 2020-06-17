@@ -86,7 +86,7 @@ public final class MesosMPIMasterStarter {
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
     int numberOfWorkers = 0;
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + mpiMaster.jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + mpiMaster.jobName + ".job");
     try {
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
 

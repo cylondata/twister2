@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
-import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistIterIterSink;
 
 /**
  * Wrapper class for {@link BatchIteratorLink} that implements
@@ -56,7 +56,7 @@ public abstract class BatchIteratorLinkWrapper<T> extends BatchIteratorLink<T> {
   @Override
   public PersistedTSet<T> lazyPersist() {
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        new DiskPersistIterSink<>(this.getId()), getTargetParallelism(), getSchema());
+        new DiskPersistIterIterSink<>(this.getId()), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
 
     return persistedTSet;

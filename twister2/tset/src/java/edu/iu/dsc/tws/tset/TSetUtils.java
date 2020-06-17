@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public final class TSetUtils {
   private TSetUtils() {
@@ -70,5 +71,9 @@ public final class TSetUtils {
     } else {
       return MessageTypes.OBJECT;
     }
+  }
+
+  public static String getDiskCollectionReference(String prefix, TSetContext ctx) {
+    return prefix + "_" + ctx.getIndex();
   }
 }

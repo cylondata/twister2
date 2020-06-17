@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
-import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -333,8 +332,8 @@ public class TWSTCPChannel implements TWSChannel {
         if (r == null || r.request == null) {
           continue;
         }
-        TCPStatus status = r.request.testStatus();
-        if (status == TCPStatus.COMPLETE) {
+
+        if (r.request.isComplete()) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
 
@@ -377,10 +376,12 @@ public class TWSTCPChannel implements TWSChannel {
           = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
         Request r = (Request) requestIterator.next();
-        TCPStatus status = r.request.testStatus();
         // this request has finished
-        if (status == TCPStatus.COMPLETE) {
+        if (r.request.isComplete()) {
           requestIterator.remove();
+        } else if (r.request.isError()) {
+          throw new Twister2RuntimeException("Error when sending a message to worker: "
+              + sendRequests.rank);
         }
       }
 

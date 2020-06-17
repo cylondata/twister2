@@ -22,6 +22,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class ZKEventsManager {
@@ -37,8 +38,7 @@ public final class ZKEventsManager {
    * Assumes that there is no znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
-  public static void createEventsZNode(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
+  public static void createEventsZNode(CuratorFramework client, String rootPath, String jobID) {
 
     String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
@@ -52,14 +52,14 @@ public final class ZKEventsManager {
       LOG.info("Job EventsZnode created: " + eventsDir);
 
     } catch (Exception e) {
-      throw new Twister2Exception("EventsZnode can not be created for the path: "
+      throw new Twister2RuntimeException("EventsZnode can not be created for the path: "
           + eventsDir, e);
     }
   }
 
   public static void initEventCounter(CuratorFramework client,
                                       String rootPath,
-                                      String jobID) throws Twister2Exception {
+                                      String jobID) {
 
     String eventsDir = ZKUtils.eventsDir(rootPath, jobID);
 
@@ -67,7 +67,7 @@ public final class ZKEventsManager {
       eventCounter = client.getChildren().forPath(eventsDir).size();
       LOG.info("eventCounter is set to: " + eventCounter);
     } catch (Exception e) {
-      throw new Twister2Exception("Could not get children of events directory: "
+      throw new Twister2RuntimeException("Could not get children of events directory: "
           + eventsDir, e);
     }
   }

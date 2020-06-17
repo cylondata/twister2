@@ -13,36 +13,37 @@ package edu.iu.dsc.tws.tset.sinks;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.tset.TSetUtils;
 
 /**
- * A disk based persisted TSet
+ * Base class for disk based persisted TSet
  *
  * @param <T> TSet data type
  */
-public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
-  private DiskBackedCollectionPartition<T> partition;
+public abstract class BaseDiskPersistIterSink<T, T1> extends StoreIterSink<T, T1> {
+  private DiskBackedCollectionPartition<T1> partition;
 
-  private String referencePrefix;
+  private final String referencePrefix;
 
   /**
-   * Creates an instance of {@link DiskPersistIterSink} with a referencePrefix
+   * Creates an instance of {@link DiskPersistIterIterSink} with a referencePrefix
    *
    * @param referencePrefix referencePrefix will be used to uniquely identify the set of
    *                        disk partitions created with this function
    */
-  public DiskPersistIterSink(String referencePrefix) {
+  public BaseDiskPersistIterSink(String referencePrefix) {
     this.referencePrefix = referencePrefix;
   }
 
+  // TFunction methods
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-
-    String reference = referencePrefix + "_" + ctx.getIndex();
-//    String reference = ctx.getId() + ctx.getIndex();
+    String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
     // buffered partition with 0 frames in memory. Then everything will be written to the memory
-    this.partition = new DiskBackedCollectionPartition<>(0,
-        ctx.getConfig(), reference);
+    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
+        reference);
+
   }
 
   @Override
@@ -52,13 +53,9 @@ public class DiskPersistIterSink<T> extends StoreIterSink<T, T> {
     this.partition.close();
   }
 
+  // StoreIterSink methods
   @Override
-  protected DiskBackedCollectionPartition<T> getPartition() {
-    return this.partition;
-  }
-
-  @Override
-  protected ValueExtractor<T, T> getValueExtractor() {
-    return input -> input;
+  public DiskBackedCollectionPartition<T1> get() {
+    return partition;
   }
 }

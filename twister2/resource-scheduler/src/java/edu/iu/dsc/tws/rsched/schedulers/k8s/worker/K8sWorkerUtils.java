@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -313,23 +314,17 @@ public final class K8sWorkerUtils {
   public static int getAndInitRestartCount(Config cnfg,
                                            String jbID,
                                            JobMasterAPI.WorkerInfo wInfo) {
-    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
-      return initRestartFromZK(cnfg, jbID, wInfo);
-    } else {
-      // initialize the controller to talk to Kubernetes master
-      KubernetesController controller = new KubernetesController();
-      controller.init(KubernetesContext.namespace(cnfg));
+    // initialize the controller to talk to Kubernetes master
+    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
+    String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
 
-      String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
+    int restartCount = initRestartFromCM(controller, jbID, keyName);
+    LOG.info("Worker restartCount: " + restartCount);
 
-      int restartCount = initRestartFromCM(controller, jbID, keyName);
-      LOG.info("Worker restartCount: " + restartCount);
+    // close the controller
+    controller.close();
 
-      // close the controller
-      controller.close();
-
-      return restartCount;
-    }
+    return restartCount;
   }
 
   /**
@@ -339,7 +334,8 @@ public final class K8sWorkerUtils {
    */
   public static int initRestartFromZK(Config cnfg,
                                       String jbID,
-                                      JobMasterAPI.WorkerInfo wInfo) {
+                                      JobMasterAPI.WorkerInfo wInfo,
+                                      long jstTime) {
 
     String zkServerAddresses = ZKContext.serverAddresses(cnfg);
     int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
@@ -352,7 +348,7 @@ public final class K8sWorkerUtils {
         return restartCount;
       }
 
-      if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
+      if (JobZNodeManager.checkJstZNodeWaitIfNeeded(client, rootPath, jbID, jstTime)) {
         ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
       }
 
@@ -370,7 +366,7 @@ public final class K8sWorkerUtils {
    * if the worker/jm is starting for the first time,
    * we need to add the config restart count key to the config map
    * otherwise, we need to increase the restart count at the configmap
-   *
+   * <p>
    * restartCount is returned as zero if the worker/jm is starting for the first time,
    * if it is more than zero, the worker is restarting
    */
@@ -386,7 +382,7 @@ public final class K8sWorkerUtils {
     // if restartCount is 0 after the increase, worker/jm is starting for the first time
     // add the key to configmap and set its value as zero
     if (restartCount == 0) {
-      boolean added = controller.addRestartCount(jbID, keyName, 0);
+      boolean added = controller.addConfigMapParam(jbID, keyName, 0 + "");
       if (!added) {
         throw new Twister2RuntimeException("Could not add the restartCount to ConfigMap");
       }
@@ -394,7 +390,7 @@ public final class K8sWorkerUtils {
       // if restartCount is more than 0 after the increase, the worker has started before,
       // it is coming from failure, set new count
     } else if (restartCount > 0) {
-      boolean updated = controller.updateRestartCount(jbID, keyName, restartCount);
+      boolean updated = controller.updateConfigMapParam(jbID, keyName, restartCount + "");
       if (!updated) {
         throw new Twister2RuntimeException("Could not update the restartCount in ConfigMap");
       }

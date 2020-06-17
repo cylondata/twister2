@@ -124,7 +124,8 @@ public class MesosWorkerController implements IWorkerController {
     try {
       //TODO: real restartCount needs to be given
       int restartCount = 0;
-      zkWorkerController.initialize(restartCount);
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

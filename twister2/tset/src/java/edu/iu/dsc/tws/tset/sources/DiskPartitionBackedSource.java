@@ -16,11 +16,12 @@ import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.tset.TSetUtils;
 
 public class DiskPartitionBackedSource<T> extends BaseSourceFunc<T> {
 
   private DataPartitionConsumer<T> consumer;
-  private String referencePrefix;
+  private final String referencePrefix;
 
   private DiskBackedCollectionPartition<T> diskPartition;
 
@@ -41,8 +42,7 @@ public class DiskPartitionBackedSource<T> extends BaseSourceFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    String reference = this.referencePrefix + ctx.getIndex();
-//    String reference = ctx.getId() + ctx.getIndex();
+    String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
     this.diskPartition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
         reference);
     this.consumer = diskPartition.getConsumer();

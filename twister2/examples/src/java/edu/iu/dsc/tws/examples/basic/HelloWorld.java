@@ -74,7 +74,7 @@ public class HelloWorld implements IWorker {
 
     LOG.info("Proceeded through the barrier ........................ ");
 
-    waitAndComplete();
+    waitSeconds(10);
   }
 
   private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
@@ -84,12 +84,11 @@ public class HelloWorld implements IWorker {
         .collect(Collectors.toList());
   }
 
-  private void waitAndComplete() {
+  private void waitSeconds(long seconds) {
 
-    long duration = 60;
     try {
-      LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
-      Thread.sleep(duration * 1000);
+      LOG.info("Sleeping " + seconds + " seconds. Will complete after that.");
+      Thread.sleep(seconds * 1000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

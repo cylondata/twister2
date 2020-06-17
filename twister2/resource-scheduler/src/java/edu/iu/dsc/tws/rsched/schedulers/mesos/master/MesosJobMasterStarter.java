@@ -77,8 +77,7 @@ public final class MesosJobMasterStarter {
 
     edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController controller;
     controller = new edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController(config);
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-        + jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
 //    try {
 //      workerController = new MesosWorkerController(config, job,
 //          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);

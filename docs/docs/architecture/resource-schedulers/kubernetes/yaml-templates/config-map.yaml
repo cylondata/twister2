@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: <job-id>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2
+    t2-job: <job-id>

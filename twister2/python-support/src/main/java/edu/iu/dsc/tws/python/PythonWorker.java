@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -228,7 +228,7 @@ public class PythonWorker implements BatchTSetIWorker {
     Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
         .setJobName(bootstrapPoint.getJobName())
         .setWorkerClass(
-            CheckpointingConfigurations.isCheckpointingEnabled(config)
+            CheckpointingContext.isCheckpointingEnabled(config)
                 ? CheckpointablePythonWorker.class : PythonWorker.class
         )
         .setConfig(jobConfig);

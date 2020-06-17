@@ -15,11 +15,12 @@ package edu.iu.dsc.tws.tset.sinks;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.tset.TSetUtils;
 
 public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   private DiskBackedCollectionPartition<T> partition;
 
-  private String referencePrefix;
+  private final String referencePrefix;
 
   /**
    * Creates an instance of {@link DiskPersistSingleSink} with a referencePrefix
@@ -34,9 +35,9 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    String reference = referencePrefix + "_" + ctx.getIndex();
-    partition = new DiskBackedCollectionPartition<>(0,
-        ctx.getConfig(), reference);
+    String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
+    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
+        reference);
   }
 
   @Override

@@ -11,16 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
+import io.kubernetes.client.openapi.models.V1ContainerStatus;
+import io.kubernetes.client.openapi.models.V1Pod;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
@@ -70,30 +71,21 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create service name from job name
+   * create service name for workers
    * @param jobID
    * @return
    */
   public static String createServiceName(String jobID) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID;
+    return jobID;
   }
 
   /**
-   * create service name from job name
+   * create service name for the job master
    * @param jobID
    * @return
    */
   public static String createJobMasterServiceName(String jobID) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobID + "-jm";
-  }
-
-  /**
-   * create persistent volume claim name name from the job name
-   * @param jobID
-   * @return
-   */
-  public static String createPersistentVolumeClaimName(String jobID) {
-    return KubernetesConstants.TWISTER2_STORAGE_CLAIM_PREFIX + jobID;
+    return jobID + "-jm";
   }
 
   /**
@@ -106,65 +98,32 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create service label from job name
-   * this label is used when constructing statefulset
+   * all twister2 resources have these two labels
+   * One is to distinguish twister2 resources from others
+   * the other is to distinguish job resources from others
    * @param jobID
-   * @return
    */
-  public static String createServiceLabel(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID;
+  public static HashMap<String, String> createJobLabels(String jobID) {
+    HashMap<String, String> labels = new HashMap<>();
+    labels.put("app", "twister2");
+    labels.put("t2-job", jobID);
+    return labels;
   }
 
-  /**
-   * create service label from job name
-   * this label is used when constructing statefulset
-   * @param jobID
-   * @return
-   */
-  public static String createJobMasterServiceLabel(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobID + "-jm";
+  public static String twister2LabelSelector() {
+    return "app=twister2";
   }
 
-  public static String createJobMasterRoleLabel(String jobID) {
-    return jobID + "-jm";
+  public static String jobLabelSelector(String jobID) {
+    return "t2-job=" + jobID;
   }
 
-  public static String createWorkerRoleLabel(String jobID) {
-    return jobID + "-worker";
+  public static String jobMasterPodLabelSelector(String jobID) {
+    return "t2-mp=" + jobID;
   }
 
-  public static String createJobPodsLabel(String jobID) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_LABEL_PREFIX + jobID;
-  }
-
-  /**
-   * this label is used when submitting queries to kubernetes master
-   * @param jobID
-   * @return
-   */
-  public static String createServiceLabelWithKey(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createServiceLabel(jobID);
-  }
-
-  /**
-   * this label is used when submitting queries to kubernetes master
-   * @param jobID
-   * @return
-   */
-  public static String createJobMasterServiceLabelWithKey(String jobID) {
-    return KubernetesConstants.SERVICE_LABEL_KEY + "=" + createJobMasterServiceLabel(jobID);
-  }
-
-  public static String createJobPodsLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobID);
-  }
-
-  public static String createJobMasterRoleLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createJobMasterRoleLabel(jobID);
-  }
-
-  public static String createWorkerRoleLabelWithKey(String jobID) {
-    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createWorkerRoleLabel(jobID);
+  public static String workerPodLabelSelector(String jobID) {
+    return "t2-wp=" + jobID;
   }
 
   /**
@@ -206,15 +165,6 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create ConfigMap name for the given job name
-   * add a suffix to job name
-   * @return
-   */
-  public static String createConfigMapName(String jobID) {
-    return jobID + "-cm";
-  }
-
-  /**
    * create the key for worker restart count to be used in ConfigMap
    * @return
    */
@@ -234,24 +184,6 @@ public final class KubernetesUtils {
     String uploaderDir = KubernetesContext.uploaderWebServerDirectory(config);
     String jobPackageFullPath = uploaderDir + "/" + JobUtils.createJobPackageFileName(jobID);
     return jobPackageFullPath;
-  }
-
-  public static String getLocalAddress() {
-    try {
-      return InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-      return null;
-    }
-  }
-
-  public static InetAddress convertToIPAddress(String ipStr) {
-    try {
-      return InetAddress.getByName(ipStr);
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when converting to IP adress: ", e);
-      return null;
-    }
   }
 
   /**
@@ -295,4 +227,35 @@ public final class KubernetesUtils {
 
     return podNames;
   }
+
+  /**
+   * we assume the pod became running when:
+   *    pod phase is Running
+   *    pod deletion time stamp is null (if not null. it is in the process of being deleted)
+   *    all containers are ready
+   *
+   * Pod Phases: Pending, Running, Succeeded, Failed, Unknown
+   * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+   *
+   * @param pod
+   * @return
+   */
+  public static boolean isPodRunning(V1Pod pod) {
+    if ("Running".equals(pod.getStatus().getPhase())
+        && pod.getMetadata().getDeletionTimestamp() == null
+        && KubernetesUtils.allContainersReady(pod.getStatus().getContainerStatuses())) {
+      return true;
+    }
+    return false;
+  }
+
+  public static boolean allContainersReady(List<V1ContainerStatus> contStatuses) {
+    for (V1ContainerStatus cs : contStatuses) {
+      if (!cs.getReady()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

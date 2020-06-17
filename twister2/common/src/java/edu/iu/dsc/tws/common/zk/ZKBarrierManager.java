@@ -19,6 +19,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public final class ZKBarrierManager {
   public static final Logger LOG = Logger.getLogger(ZKBarrierManager.class.getName());
@@ -29,8 +30,7 @@ public final class ZKBarrierManager {
   /**
    * create parent directory for barrier
    */
-  public static void createBarrierDir(CuratorFramework client, String barrierDirPath)
-      throws Twister2Exception {
+  public static void createBarrierDir(CuratorFramework client, String barrierDirPath) {
 
     try {
       client
@@ -42,7 +42,7 @@ public final class ZKBarrierManager {
       LOG.info("BarrierDirectory created: " + barrierDirPath);
 
     } catch (Exception e) {
-      throw new Twister2Exception("BarrierDirectory can not be created for the path: "
+      throw new Twister2RuntimeException("BarrierDirectory can not be created for the path: "
           + barrierDirPath, e);
     }
   }
@@ -50,8 +50,9 @@ public final class ZKBarrierManager {
   /**
    * create parent directory for default barrier
    */
-  public static void createDefaultBarrierDir(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
+  public static void createDefaultBarrierDir(CuratorFramework client,
+                                             String rootPath,
+                                             String jobID) {
 
     String barrierDirPath = ZKUtils.defaultBarrierDir(rootPath, jobID);
     createBarrierDir(client, barrierDirPath);
@@ -60,8 +61,7 @@ public final class ZKBarrierManager {
   /**
    * create parent directory for init barrier
    */
-  public static void createInitBarrierDir(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
+  public static void createInitBarrierDir(CuratorFramework client, String rootPath, String jobID) {
 
     String initDirPath = ZKUtils.initBarrierDir(rootPath, jobID);
     createBarrierDir(client, initDirPath);

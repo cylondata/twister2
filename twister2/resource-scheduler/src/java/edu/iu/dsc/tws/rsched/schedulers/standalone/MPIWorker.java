@@ -133,7 +133,7 @@ public final class MPIWorker {
 
       String jobId = MPIContext.jobId(config);
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, config);
-      JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+      JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
       /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
          // checkpoint. This is undecided at the moment.
@@ -329,7 +329,7 @@ public final class MPIWorker {
         .put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
 
