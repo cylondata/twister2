@@ -199,9 +199,9 @@ public final class MPIWorkerStarter {
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
-    // if this worker is restarted equal or more times than max restart config paramter,
+    // if this worker is restarted equal or more times than max restart config parameter,
     // finish up this worker
-    if (restartCount >= FaultToleranceContext.maxRestarts(config)) {
+    if (restartCount >= FaultToleranceContext.maxMpiJobRestarts(config)) {
       workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
       WorkerRuntime.close();
       return;
@@ -213,7 +213,7 @@ public final class MPIWorkerStarter {
       LOG.log(Level.SEVERE, "Uncaught exception in the thread "
           + thread + ". Worker FAILED...", throwable);
 
-      if (restartCount >= FaultToleranceContext.maxRestarts(config) - 1) {
+      if (restartCount >= FaultToleranceContext.maxMpiJobRestarts(config) - 1) {
         workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
       } else {
         workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);

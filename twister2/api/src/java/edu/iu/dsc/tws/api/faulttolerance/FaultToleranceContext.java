@@ -27,8 +27,12 @@ public class FaultToleranceContext extends Context {
   public static final int MAX_REEXECUTES_DEFAULT = 5;
 
   // maximum number of times to re-start worker JVMs after failures
-  public static final String MAX_RESTARTS = "twister2.fault.tolerance.max.restarts";
-  public static final int MAX_RESTARTS_DEFAULT = 5;
+  public static final String MAX_WORKER_RESTARTS = "twister2.fault.tolerance.max.worker.restarts";
+  public static final int MAX_WORKER_RESTARTS_DEFAULT = 5;
+
+  // maximum number of times to re-start mpi jobs in vase of failures
+  public static final String MAX_MPIJOB_RESTARTS = "twister2.fault.tolerance.max.mpijob.restarts";
+  public static final int MAX_MPIJOB_RESTARTS_DEFAULT = 3;
 
   public static int sessionTimeout(Config cfg) {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);
@@ -38,8 +42,12 @@ public class FaultToleranceContext extends Context {
     return cfg.getIntegerValue(MAX_REEXECUTES, MAX_REEXECUTES_DEFAULT);
   }
 
-  public static int maxRestarts(Config cfg) {
-    return cfg.getIntegerValue(MAX_RESTARTS, MAX_RESTARTS_DEFAULT);
+  public static int maxWorkerRestarts(Config cfg) {
+    return cfg.getIntegerValue(MAX_WORKER_RESTARTS, MAX_WORKER_RESTARTS_DEFAULT);
+  }
+
+  public static int maxMpiJobRestarts(Config cfg) {
+    return cfg.getIntegerValue(MAX_MPIJOB_RESTARTS, MAX_MPIJOB_RESTARTS_DEFAULT);
   }
 
 }

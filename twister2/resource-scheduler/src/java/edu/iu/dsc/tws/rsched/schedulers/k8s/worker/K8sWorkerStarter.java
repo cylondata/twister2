@@ -173,7 +173,7 @@ public final class K8sWorkerStarter {
 
     // if this worker is restarted equal or more times than max restart config paramter,
     // finish up this worker
-    if (restartCount >= FaultToleranceContext.maxRestarts(config)) {
+    if (restartCount >= FaultToleranceContext.maxWorkerRestarts(config)) {
       workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
       WorkerRuntime.close();
       externallyKilled = false;
@@ -189,7 +189,7 @@ public final class K8sWorkerStarter {
       LOG.log(Level.SEVERE, "Uncaught exception in the thread "
           + thread + ". Worker FAILED...", throwable);
 
-      if (restartCount >= FaultToleranceContext.maxRestarts(config) - 1) {
+      if (restartCount >= FaultToleranceContext.maxWorkerRestarts(config) - 1) {
         workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
       } else {
         workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);

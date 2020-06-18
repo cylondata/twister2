@@ -253,7 +253,7 @@ public final class MPIMasterStarter {
     boolean isVerbose = true;
 
     int tryCount = 0;
-    while (tryCount++ < FaultToleranceContext.maxRestarts(config)) {
+    while (tryCount++ < FaultToleranceContext.maxMpiJobRestarts(config)) {
       LOG.info("mpirun will execute with the command: \n" + commandAsAString(command));
       int status = ProcessUtils.runSyncProcess(false, command, stderr, new File("."), isVerbose);
 
@@ -264,7 +264,7 @@ public final class MPIMasterStarter {
         }
         return;
 
-      } else if (tryCount < FaultToleranceContext.maxRestarts(config)) {
+      } else if (tryCount < FaultToleranceContext.maxMpiJobRestarts(config)) {
         LOG.severe(String.format(
             "Failed to execute mpirun. Will try again. STDERR=%s", stderr));
       }
