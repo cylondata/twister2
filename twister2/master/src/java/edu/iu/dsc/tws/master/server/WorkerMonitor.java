@@ -160,6 +160,11 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
+  public JobMasterAPI.WorkerState getWorkerState(int workerID) {
+    WorkerWithState wws = workers.get(workerID);
+    return wws == null ? JobMasterAPI.WorkerState.UNRECOGNIZED : wws.getState();
+  }
+
   /**
    * get the list of workerIDs sorted
    */

@@ -365,6 +365,13 @@ public class ZKMasterController implements IWorkerEventSender {
       return;
     }
 
+    // if the worker state is COMPLETED or FULLY_FAILED in workerMonitor, ignore this event.
+    // those events are already handled by persistent state cache updates
+    JobMasterAPI.WorkerState ws = workerMonitor.getWorkerState(removedWorkerID);
+    if (ws == JobMasterAPI.WorkerState.COMPLETED || ws == JobMasterAPI.WorkerState.FULLY_FAILED) {
+      return;
+    }
+
     // get worker info and the state from persistent storage
     WorkerWithState workerWithState;
     try {
@@ -387,10 +394,10 @@ public class ZKMasterController implements IWorkerEventSender {
     // if the workerID of removed worker is higher than the number of workers in the job,
     // it means that is a scaled down worker.
     // otherwise, the worker failed. We inform the failureListener.
+    if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED
+        || workerWithState.getState() == JobMasterAPI.WorkerState.FULLY_FAILED) {
 
-    if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
-
-      // removed event received for completed worker, nothing to do
+      // removed event received for completed or fullyfailed worker, nothing to do
       return;
 
     } else if (ZKEphemStateManager.DELETE_TAG.equals(workerBodyText)) {

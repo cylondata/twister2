@@ -161,7 +161,7 @@ public class WorkerManager implements IWorkerFailureListener, IJobMasterFailureL
 
     // ignore failure events if the first INIT barrier is not proceeded
     if (!firstInitBarrierProceeded) {
-      LOG.fine("Worker failure event received before first init barrier. Failed worker: " + wID);
+      LOG.fine("Worker failure event received before first INIT barrier. Failed worker: " + wID);
       return;
     }
 
