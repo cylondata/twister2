@@ -28,10 +28,10 @@ public class UnionExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-//    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
-    SourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src1 = dummySource(env, start, COUNT, PARALLELISM).setName("src1");
     SourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
-//    src.direct().forEach(s -> LOG.info("map sssss: " + s));
+
     ComputeTSet<Integer, Iterator<Integer>> unionTSet = src1.union(src2);
     LOG.info("test source union");
     unionTSet.direct().forEach(s -> LOG.info("map: " + s));
@@ -42,6 +42,6 @@ public class UnionExample extends BatchTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM * 2, jobConfig, UnionExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, UnionExample.class.getName());
   }
 }

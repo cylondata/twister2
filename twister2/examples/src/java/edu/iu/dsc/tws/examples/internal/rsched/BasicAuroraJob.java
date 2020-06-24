@@ -82,7 +82,7 @@ public final class BasicAuroraJob {
    */
   public static void jobReadTest() {
     String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";
-    JobAPI.Job job = JobUtils.readJobFile(null, fl);
+    JobAPI.Job job = JobUtils.readJobFile(fl);
     System.out.println("job name: " + job.getJobName());
     System.out.println("job worker class name: " + job.getWorkerClassName());
     System.out.println("job workers: " + job.getNumberOfWorkers());

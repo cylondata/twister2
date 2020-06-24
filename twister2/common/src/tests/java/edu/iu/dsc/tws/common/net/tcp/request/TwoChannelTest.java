@@ -71,7 +71,7 @@ public class TwoChannelTest {
         public void run() {
           TCPChannel channel = channels.get(j);
           channel.startConnections(networkInfos);
-          channel.waitForConnections();
+          channel.waitForConnections(10000);
         }
       });
       t.start();

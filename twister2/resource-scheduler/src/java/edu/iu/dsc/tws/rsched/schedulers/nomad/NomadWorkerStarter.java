@@ -179,7 +179,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -247,7 +247,7 @@ public final class NomadWorkerStarter {
 
     String jobID = NomadContext.jobId(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
@@ -307,12 +307,12 @@ public final class NomadWorkerStarter {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    //should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers, initialState);
+        workerInfo, masterHost, masterPort, numberContainers, restartCount);
     LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
 
     jobMasterAgent.startThreaded();

@@ -6,6 +6,10 @@
 # it will use the first network interface in this list that is up and not loop back address
 # twister2.network.interfaces.for.workers: ['interface1', 'interface2']
 
+# max wait time for twister2 workers to connect to each other after the barrier operation
+# default is 30 seconds
+# twister2.network.max.connection.establishment.time: 30000
+
 ### DEFAULT CONFIGURATION FOR ALL OPERATIONS, THESE ARE OVERRIDDEN AT THE BOTTOM for specific
 ### operations
 #############################################################################################

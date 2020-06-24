@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -70,7 +69,8 @@ import mpi.MPI;
 import mpi.MPIException;
 
 /**
- * This is the base process started by the resource scheduler. This process will lanch the container
+ * This is the base process started by the resource scheduler.
+ * This process will launch the container
  * code and it will eventually will load the tasks.
  */
 public final class MPIWorker {
@@ -133,7 +133,7 @@ public final class MPIWorker {
 
       String jobId = MPIContext.jobId(config);
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, config);
-      JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+      JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
       /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
          // checkpoint. This is undecided at the moment.
@@ -159,14 +159,16 @@ public final class MPIWorker {
 
           if (rank != 0) {
             // init WorkerRuntime
-            WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
+            int restartCount = 0;
+            WorkerRuntime.init(config, job, wInfo, restartCount);
             startWorker(config, rank, comm, job);
           } else {
             startMaster(config, rank);
           }
         } else {
           wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
-          WorkerRuntime.init(config, job, wInfo, JobMasterAPI.WorkerState.STARTED);
+          int restartCount = 0;
+          WorkerRuntime.init(config, job, wInfo, restartCount);
           startWorker(config, rank, MPI.COMM_WORLD, job);
         }
       } else {
@@ -319,29 +321,30 @@ public final class MPIWorker {
 
     Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
-    Config workerConfig = Config.newBuilder().putAll(cfg).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.WORKER_CLASS, container).
-        put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+    Config workerConfig = Config.newBuilder()
+        .putAll(cfg)
+        .put(MPIContext.TWISTER2_HOME.getKey(), twister2Home)
+        .put(MPIContext.WORKER_CLASS, container)
+        .put(MPIContext.TWISTER2_CONTAINER_ID, id)
+        .put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
 
-    updatedConfig = Config.newBuilder().putAll(updatedConfig).
-        put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
-        put(MPIContext.WORKER_CLASS, container).
-        put(MPIContext.TWISTER2_CONTAINER_ID, id).
-        put(MPIContext.JOB_ID, jobId).
-        put(MPIContext.JOB_OBJECT, job).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(JobMasterContext.JOB_MASTER_IP, jIp).
-        put(JobMasterContext.JOB_MASTER_PORT, jPort).
-        put(FaultToleranceContext.FAULT_TOLERANT, false).
-        put(ZKContext.ZK_BASED_GROUP_MANAGEMENT, false).
-        build();
+    updatedConfig = Config.newBuilder()
+        .putAll(updatedConfig)
+        .put(MPIContext.TWISTER2_HOME.getKey(), twister2Home)
+        .put(MPIContext.WORKER_CLASS, container)
+        .put(MPIContext.TWISTER2_CONTAINER_ID, id)
+        .put(MPIContext.JOB_ID, jobId)
+        .put(MPIContext.JOB_OBJECT, job)
+        .put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType)
+        .put(JobMasterContext.JOB_MASTER_IP, jIp)
+        .put(JobMasterContext.JOB_MASTER_PORT, jPort)
+        .put(ZKContext.SERVER_ADDRESSES, null)
+        .build();
     return updatedConfig;
   }
 

@@ -26,13 +26,8 @@ package edu.iu.dsc.tws.common.zk;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 
 public final class ZKContext extends Context {
-
-  public static final boolean ZK_BASED_GROUP_MANAGEMENT_DEFAULT = false;
-  public static final String ZK_BASED_GROUP_MANAGEMENT
-      = "twister2.zookeeper.based.group.management";
 
   public static final String ROOT_NODE = "twister2.resource.zookeeper.root.node.path";
   public static final String ROOT_NODE_DEFAULT = "/twister2";
@@ -51,10 +46,6 @@ public final class ZKContext extends Context {
     return cfg.getStringValue(SERVER_ADDRESSES);
   }
 
-  public static boolean zkBasedGroupManagement(Config cfg) {
-    return cfg.getBooleanValue(ZK_BASED_GROUP_MANAGEMENT, ZK_BASED_GROUP_MANAGEMENT_DEFAULT);
-  }
-
   /**
    * return true if the job is fault tolerant or ZK based group management is used
    * @param cfg
@@ -62,7 +53,7 @@ public final class ZKContext extends Context {
    */
   public static boolean isZooKeeperServerUsed(Config cfg) {
 
-    if (FaultToleranceContext.faultTolerant(cfg) || zkBasedGroupManagement(cfg)) {
+    if (serverAddresses(cfg) != null) {
       return true;
     }
 

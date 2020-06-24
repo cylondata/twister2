@@ -18,6 +18,7 @@ import java.util.concurrent.CyclicBarrier;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -86,6 +87,16 @@ public class MockWorkerController implements IWorkerController {
     } catch (InterruptedException | BrokenBarrierException e) {
       throw new TimeoutException("Timeout on barrier");
     }
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    waitOnBarrier();
   }
 
 }

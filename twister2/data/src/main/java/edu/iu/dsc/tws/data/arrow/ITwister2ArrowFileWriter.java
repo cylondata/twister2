@@ -9,13 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.mesos;
+package edu.iu.dsc.tws.data.arrow;
 
-import edu.iu.dsc.tws.master.IJobTerminator;
-
-public class MesosJobTerminator implements IJobTerminator {
-  @Override
-  public boolean terminateJob(String jobID) {
-    return false;
-  }
+public interface ITwister2ArrowFileWriter {
+  boolean setUpTwister2ArrowWrite(int workerId) throws Exception;
+  //void queueArrowData(Integer data) throws Exception;
+  void queueArrowData(Object data) throws Exception;
+  void commitArrowData() throws Exception;
 }

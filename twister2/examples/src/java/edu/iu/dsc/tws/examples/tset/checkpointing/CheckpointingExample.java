@@ -55,10 +55,10 @@ public class CheckpointingExample implements CheckpointingBatchTSetIWorker, Seri
   public void execute(CheckpointingTSetEnv env) {
     int count = 5;
 
-    SourceTSet<Integer> src = dummySource(env, count, 0);
+    SourceTSet<Integer> src = dummySource(env, count, 100 * env.getWorkerID());
     PersistedTSet<Integer> persist = src.direct().persist();
 
-    SourceTSet<Integer> src1 = dummySource(env, count, 10);
+    SourceTSet<Integer> src1 = dummySource(env, count, 100 * env.getWorkerID() + 10);
     src1.direct().compute(
         new BaseComputeFunc<String, Iterator<Integer>>() {
           private DataPartitionConsumer<Integer> in;

@@ -90,6 +90,11 @@ public class Communicator {
     this.persistentDirectories = persistentDirectories;
   }
 
+  public void reInit() {
+    this.edgeGenerator = new EdgeGenerator(0);
+    this.idGenerator = new TaskIdGenerator(100000000);
+  }
+
   public TWSChannel getChannel() {
     return channel;
   }

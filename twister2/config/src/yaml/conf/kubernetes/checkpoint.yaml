@@ -1,0 +1,6 @@
+# Root directory of local file system based store
+twister2.checkpointing.store.fs.dir: "/persistent/"
+
+# Checkpointing message request timeout
+twister2.checkpointing.request.timeout: 50000
+

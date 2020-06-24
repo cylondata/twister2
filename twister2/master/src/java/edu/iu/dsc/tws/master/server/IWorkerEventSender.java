@@ -9,22 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.resource;
+package edu.iu.dsc.tws.master.server;
 
-import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public interface IManagedFailureListener extends IWorkerFailureListener {
-  /**
-   * Register a fault acceptor
-   * @param faultAcceptable a component capable of accepting a fault
-   */
-  default void registerFaultAcceptor(FaultAcceptable faultAcceptable) {
-  }
+public interface IWorkerEventSender {
 
   /**
-   * Un-Register a fault acceptor
-   * @param faultAcceptable a component capable of accepting a fault
+   * the worker with the provided workerID failed
+   * @param workerID
    */
-  default void unRegisterFaultAcceptor(FaultAcceptable faultAcceptable) {
-  }
+  void workerFailed(int workerID);
+
+  /**
+   * the worker with the provided workerInfo restarted
+   * @param workerInfo
+   */
+  void workerRestarted(JobMasterAPI.WorkerInfo workerInfo);
+
+  /**
+   * all workers joined the job
+   */
+  void allJoined();
+
+  /**
+   * job scaled up or down
+   */
+  void jobScaled(int change, int numberOfWorkers);
+
 }

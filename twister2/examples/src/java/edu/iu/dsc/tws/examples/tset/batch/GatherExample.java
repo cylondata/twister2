@@ -46,7 +46,8 @@ public class GatherExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     GatherTLink<Integer> gather = src.gather();
 
@@ -54,7 +55,8 @@ public class GatherExample extends BatchTsetExample {
     gather.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    gather.map(i -> i.toString() + "$$").withSchema(PrimitiveSchemas.STRING)
+    gather.map(i -> i.toString() + "$$")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 

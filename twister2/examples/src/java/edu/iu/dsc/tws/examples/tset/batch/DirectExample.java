@@ -48,7 +48,9 @@ public class DirectExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM)
+        .setName("src");
 
     DirectTLink<Integer> direct = src.direct().setName("direct");
 
@@ -56,12 +58,15 @@ public class DirectExample extends BatchTsetExample {
     direct.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    direct.map(i -> i.toString() + "$$").setName("map").withSchema(PrimitiveSchemas.STRING)
+    direct.map(i -> i.toString() + "$$")
+        .setName("map")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    direct.flatmap((i, c) -> c.collect(i.toString() + "##")).setName("flatmap")
+    direct.flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .setName("flatmap")
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
@@ -73,7 +78,8 @@ public class DirectExample extends BatchTsetExample {
         sum += input.next();
       }
       return "sum" + sum;
-    }).setName("compute").withSchema(PrimitiveSchemas.STRING)
+    }).setName("compute")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
@@ -98,9 +104,7 @@ public class DirectExample extends BatchTsetExample {
       return true;
     });
     env.run(sink);
-
   }
-
 
   public static void main(String[] args) {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());

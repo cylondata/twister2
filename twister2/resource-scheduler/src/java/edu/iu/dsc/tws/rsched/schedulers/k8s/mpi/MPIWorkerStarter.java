@@ -106,7 +106,7 @@ public final class MPIWorkerStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
+    job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -184,9 +184,8 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, jobID, workerInfo);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**
      * Interfaces to interact with other workers and Job Master if there is any

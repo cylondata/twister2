@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedPersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
-import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistIterIterSink;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
@@ -54,7 +54,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
   @Override
   public KeyedPersistedTSet<K, V> lazyPersist() {
     KeyedPersistedTSet<K, V> persistedTSet = new KeyedPersistedTSet<>(getTSetEnv(),
-        new DiskPersistIterSink<>(this.getId()), getTargetParallelism(), getSchema());
+        new DiskPersistIterIterSink<>(this.getId()), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
 
     return persistedTSet;

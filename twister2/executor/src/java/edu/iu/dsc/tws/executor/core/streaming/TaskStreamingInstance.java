@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
@@ -201,7 +201,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     this.taskGraphName = taskGraphName;
     this.tasksVersion = tasksVersion;
     this.checkpointable = this.task instanceof CheckpointableTask
-        && CheckpointingConfigurations.isCheckpointingEnabled(config);
+        && CheckpointingContext.isCheckpointingEnabled(config);
     this.ftGatherTask = this.task instanceof CheckpointingSGatherSink;
     if (this.ftGatherTask) {
       this.checkpointingSGatherSink = (CheckpointingSGatherSink) this.task;

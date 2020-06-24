@@ -57,7 +57,7 @@ public final class JobUtils {
   /**
    * Read the job file
    */
-  public static JobAPI.Job readJobFile(Config cfg, String fileName) {
+  public static JobAPI.Job readJobFile(String fileName) {
     try {
       byte[] fileBytes = FileUtils.readFromFile(fileName);
       JobAPI.Job.Builder builder = JobAPI.Job.newBuilder();
@@ -181,6 +181,15 @@ public final class JobUtils {
     }
 
     return jobStr;
+  }
+
+  public static String computeResourcesToPrint(JobAPI.Job job) {
+    String cmStr = ComputeResourceUtils.toString(job.getComputeResource(0));
+    for (int i = 1; i < job.getComputeResourceList().size(); i++) {
+      cmStr += System.lineSeparator() + ComputeResourceUtils.toString(job.getComputeResource(i));
+    }
+
+    return cmStr;
   }
 
   public static String createJobPackageFileName(String jobID) {

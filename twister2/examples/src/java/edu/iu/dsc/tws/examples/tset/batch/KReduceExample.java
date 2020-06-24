@@ -44,9 +44,10 @@ public class KReduceExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
-    KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+    KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 10, i))
         .keyedReduce(Integer::sum);
 
     LOG.info("test foreach");

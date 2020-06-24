@@ -1,9 +1,15 @@
 ###################################################################
-# User name that will be used in JobID
+# Job ID and User name related parameters
 ###################################################################
-# JobID is constructed as:
-#   [username]-[jobName]-[timestamp]
-# if username is specified here, we use this value.
+# users can specify the jobID that will be used with following parameter
+# if they do not specify the jobID, it will be calculated as follows:
+#   JobID = [username]-[jobName]-[timestamp]
+# jobID has to be provided for the jobs that will be restarted from previously checkpointed state
+#
+# twister2.job.id: "job-id"
+
+# User name that will be used in JobID
+# if the username is specified here, we use this value.
 # Otherwise we get username from shell environment.
 # if the username is longer than 9 characters, we use first 9 characters of it
 # long value of timestamp is converted to alphanumeric string format
@@ -20,7 +26,8 @@ twister2.job.master.used: true
 # if true, the job master runs in the submitting client
 # if false, job master runs as a separate process in the cluster
 # by default, it is true
-# when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster
+# when the job master runs in the submitting client,
+#  this client has to be submitting the job from a machine in the cluster
 twister2.job.master.runs.in.client: true
 
 twister2.worker.to.job.master.response.wait.duration: 100000
@@ -33,9 +40,15 @@ twister2.worker.to.job.master.response.wait.duration: 100000
 # in milli seconds
 twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
 
-# amount of timeout on barriers for all workers to arrive
+# maximum amount of timeout to wait on default barrier for all workers to arrive
 # in milli seconds
+# default is 100 seconds
 twister2.worker.controller.max.wait.time.on.barrier: 100000
+
+# maximum amount of timeout to wait on init barrier for all workers to arrive
+# in milli seconds
+# default is 10 minutes
+twister2.worker.controller.max.wait.time.on.init.barrier: 600000
 
 ###################################################################################
 # Common thread pool config parameters

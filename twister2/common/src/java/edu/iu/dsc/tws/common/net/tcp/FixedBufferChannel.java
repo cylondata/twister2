@@ -34,7 +34,7 @@ public class FixedBufferChannel extends BaseNetworkChannel {
       TCPMessage readRequest = readRequest(socketChannel);
 
       if (readRequest != null) {
-        readRequest.setComplete(true);
+        readRequest.setComplete();
         channelHandler.onReceiveComplete(socketChannel, readRequest);
       } else {
         break;

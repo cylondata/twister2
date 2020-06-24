@@ -74,7 +74,7 @@ def add_job_type(parser):
         help='Type of the job, Only jar type is supported')
     return parser
 
-def add_job(parser):
+def add_job_id(parser):
     '''
     :param parser:
     :return:
@@ -223,14 +223,4 @@ def add_port(parser):
         metavar='PORT',
         default=8080,
         help='Port to start dashboard server')
-    return parser
-
-def add_job_id(parser):
-    '''
-    :param parser:
-    :return:
-    '''
-    parser.add_argument(
-        'job-id',
-        help='ID of the job')
     return parser

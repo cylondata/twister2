@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tset.env;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 
 /**
@@ -57,7 +57,7 @@ public class CheckpointingTSetEnv extends BatchTSetEnvironment {
    * Commits the snapshot
    */
   public void commit() {
-    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
+    if (CheckpointingContext.isCheckpointingEnabled(workerEnvironment.getConfig())) {
       this.checkpointingWorkerEnv.commitSnapshot();
     } else {
       LOG.warning("Called commit while checkpointing is disabled.");

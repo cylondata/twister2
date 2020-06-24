@@ -27,6 +27,7 @@ public class FamilyInitHandler {
   private RRServer rrServer;
   private String family;
   private Long familyVersion;
+  private boolean pause; // should be paused when cluster is unstable
 
   public FamilyInitHandler(RRServer rrServer,
                            String family,
@@ -38,7 +39,35 @@ public class FamilyInitHandler {
     this.count = count;
   }
 
+  private void sendRejectedResponse(RequestID requestID) {
+    this.rrServer.sendResponse(requestID,
+        Checkpoint.FamilyInitializeResponse.newBuilder()
+            .setFamily(this.family)
+            .setVersion(this.familyVersion)
+            .setStatus(Checkpoint.FamilyInitializeResponse.Status.REJECTED)
+            .build());
+  }
+
+  public void pause() {
+    this.pause = true;
+
+    // send the response to the waiting workers
+    this.pendingResponses.values().forEach(this::sendRejectedResponse);
+    this.pendingResponses.clear();
+  }
+
+  public void resume() {
+    this.pendingResponses.clear();
+    this.pause = false;
+  }
+
   public boolean scheduleResponse(int workerId, RequestID requestID) {
+    if (this.pause) {
+      LOG.info("Handler is in paused mode, due to cluster instability. "
+          + "Ignored a request from " + workerId);
+      this.sendRejectedResponse(requestID);
+      return false;
+    }
     RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
     if (previousRequest != null) {
       LOG.warning("Duplicate request received for " + this.family
@@ -61,5 +90,16 @@ public class FamilyInitHandler {
 
   public long getVersion() {
     return this.familyVersion;
+  }
+
+  @Override
+  public String toString() {
+    return "FamilyInitHandler{" + "count=" + count
+        + ", family='" + family + '\''
+        + ", familyVersion=" + familyVersion + '}';
+  }
+
+  public void setFamilyVersion(long minVersion) {
+    this.familyVersion = minVersion;
   }
 }

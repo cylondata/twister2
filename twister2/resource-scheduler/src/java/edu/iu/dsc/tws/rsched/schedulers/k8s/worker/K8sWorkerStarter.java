@@ -11,21 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -64,28 +67,30 @@ public final class K8sWorkerStarter {
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // all environment variables
-    int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
-    String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
-    String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
-    String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
-    String hostName = System.getenv(K8sEnvVariables.HOST_NAME + "");
-    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
-    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
-    jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
+    int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT.name()));
+    String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME.name());
+    String podName = System.getenv(K8sEnvVariables.POD_NAME.name());
+    String hostIP = System.getenv(K8sEnvVariables.HOST_IP.name());
+    String hostName = System.getenv(K8sEnvVariables.HOST_NAME.name());
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP.name());
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST.name());
+    jobID = System.getenv(K8sEnvVariables.JOB_ID.name());
+    boolean restoreJob = Boolean.parseBoolean(System.getenv(K8sEnvVariables.RESTORE_JOB.name()));
 
     if (jobID == null) {
       throw new RuntimeException("JobID is null");
     }
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
+    String configDir = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
+    jobDescFileName = POD_MEMORY_VOLUME + File.separator + JOB_ARCHIVE_DIRECTORY
+        + File.separator + jobDescFileName;
+    job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -93,11 +98,17 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = Config.newBuilder().putAll(config)
+        .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, restoreJob)
+        .build();
 
-    // if there is no Driver in the job and ZK is used for group management,
+    // if there is no Driver in the job or checkpointing is not enabled,
+    // and ZK is used for group management,
     // then, we don't need to connect to JM
     // if there is a driver or ZK is not used for group management, then we need to connect to JM
-    if (!job.getDriverClassName().isEmpty() || !(ZKContext.isZooKeeperServerUsed(config))) {
+    if (!job.getDriverClassName().isEmpty()
+        || !(ZKContext.isZooKeeperServerUsed(config))
+        || CheckpointingContext.isCheckpointingEnabled(config)) {
       jobMasterIP = updateJobMasterIp(jobMasterIP);
     }
 
@@ -150,9 +161,8 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, jobID, workerInfo);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**
      * Interfaces to interact with other workers and Job Master if there is any
@@ -160,28 +170,42 @@ public final class K8sWorkerStarter {
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
+    // if this worker is restarted equal or more times than max restart config paramter,
+    // finish up this worker
+    if (restartCount >= FaultToleranceContext.maxRestarts(config)) {
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+      WorkerRuntime.close();
+      externallyKilled = false;
+      return;
+    }
+
     // add shut down hook
     addShutdownHook(workerStatusUpdater);
 
-    // start the worker
-    try {
-      startWorker(workerController, pv);
-    } catch (Throwable t) {
-      // update worker status to FAILED
+    // on any uncaught exception, we will label the worker as FAILED and throw a RuntimeException
+    // JVM will be restarted by K8s
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      LOG.log(Level.SEVERE, "Uncaught exception in the thread "
+          + thread + ". Worker FAILED...", throwable);
+
       workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
       WorkerRuntime.close();
       externallyKilled = false;
-      throw t;
+      throw new RuntimeException("Worker failed with the exception", throwable);
+    });
+
+    // start the worker
+    boolean completed = startWorker(workerController, pv);
+
+    if (completed) {
+      // update worker status to COMPLETED
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+    } else {
+      // if not successfully completed, it means it is fully failed
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
     }
-
-    // update worker status to COMPLETED
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
-
     WorkerRuntime.close();
     externallyKilled = false;
-
-    // wait to be deleted by Job master
-    K8sWorkerUtils.waitIndefinitely();
   }
 
   /**
@@ -212,6 +236,7 @@ public final class K8sWorkerStarter {
       if (jobMasterIP == null) {
         jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
           KubernetesContext.namespace(config), jobID, 100);
+        PodWatchUtils.close();
       }
 
       if (jobMasterIP == null) {
@@ -234,7 +259,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static boolean startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = job.getWorkerClassName();
@@ -254,7 +279,7 @@ public final class K8sWorkerStarter {
     }
     WorkerManager workerManager = new WorkerManager(config, workerID,
         workerController, pv, volatileVolume, worker);
-    workerManager.start();
+    return workerManager.execute();
   }
 
   /**
@@ -272,10 +297,7 @@ public final class K8sWorkerStarter {
           return;
         }
 
-        if (workerStatusUpdater instanceof ZKWorkerController) {
-          workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.KILLED);
-        }
-
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.KILLED);
         WorkerRuntime.close();
       }
     };
