@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -120,8 +121,7 @@ public class MPIController implements IController {
     }
     // add the args to the command
     String[] cmdArray = transformedArgs.toArray(new String[0]);
-    LOG.log(Level.FINE, "Executing job [" + jobWorkingDirectory + "]:",
-        Arrays.toString(cmdArray));
+    LOG.fine("Executing job [" + jobWorkingDirectory + "]: " + Arrays.toString(cmdArray));
     StringBuilder stderr = new StringBuilder();
     return runProcess(twister2Home, cmdArray, stderr);
   }

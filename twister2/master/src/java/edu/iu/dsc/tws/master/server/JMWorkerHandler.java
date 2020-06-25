@@ -354,7 +354,9 @@ public class JMWorkerHandler implements MessageHandler, IWorkerEventSender {
 
     // send the message to all workers
     for (int wID : workerMonitor.getWorkerIDs()) {
-      rrServer.sendMessage(workerFailed, wID);
+      if (wID != workerID) {
+        rrServer.sendMessage(workerFailed, wID);
+      }
     }
   }
 
@@ -366,7 +368,9 @@ public class JMWorkerHandler implements MessageHandler, IWorkerEventSender {
 
     // send the message to all workers
     for (int wID : workerMonitor.getWorkerIDs()) {
-      rrServer.sendMessage(workerRestarted, wID);
+      if (wID != workerInfo.getWorkerID()) {
+        rrServer.sendMessage(workerRestarted, wID);
+      }
     }
   }
 

@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.master.server;
 
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
@@ -132,7 +133,7 @@ public class JobMaster {
    * Job Terminator object.
    * it will the terminate all workers and cleanup job resources.
    */
-  private IJobTerminator jobTerminator;
+  private final IJobTerminator jobTerminator;
 
   /**
    * NodeInfo object for Job Master
@@ -143,7 +144,7 @@ public class JobMaster {
   /**
    * the scaler for the cluster in that Job Master is running
    */
-  private IScalerPerCluster clusterScaler;
+  private final IScalerPerCluster clusterScaler;
 
   /**
    * the driver object
@@ -223,11 +224,13 @@ public class JobMaster {
                    JobMasterAPI.JobMasterState initialState) {
     this.config = config;
     this.jmAddress = jmAddress;
-    this.jobTerminator = jobTerminator;
+    this.jobTerminator = Objects.requireNonNull(
+        jobTerminator, "IJobTerminator can not be null. You may use NullTerminator.");
     this.job = job;
     this.nodeInfo = nodeInfo;
     this.masterPort = port;
-    this.clusterScaler = clusterScaler;
+    this.clusterScaler = Objects.requireNonNull(
+        clusterScaler, "IScalerPerCluster can not be null. You may use NullScaler.");
     this.initialState = initialState;
 
     this.zkJobUpdater = new ZKJobUpdater(config, job.getJobId());
@@ -432,7 +435,7 @@ public class JobMaster {
       ZKUtils.closeClient();
     }
 
-    if (jobEnded && jobTerminator != null) {
+    if (jobEnded) {
       jobTerminator.terminateJob(job.getJobId(), finalState);
     }
 
@@ -611,9 +614,7 @@ public class JobMaster {
         looper.wakeup();
 
         if (clearK8sResourcesWhenKilled) {
-          if (jobTerminator != null) {
-            jobTerminator.terminateJob(job.getJobId(), finalState);
-          }
+          jobTerminator.terminateJob(job.getJobId(), finalState);
         }
 
       }

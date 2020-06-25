@@ -97,16 +97,6 @@ public interface IWorkerController {
     return null;
   }
 
-  /**
-   * Get object with a given name
-   *
-   * @param name name
-   * @return the object
-   */
-  default Object getRuntimeObject(String name) {
-    return null;
-  }
-
   default CheckpointingClient getCheckpointingClient() {
     //todo remove null return
     return null;

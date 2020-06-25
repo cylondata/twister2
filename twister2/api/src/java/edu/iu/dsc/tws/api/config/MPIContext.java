@@ -9,12 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.config.SchedulerContext;
-import edu.iu.dsc.tws.api.config.TokenSub;
+package edu.iu.dsc.tws.api.config;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MPIContext extends SchedulerContext {
   public static final String WORKING_DIRECTORY =
@@ -38,6 +37,8 @@ public class MPIContext extends SchedulerContext {
   public static final String JIP = "__job_master_ip__";
 
   public static final String JPORT = "__job_master_port__";
+
+  private static Map<String, Object> runtimeObjects = new HashMap<>();
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
@@ -87,5 +88,13 @@ public class MPIContext extends SchedulerContext {
   public static String fileSystemMount(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(FILE_SYSTEM_MOUNT,
         "${TWISTER2_HOME}/persistent/fs/"), Context.substitutions);
+  }
+
+  public static void addRuntimeObject(String name, Object value) {
+    runtimeObjects.put(name, value);
+  }
+
+  public static Object getRuntimeObject(String name) {
+    return runtimeObjects.get(name);
   }
 }

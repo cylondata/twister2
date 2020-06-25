@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -38,6 +39,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
@@ -250,7 +252,7 @@ public final class NomadJobMasterStarter {
     // start the Job Master locally
     JobMaster jobMaster = null;
     JobMasterAPI.NodeInfo jobMasterNodeInfo = NomadContext.getNodeInfo(config, hostAddress);
-    IScalerPerCluster clusterScaler = null;
+    IScalerPerCluster clusterScaler = new NullScaler();
     Thread jmThread = null;
     int workerCount = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
@@ -261,7 +263,7 @@ public final class NomadJobMasterStarter {
     //}
     LOG.log(Level.INFO, String.format("Starting the Job Master: %s:%d", hostAddress, port));
     JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
-    NomadTerminator nt = new NomadTerminator();
+    NullTerminator nt = new NullTerminator();
 
     jobMaster = new JobMaster(
         config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);

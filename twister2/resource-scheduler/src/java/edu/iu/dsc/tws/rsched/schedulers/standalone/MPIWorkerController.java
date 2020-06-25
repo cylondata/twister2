@@ -37,8 +37,6 @@ public class MPIWorkerController implements IWorkerController {
 
   private Map<Integer, JobMasterAPI.WorkerInfo> workerInfoMap = new HashMap<>();
 
-  private Map<String, Object> runtimeObjects = new HashMap<>();
-
   public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> workers) {
     this.thisWorkerID = thisWorkerID;
     this.workerInfoMap = workers;
@@ -86,15 +84,6 @@ public class MPIWorkerController implements IWorkerController {
   @Override
   public void waitOnInitBarrier() throws TimeoutException {
     waitOnBarrier();
-  }
-
-  public void add(String name, Object obj) {
-    runtimeObjects.put(name, obj);
-  }
-
-  @Override
-  public Object getRuntimeObject(String name) {
-    return runtimeObjects.get(name);
   }
 
   @Override
