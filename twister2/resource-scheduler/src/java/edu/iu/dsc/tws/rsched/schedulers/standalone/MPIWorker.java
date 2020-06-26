@@ -361,7 +361,7 @@ public final class MPIWorker {
 
     try {
       int port = JobMasterContext.jobMasterPort(cfg);
-      String hostAddress = ResourceSchedulerUtils.getHostIP();
+      String hostAddress = ResourceSchedulerUtils.getHostIP(cfg);
       LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
       IScalerPerCluster clusterScaler = null;

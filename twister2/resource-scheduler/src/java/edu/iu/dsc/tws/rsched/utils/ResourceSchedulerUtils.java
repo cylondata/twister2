@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.config.Config;
+
 public final class ResourceSchedulerUtils {
   private static final Logger LOG = Logger.getLogger(ResourceSchedulerUtils.class.getName());
 
@@ -98,8 +101,14 @@ public final class ResourceSchedulerUtils {
     return true;
   }
 
-  public static String getHostIP() {
-    String hostIP = ResourceSchedulerUtils.getOutgoingHostIP();
+  public static String getHostIP(Config cfg) {
+
+    String hostIP = CommunicationContext.getOverrideHostIP(cfg);
+    if (hostIP != null && !hostIP.isEmpty()) {
+      return hostIP;
+    }
+
+    hostIP = ResourceSchedulerUtils.getOutgoingHostIP();
 
     if (hostIP != null) {
       return hostIP;
