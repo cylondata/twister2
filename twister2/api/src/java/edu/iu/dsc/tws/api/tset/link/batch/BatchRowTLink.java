@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.StoringData;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -26,7 +25,7 @@ import edu.iu.dsc.tws.common.table.Row;
 /**
  * Table based communication links.
  */
-public interface BatchRowTLink extends StoringData<Row>, TBase {
+public interface BatchRowTLink extends TBase {
   BatchRowTSet compute(ComputeCollectorFunc<Row, Iterator<Row>> computeFunction);
 
   BatchRowTSet map(MapFunc<Row, Row> mapFn);

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.row.RowDirectLink;
 import edu.iu.dsc.tws.tset.links.batch.row.RowPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.row.RowPipeTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implements BatchRowTSet {
@@ -67,6 +68,14 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
     return direct;
   }
 
+  public BatchRowTLink pipe() {
+    RowPipeTLink pipeTLink = new RowPipeTLink(getTSetEnv(),
+        getParallelism(), (RowSchema) getOutputSchema());
+    addChildToGraph(pipeTLink);
+    return pipeTLink;
+  }
+
+
   @Override
   public BatchRowTSetImpl setName(String n) {
     rename(n);
@@ -75,22 +84,22 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
 
   @Override
   public StorableTBase<Row> cache() {
-    return direct().cache();
+    return null;
   }
 
   @Override
   public StorableTBase<Row> lazyCache() {
-    return direct().lazyCache();
+    return null;
   }
 
   @Override
   public StorableTBase<Row> persist() {
-    return direct().persist();
+    return null;
   }
 
   @Override
   public StorableTBase<Row> lazyPersist() {
-    return direct().lazyPersist();
+    return null;
   }
 
   @Override
