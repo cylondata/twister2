@@ -62,6 +62,7 @@ public class TPartition extends BaseOperation {
     this(comm, controller, builder.getSources(), builder.getTargets(), builder.build(),
         selector, indexes, schema, receiver, allocator);
   }
+
   /**
    * Create the base operation
    */
@@ -69,7 +70,18 @@ public class TPartition extends BaseOperation {
                     Set<Integer> targets, LogicalPlan plan,
                     DestinationSelector selector, List<Integer> indexes,
                     Schema schema, ArrowCallback receiver, RootAllocator allocator) {
-    super(comm, false, CommunicationContext.TABLE_PARTITION);
+    this(comm, controller, sources, targets, plan, selector, indexes, schema, receiver, allocator,
+        CommunicationContext.TABLE_PARTITION);
+  }
+
+  /**
+   * Create the base operation
+   */
+  public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
+                    Set<Integer> targets, LogicalPlan plan,
+                    DestinationSelector selector, List<Integer> indexes,
+                    Schema schema, ArrowCallback receiver, RootAllocator allocator, String name) {
+    super(comm, false, name);
     this.selector = selector;
     if (indexes == null) {
       this.indexes = new int[]{0};
