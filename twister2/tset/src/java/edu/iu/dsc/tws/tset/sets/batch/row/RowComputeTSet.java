@@ -15,46 +15,41 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
+import edu.iu.dsc.tws.tset.ops.row.RowItrComputeCollectorOp;
 
 public class RowComputeTSet extends BatchRowTSetImpl {
   private TFunction<Row, Iterator<Row>> computeFunc;
-
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<Row, Iterator<Row>> computeFn,
-                     int parallelism, RowSchema inputSchema) {
-    this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
-  }
+  private boolean iterative;
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn, int parallelism,
-                        RowSchema inputSchema) {
-    this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
-  }
-
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
-                        ComputeFunc<Row, Iterator<Row>> computeFn,
-                     int parallelism, RowSchema inputSchema) {
-    super(tSetEnv, name, parallelism, inputSchema);
-    this.computeFunc = computeFn;
+                        RowSchema inputSchema, boolean iterative) {
+    this(tSetEnv, "computec", computeFn, parallelism, inputSchema, iterative);
   }
 
   public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn,
-                        int parallelism, RowSchema inputSchema) {
+                        int parallelism, RowSchema inputSchema, boolean iterative) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
+    this.iterative = iterative;
   }
 
   @Override
   public INode getINode() {
     if (computeFunc instanceof ComputeCollectorFunc) {
-      return new RowComupteCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
-          this, getInputs());
+      if (!iterative) {
+        return new RowComupteCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
+            this, getInputs());
+      } else {
+        return new RowItrComputeCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
+            this, getInputs());
+      }
     }
 
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);

@@ -11,16 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.links.batch.row;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.common.table.Row;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
+import edu.iu.dsc.tws.tset.sets.batch.row.RowComputeTSet;
 
 public class RowPartitionTLink extends RowBatchTLinkImpl {
   private boolean useDisk = false;
@@ -41,6 +45,21 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
                         int sourceParallelism, int targetParallelism, RowSchema schema) {
     super(tSetEnv, "partition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;
+  }
+
+  protected RowComputeTSet compute(String n,
+                                ComputeCollectorFunc<Row, Iterator<Row>> computeFunction) {
+    RowComputeTSet set;
+    if (n != null && !n.isEmpty()) {
+      set = new RowComputeTSet(getTSetEnv(), n, computeFunction, getTargetParallelism(),
+          (RowSchema) getSchema(), true);
+    } else {
+      set = new RowComputeTSet(getTSetEnv(), computeFunction, getTargetParallelism(),
+          (RowSchema) getSchema(), true);
+    }
+    addChildToGraph(set);
+
+    return set;
   }
 
   @Override

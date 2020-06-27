@@ -58,15 +58,15 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
     return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
-  public RowComputeTSet compute(String n,
+  protected RowComputeTSet compute(String n,
                                 ComputeCollectorFunc<Row, Iterator<Row>> computeFunction) {
     RowComputeTSet set;
     if (n != null && !n.isEmpty()) {
       set = new RowComputeTSet(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          (RowSchema) getSchema());
+          (RowSchema) getSchema(), false);
     } else {
       set = new RowComputeTSet(getTSetEnv(), computeFunction, getTargetParallelism(),
-          (RowSchema) getSchema());
+          (RowSchema) getSchema(), false);
     }
     addChildToGraph(set);
 
