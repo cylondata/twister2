@@ -34,14 +34,14 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
-import edu.iu.dsc.tws.comms.table.ops.TPartition;
+import edu.iu.dsc.tws.comms.table.ops.STPartition;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class DirectOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PipeOperation.class.getName());
 
-  protected TPartition op;
+  protected STPartition op;
   private boolean syncCalled = false;
   private Set<Integer> thisTargets;
 
@@ -74,7 +74,7 @@ public class DirectOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     Schema schema = (Schema) edge.getProperty(CommunicationContext.ROW_SCHEMA);
-    op = new TPartition(newComm, WorkerEnvironment.getWorkerEnv().getWorkerController(),
+    op = new STPartition(newComm, WorkerEnvironment.getWorkerEnv().getWorkerController(),
         sources, targets, tPlan, destSelector, indexes, schema,
         new PartitionReceiver(), runtime.getRootAllocator(), CommunicationContext.TABLE_PIPE);
   }

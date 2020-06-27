@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch.table;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
@@ -32,8 +34,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.common.table.Table;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.table.ArrowCallback;
-import edu.iu.dsc.tws.comms.table.ops.TPartition;
+import edu.iu.dsc.tws.comms.table.ops.BTPartition;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
@@ -41,7 +42,7 @@ import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 public class PartitionOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionOperation.class.getName());
 
-  protected TPartition op;
+  protected BTPartition op;
   private boolean syncCalled = false;
   private Set<Integer> thisTargets;
 
@@ -81,22 +82,26 @@ public class PartitionOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     Schema schema = (Schema) edge.getProperty(CommunicationContext.ROW_SCHEMA);
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new TPartition(newComm, WorkerEnvironment.getWorkerEnv().getWorkerController(),
+    op = new BTPartition(newComm, WorkerEnvironment.getWorkerEnv().getWorkerController(),
         sources, targets, tPlan, destSelector, indexes, schema,
-        new PartitionReceiver(), runtime.getRootAllocator());
+        new PartitionReceiver(), runtime.getRootAllocator(), CommunicationContext.TABLE_PARTITION);
   }
 
   public synchronized boolean send(int source, IMessage message, int dest) {
     return op.insert(source, (Table) message.getContent());
   }
 
-  public class PartitionReceiver implements ArrowCallback {
+  public class PartitionReceiver implements BulkReceiver {
     @Override
-    public void onReceive(int source, int target, Table table) {
-      LOG.info(String.format("Received table to %d -> %d", source, target));
-      TaskMessage msg = new TaskMessage<>(table, inEdge, source);
+    public void init(Config cfg, Set<Integer> targets) {
+    }
+
+    @Override
+    public boolean receive(int target, Iterator<Object> it) {
+      LOG.info(String.format("Received table to %d -> %d", target, target));
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       outMessages.get(target).offer(msg);
+      return true;
     }
   }
 

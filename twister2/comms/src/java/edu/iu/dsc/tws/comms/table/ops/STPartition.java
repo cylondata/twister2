@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class TPartition extends BaseOperation {
+public class STPartition extends BaseOperation {
   private ArrowAllToAll allToAll;
   private DestinationSelector selector;
   private int[] indexes;
@@ -56,9 +56,9 @@ public class TPartition extends BaseOperation {
   /**
    * Create the base operation
    */
-  public TPartition(Communicator comm, IWorkerController controller, LogicalPlanBuilder builder,
-                    DestinationSelector selector, List<Integer> indexes,
-                    Schema schema, ArrowCallback receiver, RootAllocator allocator) {
+  public STPartition(Communicator comm, IWorkerController controller, LogicalPlanBuilder builder,
+                     DestinationSelector selector, List<Integer> indexes,
+                     Schema schema, ArrowCallback receiver, RootAllocator allocator) {
     this(comm, controller, builder.getSources(), builder.getTargets(), builder.build(),
         selector, indexes, schema, receiver, allocator);
   }
@@ -66,10 +66,10 @@ public class TPartition extends BaseOperation {
   /**
    * Create the base operation
    */
-  public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
-                    Set<Integer> targets, LogicalPlan plan,
-                    DestinationSelector selector, List<Integer> indexes,
-                    Schema schema, ArrowCallback receiver, RootAllocator allocator) {
+  public STPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
+                     Set<Integer> targets, LogicalPlan plan,
+                     DestinationSelector selector, List<Integer> indexes,
+                     Schema schema, ArrowCallback receiver, RootAllocator allocator) {
     this(comm, controller, sources, targets, plan, selector, indexes, schema, receiver, allocator,
         CommunicationContext.TABLE_PARTITION);
   }
@@ -77,10 +77,10 @@ public class TPartition extends BaseOperation {
   /**
    * Create the base operation
    */
-  public TPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
-                    Set<Integer> targets, LogicalPlan plan,
-                    DestinationSelector selector, List<Integer> indexes,
-                    Schema schema, ArrowCallback receiver, RootAllocator allocator, String name) {
+  public STPartition(Communicator comm, IWorkerController controller, Set<Integer> sources,
+                     Set<Integer> targets, LogicalPlan plan,
+                     DestinationSelector selector, List<Integer> indexes,
+                     Schema schema, ArrowCallback receiver, RootAllocator allocator, String name) {
     super(comm, false, name);
     this.selector = selector;
     if (indexes == null) {
