@@ -363,7 +363,7 @@ public class JobMaster {
       }
     };
 
-    jmThread.setName("JM");
+    jmThread.setName("JobMaster");
     jmThread.setDaemon(true);
     jmThread.start();
 

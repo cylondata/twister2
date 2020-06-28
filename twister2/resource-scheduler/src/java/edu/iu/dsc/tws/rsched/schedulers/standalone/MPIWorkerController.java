@@ -33,18 +33,22 @@ public class MPIWorkerController implements IWorkerController {
 
   private static final Logger LOG = Logger.getLogger(MPIWorkerController.class.getName());
 
-  private int thisWorkerID;
+  private int workerID;
+  private int restartCount;
 
   private Map<Integer, JobMasterAPI.WorkerInfo> workerInfoMap = new HashMap<>();
 
-  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> workers) {
-    this.thisWorkerID = thisWorkerID;
+  public MPIWorkerController(int workerID,
+                             Map<Integer, JobMasterAPI.WorkerInfo> workers,
+                             int restartCount) {
+    this.workerID = workerID;
     this.workerInfoMap = workers;
+    this.restartCount = restartCount;
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return workerInfoMap.get(thisWorkerID);
+    return workerInfoMap.get(workerID);
   }
 
   @Override
@@ -65,6 +69,11 @@ public class MPIWorkerController implements IWorkerController {
   @Override
   public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     return new ArrayList<>(workerInfoMap.values());
+  }
+
+  @Override
+  public int workerRestartCount() {
+    return restartCount;
   }
 
   @Override

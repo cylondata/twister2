@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -110,6 +111,12 @@ public final class MPIWorkerStarter {
    */
   private JobMaster jobMaster;
 
+  /**
+   * number of time the job is restarted after failures
+   * initially, it is zero for the first submission
+   */
+  private int restartCount;
+
   public static void main(String[] args) {
     new MPIWorkerStarter(args);
   }
@@ -119,7 +126,6 @@ public final class MPIWorkerStarter {
    *
    * @param args the main args
    */
-  @SuppressWarnings("RegexpSinglelineJava")
   private MPIWorkerStarter(String[] args) {
 
     // initialize MPI
@@ -131,32 +137,7 @@ public final class MPIWorkerStarter {
       throw new Twister2RuntimeException("Failed to initialize MPI process", e);
     }
 
-    // on any uncaught exception, we will send worker status message to JM and exit
-    // We use system exit to signal MPI master that this worker has failed
-    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-      LOG.log(Level.SEVERE, "Uncaught exception in thread "
-          + thread + ". Finalizing this worker...", throwable);
-
-      // if this is the JobMaster
-      if (wInfo != null && wInfo.getWorkerID() == -1 && jobMaster != null) {
-        jobMaster.jmFailed();
-        return;
-      }
-
-      // it means another worker already failed
-      // just exit. Since JM is already done.
-      if (throwable instanceof JobFaultyException) {
-        WorkerRuntime.close();
-        System.exit(1);
-      } else {
-        // first send a FAILED message
-        // this message will be broadcasted to all workers
-        // then send a FULLY_FAILED, to end the job
-        updateWorkerState(JobMasterAPI.WorkerState.FAILED);
-        sendWorkerFinalStateToJM(JobMasterAPI.WorkerState.FULLY_FAILED);
-        System.exit(1);
-      }
-    });
+    setUncaughtExceptionHandler();
 
     // parse command line parameters
     Options cmdOptions = setupOptions();
@@ -183,7 +164,58 @@ public final class MPIWorkerStarter {
       startWorkerWithoutJM(config, MPI.COMM_WORLD);
     }
 
-    finalizeMPI(JobMasterAPI.WorkerState.COMPLETED);
+    finalizeMPI();
+  }
+
+  @SuppressWarnings("RegexpSinglelineJava")
+  private void setUncaughtExceptionHandler() {
+    // on any uncaught exception, we will send worker status message to JM and exit
+    // We use system exit to signal MPI master that this worker has failed
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      LOG.log(Level.SEVERE, "Uncaught exception in thread "
+          + thread + ". Finalizing this worker...", throwable);
+
+      // if JM is not used, exit JVM
+      if (!JobMasterContext.isJobMasterUsed(config)) {
+        System.exit(1);
+      }
+
+      // if this is the JobMaster
+      if (wInfo != null && wInfo.getWorkerID() == -1 && jobMaster != null) {
+        jobMaster.jmFailed();
+        LOG.severe("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! JM Exiting with failure.");
+        System.exit(1);
+      }
+
+      // if JM runs in the client, send a FAILED message,
+      // if RESTART count reached the limit, send FULLY_FAILED
+      if (JobMasterContext.jobMasterRunsInClient(config)) {
+        updateWorkerState(JobMasterAPI.WorkerState.FAILED);
+        if (restartCount >= FaultToleranceContext.maxMpiJobRestarts(config) - 1) {
+          sendWorkerFinalStateToJM(JobMasterAPI.WorkerState.FULLY_FAILED);
+        }
+        System.exit(1);
+      }
+
+      //
+      // if JM is running in the first MPI worker
+      //
+      // it means another worker already failed
+      // just exit. Since JM is already done.
+      if (throwable instanceof JobFaultyException) {
+        WorkerRuntime.close();
+        LOG.severe("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Worker Exiting with JobFaultyException failure.");
+        System.exit(1);
+      } else {
+        // first send a FAILED message
+        // this message will be broadcasted to all workers
+        // then send a FULLY_FAILED, to end the job
+        updateWorkerState(JobMasterAPI.WorkerState.FAILED);
+        sendWorkerFinalStateToJM(JobMasterAPI.WorkerState.FULLY_FAILED);
+        LOG.severe("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Worker Exiting with failure.");
+        System.exit(1);
+      }
+    });
   }
 
   private void setThreadName() {
@@ -208,21 +240,18 @@ public final class MPIWorkerStarter {
    */
   private void startWorkerWithoutJM(Config cfg, Intracomm intracomm) {
     wInfo = createWorkerInfo(config, globalRank);
-    LOG.info("workerID: " + wInfo.getWorkerID());
     Map<Integer, JobMasterAPI.WorkerInfo> infos = createWorkerInfoMap(intracomm);
-    MPIWorkerController wc = new MPIWorkerController(globalRank, infos);
+    MPIWorkerController wc = new MPIWorkerController(globalRank, infos, restartCount);
     WorkerRuntime.init(cfg, wc);
-    startWorker(config, globalRank, intracomm);
+    startWorker(intracomm);
   }
 
   private void startWorkerWithJM() {
 
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       wInfo = createWorkerInfo(config, globalRank);
-      LOG.info("workerID: " + wInfo.getWorkerID());
-      int restartCount = 0;
       WorkerRuntime.init(config, job, wInfo, restartCount);
-      startWorker(config, globalRank, MPI.COMM_WORLD);
+      startWorker(MPI.COMM_WORLD);
     } else {
       // lets broadcast the worker info
       // broadcast the port of job master
@@ -243,10 +272,8 @@ public final class MPIWorkerStarter {
 
       if (globalRank == 0) {
         wInfo = createWorkerInfo(config, -1);
-        LOG.info("workerID: " + wInfo.getWorkerID());
       } else {
         wInfo = createWorkerInfo(config, splittedRank);
-        LOG.info("workerID: " + wInfo.getWorkerID());
       }
 
       // broadcast the job master information to all workers
@@ -256,9 +283,8 @@ public final class MPIWorkerStarter {
         startMaster();
       } else {
         // init WorkerRuntime
-        int restartCount = 0;
         WorkerRuntime.init(config, job, wInfo, restartCount);
-        startWorker(config, globalRank, splittedComm);
+        startWorker(splittedComm);
       }
     }
   }
@@ -266,40 +292,35 @@ public final class MPIWorkerStarter {
   /**
    * Start the worker
    *
-   * @param cfg configuration
-   * @param rank global rank
    * @param intracomm communication
    */
-  private void startWorker(Config cfg, int rank, Intracomm intracomm) {
+  private void startWorker(Intracomm intracomm) {
+
     try {
-      String twister2Home = Context.twister2Home(cfg);
+      String twister2Home = Context.twister2Home(config);
       // initialize the logger
-      initLogger(cfg, intracomm.getRank(), twister2Home);
+      initLogger(config, intracomm.getRank(), twister2Home);
 
       // now create the worker
       IWorkerController wc = WorkerRuntime.getWorkerController();
-      IPersistentVolume persistentVolume = initPersistenceVolume(cfg, rank);
+      IPersistentVolume persistentVolume = initPersistenceVolume(config, globalRank);
 
       MPIContext.addRuntimeObject("comm", intracomm);
-      String workerClass = MPIContext.workerClass(cfg);
+      String workerClass = job.getWorkerClassName();
       try {
         Object object = ReflectionUtils.newInstance(workerClass);
+        LOG.log(Level.FINE, "loaded the worker class: " + workerClass);
         if (object instanceof IWorker) {
           IWorker worker = (IWorker) object;
           MPIWorkerManager workerManager = new MPIWorkerManager();
-          workerManager.execute(cfg, intracomm.getRank(), wc, persistentVolume, null, worker);
-          // now initialize the worker
-          // worker.execute(cfg, intracomm.getRank(), wc, persistentVolume, null);
+          workerManager.execute(config, intracomm.getRank(), wc, persistentVolume, null, worker);
         } else {
           throw new RuntimeException("Cannot instantiate the class: " + object.getClass());
         }
-        LOG.log(Level.FINE, "loaded the worker class: " + workerClass);
       } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
         LOG.log(Level.SEVERE, String.format("failed to load the worker class %s", workerClass), e);
         throw new RuntimeException(e);
       }
-
-      LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
       throw new RuntimeException(e);
@@ -307,11 +328,9 @@ public final class MPIWorkerStarter {
   }
 
   /**
-   * Start the master
+   * Start the JobMaster
    */
   private void startMaster() {
-    // lets do a barrier here so everyone is synchronized at the start
-    // lets create the resource plan
 
     try {
       int port = JobMasterContext.jobMasterPort(config);
@@ -325,8 +344,7 @@ public final class MPIWorkerStarter {
       jobMaster = new JobMaster(
           config, "0.0.0.0", port, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
       jobMaster.startJobMasterBlocking();
-
-      LOG.log(Level.INFO, "Master done... ");
+      LOG.log(Level.INFO, "JobMaster done... ");
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
@@ -447,6 +465,14 @@ public final class MPIWorkerStarter {
         .required()
         .build();
 
+    Option restartCountOption = Option.builder("x")
+        .desc("number of time the job is restarted after failure")
+        .longOpt("restart_count")
+        .hasArgs()
+        .argName("restart count")
+        .required()
+        .build();
+
     options.addOption(twister2Home);
     options.addOption(containerClass);
     options.addOption(configDirectory);
@@ -455,6 +481,7 @@ public final class MPIWorkerStarter {
     options.addOption(jobMasterIP);
     options.addOption(jobMasterPort);
     options.addOption(restoreJob);
+    options.addOption(restartCountOption);
 
     return options;
   }
@@ -468,6 +495,7 @@ public final class MPIWorkerStarter {
     String jIp = cmd.getOptionValue("job_master_ip");
     int jPort = Integer.parseInt(cmd.getOptionValue("job_master_port"));
     boolean restoreJob = Boolean.parseBoolean(cmd.getOptionValue("restore_job"));
+    restartCount = Integer.parseInt(cmd.getOptionValue("restart_count"));
 
     LOG.log(Level.FINE, String.format("Initializing process with "
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
@@ -669,12 +697,9 @@ public final class MPIWorkerStarter {
     return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
   }
 
-  public void finalizeMPI(JobMasterAPI.WorkerState finalState) {
+  public void finalizeMPI() {
     try {
-      // lets do a barrier here so everyone is synchronized at the end
-      // commenting out barrier to fix stale workers issue
-      // MPI.COMM_WORLD.barrier();
-      sendWorkerFinalStateToJM(finalState);
+      sendWorkerFinalStateToJM(JobMasterAPI.WorkerState.COMPLETED);
       MPI.Finalize();
     } catch (MPIException ignore) {
     }
@@ -708,11 +733,11 @@ public final class MPIWorkerStarter {
    * if Job Master is used,
    * propagate final worker state to Job Master
    */
-  private void sendWorkerFinalStateToJM(JobMasterAPI.WorkerState finalState) {
+  private void sendWorkerFinalStateToJM(JobMasterAPI.WorkerState workerState) {
     LOG.info(String.format("Worker-%d finished executing with the final status: %s",
-        wInfo.getWorkerID(), finalState.name()));
+        wInfo.getWorkerID(), workerState.name()));
 
-    updateWorkerState(finalState);
+    updateWorkerState(workerState);
     WorkerRuntime.close();
   }
 

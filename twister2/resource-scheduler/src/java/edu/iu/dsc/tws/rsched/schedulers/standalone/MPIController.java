@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.MPIContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -66,12 +67,11 @@ public class MPIController implements IController {
   @Override
   public boolean start(JobAPI.Job job) {
     if (job == null || job.getNumberOfWorkers() == 0) {
-      LOG.log(Level.SEVERE, "No container requested. Can't schedule");
+      LOG.log(Level.SEVERE, "No worker requested. Can't deploy the job");
       return false;
     }
-    long containers = job.getNumberOfWorkers();
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of workers = %d",
-        MPIContext.clusterType(config), containers));
+        MPIContext.clusterType(config), job.getNumberOfWorkers()));
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobId()).toString();
     boolean jobCreated = createJob(this.workingDirectory, jobDirectory, job);
@@ -119,6 +119,10 @@ public class MPIController implements IController {
         transformedArgs.add(arg);
       }
     }
+
+    // add restart count as the last parameter
+    transformedArgs.add("0");
+
     // add the args to the command
     String[] cmdArray = transformedArgs.toArray(new String[0]);
     LOG.fine("Executing job [" + jobWorkingDirectory + "]: " + Arrays.toString(cmdArray));
@@ -129,9 +133,31 @@ public class MPIController implements IController {
   /**
    * This is for unit testing
    */
-  protected boolean runProcess(String jobWorkingDirectory, String[] slurmCmd,
+  protected boolean runProcess(String jobWorkingDirectory, String[] cmd,
                                StringBuilder stderr) {
-    File file = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
-    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file, true);
+    File workingDir = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
+
+    int tryCount = 0;
+
+    while (tryCount++ < FaultToleranceContext.maxMpiJobRestarts(config)) {
+      int statusCode = ProcessUtils.runSyncProcess(false, cmd, stderr, workingDir, true);
+      if (statusCode == 0) {
+        LOG.info("MPI job succeeded.");
+        return true;
+      } else if (tryCount < FaultToleranceContext.maxMpiJobRestarts(config)) {
+        LOG.severe(
+            "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                + "\nFailed to execute mpirun. Will try again. STDERR: " + stderr.toString()
+                + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+        // clear error buffer
+        stderr.setLength(0);
+
+        // update restartCount at the mpi command
+        cmd[19] = tryCount + "";
+      }
+    }
+
+    return false;
   }
 }

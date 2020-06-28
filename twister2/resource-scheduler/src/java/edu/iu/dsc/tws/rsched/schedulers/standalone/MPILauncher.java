@@ -41,7 +41,6 @@ import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -256,7 +255,6 @@ public class MPILauncher implements ILauncher {
             config, "0.0.0.0", port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
-        ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
         throw new RuntimeException(e);
@@ -270,6 +268,7 @@ public class MPILauncher implements ILauncher {
       controller.initialize(config);
       start[0] = controller.start(job);
     });
+    controllerThread.setName("MPIController");
     controllerThread.start();
     // wait until the controller finishes
     try {

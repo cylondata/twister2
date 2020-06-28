@@ -44,9 +44,7 @@ public interface IWorkerController {
    * get worker restartCount
    * zero means starting for the first time
    */
-  default int workerRestartCount() {
-    return 0;
-  }
+  int workerRestartCount();
 
   /**
    * get all joined workers in this job, including the ones finished execution
