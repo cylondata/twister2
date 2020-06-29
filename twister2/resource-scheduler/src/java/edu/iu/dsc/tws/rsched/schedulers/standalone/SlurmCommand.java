@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class SlurmCommand extends MPICommand {
@@ -82,6 +83,8 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add("-Xms" + getMemory(job) + "m");
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
+    // whether this is a job that is starting from a checkpoint
+    mpiCommand.add(Boolean.toString(CheckpointingContext.startingFromACheckpoint(config)));
     return mpiCommand;
   }
 

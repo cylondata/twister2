@@ -154,7 +154,7 @@ public class MPIController implements IController {
         stderr.setLength(0);
 
         // update restartCount at the mpi command
-        cmd[19] = tryCount + "";
+        cmd[cmd.length - 1] = tryCount + "";
       }
     }
 
