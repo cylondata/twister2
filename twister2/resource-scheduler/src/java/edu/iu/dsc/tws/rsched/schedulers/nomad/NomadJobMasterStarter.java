@@ -160,7 +160,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobId, workerConfig);
-    job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);

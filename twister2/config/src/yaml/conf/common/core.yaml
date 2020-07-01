@@ -1,9 +1,15 @@
 ###################################################################
-# User name that will be used in JobID
+# Job ID and User name related parameters
 ###################################################################
-# JobID is constructed as:
-#   [username]-[jobName]-[timestamp]
-# if username is specified here, we use this value.
+# users can specify the jobID that will be used with following parameter
+# if they do not specify the jobID, it will be calculated as follows:
+#   JobID = [username]-[jobName]-[timestamp]
+# jobID has to be provided for the jobs that will be restarted from previously checkpointed state
+#
+# twister2.job.id: "job-id"
+
+# User name that will be used in JobID
+# if the username is specified here, we use this value.
 # Otherwise we get username from shell environment.
 # if the username is longer than 9 characters, we use first 9 characters of it
 # long value of timestamp is converted to alphanumeric string format

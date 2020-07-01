@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -55,17 +58,28 @@ import okhttp3.OkHttpClient;
  * a controller class to talk to the Kubernetes Master to manage jobs
  */
 
-public class KubernetesController {
+public final class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
-  private String namespace;
+  private static String namespace;
   private static ApiClient client = null;
   private static CoreV1Api coreApi;
   private static AppsV1Api appsApi;
 
-  public void init(String nspace) {
-    this.namespace = nspace;
+  private static KubernetesController controller;
+
+  private KubernetesController() {
+  }
+
+  public static synchronized KubernetesController init(String nspace) {
+    if (controller != null) {
+      return controller;
+    }
+
+    namespace = nspace;
     initApiInstances();
+    controller = new KubernetesController();
+    return controller;
   }
 
   public static ApiClient getApiClient() {
@@ -83,7 +97,7 @@ public class KubernetesController {
     }
   }
 
-  public static void initApiInstances() {
+  private static void initApiInstances() {
     if (client == null) {
       getApiClient();
     }
@@ -108,16 +122,49 @@ public class KubernetesController {
   }
 
   public static void close() {
-    if (client != null && client.getHttpClient() != null
-        && client.getHttpClient().connectionPool() != null) {
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().dispatcher() != null
+        && client.getHttpClient().dispatcher().executorService() != null) {
+      client.getHttpClient().dispatcher().executorService().shutdown();
+    }
 
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().connectionPool() != null) {
       client.getHttpClient().connectionPool().evictAll();
+    }
+
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().cache() != null) {
+      try {
+        client.getHttpClient().cache().close();
+      } catch (IOException e) {
+      }
+    }
+
+    controller = null;
+  }
+
+  /**
+   * return the list of StatefulSet objects for this job,
+   * otherwise return null
+   */
+  public List<V1StatefulSet> getJobStatefulSets(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1StatefulSetList setList = appsApi.listNamespacedStatefulSet(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+      return setList.getItems();
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
+      throw new RuntimeException(e);
     }
   }
 
   /**
-   * return the StatefulSet object if it exists in the Kubernetes master,
-   * otherwise return null
+   * check whether given StatefulSet objects exist Kubernetes master,
    */
   public boolean existStatefulSets(List<String> statefulSetNames) {
     V1StatefulSetList setList = null;
@@ -141,23 +188,15 @@ public class KubernetesController {
   }
 
   /**
-   * return the list of StatefulSet names that matches this jobs StatefulSet names for workers
+   * return the list of worker StatefulSet names for this job
    * they must be in the form of "jobID-index"
    * otherwise return an empty ArrayList
    */
-  public ArrayList<String> getStatefulSetsForJobWorkers(String jobID) {
-    V1StatefulSetList setList = null;
-    try {
-      setList = appsApi.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
-    } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
-      throw new RuntimeException(e);
-    }
-
+  public ArrayList<String> getJobWorkerStatefulSets(String jobID) {
+    List<V1StatefulSet> ssList = getJobStatefulSets(jobID);
     ArrayList<String> ssNameList = new ArrayList<>();
 
-    for (V1StatefulSet statefulSet : setList.getItems()) {
+    for (V1StatefulSet statefulSet : ssList) {
       String ssName = statefulSet.getMetadata().getName();
       if (ssName.matches(jobID + "-" + "[0-9]+")) {
         ssNameList.add(ssName);
@@ -291,12 +330,26 @@ public class KubernetesController {
   }
 
   /**
+   * return the list of services that belong to this job
+   * otherwise return an empty list
+   */
+  public List<V1Service> getJobServices(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1ServiceList serviceList = coreApi.listNamespacedService(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+      return serviceList.getItems();
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting service list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * return existing service name if one of the services exist in Kubernetes master,
    * otherwise return null
    */
   public String existServices(List<String> serviceNames) {
-// sending the request with label does not work for list services call
-//    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(
@@ -392,12 +445,12 @@ public class KubernetesController {
   /**
    * check whether the given PersistentVolumeClaim exist on Kubernetes master
    */
-  public boolean existPersistentVolumeClaim(String pvcName) {
-    String labelSelector = "t2-pvc=" + pvcName;
+  public boolean existPersistentVolumeClaim(String jobID) {
+    String pvcName = jobID;
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
-          namespace, null, null, null, null, labelSelector, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
       throw new RuntimeException(e);
@@ -411,6 +464,51 @@ public class KubernetesController {
     }
 
     return false;
+  }
+
+  /**
+   * get PersistentVolumeClaim object for this job
+   */
+  public V1PersistentVolumeClaim getJobPersistentVolumeClaim(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      if (pvcList.getItems().size() == 1) {
+        return pvcList.getItems().get(0);
+      } else if (pvcList.getItems().size() > 1) {
+        throw new Twister2RuntimeException(
+            "There are multiple PersistentVolumeClaim objects for this job on Kubernetes master");
+      } else {
+        return null;
+      }
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return the PersistentVolumeClaim object names that belong to Twister2
+   * otherwise return empty list
+   */
+  public List<String> getTwister2PersistentVolumeClaims() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return pvcList.getItems().stream()
+          .map(pvc -> pvc.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
   }
 
   /**
@@ -441,7 +539,9 @@ public class KubernetesController {
     return false;
   }
 
-  public boolean deletePersistentVolumeClaim(String pvcName) {
+  public boolean deletePersistentVolumeClaim(String jobID) {
+
+    String pvcName = jobID;
 
     try (okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
         pvcName, namespace, null, null, null, null, null, null, null)
@@ -620,16 +720,12 @@ public class KubernetesController {
     return nodeInfoList;
   }
 
-  public static List<String> getUploaderWebServerPods(String ns, String uploaderLabel) {
-
-    if (coreApi == null) {
-      initApiInstances();
-    }
+  public List<String> getUploaderWebServerPods(String uploaderLabel) {
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          ns, null, null, null, null, uploaderLabel, null, null, null, null);
+          namespace, null, null, null, null, uploaderLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting uploader pod list.", e);
       throw new RuntimeException(e);
@@ -649,21 +745,17 @@ public class KubernetesController {
    * currently it does not delete job package file from multiple uploader pods
    * so, It is not in use
    */
-  public boolean deleteJobPackage(List<String> uploaderPods, String jobPackageName) {
+  public boolean deleteJobPackage(List<String> uploaderPods,
+                                         String jobPackageName) {
 
-    // command to execute
-    // if [ -f test.txt ]; then rm -f test.txt; else exit 1; fi
-    // if file exist, remove it. Otherwise exit 1
-//    String command = String.format("if [ -f %s ]; then rm -f %s; else exit 1; fi",
-//        jobPackageName, jobPackageName);
-    String command = String.format("rm -f %s", jobPackageName);
+    String command = String.format("rm %s", jobPackageName);
     String[] fullCommand = {"bash", "-c", command};
 
     boolean allDeleted = true;
     for (String uploaderPod : uploaderPods) {
 
       try {
-        Exec exec = new Exec(client);
+        Exec exec = new Exec(getApiClient());
         final Process proc = exec.exec(namespace, uploaderPod, fullCommand, false, false);
         proc.waitFor();
         proc.destroy();
@@ -726,8 +818,9 @@ public class KubernetesController {
   /**
    * delete the given ConfigMap from Kubernetes master
    */
-  public boolean deleteConfigMap(String configMapName) {
+  public boolean deleteConfigMap(String jobID) {
 
+    String configMapName = jobID;
     int gracePeriodSeconds = 0;
     String propagationPolicy = KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY;
 
@@ -762,25 +855,12 @@ public class KubernetesController {
    * return true if there is already a ConfigMap object with the same name on Kubernetes master,
    * otherwise return false
    */
-  public boolean existConfigMap(String configMapName) {
-    if (getConfigMap(configMapName) == null) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * return the ConfigMap object if it exists,
-   * otherwise return null
-   */
-  public V1ConfigMap getConfigMap(String configMapName) {
-
-    String labelSelector = "t2-cm=" + configMapName;
+  public boolean existConfigMap(String jobID) {
+    String configMapName = jobID;
     V1ConfigMapList configMapList = null;
     try {
       configMapList = coreApi.listNamespacedConfigMap(namespace,
-          null, null, null, null, labelSelector, null, null, null, null);
+          null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
       throw new RuntimeException(e);
@@ -788,20 +868,79 @@ public class KubernetesController {
 
     for (V1ConfigMap configMap : configMapList.getItems()) {
       if (configMapName.equals(configMap.getMetadata().getName())) {
-        return configMap;
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
-   * return restart count for the given workerID
-   * if there is no key for the given workerID, return -1
+   * return the ConfigMap object names that belong to Twister2
+   * otherwise return empty list
+   * ConfigMap names correspond to jobIDs
+   * There is a ConfigMap for each running job
+   * So, this list shows the currently running jobs
    */
-  public int getRestartCount(String jobID, String keyName) {
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
-    V1ConfigMap configMap = getConfigMap(configMapName);
+  public List<String> getTwister2ConfigMapNames() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return configMapList.getItems().stream()
+          .map(cm -> cm.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return the ConfigMap object of this job, if it exists,
+   * otherwise return null
+   */
+  public V1ConfigMap getJobConfigMap(String jobID) {
+
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(namespace,
+          null, null, null, null, labelSelector, null, null, null, null);
+
+      if (configMapList.getItems().size() == 1) {
+        return configMapList.getItems().get(0);
+      } else if (configMapList.getItems().size() > 1) {
+        throw new Twister2RuntimeException(
+            "There are multiple ConfigMaps for this job on Kubernetes master.");
+      } else {
+        return null;
+      }
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return configMap parameter value for the given jobID
+   * if there is no value for the key, return null
+   */
+  public String getConfigMapParam(String jobID, String keyName) {
+    Map<String, String> pairs = getConfigMapParams(jobID);
+    return pairs.get(keyName);
+  }
+
+  /**
+   * return all configMap parameters for the given jobID
+   * if there is no ConfigMap, throw an exception
+   */
+  public Map<String, String> getConfigMapParams(String jobID) {
+    String configMapName = jobID;
+    V1ConfigMap configMap = getJobConfigMap(jobID);
     if (configMap == null) {
       throw new RuntimeException("Could not get ConfigMap from K8s master: " + configMapName);
     }
@@ -811,7 +950,15 @@ public class KubernetesController {
       throw new RuntimeException("Could not get data from ConfigMap");
     }
 
-    String countStr = pairs.get(keyName);
+    return pairs;
+  }
+
+  /**
+   * return restart count for the given workerID
+   * if there is no key for the given workerID, return -1
+   */
+  public int getRestartCount(String jobID, String keyName) {
+    String countStr = getConfigMapParam(jobID, keyName);
     if (countStr == null) {
       return -1;
     } else {
@@ -820,22 +967,22 @@ public class KubernetesController {
   }
 
   /**
-   * add a new restart count to the job ConfigMap
+   * add a new parameter the job ConfigMap
    */
-  public boolean addRestartCount(String jobID, String keyName, int restartCount) {
+  public boolean addConfigMapParam(String jobID, String keyName, String value) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
-    String countStr = "\"" + restartCount + "\"";
+    String configMapName = jobID;
+    String valueStr = "\"" + value + "\"";
 
     String jsonPatchStr =
-        "[{\"op\":\"add\",\"path\":\"/data/" + keyName + "\",\"value\":" + countStr + "}]";
+        "[{\"op\":\"add\",\"path\":\"/data/" + keyName + "\",\"value\":" + valueStr + "}]";
 
     try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
         configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
         .execute()) {
 
       if (response.isSuccessful()) {
-        LOG.fine("ConfigMap parameter added " + keyName + " = " + restartCount);
+        LOG.fine("ConfigMap parameter added " + keyName + " = " + value);
         return true;
 
       } else {
@@ -852,22 +999,22 @@ public class KubernetesController {
   }
 
   /**
-   * update a restart count in the job ConfigMap
+   * update a parameter value in the job ConfigMap
    */
-  public boolean updateRestartCount(String jobID, String keyName, int restartCount) {
+  public boolean updateConfigMapParam(String jobID, String paramName, String paramValue) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
-    String countStr = "\"" + restartCount + "\"";
+    String configMapName = jobID;
+    String countStr = "\"" + paramValue + "\"";
 
     String jsonPatchStr =
-        "[{\"op\":\"replace\",\"path\":\"/data/" + keyName + "\",\"value\":" + countStr + "}]";
+        "[{\"op\":\"replace\",\"path\":\"/data/" + paramName + "\",\"value\":" + countStr + "}]";
 
     try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
         configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
         .execute()) {
 
       if (response.isSuccessful()) {
-        LOG.fine("ConfigMap parameter updated " + keyName + " = " + restartCount);
+        LOG.fine("ConfigMap parameter updated " + paramName + " = " + paramValue);
         return true;
 
       } else {
@@ -883,13 +1030,19 @@ public class KubernetesController {
     return false;
   }
 
+  public boolean updateConfigMapJobParam(JobAPI.Job job) {
+    String jobAsEncodedStr = Base64.getEncoder().encodeToString(job.toByteArray());
+    return updateConfigMapParam(
+        job.getJobId(), KubernetesConstants.JOB_OBJECT_CM_PARAM, jobAsEncodedStr);
+  }
+
   /**
    * remove a restart count from the job ConfigMap
    * this is used when the job is scaled down
    */
   public boolean removeRestartCount(String jobID, String keyName) {
 
-    String configMapName = KubernetesUtils.createConfigMapName(jobID);
+    String configMapName = jobID;
 
     String jsonPatchStr =
         "[{\"op\":\"remove\",\"path\":\"/data/" + keyName + "\"}]";

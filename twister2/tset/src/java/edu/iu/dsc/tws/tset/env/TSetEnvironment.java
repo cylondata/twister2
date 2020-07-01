@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
@@ -250,7 +251,7 @@ public abstract class TSetEnvironment {
    * @return bool
    */
   public boolean isCheckpointingEnabled() {
-    return CheckpointingConfigurations.isCheckpointingEnabled(this.getConfig())
+    return CheckpointingContext.isCheckpointingEnabled(this.getConfig())
         && this instanceof CheckpointingTSetEnv;
   }
 

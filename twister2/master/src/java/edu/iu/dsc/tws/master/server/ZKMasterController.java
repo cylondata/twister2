@@ -302,7 +302,6 @@ public class ZKMasterController implements IWorkerEventSender {
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
 
       workerMonitor.restarted(workerWithState);
-      workerRestarted(workerWithState.getInfo());
 
     } else if (workerWithState.getState() == JobMasterAPI.WorkerState.STARTED) {
 

@@ -81,8 +81,7 @@ public final class MesosMPIWorkerStarter {
         MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
 
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
+      JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
 
       // add any configuration from job file to the config object
       // if there are the same config parameters in both,
@@ -148,7 +147,7 @@ public final class MesosMPIWorkerStarter {
                                  IPersistentVolume pv) {
 
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
     String workerClass = job.getWorkerClassName();
     LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;

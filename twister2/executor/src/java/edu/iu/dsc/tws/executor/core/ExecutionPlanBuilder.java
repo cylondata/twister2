@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
@@ -127,7 +127,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     long tasksVersion = 0L;
 
-    if (CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+    if (CheckpointingContext.isCheckpointingEnabled(cfg)) {
       Set<Integer> globalTasks = Collections.emptySet();
       if (workerId == 0) {
         globalTasks = containersMap.values().stream()

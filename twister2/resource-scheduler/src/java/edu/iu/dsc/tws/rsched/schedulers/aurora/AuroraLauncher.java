@@ -88,7 +88,7 @@ public class AuroraLauncher implements ILauncher {
    * Terminate the Aurora Job
    */
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean killJob(String jobID) {
 
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraContext.auroraClusterName(config);

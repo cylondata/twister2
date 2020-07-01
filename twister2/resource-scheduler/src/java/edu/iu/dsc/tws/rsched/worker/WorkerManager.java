@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
+import edu.iu.dsc.tws.api.resource.IJobMasterFailureListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -32,7 +33,7 @@ import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 /**
  * Keep information about a managed environment where workers can get restarted.
  */
-public class WorkerManager implements IWorkerFailureListener {
+public class WorkerManager implements IWorkerFailureListener, IJobMasterFailureListener {
   private static final Logger LOG = Logger.getLogger(WorkerManager.class.getName());
 
   /**
@@ -92,6 +93,7 @@ public class WorkerManager implements IWorkerFailureListener {
     this.maxRetries = FaultToleranceContext.maxReExecutes(config);
 
     WorkerRuntime.addWorkerFailureListener(this);
+    WorkerRuntime.addJMFailureListener(this);
     JobProgressImpl.init();
   }
 
@@ -128,8 +130,8 @@ public class WorkerManager implements IWorkerFailureListener {
         LOG.warning("thrown JobFaultyException. Some workers should have failed.");
       }
 
-      // if the job is healthy, it means the worker finished successfully.
-      // we need to make sure whether all workers finish successfully also
+      // if the job is healthy, it means this worker has finished successfully.
+      // we need to make sure whether that all workers finished successfully also
       if (JobProgress.isJobHealthy()) {
 
         try {
@@ -174,7 +176,7 @@ public class WorkerManager implements IWorkerFailureListener {
 
     // ignore failure events if the first INIT barrier is not proceeded
     if (!firstInitBarrierProceeded) {
-      LOG.fine("Worker restarted event received before first init barrier. Restarted worker: "
+      LOG.fine("Worker restarted event received before first INIT barrier. Restarted worker: "
           + workerInfo.getWorkerID());
       return;
     }
@@ -202,5 +204,24 @@ public class WorkerManager implements IWorkerFailureListener {
     restartedWorkers.clear();
 
     JobProgressImpl.faultOccurred(wID);
+  }
+
+  @Override
+  public void jmFailed() {
+    // jm failed events are not propagated currently
+  }
+
+  @Override
+  public void jmRestarted(String jobMasterAddress) {
+    // ignore failure events if the first INIT barrier is not proceeded
+    if (!firstInitBarrierProceeded) {
+      LOG.warning("Job Master restarted event received before the first INIT barrier. Ignoring");
+      return;
+    }
+
+    // job is becoming faulty
+    if (JobProgress.isJobHealthy()) {
+      faultOccurred(-1);
+    }
   }
 }

@@ -219,7 +219,7 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     if (newState == JobAPI.JobState.COMPLETED || newState == JobAPI.JobState.FAILED) {
-      jobMaster.completeJob();
+      jobMaster.endJob(newState);
     }
   }
 

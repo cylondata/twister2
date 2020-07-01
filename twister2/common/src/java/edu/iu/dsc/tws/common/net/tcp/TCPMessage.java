@@ -50,7 +50,7 @@ public class TCPMessage {
     this.length = l;
   }
 
-  public TCPStatus testStatus() {
+  public TCPStatus getStatus() {
     return status;
   }
 
@@ -70,16 +70,24 @@ public class TCPMessage {
     return edge;
   }
 
-  void setComplete(boolean complete) {
-    if (complete) {
-      this.status = TCPStatus.COMPLETE;
-    } else {
-      this.status = TCPStatus.INIT;
-    }
+  public void setStatus(TCPStatus status) {
+    this.status = status;
+  }
+
+  public void setComplete() {
+    this.status = TCPStatus.COMPLETE;
+  }
+
+  public void setError() {
+    this.status = TCPStatus.ERROR;
   }
 
   public boolean isComplete() {
     return TCPStatus.COMPLETE == status;
+  }
+
+  public boolean isError() {
+    return TCPStatus.ERROR == status;
   }
 
   public int getLength() {

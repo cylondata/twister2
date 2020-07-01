@@ -4,8 +4,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: twister2-storage-<job-name>
+  name: <job-id>
   namespace: <kubernetes.namespace>
+  labels:
+    app: twister2
+    t2-job: <job-id>
   annotations:
     volume.beta.kubernetes.io/storage-class: "<kubernetes.persistent.storage.class>"
 spec:

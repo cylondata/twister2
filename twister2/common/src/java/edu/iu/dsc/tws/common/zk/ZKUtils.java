@@ -53,6 +53,10 @@ public final class ZKUtils {
   private ZKUtils() {
   }
 
+  public static CuratorFramework getClient() {
+    return client;
+  }
+
   /**
    * connect to ZooKeeper server
    * @param zkServers
@@ -155,6 +159,20 @@ public final class ZKUtils {
    */
   public static String jmEphemPath(String rootPath, String jobID) {
     return jobDir(rootPath, jobID) + "/jm-ephem-state";
+  }
+
+  /**
+   * construct the job submission time znode path
+   */
+  public static String jobSubmisionTimePath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/job-submission-time";
+  }
+
+  /**
+   * construct the job end time znode path
+   */
+  public static String jobEndTimePath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/job-end-time";
   }
 
   /**

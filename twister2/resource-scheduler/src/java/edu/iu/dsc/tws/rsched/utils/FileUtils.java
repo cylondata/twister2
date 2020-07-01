@@ -20,8 +20,12 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public final class FileUtils {
   private static final Logger LOG = Logger.getLogger(FileUtils.class.getName());
@@ -120,4 +124,23 @@ public final class FileUtils {
       return org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
     }
   }
+
+  /**
+   * get the list of directories in the given directory
+   * @param dirName
+   * @return
+   */
+  public static List<String> getDirectories(String dirName) {
+
+    File dir = new File(dirName);
+    if (dir.exists() && dir.isDirectory()) {
+      File[] dirs = dir.listFiles(File::isDirectory);
+      return Arrays.stream(dirs)
+          .map(f -> f.getName())
+          .collect(Collectors.toList());
+    }
+
+    return new LinkedList<>();
+  }
+
 }

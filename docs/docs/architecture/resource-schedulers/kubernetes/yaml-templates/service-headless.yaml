@@ -4,9 +4,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: t2-srv-<jobname>
+  name: <job-id>
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2
+    t2-job: <job-id>
 spec:
   clusterIP: None
   selector:
-    app: t2-srv-lb-<jobname>
+    t2-wp: <job-id>
 

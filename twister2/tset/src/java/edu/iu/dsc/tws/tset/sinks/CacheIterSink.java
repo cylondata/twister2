@@ -31,12 +31,12 @@ public class CacheIterSink<T> extends StoreIterSink<T, T> {
   }
 
   @Override
-  protected CollectionPartition<T> getPartition() {
+  public CollectionPartition<T> get() {
     return partition;
   }
 
   @Override
-  protected ValueExtractor<T, T> getValueExtractor() {
-    return input -> input;
+  protected T extractValue(T input) {
+    return input;
   }
 }

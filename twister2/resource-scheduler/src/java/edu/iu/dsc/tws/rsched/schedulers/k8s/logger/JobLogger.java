@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.logger;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +22,8 @@ import com.google.gson.reflect.TypeToken;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.client.JobEndListener;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.client.JobEndWatcher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
@@ -39,7 +39,7 @@ import io.kubernetes.client.util.Watch;
  *   $HOME/.twister2/jobID
  */
 
-public class JobLogger extends Thread {
+public class JobLogger extends Thread implements JobEndListener {
   private static final Logger LOG = Logger.getLogger(JobLogger.class.getName());
 
   private JobAPI.Job job;
@@ -51,7 +51,6 @@ public class JobLogger extends Thread {
   private boolean stopLogger = false;
 
   private List<WorkerLogger> loggers;
-  private Set<String> completedLoggers;
 
   private int numberOfWorkers;
 
@@ -61,32 +60,49 @@ public class JobLogger extends Thread {
     this.numberOfWorkers = job.getNumberOfWorkers();
 
     loggers = new LinkedList<>();
-    completedLoggers = new ConcurrentSkipListSet<>();
   }
 
   @Override
   public void run() {
+    KubernetesController.init(namespace);
     v1Api = KubernetesController.createCoreV1Api();
+
     logsDir = System.getProperty("user.home") + "/.twister2/" + job.getJobId();
-    if (!FileUtils.isDirectoryExists(logsDir)) {
-      FileUtils.createDirectory(logsDir);
+    if (FileUtils.isDirectoryExists(logsDir)) {
+      logsDir = getAvailableLogDir(logsDir);
     }
+    FileUtils.createDirectory(logsDir);
     LOG.info("Job logs directory: " + logsDir);
+
+    // initialize job watcher
+    JobEndWatcher jobEndWatcher = JobEndWatcher.init(namespace, job.getJobId());
+    jobEndWatcher.addJobEndListener(this::jobEnded);
 
     watchPodsToRunningStartLoggers();
   }
 
   /**
+   * if there is already a directory with the same name
+   * get an available directory name with a numerical suffix added
+   * if there is also a directory with the same numerical suffix,
+   * increase the suffix value until finding an available one
+   * @param existingDir
+   */
+  private String getAvailableLogDir(String existingDir) {
+    int suffix = 1;
+    String dirName = existingDir + "-" + suffix;
+    while (FileUtils.isDirectoryExists(dirName)) {
+      suffix++;
+      dirName = existingDir + "-" + suffix;
+    }
+    return dirName;
+  }
+
+  /**
    * worker loggers let JobLogger know that they completed
-   * JobLogger needs to close watcher and finish log saving
    */
   public synchronized void workerLoggerCompleted(String loggerID) {
-    completedLoggers.add(loggerID);
-
-    if (completedLoggers.size() == numberOfWorkers + 1) {
-      stopLogger();
-      LOG.info("All workers completed. Job has finished.");
-    }
+    loggers.removeIf(logger -> logger.getID().equals(loggerID));
   }
 
   /**
@@ -94,13 +110,8 @@ public class JobLogger extends Thread {
    */
   private void watchPodsToRunningStartLoggers() {
 
-    /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
-     * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(job.getJobId());
-
+    String jobPodsLabel = KubernetesUtils.jobLabelSelector(job.getJobId());
     Integer timeoutSeconds = Integer.MAX_VALUE;
-    String podPhase = "Running";
 
     try {
       watcher = Watch.createWatch(
@@ -133,8 +144,7 @@ public class JobLogger extends Thread {
         // it means that the pod is in the process of being deleted
         if (item.object != null
             && item.object.getMetadata().getName().startsWith(job.getJobId())
-            && podPhase.equals(item.object.getStatus().getPhase())
-            && item.object.getMetadata().getDeletionTimestamp() == null
+            && KubernetesUtils.isPodRunning(item.object)
         ) {
 
           String podName = item.object.getMetadata().getName();
@@ -188,7 +198,6 @@ public class JobLogger extends Thread {
       }
     }
     workerLogger.start();
-    completedLoggers.removeIf(loggerID -> loggerID.equals(workerLogger.getID()));
     loggers.add(workerLogger);
   }
 
@@ -197,6 +206,8 @@ public class JobLogger extends Thread {
     if (watcher == null) {
       return;
     }
+
+    stopLogger = true;
 
     try {
       watcher.close();
@@ -207,14 +218,8 @@ public class JobLogger extends Thread {
     watcher = null;
   }
 
-  public void stopLogger() {
-    stopLogger = true;
+  @Override
+  public void jobEnded() {
     closeWatcher();
-
-    for (WorkerLogger logger: loggers) {
-      if (logger.isAlive()) {
-        logger.stopLogging();
-      }
-    }
   }
 }
