@@ -44,9 +44,7 @@ public interface IWorkerController {
    * get worker restartCount
    * zero means starting for the first time
    */
-  default int workerRestartCount() {
-    return 0;
-  }
+  int workerRestartCount();
 
   /**
    * get all joined workers in this job, including the ones finished execution
@@ -94,16 +92,6 @@ public interface IWorkerController {
    * @return the failure listener
    */
   default IWorkerFailureListener getFailureListener() {
-    return null;
-  }
-
-  /**
-   * Get object with a given name
-   *
-   * @param name name
-   * @return the object
-   */
-  default Object getRuntimeObject(String name) {
     return null;
   }
 

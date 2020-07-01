@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.driver.IScaler;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.api.driver.NullScalar;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
 import edu.iu.dsc.tws.master.server.ZKJobUpdater;
 
@@ -36,7 +36,7 @@ public class Scaler implements IScaler {
     this.zkJobUpdater = zkJobUpdater;
 
     if (this.clusterScaler == null) {
-      this.clusterScaler = new NullScalar();
+      this.clusterScaler = new NullScaler();
     }
   }
 
