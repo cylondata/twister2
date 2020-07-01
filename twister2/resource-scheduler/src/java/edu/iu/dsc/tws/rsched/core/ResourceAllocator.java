@@ -276,7 +276,9 @@ public class ResourceAllocator {
     // clear job files and return
     if (!launchState.isRequestGranted()) {
       launcher.close();
-      uploader.undo();
+      if (!SchedulerContext.isLocalFileSystemUploader(config)) {
+        uploader.undo();
+      }
       // clear temporary twister2 files
       clearTemporaryFiles(jobDirectory);
       return launchState;
@@ -303,8 +305,7 @@ public class ResourceAllocator {
     // if this is a checkpointed job and the uploader is not LocalFileSystemUploader
     // copy the job package to the local repository
     if (CheckpointingContext.isCheckpointingEnabled(config)
-        && !SchedulerContext.uploaderClass(config)
-        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
+        && !SchedulerContext.isLocalFileSystemUploader(config)) {
 
       IUploader localUploader = new LocalFileSystemUploader();
       localUploader.initialize(config, job.getJobId());
@@ -314,8 +315,7 @@ public class ResourceAllocator {
 
     if (!CheckpointingContext.isCheckpointingEnabled(config)
         && SchedulerContext.clusterType(config).equals("standalone")
-        && SchedulerContext.uploaderClass(config)
-        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
+        && SchedulerContext.isLocalFileSystemUploader(config)) {
       uploader.undo();
     }
 
@@ -335,8 +335,7 @@ public class ResourceAllocator {
 
     // upload the job package if it is not local upoader
     IUploader uploader = null;
-    if (!SchedulerContext.uploaderClass(config)
-        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader")) {
+    if (!SchedulerContext.isLocalFileSystemUploader(config)) {
       uploader = uploadJobPackage();
     }
 

@@ -98,7 +98,8 @@ public final class RuntimeManagerMain {
         .put(Context.TWISTER2_HOME.getKey(), twister2Home)
         .put(SchedulerContext.CONFIG_DIR, configDir)
         .put(Context.JOB_ID, jobID)
-        .put(Context.TWISTER2_CLUSTER_TYPE, cluster).build();
+        .put(Context.TWISTER2_CLUSTER_TYPE, cluster)
+        .build();
   }
 
   /**

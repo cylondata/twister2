@@ -9,14 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.nomad;
+package edu.iu.dsc.tws.rsched.schedulers;
 
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class NomadTerminator implements IJobTerminator {
+public class NullTerminator implements IJobTerminator {
   @Override
   public boolean terminateJob(String jobID, JobAPI.JobState finalState) {
-    return false;
+    return true;
   }
 }

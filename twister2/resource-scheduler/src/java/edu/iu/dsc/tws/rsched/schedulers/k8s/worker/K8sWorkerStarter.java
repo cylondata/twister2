@@ -61,6 +61,7 @@ public final class K8sWorkerStarter {
 
   private K8sWorkerStarter() { }
 
+  @SuppressWarnings("RegexpSinglelineJava")
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
@@ -172,7 +173,7 @@ public final class K8sWorkerStarter {
 
     // if this worker is restarted equal or more times than max restart config paramter,
     // finish up this worker
-    if (restartCount >= FaultToleranceContext.maxRestarts(config)) {
+    if (restartCount >= FaultToleranceContext.maxWorkerRestarts(config)) {
       workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
       WorkerRuntime.close();
       externallyKilled = false;
@@ -188,10 +189,14 @@ public final class K8sWorkerStarter {
       LOG.log(Level.SEVERE, "Uncaught exception in the thread "
           + thread + ". Worker FAILED...", throwable);
 
-      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      if (restartCount >= FaultToleranceContext.maxWorkerRestarts(config) - 1) {
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+      } else {
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      }
       WorkerRuntime.close();
       externallyKilled = false;
-      throw new RuntimeException("Worker failed with the exception", throwable);
+      System.exit(1);
     });
 
     // start the worker
