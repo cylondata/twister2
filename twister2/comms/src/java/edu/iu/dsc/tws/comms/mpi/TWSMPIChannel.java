@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -147,7 +148,7 @@ public class TWSMPIChannel implements TWSChannel {
    */
   public TWSMPIChannel(Config config,
                        IWorkerController wController) {
-    Object commObject = wController.getRuntimeObject("comm");
+    Object commObject = MPIContext.getRuntimeObject("comm");
     if (commObject == null) {
       this.comm = MPI.COMM_WORLD;
     } else {

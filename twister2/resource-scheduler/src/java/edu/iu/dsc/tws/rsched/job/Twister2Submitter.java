@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.rsched.job;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,12 +127,23 @@ public final class Twister2Submitter {
       LOG.warning("Exception when deleting temp directory: " + tempDirPath);
     }
 
+    URI packageURI = null;
+    try {
+      packageURI = new URI(prevJobDir);
+    } catch (URISyntaxException e) {
+      throw new Twister2RuntimeException("Can not ceate URI for directory: " + prevJobDir, e);
+    }
+
     // add restore parameter
     // local packages path
     prevConfig = Config.newBuilder().putAll(prevConfig)
         .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, true)
         .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, prevJobDir)
         .put(SchedulerContext.USER_JOB_FILE, job.getJobFormat().getJobFile())
+        .put(SchedulerContext.JOB_PACKAGE_URI, packageURI)
+        .put(Context.TWISTER2_HOME.getKey(), Context.twister2Home(config))
+        .put(Context.JOB_ID, jobID)
+        .put(Context.TWISTER2_CLUSTER_TYPE, Context.clusterType(config))
         .build();
 
     writeJobIdToFile(jobID);

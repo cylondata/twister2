@@ -186,6 +186,9 @@ public final class TarGzipPacker {
 
       TarArchiveEntry entry = new TarArchiveEntry(file, filePathInTar);
       entry.setSize(file.length());
+      if (!file.isDirectory() && file.canExecute()) {
+        entry.setMode(0755);
+      }
       tarOutputStream.putArchiveEntry(entry);
       IOUtils.copy(new FileInputStream(file), tarOutputStream);
       tarOutputStream.closeArchiveEntry();
@@ -303,6 +306,11 @@ public final class TarGzipPacker {
           IOUtils.copy(tarInputStream, outputFileStream);
           outputFileStream.close();
 //          LOG.info("Unpacked the file: " + outputFile.getAbsolutePath());
+
+          // if the file has sh extension, make it executable
+          if (entry.getName().endsWith(".sh")) {
+            outputFile.setExecutable(true);
+          }
         }
       }
 

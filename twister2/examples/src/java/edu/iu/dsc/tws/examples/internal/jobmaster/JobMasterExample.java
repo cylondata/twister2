@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter;
@@ -133,7 +134,7 @@ public final class JobMasterExample {
 
     KubernetesController controller = KubernetesController.init("default");
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = null;
+    IJobTerminator jobTerminator = new NullTerminator();
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
