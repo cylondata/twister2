@@ -36,7 +36,7 @@ public class NullScalar implements IScalerPerCluster {
   }
 
   @Override
-  public boolean scaleDownWorkers(int instancesToRemove) {
+  public boolean scaleDownWorkers(int instancesToRemove, int numberOfWorkers) {
     return false;
   }
 }

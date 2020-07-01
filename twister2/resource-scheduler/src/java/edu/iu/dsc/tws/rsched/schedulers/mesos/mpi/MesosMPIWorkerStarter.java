@@ -81,8 +81,7 @@ public final class MesosMPIWorkerStarter {
         MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
 
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
+      JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
 
       // add any configuration from job file to the config object
       // if there are the same config parameters in both,
@@ -134,11 +133,11 @@ public final class MesosMPIWorkerStarter {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
 
-    //TODO: should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        jobMasterPort, numberOfWorkers, initialState);
+        jobMasterPort, numberOfWorkers, restartCount);
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
@@ -148,7 +147,7 @@ public final class MesosMPIWorkerStarter {
                                  IPersistentVolume pv) {
 
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
     String workerClass = job.getWorkerClassName();
     LOG.info("Worker class---->>>" + workerClass);
     IWorker worker;

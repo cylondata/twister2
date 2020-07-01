@@ -26,7 +26,7 @@ rules:
 
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["get", "list", "watch", "delete"]
+  verbs: ["get", "list", "watch", "patch", "delete"]
 
 - apiGroups: ["apps"]
   resources: ["statefulsets", "statefulsets/scale"]

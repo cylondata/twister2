@@ -33,9 +33,9 @@ public interface ILauncher extends AutoCloseable {
   void close();
 
   /**
-   * terminate the submitted job
+   * kill the submitted job
    */
-  boolean terminateJob(String jobID);
+  boolean killJob(String jobID);
 
   /**
    * Launch the processes according to the requested resources.

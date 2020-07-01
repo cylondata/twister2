@@ -96,7 +96,7 @@ public class MesosWorker implements Executor {
 
     MesosWorkerController workerController;
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
+      JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
       workerController = new MesosWorkerController(config, job,
           InetAddress.getLocalHost().getHostAddress(), toIntExact(port), id);
       LOG.info("Initializing with zookeeper");

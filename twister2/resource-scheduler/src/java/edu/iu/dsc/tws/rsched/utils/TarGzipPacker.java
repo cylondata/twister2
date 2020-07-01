@@ -264,23 +264,22 @@ public final class TarGzipPacker {
    * it unpacks to the directory where the job package resides
    */
   public static boolean unpack(final String sourceGzip) {
-
-    File sourceGzipFile = new File(sourceGzip);
-    File outputDir = sourceGzipFile.getParentFile();
-    return unpack(sourceGzip, outputDir);
+    Path sourceGzipFile = Paths.get(sourceGzip);
+    Path outputDir = sourceGzipFile.getParent();
+    return unpack(sourceGzipFile, outputDir);
   }
 
   /**
    * unpackage the given tar.gz file to the provided output directory
    */
-  public static boolean unpack(final String sourceGzip, File outputDir) {
+  public static boolean unpack(final Path sourceGzip, Path outputDir) {
 
     GzipCompressorInputStream gzIn = null;
     TarArchiveInputStream tarInputStream = null;
 
     try {
       // construct input stream
-      InputStream fin = Files.newInputStream(Paths.get(sourceGzip));
+      InputStream fin = Files.newInputStream(sourceGzip);
       BufferedInputStream in = new BufferedInputStream(fin);
       gzIn = new GzipCompressorInputStream(in);
       tarInputStream = new TarArchiveInputStream(gzIn);
@@ -289,7 +288,7 @@ public final class TarGzipPacker {
 
       while ((entry = (TarArchiveEntry) tarInputStream.getNextEntry()) != null) {
 
-        File outputFile = new File(outputDir, entry.getName());
+        File outputFile = new File(outputDir.toFile(), entry.getName());
         if (!outputFile.getParentFile().exists()) {
           boolean dirCreated = outputFile.getParentFile().mkdirs();
           if (!dirCreated) {

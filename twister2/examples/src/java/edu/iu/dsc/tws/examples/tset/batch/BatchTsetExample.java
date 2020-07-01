@@ -52,6 +52,23 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel);
   }
 
+  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int start, int count, int parallel) {
+    return env.createSource(new SourceFunc<Integer>() {
+      private int c = start;
+      private int limit = c + count;
+
+      @Override
+      public boolean hasNext() {
+        return c < limit;
+      }
+
+      @Override
+      public Integer next() {
+        return c++;
+      }
+    }, parallel);
+  }
+
   SourceTSet<String> dummyStringSource(BatchTSetEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<String>() {
       private int c = 0;
@@ -145,7 +162,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(clazz)
+        .setJobName(clazz.substring(clazz.lastIndexOf(".") + 1))
         .setWorkerClass(clazz)
         .addComputeResource(1, 512, containers)
         .setConfig(jobConfig)

@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.resource;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -40,6 +41,14 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
+   * get worker restartCount
+   * zero means starting for the first time
+   */
+  default int workerRestartCount() {
+    return 0;
+  }
+
+  /**
    * get all joined workers in this job, including the ones finished execution
    * if there are some workers that have not joined yet, they may not be included in this list.
    * users can compare the total number of workers to the size of this list and
@@ -62,7 +71,22 @@ public interface IWorkerController {
    * After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
    * if some workers still could not arrive at the barrier, throw an exception
    */
-  void waitOnBarrier() throws TimeoutException;
+  void waitOnBarrier() throws TimeoutException, JobFaultyException;
+
+  /**
+   * wait for all workers in the job to arrive at this barrier
+   * After waiting for the timeLimit,
+   * if some workers still could not arrive at the barrier, throw an exception
+   */
+  void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException;
+
+  /**
+   * this barrier is used when initializing the workers.
+   * when there is a failure in the job,
+   * workers synchronize with this barrier
+   * this must not be used in other parts of the system
+   */
+  void waitOnInitBarrier() throws TimeoutException;
 
   /**
    * Get the failure listener

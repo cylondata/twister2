@@ -37,11 +37,12 @@ public class  DriverExample implements IDriver {
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     waitAllWorkersToJoin();
+    BasicK8sWorker.sleepSomeTime("driver", 600);
 
 //    scalingExampleCLI(scaler);
-    scalingExample(scaler, messenger);
-    broadcastExample(messenger);
-    sendCompleteMessage(messenger);
+//    scalingExample(scaler, messenger);
+//    broadcastExample(messenger);
+//    sendCompleteMessage(messenger);
 
     LOG.info("Driver has finished execution.");
   }

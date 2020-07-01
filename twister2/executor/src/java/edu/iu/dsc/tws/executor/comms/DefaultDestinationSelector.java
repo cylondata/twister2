@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -21,27 +24,52 @@ public class DefaultDestinationSelector implements DestinationSelector {
 
   private TaskPartitioner partitioner;
 
-  public DefaultDestinationSelector(TaskPartitioner partitioner) {
+  private Map<Integer, Integer> srcGlobalToIndex;
+  private Map<Integer, Integer> tgtsGlobaToIndex;
+  private Set<Integer> srcIndexes = new HashSet<>();
+  private Set<Integer> tgtIndexes = new HashSet<>();
+  private Map<Integer, Integer> indexToGlobal = new HashMap<>();
+
+  public DefaultDestinationSelector(TaskPartitioner partitioner,
+                                    Map<Integer, Integer> srcGlobalToIndex,
+                                    Map<Integer, Integer> tgtsGlobalToIndex) {
     this.partitioner = partitioner;
+    this.srcGlobalToIndex = srcGlobalToIndex;
+    this.tgtsGlobaToIndex = tgtsGlobalToIndex;
+
+    srcIndexes.addAll(srcGlobalToIndex.values());
+    tgtIndexes.addAll(tgtsGlobalToIndex.values());
+    for (Map.Entry<Integer, Integer> e : tgtsGlobalToIndex.entrySet()) {
+      indexToGlobal.put(e.getValue(), e.getKey());
+    }
   }
 
   @Override
   public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
-    partitioner.prepare(sources, destinations);
+    if (!sources.equals(new HashSet<>(srcGlobalToIndex.keySet()))) {
+      throw new RuntimeException("Sources should be equal");
+    }
+    if (!destinations.equals(new HashSet<>(tgtsGlobaToIndex.keySet()))) {
+      throw new RuntimeException("Targets should be equal");
+    }
+
+    partitioner.prepare(srcIndexes, tgtIndexes);
   }
 
   @Override
   public int next(int source, Object data) {
-    return partitioner.partition(source, data);
+    int partition = partitioner.partition(srcGlobalToIndex.get(source), data);
+    return indexToGlobal.get(partition);
   }
 
   @Override
   public void commit(int source, int next) {
-    partitioner.commit(source, next);
+    partitioner.commit(srcGlobalToIndex.get(source), next);
   }
 
   @Override
   public int next(int source, Object key, Object data) {
-    return partitioner.partition(source, key);
+    int partition = partitioner.partition(srcGlobalToIndex.get(source), key);
+    return indexToGlobal.get(partition);
   }
 }

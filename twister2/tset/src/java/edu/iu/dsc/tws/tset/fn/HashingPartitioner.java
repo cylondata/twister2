@@ -14,9 +14,7 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -25,16 +23,15 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 public class HashingPartitioner<T> implements PartitionFunc<T> {
   private static final Logger LOG = Logger.getLogger(HashingPartitioner.class.getName());
 
-  private Map<Integer, List<Integer>> destination = new HashMap<>();
+  private List<Integer> destinations = new ArrayList<>();
 
   @Override
-  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
-    initialize(sources, destinations);
+  public void prepare(Set<Integer> sources, Set<Integer> dests) {
+    initialize(sources, dests);
   }
 
   @Override
   public int partition(int sourceIndex, T val) {
-    List<Integer> destinations = destination.get(sourceIndex);
     int next = (int) (Math.abs((long) val.hashCode()) % destinations.size());
     return destinations.get(next);
   }
@@ -44,11 +41,8 @@ public class HashingPartitioner<T> implements PartitionFunc<T> {
 
   }
 
-  private void initialize(Set<Integer> sources, Set<Integer> destinations) {
-    for (int s : sources) {
-      ArrayList<Integer> destList = new ArrayList<>(destinations);
-      destList.sort(Comparator.comparingInt(o -> o));
-      destination.put(s, destList);
-    }
+  private void initialize(Set<Integer> sources, Set<Integer> dests) {
+    destinations = new ArrayList<>(dests);
+    destinations.sort(Comparator.comparingInt(o -> o));
   }
 }

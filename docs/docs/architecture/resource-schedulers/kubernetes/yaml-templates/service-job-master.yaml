@@ -4,10 +4,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: t2-srv-<jobname>-<jm>
+  name: <job-id>-jm
+  namespace: <kubernetes.namespace>
+  labels:
+    app: twister2
+    t2-job: <job-id>
 spec:
+  clusterIP: None
   selector:
-    app: t2-srv-lb-<jobname>-<job-master>
+    t2-mp: <job-id>
   ports:
   - name: job-master-port
     port: <twister2.job.master.port>

@@ -16,11 +16,11 @@ public interface IJobMasterFailureListener {
   /**
    * informs when the job master fails.
    */
-  void failed();
+  void jmFailed();
 
   /**
    * informs when the job master rejoins after failure
    * @param jobMasterAddress
    */
-  void restarted(String jobMasterAddress);
+  void jmRestarted(String jobMasterAddress);
 }

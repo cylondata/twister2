@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
@@ -37,12 +38,15 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   protected BKeyedGather op;
 
   public KeyedGatherBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
+                                   Set<Integer> sources, Set<Integer> dests, Edge edge,
+                                   Map<Integer, Integer> srcGlobalToIndex,
+                                   Map<Integer, Integer> tgtsGlobalToIndex) {
     super(config, network, tPlan, edge.getName());
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner(),
+          srcGlobalToIndex, tgtsGlobalToIndex);
     } else {
       destSelector = new HashingSelector();
     }

@@ -47,7 +47,8 @@ public class ReduceExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     ReduceTLink<Integer> reduce = src.reduce(Integer::sum);
 
@@ -56,20 +57,21 @@ public class ReduceExample extends BatchTsetExample {
 
     LOG.info("test map");
     reduce
-        .map(i -> i.toString() + "$$").withSchema(PrimitiveSchemas.STRING)
+        .map(i -> i.toString() + "$$")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
     reduce
-        .flatmap((i, c) -> c.collect(i.toString() + "##")).withSchema(PrimitiveSchemas.STRING)
+        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
     reduce
-        .compute((ComputeFunc<String, Integer>)
-            input -> "sum=" + input)
+        .compute((ComputeFunc<String, Integer>) input -> "sum=" + input)
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));

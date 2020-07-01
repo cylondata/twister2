@@ -118,7 +118,7 @@ public final class AuroraWorkerStarter {
   private void readJobDescFile() {
     String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
     jobDescFile = JOB_ARCHIVE_DIRECTORY + "/" + jobDescFile;
-    job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
 
     // printing for testing
     LOG.log(Level.INFO, "Job description file is read: " + jobDescFile);
@@ -178,7 +178,9 @@ public final class AuroraWorkerStarter {
     zkWorkerController =
         new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
     try {
-      zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTED);
+      int restartCount = 0;
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }

@@ -7,27 +7,28 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: <job-name>
+  name: <job-id>-<index>
   namespace: <kubernetes.namespace>
   labels:
-    app: t2-srv-lb-<job-name>
-    twister2-job-pods: twister2-<job-name>
-    twister2-role: <job-name>-worker
+    app: twister2
+    t2-job: <job-id>
+    t2-wss: <job-id>
 spec:
   # replicas are calculated by dividing twister2.worker.instances/kubernetes.workers.per.pod
   replicas: <twister2.worker.instances>/<kubernetes.workers.per.pod>
-  serviceName: t2-srv-<job-name>
+  serviceName: <job-id>
   podManagementPolicy: Parallel
 
   selector:
     matchLabels:
-      app: t2-srv-lb-<job-name>
+      t2-wp: <job-id>
 
   template:
     metadata:
       labels:
-        app: t2-srv-lb-<job-name>
-
+        app: twister2
+        t2-job: <job-id>
+        t2-wp: <job-id>
     spec:
       terminationGracePeriodSeconds: 0
       volumes:

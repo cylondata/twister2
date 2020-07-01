@@ -22,7 +22,11 @@ java_library(
         "//twister2/data/src/main/java:data-java",
         "@com_google_guava_guava",
         "@commons_logging_commons_logging//jar",
-        "@org_apache_hadoop_hadoop_hdfs_client//jar",
+        "@org_apache_hadoop_hadoop_hdfs_client",
+        "@maven//:org_apache_arrow_arrow_vector",
+        "@maven//:org_apache_arrow_arrow_memory",
+        "@maven//:org_apache_arrow_arrow_format",
+        "@maven//:com_google_flatbuffers_flatbuffers_java",
     ],
 )
 

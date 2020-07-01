@@ -9,7 +9,8 @@ t2_java_lib(
     deps = [
         "//third_party:ompi_javabinding_java",  #todo get rid of this
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+        "//twister2/proto:proto-java",
     ],
 )

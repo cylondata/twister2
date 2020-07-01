@@ -16,24 +16,30 @@ import edu.iu.dsc.tws.api.config.Context;
 
 public class FaultToleranceContext extends Context {
 
-  // A flag to enable/disable fault tolerance in Twister2
-  // By default, it is disabled
-  public static final String FAULT_TOLERANT = "twister2.fault.tolerant";
-  public static final boolean FAULT_TOLERANT_DEFAULT = false;
-
   // FAILURE_TIMEOUT determines worker failures.
   // If workers do not send heartbeat messages for this many milli seconds,
   // they are assumed failed
   public static final String FAILURE_TIMEOUT = "twister2.fault.tolerance.failure.timeout";
   public static final int FAILURE_TIMEOUT_DEFAULT = 10 * 1000;
 
-  public static boolean faultTolerant(Config cfg) {
-    return cfg.getBooleanValue(FAULT_TOLERANT, FAULT_TOLERANT_DEFAULT);
-  }
+  // maximum number of times to re-execute IWorker after some other workers failed in the job
+  public static final String MAX_REEXECUTES = "twister2.fault.tolerance.max.reexecutes";
+  public static final int MAX_REEXECUTES_DEFAULT = 5;
+
+  // maximum number of times to re-start worker JVMs after failures
+  public static final String MAX_RESTARTS = "twister2.fault.tolerance.max.restarts";
+  public static final int MAX_RESTARTS_DEFAULT = 5;
 
   public static int sessionTimeout(Config cfg) {
     return cfg.getIntegerValue(FAILURE_TIMEOUT, FAILURE_TIMEOUT_DEFAULT);
   }
 
+  public static int maxReExecutes(Config cfg) {
+    return cfg.getIntegerValue(MAX_REEXECUTES, MAX_REEXECUTES_DEFAULT);
+  }
+
+  public static int maxRestarts(Config cfg) {
+    return cfg.getIntegerValue(MAX_RESTARTS, MAX_RESTARTS_DEFAULT);
+  }
 
 }

@@ -9,5 +9,6 @@ t2_java_lib(
     deps = [
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/proto:proto-java",
     ],
 )

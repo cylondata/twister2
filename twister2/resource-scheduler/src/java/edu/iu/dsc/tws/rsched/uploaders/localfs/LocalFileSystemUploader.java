@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public class LocalFileSystemUploader implements IUploader {
@@ -33,8 +32,8 @@ public class LocalFileSystemUploader implements IUploader {
   private String destinationDirectory;
 
   @Override
-  public void initialize(Config config, JobAPI.Job job) {
-    this.destinationDirectory = FsContext.uploaderJobDirectory(config) + "/" + job.getJobId();
+  public void initialize(Config config, String jobID) {
+    this.destinationDirectory = FsContext.uploaderJobDirectory(config) + "/" + jobID;
   }
 
   @Override
@@ -55,8 +54,8 @@ public class LocalFileSystemUploader implements IUploader {
 
     // if the dest directory does not exist, create it.
     if (!parentDirectory.exists()) {
-      LOG.log(Level.INFO, String.format(
-          "Working directory does not exist. Creating it now at %s", parentDirectory.getPath()));
+      LOG.log(Level.FINE, String.format(
+          "Target directory does not exist. Creating it now at %s", parentDirectory.getPath()));
       if (!parentDirectory.mkdirs()) {
         throw new UploaderException(
             String.format("Failed to create directory for topology package at %s",
@@ -71,9 +70,9 @@ public class LocalFileSystemUploader implements IUploader {
           filePath.toString()));
     }
 
-    // copy the topology package to target working directory
-    LOG.log(Level.INFO, String.format("Copying job directory at '%s' to target "
-        + "working directory '%s'", sourceLocation, filePath.toString()));
+    // copy the job package to target working directory
+    LOG.log(Level.FINE, String.format("Copying job directory at '%s' to target directory '%s'",
+        sourceLocation, filePath.toString()));
     try {
       FileUtils.copyDirectory(sourceLocation, destinationDirectory);
       return new URI(destinationDirectory);
@@ -87,7 +86,7 @@ public class LocalFileSystemUploader implements IUploader {
   }
 
   @Override
-  public boolean undo(Config cnfg, String jobID) {
+  public boolean undo() {
     LOG.info("Cleaning upload directory: " + destinationDirectory);
     return FileUtils.deleteDir(destinationDirectory);
   }

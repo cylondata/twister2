@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
-public class AllreduceExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(AllreduceExample.class.getName());
+public class AllReduceExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(AllReduceExample.class.getName());
 
   private static final int COUNT = 10;
   private static final int PARALLELISM = 4;
@@ -44,7 +44,8 @@ public class AllreduceExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     LOG.info("test foreach");
     src.allReduce(Integer::sum)
@@ -81,6 +82,6 @@ public class AllreduceExample extends BatchTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, AllreduceExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, AllReduceExample.class.getName());
   }
 }

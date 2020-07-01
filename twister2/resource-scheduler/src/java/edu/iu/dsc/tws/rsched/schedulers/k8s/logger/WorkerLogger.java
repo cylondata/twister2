@@ -79,14 +79,13 @@ public class WorkerLogger extends Thread {
   public void run() {
 
     Path logfile = createLogFile();
-    LOG.info("Saving " + id + " logs to: " + logFileName);
+    LOG.info("Starting to log for " + id + " to: " + logFileName);
 
     try {
       logStream = streamContainerLog();
       Files.copy(logStream, logfile, StandardCopyOption.REPLACE_EXISTING);
       if (!stop) {
         logStream.close();
-        response.body().close();
         response.close();
         LOG.info("Logging completed for " + id + " to: " + logFileName);
       }

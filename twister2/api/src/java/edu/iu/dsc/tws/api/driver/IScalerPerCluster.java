@@ -36,8 +36,9 @@ public interface IScalerPerCluster {
   /**
    * remove some instances of the workers from the job
    * @param instancesToRemove
+   * @param numberOfWorkers number of workers before the scale down
    * @return true if successful
    */
-  boolean scaleDownWorkers(int instancesToRemove);
+  boolean scaleDownWorkers(int instancesToRemove, int numberOfWorkers);
 
 }

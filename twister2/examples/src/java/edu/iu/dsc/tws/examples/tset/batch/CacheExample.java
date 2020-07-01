@@ -47,17 +47,20 @@ public class CacheExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     // test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();
     runOps(env, cache);
 
     // test reduce().cache() which has SingleLink semantics
+    LOG.info("test caching after reduce");
     CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
     runOps(env, cache1);
 
     // test gather.cache() which has TupleValueIterLink
+    LOG.info("test caching after gather");
     CachedTSet<Integer> cache2 = src.gather().cache();
     runOps(env, cache2);
   }

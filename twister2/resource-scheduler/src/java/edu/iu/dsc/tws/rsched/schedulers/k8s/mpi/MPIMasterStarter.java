@@ -81,7 +81,7 @@ public final class MPIMasterStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -131,6 +131,7 @@ public final class MPIMasterStarter {
 
     ArrayList<String> podIPs = PodWatchUtils.getWorkerIPsByWatchingPodsToRunning(
         namespace, jobID, numberOfPods, timeoutSeconds);
+    PodWatchUtils.close();
 
     if (podIPs == null) {
       LOG.severe("Could not get IPs of all pods running. Aborting. "

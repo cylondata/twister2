@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
@@ -103,6 +103,8 @@ public abstract class TSetEnvironment {
 
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
                                                      int parallelism, String type);
+
+  public abstract BaseTSet<Integer> createArrowSource(String filePath, int parallelism);
 
   /**
    * This method will create a source based on the list and each source will read only a part
@@ -241,7 +243,7 @@ public abstract class TSetEnvironment {
    * @return bool
    */
   public boolean isCheckpointingEnabled() {
-    return CheckpointingConfigurations.isCheckpointingEnabled(this.getConfig())
+    return CheckpointingContext.isCheckpointingEnabled(this.getConfig())
         && this instanceof CheckpointingTSetEnv;
   }
 

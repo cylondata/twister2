@@ -56,7 +56,7 @@ public final class ComputeResourceUtils {
    * @return
    */
   public static String toString(JobAPI.ComputeResource cr) {
-    return String.format("ComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
+    return String.format("ComputeResource[%d]: \tcpu: %.1f, ram: %d MB, disk: %.1f GB, "
             + "instances: %d, scalable: %b workersPerPod: %d",
         cr.getIndex(), cr.getCpu(), cr.getRamMegaBytes(), cr.getDiskGigaBytes(),
         cr.getInstances(), cr.getScalable(), cr.getWorkersPerPod());

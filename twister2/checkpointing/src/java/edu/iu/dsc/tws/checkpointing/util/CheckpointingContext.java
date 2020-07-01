@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.checkpointing.util;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore;
 
-public final class CheckpointingConfigurations {
+public final class CheckpointingContext {
 
   public static final String JOB_MASTER_USED = "twister2.job.master.used";
   public static final String CHECKPOINTING_ENABLED = "twister2.checkpointing.enable";
@@ -22,9 +22,9 @@ public final class CheckpointingConfigurations {
   public static final String CHECKPOINTING_SOURCE_FREQUNCY
       = "twister2.checkpointing.source.frequency";
 
-  public static final String RESTORING_CHECKPOINTED_JOB = "RESTORING_CHECKPOINTED_JOB";
+  public static final String CHECKPOINTING_RESTORE_JOB = "twister2.checkpointing.restore.job";
 
-  private CheckpointingConfigurations() {
+  private CheckpointingContext() {
   }
 
   public static boolean isCheckpointingEnabled(Config config) {
@@ -38,10 +38,16 @@ public final class CheckpointingConfigurations {
   }
 
   public static boolean startingFromACheckpoint(Config config) {
-    return config.getBooleanValue(RESTORING_CHECKPOINTED_JOB, false);
+    return config.getBooleanValue(CHECKPOINTING_RESTORE_JOB, false);
   }
 
   public static long getCheckPointingFrequency(Config config) {
     return config.getLongValue(CHECKPOINTING_SOURCE_FREQUNCY, 1000);
+  }
+
+  //todo: can checkpointing data be saved to nfs even above parameter is LocalFileStateStore
+  public static boolean isNfsUsed(Config config) {
+    return "edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore"
+        .equals(getCheckpointingStoreClass(config));
   }
 }

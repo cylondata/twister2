@@ -19,16 +19,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.config.SchedulerContext;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
@@ -36,9 +32,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1EnvVarSource;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
-import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
@@ -56,34 +50,36 @@ public final class JobMasterRequestObject {
 
   private static Config config;
   private static String jobID;
-  private static String encodedNodeInfoList;
-  private static long jobPackageFileSize;
 
   private JobMasterRequestObject() {
   }
 
-  public static void init(Config cnfg, String jID, long jpFileSize) {
+  public static void init(Config cnfg, String jID) {
     config = cnfg;
     jobID = jID;
-    jobPackageFileSize = jpFileSize;
   }
 
   /**
    * create StatefulSet object for a job
    */
-  public static V1StatefulSet createStatefulSetObject(String nodeInfoListStr) {
+  public static V1StatefulSet createStatefulSetObject() {
 
     if (config == null) {
       LOG.severe("JobMasterRequestObject.init method has not been called.");
       return null;
     }
-    encodedNodeInfoList = nodeInfoListStr;
 
     V1StatefulSet statefulSet = new V1StatefulSet();
+    String statefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobID);
+
+    // set labels for the jm stateful set
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
+    labels.put("t2-mss", jobID); // job master statefulset
 
     // construct metadata and set for jobID setting
     V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(KubernetesUtils.createJobMasterStatefulSetName(jobID));
+    meta.setName(statefulSetName);
+    meta.setLabels(labels);
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
@@ -93,8 +89,7 @@ public final class JobMasterRequestObject {
 
     // add selector for the job
     V1LabelSelector selector = new V1LabelSelector();
-    String jobMasterServiceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
-    selector.putMatchLabelsItem(KubernetesConstants.SERVICE_LABEL_KEY, jobMasterServiceLabel);
+    selector.putMatchLabelsItem("t2-mp", jobID);
     setSpec.setSelector(selector);
 
     // construct the pod template
@@ -113,21 +108,14 @@ public final class JobMasterRequestObject {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
-    HashMap<String, String> labels = new HashMap<String, String>();
-    labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
-        KubernetesUtils.createJobMasterServiceLabel(jobID));
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
-
-    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobID);
-    labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, jobMasterRoleLabel);
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
+    labels.put("t2-mp", jobID); // job master pod
 
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
     V1PodSpec podSpec = new V1PodSpec();
-    podSpec.setTerminationGracePeriodSeconds(1L);
+    podSpec.setTerminationGracePeriodSeconds(0L);
 
     ArrayList<V1Volume> volumes = new ArrayList<>();
     V1Volume memoryVolume = new V1Volume();
@@ -146,7 +134,7 @@ public final class JobMasterRequestObject {
     }
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
-      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobID);
+      String claimName = jobID;
       V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
@@ -222,73 +210,18 @@ public final class JobMasterRequestObject {
    * set environment variables for containers
    */
   public static List<V1EnvVar> constructEnvironmentVariables(int jvmMem) {
-    ArrayList<V1EnvVar> envVars = new ArrayList<>();
+    ArrayList<V1EnvVar> envVars = RequestObjectBuilder.getCommonEnvVars();
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_ID + "")
-        .value(jobID));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
-        .value(encodedNodeInfoList));
-
-    // HOST_IP (node-ip) with downward API
-    V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
-    fieldSelector.setFieldPath("status.hostIP");
-    V1EnvVarSource varSource = new V1EnvVarSource();
-    varSource.setFieldRef(fieldSelector);
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.HOST_IP + "")
-        .valueFrom(varSource));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
-        .value(jobPackageFileSize + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.CONTAINER_NAME + "")
+        .name(K8sEnvVariables.CONTAINER_NAME.name())
         .value("twister2-job-master-0"));
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
-        .value(SchedulerContext.userJobJarFile(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.CLASS_TO_RUN + "")
+        .name(K8sEnvVariables.CLASS_TO_RUN.name())
         .value("edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter"));
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.POD_MEMORY_VOLUME + "")
-        .value(KubernetesConstants.POD_MEMORY_VOLUME));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_ARCHIVE_DIRECTORY + "")
-        .value(Context.JOB_ARCHIVE_DIRECTORY));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
-        .value(JobUtils.createJobPackageFileName(jobID)));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.UPLOAD_METHOD + "")
-        .value(RequestObjectBuilder.uploadMethod));
-
-    String uri = null;
-    if (SchedulerContext.jobPackageUri(config) != null) {
-      uri = SchedulerContext.jobPackageUri(config).toString();
-    }
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JOB_PACKAGE_URI + "")
-        .value(uri));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.LOGGER_PROPERTIES_FILE + "")
-        .value(LoggingContext.LOGGER_PROPERTIES_FILE));
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.JVM_MEMORY_MB + "")
+        .name(K8sEnvVariables.JVM_MEMORY_MB.name())
         .value(jvmMem + ""));
 
     return envVars;
@@ -300,22 +233,25 @@ public final class JobMasterRequestObject {
   public static V1Service createJobMasterServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the jm service
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec
     V1ServiceSpec serviceSpec = new V1ServiceSpec();
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-mp", jobID);
     serviceSpec.setSelector(selectors);
     // set port
     V1ServicePort servicePort = new V1ServicePort();
@@ -336,15 +272,18 @@ public final class JobMasterRequestObject {
   public static V1Service createJobMasterHeadlessServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobID);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobID);
 
     V1Service service = new V1Service();
     service.setKind("Service");
     service.setApiVersion("v1");
 
+    // set labels for the jm service
+    HashMap<String, String> labels = KubernetesUtils.createJobLabels(jobID);
+
     // construct and set metadata
     V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(serviceName);
+    meta.setLabels(labels);
     service.setMetadata(meta);
 
     // construct and set service spec
@@ -353,7 +292,7 @@ public final class JobMasterRequestObject {
 
     // set selector
     HashMap<String, String> selectors = new HashMap<String, String>();
-    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    selectors.put("t2-mp", jobID);
     serviceSpec.setSelector(selectors);
 
     service.setSpec(serviceSpec);
