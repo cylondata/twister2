@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
@@ -62,10 +63,11 @@ public abstract class BenchWorker implements IWorker {
   private WorkerEnvironment workerEnv;
 
   @Override
-  public void execute(Config cfg, int workerID,
+  public void execute(Config cfg, JobAPI.Job job,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
+    workerId = workerController.getWorkerInfo().getWorkerID();
     Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
 
     // create the job parameters
@@ -73,13 +75,11 @@ public abstract class BenchWorker implements IWorker {
 
     this.resultsRecorder = new BenchmarkResultsRecorder(
         cfg,
-        workerID == 0
+        workerId == 0
     );
 
-    this.workerId = workerID;
-
     // create a worker environment
-    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, job, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan

@@ -22,25 +22,29 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 /**
  * A simple word count where we generate words in-memory
  */
-public class WordCount implements BatchTSetIWorker, Serializable {
+public class WordCount implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchTSetEnvironment env = TSetEnvironment.initBatch(workerEnv);
+
     int sourcePar = 4;
     Config config = env.getConfig();
 
@@ -109,7 +113,7 @@ public class WordCount implements BatchTSetIWorker, Serializable {
     jobBuilder.setJobName("tset-simple-wordcount");
     jobBuilder.setWorkerClass(WordCount.class);
     // we use 2 processes, each with 512mb memory and 1 CPU assigned
-    jobBuilder.addComputeResource(1, 512, 2);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -50,9 +51,9 @@ public final class ComputeEnvironment {
    */
   private static int taskGraphIndex = 0;
 
-  private ComputeEnvironment(Config config, int workerId, IWorkerController wController,
+  private ComputeEnvironment(Config config, JobAPI.Job job, IWorkerController wController,
                              IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    this(WorkerEnvironment.init(config, workerId, wController, pVolume, vVolume));
+    this(WorkerEnvironment.init(config, job, wController, pVolume, vVolume));
   }
 
   private ComputeEnvironment(WorkerEnvironment workerEnv) {
@@ -114,15 +115,18 @@ public final class ComputeEnvironment {
    * Initialize the task environment
    *
    * @param config configuration
-   * @param workerId worker id
+   * @param job job object
    * @param wController worker controller
    * @param pVolume persisent volume
    * @param vVolume volatile volume
    * @return the compute environment
    */
-  public static ComputeEnvironment init(Config config, int workerId, IWorkerController wController,
-                                        IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    return new ComputeEnvironment(config, workerId, wController, pVolume, vVolume);
+  public static ComputeEnvironment init(Config config,
+                                        JobAPI.Job job,
+                                        IWorkerController wController,
+                                        IPersistentVolume pVolume,
+                                        IVolatileVolume vVolume) {
+    return new ComputeEnvironment(config, job, wController, pVolume, vVolume);
   }
 
   /**

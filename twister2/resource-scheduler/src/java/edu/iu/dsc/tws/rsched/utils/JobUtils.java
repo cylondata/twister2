@@ -35,9 +35,14 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
+import edu.iu.dsc.tws.rsched.worker.Twister2WorkerStarter;
 
 public final class JobUtils {
   private static final Logger LOG = Logger.getLogger(JobUtils.class.getName());
@@ -222,5 +227,34 @@ public final class JobUtils {
     }
 
     return true;
+  }
+
+  /**
+   * if the worker class is an instance of IWorker
+   * initialize that
+   * if
+   * @param job
+   * @return
+   */
+  public static IWorker initializeIWorker(JobAPI.Job job) {
+
+    String workerClass = job.getWorkerClassName();
+    try {
+      Object object = ReflectionUtils.newInstance(workerClass);
+      if (object instanceof IWorker) {
+        LOG.info("loaded worker class: " + workerClass);
+        return (IWorker) object;
+      } else if (object instanceof Twister2Worker) {
+        return new Twister2WorkerStarter();
+      } else {
+        throw new Twister2RuntimeException(String.format(
+            "Worker class [%s] is neither an instance of IWorker nor Twister2Worker interfaces.",
+            workerClass));
+      }
+
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.severe(String.format("failed to load the worker class %s", workerClass));
+      throw new RuntimeException(e);
+    }
   }
 }

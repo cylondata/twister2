@@ -6,6 +6,7 @@ common_deps_files = [
     "//twister2/common/src/java:common-java",
     "//twister2/task/src/main/java:task-java",
     "//twister2/master/src/java:master-java",
+    "//twister2/proto:proto-java",
     "//twister2/api/src/java:api-java",
     "//twister2/executor/src/java:executor-java",
     "//twister2/comms/src/java:comms-java",

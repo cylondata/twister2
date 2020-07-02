@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -38,9 +39,11 @@ public class HelloWorld implements IWorker {
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+
+    int workerID = workerController.getWorkerInfo().getWorkerID();
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 

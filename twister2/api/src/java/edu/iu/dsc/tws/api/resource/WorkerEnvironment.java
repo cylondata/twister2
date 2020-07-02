@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * Worker environment encapsulating the details about the workers.
@@ -46,6 +47,11 @@ public final class WorkerEnvironment {
    * Worker id
    */
   private int workerId;
+
+  /**
+   * Job object
+   */
+  private JobAPI.Job job;
 
   /**
    * Worker controller
@@ -88,10 +94,11 @@ public final class WorkerEnvironment {
    */
   private static volatile Map<String, Object> sharedKeyValueStore = new HashMap<>();
 
-  private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
+  private WorkerEnvironment(Config config, JobAPI.Job job, IWorkerController workerController,
                             IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.config = config;
-    this.workerId = workerId;
+    this.workerId = workerController.getWorkerInfo().getWorkerID();
+    this.job = job;
     this.workerController = workerController;
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
@@ -129,6 +136,10 @@ public final class WorkerEnvironment {
 
   public int getWorkerId() {
     return workerId;
+  }
+
+  public JobAPI.Job getJob() {
+    return job;
   }
 
   public int getNumberOfWorkers() {
@@ -218,20 +229,20 @@ public final class WorkerEnvironment {
    * Initialize the worker environment, this is a singleton and every job should call this method
    *
    * @param config configuration
-   * @param workerId this worker id
+   * @param job job object for this Twister2 job
    * @param workerController worker controller
    * @param persistentVolume persistent volume
    * @param volatileVolume volatile volume
    * @return the worker environment
    */
-  public static WorkerEnvironment init(Config config, int workerId,
+  public static WorkerEnvironment init(Config config, JobAPI.Job job,
                                        IWorkerController workerController,
                                        IPersistentVolume persistentVolume,
                                        IVolatileVolume volatileVolume) {
     if (workerEnv == null) {
       synchronized (WorkerEnvironment.class) {
         if (workerEnv == null) {
-          workerEnv = new WorkerEnvironment(config, workerId, workerController, persistentVolume,
+          workerEnv = new WorkerEnvironment(config, job, workerController, persistentVolume,
               volatileVolume);
         }
       }

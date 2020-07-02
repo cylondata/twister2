@@ -22,15 +22,18 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public interface StreamingTSetIWorker extends IWorker {
 
   @Override
-  default void execute(Config config, int workerID, IWorkerController workerController,
+  default void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                        IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
+
+    int workerID = workerController.getWorkerInfo().getWorkerID();
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
     ISenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getDriverAgent();
 

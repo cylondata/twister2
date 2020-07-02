@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -267,22 +266,13 @@ public final class K8sWorkerStarter {
   public static boolean startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
-    String workerClass = job.getWorkerClassName();
-    IWorker worker;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      worker = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("failed to load the worker class %s", workerClass));
-      throw new RuntimeException(e);
-    }
+    IWorker worker = JobUtils.initializeIWorker(job);
 
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobID, workerID);
     }
-    WorkerManager workerManager = new WorkerManager(config, workerID,
+    WorkerManager workerManager = new WorkerManager(config, job,
         workerController, pv, volatileVolume, worker);
     return workerManager.execute();
   }

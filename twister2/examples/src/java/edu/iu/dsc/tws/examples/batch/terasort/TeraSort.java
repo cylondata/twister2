@@ -64,6 +64,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -112,9 +113,11 @@ public class TeraSort implements IWorker {
   private static volatile AtomicInteger tasksCount = new AtomicInteger();
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+
+    int workerID = workerController.getWorkerInfo().getWorkerID();
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
 
     resultsRecorder = new BenchmarkResultsRecorder(config, workerID == 0);

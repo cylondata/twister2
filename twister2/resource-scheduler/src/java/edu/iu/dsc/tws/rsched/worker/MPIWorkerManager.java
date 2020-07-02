@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 public class MPIWorkerManager implements IWorkerFailureListener, IJobMasterFailureListener {
@@ -40,11 +41,13 @@ public class MPIWorkerManager implements IWorkerFailureListener, IJobMasterFailu
   }
 
   public boolean execute(Config config,
-                         int workerID,
+                         JobAPI.Job job,
                          IWorkerController workerController,
                          IPersistentVolume persistentVolume,
                          IVolatileVolume volatileVolume,
                          IWorker managedWorker) {
+
+    int workerID = workerController.getWorkerInfo().getWorkerID();
 
     LOG.info("Waiting on the init barrier before starting IWorker: " + workerID
         + " with restartCount: " + workerController.workerRestartCount()
@@ -61,7 +64,7 @@ public class MPIWorkerManager implements IWorkerFailureListener, IJobMasterFailu
 
     try {
       managedWorker.execute(
-          config, workerID, workerController, persistentVolume, volatileVolume);
+          config, job, workerController, persistentVolume, volatileVolume);
       return true;
 
     } catch (JobFaultyException jfe) {

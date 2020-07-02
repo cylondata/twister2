@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -39,9 +40,11 @@ public class MultiStageGraph implements IWorker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+
+    int workerId = workerController.getWorkerInfo().getWorkerID();
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job,
         workerController, persistentVolume, volatileVolume);
     GeneratorTask g = new GeneratorTask();
     ReduceTask rt = new ReduceTask();

@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -45,9 +46,11 @@ public class HadoopTSet implements IWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(HadoopTSet.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
+
+    int workerId = workerController.getWorkerInfo().getWorkerID();
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
     BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 

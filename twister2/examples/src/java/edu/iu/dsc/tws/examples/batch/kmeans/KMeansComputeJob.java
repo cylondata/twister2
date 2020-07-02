@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
@@ -61,11 +62,13 @@ public class KMeansComputeJob implements IWorker {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public void execute(Config config, int workerId, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+
+    int workerId = workerController.getWorkerInfo().getWorkerID();
     LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 

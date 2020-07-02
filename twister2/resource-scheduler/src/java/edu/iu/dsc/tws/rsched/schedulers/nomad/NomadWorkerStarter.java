@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -43,6 +42,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
 
 //import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
@@ -64,6 +64,8 @@ public final class NomadWorkerStarter {
    * The worker controller
    */
   private IWorkerController workerController;
+
+  private JobAPI.Job job;
 
   private NomadWorkerStarter(String[] args) {
     Options cmdOptions = null;
@@ -179,7 +181,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -199,7 +201,6 @@ public final class NomadWorkerStarter {
     this.workerController = createWorkerController();
     JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
-    String workerClass = SchedulerContext.workerClass(config);
     try {
       LOG.log(Level.INFO, "Worker IP..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
@@ -212,21 +213,9 @@ public final class NomadWorkerStarter {
       return;
     }
 
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IWorker container = (IWorker) object;
-        // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
-      } else {
-        throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
-      }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
+    IWorker worker = JobUtils.initializeIWorker(job);
+    MPIWorkerManager workerManager = new MPIWorkerManager();
+    workerManager.execute(config, job, workerController, null, null, worker);
   }
 
   /**
@@ -245,9 +234,6 @@ public final class NomadWorkerStarter {
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    String jobID = NomadContext.jobId(config);
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);

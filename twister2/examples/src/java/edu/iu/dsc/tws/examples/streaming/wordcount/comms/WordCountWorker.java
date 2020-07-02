@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
@@ -51,12 +52,12 @@ public class WordCountWorker implements IWorker {
   private LogicalPlan logicalPlan;
 
   @Override
-  public void execute(Config cfg, int workerID,
+  public void execute(Config cfg, JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.id = workerID;
+    this.id = workerController.getWorkerInfo().getWorkerID();
     this.noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     setupTasks(workerController);

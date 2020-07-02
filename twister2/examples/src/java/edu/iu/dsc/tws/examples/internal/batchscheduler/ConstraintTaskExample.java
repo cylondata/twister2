@@ -56,6 +56,7 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -120,14 +121,15 @@ public class ConstraintTaskExample implements IWorker {
   }
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
 
+    int workerId = workerController.getWorkerInfo().getWorkerID();
     long startTime = System.currentTimeMillis();
 
-    LOG.log(Level.INFO, "Task worker starting: " + workerID);
+    LOG.log(Level.INFO, "Task worker starting: " + job);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
@@ -137,7 +139,7 @@ public class ConstraintTaskExample implements IWorker {
         = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.PARALLELISM_VALUE)));
     int dsize = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DSIZE)));
 
-    DataGenerator dataGenerator = new DataGenerator(config, workerID);
+    DataGenerator dataGenerator = new DataGenerator(config, workerId);
     dataGenerator.generate(new Path(dinput), dsize, dimension);
 
     ComputeGraph firstGraph = buildFirstGraph(

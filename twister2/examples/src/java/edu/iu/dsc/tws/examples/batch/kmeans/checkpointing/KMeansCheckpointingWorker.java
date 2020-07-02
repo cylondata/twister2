@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansComputeJob;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansUtils;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -72,12 +73,14 @@ public class KMeansCheckpointingWorker implements IWorker {
   @SuppressWarnings("unchecked")
   @Override
   public void execute(Config config,
-                      int workerId,
+                      JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    ComputeEnvironment taskEnv = ComputeEnvironment.init(config, workerId,
+    int workerId = workerController.getWorkerInfo().getWorkerID();
+
+    ComputeEnvironment taskEnv = ComputeEnvironment.init(config, job,
         workerController, persistentVolume, volatileVolume);
 
     CheckpointingWorkerEnv checkpointingEnv =
