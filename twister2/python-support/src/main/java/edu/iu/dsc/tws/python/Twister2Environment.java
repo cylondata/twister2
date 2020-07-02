@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.python;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,14 @@ public class Twister2Environment extends EntryPoint {
 
   Twister2Environment(TSetEnvironment tSetEnvironment) {
     this.tSetEnvironment = tSetEnvironment;
+  }
+
+  public Map<Integer, String> getPeerNetworkInfo() {
+    Map<Integer, String> workerNetworkInfo = new HashMap<>();
+    this.tSetEnvironment.getWorkerEnv().getWorkerList().forEach(w -> {
+      workerNetworkInfo.put(w.getWorkerID(), w.getNodeInfo().getNodeIP());
+    });
+    return workerNetworkInfo;
   }
 
   public int getWorkerId() {
