@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.driver;
 
-public class NullScalar implements IScalerPerCluster {
+public class NullScaler implements IScalerPerCluster {
 
   @Override
   public boolean isScalable() {

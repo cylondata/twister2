@@ -19,7 +19,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class StandaloneCommand extends MPICommand {
@@ -96,6 +98,8 @@ public class StandaloneCommand extends MPICommand {
       mpiCommand.add(SchedulerContext.twister2Home(config));
     }
 
+    // whether this is a job that is starting from a checkpoint
+    mpiCommand.add(Boolean.toString(CheckpointingContext.startingFromACheckpoint(config)));
     return mpiCommand;
   }
 

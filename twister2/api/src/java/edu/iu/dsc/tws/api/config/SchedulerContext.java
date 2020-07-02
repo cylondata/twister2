@@ -105,6 +105,11 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
 
+  public static boolean isLocalFileSystemUploader(Config cfg) {
+    return SchedulerContext.uploaderClass(cfg)
+        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader");
+  }
+
   public static String launcherClass(Config cfg) {
     return cfg.getStringValue(LAUNCHER_CLASS);
   }

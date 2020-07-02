@@ -108,6 +108,10 @@ public class MesosWorkerController implements IWorkerController {
     return zkWorkerController.getJoinedWorkers();
   }
 
+  @Override
+  public int workerRestartCount() {
+    return 0;
+  }
 
   public void initializeWithZooKeeper() {
 
