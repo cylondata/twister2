@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -62,11 +63,10 @@ public final class MPIMasterStarter {
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
-    String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
-    String jvmMemory = System.getenv(K8sEnvVariables.JVM_MEMORY_MB + "");
-
-    jobID = System.getenv(K8sEnvVariables.JOB_ID + "");
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP.name());
+    String podName = System.getenv(K8sEnvVariables.POD_NAME.name());
+    String jvmMemory = System.getenv(K8sEnvVariables.JVM_MEMORY_MB.name());
+    jobID = System.getenv(K8sEnvVariables.JOB_ID.name());
     if (jobID == null) {
       throw new RuntimeException("JobID is null");
     }
@@ -217,21 +217,22 @@ public final class MPIMasterStarter {
                                                String logPropsFile,
                                                String jvmMemory) {
 
-    String jobMasterCLArgument = createJobMasterIPCommandLineArgument(jobMasterIP);
+    String jst = System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME.name());
+    String restore = System.getenv(K8sEnvVariables.RESTORE_JOB.name());
 
     return new String[]
         {"mpirun",
-            "--hostfile",
-            HOSTFILE_NAME,
+            "--hostfile", HOSTFILE_NAME,
             "--allow-run-as-root",
 //            "--fwd-mpirun-port",
 //            "--mca", "oob_tcp_listen_mode", "listen_thread",
-            "-npernode",
-            workersPerPod + "",
-            "-x",
-            "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
-            "-x",
-            "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
+            "-npernode", workersPerPod + "",
+            "-x", "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
+            "-x", "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
+            "-x", K8sEnvVariables.JOB_ID.name() + "=" + jobID,
+            "-x", K8sEnvVariables.JOB_MASTER_IP.name() + "=" + jobMasterIP,
+            "-x", K8sEnvVariables.JOB_SUBMISSION_TIME.name() + "=" + jst,
+            "-x", K8sEnvVariables.RESTORE_JOB.name() + "=" + restore,
 //            "-output-filename",
 //            "/twister2-memory-dir/logfile",
             "-tag-output",
@@ -240,32 +241,38 @@ public final class MPIMasterStarter {
             "-Xmx" + jvmMemory + "m",
             "-Djava.util.logging.config.file=" + logPropsFile,
             "-cp", System.getenv("CLASSPATH"),
-            className,
-            jobMasterCLArgument,
-            jobID
+            className
         };
   }
 
   /**
    * send mpirun command to shell
    */
-  public static boolean executeMpirun(String[] command) {
+  public static void executeMpirun(String[] command) {
     StringBuilder stderr = new StringBuilder();
     boolean isVerbose = true;
-    LOG.info("mpirun will be executed with the command: \n" + commandAsAString(command));
 
-    int status = ProcessUtils.runSyncProcess(false, command, stderr, new File("."), isVerbose);
+    int tryCount = 0;
+    while (tryCount++ < FaultToleranceContext.maxMpiJobRestarts(config)) {
+      LOG.info("mpirun will execute with the command: \n" + commandAsAString(command));
+      int status = ProcessUtils.runSyncProcess(false, command, stderr, new File("."), isVerbose);
 
-    if (status != 0) {
-      LOG.severe(String.format(
-          "Failed to execute mpirun command=%s, STDERR=%s", commandAsAString(command), stderr));
-    } else {
-      LOG.info("mpirun execution completed with success...");
-      if (stderr.length() != 0) {
-        LOG.info("The error output:\n " + stderr.toString());
+      if (status == 0) {
+        LOG.info("mpirun completed with success...");
+        if (stderr.length() != 0) {
+          LOG.info("The output:\n " + stderr.toString());
+        }
+        return;
+
+      } else if (tryCount < FaultToleranceContext.maxMpiJobRestarts(config)) {
+        LOG.severe(String.format(
+            "Failed to execute mpirun. Will try again. STDERR=%s", stderr));
       }
+      stderr.setLength(0);
     }
-    return status == 0;
+
+    LOG.severe(String.format(
+        "Failed to execute mpirun. Tried %s times. STDERR=%s", tryCount, stderr));
   }
 
   public static String commandAsAString(String[] commandArray) {
@@ -275,25 +282,6 @@ public final class MPIMasterStarter {
     }
 
     return command;
-  }
-
-  /**
-   * we send the jobMaster IP as a command line parameter to workers
-   * we send it in the form of: "jobMasterIP=ip"
-   */
-  public static String createJobMasterIPCommandLineArgument(String value) {
-    return "jobMasterIP=" + value;
-  }
-
-  /**
-   * retrieve job master ip from the command line parameter
-   */
-  public static String getJobMasterIPCommandLineArgumentValue(String commandLineArgument) {
-    if (commandLineArgument == null || !commandLineArgument.startsWith("jobMasterIP=")) {
-      return null;
-    }
-
-    return commandLineArgument.substring(commandLineArgument.indexOf('=') + 1);
   }
 
   public static String[] generateCheckSshCommand(ArrayList<String> podIPs) {

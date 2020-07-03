@@ -84,6 +84,11 @@ public class TWSUCXChannelTest {
     }
 
     @Override
+    public int workerRestartCount() {
+      return 0;
+    }
+
+    @Override
     public void waitOnBarrier() throws TimeoutException {
       try {
         this.cyclicBarrier.await();

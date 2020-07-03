@@ -33,20 +33,22 @@ public class MPIWorkerController implements IWorkerController {
 
   private static final Logger LOG = Logger.getLogger(MPIWorkerController.class.getName());
 
-  private int thisWorkerID;
+  private int workerID;
+  private int restartCount;
 
   private Map<Integer, JobMasterAPI.WorkerInfo> workerInfoMap = new HashMap<>();
 
-  private Map<String, Object> runtimeObjects = new HashMap<>();
-
-  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> workers) {
-    this.thisWorkerID = thisWorkerID;
+  public MPIWorkerController(int workerID,
+                             Map<Integer, JobMasterAPI.WorkerInfo> workers,
+                             int restartCount) {
+    this.workerID = workerID;
     this.workerInfoMap = workers;
+    this.restartCount = restartCount;
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return workerInfoMap.get(thisWorkerID);
+    return workerInfoMap.get(workerID);
   }
 
   @Override
@@ -70,6 +72,11 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
+  public int workerRestartCount() {
+    return restartCount;
+  }
+
+  @Override
   public void waitOnBarrier() throws TimeoutException {
     try {
       MPI.COMM_WORLD.barrier();
@@ -86,15 +93,6 @@ public class MPIWorkerController implements IWorkerController {
   @Override
   public void waitOnInitBarrier() throws TimeoutException {
     waitOnBarrier();
-  }
-
-  public void add(String name, Object obj) {
-    runtimeObjects.put(name, obj);
-  }
-
-  @Override
-  public Object getRuntimeObject(String name) {
-    return runtimeObjects.get(name);
   }
 
   @Override

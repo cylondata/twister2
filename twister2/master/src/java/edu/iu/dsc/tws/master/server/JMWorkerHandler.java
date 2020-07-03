@@ -352,9 +352,11 @@ public class JMWorkerHandler implements MessageHandler, IWorkerEventSender {
         .setWorkerID(workerID)
         .build();
 
-    // send the message to all workers
-    for (int wID : workerMonitor.getWorkerIDs()) {
-      rrServer.sendMessage(workerFailed, wID);
+    // send the message to all running workers
+    for (WorkerWithState wws : workerMonitor.getWorkerList()) {
+      if (wws.getWorkerID() != workerID && wws.running()) {
+        rrServer.sendMessage(workerFailed, wws.getWorkerID());
+      }
     }
   }
 
@@ -364,9 +366,11 @@ public class JMWorkerHandler implements MessageHandler, IWorkerEventSender {
         .setWorkerInfo(workerInfo)
         .build();
 
-    // send the message to all workers
-    for (int wID : workerMonitor.getWorkerIDs()) {
-      rrServer.sendMessage(workerRestarted, wID);
+    // send the message to all running workers
+    for (WorkerWithState wws : workerMonitor.getWorkerList()) {
+      if (wws.getWorkerID() != workerInfo.getWorkerID() && wws.running()) {
+        rrServer.sendMessage(workerRestarted, wws.getWorkerID());
+      }
     }
   }
 
