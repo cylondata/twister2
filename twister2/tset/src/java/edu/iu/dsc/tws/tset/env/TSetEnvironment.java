@@ -70,6 +70,10 @@ public abstract class TSetEnvironment {
     this.tBaseGraph = new TBaseGraph(getOperationMode());
   }
 
+  public WorkerEnvironment getWorkerEnv() {
+    return workerEnv;
+  }
+
   /**
    * Returns the {@link OperationMode}
    *
@@ -80,9 +84,9 @@ public abstract class TSetEnvironment {
   /**
    * Creates a source TSet based on the {@link SourceFunc}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
@@ -90,10 +94,10 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
@@ -102,7 +106,7 @@ public abstract class TSetEnvironment {
                                                      int parallelism, String type);
 
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
-                                                     int parallelism, String type);
+                                                    int parallelism, String type);
 
   public abstract BaseTSet<Integer> createArrowSource(String filePath, int parallelism);
 
@@ -110,10 +114,10 @@ public abstract class TSetEnvironment {
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.
    *
-   * @param name        name of the tset
-   * @param list        list to be parallelized
+   * @param name name of the tset
+   * @param list list to be parallelized
    * @param parallelism no of sources to be created
-   * @param <T>         data type of the list
+   * @param <T> data type of the list
    * @return Source TSet
    */
   public <T> BaseTSet<T> parallelize(String name, List<T> list, int parallelism) {
@@ -126,9 +130,9 @@ public abstract class TSetEnvironment {
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.
    *
-   * @param list        list to be parallelized
+   * @param list list to be parallelized
    * @param parallelism no of sources to be created
-   * @param <T>         data type of the list
+   * @param <T> data type of the list
    * @return Source TSet
    */
   public <T> BaseTSet<T> parallelize(List<T> list, int parallelism) {
@@ -162,10 +166,10 @@ public abstract class TSetEnvironment {
   /**
    * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
@@ -174,11 +178,11 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
@@ -251,9 +255,9 @@ public abstract class TSetEnvironment {
    * Adds a {@link edu.iu.dsc.tws.api.tset.sets.TSet} to another
    * {@link edu.iu.dsc.tws.api.tset.sets.TSet} as an input that will be identified by the inputKey
    *
-   * @param tSetID      TSet ID
+   * @param tSetID TSet ID
    * @param inputTSetID input TSet ID
-   * @param inputKey    key given to the input TSet
+   * @param inputKey key given to the input TSet
    */
   public void addInput(String tSetID, String inputTSetID, String inputKey) {
     if (tSetInputMap.containsKey(tSetID)) {
