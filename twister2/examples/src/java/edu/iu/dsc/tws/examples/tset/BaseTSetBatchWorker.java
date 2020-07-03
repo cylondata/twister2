@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 /**
@@ -36,7 +36,7 @@ public class BaseTSetBatchWorker implements BatchTSetIWorker, Serializable {
   protected static ExperimentData experimentData;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     jobParameters = JobParameters.build(env.getConfig());
 
     experimentData = new ExperimentData();

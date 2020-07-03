@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.AggregateFunc;
 import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
@@ -46,7 +46,7 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
 
   @Override
-  public void buildGraph(StreamingTSetEnvironment env) {
+  public void buildGraph(StreamingEnvironment env) {
 
     SSourceTSet<Integer> src = dummySource(env, ELEMENTS_IN_STREAM, PARALLELISM);
     SDirectTLink<Integer> link = src.direct();

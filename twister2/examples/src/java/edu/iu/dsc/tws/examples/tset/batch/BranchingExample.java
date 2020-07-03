@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
@@ -32,7 +32,7 @@ public class BranchingExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(BranchingExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     int para = 2;
     SourceTSet<Integer> src = dummySource(env, COUNT, para).setName("src0");
 

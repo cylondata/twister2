@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
@@ -38,11 +38,11 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 public abstract class StreamingGatherLink<T>
     extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+  StreamingGatherLink(StreamingEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingGatherLink(StreamingEnvironment env, String n, int sourceP, int targetP,
                       Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

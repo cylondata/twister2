@@ -52,7 +52,7 @@ distribution setup.
     import org.apache.beam.sdk.values.PCollection;
     
     import edu.iu.dsc.tws.api.config.Config;
-    import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+    import edu.iu.dsc.tws.tset.env.BatchEnvironment;
     import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
     
     public class WordCount implements Serializable, BatchTSetIWorker {
@@ -60,7 +60,7 @@ distribution setup.
       public static final String TOKENIZER_PATTERN = "[^\\p{L}]+";
     
       @Override
-      public void execute(BatchTSetEnvironment env) {
+      public void execute(BatchEnvironment env) {
     
         Config config = env.getConfig();
         String input = config.getStringValue("input");

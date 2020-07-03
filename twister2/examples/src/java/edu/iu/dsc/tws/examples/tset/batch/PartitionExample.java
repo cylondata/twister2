@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -42,7 +42,7 @@ public class PartitionExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     int start = env.getWorkerID() * 100;
     SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 

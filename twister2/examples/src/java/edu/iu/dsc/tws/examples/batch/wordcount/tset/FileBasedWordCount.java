@@ -52,7 +52,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
@@ -68,7 +68,7 @@ public class FileBasedWordCount implements Twister2Worker, Serializable {
 
   @Override
   public void execute(WorkerEnvironment workerEnv) {
-    BatchTSetEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
 
     int sourcePar = (int) env.getConfig().get("PAR");
 

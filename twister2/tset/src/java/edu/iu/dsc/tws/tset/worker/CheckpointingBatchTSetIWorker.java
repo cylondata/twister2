@@ -18,7 +18,8 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public interface CheckpointingBatchTSetIWorker extends IWorker {
 
@@ -30,8 +31,9 @@ public interface CheckpointingBatchTSetIWorker extends IWorker {
     WorkerEnvironment workerEnv = WorkerEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
 
-    this.execute(new CheckpointingTSetEnv(workerEnv));
+    BatchChkPntEnvironment checkpointingTSetEnv = TSetEnvironment.initCheckpointing(workerEnv);
+    this.execute(checkpointingTSetEnv);
   }
 
-  void execute(CheckpointingTSetEnv env);
+  void execute(BatchChkPntEnvironment env);
 }

@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -33,7 +33,7 @@ public class BroadcastExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, 1);
 
     ReplicateTLink<Integer> replicate = src.replicate(PARALLELISM);

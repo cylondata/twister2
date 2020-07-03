@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -69,7 +69,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
 
   private boolean testStatus = false;
 
-  private void executeAll(BatchTSetEnvironment env) {
+  private void executeAll(BatchEnvironment env) {
     this
         .initialize(env)
         .loadData(env)
@@ -80,7 +80,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
   }
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
 //    Method 1
 //    initializeParameters();
 //    trainingData = loadTrainingData();
@@ -99,7 +99,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
   /**
    * This method initializes the parameters in running SVM
    */
-  private void initializeParameters(BatchTSetEnvironment env) {
+  private void initializeParameters(BatchEnvironment env) {
     this.svmJobParameters = SVMJobParameters.build(env.getConfig());
     this.binaryBatchModel = new BinaryBatchModel();
     this.dataStreamerParallelism = this.svmJobParameters.getParallelism();
@@ -115,26 +115,26 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
     LOG.info(this.binaryBatchModel.toString());
   }
 
-  private CachedTSet<double[][]> loadTrainingData(BatchTSetEnvironment env) {
+  private CachedTSet<double[][]> loadTrainingData(BatchEnvironment env) {
     return env.createSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "train"),
         this.dataStreamerParallelism).setName("trainingDataSource").cache();
   }
 
-  private CachedTSet<double[][]> loadTestingData(BatchTSetEnvironment env) {
+  private CachedTSet<double[][]> loadTestingData(BatchEnvironment env) {
     return env.createSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "test"),
         this.dataStreamerParallelism).setName("testingDataSource").cache();
   }
 
-  private CachedTSet<double[]> loadWeightVector(BatchTSetEnvironment env) {
+  private CachedTSet<double[]> loadWeightVector(BatchEnvironment env) {
     return env.createSource(
         new WeightVectorLoad(this.binaryBatchModel, this.svmJobParameters),
         this.dataStreamerParallelism).setName("weightVectorSource")
         .cache();
   }
 
-  private void executeTraining(BatchTSetEnvironment env) {
+  private void executeTraining(BatchEnvironment env) {
     this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0)); // todo test this!
     for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
       LOG.info(String.format("Iteration %d", i));
@@ -178,13 +178,13 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
 //    });
   }
 
-  private void executeSummary(BatchTSetEnvironment env) {
+  private void executeSummary(BatchEnvironment env) {
     if (env.getWorkerID() == 0) {
       generateSummary();
     }
   }
 
-  private void executePredict(BatchTSetEnvironment env) {
+  private void executePredict(BatchEnvironment env) {
     assert this.trainedWeightVector.getStoredSourceTSet() != null : "Partition is null";
 
     this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0));
@@ -204,34 +204,34 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
     LOG.info(String.format("Training Accuracy : %f ", accuracy));
   }
 
-  private SvmSgdTsetRunner initialize(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner initialize(BatchEnvironment env) {
     long t1 = System.nanoTime();
     initializeParameters(env);
     this.initializingTime = System.nanoTime() - t1;
     return this;
   }
 
-  private SvmSgdTsetRunner train(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner train(BatchEnvironment env) {
     long t1 = System.nanoTime();
     executeTraining(env);
     this.trainingTime = System.nanoTime() - t1;
     return this;
   }
 
-  private SvmSgdTsetRunner predict(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner predict(BatchEnvironment env) {
     long t1 = System.nanoTime();
     executePredict(env);
     this.testingTime = System.nanoTime() - t1;
     return this;
   }
 
-  private SvmSgdTsetRunner summary(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner summary(BatchEnvironment env) {
     executeSummary(env);
     return this;
   }
 
 
-  private SvmSgdTsetRunner loadData(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner loadData(BatchEnvironment env) {
     long t1 = System.nanoTime();
     trainingData = loadTrainingData(env);
     testingData = loadTestingData(env);
@@ -240,7 +240,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
     return this;
   }
 
-  private SvmSgdTsetRunner save(BatchTSetEnvironment env) {
+  private SvmSgdTsetRunner save(BatchEnvironment env) {
     try {
       saveResults(env);
     } catch (IOException e) {
@@ -250,7 +250,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
   }
 
 
-  private void saveResults(BatchTSetEnvironment env) throws IOException {
+  private void saveResults(BatchEnvironment env) throws IOException {
     ResultsSaver resultsSaver = new ResultsSaver(this.trainingTime, this.testingTime,
         this.dataLoadingTime, this.dataLoadingTime + this.trainingTime + this.testingTime,
         this.svmJobParameters, "itr-tset");

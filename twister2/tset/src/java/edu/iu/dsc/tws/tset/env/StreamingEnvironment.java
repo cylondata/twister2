@@ -28,13 +28,13 @@ import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
  * <p>
  * There is only a single execution mode that would run the entire TSet graph.
  */
-public class StreamingTSetEnvironment extends TSetEnvironment {
+public class StreamingEnvironment extends TSetEnvironment {
 
-  public StreamingTSetEnvironment(WorkerEnvironment wEnv) {
+  public StreamingEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
   }
 
-  public StreamingTSetEnvironment() {
+  public StreamingEnvironment() {
     super();
   }
 

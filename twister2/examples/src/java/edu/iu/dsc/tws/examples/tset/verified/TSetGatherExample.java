@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -41,7 +41,7 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetGatherExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     super.execute(env);
 
     // set the parallelism of source to task stage 0

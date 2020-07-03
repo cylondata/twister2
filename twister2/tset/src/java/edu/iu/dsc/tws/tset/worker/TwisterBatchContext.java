@@ -16,12 +16,13 @@ package edu.iu.dsc.tws.tset.worker;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 /**
  * Twister context provides the user with the basic functionality that is needed to
  * start a Twister2 application
  * <p>
- * This is now deprecated. Use {@link edu.iu.dsc.tws.tset.env.BatchTSetEnvironment} instead!
+ * This is now deprecated. Use {@link BatchEnvironment} instead!
  *
  * @deprecated deprecated class
  */

@@ -24,11 +24,11 @@
 package edu.iu.dsc.tws.examples.tset.verified;
 
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     super.execute(env);
 /*    super.execute(tc);
 

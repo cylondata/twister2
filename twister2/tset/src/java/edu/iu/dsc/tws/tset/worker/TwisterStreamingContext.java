@@ -16,9 +16,10 @@ package edu.iu.dsc.tws.tset.worker;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 
 /**
- * This is now deprecated. Use {@link edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment} instead!
+ * This is now deprecated. Use {@link StreamingEnvironment} instead!
  *
  * @deprecated deprecated abstract class
  */

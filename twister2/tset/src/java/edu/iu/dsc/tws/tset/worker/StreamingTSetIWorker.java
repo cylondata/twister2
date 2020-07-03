@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public interface StreamingTSetIWorker extends IWorker {
@@ -37,7 +37,7 @@ public interface StreamingTSetIWorker extends IWorker {
         persistentVolume, volatileVolume);
     ISenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getDriverAgent();
 
-    StreamingTSetEnvironment tSetEnv = TSetEnvironment.initStreaming(workerEnv);
+    StreamingEnvironment tSetEnv = TSetEnvironment.initStreaming(workerEnv);
 
     buildGraph(tSetEnv);
 
@@ -57,5 +57,5 @@ public interface StreamingTSetIWorker extends IWorker {
    *
    * @param env streaming tset env
    */
-  void buildGraph(StreamingTSetEnvironment env);
+  void buildGraph(StreamingEnvironment env);
 }

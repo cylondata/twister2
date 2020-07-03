@@ -32,7 +32,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 /**
  * doc.
@@ -41,7 +41,7 @@ public class ReadSourceTest implements Serializable, BatchTSetIWorker {
   private static final Logger LOG = Logger.getLogger(ReadSourceTest.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     System.out.println("Rank " + env.getWorkerID());
     Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
     options.setTSetEnvironment(env);

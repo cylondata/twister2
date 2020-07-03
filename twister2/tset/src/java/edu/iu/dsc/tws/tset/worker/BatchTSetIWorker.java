@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public interface BatchTSetIWorker extends IWorker {
@@ -38,7 +38,7 @@ public interface BatchTSetIWorker extends IWorker {
 
     this.retrieveWorkerEnvironment(workerEnv);
 
-    BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
+    BatchEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 
     execute(tSetEnv);
 
@@ -63,5 +63,5 @@ public interface BatchTSetIWorker extends IWorker {
 
   }
 
-  void execute(BatchTSetEnvironment env);
+  void execute(BatchEnvironment env);
 }

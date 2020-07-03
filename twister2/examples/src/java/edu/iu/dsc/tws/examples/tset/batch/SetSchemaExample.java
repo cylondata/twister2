@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -38,7 +38,7 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(SetSchemaExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     SourceTSet<Integer> src = env.createSource(new BaseSourceFunc<Integer>() {
       private int i = 0;
 

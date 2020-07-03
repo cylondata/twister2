@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.tset.worker.StreamingTSetIWorker;
 
@@ -27,7 +27,7 @@ public abstract class StreamingTsetExample implements StreamingTSetIWorker, Seri
   static final int COUNT = 6;
   static final int PARALLELISM = 2;
 
-  SSourceTSet<Integer> dummySource(StreamingTSetEnvironment env, int count,
+  SSourceTSet<Integer> dummySource(StreamingEnvironment env, int count,
                                    int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 0;
@@ -44,7 +44,7 @@ public abstract class StreamingTsetExample implements StreamingTSetIWorker, Seri
     }, parallel);
   }
 
-  SSourceTSet<Integer> dummySourceOther(StreamingTSetEnvironment env, int count,
+  SSourceTSet<Integer> dummySourceOther(StreamingEnvironment env, int count,
                                         int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 25;

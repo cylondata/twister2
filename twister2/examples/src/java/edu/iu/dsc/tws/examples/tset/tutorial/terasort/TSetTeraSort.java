@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 
 public class TSetTeraSort extends BaseTSetBatchWorker {
@@ -64,7 +64,7 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
   }
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     final int parallelism = env.getConfig().getIntegerValue(PARAM_PARALLELISM);
     final int dataSize = env.getConfig().getIntegerValue(PARAM_DATA_SIZE_GB);
 

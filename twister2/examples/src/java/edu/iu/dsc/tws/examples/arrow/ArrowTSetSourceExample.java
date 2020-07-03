@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSinkFunction;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -50,7 +50,7 @@ public class ArrowTSetSourceExample implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(ArrowTSetSourceExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     Config config = env.getConfig();
     String csvInputDirectory = config.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
     String arrowInputDirectory = config.getStringValue(DataObjectConstants.ARROW_DIRECTORY);

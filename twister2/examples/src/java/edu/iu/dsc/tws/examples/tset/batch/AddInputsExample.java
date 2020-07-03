@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -32,7 +32,7 @@ public class AddInputsExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     // source with 25..29
     SourceTSet<Integer> baseSrc = dummySourceOther(env, COUNT, PARALLELISM);
     // source with 0..4

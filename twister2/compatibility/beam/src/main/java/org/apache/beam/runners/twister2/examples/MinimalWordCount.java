@@ -26,13 +26,13 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptors;
 
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public class MinimalWordCount implements Serializable, BatchTSetIWorker {
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     System.out.println("Rank " + env.getWorkerID());
     Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
     options.setTSetEnvironment(env);

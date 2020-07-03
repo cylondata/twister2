@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
@@ -28,7 +28,7 @@ public class SUnionExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void buildGraph(StreamingTSetEnvironment env) {
+  public void buildGraph(StreamingEnvironment env) {
 //    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
     SSourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
     SSourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");

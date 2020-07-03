@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
@@ -48,7 +48,7 @@ public class KeyedAddInputsExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     KeyedSourceTSet<String, Integer> src0 = dummyKeyedSource(env, COUNT, PARALLELISM);
     KeyedSourceTSet<String, Integer> src1 = dummyKeyedSourceOther(env, COUNT, PARALLELISM);
 

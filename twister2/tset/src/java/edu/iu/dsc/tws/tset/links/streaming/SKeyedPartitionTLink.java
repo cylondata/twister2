@@ -18,13 +18,13 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
 
-  public SKeyedPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
+  public SKeyedPartitionTLink(StreamingEnvironment tSetEnv, PartitionFunc<K> parFn,
                               int sourceParallelism, KeyedSchema schema) {
     super(tSetEnv, "skpartition", sourceParallelism, schema);
     this.partitionFunction = parFn;

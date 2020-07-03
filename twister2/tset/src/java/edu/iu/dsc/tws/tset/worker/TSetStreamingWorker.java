@@ -15,9 +15,10 @@ package edu.iu.dsc.tws.tset.worker;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 
 /**
- * This is now deprecated. Use {@link edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment} instead!
+ * This is now deprecated. Use {@link StreamingEnvironment} instead!
  *
  * @deprecated deprecated abstract class
  */

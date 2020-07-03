@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 /**
@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.tset.links.TLinkUtils;
  */
 public class SAllGatherTLink<T> extends StreamingGatherLink<T> {
 
-  public SAllGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParalellism,
+  public SAllGatherTLink(StreamingEnvironment tSetEnv, int sourceParalellism,
                          Schema schema) {
     super(tSetEnv, "sallgather", sourceParalellism, schema);
   }

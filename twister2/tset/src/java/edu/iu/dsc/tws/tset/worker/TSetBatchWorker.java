@@ -15,9 +15,10 @@ package edu.iu.dsc.tws.tset.worker;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 /**
- * This is now deprecated. Use {@link edu.iu.dsc.tws.tset.env.BatchTSetEnvironment} instead!
+ * This is now deprecated. Use {@link BatchEnvironment} instead!
  *
  * @deprecated deprecated abstract class
  */

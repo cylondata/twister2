@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -29,7 +29,7 @@ public class JoinExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(JoinExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     int para = 2;
     int workerID = env.getWorkerID();
     SourceTSet<Integer> src0 = dummySource(env, COUNT, para).setName("src0");

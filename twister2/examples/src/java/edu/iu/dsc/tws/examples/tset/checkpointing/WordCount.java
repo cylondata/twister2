@@ -22,31 +22,33 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedPersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
 /**
  * A simple word count with checkpointing
  * we generate words randomly in-memory
  */
-public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
+public class WordCount implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   @Override
   @SuppressWarnings("RegexpSinglelineJava")
-  public void execute(CheckpointingTSetEnv env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
+
     int sourcePar = 4;
     Config config = env.getConfig();
 
@@ -75,15 +77,15 @@ public class WordCount implements CheckpointingBatchTSetIWorker, Serializable {
     KeyedPersistedTSet<String, Integer> persistedKeyedReduced = keyedReduce.persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted keyedReduced data");
 
-    if (env.getWorkerID() == 2
-        && WorkerRuntime.getWorkerController().workerRestartCount() == 0
-        && !CheckpointingContext.startingFromACheckpoint(config)) {
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-      }
-      throw new RuntimeException("intentionally killed");
-    }
+//    if (env.getWorkerID() == 2
+//        && WorkerRuntime.getWorkerController().workerRestartCount() == 0
+//        && !CheckpointingContext.startingFromACheckpoint(config)) {
+//      try {
+//        Thread.sleep(10000);
+//      } catch (InterruptedException e) {
+//      }
+//      throw new RuntimeException("intentionally killed");
+//    }
 
     // write to log for testing
     persistedKeyedReduced.keyedDirect().forEach(c -> LOG.info(c.toString()));

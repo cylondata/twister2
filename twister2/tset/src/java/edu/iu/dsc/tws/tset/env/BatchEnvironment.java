@@ -48,19 +48,19 @@ import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
  * 2. Running/ evaluating a tset and update another with the results
  * 3. Running just a single source TSet
  */
-public class BatchTSetEnvironment extends TSetEnvironment {
-  private static final Logger LOG = Logger.getLogger(BatchTSetEnvironment.class.getName());
+public class BatchEnvironment extends TSetEnvironment {
+  private static final Logger LOG = Logger.getLogger(BatchEnvironment.class.getName());
 
   /**
    * private cache of {@link BuildContext}s to be reused during execution
    */
   private Map<String, BuildContext> buildCtxCache = new HashMap<>();
 
-  public BatchTSetEnvironment(WorkerEnvironment wEnv) {
+  public BatchEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
   }
 
-  public BatchTSetEnvironment() {
+  public BatchEnvironment() {
     super();
   }
 

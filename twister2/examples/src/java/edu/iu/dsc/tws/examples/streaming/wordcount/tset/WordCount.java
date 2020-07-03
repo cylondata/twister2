@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 
@@ -55,7 +55,7 @@ public class WordCount implements IWorker, Serializable {
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
 
     int workerId = workerController.getWorkerInfo().getWorkerID();
-    StreamingTSetEnvironment cEnv = TSetEnvironment.initStreaming(WorkerEnvironment.init(config,
+    StreamingEnvironment cEnv = TSetEnvironment.initStreaming(WorkerEnvironment.init(config,
         job, workerController, persistentVolume, volatileVolume));
 
     // create source and aggregator

@@ -20,7 +20,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public class BeamBatchWorker implements Serializable, BatchTSetIWorker {
@@ -29,7 +29,7 @@ public class BeamBatchWorker implements Serializable, BatchTSetIWorker {
   private static final String LEAVES = "leaves";
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(BatchEnvironment env) {
     Config config = env.getConfig();
 
     Map<PCollectionView<?>, BatchTSet<?>> sideInputs

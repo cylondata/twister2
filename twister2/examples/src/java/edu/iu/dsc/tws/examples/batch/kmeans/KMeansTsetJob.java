@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -42,7 +42,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment tc) {
+  public void execute(BatchEnvironment tc) {
     int workerId = tc.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 

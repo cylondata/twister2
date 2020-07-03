@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 /**
@@ -44,7 +44,7 @@ public class AllGatherTLink<T> extends BatchGatherLink<T> {
     //non arg constructor for kryo
   }
 
-  public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+  public AllGatherTLink(BatchEnvironment tSetEnv, int sourceParallelism, Schema schema) {
     super(tSetEnv, "allgather", sourceParallelism, schema);
   }
 

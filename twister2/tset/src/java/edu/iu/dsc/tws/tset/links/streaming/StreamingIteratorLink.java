@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
@@ -29,11 +29,11 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterator<T>, T> {
 
-  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+  StreamingIteratorLink(StreamingEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingIteratorLink(StreamingEnvironment env, String n, int sourceP, int targetP,
                         Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
