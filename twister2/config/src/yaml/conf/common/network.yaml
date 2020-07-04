@@ -59,6 +59,11 @@ twister2.network.shuffle.parallel.io: 2
 # the partitioning algorithm
 twister2.network.alltoall.algorithm.batch: "ring"
 
+# the overridden host ip for the twister server. Usually the host ip is derived from the network
+# interface with the outgoing internet connection but in special cases this ip can be overridden to use
+# some other network interface
+# twister2.network.override.host.ip: "127.0.0.1"
+
 ##### streaming operations ###########
 ######################################
 

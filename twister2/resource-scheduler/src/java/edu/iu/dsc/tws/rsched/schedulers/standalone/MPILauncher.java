@@ -235,7 +235,7 @@ public class MPILauncher implements ILauncher {
         int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
         if (hostAddress == null) {
-          hostAddress = ResourceSchedulerUtils.getHostIP();
+          hostAddress = ResourceSchedulerUtils.getHostIP(config);
         }
         // add the port and ip to config
         config = Config.newBuilder().putAll(config)
