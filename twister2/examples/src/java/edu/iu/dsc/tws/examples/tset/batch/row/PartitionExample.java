@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset.batch.row;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -61,15 +62,27 @@ public class PartitionExample extends BatchTsetExample {
     BatchRowTLink partition = src.partition(new PartitionFunc<Row>() {
       private List<Integer> targets;
       private Random random;
+      private int c = 0;
+      private Map<Integer, Integer> counts = new HashMap<>();
       @Override
       public void prepare(Set<Integer> sources, Set<Integer> destinations) {
         targets = new ArrayList<>(destinations);
         random = new Random();
+        for (int t : targets) {
+          counts.put(t, 0);
+        }
       }
 
       @Override
       public int partition(int sourceIndex, Row val) {
-        return targets.get(random.nextInt(targets.size()));
+        int index = random.nextInt(targets.size());
+        int count = counts.get(index);
+        counts.put(index, count + 1);
+        c++;
+        if (c == 1000) {
+          LOG.info("COUNTS " + counts);
+        }
+        return targets.get(index);
       }
     }, 4, 0);
 

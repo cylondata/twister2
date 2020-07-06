@@ -80,6 +80,7 @@ public class ArrowAllToAll implements ReceiveCallback {
     private int noArray;
     private int length;
     private int target;
+    private VectorSchemaRoot root;
 
     private List<ArrowBuf> buffers = new ArrayList<>();
     private List<ArrowFieldNode> fieldNodes = new ArrayList<>();
@@ -96,6 +97,7 @@ public class ArrowAllToAll implements ReceiveCallback {
       buffers.clear();
       fieldNodes.clear();
       arrays.clear();
+      root = VectorSchemaRoot.create(schema, allocator);
     }
   }
 
@@ -121,11 +123,14 @@ public class ArrowAllToAll implements ReceiveCallback {
   private List<Integer> finishedSources = new ArrayList<>();
   private int receivedBuffers;
   private int workerId;
-  private VectorSchemaRoot schemaRoot;
   // mapping from target to worker id
   private Map<Integer, Integer> targetToWorker = new HashMap<>();
   private List<Integer> finishedCalledSources = new ArrayList<>();
   private Set<Integer> sourcesOfThisWorker;
+  private boolean completed = false;
+  private boolean finishedSent = false;
+  private Schema schema;
+  private RootAllocator allocator;
 
   public ArrowAllToAll(Config cfg, IWorkerController controller,
                        Set<Integer> sources, Set<Integer> targets,
@@ -154,11 +159,14 @@ public class ArrowAllToAll implements ReceiveCallback {
     }
     this.sourceWorkerList = new ArrayList<>(sourceWorkers);
     for (int s : sourceWorkers) {
-      this.receives.put(s, new PendingReceiveTable());
+      PendingReceiveTable value = new PendingReceiveTable();
+      this.receives.put(s, value);
+      value.root = VectorSchemaRoot.create(schema, allocator);
     }
 
     this.sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(plan, sources);
-    this.schemaRoot = VectorSchemaRoot.create(schema, allocator);
+    this.schema = schema;
+    this.allocator = allocator;
     this.all = new SimpleAllToAll(cfg, controller, sourceWorkerList, targetWorkerList, edgeId, this,
         new ArrowAllocator(allocator));
   }
@@ -166,7 +174,6 @@ public class ArrowAllToAll implements ReceiveCallback {
   public boolean insert(Table table, int target) {
     int worker = targetToWorker.get(target);
     PendingSendTable st = inputs.get(worker);
-    LOG.info("Sending table to " + target);
     st.pending.offer(table);
     st.target.offer(target);
     return true;
@@ -177,6 +184,10 @@ public class ArrowAllToAll implements ReceiveCallback {
    * @return true if operation is complete
    */
   public boolean isComplete() {
+    if (completed) {
+      return true;
+    }
+
     boolean isAllEmpty = true;
 
     for (Map.Entry<Integer, PendingSendTable> t : inputs.entrySet()) {
@@ -239,10 +250,15 @@ public class ArrowAllToAll implements ReceiveCallback {
       }
     }
 
-    if (isAllEmpty && finished) {
+    if (isAllEmpty && finished && !finishedSent) {
       all.finish();
+      finishedSent = true;
     }
-    return isAllEmpty && all.isComplete() && finishedSources.size() == sourceWorkerList.size();
+    boolean b = isAllEmpty && all.isComplete() && finishedSources.size() == sourceWorkerList.size();
+    if (b) {
+      completed = true;
+    }
+    return b;
   }
 
   public void finish() {
@@ -267,10 +283,11 @@ public class ArrowAllToAll implements ReceiveCallback {
     receivedBuffers++;
     ArrowBuf buf = ((ArrowChannelBuffer) buffer).getArrowBuf();
     table.buffers.add(buf);
-    if (table.bufferIndex == 1) {
+    if (table.bufferIndex == 0) {
       table.fieldNodes.add(new ArrowFieldNode(table.noArray, 0));
     }
 
+    VectorSchemaRoot schemaRoot = table.root;
     List<FieldVector> fieldVectors = schemaRoot.getFieldVectors();
     // we received everything for this array
     if (table.noBuffers == table.bufferIndex + 1) {
@@ -315,8 +332,10 @@ public class ArrowAllToAll implements ReceiveCallback {
         }
 
         Table t = new ArrowTable(schemaRoot.getSchema(), table.noArray, columns);
-        LOG.info("RECEIVED table from source " + source + " to " + table.target);
+        LOG.info("Received table from source " + source + " to " + table.target
+            + " count" + t.rowCount());
         recvCallback.onReceive(source, table.target, t);
+        table.clear();
       }
     }
   }

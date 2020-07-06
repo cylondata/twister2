@@ -127,6 +127,7 @@ public class STPartition extends BaseOperation {
         for (int j = 0; j < columns.size(); j++) {
           builder.getColumns().get(j).addValue(columns.get(j).get(i));
         }
+
       }
     }
 
