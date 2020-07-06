@@ -13,9 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,35 +104,17 @@ public class MPIController implements IController {
    * @return true if the job creation is successful
    */
   public boolean createJob(String jobWorkingDirectory, String twister2Home, JobAPI.Job job) {
-    // get the command to run the job on Slurm cluster
-    List<String> cmds = command.mpiCommand(jobWorkingDirectory, job);
-    // change the empty strings of command args to "", because batch
-    // doesn't recognize space as an arguments
-    List<String> transformedArgs = new ArrayList<>();
-    for (int i = 0; i < cmds.size(); i++) {
-      String arg = cmds.get(i);
-      if (arg == null || arg.trim().equals("")) {
-        transformedArgs.add("\"\"");
-      } else {
-        transformedArgs.add(arg);
-      }
-    }
-
-    // add restart count as the last parameter
-    transformedArgs.add("0");
-
-    // add the args to the command
-    String[] cmdArray = transformedArgs.toArray(new String[0]);
-    LOG.fine("Executing job [" + jobWorkingDirectory + "]: " + Arrays.toString(cmdArray));
+    String[] mpiCmd = command.mpiCommand(jobWorkingDirectory, job);
+    LOG.fine("Executing job [" + jobWorkingDirectory + "]: " + Arrays.toString(mpiCmd));
     StringBuilder stderr = new StringBuilder();
-    return runProcess(twister2Home, cmdArray, stderr);
+    return runProcess(twister2Home, mpiCmd, stderr);
   }
 
   /**
-   * This is for unit testing
+   * Submit the job
+   * resubmit it if it fails
    */
-  protected boolean runProcess(String jobWorkingDirectory, String[] cmd,
-                               StringBuilder stderr) {
+  protected boolean runProcess(String jobWorkingDirectory, String[] cmd, StringBuilder stderr) {
     File workingDir = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
 
     int tryCount = 0;
@@ -154,7 +134,7 @@ public class MPIController implements IController {
         stderr.setLength(0);
 
         // update restartCount at the mpi command
-        cmd[cmd.length - 1] = tryCount + "";
+        command.updateRestartCount(cmd, tryCount);
       }
     }
 
