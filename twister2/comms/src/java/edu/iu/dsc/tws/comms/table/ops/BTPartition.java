@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -32,6 +33,8 @@ import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class BTPartition extends BaseOperation {
+  private static final Logger LOG = Logger.getLogger(BTPartition.class.getName());
+
   private STPartition partition;
   private Map<Integer, List<Object>> receivedTables = new HashMap<>();
   private boolean completed = false;

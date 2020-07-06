@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 
@@ -100,7 +101,7 @@ public class MPIChannel {
                     ChannelReceiveCallback recvCallback, ChannelSendCallback sCallback,
                     Allocator allocator) {
     this.cfg = config;
-    Object commObject = wController.getRuntimeObject("comm");
+    Object commObject = MPIContext.getRuntimeObject("comm");
     if (commObject == null) {
       this.comm = MPI.COMM_WORLD;
     } else {
@@ -185,7 +186,6 @@ public class MPIChannel {
             TRequest r = pendSend.pendingData.peek();
 
             assert r != null;
-
             pendSend.request = comm.iSend(r.buffer, r.length, MPI.BYTE, r.target, edge);
             pendSend.status = SendStatus.SEND_POSTED;
             pendSend.pendingData.poll();
@@ -343,7 +343,6 @@ public class MPIChannel {
     // for the last header we always send only the first 2 integers
     send.headerBuf.put(0, 0);
     send.headerBuf.put(1, TWISTERX_MSG_FIN);
-    // LOG(INFO) << rank << " Sent finish to " << x.first;
     send.request = comm.iSend(send.headerBuf, 2, MPI.INT, send.currentSend.target, edge);
     send.status = SendStatus.SEND_FINISH;
   }

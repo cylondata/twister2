@@ -110,6 +110,9 @@ public class ArrowTable implements Table {
       } catch (IndexOutOfBoundsException e) {
         LOG.severe("Index out of bounds " + index + " row count " + rowCount());
         throw e;
+      } catch (IllegalStateException e) {
+        LOG.severe("Value at index NULL " + index + " row count " + rowCount());
+        throw e;
       }
     }
   }
