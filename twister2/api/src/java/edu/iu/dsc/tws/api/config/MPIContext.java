@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.config;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class MPIContext extends SchedulerContext {
 
   public static final String SLURM_JOB_ID = "twister2.resource.scheduler.mpi.job.id";
 
-  public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.mpi.shell.script";
+  public static final String MPI_SHELL_SCRIPT = "twister2.resource.scheduler.mpi.shell.script";
 
   public static final String PARTITION = "twister2.resource.scheduler.slurm.partition";
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
@@ -50,7 +51,19 @@ public class MPIContext extends SchedulerContext {
   }
 
   public static String mpiShellScript(Config config) {
-    return config.getStringValue(SLURM_SHELL_SCRIPT, "mpi.sh");
+    return config.getStringValue(MPI_SHELL_SCRIPT, "mpiworker.sh");
+  }
+
+  public static String mpiScriptWithPath(Config config) {
+    return new File(conf(config), mpiShellScript(config)).getPath();
+  }
+
+  public static String slurmShellScript(Config config) {
+    return config.getStringValue(MPI_SHELL_SCRIPT, "mpilauncher.sh");
+  }
+
+  public static String slurmScriptWithPath(Config config) {
+    return new File(conf(config), slurmShellScript(config)).getPath();
   }
 
   public static String partition(Config cfg) {
@@ -61,7 +74,7 @@ public class MPIContext extends SchedulerContext {
     return cfg.getStringValue(MODE, "node");
   }
 
-  public static String nodeFiles(Config cfg) {
+  public static String nodesFile(Config cfg) {
     return cfg.getStringValue(NODES_FILE, "nodes");
   }
 
