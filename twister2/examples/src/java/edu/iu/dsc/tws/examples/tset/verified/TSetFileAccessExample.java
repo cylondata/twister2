@@ -23,13 +23,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.verified;
 
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
-  public void execute(BatchEnvironment env) {
-    super.execute(env);
+  public void execute(WorkerEnvironment workerEnv) {
+    super.execute(workerEnv);
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
 /*    super.execute(tc);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,

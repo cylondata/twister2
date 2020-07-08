@@ -25,15 +25,18 @@ package edu.iu.dsc.tws.examples.tset.verified;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public class TSetPartitionExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetPartitionExample.class.getName());
 
   @Override
-  public void execute(BatchEnvironment env) {
-    super.execute(env);
+  public void execute(WorkerEnvironment workerEnv) {
+    super.execute(workerEnv);
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
 /*    super.execute(tc);
 
     // set the parallelism of source to task stage 0

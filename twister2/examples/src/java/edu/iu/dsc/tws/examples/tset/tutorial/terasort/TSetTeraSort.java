@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -30,6 +31,7 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 
 public class TSetTeraSort extends BaseTSetBatchWorker {
@@ -64,7 +66,8 @@ public class TSetTeraSort extends BaseTSetBatchWorker {
   }
 
   @Override
-  public void execute(BatchEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     final int parallelism = env.getConfig().getIntegerValue(PARAM_PARALLELISM);
     final int dataSize = env.getConfig().getIntegerValue(PARAM_DATA_SIZE_GB);
 

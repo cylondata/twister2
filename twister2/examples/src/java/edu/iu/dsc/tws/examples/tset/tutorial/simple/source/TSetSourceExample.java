@@ -29,13 +29,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class TSetSourceExample implements BatchTSetIWorker, Serializable {
+public class TSetSourceExample implements Twister2Worker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetSourceExample.class.getName());
 
@@ -54,7 +56,8 @@ public class TSetSourceExample implements BatchTSetIWorker, Serializable {
   }
 
   @Override
-  public void execute(BatchEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
     SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {

@@ -15,6 +15,8 @@ import java.io.Serializable;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
@@ -22,12 +24,12 @@ import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 /**
  * We need to keep variable static as this class is serialized
  */
-public class BaseTSetBatchWorker implements BatchTSetIWorker, Serializable {
+public class BaseTSetBatchWorker implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(BaseTSetBatchWorker.class.getName());
 
   protected static JobParameters jobParameters;
@@ -36,7 +38,8 @@ public class BaseTSetBatchWorker implements BatchTSetIWorker, Serializable {
   protected static ExperimentData experimentData;
 
   @Override
-  public void execute(BatchEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     jobParameters = JobParameters.build(env.getConfig());
 
     experimentData = new ExperimentData();
