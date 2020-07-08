@@ -388,14 +388,6 @@ public final class MPIWorkerStarter {
   private Options setupOptions() {
     Options options = new Options();
 
-    Option containerClass = Option.builder("c")
-        .desc("The class name of the container to launch")
-        .longOpt("container_class")
-        .hasArgs()
-        .argName("container class")
-        .required()
-        .build();
-
     Option configDirectory = Option.builder("d")
         .desc("The class name of the container to launch")
         .longOpt("config_dir")
@@ -461,7 +453,6 @@ public final class MPIWorkerStarter {
         .build();
 
     options.addOption(twister2Home);
-    options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
     options.addOption(jobId);
@@ -475,7 +466,6 @@ public final class MPIWorkerStarter {
 
   private Config loadConfigurations(CommandLine cmd) {
     String twister2Home = cmd.getOptionValue("twister2_home");
-    String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
     String jobId = cmd.getOptionValue("job_id");
@@ -484,16 +474,11 @@ public final class MPIWorkerStarter {
     boolean restoreJob = Boolean.parseBoolean(cmd.getOptionValue("restore_job"));
     restartCount = Integer.parseInt(cmd.getOptionValue("restart_count"));
 
-    LOG.log(Level.FINE, String.format("Initializing process with "
-            + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
-        twister2Home, container, configDir, clusterType));
-
     Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder()
         .putAll(cfg)
         .put(MPIContext.TWISTER2_HOME.getKey(), twister2Home)
-        .put(MPIContext.WORKER_CLASS, container)
         .put(MPIContext.TWISTER2_CONTAINER_ID, globalRank)
         .put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType)
         .build();
@@ -506,7 +491,7 @@ public final class MPIWorkerStarter {
     updatedConfig = Config.newBuilder()
         .putAll(updatedConfig)
         .put(MPIContext.TWISTER2_HOME.getKey(), twister2Home)
-        .put(MPIContext.WORKER_CLASS, container)
+        .put(MPIContext.WORKER_CLASS, job.getWorkerClassName())
         .put(MPIContext.TWISTER2_CONTAINER_ID, globalRank)
         .put(MPIContext.JOB_ID, jobId)
         .put(MPIContext.JOB_OBJECT, job)
@@ -516,6 +501,11 @@ public final class MPIWorkerStarter {
         .put(ZKContext.SERVER_ADDRESSES, null)
         .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, restoreJob)
         .build();
+
+    LOG.log(Level.FINE, String.format("Initializing process with "
+            + "twister_home: %s worker_class: %s config_dir: %s cluster_type: %s",
+        twister2Home, job.getWorkerClassName(), configDir, clusterType));
+
     return updatedConfig;
   }
 
