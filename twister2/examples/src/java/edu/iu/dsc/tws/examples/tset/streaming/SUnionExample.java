@@ -17,9 +17,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
@@ -28,7 +30,8 @@ public class SUnionExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void buildGraph(StreamingEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    StreamingEnvironment env = TSetEnvironment.initStreaming(workerEnv);
 //    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
     SSourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
     SSourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
@@ -36,6 +39,9 @@ public class SUnionExample extends StreamingTsetExample {
     SComputeTSet<Integer, Integer> unionTSet = src1.union(src2);
     LOG.info("test source union");
     unionTSet.direct().forEach(s -> LOG.info("map: " + s));
+
+    // Runs the entire TSet graph
+    env.run();
   }
 
 

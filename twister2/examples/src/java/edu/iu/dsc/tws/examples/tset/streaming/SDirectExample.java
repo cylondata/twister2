@@ -17,9 +17,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
@@ -29,7 +31,8 @@ public class SDirectExample extends StreamingTsetExample {
   private static final Logger LOG = Logger.getLogger(SDirectExample.class.getName());
 
   @Override
-  public void buildGraph(StreamingEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    StreamingEnvironment env = TSetEnvironment.initStreaming(workerEnv);
     SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
     SDirectTLink<Integer> link = src.direct().setName("dir");
@@ -44,6 +47,9 @@ public class SDirectExample extends StreamingTsetExample {
 
     link.compute((input, output) -> output.collect(input + "DD")).setName("computec")
         .direct().forEach(s -> LOG.info(s.toString()));
+
+    // Runs the entire TSet graph
+    env.run();
   }
 
 

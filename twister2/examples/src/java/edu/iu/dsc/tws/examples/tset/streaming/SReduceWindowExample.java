@@ -20,10 +20,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.AggregateFunc;
 import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
@@ -46,7 +48,8 @@ public class SReduceWindowExample extends StreamingTsetExample {
 
 
   @Override
-  public void buildGraph(StreamingEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    StreamingEnvironment env = TSetEnvironment.initStreaming(workerEnv);
 
     SSourceTSet<Integer> src = dummySource(env, ELEMENTS_IN_STREAM, PARALLELISM);
     SDirectTLink<Integer> link = src.direct();
@@ -127,6 +130,9 @@ public class SReduceWindowExample extends StreamingTsetExample {
         //link.countWindow().reduce(a,b-> a + b)
       }
     }
+
+    // Runs the entire TSet graph
+    env.run();
   }
 
 
