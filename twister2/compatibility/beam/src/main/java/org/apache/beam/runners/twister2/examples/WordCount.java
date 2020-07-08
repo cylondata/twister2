@@ -35,15 +35,18 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
-public class WordCount implements Serializable, BatchTSetIWorker {
+public class WordCount implements Serializable, Twister2Worker {
 
   public static final String TOKENIZER_PATTERN = "[^\\p{L}]+";
 
   @Override
-  public void execute(BatchEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
 
     Config config = env.getConfig();
     String input = config.getStringValue("input");

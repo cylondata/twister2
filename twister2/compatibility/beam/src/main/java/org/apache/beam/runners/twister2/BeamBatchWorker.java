@@ -18,18 +18,21 @@ import java.util.Set;
 import org.apache.beam.sdk.values.PCollectionView;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
-public class BeamBatchWorker implements Serializable, BatchTSetIWorker {
+public class BeamBatchWorker implements Serializable, Twister2Worker {
 
   private static final String SIDEINPUTS = "sideInputs";
   private static final String LEAVES = "leaves";
 
   @Override
-  public void execute(BatchEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     Config config = env.getConfig();
 
     Map<PCollectionView<?>, BatchTSet<?>> sideInputs
