@@ -33,6 +33,8 @@ public class CommunicationContext extends Context {
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String DIRECT = "direct";
   public static final String JOIN = "join";
+  public static final String TABLE_PARTITION = "table_partition";
+  public static final String TABLE_PIPE = "table_pipe";
 
   public static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
   public static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
@@ -85,6 +87,7 @@ public class CommunicationContext extends Context {
    * not applicable for all the operations and not intended to use directly.
    */
   public static final String USE_DISK = "use-disk";
+  public static final String ROW_SCHEMA = "row-schema";
 
   /**
    * Twister2 keyed operations sometimes requires to compare keys. This property

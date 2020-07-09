@@ -27,6 +27,11 @@ public final class OperationNames {
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String DIRECT = "direct";
   public static final String JOIN = "join";
+  // table operations
+  public static final String TABLE_PARTITION = "table_partition";
+  public static final String TABLE_JOIN = "table_join";
+  public static final String TABLE_DIRECT = "table_direct";
+  public static final String TABLE_PIPE = "table_pipe";
 
 }
 

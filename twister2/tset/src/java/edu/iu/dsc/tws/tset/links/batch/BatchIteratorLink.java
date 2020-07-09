@@ -29,11 +29,11 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  protected BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  protected BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
                     Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

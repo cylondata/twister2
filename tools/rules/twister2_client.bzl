@@ -129,6 +129,7 @@ def twister2_arrow_lib_files():
         "@maven//:javax_annotation_javax_annotation_api",
         "@maven//:io_netty_netty_buffer",
         "@maven//:io_netty_netty_all",
+        "@maven//:io_netty_netty_common",
         "@maven//:io_netty_netty_transport",
         "@maven//:io_netty_netty_transport_native_epoll",
 

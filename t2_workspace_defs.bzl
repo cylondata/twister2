@@ -83,6 +83,7 @@ def load_modules():
             "com.google.flatbuffers:flatbuffers-java:1.9.0",
             "javax.annotation:javax.annotation-api:1.3.2",
             "io.netty:netty-buffer:4.1.27.Final",
+            "io.netty:netty-common:4.1.27.Final",
             "io.netty:netty-all:4.1.27.Final",
             "io.netty:netty-transport:4.1.27.Final",
             "io.netty:netty-transport-native-epoll:4.1.27.Final",
