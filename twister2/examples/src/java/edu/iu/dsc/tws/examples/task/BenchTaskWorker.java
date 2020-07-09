@@ -25,10 +25,8 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
@@ -36,16 +34,14 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.window.BaseWindowSource;
-
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
-public abstract class BenchTaskWorker implements IWorker {
+public abstract class BenchTaskWorker implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
 
   protected static final String SOURCE = "source";
@@ -71,11 +67,10 @@ public abstract class BenchTaskWorker implements IWorker {
   protected static AtomicInteger receiversInProgress = new AtomicInteger();
 
   @Override
-  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    int workerId = workerController.getWorkerInfo().getWorkerID();
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job,
-        workerController, persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
 
     if (resultsRecorder == null) {
       resultsRecorder = new BenchmarkResultsRecorder(

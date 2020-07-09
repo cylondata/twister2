@@ -30,13 +30,10 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
@@ -47,7 +44,7 @@ import edu.iu.dsc.tws.task.impl.TaskExecutor;
  * generation of datapoints and centroids, partition and read the partitioned data points,
  * read the centroids, and finally perform the distance calculation.
  */
-public class KMeansComputeJob implements IWorker {
+public class KMeansComputeJob implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(KMeansComputeJob.class.getName());
 
   /**
@@ -62,14 +59,13 @@ public class KMeansComputeJob implements IWorker {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnv) {
 
-    int workerId = workerController.getWorkerInfo().getWorkerID();
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
     LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job, workerController,
-        persistentVolume, volatileVolume);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     int parallelismValue = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);

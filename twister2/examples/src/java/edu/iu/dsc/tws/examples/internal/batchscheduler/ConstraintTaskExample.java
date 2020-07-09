@@ -45,10 +45,8 @@ import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -56,7 +54,6 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -67,7 +64,7 @@ import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import mpi.MPI;
 import mpi.MPIException;
 
-public class ConstraintTaskExample implements IWorker {
+public class ConstraintTaskExample implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(ConstraintTaskExample.class.getName());
 
@@ -121,16 +118,15 @@ public class ConstraintTaskExample implements IWorker {
   }
 
   @Override
-  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnv) {
 
-    int workerId = workerController.getWorkerInfo().getWorkerID();
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
     long startTime = System.currentTimeMillis();
 
-    LOG.log(Level.INFO, "Task worker starting: " + job);
+    LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job, workerController,
-        persistentVolume, volatileVolume);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     String dinput = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));

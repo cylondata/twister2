@@ -27,12 +27,9 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
@@ -43,7 +40,7 @@ import edu.iu.dsc.tws.task.typed.streaming.SPartitionCompute;
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated. Example is done using the compute API.
  */
-public class WordCount implements IWorker {
+public class WordCount implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   private static final String EDGE = "partition-edge";
@@ -53,19 +50,16 @@ public class WordCount implements IWorker {
   private static final int NO_OF_SAMPLE_WORDS = 100;
 
   @Override
-  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnv) {
 
-    int workerId = workerController.getWorkerInfo().getWorkerID();
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, job,
-        workerController, persistentVolume, volatileVolume);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
 
     // create source and aggregator
     WordSource source = new WordSource();
     WordAggregator counter = new WordAggregator();
 
     // build the graph
-    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(workerEnv.getConfig());
     builder.addSource("word-source", source, 4);
     builder.addCompute("word-aggregator", counter, 4)
         .partition("word-source")
