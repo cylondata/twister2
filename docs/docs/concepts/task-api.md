@@ -32,12 +32,10 @@ Then a ```ComputeGraphBuilder``` is created and the graph is constructed. After 
 graph and graph is built. THen we can use the ```ComputeEnvironment``` to execute the graph.
 
 ```java
-public class HelloTwister2 implements IWorker {
+public class HelloTwister2 implements Twister2Worker {
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
-            workerController, persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     ComputeGraphBuilder computeGraphBuilder = cEnv.newTaskGraph(OperationMode.BATCH);
     
     // build the graph by creating the tasks and adding them

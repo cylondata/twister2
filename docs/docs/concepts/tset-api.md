@@ -14,14 +14,15 @@ translated to Task API Task Graph.
 
 ## Example TSet Program
 
-Here is an example TSet program. We would start off with a ```BatchTSetIWorker``` class which 
-provides us a```BatchTSetEnvironment``` environment. And then we can create a source, 
+Here is an example TSet program. We would start off with implementing ```Twister2Worker``` interface and 
+initializing ```BatchEnvironment```. And then we can create a source, 
 transformations and finally a sink.
 
 ```java
-public class ExampleTSet implements BatchTSetIWorker, Serializable {
+public class ExampleTSet implements Twister2Worker, Serializable {
   @Override
-  public void execute(BatchTSetEnvironment env) {  
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     SourceTSet<Integer> source = env.createSource(new TestBaseSource(), 4).setName("Source");
     ReduceTLink<Integer> reduce = source.reduce(Integer::sum);
 
@@ -48,27 +49,14 @@ As in the, ```Task API``` there are two operation modes.
 1. Batch mode 
 2. Streaming mode 
 
-Users can choose the operation mode by extending the corresponding TSetIWorker. At the moment, batch 
-and streaming modes can not be used together in a single IWorker. 
-
-## TSetIWorker
-TSetIWorker is an extension of the IWorker interface that would be used in the TSet API. There are 
-two interfaces corresponding to the Operation Modes. 
-### BatchTSetIWorker
+Users can choose the operation mode by initializing the proper environment: BatchEnvironment or StreamingEnvironment. 
+At the moment, batch and streaming modes can not be used together in a single Twister2Worker. 
+These environment objects are singleton. They are initialized with a static init method. 
 ```java
-public interface BatchTSetIWorker extends IWorker {
-
-  void execute(BatchTSetEnvironment env);
-}
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    StreamingEnvironment env = TSetEnvironment.initStreaming(workerEnv);
 ```
 
-### StreamingTSetIWorker
-```java
-public interface StreamingTSetIWorker extends IWorker {
-
-  void buildGraph(StreamingTSetEnvironment env);
-}
-```
 ## TSetEnvironment 
 TSetEnvironment provides the entry point to the TSet API. 
 
