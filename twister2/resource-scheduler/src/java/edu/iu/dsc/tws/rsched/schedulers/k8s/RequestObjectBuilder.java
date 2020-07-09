@@ -97,7 +97,7 @@ public final class RequestObjectBuilder {
     encodedNodeInfoList = encodedNodeInfoStr;
 
     if (JobMasterContext.jobMasterRunsInClient(config)) {
-      jobMasterIP = ResourceSchedulerUtils.getHostIP();
+      jobMasterIP = ResourceSchedulerUtils.getHostIP(config);
 
       // It is very unlikely for the host to not get localhost IP address
       // if that happens, we throw RuntimeException
