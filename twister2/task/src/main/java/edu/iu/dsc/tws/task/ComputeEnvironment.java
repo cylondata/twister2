@@ -18,15 +18,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -51,10 +46,10 @@ public final class ComputeEnvironment {
    */
   private static int taskGraphIndex = 0;
 
-  private ComputeEnvironment(Config config, JobAPI.Job job, IWorkerController wController,
-                             IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    this(WorkerEnvironment.init(config, job, wController, pVolume, vVolume));
-  }
+  /**
+   * Singleton environment
+   */
+  private static volatile ComputeEnvironment computeEnv;
 
   private ComputeEnvironment(WorkerEnvironment workerEnv) {
     this.workerEnvironment = workerEnv;
@@ -112,31 +107,20 @@ public final class ComputeEnvironment {
   }
 
   /**
-   * Initialize the task environment
-   *
-   * @param config configuration
-   * @param job job object
-   * @param wController worker controller
-   * @param pVolume persisent volume
-   * @param vVolume volatile volume
-   * @return the compute environment
-   */
-  public static ComputeEnvironment init(Config config,
-                                        JobAPI.Job job,
-                                        IWorkerController wController,
-                                        IPersistentVolume pVolume,
-                                        IVolatileVolume vVolume) {
-    return new ComputeEnvironment(config, job, wController, pVolume, vVolume);
-  }
-
-  /**
    * Initialize the compute environment with the worker environment
    *
    * @param workerEnv worker environment
    * @return the compute environment
    */
   public static ComputeEnvironment init(WorkerEnvironment workerEnv) {
-    return new ComputeEnvironment(workerEnv);
+    if (computeEnv == null) {
+      synchronized (ComputeEnvironment.class) {
+        if (computeEnv == null) {
+          computeEnv = new ComputeEnvironment(workerEnv);
+        }
+      }
+    }
+    return computeEnv;
   }
 
   /**
