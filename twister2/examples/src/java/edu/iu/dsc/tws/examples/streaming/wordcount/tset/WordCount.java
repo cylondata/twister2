@@ -23,16 +23,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
@@ -43,7 +39,7 @@ import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
  * TSet API based word count example. A simple wordcount program where fixed number of words
  * are generated and the global counts of words are calculated.
  */
-public class WordCount implements IWorker, Serializable {
+public class WordCount implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(WordCount.class.getName());
 
   private static final int MAX_CHARS = 5;
@@ -51,12 +47,8 @@ public class WordCount implements IWorker, Serializable {
   private static final int NO_OF_SAMPLE_WORDS = 100;
 
   @Override
-  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-
-    int workerId = workerController.getWorkerInfo().getWorkerID();
-    StreamingEnvironment cEnv = TSetEnvironment.initStreaming(WorkerEnvironment.init(config,
-        job, workerController, persistentVolume, volatileVolume));
+  public void execute(WorkerEnvironment workerEnvironment) {
+    StreamingEnvironment cEnv = TSetEnvironment.initStreaming(workerEnvironment);
 
     // create source and aggregator
     cEnv.createSource(new SourceFunc<String>() {

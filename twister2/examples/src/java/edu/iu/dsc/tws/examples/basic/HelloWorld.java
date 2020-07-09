@@ -12,21 +12,13 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -34,57 +26,25 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */
-public class HelloWorld implements IWorker {
+public class HelloWorld implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override
-  public void execute(Config config, JobAPI.Job job,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnvironment) {
 
-    int workerID = workerController.getWorkerInfo().getWorkerID();
+    int workerID = workerEnvironment.getWorkerId();
+    Config config = workerEnvironment.getConfig();
+
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 
     // lets do a log to indicate we are running
-    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
+    LOG.info(String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a message: %s", workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
+        workerEnvironment.getNumberOfWorkers(), helloKeyValue));
 
-    // lets wait for all workers to join the job
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
-
-    // lets sync with all workers
-    LOG.info("Waiting on a barrier ........................ ");
-    try {
-      long start = System.currentTimeMillis();
-      workerController.waitOnBarrier();
-      long delay = System.currentTimeMillis() - start;
-      LOG.info("Barrier wait time: " + delay + " ms for worker: " + workerID);
-    } catch (TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return;
-    }
-
-    LOG.info("Proceeded through the barrier ........................ ");
-
-    waitSeconds(10);
-  }
-
-  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
-    return workerList.stream()
-        .map(wi -> wi.getWorkerID())
-        .sorted()
-        .collect(Collectors.toList());
+    waitSeconds(30);
   }
 
   private void waitSeconds(long seconds) {
