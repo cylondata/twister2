@@ -67,6 +67,8 @@ import static org.apache.arrow.util.Preconditions.checkArgument;
 public class ArrowAllToAll implements ReceiveCallback {
   private static final Logger LOG = Logger.getLogger(ArrowAllToAll.class.getName());
 
+  private static final int HEADER_SIZE = 6;
+
   private enum ArrowHeader {
     HEADER_INIT,
     COLUMN_CONTINUE
@@ -214,7 +216,7 @@ public class ArrowAllToAll implements ReceiveCallback {
 
           while (pst.bufferIndex < bufs.size()) {
             ArrowBuf buf = bufs.get(pst.bufferIndex);
-            int[] hdr = new int[6];
+            int[] hdr = new int[HEADER_SIZE];
             hdr[0] = pst.columnIndex;
             hdr[1] = pst.bufferIndex;
             hdr[2] = bufs.size();
@@ -224,7 +226,7 @@ public class ArrowAllToAll implements ReceiveCallback {
             hdr[5] = pst.currentTarget; // target
 
             boolean accept = all.insert(buf.nioBuffer(), length, hdr,
-                6, t.getKey());
+                HEADER_SIZE, t.getKey());
             if (!accept) {
               canContinue = false;
               break;
@@ -343,8 +345,8 @@ public class ArrowAllToAll implements ReceiveCallback {
   @Override
   public void onReceiveHeader(int source, boolean fin, int[] header, int length) {
     if (!fin) {
-      if (length != 6) {
-        String msg = "Incorrect length on header, expected 6 ints got " + length;
+      if (length != HEADER_SIZE) {
+        String msg = "Incorrect length on header, expected " + HEADER_SIZE + " ints got " + length;
         LOG.log(Level.SEVERE, msg);
         throw new RuntimeException(msg);
       }
