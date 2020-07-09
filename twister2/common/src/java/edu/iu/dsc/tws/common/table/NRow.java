@@ -11,6 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
-public class ThreeRow extends NRow {
+public class NRow implements Row {
 
+  private final Object[] data;
+
+  public NRow(Object... data) {
+    this.data = data;
+  }
+
+  @Override
+  public Row duplicate() {
+    return new NRow(this.data);
+  }
+
+  @Override
+  public Object[] getData() {
+    return this.data;
+  }
 }
