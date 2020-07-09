@@ -42,7 +42,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   private boolean reduceDone;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),

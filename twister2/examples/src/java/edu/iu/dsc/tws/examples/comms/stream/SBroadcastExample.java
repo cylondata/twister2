@@ -40,7 +40,7 @@ public class SBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting task stages to 1");
       jobParameters.getTaskStages().set(0, 1);

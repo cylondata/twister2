@@ -45,7 +45,7 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),
