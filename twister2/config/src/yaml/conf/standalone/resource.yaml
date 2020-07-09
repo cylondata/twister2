@@ -7,8 +7,8 @@ twsiter2.resource.scheduler.mpi.mode: "standalone"
 # the job id file
 twister2.resource.scheduler.mpi.job.id: ""
 
-# slurm script to run
-twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
+# mpi worker script to run
+twister2.resource.scheduler.mpi.shell.script: "mpiworker.sh"
 
 # the mpirun command location
 twister2.resource.scheduler.mpi.home: ""
