@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public final class ResourceSchedulerUtils {
   private static final Logger LOG = Logger.getLogger(ResourceSchedulerUtils.class.getName());
