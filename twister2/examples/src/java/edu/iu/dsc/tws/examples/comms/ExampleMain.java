@@ -39,6 +39,7 @@ import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BPartitionExample;
 import edu.iu.dsc.tws.examples.comms.batch.BReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BTAllToAll;
 import edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample;
@@ -216,6 +217,8 @@ public class ExampleMain {
         case "bcast":
           submitJob(config, workers, jobConfig, BBroadcastExample.class.getName(), memory);
           break;
+        case "alltoall":
+          submitJob(config, workers, jobConfig, BTAllToAll.class.getName(), memory);
       }
     } else {
       switch (operation) {

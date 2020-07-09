@@ -16,6 +16,7 @@ t2_java_lib(
         "//twister2/data/src/main/java:data-java",
         "//twister2/task/src/main/java:task-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/common/src/java:common-java",
         "@org_apache_hadoop_hadoop_mapreduce_client_core//jar",
         "@org_apache_hadoop_hadoop_common//jar",
         "@com_google_guava_guava",

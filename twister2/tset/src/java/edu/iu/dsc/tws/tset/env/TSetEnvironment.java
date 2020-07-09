@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.apache.arrow.memory.RootAllocator;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
@@ -28,6 +30,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
@@ -60,6 +63,10 @@ public abstract class TSetEnvironment {
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
+
+    // create the table runtime here
+    WorkerEnvironment.putSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
+        new TableRuntime(new RootAllocator()));
   }
 
   /**

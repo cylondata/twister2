@@ -121,4 +121,6 @@ public final class MessageTypes {
   public static final ObjectType OBJECT = new ObjectType();
 
   public static final EmptyType EMPTY = new EmptyType();
+
+  public static final ArrowTableType ARROW_TABLE = new ArrowTableType();
 }

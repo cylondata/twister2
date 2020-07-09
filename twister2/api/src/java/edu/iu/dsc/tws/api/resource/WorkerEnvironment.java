@@ -285,4 +285,8 @@ public final class WorkerEnvironment {
     }
     return null;
   }
+
+  public static WorkerEnvironment getWorkerEnv() {
+    return workerEnv;
+  }
 }
