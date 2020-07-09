@@ -101,6 +101,8 @@ public class SchedulerContext extends Context {
 
   public static final String NETWORK_INTERFACES = "twister2.network.interfaces.for.workers";
 
+  public static final String JOB_MASTER_PROVIDED_IP = "twister2.job.master.provided.ip";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -261,4 +263,7 @@ public class SchedulerContext extends Context {
     return null;
   }
 
+  public static String getJobMasterProvidedIp(Config cfg) {
+    return getStringPropertyValue(cfg, JOB_MASTER_PROVIDED_IP, "");
+  }
 }
