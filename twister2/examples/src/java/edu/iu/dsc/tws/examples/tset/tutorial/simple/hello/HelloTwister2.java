@@ -26,12 +26,18 @@ public class HelloTwister2 implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(HelloTwister2.class.getName());
 
+  @Override
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
+  }
+
   public static void main(String[] args) {
 
     JobConfig jobConfig = new JobConfig();
 
     Twister2Job job = Twister2Job.newBuilder()
-        .setJobName(HelloTwister2.class.getName())
+        .setJobName("hello-twister2")
         .setConfig(jobConfig)
         .setWorkerClass(HelloTwister2.class)
         .addComputeResource(1, 512, 4)
@@ -40,9 +46,4 @@ public class HelloTwister2 implements Twister2Worker {
     Twister2Submitter.submitJob(job);
   }
 
-  @Override
-  public void execute(WorkerEnvironment workerEnv) {
-    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
-    LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
-  }
 }
