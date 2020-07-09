@@ -73,9 +73,6 @@ public class CommunicationContext extends Context {
   public static final String RING_GROUPING_WORKER_PER_GROUPS =
       "twister2.network.partition.ring.group.workers";
 
-  public static final String OVERRIDE_HOST_IP =
-      "twister2.network.override.host.ip";
-
   public static final int DEFAULT_DESTINATION = 0;
 
   public static final List<Object> EMPTY_OBJECT = new ArrayList<>();
@@ -194,9 +191,5 @@ public class CommunicationContext extends Context {
 
   public static int getRingWorkersPerGroup(Config cfg) {
     return getIntPropertyValue(cfg, RING_GROUPING_WORKER_PER_GROUPS, 128);
-  }
-
-  public static String getOverrideHostIP(Config cfg) {
-    return getStringPropertyValue(cfg, OVERRIDE_HOST_IP, "");
   }
 }

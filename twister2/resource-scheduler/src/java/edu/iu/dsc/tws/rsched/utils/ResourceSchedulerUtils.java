@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.config.Config;
 
 public final class ResourceSchedulerUtils {
@@ -103,7 +103,7 @@ public final class ResourceSchedulerUtils {
 
   public static String getHostIP(Config cfg) {
 
-    String hostIP = CommunicationContext.getOverrideHostIP(cfg);
+    String hostIP = SchedulerContext.getJobMasterProvidedIp(cfg);
     if (hostIP != null && !hostIP.isEmpty()) {
       return hostIP;
     }
