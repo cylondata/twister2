@@ -14,13 +14,11 @@ package edu.iu.dsc.tws.common.table;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public class TwoRow implements Row {
-  private Object val1;
+  private Object[] vals;
 
-  private Object val2;
 
   public TwoRow(Object val1, Object val2) {
-    this.val1 = val1;
-    this.val2 = val2;
+    this.vals = new Object[]{val1, val2};
   }
 
   @Override
@@ -30,15 +28,13 @@ public class TwoRow implements Row {
 
   @Override
   public Row duplicate() {
-    return new TwoRow(val1, val2);
+    return new TwoRow(vals[0], vals[1]);
   }
 
   @Override
   public Object get(int column) {
-    if (column == 0) {
-      return val1;
-    } else if (column == 1) {
-      return val2;
+    if (column <= 1) {
+      return vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -46,10 +42,8 @@ public class TwoRow implements Row {
 
   @Override
   public String getString(int column) {
-    if (column == 0) {
-      return (String) val1;
-    } else if (column == 1) {
-      return (String) val2;
+    if (column <= 1) {
+      return (String) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -57,10 +51,8 @@ public class TwoRow implements Row {
 
   @Override
   public int getInt4(int column) {
-    if (column == 0) {
-      return (int) val1;
-    } else if (column == 1) {
-      return (int) val2;
+    if (column <= 1) {
+      return (int) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -68,10 +60,8 @@ public class TwoRow implements Row {
 
   @Override
   public long getInt8(int column) {
-    if (column == 0) {
-      return (long) val1;
-    } else if (column == 1) {
-      return (long) val2;
+    if (column <= 1) {
+      return (long) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -79,10 +69,8 @@ public class TwoRow implements Row {
 
   @Override
   public double getFloat8(int column) {
-    if (column == 0) {
-      return (double) val1;
-    } else if (column == 1) {
-      return (double) val2;
+    if (column <= 1) {
+      return (double) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -90,10 +78,8 @@ public class TwoRow implements Row {
 
   @Override
   public float getFloat4(int column) {
-    if (column == 0) {
-      return (float) val1;
-    } else if (column == 1) {
-      return (float) val2;
+    if (column <= 1) {
+      return (float) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -101,10 +87,8 @@ public class TwoRow implements Row {
 
   @Override
   public short getInt2(int column) {
-    if (column == 0) {
-      return (short) val1;
-    } else if (column == 1) {
-      return (short) val2;
+    if (column <= 1) {
+      return (short) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
@@ -112,10 +96,8 @@ public class TwoRow implements Row {
 
   @Override
   public byte[] getByte(int column) {
-    if (column == 0) {
-      return (byte[]) val1;
-    } else if (column == 1) {
-      return (byte[]) val2;
+    if (column <= 1) {
+      return (byte[]) vals[column];
     } else {
       throw new Twister2RuntimeException("Invalid column index " + column + " only two columns");
     }
