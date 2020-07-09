@@ -24,5 +24,7 @@
 package edu.iu.dsc.tws.common.table;
 
 public class OneRow extends NRow {
-
+  public OneRow(Object data) {
+    super(data);
+  }
 }

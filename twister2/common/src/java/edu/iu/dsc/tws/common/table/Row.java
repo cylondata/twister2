@@ -59,7 +59,7 @@ public interface Row {
    * @param column column index
    * @return the int value
    */
-  default int getInt4(int column){
+  default int getInt4(int column) {
     return this.getTypedData(column);
   }
 
@@ -69,7 +69,7 @@ public interface Row {
    * @param column column index
    * @return the long value
    */
-  default long getInt8(int column){
+  default long getInt8(int column) {
     return this.getTypedData(column);
   }
 
@@ -79,7 +79,7 @@ public interface Row {
    * @param column column index
    * @return the double value
    */
-  default double getFloat8(int column){
+  default double getFloat8(int column) {
     return this.getTypedData(column);
   }
 
@@ -89,7 +89,7 @@ public interface Row {
    * @param column column index
    * @return the float value
    */
-  default float getFloat4(int column){
+  default float getFloat4(int column) {
     return this.getTypedData(column);
   }
 
@@ -99,7 +99,7 @@ public interface Row {
    * @param column column index
    * @return the short value
    */
-  default short getInt2(int column){
+  default short getInt2(int column) {
     return this.getTypedData(column);
   }
 

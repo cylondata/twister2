@@ -12,5 +12,7 @@
 package edu.iu.dsc.tws.common.table;
 
 public class ThreeRow extends NRow {
-
+  public ThreeRow(Object d1, Object d2, Object d3) {
+    super(d1, d2, d3);
+  }
 }
