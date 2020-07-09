@@ -196,9 +196,11 @@ public final class WorkerRuntime {
     failureListener = workerFailureListener;
     if (zkWorkerController != null) {
       return zkWorkerController.addFailureListener(workerFailureListener);
-    } else {
+    } else if (jmWorkerAgent != null) {
       return jmWorkerAgent.addWorkerFailureListener(workerFailureListener);
     }
+
+    return false;
   }
 
   /**
