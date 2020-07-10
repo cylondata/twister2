@@ -16,11 +16,11 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 public class RowCachedTSet extends RowStoredTSet {
-  public RowCachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<Row> sinkFunc,
-                         int parallelism, RowSchema inputSchema) {
+  public RowCachedTSet(BatchEnvironment tSetEnv, SinkFunc<Row> sinkFunc,
+                       int parallelism, RowSchema inputSchema) {
     super(tSetEnv, "kcached", sinkFunc, parallelism, inputSchema);
   }
 

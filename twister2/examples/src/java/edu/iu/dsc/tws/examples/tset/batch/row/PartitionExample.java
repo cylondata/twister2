@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -33,7 +34,8 @@ import edu.iu.dsc.tws.common.table.TField;
 import edu.iu.dsc.tws.common.table.TwoRow;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.row.RowSourceTSet;
 
 public class PartitionExample extends BatchTsetExample {
@@ -41,7 +43,8 @@ public class PartitionExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnvironment);
     List<TField> fieldList = new ArrayList<>();
     fieldList.add(new TField("first", MessageTypes.INTEGER));
     fieldList.add(new TField("second", MessageTypes.DOUBLE));

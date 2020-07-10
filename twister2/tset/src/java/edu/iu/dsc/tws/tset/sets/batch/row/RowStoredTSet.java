@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 
@@ -33,9 +33,9 @@ public abstract class RowStoredTSet extends BatchRowTSetImpl implements Storable
   private SinkFunc<Row> storingSinkFunc;
   protected RowSourceTSet storedSource;
 
-  RowStoredTSet(BatchTSetEnvironment tSetEnv, String name,
-                  SinkFunc<Row> storingSinkFn, int parallelism,
-                  RowSchema inputSchema) {
+  RowStoredTSet(BatchEnvironment tSetEnv, String name,
+                SinkFunc<Row> storingSinkFn, int parallelism,
+                RowSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = storingSinkFn;
     this.storedSourcePrefix = "kstored(" + getId() + ")";

@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 import edu.iu.dsc.tws.tset.sets.batch.row.RowComputeTSet;
 
@@ -31,18 +31,18 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
 
   private PartitionFunc<Row> partitionFunction;
 
-  public RowPartitionTLink(BatchTSetEnvironment tSetEnv,
+  public RowPartitionTLink(BatchEnvironment tSetEnv,
                            int sourceParallelism, RowSchema schema) {
     this(tSetEnv, null, sourceParallelism, schema);
   }
 
-  public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
+  public RowPartitionTLink(BatchEnvironment tSetEnv, PartitionFunc<Row> parFn,
                         int sourceParallelism, RowSchema schema) {
     this(tSetEnv, parFn, sourceParallelism, sourceParallelism, schema);
   }
 
-  public RowPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<Row> parFn,
-                        int sourceParallelism, int targetParallelism, RowSchema schema) {
+  public RowPartitionTLink(BatchEnvironment tSetEnv, PartitionFunc<Row> parFn,
+                           int sourceParallelism, int targetParallelism, RowSchema schema) {
     super(tSetEnv, "partition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;
   }

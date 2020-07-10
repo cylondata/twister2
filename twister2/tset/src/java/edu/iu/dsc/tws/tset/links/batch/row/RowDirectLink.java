@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class RowDirectLink extends RowBatchTLinkImpl {
@@ -26,12 +26,12 @@ public class RowDirectLink extends RowBatchTLinkImpl {
     //non arg constructor for kryp
   }
 
-  public RowDirectLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, RowSchema schema) {
+  public RowDirectLink(BatchEnvironment tSetEnv, int sourceParallelism, RowSchema schema) {
     super(tSetEnv, "direct", sourceParallelism, schema);
   }
 
-  public RowDirectLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism,
-                     RowSchema schema) {
+  public RowDirectLink(BatchEnvironment tSetEnv, String name, int sourceParallelism,
+                       RowSchema schema) {
     super(tSetEnv, name, sourceParallelism, schema);
   }
 
