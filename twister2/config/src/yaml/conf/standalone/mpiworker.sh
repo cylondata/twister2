@@ -24,7 +24,7 @@ if [ -z "${CUSTOM_JAVA_HOME}" ]; then
 fi
 # check if we have a valid JAVA_HOME and if java is not available
 if [ -z "${CUSTOM_JAVA_HOME}" ] && ! type java > /dev/null 2> /dev/null; then
-    echo "Please specify JAVA_HOME. in conf/standalone/exp.sh or as system-wide JAVA_HOME."
+    echo "Please specify JAVA_HOME. in conf/standalone/mpiworker.sh or as system-wide JAVA_HOME."
     exit 1
 else
     JAVA_HOME=${CUSTOM_JAVA_HOME}
