@@ -60,7 +60,8 @@ public class WordCount implements Twister2Worker, Serializable {
     PersistedTSet<String> persisted = source.direct().persist();
     LOG.info("worker-" + env.getWorkerID() + " persisted initial raw data");
 
-//    if (env.getWorkerID() == 1 && WorkerRuntime.getWorkerController().workerRestartCount() == 0) {
+//    if (env.getWorkerID() == 1
+//        && workerEnvironment.getWorkerController().workerRestartCount() == 0) {
 //      try {
 //        Thread.sleep(6000);
 //      } catch (InterruptedException e) {
@@ -78,7 +79,7 @@ public class WordCount implements Twister2Worker, Serializable {
     LOG.info("worker-" + env.getWorkerID() + " persisted keyedReduced data");
 
 //    if (env.getWorkerID() == 2
-//        && WorkerRuntime.getWorkerController().workerRestartCount() == 0
+//        && workerEnvironment.getWorkerController().workerRestartCount() == 0
 //        && !CheckpointingContext.startingFromACheckpoint(config)) {
 //      try {
 //        Thread.sleep(10000);

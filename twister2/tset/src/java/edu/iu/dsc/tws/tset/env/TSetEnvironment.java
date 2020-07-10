@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
@@ -53,6 +54,12 @@ public abstract class TSetEnvironment {
   private Map<String, Map<String, String>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
+
+  /**
+   * to determine whether the worker is re-executed after a failure
+   * when the worker is executed for the first time, executeCount is 1
+   */
+  private static int executeCount = 1;
 
   protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
@@ -353,24 +360,30 @@ public abstract class TSetEnvironment {
   }
 
   // TSetEnvironment singleton initialization
-  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
-    if (thisTSetEnv == null) {
-      synchronized (TSetEnvironment.class) {
-        if (thisTSetEnv == null) {
-          if (opMode == OperationMode.BATCH) {
-            thisTSetEnv = new BatchEnvironment(wEnv);
-          } else if (opMode == OperationMode.STREAMING) {
-            thisTSetEnv = new StreamingEnvironment(wEnv);
-          } else if (opMode == OperationMode.BATCH_CHECKPOINTING) {
-            thisTSetEnv = new BatchChkPntEnvironment(wEnv);
-          } else {
-            throw new Twister2RuntimeException("Non-valid OperationMode: " + opMode);
-          }
-        }
+  private static synchronized TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
+    if (isWorkerReExecuting() || thisTSetEnv == null) {
+      if (opMode == OperationMode.BATCH) {
+        thisTSetEnv = new BatchEnvironment(wEnv);
+      } else if (opMode == OperationMode.STREAMING) {
+        thisTSetEnv = new StreamingEnvironment(wEnv);
+      } else if (opMode == OperationMode.BATCH_CHECKPOINTING) {
+        thisTSetEnv = new BatchChkPntEnvironment(wEnv);
+      } else {
+        throw new Twister2RuntimeException("Non-valid OperationMode: " + opMode);
       }
     }
 
     return thisTSetEnv;
+  }
+
+  /**
+   * this method will return true only once for each re-execution
+   * so, the singleton object will be created only for once
+   */
+  private static boolean isWorkerReExecuting() {
+    boolean reExecuting = executeCount < JobProgress.getWorkerExecuteCount();
+    executeCount = JobProgress.getWorkerExecuteCount();
+    return reExecuting;
   }
 
   /**
