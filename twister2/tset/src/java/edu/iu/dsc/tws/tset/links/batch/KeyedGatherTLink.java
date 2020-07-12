@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterator<V>> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherTLink.class.getName());
@@ -26,16 +26,16 @@ public class KeyedGatherTLink<K, V> extends KeyedGatherUngroupedTLink<K, Iterato
     //non arg constructor for kryo
   }
 
-  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, TupleSchema schema) {
+  public KeyedGatherTLink(BatchEnvironment tSetEnv, int sourceParallelism, TupleSchema schema) {
     this(tSetEnv, null, sourceParallelism, null, schema);
   }
 
-  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
+  public KeyedGatherTLink(BatchEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism, TupleSchema schema) {
     this(tSetEnv, partitionFn, sourceParallelism, null, schema);
   }
 
-  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
+  public KeyedGatherTLink(BatchEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism, Comparator<K> keyCompartor, TupleSchema schema) {
     super(tSetEnv, partitionFn, sourceParallelism, keyCompartor, schema);
     this.enableGroupByKey();

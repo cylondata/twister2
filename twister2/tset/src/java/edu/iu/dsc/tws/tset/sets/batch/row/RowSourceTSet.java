@@ -17,17 +17,17 @@ import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowSourceOp;
 
 public class RowSourceTSet extends BatchRowTSetImpl {
   private SourceFunc<Row> source;
 
-  public RowSourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<Row> src, int parallelism) {
+  public RowSourceTSet(BatchEnvironment tSetEnv, SourceFunc<Row> src, int parallelism) {
     this(tSetEnv, "source", src, parallelism, PrimitiveSchemas.NULL);
   }
 
-  public RowSourceTSet(BatchTSetEnvironment tSetEnv, String name,
+  public RowSourceTSet(BatchEnvironment tSetEnv, String name,
                        SourceFunc<Row> src, int parallelism, Schema schema) {
     super(tSetEnv, name, parallelism, schema);
     this.source = src;

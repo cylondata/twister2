@@ -56,7 +56,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -306,21 +305,9 @@ public final class MPIWorkerStarter {
       IPersistentVolume persistentVolume = initPersistenceVolume(config, globalRank);
 
       MPIContext.addRuntimeObject("comm", intracomm);
-      String workerClass = job.getWorkerClassName();
-      try {
-        Object object = ReflectionUtils.newInstance(workerClass);
-        LOG.log(Level.FINE, "loaded the worker class: " + workerClass);
-        if (object instanceof IWorker) {
-          IWorker worker = (IWorker) object;
-          MPIWorkerManager workerManager = new MPIWorkerManager();
-          workerManager.execute(config, intracomm.getRank(), wc, persistentVolume, null, worker);
-        } else {
-          throw new RuntimeException("Cannot instantiate the class: " + object.getClass());
-        }
-      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-        LOG.log(Level.SEVERE, String.format("failed to load the worker class %s", workerClass), e);
-        throw new RuntimeException(e);
-      }
+      IWorker worker = JobUtils.initializeIWorker(job);
+      MPIWorkerManager workerManager = new MPIWorkerManager();
+      workerManager.execute(config, job, wc, persistentVolume, null, worker);
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
       throw new RuntimeException(e);

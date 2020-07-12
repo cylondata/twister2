@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP, Schema schema) {
+  BatchTLinkImpl(BatchEnvironment env, String n, int sourceP, int targetP, Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
@@ -38,8 +38,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
   }
 
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
@@ -106,7 +106,7 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
       String persistVariableName = this.getId() + "-persisted";
-      CheckpointingTSetEnv chkEnv = (CheckpointingTSetEnv) getTSetEnv();
+      BatchChkPntEnvironment chkEnv = (BatchChkPntEnvironment) getTSetEnv();
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
       if (persisted) {
         // create a source function with the capability to read from disk

@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapper<K, V> {
@@ -33,17 +33,17 @@ public class KeyedGatherUngroupedTLink<K, V> extends KeyedBatchIteratorLinkWrapp
 
   private boolean useDisk = false;
 
-  public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism,
+  public KeyedGatherUngroupedTLink(BatchEnvironment tSetEnv, int sourceParallelism,
                                    TupleSchema schema) {
     this(tSetEnv, null, sourceParallelism, null, schema);
   }
 
-  public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
+  public KeyedGatherUngroupedTLink(BatchEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                                    int sourceParallelism, TupleSchema schema) {
     this(tSetEnv, partitionFn, sourceParallelism, null, schema);
   }
 
-  public KeyedGatherUngroupedTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
+  public KeyedGatherUngroupedTLink(BatchEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                                    int sourceParallelism, Comparator<K> keyCompartor,
                                    TupleSchema schema) {
     super(tSetEnv, "kgather", sourceParallelism, schema);

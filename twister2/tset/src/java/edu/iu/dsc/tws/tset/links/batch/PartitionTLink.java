@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
@@ -27,16 +27,16 @@ public class PartitionTLink<T> extends BatchIteratorLinkWrapper<T> {
 
   private PartitionFunc<T> partitionFunction;
 
-  public PartitionTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+  public PartitionTLink(BatchEnvironment tSetEnv, int sourceParallelism, Schema schema) {
     this(tSetEnv, null, sourceParallelism, schema);
   }
 
-  public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+  public PartitionTLink(BatchEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism, Schema schema) {
     this(tSetEnv, parFn, sourceParallelism, sourceParallelism, schema);
   }
 
-  public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+  public PartitionTLink(BatchEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism, int targetParallelism, Schema schema) {
     super(tSetEnv, "partition", sourceParallelism, targetParallelism, schema);
     this.partitionFunction = parFn;

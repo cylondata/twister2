@@ -13,5 +13,6 @@ package edu.iu.dsc.tws.api.compute.graph;
 
 public enum OperationMode {
   STREAMING,
-  BATCH
+  BATCH,
+  BATCH_CHECKPOINTING
 }

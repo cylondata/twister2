@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.row.RowDirectLink;
 import edu.iu.dsc.tws.tset.links.batch.row.RowPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.row.RowPipeTLink;
@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
 public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implements BatchRowTSet {
 
-  protected BatchRowTSetImpl(BatchTSetEnvironment tSetEnv, String name,
+  protected BatchRowTSetImpl(BatchEnvironment tSetEnv, String name,
                              int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
   }
@@ -56,8 +56,8 @@ public abstract class BatchRowTSetImpl extends BaseTSetWithSchema<Row> implement
   }
 
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   @Override

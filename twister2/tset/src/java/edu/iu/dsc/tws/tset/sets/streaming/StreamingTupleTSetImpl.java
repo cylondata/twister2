@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
@@ -32,14 +32,14 @@ import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> implements
     StreamingTupleTSet<K, V> {
 
-  StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+  StreamingTupleTSetImpl(StreamingEnvironment tSetEnv, String name, int parallelism,
                          Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema, PrimitiveSchemas.OBJECT_TUPLE2);
   }
 
   @Override
-  public StreamingTSetEnvironment getTSetEnv() {
-    return (StreamingTSetEnvironment) super.getTSetEnv();
+  public StreamingEnvironment getTSetEnv() {
+    return (StreamingEnvironment) super.getTSetEnv();
   }
 
   @Override

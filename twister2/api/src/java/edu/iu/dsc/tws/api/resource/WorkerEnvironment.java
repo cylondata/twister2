@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * Worker environment encapsulating the details about the workers.
@@ -46,6 +47,11 @@ public final class WorkerEnvironment {
    * Worker id
    */
   private int workerId;
+
+  /**
+   * Job object
+   */
+  private JobAPI.Job job;
 
   /**
    * Worker controller
@@ -78,6 +84,14 @@ public final class WorkerEnvironment {
   private final List<JobMasterAPI.WorkerInfo> workerList;
 
   /**
+   * keep track of worker reExecutions when initializing
+   * when init is called, if executeCount is smaller,
+   * that means, worker is reexecuted.
+   * So, some reinitializations need to be performed
+   */
+  private static int executeCount = 1;
+
+  /**
    * Singleton environment
    */
   private static volatile WorkerEnvironment workerEnv;
@@ -88,10 +102,11 @@ public final class WorkerEnvironment {
    */
   private static volatile Map<String, Object> sharedKeyValueStore = new HashMap<>();
 
-  private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
+  private WorkerEnvironment(Config config, JobAPI.Job job, IWorkerController workerController,
                             IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.config = config;
-    this.workerId = workerId;
+    this.workerId = workerController.getWorkerInfo().getWorkerID();
+    this.job = job;
     this.workerController = workerController;
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
@@ -129,6 +144,10 @@ public final class WorkerEnvironment {
 
   public int getWorkerId() {
     return workerId;
+  }
+
+  public JobAPI.Job getJob() {
+    return job;
   }
 
   public int getNumberOfWorkers() {
@@ -170,10 +189,9 @@ public final class WorkerEnvironment {
 
   /**
    * TODO: this is in infinite loop if some pods are not reachable
-   *       we should put a limit to waiting and checking
+   * we should put a limit to waiting and checking
    * TODO: we are checking reachability of all pods in the job
-   *       we should only check the pods this worker will connect to.
-   * @return
+   * we should only check the pods this worker will connect to.
    */
   private boolean checkAllPodsReachable() {
 
@@ -218,30 +236,38 @@ public final class WorkerEnvironment {
    * Initialize the worker environment, this is a singleton and every job should call this method
    *
    * @param config configuration
-   * @param workerId this worker id
+   * @param job job object for this Twister2 job
    * @param workerController worker controller
    * @param persistentVolume persistent volume
    * @param volatileVolume volatile volume
    * @return the worker environment
    */
-  public static WorkerEnvironment init(Config config, int workerId,
-                                       IWorkerController workerController,
-                                       IPersistentVolume persistentVolume,
-                                       IVolatileVolume volatileVolume) {
+  public static synchronized WorkerEnvironment init(Config config,
+                                                    JobAPI.Job job,
+                                                    IWorkerController workerController,
+                                                    IPersistentVolume persistentVolume,
+                                                    IVolatileVolume volatileVolume) {
     if (workerEnv == null) {
-      synchronized (WorkerEnvironment.class) {
-        if (workerEnv == null) {
-          workerEnv = new WorkerEnvironment(config, workerId, workerController, persistentVolume,
-              volatileVolume);
-        }
-      }
-    } else {
-      //If the worker Env exists reset the config (need to check if complete re-init is needed)
+      workerEnv = new WorkerEnvironment(
+          config, job, workerController, persistentVolume, volatileVolume);
+    } else if (isWorkerReExecuting()) {
+      // If the worker Env exists and execute count increased
+      // reset the config (need to check if complete re-init is needed)
       workerEnv.setConfig(config);
       workerEnv.getCommunicator().reInit();
       workerEnv.getChannel().reInit(JobProgress.getRestartedWorkers());
     }
     return workerEnv;
+  }
+
+  /**
+   * this method will return true only once for each re-execution
+   * so, the singleton object will be created only for once
+   */
+  private static boolean isWorkerReExecuting() {
+    boolean reExecuting = executeCount < JobProgress.getWorkerExecuteCount();
+    executeCount = JobProgress.getWorkerExecuteCount();
+    return reExecuting;
   }
 
   private void setConfig(Config conf) {

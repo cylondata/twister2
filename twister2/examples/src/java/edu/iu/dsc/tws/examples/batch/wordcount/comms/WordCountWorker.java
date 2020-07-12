@@ -35,16 +35,13 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
 
-public class WordCountWorker implements IWorker {
+public class WordCountWorker implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
   private BKeyedReduce keyGather;
@@ -63,18 +60,13 @@ public class WordCountWorker implements IWorker {
   private WorkerEnvironment workerEnv;
 
   @Override
-  public void execute(Config cfg, int workerID,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
-    this.workerId = workerID;
+  public void execute(WorkerEnvironment wEnv) {
+
+    this.workerEnv = wEnv;
+    this.workerId = workerEnv.getWorkerId();
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
-
-    // create a worker environment
-    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
-        volatileVolume);
 
     // lets create the task plan
     this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);

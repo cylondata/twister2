@@ -4,57 +4,33 @@ title: Worker API
 sidebar_label: Worker API
 ---
 
-This is the lowest API supported by Twister2. Once a Twister2 job is submitted a worker instances are
+This is the API that should be implemented by users. Once a Twister2 job is submitted Twister2Worker instances are
 created in the cluster. Number of worker instances are specified by the user when submitting the job.
 
-## IWorker Interface
+## Twister2Worker Interface
 
 ```java
-/**
- * This is the main point of entry for a Twister2 job. Every job should implement this interface.
- * When a job is submitted, a class that implements this interface gets instantiated and executed
- * by Twister2.
- */
-public interface IWorker {
-  /**
-   * Execute with the resources configured
-   * @param config configuration
-   * @param workerID the worker id
-   * @param workerController the worker controller
-   * @param persistentVolume information about persistent file system
-   * @param volatileVolume information about volatile file system
-   */
-  void execute(Config config,
-               int workerID,
-               IWorkerController workerController,
-               IPersistentVolume persistentVolume,
-               IVolatileVolume volatileVolume);
+public interface Twister2Worker {
 
+  /**
+   * This is the main point of entry for Twister2 jobs.
+   * Every job should implement this interface.
+   * When a job is submitted, a class implementing this interface gets instantiated
+   * and executed by Twister2.
+   *
+   * As the first thing in the execute method,
+   * users are expected to initialize the proper environment object:
+   *   for batch jobs: BatchTSetEnvironment
+   *   for streaming jobs: StreamingTSetEnvironment
+   */
+  void execute(WorkerEnvironment workerEnv);
 }
 ```
 
-A user programs a worker by implementing the above interface. This interface provides access to the
+Users write their programs by implementing the above interface. This interface provides access to the
 Twister2 distributed environment. From here onwards a user can use different APIs provided by 
 Twister2 to define the application. For example a single application can use [Operator API](operator-api.md), [Task API](task-api.md), 
 or [TSet API](tset-api.md) all mixed together to achieve the desired goals.
-
-Usually the first thing a user would do is to create the ```WorkerEnvironment```. This environment is the base 
-for all other environments.
-
-```java
-
-public class ExampleWorker implements IWorker {
-  public void execute(Config config,
-                 int workerID,
-                 IWorkerController workerController,
-                 IPersistentVolume persistentVolume,
-                 IVolatileVolume volatileVolume) {
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, 
-                                                        workerController, persistentVolume,
-                                                        volatileVolume);  
-  }
-}
-```
 
 ## Creating the Job
 

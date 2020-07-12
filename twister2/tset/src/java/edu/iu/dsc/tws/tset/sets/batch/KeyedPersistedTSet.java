@@ -18,11 +18,11 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 public class KeyedPersistedTSet<K, V> extends KeyedStoredTSet<K, V> {
 
-  public KeyedPersistedTSet(BatchTSetEnvironment tSetEnv,
+  public KeyedPersistedTSet(BatchEnvironment tSetEnv,
                             SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism,
                             KeyedSchema inputSchema) {
     super(tSetEnv, "kpersisted", storingSinkFn, parallelism, inputSchema);

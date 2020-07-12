@@ -12,23 +12,23 @@
 package edu.iu.dsc.tws.api.resource;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
- * This is the main point of entry for a Twister2 job. Every job should implement this interface.
- * When a job is submitted, a class that implements this interface gets instantiated and executed
- * by Twister2.
+ * This is the main point of entry from resource scheduler layer to higher layers of Twister2.
+ * Resource scheduler starts an instance of this class for each worker.
  */
 public interface IWorker {
   /**
    * Execute with the resources configured
    * @param config configuration
-   * @param workerID the worker id
+   * @param job the worker id
    * @param workerController the worker controller
    * @param persistentVolume information about persistent file system
    * @param volatileVolume information about volatile file system
    */
   void execute(Config config,
-               int workerID,
+               JobAPI.Job job,
                IWorkerController workerController,
                IPersistentVolume persistentVolume,
                IVolatileVolume volatileVolume);

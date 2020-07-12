@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SAllGatherTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SAllReduceTLink;
@@ -48,14 +48,14 @@ import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 public abstract class StreamingTSetImpl<T> extends BaseTSetWithSchema<T> implements
     StreamingTSet<T> {
 
-  public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+  public StreamingTSetImpl(StreamingEnvironment tSetEnv, String name, int parallelism,
                            Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
   }
 
   @Override
-  public StreamingTSetEnvironment getTSetEnv() {
-    return (StreamingTSetEnvironment) super.getTSetEnv();
+  public StreamingEnvironment getTSetEnv() {
+    return (StreamingEnvironment) super.getTSetEnv();
   }
 
   @Override

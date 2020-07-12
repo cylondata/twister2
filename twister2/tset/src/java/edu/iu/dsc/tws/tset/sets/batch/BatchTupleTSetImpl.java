@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
@@ -51,7 +51,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
    * @param parallelism par
    * @param inputSchema Schema from the preceding {@link edu.iu.dsc.tws.api.tset.link.TLink}
    */
-  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism,
+  BatchTupleTSetImpl(BatchEnvironment tSetEnv, String name, int parallelism,
                      Schema inputSchema) {
     // since the output schema will be a KeyedSchema, it needs to be initialized by a KeyedSchema
     // of OBJECT type
@@ -64,8 +64,8 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
 
   // since keyed tset is the base impl for BatchTupleTSet, it needs to override the env getter
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   @Override

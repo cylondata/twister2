@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedPersistedTSet;
@@ -24,12 +24,12 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistIterIterSink;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorLink<Tuple<K, V>> {
-  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP,
+  KeyedBatchIteratorLinkWrapper(BatchEnvironment env, String n, int sourceP,
                                 TupleSchema schema) {
     super(env, n, sourceP, schema);
   }
 
-  KeyedBatchIteratorLinkWrapper(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  KeyedBatchIteratorLinkWrapper(BatchEnvironment env, String n, int sourceP, int targetP,
                                 TupleSchema schema) {
     super(env, n, sourceP, targetP, schema);
   }
@@ -65,7 +65,7 @@ public abstract class KeyedBatchIteratorLinkWrapper<K, V> extends BatchIteratorL
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
       String persistVariableName = this.getId() + "-persisted";
-      CheckpointingTSetEnv chkEnv = (CheckpointingTSetEnv) getTSetEnv();
+      BatchChkPntEnvironment chkEnv = (BatchChkPntEnvironment) getTSetEnv();
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
 
       if (persisted) {

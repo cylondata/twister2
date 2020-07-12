@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.tset.cdfw;
 
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.tset.env.BuildContext;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 
-public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
+public class StreamTSetCDFWEnvironment extends StreamingEnvironment {
 
   private CDFWEnv cdfwEnv;
 

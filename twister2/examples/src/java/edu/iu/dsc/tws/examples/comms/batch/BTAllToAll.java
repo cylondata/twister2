@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.comms.table.ArrowAllToAll;
 import edu.iu.dsc.tws.comms.table.ArrowCallback;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class BTAllToAll implements IWorker {
   private static final Logger LOG = Logger.getLogger(BTAllToAll.class.getName());
@@ -45,12 +46,12 @@ public class BTAllToAll implements IWorker {
   protected JobParameters jobParameters;
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.jobParameters = JobParameters.build(config);
 
     // create a worker environment
-    this.wEnv = WorkerEnvironment.init(config, workerID, workerController, persistentVolume,
+    this.wEnv = WorkerEnvironment.init(config, job, workerController, persistentVolume,
         volatileVolume);
 
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(

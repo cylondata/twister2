@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 /**
@@ -50,6 +51,11 @@ public class WorkerManager implements IWorkerFailureListener, IJobMasterFailureL
    * The worker id
    */
   private int workerID;
+
+  /**
+   * Job object
+   */
+  private JobAPI.Job job;
 
   /**
    * The worker controller
@@ -77,13 +83,14 @@ public class WorkerManager implements IWorkerFailureListener, IJobMasterFailureL
   private Map<Integer, JobMasterAPI.WorkerInfo> restartedWorkers = new TreeMap<>();
 
   public WorkerManager(Config config,
-                       int workerID,
+                       JobAPI.Job job,
                        IWorkerController workerController,
                        IPersistentVolume persistentVolume,
                        IVolatileVolume volatileVolume,
                        IWorker worker) {
     this.config = config;
-    this.workerID = workerID;
+    this.job = job;
+    this.workerID = workerController.getWorkerInfo().getWorkerID();
     this.workerController = workerController;
     this.persistentVolume = persistentVolume;
     this.volatileVolume = volatileVolume;
@@ -122,7 +129,7 @@ public class WorkerManager implements IWorkerFailureListener, IJobMasterFailureL
       JobProgressImpl.setRestartedWorkers(restartedWorkers.values());
       try {
         managedWorker.execute(
-            config, workerID, workerController, persistentVolume, volatileVolume);
+            config, job, workerController, persistentVolume, volatileVolume);
       } catch (JobFaultyException cue) {
         // a worker in the cluster should have failed
         // we will try to re-execute this worker

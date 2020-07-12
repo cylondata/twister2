@@ -43,14 +43,16 @@ the example.
 
 #### The Job class
 
-Every Twister2 job should implement ```IWorker``` interface. We have provided a base class for creating
-batch jobs with the TSet API called ```BatchTSetIWorker``` to hide some of the details and provide user with
-a ```BatchTSetEnvironment``` instance. So our job class has the following signature.
+Every Twister2 job should implement ```Twister2Worker``` interface. 
+That interface has only one method: execute. 
+Inside the execute method, the proper environment object should be initialized. 
+In this case, BatchEnvironment is initialized. 
 
 ```java
-public class WordCount implements BatchTSetIWorker, Serializable {
+public class WordCount implements Twister2Worker, Serializable {
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     
   }
 }
@@ -64,7 +66,8 @@ Lets see how the job graph is created and executed.
 
 ```java
 @Override
-public void execute(BatchTSetEnvironment env) {
+public void execute(WorkerEnvironment workerEnv) {
+  BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
   int sourcePar = 4;
   Config config = env.getConfig();
 
@@ -95,22 +98,18 @@ in both cases.
 
 #### The Job class
 
-For the job class we use the ```IWorker``` interface directly. Even for batch case we can use the 
-IWorker class directly. 
+For the job class we implement the ```Twister2Worker``` interface. Inside the execute method, 
+we initialize streaming environment object. 
 
 ```java
-public class WordCount implements IWorker, Serializable {
+public class WordCount implements Twister2Worker, Serializable {
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    StreamingTSetEnvironment cEnv = TSetEnvironment.initStreaming(WorkerEnvironment.init(config,
-        workerID, workerController, persistentVolume, volatileVolume));
+  public void execute(WorkerEnvironment workerEnvironment) {
+    StreamingEnvironment cEnv = TSetEnvironment.initStreaming(workerEnvironment);
   }
 }
 ```
-
-Here we create the ```StreamingTSetEnvironment``` manually.
 
 #### Streaming graph
 
@@ -119,10 +118,9 @@ stream of random words. Then we send those words specific tasks using a hash par
 Since a given word goes to the same task, we can create a global count of words inside that task.
 
 ```java
-public void execute(Config config, int workerID, IWorkerController workerController,
-                    IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-  StreamingTSetEnvironment cEnv = TSetEnvironment.initStreaming(WorkerEnvironment.init(config,
-      workerID, workerController, persistentVolume, volatileVolume));
+public void execute(WorkerEnvironment workerEnvironment) {
+  StreamingEnvironment cEnv = TSetEnvironment.initStreaming(workerEnvironment);
+
   // create source and aggregator
   cEnv.createSource(new SourceFunc<String>() {
     // sample words

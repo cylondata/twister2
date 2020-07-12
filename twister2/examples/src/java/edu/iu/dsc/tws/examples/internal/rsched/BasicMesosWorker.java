@@ -26,13 +26,14 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class BasicMesosWorker implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, JobAPI.Job job,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     LOG.info("Mesos Worker start time(ms): " + System.currentTimeMillis());
@@ -41,7 +42,7 @@ public class BasicMesosWorker implements IWorker {
     long duration = (long) (Math.random() * 1000);
     int port = workerController.getWorkerInfo().getPort();
     try {
-      System.out.println("I am the worker: " + workerID);
+      System.out.println("I am the worker: " + job);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
       //echoServer(port);

@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
 import edu.iu.dsc.tws.tset.ops.row.RowItrComputeCollectorOp;
 
@@ -26,13 +26,13 @@ public class RowComputeTSet extends BatchRowTSetImpl {
   private TFunction<Row, Iterator<Row>> computeFunc;
   private boolean iterative;
 
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv,
+  public RowComputeTSet(BatchEnvironment tSetEnv,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn, int parallelism,
                         RowSchema inputSchema, boolean iterative) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema, iterative);
   }
 
-  public RowComputeTSet(BatchTSetEnvironment tSetEnv, String name,
+  public RowComputeTSet(BatchEnvironment tSetEnv, String name,
                         ComputeCollectorFunc<Row, Iterator<Row>> computeFn,
                         int parallelism, RowSchema inputSchema, boolean iterative) {
     super(tSetEnv, name, parallelism, inputSchema);

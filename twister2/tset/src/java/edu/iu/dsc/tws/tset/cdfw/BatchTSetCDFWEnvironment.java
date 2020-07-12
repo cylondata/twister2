@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.tset.cdfw;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.BuildContext;
 
-public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
+public class BatchTSetCDFWEnvironment extends BatchEnvironment {
 
   private CDFWEnv cdfwEnv;
 

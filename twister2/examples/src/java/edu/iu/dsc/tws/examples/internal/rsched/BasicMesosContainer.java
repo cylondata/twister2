@@ -26,19 +26,20 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class BasicMesosContainer implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicMesosContainer.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     //temporary solution until parameter problem solved
-    String s = workerID + "";
+    String s = job + "";
     String p = s.substring(0, 5);
     String ids = s.substring(5);
     int port = Integer.parseInt(p);

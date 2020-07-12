@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
@@ -27,11 +27,11 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
 
-  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+  StreamingSingleLink(StreamingEnvironment env, String n, int sourceP, Schema schema) {
     super(env, n, sourceP, sourceP, schema);
   }
 
-  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingSingleLink(StreamingEnvironment env, String n, int sourceP, int targetP,
                       Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

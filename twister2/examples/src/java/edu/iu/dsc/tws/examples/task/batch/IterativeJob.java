@@ -34,10 +34,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -47,16 +45,16 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class IterativeJob implements IWorker {
+public class IterativeJob implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(IterativeJob.class.getName());
 
   @Override
-  public void execute(Config config, int workerId, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    LOG.log(Level.INFO, "Task worker starting: " + workerId);
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
-        persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
+    LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
     IterativeSourceTask g = new IterativeSourceTask();
     PartitionTask r = new PartitionTask();

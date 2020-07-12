@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import static edu.iu.dsc.tws.api.comms.CommunicationContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
@@ -71,13 +72,15 @@ public class SortJob implements IWorker {
   private List<Integer> taskStages = new ArrayList<>();
 
   @Override
-  public void execute(Config cfg, int workerID,
+  public void execute(Config cfg, JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
+    int workerID = workerController.getWorkerInfo().getWorkerID();
+
     // create a worker environment & setup the network
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(cfg, workerID, workerController,
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(cfg, job, workerController,
         persistentVolume, volatileVolume);
 
     int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);

@@ -19,30 +19,30 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
 public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
                       int parallelism, Schema inputSchema) {
     this(tSetEnv, "scompute", computeFunction, parallelism, inputSchema);
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
+  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
                       int parallelism, Schema inputSchema) {
     this(tSetEnv, "scomputec", compOp, parallelism, inputSchema);
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+  public SComputeTSet(StreamingEnvironment tSetEnv, String name,
                       ComputeFunc<O, I> computeFunction, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFunction;
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+  public SComputeTSet(StreamingEnvironment tSetEnv, String name,
                       ComputeCollectorFunc<O, I> compOp, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = compOp;
