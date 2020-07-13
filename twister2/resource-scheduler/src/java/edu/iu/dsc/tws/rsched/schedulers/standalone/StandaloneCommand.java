@@ -35,6 +35,7 @@ public class StandaloneCommand extends MPICommand {
     return new String[0];
   }
 
+  @Override
   public String[] mpiCommand(String workingDir, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDir, job.getJobId()).toString();
     String confDir = Paths.get(
@@ -59,8 +60,7 @@ public class StandaloneCommand extends MPICommand {
         "-x", "CONFIG_DIR=" + twister2Home,
         "-x", "JOB_MASTER_IP=" + config.getStringValue("__job_master_ip__", "ip"),
         "-x", "JOB_MASTER_PORT=" + config.getIntegerValue("__job_master_port__", 0) + "",
-        "-x", "RESTORE_JOB= " + CheckpointingContext.startingFromACheckpoint(config),
-        "-x", "RESTART_COUNT=" + 0,
+        "-x", "RESTORE_JOB= " + CheckpointingContext.startingFromACheckpoint(config)
     };
 
     List<String> cmdList = new ArrayList<>();
@@ -71,6 +71,12 @@ public class StandaloneCommand extends MPICommand {
     if (mpiParams != null && !mpiParams.trim().isEmpty()) {
       cmdList.addAll(Arrays.asList(mpiParams.split(" ")));
     }
+
+    // add restart count as the last parameter
+    // restart count has to be added as the last parameter
+    // since we are updating it in subsequent resubmissions in case of failures
+    cmdList.add("-x");
+    cmdList.add("RESTART_COUNT=" + 0);
 
     // add mpi script to run as the last command
     cmdList.add(MPIContext.mpiScriptWithPath(config));
