@@ -31,14 +31,11 @@ public class MPIContext extends SchedulerContext {
   public static final String MPI_MAP_BY = "twister2.resource.scheduler.mpi.mapby";
   public static final String MPI_MAP_BY_PE = "twister2.resource.scheduler.mpi.mapby.use-pe";
   public static final String MPI_PARAMS = "twister2.resource.scheduler.mpi.params";
+  public static final String SLURM_PARAMS = "twister2.resource.scheduler.slurm.params";
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
   public static final String FILE_SYSTEM_MOUNT = "twister2.resource.fs.mount";
-
-  public static final String JIP = "__job_master_ip__";
-
-  public static final String JPORT = "__job_master_port__";
 
   private static Map<String, Object> runtimeObjects = new HashMap<>();
 
@@ -59,16 +56,12 @@ public class MPIContext extends SchedulerContext {
     return new File(conf(config), mpiShellScript(config)).getPath();
   }
 
-  public static String slurmShellScript(Config config) {
-    return config.getStringValue(MPI_SHELL_SCRIPT, "mpilauncher.sh");
-  }
-
-  public static String slurmScriptWithPath(Config config) {
-    return new File(conf(config), slurmShellScript(config)).getPath();
-  }
-
   public static String mpiParams(Config cfg) {
     return cfg.getStringValue(MPI_PARAMS);
+  }
+
+  public static String slurmParams(Config cfg) {
+    return cfg.getStringValue(SLURM_PARAMS);
   }
 
   public static String partition(Config cfg) {
