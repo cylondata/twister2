@@ -18,10 +18,13 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
@@ -35,7 +38,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -118,8 +120,13 @@ public final class MPIMasterStarter {
     int timeoutSeconds = 100;
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
-          namespace, jobID, timeoutSeconds);
+      jobMasterIP = K8sWorkerUtils.getJobMasterServiceIP(
+          KubernetesContext.namespace(config), jobID);
+
+      if (jobMasterIP == null) {
+        jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
+            namespace, jobID, timeoutSeconds);
+      }
 
       if (jobMasterIP == null) {
         LOG.severe("Could not get job master IP by wathing job master pod to running. Aborting. "
@@ -220,29 +227,38 @@ public final class MPIMasterStarter {
     String jst = System.getenv(K8sEnvVariables.JOB_SUBMISSION_TIME.name());
     String restore = System.getenv(K8sEnvVariables.RESTORE_JOB.name());
 
-    return new String[]
+    List<String> cmdList = new ArrayList<>();
+
+    String[] mpirunCmd = new String[]
         {"mpirun",
             "--hostfile", HOSTFILE_NAME,
             "--allow-run-as-root",
-//            "--fwd-mpirun-port",
-//            "--mca", "oob_tcp_listen_mode", "listen_thread",
             "-npernode", workersPerPod + "",
+            "-tag-output",
             "-x", "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
             "-x", "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
             "-x", K8sEnvVariables.JOB_ID.name() + "=" + jobID,
             "-x", K8sEnvVariables.JOB_MASTER_IP.name() + "=" + jobMasterIP,
             "-x", K8sEnvVariables.JOB_SUBMISSION_TIME.name() + "=" + jst,
-            "-x", K8sEnvVariables.RESTORE_JOB.name() + "=" + restore,
-//            "-output-filename",
-//            "/twister2-memory-dir/logfile",
-            "-tag-output",
-            "java",
-            "-Xms" + jvmMemory + "m",
-            "-Xmx" + jvmMemory + "m",
-            "-Djava.util.logging.config.file=" + logPropsFile,
-            "-cp", System.getenv("CLASSPATH"),
-            className
+            "-x", K8sEnvVariables.RESTORE_JOB.name() + "=" + restore
         };
+
+    cmdList.addAll(Arrays.asList(mpirunCmd));
+    String mpiParams = MPIContext.mpiParams(config);
+    if (mpiParams != null && !mpiParams.trim().isEmpty()) {
+      cmdList.addAll(Arrays.asList(mpiParams.split(" ")));
+    }
+
+    // add java related commands
+    cmdList.add("java");
+    cmdList.add("-Xms" + jvmMemory + "m");
+    cmdList.add("-Xmx" + jvmMemory + "m");
+    cmdList.add("-Djava.util.logging.config.file=" + logPropsFile);
+    cmdList.add("-cp");
+    cmdList.add(System.getenv("CLASSPATH"));
+    cmdList.add(className);
+
+    return cmdList.toArray(new String[]{});
   }
 
   /**
