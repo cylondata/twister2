@@ -30,6 +30,7 @@ public class MPIContext extends SchedulerContext {
   public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
   public static final String MPI_MAP_BY = "twister2.resource.scheduler.mpi.mapby";
   public static final String MPI_MAP_BY_PE = "twister2.resource.scheduler.mpi.mapby.use-pe";
+  public static final String MPI_PARAMS = "twister2.resource.scheduler.mpi.params";
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
@@ -64,6 +65,10 @@ public class MPIContext extends SchedulerContext {
 
   public static String slurmScriptWithPath(Config config) {
     return new File(conf(config), slurmShellScript(config)).getPath();
+  }
+
+  public static String mpiParams(Config cfg) {
+    return cfg.getStringValue(MPI_PARAMS);
   }
 
   public static String partition(Config cfg) {

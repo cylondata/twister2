@@ -49,3 +49,9 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.Local
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
 twister2.resource.uploader.download.method: "HTTP"
+
+# OpenMPI parameters:
+# -np, --hostfile and --mapby are specified by Twister2
+# you can specify other OpenMPI parameters that will be provided in mpirun command
+# for example:
+#    twister2.resource.scheduler.mpi.params: '--mca btl vader,self'
