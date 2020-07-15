@@ -21,4 +21,10 @@ public interface ICompute<T> extends INode {
    * Execute with an incoming message
    */
   boolean execute(IMessage<T> content);
+
+  /**
+   * Callback that is gets called when the stream ends
+   */
+  default void endExecute() {
+  }
 }

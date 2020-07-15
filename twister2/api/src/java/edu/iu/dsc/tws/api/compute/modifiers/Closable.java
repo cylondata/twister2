@@ -49,11 +49,4 @@ public interface Closable {
    */
   default void reset() {
   }
-
-  /**
-   * Callback that is gets called when the stream ends
-   * @param edge the name of the edge
-   */
-  default void endOfStream(String edge) {
-  }
 }
