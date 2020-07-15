@@ -42,6 +42,12 @@ public interface TFunction<O, I> extends Closable, Serializable {
 
   }
 
+  /**
+   * Calls at the end of the message stream
+   */
+  default void end() {
+  }
+
   @Override
   default void close() {
 

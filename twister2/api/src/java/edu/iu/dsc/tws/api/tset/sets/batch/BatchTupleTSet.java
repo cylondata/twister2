@@ -85,6 +85,12 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V>,
   BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedDirect();
 
   /**
+   * Pipe implementation
+   * @return Keyed Pipe TLink
+   */
+  BatchTLink<Tuple<K, V>, Tuple<K, V>> keyedPipe();
+
+  /**
    * Gathers data by key for {@link BatchTupleTSet}s
    *
    * @return Keyed Gather TLink

@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.PipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
@@ -63,6 +64,12 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism(), getOutputSchema());
     addChildToGraph(direct);
     return direct;
+  }
+
+  public PipeTLink<T> pipe() {
+    PipeTLink<T> pipe = new PipeTLink<>(getTSetEnv(), getParallelism(), getOutputSchema());
+    addChildToGraph(pipe);
+    return pipe;
   }
 
   @Override
