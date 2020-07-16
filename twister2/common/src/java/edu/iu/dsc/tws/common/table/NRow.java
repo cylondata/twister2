@@ -11,10 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
+public class NRow implements Row {
 
-public class TwoRow extends NRow {
+  private final Object[] data;
 
-  public TwoRow(Object d1, Object d2) {
-    super(d1, d2);
+  public NRow(Object... data) {
+    this.data = data;
+  }
+
+  @Override
+  public Row duplicate() {
+    return new NRow(this.data);
+  }
+
+  @Override
+  public Object[] getData() {
+    return this.data;
   }
 }

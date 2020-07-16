@@ -23,68 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.table;
 
-import com.google.common.base.Preconditions;
-
-public class OneRow implements Row {
-  private Object val;
-
-  public OneRow(Object val) {
-    this.val = val;
-  }
-
-  @Override
-  public int numberOfColumns() {
-    return 1;
-  }
-
-  @Override
-  public Row duplicate() {
-    return null;
-  }
-
-  private void check(int column) {
-    Preconditions.checkArgument(column == 0, "Only a single column");
-  }
-
-  @Override
-  public Object get(int column) {
-    check(column);
-    return val;
-  }
-
-  @Override
-  public String getString(int column) {
-    check(column);
-    return val.toString();
-  }
-
-  @Override
-  public int getInt4(int column) {
-    return (int) val;
-  }
-
-  @Override
-  public long getInt8(int column) {
-    return (long) val;
-  }
-
-  @Override
-  public double getFloat8(int column) {
-    return (double) val;
-  }
-
-  @Override
-  public float getFloat4(int column) {
-    return (float) val;
-  }
-
-  @Override
-  public short getInt2(int column) {
-    return (short) val;
-  }
-
-  @Override
-  public byte[] getByte(int column) {
-    return (byte[]) val;
+public class OneRow extends NRow {
+  public OneRow(Object data) {
+    super(data);
   }
 }
