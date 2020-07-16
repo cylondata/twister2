@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedPipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
@@ -63,6 +64,11 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
   @Override
   public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     return getStoredSourceTSet().keyedPartition(partitionFn);
+  }
+
+  @Override
+  public KeyedPipeTLink<K, V> keyedPipe() {
+    return getStoredSourceTSet().keyedPipe();
   }
 
   @Override

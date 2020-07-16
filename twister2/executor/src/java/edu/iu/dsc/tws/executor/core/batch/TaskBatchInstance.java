@@ -253,6 +253,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       boolean complete = isComplete(intOpArray);
       // if we no longer needs to progress comm and input is empty
       if (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED) && complete) {
+        task.endExecute();
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }

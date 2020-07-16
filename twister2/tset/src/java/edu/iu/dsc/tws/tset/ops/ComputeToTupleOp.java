@@ -43,8 +43,17 @@ public class ComputeToTupleOp<K, O, I> extends BaseComputeOp<I> {
   public boolean execute(IMessage<I> content) {
     Tuple<K, O> tuple = computeFunc.compute(content.getContent());
     keyedWriteToEdges(tuple.getKey(), tuple.getValue());
-    writeEndToEdges();
-    computeFunc.close();
     return false;
+  }
+
+  @Override
+  public void close() {
+    computeFunc.close();
+  }
+
+  @Override
+  public void endExecute() {
+    computeFunc.end();
+    writeEndToEdges();
   }
 }

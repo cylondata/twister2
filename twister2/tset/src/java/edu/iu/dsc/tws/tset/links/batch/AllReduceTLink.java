@@ -31,6 +31,8 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 
 /**
  * Represent a data set create by a all reduce opration
@@ -57,5 +59,25 @@ public class AllReduceTLink<T> extends BatchSingleLink<T> {
   public AllReduceTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return (CachedTSet<T>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    return (CachedTSet<T>) super.cache();
+  }
+
+  @Override
+  public PersistedTSet<T> lazyPersist() {
+    return (PersistedTSet<T>) super.lazyPersist();
+  }
+
+  @Override
+  public PersistedTSet<T> persist() {
+    return (PersistedTSet<T>) super.persist();
   }
 }

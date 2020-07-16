@@ -9,12 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.comms.streaming;
+package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -27,47 +26,42 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.stream.SDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
-public class DirectStreamingOperation extends AbstractParallelOperation {
+public class PipeBatchOperation extends AbstractParallelOperation {
+  private SDirect op;
 
-  protected SDirect op;
-
-  public DirectStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                  Set<Integer> srcs, Set<Integer> dests, Edge edge) {
+  public PipeBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
+                              Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    if (srcs.size() == 0) {
-      throw new IllegalArgumentException("Sources should have more than 0 elements");
-    }
 
-    if (dests == null) {
-      throw new IllegalArgumentException("Targets should have more than 0 elements");
-    }
-
+    // we assume a uniform task id association, so this will work
     ArrayList<Integer> sources = new ArrayList<>(srcs);
     Collections.sort(sources);
     ArrayList<Integer> targets = new ArrayList<>(dests);
     Collections.sort(targets);
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SDirect(newComm, logicalPlan, sources, targets, edge.getDataType(),
-        new DirectReceiver(), edge.getEdgeID().nextId(), edge.getMessageSchema());
+    op = new SDirect(newComm, logicalPlan, sources, targets,
+        edge.getDataType(), new PartitionReceiver(), edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
-  public boolean send(int source, IMessage message, int flags) {
-    return op.insert(source, message.getContent(), flags);
+  public void send(int source, IMessage message) {
+    op.insert(source, message.getContent(), 0);
   }
 
-  public class DirectReceiver implements SingularReceiver {
+  public boolean send(int source, IMessage message, int dest) {
+    return op.insert(source, message.getContent(), 0);
+  }
+
+  public class PartitionReceiver implements SingularReceiver {
     @Override
-    public void init(Config cfg, Set<Integer> targets) {
-
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Object object) {
-      BlockingQueue<IMessage> messages = outMessages.get(target);
-
       TaskMessage msg = new TaskMessage<>(object, inEdge, target);
-      return messages.offer(msg);
+      return outMessages.get(target).offer(msg);
     }
 
     @Override

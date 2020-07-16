@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedPipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
@@ -71,6 +72,14 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
   @Override
   public KeyedDirectTLink<K, V> keyedDirect() {
     KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism(),
+        getOutputSchema());
+    addChildToGraph(kDirect);
+    return kDirect;
+  }
+
+  @Override
+  public KeyedPipeTLink<K, V> keyedPipe() {
+    KeyedPipeTLink<K, V> kDirect = new KeyedPipeTLink<>(getTSetEnv(), getParallelism(),
         getOutputSchema());
     addChildToGraph(kDirect);
     return kDirect;

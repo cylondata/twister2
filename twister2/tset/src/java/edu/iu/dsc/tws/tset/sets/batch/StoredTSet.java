@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.PipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
@@ -71,6 +72,10 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   @Override
   public DirectTLink<T> direct() {
     return getStoredSourceTSet().direct();
+  }
+
+  public PipeTLink<T> pipe() {
+    return getStoredSourceTSet().pipe();
   }
 
   @Override
