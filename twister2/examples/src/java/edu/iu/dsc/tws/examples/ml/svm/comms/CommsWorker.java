@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public abstract class CommsWorker implements IWorker {
 
@@ -55,13 +56,13 @@ public abstract class CommsWorker implements IWorker {
   private WorkerEnvironment workerEnv;
 
   @Override
-  public void execute(Config cfg, int workerID, IWorkerController workerController,
+  public void execute(Config cfg, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.svmJobParameters = SVMJobParameters.build(cfg);
-    this.workerId = workerID;
+    this.workerId = workerController.getWorkerInfo().getWorkerID();
 
     // create a worker environment
-    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, job, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan

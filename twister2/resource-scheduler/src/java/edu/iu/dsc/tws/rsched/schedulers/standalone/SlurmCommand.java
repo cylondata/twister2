@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,24 +53,49 @@ public class SlurmCommand extends MPICommand {
   public String[] mpiCommand(String workingDir, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDir, job.getJobId()).toString();
 
-    return new String[]{
-        "sbatch", "-N", "1",
-        "--ntasks=1",
-        "--partition=" + MPIContext.partition(config),
-        MPIContext.slurmScriptWithPath(config),
-        getNumberOfWorkers(job),
-        getClasspath(config, job),
-        job.getJobId(),
-        twister2Home,
-        twister2Home,
-        mpirunPath(),
-        "-Xmx" + getMemory(job) + "m",
-        "-Xms" + getMemory(job) + "m",
-        config.getIntegerValue("__job_master_port__", 0) + "",
-        config.getStringValue("__job_master_ip__", "ip"),
-        Boolean.toString(CheckpointingContext.startingFromACheckpoint(config)),
-        "0"
-    };
+    List<String> cmd = new ArrayList<>();
+    cmd.add("sbatch");
+    cmd.add("--partition=" + MPIContext.partition(config));
+    String slurmParams = MPIContext.slurmParams(config);
+    if (slurmParams != null && !slurmParams.trim().isEmpty()) {
+      cmd.addAll(Arrays.asList(slurmParams.split(" ")));
+    }
+
+    // add mpirun and its parameters
+    cmd.add(mpirunPath());
+    String mpiParams = MPIContext.mpiParams(config);
+    if (mpiParams != null && !mpiParams.trim().isEmpty()) {
+      cmd.addAll(Arrays.asList(mpiParams.split(" ")));
+    }
+
+    // add java and jvm parameters
+    cmd.add("java");
+    cmd.add("-Xmx" + getMemory(job) + "m");
+    cmd.add("-Xms" + getMemory(job) + "m");
+    cmd.add("-Djava.util.logging.config.file=common/logger.properties");
+    cmd.add("-cp");
+    cmd.add(getClasspath(config, job));
+
+    // add java class and command line parameters
+    cmd.add("edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerStarter");
+    cmd.add("--job_id");
+    cmd.add(job.getJobId());
+    cmd.add("--twister2_home");
+    cmd.add(twister2Home);
+    cmd.add("--config_dir");
+    cmd.add(twister2Home);
+    cmd.add("--cluster_type");
+    cmd.add("slurm");
+    cmd.add("--job_master_ip");
+    cmd.add(config.getStringValue("__job_master_ip__", "ip"));
+    cmd.add("--job_master_port");
+    cmd.add(config.getIntegerValue("__job_master_port__", 0) + "");
+    cmd.add("--restore_job");
+    cmd.add(Boolean.toString(CheckpointingContext.startingFromACheckpoint(config)));
+    cmd.add("--restart_count");
+    cmd.add("0");
+
+    return cmd.toArray(new String[]{});
   }
 
   protected String getJobIdFilePath() {

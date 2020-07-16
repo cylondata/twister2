@@ -12,6 +12,9 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -32,6 +35,7 @@ public class StandaloneCommand extends MPICommand {
     return new String[0];
   }
 
+  @Override
   public String[] mpiCommand(String workingDir, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDir, job.getJobId()).toString();
     String confDir = Paths.get(
@@ -39,7 +43,7 @@ public class StandaloneCommand extends MPICommand {
         .toString();
     String hostfile = Paths.get(confDir, MPIContext.nodesFile(config)).toString();
 
-    return new String[]{
+    String[] mpirunCmd = new String[] {
         mpirunPath(),
         "-np", getNumberOfWorkers(job),
         "--map-by", getMapBy(job),
@@ -56,10 +60,28 @@ public class StandaloneCommand extends MPICommand {
         "-x", "CONFIG_DIR=" + twister2Home,
         "-x", "JOB_MASTER_IP=" + config.getStringValue("__job_master_ip__", "ip"),
         "-x", "JOB_MASTER_PORT=" + config.getIntegerValue("__job_master_port__", 0) + "",
-        "-x", "RESTORE_JOB= " + CheckpointingContext.startingFromACheckpoint(config),
-        "-x", "RESTART_COUNT=" + 0,
-        MPIContext.mpiScriptWithPath(config)
+        "-x", "RESTORE_JOB= " + CheckpointingContext.startingFromACheckpoint(config)
     };
+
+    List<String> cmdList = new ArrayList<>();
+    cmdList.addAll(Arrays.asList(mpirunCmd));
+
+    // add mpi parameters
+    String mpiParams = MPIContext.mpiParams(config);
+    if (mpiParams != null && !mpiParams.trim().isEmpty()) {
+      cmdList.addAll(Arrays.asList(mpiParams.split(" ")));
+    }
+
+    // add restart count as the last parameter
+    // restart count has to be added as the last parameter
+    // since we are updating it in subsequent resubmissions in case of failures
+    cmdList.add("-x");
+    cmdList.add("RESTART_COUNT=" + 0);
+
+    // add mpi script to run as the last command
+    cmdList.add(MPIContext.mpiScriptWithPath(config));
+
+    return cmdList.toArray(new String[]{});
   }
 
   private String getDebug() {

@@ -26,6 +26,8 @@ import org.apache.arrow.memory.RootAllocator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
@@ -39,7 +41,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Entry point to tset operations. This is a singleton which initializes as
- * {@link BatchTSetEnvironment} or {@link StreamingTSetEnvironment}
+ * {@link BatchEnvironment} or {@link StreamingEnvironment}
  */
 public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
@@ -55,6 +57,12 @@ public abstract class TSetEnvironment {
   private Map<String, Map<String, String>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
+
+  /**
+   * to determine whether the worker is re-executed after a failure
+   * when the worker is executed for the first time, executeCount is 1
+   */
+  private static int executeCount = 1;
 
   protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
@@ -255,7 +263,7 @@ public abstract class TSetEnvironment {
    */
   public boolean isCheckpointingEnabled() {
     return CheckpointingContext.isCheckpointingEnabled(this.getConfig())
-        && this instanceof CheckpointingTSetEnv;
+        && this instanceof BatchChkPntEnvironment;
   }
 
   /**
@@ -292,8 +300,8 @@ public abstract class TSetEnvironment {
    * @param wEnv worker environment
    * @return BatchTSetEnvironment
    */
-  public static BatchTSetEnvironment initBatch(WorkerEnvironment wEnv) {
-    return (BatchTSetEnvironment) init(wEnv, OperationMode.BATCH);
+  public static BatchEnvironment initBatch(WorkerEnvironment wEnv) {
+    return (BatchEnvironment) init(wEnv, OperationMode.BATCH);
   }
 
   /**
@@ -302,8 +310,25 @@ public abstract class TSetEnvironment {
    * @param wEnv worker environment
    * @return StreamingTSetEnvironment
    */
-  public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
-    return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);
+  public static StreamingEnvironment initStreaming(WorkerEnvironment wEnv) {
+    return (StreamingEnvironment) init(wEnv, OperationMode.STREAMING);
+  }
+
+  /**
+   * initialize the Tset environment for checkpointing {@link OperationMode}
+   *
+   * @param wEnv worker environment
+   * @return CheckpointingTSetEnv
+   */
+  public static BatchChkPntEnvironment initCheckpointing(WorkerEnvironment wEnv) {
+    if (CheckpointingContext.isCheckpointingEnabled(wEnv.getConfig())) {
+      return (BatchChkPntEnvironment) init(wEnv, OperationMode.BATCH_CHECKPOINTING);
+    } else {
+      String msg = "Can not initialize CheckpointingTSetEnv. Either checkpointing is not enabled "
+          + "or JobMaster is not used. Make sure checkpointing is enabled with the config "
+          + " parameter twister2.checkpointing.enable and JobMaster is used.";
+      throw new Twister2RuntimeException(msg);
+    }
   }
 
   /**
@@ -342,20 +367,30 @@ public abstract class TSetEnvironment {
   }
 
   // TSetEnvironment singleton initialization
-  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
-    if (thisTSetEnv == null) {
-      synchronized (TSetEnvironment.class) {
-        if (thisTSetEnv == null) {
-          if (opMode == OperationMode.BATCH) {
-            thisTSetEnv = new BatchTSetEnvironment(wEnv);
-          } else { // streaming
-            thisTSetEnv = new StreamingTSetEnvironment(wEnv);
-          }
-        }
+  private static synchronized TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
+    if (isWorkerReExecuting() || thisTSetEnv == null) {
+      if (opMode == OperationMode.BATCH) {
+        thisTSetEnv = new BatchEnvironment(wEnv);
+      } else if (opMode == OperationMode.STREAMING) {
+        thisTSetEnv = new StreamingEnvironment(wEnv);
+      } else if (opMode == OperationMode.BATCH_CHECKPOINTING) {
+        thisTSetEnv = new BatchChkPntEnvironment(wEnv);
+      } else {
+        throw new Twister2RuntimeException("Non-valid OperationMode: " + opMode);
       }
     }
 
     return thisTSetEnv;
+  }
+
+  /**
+   * this method will return true only once for each re-execution
+   * so, the singleton object will be created only for once
+   */
+  private static boolean isWorkerReExecuting() {
+    boolean reExecuting = executeCount < JobProgress.getWorkerExecuteCount();
+    executeCount = JobProgress.getWorkerExecuteCount();
+    return reExecuting;
   }
 
   /**

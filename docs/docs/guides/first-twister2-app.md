@@ -10,7 +10,7 @@ This guide walks you through creating a simple application using Twister2.
 
 Twister2 Applications are developed as Java Applications. We recommend using Java 1.8 or higher.
 
-It is easier use Maven build tool to build the application.
+It is easier to use Maven build tool to build the application.
 
 ## Creating the Maven application
 
@@ -107,17 +107,13 @@ vi src/main/java/helloworld/HelloWorld.java
 package helloworld;
 
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -125,21 +121,35 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */
-public class HelloWorld implements IWorker {
+public class HelloWorld implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+
+    int workerID = workerEnvironment.getWorkerId();
+    Config config = workerEnvironment.getConfig();
+
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 
     // lets do a log to indicate we are running
-    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
+    LOG.info(String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a message: %s", workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
+        workerEnvironment.getNumberOfWorkers(), helloKeyValue));
+
+    waitSeconds(30);
+  }
+
+  private void waitSeconds(long seconds) {
+
+    try {
+      LOG.info("Sleeping " + seconds + " seconds. Will complete after that.");
+      Thread.sleep(seconds * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   public static void main(String[] args) {
@@ -159,7 +169,7 @@ public class HelloWorld implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("hello-world-job")
         .setWorkerClass(HelloWorld.class)
-        .addComputeResource(2, 1024, numberOfWorkers)
+        .addComputeResource(.2, 128, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

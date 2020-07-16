@@ -18,6 +18,14 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 # by default it is false
 # twister2.kubernetes.check.pwd.free.ssh: true
 
+# MPI parameters in OpenMPI enabled jobs:
+# you can specify MPI parameters that will be provided in mpirun command
+# with the below config
+# following mpirun parameters are already specified by Twister2
+#    --hostfile, --allow-run-as-root, -npernode (workersPerPod), -tag-output
+#
+# twister2.resource.scheduler.mpi.params: ''
+
 #############################################################################
 # Worker port settings
 #############################################################################

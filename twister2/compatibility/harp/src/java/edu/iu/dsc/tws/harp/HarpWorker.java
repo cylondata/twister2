@@ -65,6 +65,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.harp.client.SyncClient;
 import edu.iu.harp.collective.Communication;
 import edu.iu.harp.io.Constant;
@@ -82,9 +83,11 @@ public abstract class HarpWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(HarpWorker.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, JobAPI.Job job,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    int workerID = workerController.getWorkerInfo().getWorkerID();
     List<JobMasterAPI.WorkerInfo> workersList = null;
     try {
       workersList = workerController.getAllWorkers();

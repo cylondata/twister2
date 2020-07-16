@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.AggregateFunc;
 import edu.iu.dsc.tws.tset.fn.WindowComputeFunc;
 import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
@@ -45,7 +45,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 //    this(tSetEnv, "wcompute", computeFunction, parallelism, winParam);
 //  }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv,
+  public WindowComputeTSet(StreamingEnvironment tSetEnv,
                            int parallelism, WindowParameter winParam, Schema inputSchema) {
     this(tSetEnv, "wcompute", parallelism, winParam, inputSchema);
   }
@@ -63,7 +63,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 //    this.windowParameter = winParam;
 //  }
 
-  public WindowComputeTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism,
+  public WindowComputeTSet(StreamingEnvironment tSetEnv, String name, int parallelism,
                            WindowParameter winParam, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.windowParameter = winParam;

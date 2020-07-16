@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchRowTSet;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.row.RowFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.row.RowForEachCompute;
 import edu.iu.dsc.tws.tset.fn.row.RowMapCompute;
@@ -41,12 +41,12 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
 public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
     implements BatchRowTLink {
-  RowBatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP,
+  RowBatchTLinkImpl(BatchEnvironment env, String n, int sourceP,
                     int targetP, RowSchema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
-  RowBatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, RowSchema schema) {
+  RowBatchTLinkImpl(BatchEnvironment env, String n, int sourceP, RowSchema schema) {
     super(env, n, sourceP, schema);
   }
 
@@ -54,8 +54,8 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
   }
 
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   protected RowComputeTSet compute(String n,
@@ -141,7 +141,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
     // handling checkpointing
     if (getTSetEnv().isCheckpointingEnabled()) {
       String persistVariableName = this.getId() + "-persisted";
-      CheckpointingTSetEnv chkEnv = (CheckpointingTSetEnv) getTSetEnv();
+      BatchChkPntEnvironment chkEnv = (BatchChkPntEnvironment) getTSetEnv();
       Boolean persisted = chkEnv.initVariable(persistVariableName, false);
       if (persisted) {
         // create a source function with the capability to read from disk

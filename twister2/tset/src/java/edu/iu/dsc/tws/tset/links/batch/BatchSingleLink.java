@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
@@ -44,11 +44,11 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistSingleSink;
 
 public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  BatchSingleLink(BatchEnvironment env, String n, int sourceP, Schema schema) {
     super(env, n, sourceP, sourceP, schema);
   }
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  BatchSingleLink(BatchEnvironment env, String n, int sourceP, int targetP,
                   Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

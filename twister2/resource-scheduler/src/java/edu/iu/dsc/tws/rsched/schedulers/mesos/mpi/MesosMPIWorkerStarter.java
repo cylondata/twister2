@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -148,17 +147,6 @@ public final class MesosMPIWorkerStarter {
 
 
     JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
-    String workerClass = job.getWorkerClassName();
-    LOG.info("Worker class---->>>" + workerClass);
-    IWorker worker;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      worker = (IWorker) object;
-      LOG.info("Loaded worker class..: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("Failed to load the worker class %s", workerClass));
-      throw new RuntimeException(e);
-    }
 
     MesosVolatileVolume volatileVolume = null;
     //TODO method SchedulerContext.volatileDiskRequested deleted
@@ -176,8 +164,8 @@ public final class MesosMPIWorkerStarter {
 //    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
 //        workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.execute(config, workerID, workerController,
-        pv, volatileVolume);
+    IWorker worker = JobUtils.initializeIWorker(job);
+    worker.execute(config, job, workerController, pv, volatileVolume);
   }
 
   /**

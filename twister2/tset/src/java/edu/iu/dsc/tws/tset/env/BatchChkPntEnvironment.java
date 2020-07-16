@@ -18,16 +18,16 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 
 /**
- * Extension to the {@link BatchTSetEnvironment} with checkpointing capability.
+ * Extension to the {@link BatchEnvironment} with checkpointing capability.
  */
-public class CheckpointingTSetEnv extends BatchTSetEnvironment {
+public class BatchChkPntEnvironment extends BatchEnvironment {
 
-  private static final Logger LOG = Logger.getLogger(CheckpointingTSetEnv.class.getName());
+  private static final Logger LOG = Logger.getLogger(BatchChkPntEnvironment.class.getName());
 
   private CheckpointingWorkerEnv checkpointingWorkerEnv;
   private WorkerEnvironment workerEnvironment;
 
-  public CheckpointingTSetEnv(WorkerEnvironment workerEnvironment) {
+  public BatchChkPntEnvironment(WorkerEnvironment workerEnvironment) {
     super(workerEnvironment);
     this.checkpointingWorkerEnv = CheckpointingWorkerEnv.newBuilder(workerEnvironment).build();
     this.workerEnvironment = workerEnvironment;

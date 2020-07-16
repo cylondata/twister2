@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.deeplearning.common.ParameterTool;
 import edu.iu.dsc.tws.deeplearning.process.ProcessManager;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -44,8 +45,9 @@ public class PytorchSampleJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(PytorchSampleJob.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    int workerID = workerController.getWorkerInfo().getWorkerID();
     String helloKeyValue = config.getStringValue("hello-key");
     scriptPath = config.getStringValue("scriptPath");
     pythonPath = config.getStringValue("pythonPath");

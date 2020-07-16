@@ -70,7 +70,7 @@ public final class AuroraWorkerStarter {
 
     // TODO: need to provide all parameters
     worker.execute(workerStarter.config,
-        workerStarter.zkWorkerController.getWorkerInfo().getWorkerID(),
+        workerStarter.job,
         null, null, null);
 
     // close the things, let others know that it is done

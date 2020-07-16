@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
@@ -31,7 +31,7 @@ public class SinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingData<
    * @param tSetEnv The TSetEnv used for execution
    * @param s       The Sink function to be used
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s, Schema inputSchema) {
+  public SinkTSet(BatchEnvironment tSetEnv, SinkFunc<T> s, Schema inputSchema) {
     this(tSetEnv, s, 1, inputSchema);
   }
 
@@ -42,7 +42,7 @@ public class SinkTSet<T> extends BaseTSetWithSchema<T> implements AcceptingData<
    * @param sinkFn      The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism,
+  public SinkTSet(BatchEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism,
                   Schema inputSchema) {
     super(tSetEnv, "sink", parallelism, inputSchema);
     this.sinkFunc = sinkFn;

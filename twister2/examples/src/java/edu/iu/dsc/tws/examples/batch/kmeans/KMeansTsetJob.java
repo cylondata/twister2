@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
@@ -32,21 +34,22 @@ import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
+public class KMeansTsetJob implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment tc) {
-    int workerId = tc.getWorkerID();
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int workerId = env.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
-    Config config = tc.getConfig();
+    Config config = env.getConfig();
     int parallelism = config.getIntegerValue(DataObjectConstants.PARALLELISM_VALUE);
     int dimension = config.getIntegerValue(DataObjectConstants.DIMENSIONS);
     int numFiles = config.getIntegerValue(DataObjectConstants.NUMBER_OF_FILES);
@@ -59,7 +62,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
         DataObjectConstants.CINPUT_DIRECTORY) + workerId;
     String type = config.getStringValue(DataObjectConstants.FILE_TYPE);
 
-    KMeansUtils.generateDataPoints(tc.getConfig(), dimension, numFiles,
+    KMeansUtils.generateDataPoints(env.getConfig(), dimension, numFiles,
         dsize, csize, dataDirectory, centroidDirectory, type);
 
     long startTime = System.currentTimeMillis();
@@ -67,7 +70,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     /*CachedTSet<double[][]> points =
         tc.createSource(new PointsSource(type), parallelismValue).setName("dataSource").cache();*/
 
-    SourceTSet<String[]> pointSource = tc.createCSVSource(dataDirectory, dsize, parallelism,
+    SourceTSet<String[]> pointSource = env.createCSVSource(dataDirectory, dsize, parallelism,
         "split");
     ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String[]>>() {
@@ -88,7 +91,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     //CachedTSet<double[][]> centers = tc.createSource(new CenterSource(type), parallelism).cache();
 
-    SourceTSet<String[]> centerSource = tc.createCSVSource(centroidDirectory, csize, parallelism,
+    SourceTSet<String[]> centerSource = env.createCSVSource(centroidDirectory, csize, parallelism,
         "complete");
     ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
         new ComputeFunc<double[][], Iterator<String[]>>() {
@@ -124,9 +127,9 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     CachedTSet<double[][]> cached = reduced.lazyCache();
     for (int i = 0; i < iterations; i++) {
-      tc.evalAndUpdate(cached, cachedCenters);
+      env.evalAndUpdate(cached, cachedCenters);
     }
-    tc.finishEval(cached);
+    env.finishEval(cached);
 
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {

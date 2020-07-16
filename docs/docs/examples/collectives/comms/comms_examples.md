@@ -60,11 +60,11 @@ After building the project, you can run the batch mode examples as follows.
 
 ### Communication Example Structure
 
-The main component of the example is in the execute method of each example class. 
+The main component of the example is in the compute method of each example class. 
 Initially, a task plan is created 
 
 ```java 
- protected void execute() {
+ protected void compute(WorkerEnvironment workerEnv) {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
         jobParameters.getTaskStages(), workerList);
 

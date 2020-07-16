@@ -20,23 +20,23 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable {
+public abstract class BatchTsetExample implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(BatchTsetExample.class.getName());
 
   protected static final int COUNT = 5;
   protected static final int PARALLELISM = 2;
 
-  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
+  SourceTSet<Integer> dummySource(BatchEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 0;
 
@@ -52,7 +52,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel);
   }
 
-  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int start, int count, int parallel) {
+  SourceTSet<Integer> dummySource(BatchEnvironment env, int start, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = start;
       private int limit = c + count;
@@ -69,7 +69,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel);
   }
 
-  SourceTSet<String> dummyStringSource(BatchTSetEnvironment env, int count, int parallel) {
+  SourceTSet<String> dummyStringSource(BatchEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<String>() {
       private int c = 0;
       private String[] dataList = {"The", "at", "one", "two", "three"};
@@ -86,7 +86,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel).withSchema(PrimitiveSchemas.STRING);
   }
 
-  KeyedSourceTSet<String, Integer> dummyKeyedSource(BatchTSetEnvironment env, int count,
+  KeyedSourceTSet<String, Integer> dummyKeyedSource(BatchEnvironment env, int count,
                                                     int parallel) {
     return env.createKeyedSource(new SourceFunc<Tuple<String, Integer>>() {
       private int c = 0;
@@ -104,7 +104,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel).withSchema(new KeyedSchema(MessageTypes.STRING, MessageTypes.INTEGER));
   }
 
-  SourceTSet<Integer> dummyReplayableSource(BatchTSetEnvironment env, int count, int parallel) {
+  SourceTSet<Integer> dummyReplayableSource(BatchEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 0;
 
@@ -125,7 +125,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
   }
 
 
-  SourceTSet<Integer> dummySourceOther(BatchTSetEnvironment env, int count, int parallel) {
+  SourceTSet<Integer> dummySourceOther(BatchEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 25;
 
@@ -141,7 +141,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel).withSchema(PrimitiveSchemas.INTEGER);
   }
 
-  KeyedSourceTSet<String, Integer> dummyKeyedSourceOther(BatchTSetEnvironment env, int count,
+  KeyedSourceTSet<String, Integer> dummyKeyedSourceOther(BatchEnvironment env, int count,
                                                          int parallel) {
     return env.createKeyedSource(new SourceFunc<Tuple<String, Integer>>() {
       private int c = 0;

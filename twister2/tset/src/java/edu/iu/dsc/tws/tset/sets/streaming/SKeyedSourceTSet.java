@@ -19,19 +19,19 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
 
 public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   private SourceFunc<Tuple<K, V>> source;
 
-  public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<Tuple<K, V>> src,
+  public SKeyedSourceTSet(StreamingEnvironment tSetEnv, SourceFunc<Tuple<K, V>> src,
                           int parallelism) {
     super(tSetEnv, "sksource", parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;
   }
 
-  public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, String name,
+  public SKeyedSourceTSet(StreamingEnvironment tSetEnv, String name,
                           SourceFunc<Tuple<K, V>> src, int parallelism) {
     super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL_TUPLE2);
     this.source = src;

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tset.sets.batch.row;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.schema.RowSchema;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
 public class RowCheckpointedTSet extends RowPersistedTSet {
   private DiskPartitionBackedSource<Row> sourceFunc;
 
-  public RowCheckpointedTSet(BatchTSetEnvironment tSetEnv,
+  public RowCheckpointedTSet(BatchEnvironment tSetEnv,
                              DiskPartitionBackedSource<Row> sourceFn, int parallelism,
                              RowSchema inputSchema) {
     super(tSetEnv, null, parallelism, inputSchema);

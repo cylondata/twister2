@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class TSetExecDemo implements IWorker, Serializable {
@@ -43,9 +44,10 @@ public class TSetExecDemo implements IWorker, Serializable {
 
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
 
+//    int workerID = workerController.getWorkerInfo().getWorkerID();
 //    WorkerEnvironment env = WorkerEnvironment.init(config, workerID, workerController,
 //        persistentVolume, volatileVolume);
 //

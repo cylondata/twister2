@@ -63,7 +63,7 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
 
   @Override
   public void execute(Config config,
-                      int workerID,
+                      JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -73,7 +73,7 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
 
     senderToDriver = WorkerRuntime.getSenderToDriver();
 
-    wID = workerID;
+    wID = workerController.getWorkerInfo().getWorkerID();
 
     LOG.info(wID + " BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 

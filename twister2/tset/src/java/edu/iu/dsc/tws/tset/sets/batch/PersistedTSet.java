@@ -14,11 +14,11 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 public class PersistedTSet<T> extends StoredTSet<T> {
 
-  public PersistedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism,
+  public PersistedTSet(BatchEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism,
                        Schema inputSchema) {
     super(tSetEnv, "persisted", sinkFunc, parallelism, inputSchema);
   }
