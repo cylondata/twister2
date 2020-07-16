@@ -89,7 +89,7 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!direct.partition(task, data, flag)) {
+    while (!direct.insert(task, data, flag)) {
       // lets wait a litte and try again
       direct.progress();
     }

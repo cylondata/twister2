@@ -52,6 +52,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
    * The output schema
    */
   private RowSchema schema;
+  private CollectorImp collectorImp;
 
   public RowComupteCollectorOp() {
   }
@@ -74,16 +75,14 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
     schema = (RowSchema) ctx.getConfig(TSetConstants.OUTPUT_SCHEMA_KEY);
     tableMaxSize = cfg.getLongValue("twister2.table.max.size", tableMaxSize);
     builder = new ArrowTableBuilder(schema.toArrowSchema(), runtime.getRootAllocator());
+    collectorImp = new CollectorImp();
+
   }
 
   @Override
   public boolean execute(IMessage<Table> content) {
-    CollectorImp collectorImp = new CollectorImp();
     Table table = content.getContent();
     computeFunction.compute(table.getRowIterator(), collectorImp);
-    collectorImp.close();
-    writeEndToEdges();
-    computeFunction.close();
     return true;
   }
 
@@ -102,6 +101,17 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
     public void close() {
       writeToEdges(builder.build());
     }
+  }
+
+  @Override
+  public void endExecute() {
+    collectorImp.close();
+    writeEndToEdges();
+  }
+
+  @Override
+  public void close() {
+    computeFunction.close();
   }
 
   @Override

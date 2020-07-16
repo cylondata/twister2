@@ -74,7 +74,7 @@ public class SDirect extends BaseOperation {
    * @param flags message flag
    * @return true if the message is accepted
    */
-  public boolean partition(int src, Object message, int flags) {
+  public boolean insert(int src, Object message, int flags) {
     return op.send(src, message, flags);
   }
 }

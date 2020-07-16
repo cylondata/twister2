@@ -62,6 +62,11 @@ public class SinkOp<T> extends BaseOp implements ICompute<T>, Closable, Collecto
     sink.close();
   }
 
+  @Override
+  public void endExecute() {
+    sink.end();
+  }
+
   /**
    * returns the collected data partition only when it matches the provided name
    */

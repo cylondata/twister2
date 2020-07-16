@@ -44,8 +44,17 @@ public class ComputeOp<O, I> extends BaseComputeOp<I> {
   public boolean execute(IMessage<I> content) {
     O output = computeFunction.compute(content.getContent());
     writeToEdges(output);
-    writeEndToEdges();
-    computeFunction.close();
     return true;
+  }
+
+  @Override
+  public void close() {
+    computeFunction.close();
+  }
+
+  @Override
+  public void endExecute() {
+    computeFunction.end();
+    writeEndToEdges();
   }
 }
