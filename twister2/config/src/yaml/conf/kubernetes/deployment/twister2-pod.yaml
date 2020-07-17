@@ -18,7 +18,7 @@ spec:
   terminationGracePeriodSeconds: 0
 
   containers:
-    - image: twister2/twister2-k8s:0.7.0
+    - image: twister2/twister2-k8s:0.8.0-SNAPSHOT
       name: twister2-container
       command: ["bash"]
       args: ["-c", "echo sleeping to infinity ........... ; sleep infinity"]

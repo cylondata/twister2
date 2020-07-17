@@ -132,7 +132,9 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/executor/comms/DefaultDestinationSelector.html#DefaultDestinationSelector-edu.iu.dsc.tws.api.compute.TaskPartitioner-">DefaultDestinationSelector</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&nbsp;partitioner)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/executor/comms/DefaultDestinationSelector.html#DefaultDestinationSelector-edu.iu.dsc.tws.api.compute.TaskPartitioner-java.util.Map-java.util.Map-">DefaultDestinationSelector</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&nbsp;partitioner,
+                          java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;srcGlobalToIndex,
+                          java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;tgtsGlobalToIndex)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -208,13 +210,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="DefaultDestinationSelector-edu.iu.dsc.tws.api.compute.TaskPartitioner-">
+<a name="DefaultDestinationSelector-edu.iu.dsc.tws.api.compute.TaskPartitioner-java.util.Map-java.util.Map-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>DefaultDestinationSelector</h4>
-<pre>public&nbsp;DefaultDestinationSelector(<a href="../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&nbsp;partitioner)</pre>
+<pre>public&nbsp;DefaultDestinationSelector(<a href="../../../../../../edu/iu/dsc/tws/api/compute/TaskPartitioner.html" title="interface in edu.iu.dsc.tws.api.compute">TaskPartitioner</a>&nbsp;partitioner,
+                                  java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;srcGlobalToIndex,
+                                  java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;tgtsGlobalToIndex)</pre>
 </li>
 </ul>
 </li>

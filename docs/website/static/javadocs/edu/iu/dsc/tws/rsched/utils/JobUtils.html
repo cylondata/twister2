@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -129,9 +129,13 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#createJobPackageFileName-java.lang.String-">createJobPackageFileName</a></span>(java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#computeResourcesToPrint-JobAPI.Job-">computeResourcesToPrint</a></span>(JobAPI.Job&nbsp;job)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#createJobPackageFileName-java.lang.String-">createJobPackageFileName</a></span>(java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static JobAPI.ComputeResource</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#getComputeResource-JobAPI.Job-int-">getComputeResource</a></span>(JobAPI.Job&nbsp;job,
                   int&nbsp;index)</code>
@@ -139,18 +143,26 @@ extends java.lang.Object</pre>
  if not found, return null</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#getJobDescriptionFilePath-java.lang.String-edu.iu.dsc.tws.api.config.Config-">getJobDescriptionFilePath</a></span>(java.lang.String&nbsp;jobFileName,
                          <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#getJobDescriptionFilePath-java.lang.String-java.lang.String-edu.iu.dsc.tws.api.config.Config-">getJobDescriptionFilePath</a></span>(java.lang.String&nbsp;workingDirectory,
                          java.lang.String&nbsp;jobFileName,
                          <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#initializeIWorker-JobAPI.Job-">initializeIWorker</a></span>(JobAPI.Job&nbsp;job)</code>
+<div class="block">if the worker class is an instance of IWorker
+ initialize that
+ if</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#isJobScalable-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">isJobScalable</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
              JobAPI.Job&nbsp;job)</code>
@@ -160,46 +172,45 @@ extends java.lang.Object</pre>
  itshould not be an openMPI job</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#jobClassPath-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-java.lang.String-">jobClassPath</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
             JobAPI.Job&nbsp;job,
             java.lang.String&nbsp;wd)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#overrideConfigs-JobAPI.Job-edu.iu.dsc.tws.api.config.Config-">overrideConfigs</a></span>(JobAPI.Job&nbsp;job,
                <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>
 <div class="block">[Deprecated Function]</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>static java.util.Map&lt;java.lang.String,java.lang.Object&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#readCommandLineOpts--">readCommandLineOpts</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static JobAPI.Job</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#readJobFile-edu.iu.dsc.tws.api.config.Config-java.lang.String-">readJobFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-           java.lang.String&nbsp;fileName)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#readJobFile-java.lang.String-">readJobFile</a></span>(java.lang.String&nbsp;fileName)</code>
 <div class="block">Read the job file</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#systemClassPath-edu.iu.dsc.tws.api.config.Config-">systemClassPath</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#toString-JobAPI.Job-">toString</a></span>(JobAPI.Job&nbsp;job)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#updateConfigs-JobAPI.Job-edu.iu.dsc.tws.api.config.Config-">updateConfigs</a></span>(JobAPI.Job&nbsp;job,
              <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>
 <div class="block">write the values from Job object to config object</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/JobUtils.html#writeJobFile-JobAPI.Job-java.lang.String-">writeJobFile</a></span>(JobAPI.Job&nbsp;job,
             java.lang.String&nbsp;fileName)</code>
@@ -239,14 +250,13 @@ extends java.lang.Object</pre>
 <div class="block">Write the job file</div>
 </li>
 </ul>
-<a name="readJobFile-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
+<a name="readJobFile-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>readJobFile</h4>
-<pre>public static&nbsp;JobAPI.Job&nbsp;readJobFile(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-                                     java.lang.String&nbsp;fileName)</pre>
+<pre>public static&nbsp;JobAPI.Job&nbsp;readJobFile(java.lang.String&nbsp;fileName)</pre>
 <div class="block">Read the job file</div>
 </li>
 </ul>
@@ -343,6 +353,15 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;java.lang.String&nbsp;toString(JobAPI.Job&nbsp;job)</pre>
 </li>
 </ul>
+<a name="computeResourcesToPrint-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>computeResourcesToPrint</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;computeResourcesToPrint(JobAPI.Job&nbsp;job)</pre>
+</li>
+</ul>
 <a name="createJobPackageFileName-java.lang.String-">
 <!--   -->
 </a>
@@ -355,7 +374,7 @@ extends java.lang.Object</pre>
 <a name="isJobScalable-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>isJobScalable</h4>
 <pre>public static&nbsp;boolean&nbsp;isJobScalable(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
@@ -364,6 +383,23 @@ extends java.lang.Object</pre>
  Driver class shall be specified
  a scalable compute resource shall be given
  itshould not be an openMPI job</div>
+</li>
+</ul>
+<a name="initializeIWorker-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>initializeIWorker</h4>
+<pre>public static&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a>&nbsp;initializeIWorker(JobAPI.Job&nbsp;job)</pre>
+<div class="block">if the worker class is an instance of IWorker
+ initialize that
+ if</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>job</code> - </dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
 </li>
 </ul>
 </li>

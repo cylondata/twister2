@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,7 +47,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
@@ -105,10 +105,15 @@ var activeTableTab = "activeTableTab";
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Implemented Interfaces:</dt>
+<dd><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></dd>
+</dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">ZKMasterController</span>
-extends java.lang.Object</pre>
+extends java.lang.Object
+implements <a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></pre>
 </li>
 </ul>
 </div>
@@ -126,14 +131,6 @@ extends java.lang.Object</pre>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Field and Description</th>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>protected PathChildrenCache</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#barrierChildrenCache">barrierChildrenCache</a></span></code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#barrierDir">barrierDir</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected CuratorFramework</code></td>
@@ -213,46 +210,45 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#allJoined--">allJoined</a></span>()</code>
+<div class="block">all workers joined the job</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#close--">close</a></span>()</code>
 <div class="block">close all local entities.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#initialize-JobMasterState-">initialize</a></span>(JobMasterState&nbsp;initialState)</code>
 <div class="block">initialize ZKMasterController,
  create znode children caches for job master to watch proper events</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#jobScaledDown-int-">jobScaledDown</a></span>(int&nbsp;newNumberOfWorkers)</code>
-<div class="block">this method invoked by WorkerMonitor, when the job is scaled down</div>
-</td>
-</tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#jobScaledUp-int-">jobScaledUp</a></span>(int&nbsp;newNumberOfWorkers)</code>
-<div class="block">this method invoked by WorkerMonitor, when the job is scaled up</div>
-</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#jmRestarted--">jmRestarted</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#publishAllJoined--">publishAllJoined</a></span>()</code>
-<div class="block">generate and publish all joined event</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#jobScaled-int-int-">jobScaled</a></span>(int&nbsp;change,
+         int&nbsp;numberOfWorkers1)</code>
+<div class="block">job scaled up or down</div>
 </td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#publishJobMasterRestarted--">publishJobMasterRestarted</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#workerFailed-int-">workerFailed</a></span>(int&nbsp;workerID)</code>
+<div class="block">the worker with the provided workerID failed</div>
+</td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#publishWorkerFailed-int-">publishWorkerFailed</a></span>(int&nbsp;failedID)</code>&nbsp;</td>
-</tr>
-<tr id="i7" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#publishWorkerRestarted-edu.iu.dsc.tws.common.zk.WorkerWithState-">publishWorkerRestarted</a></span>(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html#workerRestarted-JobMasterAPI.WorkerInfo-">workerRestarted</a></span>(JobMasterAPI.WorkerInfo&nbsp;workerInfo)</code>
+<div class="block">the worker with the provided workerInfo restarted</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -339,15 +335,6 @@ extends java.lang.Object</pre>
 <pre>protected&nbsp;java.lang.String ephemDir</pre>
 </li>
 </ul>
-<a name="barrierDir">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>barrierDir</h4>
-<pre>protected&nbsp;java.lang.String barrierDir</pre>
-</li>
-</ul>
 <a name="client">
 <!--   -->
 </a>
@@ -369,19 +356,10 @@ extends java.lang.Object</pre>
 <a name="persChildrenCache">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>persChildrenCache</h4>
 <pre>protected&nbsp;PathChildrenCache persChildrenCache</pre>
-</li>
-</ul>
-<a name="barrierChildrenCache">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>barrierChildrenCache</h4>
-<pre>protected&nbsp;PathChildrenCache barrierChildrenCache</pre>
 </li>
 </ul>
 </li>
@@ -429,69 +407,74 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="jobScaledUp-int-">
+<a name="workerFailed-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>jobScaledUp</h4>
-<pre>public&nbsp;void&nbsp;jobScaledUp(int&nbsp;newNumberOfWorkers)</pre>
-<div class="block">this method invoked by WorkerMonitor, when the job is scaled up</div>
+<h4>workerFailed</h4>
+<pre>public&nbsp;void&nbsp;workerFailed(int&nbsp;workerID)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#workerFailed-int-">IWorkerEventSender</a></code></span></div>
+<div class="block">the worker with the provided workerID failed</div>
 <dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>newNumberOfWorkers</code> - </dd>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#workerFailed-int-">workerFailed</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></code></dd>
 </dl>
 </li>
 </ul>
-<a name="jobScaledDown-int-">
+<a name="workerRestarted-JobMasterAPI.WorkerInfo-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>jobScaledDown</h4>
-<pre>public&nbsp;void&nbsp;jobScaledDown(int&nbsp;newNumberOfWorkers)</pre>
-<div class="block">this method invoked by WorkerMonitor, when the job is scaled down</div>
+<h4>workerRestarted</h4>
+<pre>public&nbsp;void&nbsp;workerRestarted(JobMasterAPI.WorkerInfo&nbsp;workerInfo)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#workerRestarted-JobMasterAPI.WorkerInfo-">IWorkerEventSender</a></code></span></div>
+<div class="block">the worker with the provided workerInfo restarted</div>
 <dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>newNumberOfWorkers</code> - </dd>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#workerRestarted-JobMasterAPI.WorkerInfo-">workerRestarted</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></code></dd>
 </dl>
 </li>
 </ul>
-<a name="publishWorkerRestarted-edu.iu.dsc.tws.common.zk.WorkerWithState-">
+<a name="allJoined--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>publishWorkerRestarted</h4>
-<pre>public&nbsp;void&nbsp;publishWorkerRestarted(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</pre>
+<h4>allJoined</h4>
+<pre>public&nbsp;void&nbsp;allJoined()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#allJoined--">IWorkerEventSender</a></code></span></div>
+<div class="block">all workers joined the job</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#allJoined--">allJoined</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></code></dd>
+</dl>
 </li>
 </ul>
-<a name="publishWorkerFailed-int-">
+<a name="jobScaled-int-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>publishWorkerFailed</h4>
-<pre>public&nbsp;void&nbsp;publishWorkerFailed(int&nbsp;failedID)</pre>
+<h4>jobScaled</h4>
+<pre>public&nbsp;void&nbsp;jobScaled(int&nbsp;change,
+                      int&nbsp;numberOfWorkers1)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#jobScaled-int-int-">IWorkerEventSender</a></code></span></div>
+<div class="block">job scaled up or down</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html#jobScaled-int-int-">jobScaled</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></code></dd>
+</dl>
 </li>
 </ul>
-<a name="publishAllJoined--">
+<a name="jmRestarted--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>publishAllJoined</h4>
-<pre>public&nbsp;void&nbsp;publishAllJoined()</pre>
-<div class="block">generate and publish all joined event</div>
-</li>
-</ul>
-<a name="publishJobMasterRestarted--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>publishJobMasterRestarted</h4>
-<pre>public&nbsp;void&nbsp;publishJobMasterRestarted()</pre>
+<h4>jmRestarted</h4>
+<pre>public&nbsp;void&nbsp;jmRestarted()</pre>
 </li>
 </ul>
 <a name="close--">
@@ -531,7 +514,7 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">

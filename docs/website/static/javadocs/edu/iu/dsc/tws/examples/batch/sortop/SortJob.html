@@ -218,8 +218,8 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.htm
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/batch/sortop/SortJob.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-       int&nbsp;workerID,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/batch/sortop/SortJob.html#execute-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
+       JobAPI.Job&nbsp;job,
        <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
        <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
        <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</code>
@@ -446,25 +446,25 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.htm
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">
+<a name="execute-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>execute</h4>
 <pre>public&nbsp;void&nbsp;execute(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-                    int&nbsp;workerID,
+                    JobAPI.Job&nbsp;job,
                     <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
                     <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
                     <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">IWorker</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">IWorker</a></code></span></div>
 <div class="block">Execute with the resources configured</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>cfg</code> - configuration</dd>
-<dd><code>workerID</code> - the worker id</dd>
+<dd><code>job</code> - the worker id</dd>
 <dd><code>workerController</code> - the worker controller</dd>
 <dd><code>persistentVolume</code> - information about persistent file system</dd>
 <dd><code>volatileVolume</code> - information about volatile file system</dd>

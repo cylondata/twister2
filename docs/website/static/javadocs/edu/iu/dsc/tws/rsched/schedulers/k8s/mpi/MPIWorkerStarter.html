@@ -132,7 +132,7 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIWorkerStarter.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>static void</code></td>
+<td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIWorkerStarter.html#startWorker-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-java.lang.String-">startWorker</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
            <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv,
            java.lang.String&nbsp;podName)</code>
@@ -176,9 +176,9 @@ extends java.lang.Object</pre>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>startWorker</h4>
-<pre>public static&nbsp;void&nbsp;startWorker(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
-                               <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv,
-                               java.lang.String&nbsp;podName)</pre>
+<pre>public static&nbsp;boolean&nbsp;startWorker(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
+                                  <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv,
+                                  java.lang.String&nbsp;podName)</pre>
 <div class="block">start the Worker class specified in conf files</div>
 </li>
 </ul>

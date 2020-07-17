@@ -110,11 +110,11 @@
 </dl>
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/CacheSingleSink.html" title="class in edu.iu.dsc.tws.tset.sinks">CacheSingleSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/DiskPersistSingleSink.html" title="class in edu.iu.dsc.tws.tset.sinks">DiskPersistSingleSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/fn/impl/ArrowBasedSinkFunction.html" title="class in edu.iu.dsc.tws.tset.fn.impl">ArrowBasedSinkFunction</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/CacheSingleSink.html" title="class in edu.iu.dsc.tws.tset.sinks">CacheSingleSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/DiskPersistSingleSink.html" title="class in edu.iu.dsc.tws.tset.sinks">DiskPersistSingleSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/StreamingCacheSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StreamingCacheSink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sinks/StreamingDiskPersistSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StreamingDiskPersistSink</a></dd>
 </dl>
 <hr>
 <br>
@@ -181,14 +181,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.htm
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.tset.fn.<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#close--">close</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#prepare-edu.iu.dsc.tws.api.tset.TSetContext-">prepare</a></code></li>
-</ul>
-<ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Closable">
-<!--   -->
-</a>
-<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.compute.modifiers.<a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#reset--">reset</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#close--">close</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#end--">end</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#prepare-edu.iu.dsc.tws.api.tset.TSetContext-">prepare</a></code></li>
 </ul>
 </li>
 </ul>

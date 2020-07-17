@@ -152,8 +152,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#close--">close</a></span>()</code>
-<div class="block">This is to for disposing or cleaning up any internal state accumulated by
- the uploader</div>
+<div class="block">This is to for disposing or cleaning up any internal state accumulated by the uploader</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -162,23 +161,21 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">initialize</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;conf,
-          JobAPI.Job&nbsp;job)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-java.lang.String-">initialize</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;conf,
+          java.lang.String&nbsp;jobID)</code>
 <div class="block">Initialize the uploader with the incoming context.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">undo</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
-    java.lang.String&nbsp;jobID)</code>
-<div class="block">If subsequent stages fail, undo will be called to free resources used by
- uploading package.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#undo--">undo</a></span>()</code>
+<div class="block">Undo uploading.</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>java.net.URI</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpUploader.html#uploadPackage-java.lang.String-">uploadPackage</a></span>(java.lang.String&nbsp;sourceLocation)</code>
-<div class="block">UploadPackage will upload the topology package to the given location.</div>
+<div class="block">UploadPackage will upload the job package to the given location.</div>
 </td>
 </tr>
 </table>
@@ -236,19 +233,19 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.
 <pre>protected&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/scp/ScpController.html" title="class in edu.iu.dsc.tws.rsched.uploaders.scp">ScpController</a>&nbsp;getScpController()</pre>
 </li>
 </ul>
-<a name="initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
+<a name="initialize-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>initialize</h4>
 <pre>public&nbsp;void&nbsp;initialize(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;conf,
-                       JobAPI.Job&nbsp;job)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">IUploader</a></code></span></div>
+                       java.lang.String&nbsp;jobID)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-java.lang.String-">IUploader</a></code></span></div>
 <div class="block">Initialize the uploader with the incoming context.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">initialize</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#initialize-edu.iu.dsc.tws.api.config.Config-java.lang.String-">initialize</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -261,34 +258,32 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.
 <pre>public&nbsp;java.net.URI&nbsp;uploadPackage(java.lang.String&nbsp;sourceLocation)
                            throws <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/UploaderException.html" title="class in edu.iu.dsc.tws.api.scheduler">UploaderException</a></pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#uploadPackage-java.lang.String-">IUploader</a></code></span></div>
-<div class="block">UploadPackage will upload the topology package to the given location.</div>
+<div class="block">UploadPackage will upload the job package to the given location.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#uploadPackage-java.lang.String-">uploadPackage</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>sourceLocation</code> - the source location with all the files</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>destination URI of where the topology package has
+<dd>destination URI of where the job package has
  been uploaded if successful, or <code>null</code> if failed.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/UploaderException.html" title="class in edu.iu.dsc.tws.api.scheduler">UploaderException</a></code></dd>
 </dl>
 </li>
 </ul>
-<a name="undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">
+<a name="undo--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>undo</h4>
-<pre>public&nbsp;boolean&nbsp;undo(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
-                    java.lang.String&nbsp;jobID)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">IUploader</a></code></span></div>
-<div class="block">If subsequent stages fail, undo will be called to free resources used by
- uploading package. Ideally, this should try to remove the uploaded package.</div>
+<pre>public&nbsp;boolean&nbsp;undo()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo--">IUploader</a></code></span></div>
+<div class="block">Undo uploading. Remove uploaded files.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo-edu.iu.dsc.tws.api.config.Config-java.lang.String-">undo</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#undo--">undo</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -300,12 +295,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#close--">IUploader</a></code></span></div>
-<div class="block">This is to for disposing or cleaning up any internal state accumulated by
- the uploader
- <p>
- Closes this stream and releases any system resources associated
- with it. If the stream is already closed then invoking this
- method has no effect.</div>
+<div class="block">This is to for disposing or cleaning up any internal state accumulated by the uploader</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/IUploader.html" title="interface in edu.iu.dsc.tws.api.scheduler">IUploader</a></code></dd>

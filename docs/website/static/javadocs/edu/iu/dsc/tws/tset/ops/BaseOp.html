@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -74,13 +74,13 @@ var activeTableTab = "activeTableTab";
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>
@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" title="class in edu.iu.dsc.tws.tset.ops">BaseComputeOp</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html" title="class in edu.iu.dsc.tws.tset.ops">SinkOp</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/SourceOp.html" title="class in edu.iu.dsc.tws.tset.ops">SourceOp</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" title="class in edu.iu.dsc.tws.tset.ops">BaseComputeOp</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/row/RowSinkOp.html" title="class in edu.iu.dsc.tws.tset.ops.row">RowSinkOp</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html" title="class in edu.iu.dsc.tws.tset.ops">SinkOp</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/SourceOp.html" title="class in edu.iu.dsc.tws.tset.ops">SourceOp</a></dd>
 </dl>
 <hr>
 <br>
@@ -130,6 +130,34 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.summary">
+<!--   -->
+</a>
+<h3>Constructor Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Constructor Summary table, listing constructors, and an explanation">
+<caption><span>Constructors</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier</th>
+<th class="colLast" scope="col">Constructor and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected </code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#BaseOp--">BaseOp</a></span>()</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected </code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#BaseOp-edu.iu.dsc.tws.tset.sets.BaseTSet-">BaseOp</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;originTSet)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected </code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#BaseOp-edu.iu.dsc.tws.tset.sets.BaseTSet-java.util.Map-">BaseOp</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;originTSet,
+      java.util.Map&lt;java.lang.String,java.lang.String&gt;&nbsp;receivableTSets)</code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- ========== METHOD SUMMARY =========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.summary">
@@ -152,6 +180,10 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#getReceivableNames--">getReceivableNames</a></span>()</code>
 <div class="block">This method should return a set of receivable names, that are expected by this receptor.</div>
 </td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../edu/iu/dsc/tws/api/tset/TSetContext.html" title="class in edu.iu.dsc.tws.api.tset">TSetContext</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#gettSetContext--">gettSetContext</a></span>()</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -176,6 +208,42 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.detail">
+<!--   -->
+</a>
+<h3>Constructor Detail</h3>
+<a name="BaseOp--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>BaseOp</h4>
+<pre>protected&nbsp;BaseOp()</pre>
+</li>
+</ul>
+<a name="BaseOp-edu.iu.dsc.tws.tset.sets.BaseTSet-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>BaseOp</h4>
+<pre>protected&nbsp;BaseOp(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;originTSet)</pre>
+</li>
+</ul>
+<a name="BaseOp-edu.iu.dsc.tws.tset.sets.BaseTSet-java.util.Map-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>BaseOp</h4>
+<pre>protected&nbsp;BaseOp(<a href="../../../../../../edu/iu/dsc/tws/tset/sets/BaseTSet.html" title="class in edu.iu.dsc.tws.tset.sets">BaseTSet</a>&nbsp;originTSet,
+                 java.util.Map&lt;java.lang.String,java.lang.String&gt;&nbsp;receivableTSets)</pre>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ============ METHOD DETAIL ========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.detail">
@@ -199,7 +267,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <a name="getReceivableNames--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getReceivableNames</h4>
 <pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/IONames.html" title="class in edu.iu.dsc.tws.api.compute.modifiers">IONames</a>&nbsp;getReceivableNames()</pre>
@@ -217,6 +285,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>get the set of names</dd>
 </dl>
+</li>
+</ul>
+<a name="gettSetContext--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>gettSetContext</h4>
+<pre>protected&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/tset/TSetContext.html" title="class in edu.iu.dsc.tws.api.tset">TSetContext</a>&nbsp;gettSetContext()</pre>
 </li>
 </ul>
 </li>
@@ -273,13 +350,13 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Recep
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>
