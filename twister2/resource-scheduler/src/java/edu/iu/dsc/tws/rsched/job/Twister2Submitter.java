@@ -170,7 +170,7 @@ public final class Twister2Submitter {
         + "/__   \\__      _(_)___| |_ ___ _ _|___ \\ \n"
         + "  / /\\/\\ \\ /\\ / / / __| __/ _ \\ '__|__) |\n"
         + " / /    \\ V  V /| \\__ \\ ||  __/ |  / __/ \n"
-        + " \\/      \\_/\\_/ |_|___/\\__\\___|_| |_____| v0.7.0\n"
+        + " \\/      \\_/\\_/ |_|___/\\__\\___|_| |_____| v0.8.0-SNAPSHOT\n"
         + "                                         \n"
         + "Job ID      \t  :\t" + job.getJobId() + "\n"
         + "Number of Workers :\t" + job.getNumberOfWorkers() + "\n"
