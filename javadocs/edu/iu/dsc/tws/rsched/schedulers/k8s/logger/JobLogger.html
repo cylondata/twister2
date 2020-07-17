@@ -112,12 +112,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd>java.lang.Runnable</dd>
+<dd><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/client/JobEndListener.html" title="interface in edu.iu.dsc.tws.rsched.schedulers.k8s.client">JobEndListener</a>, java.lang.Runnable</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">JobLogger</span>
-extends java.lang.Thread</pre>
+extends java.lang.Thread
+implements <a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/client/JobEndListener.html" title="interface in edu.iu.dsc.tws.rsched.schedulers.k8s.client">JobEndListener</a></pre>
 <div class="block">get logs of all workers and the job master in a job from Kubernetes master
  save them to local disk under the directory:
    $HOME/.twister2/jobID</div>
@@ -189,17 +190,18 @@ extends java.lang.Thread</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/logger/JobLogger.html#run--">run</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/logger/JobLogger.html#jobEnded--">jobEnded</a></span>()</code>
+<div class="block">this method is called when the job has ended</div>
+</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/logger/JobLogger.html#stopLogger--">stopLogger</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/logger/JobLogger.html#run--">run</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/logger/JobLogger.html#workerLoggerCompleted-java.lang.String-">workerLoggerCompleted</a></span>(java.lang.String&nbsp;loggerID)</code>
-<div class="block">worker loggers let JobLogger know that they completed
- JobLogger needs to close watcher and finish log saving</div>
+<div class="block">worker loggers let JobLogger know that they completed</div>
 </td>
 </tr>
 </table>
@@ -271,17 +273,22 @@ extends java.lang.Thread</pre>
 <li class="blockList">
 <h4>workerLoggerCompleted</h4>
 <pre>public&nbsp;void&nbsp;workerLoggerCompleted(java.lang.String&nbsp;loggerID)</pre>
-<div class="block">worker loggers let JobLogger know that they completed
- JobLogger needs to close watcher and finish log saving</div>
+<div class="block">worker loggers let JobLogger know that they completed</div>
 </li>
 </ul>
-<a name="stopLogger--">
+<a name="jobEnded--">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>stopLogger</h4>
-<pre>public&nbsp;void&nbsp;stopLogger()</pre>
+<h4>jobEnded</h4>
+<pre>public&nbsp;void&nbsp;jobEnded()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/client/JobEndListener.html#jobEnded--">JobEndListener</a></code></span></div>
+<div class="block">this method is called when the job has ended</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/client/JobEndListener.html#jobEnded--">jobEnded</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/client/JobEndListener.html" title="interface in edu.iu.dsc.tws.rsched.schedulers.k8s.client">JobEndListener</a></code></dd>
+</dl>
 </li>
 </ul>
 </li>

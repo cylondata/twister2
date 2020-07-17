@@ -81,22 +81,28 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/K8sUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">K8sUploader</a></td>
-<td class="colLast">
-<div class="block">Upload job package to either:
-   uploader web server pods
-   all job pods
-
- If there are uploader web server pods in the cluster, job package is uploaded to all those pods.</div>
-</td>
+<td class="colFirst"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/DirectUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">DirectUploader</a></td>
+<td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/K8sUploader.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">K8sUploader</a></td>
+<td class="colLast">
+<div class="block">Upload the job package to either:
+    uploader web server pods with UploaderToWebServers
+    all job pods with DirectUploader</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/UploaderToPod.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">UploaderToPod</a></td>
 <td class="colLast">
 <div class="block">upload the job package to a worker
  it assumes the target pod is ready
  so MAX_FILE_TRANSFER_TRY_COUNT is set to only a few</div>
 </td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../edu/iu/dsc/tws/rsched/uploaders/k8s/UploaderToWebServers.html" title="class in edu.iu.dsc.tws.rsched.uploaders.k8s">UploaderToWebServers</a></td>
+<td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
 </table>

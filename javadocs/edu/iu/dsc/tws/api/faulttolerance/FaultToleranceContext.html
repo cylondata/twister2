@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultAcceptable.html" title="interface in edu.iu.dsc.tws.api.faulttolerance"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li>Next&nbsp;Class</li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/JobFaultListener.html" title="interface in edu.iu.dsc.tws.api.faulttolerance"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" target="_top">Frames</a></li>
@@ -142,11 +142,27 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#FAULT_TOLERANT">FAULT_TOLERANT</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_MPIJOB_RESTARTS">MAX_MPIJOB_RESTARTS</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#FAULT_TOLERANT_DEFAULT">FAULT_TOLERANT_DEFAULT</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_MPIJOB_RESTARTS_DEFAULT">MAX_MPIJOB_RESTARTS_DEFAULT</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_REEXECUTES">MAX_REEXECUTES</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_REEXECUTES_DEFAULT">MAX_REEXECUTES_DEFAULT</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_WORKER_RESTARTS">MAX_WORKER_RESTARTS</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#MAX_WORKER_RESTARTS_DEFAULT">MAX_WORKER_RESTARTS_DEFAULT</a></span></code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -188,10 +204,18 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#faultTolerant-edu.iu.dsc.tws.api.config.Config-">faultTolerant</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#maxMpiJobRestarts-edu.iu.dsc.tws.api.config.Config-">maxMpiJobRestarts</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#maxReExecutes-edu.iu.dsc.tws.api.config.Config-">maxReExecutes</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#maxWorkerRestarts-edu.iu.dsc.tws.api.config.Config-">maxWorkerRestarts</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html#sessionTimeout-edu.iu.dsc.tws.api.config.Config-">sessionTimeout</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
@@ -201,7 +225,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.api.config.<a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title="class in edu.iu.dsc.tws.api.config">Context</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#auroraScript-edu.iu.dsc.tws.api.config.Config-">auroraScript</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointCofigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointCofigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointConfigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#clusterType-edu.iu.dsc.tws.api.config.Config-">clusterType</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#commonConfDir-edu.iu.dsc.tws.api.config.Config-">commonConfDir</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#conf-edu.iu.dsc.tws.api.config.Config-">conf</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#containerId-edu.iu.dsc.tws.api.config.Config-">containerId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#dataConfigurationFile-edu.iu.dsc.tws.api.config.Config-">dataConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#distDirectory-edu.iu.dsc.tws.api.config.Config-">distDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDefaults--">getDefaults</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDoublePropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-double-">getDoublePropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getIntPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-">getIntPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getLongPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">getLongPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getStringPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-java.lang.String-">getStringPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#verbose-edu.iu.dsc.tws.api.config.Config-">verbose</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#workerInstances-edu.iu.dsc.tws.api.config.Config-">workerInstances</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#auroraScript-edu.iu.dsc.tws.api.config.Config-">auroraScript</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointCofigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointCofigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointConfigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#clusterType-edu.iu.dsc.tws.api.config.Config-">clusterType</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#commonConfDir-edu.iu.dsc.tws.api.config.Config-">commonConfDir</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#conf-edu.iu.dsc.tws.api.config.Config-">conf</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#containerId-edu.iu.dsc.tws.api.config.Config-">containerId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#dataConfigurationFile-edu.iu.dsc.tws.api.config.Config-">dataConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#distDirectory-edu.iu.dsc.tws.api.config.Config-">distDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDefaults--">getDefaults</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDoublePropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-double-">getDoublePropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getIntPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-">getIntPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getLongPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">getLongPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getStringPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-java.lang.String-">getStringPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#isKubernetesCluster-edu.iu.dsc.tws.api.config.Config-">isKubernetesCluster</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#verbose-edu.iu.dsc.tws.api.config.Config-">verbose</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#workerInstances-edu.iu.dsc.tws.api.config.Config-">workerInstances</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -224,32 +248,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="FAULT_TOLERANT">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>FAULT_TOLERANT</h4>
-<pre>public static final&nbsp;java.lang.String FAULT_TOLERANT</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.FAULT_TOLERANT">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
-<a name="FAULT_TOLERANT_DEFAULT">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>FAULT_TOLERANT_DEFAULT</h4>
-<pre>public static final&nbsp;boolean FAULT_TOLERANT_DEFAULT</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.FAULT_TOLERANT_DEFAULT">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
 <a name="FAILURE_TIMEOUT">
 <!--   -->
 </a>
@@ -266,13 +264,91 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <a name="FAILURE_TIMEOUT_DEFAULT">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>FAILURE_TIMEOUT_DEFAULT</h4>
 <pre>public static final&nbsp;int FAILURE_TIMEOUT_DEFAULT</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.FAILURE_TIMEOUT_DEFAULT">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_REEXECUTES">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_REEXECUTES</h4>
+<pre>public static final&nbsp;java.lang.String MAX_REEXECUTES</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_REEXECUTES">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_REEXECUTES_DEFAULT">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_REEXECUTES_DEFAULT</h4>
+<pre>public static final&nbsp;int MAX_REEXECUTES_DEFAULT</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_REEXECUTES_DEFAULT">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_WORKER_RESTARTS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_WORKER_RESTARTS</h4>
+<pre>public static final&nbsp;java.lang.String MAX_WORKER_RESTARTS</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_WORKER_RESTARTS">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_WORKER_RESTARTS_DEFAULT">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_WORKER_RESTARTS_DEFAULT</h4>
+<pre>public static final&nbsp;int MAX_WORKER_RESTARTS_DEFAULT</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_WORKER_RESTARTS_DEFAULT">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_MPIJOB_RESTARTS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_MPIJOB_RESTARTS</h4>
+<pre>public static final&nbsp;java.lang.String MAX_MPIJOB_RESTARTS</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_MPIJOB_RESTARTS">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="MAX_MPIJOB_RESTARTS_DEFAULT">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>MAX_MPIJOB_RESTARTS_DEFAULT</h4>
+<pre>public static final&nbsp;int MAX_MPIJOB_RESTARTS_DEFAULT</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext.MAX_MPIJOB_RESTARTS_DEFAULT">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>
@@ -301,22 +377,40 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="faultTolerant-edu.iu.dsc.tws.api.config.Config-">
+<a name="sessionTimeout-edu.iu.dsc.tws.api.config.Config-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>faultTolerant</h4>
-<pre>public static&nbsp;boolean&nbsp;faultTolerant(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
+<h4>sessionTimeout</h4>
+<pre>public static&nbsp;int&nbsp;sessionTimeout(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
-<a name="sessionTimeout-edu.iu.dsc.tws.api.config.Config-">
+<a name="maxReExecutes-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxReExecutes</h4>
+<pre>public static&nbsp;int&nbsp;maxReExecutes(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
+</li>
+</ul>
+<a name="maxWorkerRestarts-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxWorkerRestarts</h4>
+<pre>public static&nbsp;int&nbsp;maxWorkerRestarts(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
+</li>
+</ul>
+<a name="maxMpiJobRestarts-edu.iu.dsc.tws.api.config.Config-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>sessionTimeout</h4>
-<pre>public static&nbsp;int&nbsp;sessionTimeout(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
+<h4>maxMpiJobRestarts</h4>
+<pre>public static&nbsp;int&nbsp;maxMpiJobRestarts(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
 </li>
@@ -347,7 +441,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultAcceptable.html" title="interface in edu.iu.dsc.tws.api.faulttolerance"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li>Next&nbsp;Class</li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/JobFaultListener.html" title="interface in edu.iu.dsc.tws.api.faulttolerance"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" target="_top">Frames</a></li>

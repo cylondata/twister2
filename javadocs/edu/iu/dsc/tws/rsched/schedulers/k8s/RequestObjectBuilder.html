@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -153,52 +153,55 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>static V1Container</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructContainer-ComputeResource-int-java.lang.String-">constructContainer</a></span>(ComputeResource&nbsp;computeResource,
-                  int&nbsp;containerIndex,
-                  java.lang.String&nbsp;encodedNodeInfoList)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructContainer-ComputeResource-int-">constructContainer</a></span>(ComputeResource&nbsp;computeResource,
+                  int&nbsp;containerIndex)</code>
 <div class="block">construct a container</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static java.util.List&lt;V1EnvVar&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructEnvironmentVariables-java.lang.String-int-java.lang.String-int-">constructEnvironmentVariables</a></span>(java.lang.String&nbsp;containerName,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructEnvironmentVariables-java.lang.String-int-int-">constructEnvironmentVariables</a></span>(java.lang.String&nbsp;containerName,
                              int&nbsp;workerPort,
-                             java.lang.String&nbsp;encodedNodeInfoList,
                              int&nbsp;jvmMem)</code>
 <div class="block">set environment variables for containers</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static V1PodTemplateSpec</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructPodTemplate-ComputeResource-java.lang.String-java.lang.String-">constructPodTemplate</a></span>(ComputeResource&nbsp;computeResource,
-                    java.lang.String&nbsp;serviceLabel,
-                    java.lang.String&nbsp;encodedNodeInfoList)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#constructPodTemplate-ComputeResource-">constructPodTemplate</a></span>(ComputeResource&nbsp;computeResource)</code>
 <div class="block">construct pod template</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code>static V1Service</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createHeadlessServiceObject-java.lang.String-java.lang.String-">createHeadlessServiceObject</a></span>(java.lang.String&nbsp;serviceName,
-                           java.lang.String&nbsp;serviceLabel)</code>&nbsp;</td>
+<td class="colFirst"><code>static V1ConfigMap</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createConfigMap-JobAPI.Job-">createConfigMap</a></span>(JobAPI.Job&nbsp;job)</code>
+<div class="block">create a ConfigMap object
+ It will have start counts for workers</div>
+</td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>static V1Service</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createJobServiceObject--">createJobServiceObject</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createHeadlessServiceObject-java.lang.String-">createHeadlessServiceObject</a></span>(java.lang.String&nbsp;serviceName)</code>&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>static V1Service</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createNodePortServiceObject--">createNodePortServiceObject</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createJobServiceObject--">createJobServiceObject</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
+<td class="colFirst"><code>static V1Service</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createNodePortServiceObject--">createNodePortServiceObject</a></span>()</code>
+<div class="block">create service for NodePort</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static V1Volume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createPersistentVolume-java.lang.String-">createPersistentVolume</a></span>(java.lang.String&nbsp;claimName)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
-<td class="colFirst"><code>static V1PersistentVolumeClaim</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createPersistentVolumeClaimObject-java.lang.String-int-">createPersistentVolumeClaimObject</a></span>(java.lang.String&nbsp;pvcName,
-                                 int&nbsp;numberOfWorkers)</code>&nbsp;</td>
-</tr>
 <tr id="i9" class="rowColor">
+<td class="colFirst"><code>static V1PersistentVolumeClaim</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createPersistentVolumeClaimObject-int-">createPersistentVolumeClaimObject</a></span>(int&nbsp;numberOfWorkers)</code>&nbsp;</td>
+</tr>
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static V1PersistentVolume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createPersistentVolumeObject-java.lang.String-">createPersistentVolumeObject</a></span>(java.lang.String&nbsp;pvName)</code>
 <div class="block">we initially used this method to create PersistentVolumes
@@ -206,40 +209,47 @@ extends java.lang.Object</pre>
  it is just here in case we may need it for some reason at one point</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static V1Volume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createSecretVolume-java.lang.String-">createSecretVolume</a></span>(java.lang.String&nbsp;secretName)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static V1StatefulSet</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createStatefulSetForWorkers-ComputeResource-java.lang.String-">createStatefulSetForWorkers</a></span>(ComputeResource&nbsp;computeResource,
-                           java.lang.String&nbsp;encodedNodeInfoList)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createStatefulSetForWorkers-ComputeResource-">createStatefulSetForWorkers</a></span>(ComputeResource&nbsp;computeResource)</code>
 <div class="block">create StatefulSet object for a job</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static V1Volume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#createVolatileVolume-double-">createVolatileVolume</a></span>(double&nbsp;volumeSize)</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
+<td class="colFirst"><code>static java.util.ArrayList&lt;V1EnvVar&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#getCommonEnvVars--">getCommonEnvVars</a></span>()</code>
+<div class="block">add common environment variables to both jm and workers</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#getJobMasterIP--">getJobMasterIP</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#init-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">init</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#init-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-long-java.lang.String-">init</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
     java.lang.String&nbsp;jID,
-    long&nbsp;jpFileSize)</code>&nbsp;</td>
+    long&nbsp;jpFileSize,
+    long&nbsp;jobSubmitTime,
+    java.lang.String&nbsp;encodedNodeInfoStr)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#setNodeAffinity-V1Affinity-">setNodeAffinity</a></span>(V1Affinity&nbsp;affinity)</code>&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#setUniformMappingAffinity-V1Affinity-">setUniformMappingAffinity</a></span>(V1Affinity&nbsp;affinity)</code>&nbsp;</td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/RequestObjectBuilder.html#setUploadMethod-java.lang.String-">setUploadMethod</a></span>(java.lang.String&nbsp;uploadType)</code>&nbsp;</td>
 </tr>
@@ -282,7 +292,7 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="init-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">
+<a name="init-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-long-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -290,7 +300,9 @@ extends java.lang.Object</pre>
 <h4>init</h4>
 <pre>public static&nbsp;void&nbsp;init(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
                         java.lang.String&nbsp;jID,
-                        long&nbsp;jpFileSize)</pre>
+                        long&nbsp;jpFileSize,
+                        long&nbsp;jobSubmitTime,
+                        java.lang.String&nbsp;encodedNodeInfoStr)</pre>
 </li>
 </ul>
 <a name="setUploadMethod-java.lang.String-">
@@ -311,26 +323,23 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;java.lang.String&nbsp;getJobMasterIP()</pre>
 </li>
 </ul>
-<a name="createStatefulSetForWorkers-ComputeResource-java.lang.String-">
+<a name="createStatefulSetForWorkers-ComputeResource-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createStatefulSetForWorkers</h4>
-<pre>public static&nbsp;V1StatefulSet&nbsp;createStatefulSetForWorkers(ComputeResource&nbsp;computeResource,
-                                                        java.lang.String&nbsp;encodedNodeInfoList)</pre>
+<pre>public static&nbsp;V1StatefulSet&nbsp;createStatefulSetForWorkers(ComputeResource&nbsp;computeResource)</pre>
 <div class="block">create StatefulSet object for a job</div>
 </li>
 </ul>
-<a name="constructPodTemplate-ComputeResource-java.lang.String-java.lang.String-">
+<a name="constructPodTemplate-ComputeResource-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>constructPodTemplate</h4>
-<pre>public static&nbsp;V1PodTemplateSpec&nbsp;constructPodTemplate(ComputeResource&nbsp;computeResource,
-                                                     java.lang.String&nbsp;serviceLabel,
-                                                     java.lang.String&nbsp;encodedNodeInfoList)</pre>
+<pre>public static&nbsp;V1PodTemplateSpec&nbsp;constructPodTemplate(ComputeResource&nbsp;computeResource)</pre>
 <div class="block">construct pod template</div>
 </li>
 </ul>
@@ -370,19 +379,18 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;V1Volume&nbsp;createSecretVolume(java.lang.String&nbsp;secretName)</pre>
 </li>
 </ul>
-<a name="constructContainer-ComputeResource-int-java.lang.String-">
+<a name="constructContainer-ComputeResource-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>constructContainer</h4>
 <pre>public static&nbsp;V1Container&nbsp;constructContainer(ComputeResource&nbsp;computeResource,
-                                             int&nbsp;containerIndex,
-                                             java.lang.String&nbsp;encodedNodeInfoList)</pre>
+                                             int&nbsp;containerIndex)</pre>
 <div class="block">construct a container</div>
 </li>
 </ul>
-<a name="constructEnvironmentVariables-java.lang.String-int-java.lang.String-int-">
+<a name="constructEnvironmentVariables-java.lang.String-int-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -390,9 +398,18 @@ extends java.lang.Object</pre>
 <h4>constructEnvironmentVariables</h4>
 <pre>public static&nbsp;java.util.List&lt;V1EnvVar&gt;&nbsp;constructEnvironmentVariables(java.lang.String&nbsp;containerName,
                                                                      int&nbsp;workerPort,
-                                                                     java.lang.String&nbsp;encodedNodeInfoList,
                                                                      int&nbsp;jvmMem)</pre>
 <div class="block">set environment variables for containers</div>
+</li>
+</ul>
+<a name="getCommonEnvVars--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCommonEnvVars</h4>
+<pre>public static&nbsp;java.util.ArrayList&lt;V1EnvVar&gt;&nbsp;getCommonEnvVars()</pre>
+<div class="block">add common environment variables to both jm and workers</div>
 </li>
 </ul>
 <a name="setNodeAffinity-V1Affinity-">
@@ -422,14 +439,13 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;V1Service&nbsp;createJobServiceObject()</pre>
 </li>
 </ul>
-<a name="createHeadlessServiceObject-java.lang.String-java.lang.String-">
+<a name="createHeadlessServiceObject-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createHeadlessServiceObject</h4>
-<pre>public static&nbsp;V1Service&nbsp;createHeadlessServiceObject(java.lang.String&nbsp;serviceName,
-                                                    java.lang.String&nbsp;serviceLabel)</pre>
+<pre>public static&nbsp;V1Service&nbsp;createHeadlessServiceObject(java.lang.String&nbsp;serviceName)</pre>
 </li>
 </ul>
 <a name="createNodePortServiceObject--">
@@ -439,6 +455,10 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>createNodePortServiceObject</h4>
 <pre>public static&nbsp;V1Service&nbsp;createNodePortServiceObject()</pre>
+<div class="block">create service for NodePort</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
 </li>
 </ul>
 <a name="createPersistentVolumeObject-java.lang.String-">
@@ -453,14 +473,27 @@ extends java.lang.Object</pre>
  it is just here in case we may need it for some reason at one point</div>
 </li>
 </ul>
-<a name="createPersistentVolumeClaimObject-java.lang.String-int-">
+<a name="createPersistentVolumeClaimObject-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createPersistentVolumeClaimObject</h4>
+<pre>public static&nbsp;V1PersistentVolumeClaim&nbsp;createPersistentVolumeClaimObject(int&nbsp;numberOfWorkers)</pre>
+</li>
+</ul>
+<a name="createConfigMap-JobAPI.Job-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>createPersistentVolumeClaimObject</h4>
-<pre>public static&nbsp;V1PersistentVolumeClaim&nbsp;createPersistentVolumeClaimObject(java.lang.String&nbsp;pvcName,
-                                                                        int&nbsp;numberOfWorkers)</pre>
+<h4>createConfigMap</h4>
+<pre>public static&nbsp;V1ConfigMap&nbsp;createConfigMap(JobAPI.Job&nbsp;job)</pre>
+<div class="block">create a ConfigMap object
+ It will have start counts for workers</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
 </li>
 </ul>
 </li>

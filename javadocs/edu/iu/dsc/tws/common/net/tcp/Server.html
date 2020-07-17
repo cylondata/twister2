@@ -132,19 +132,21 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Server.html#Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-">Server</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-      java.lang.String&nbsp;host,
-      int&nbsp;port,
-      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Progress.html" title="class in edu.iu.dsc.tws.common.net.tcp">Progress</a>&nbsp;loop,
-      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;msgHandler)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Server.html#Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-boolean-">Server</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
       java.lang.String&nbsp;host,
       int&nbsp;port,
       <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Progress.html" title="class in edu.iu.dsc.tws.common.net.tcp">Progress</a>&nbsp;loop,
-      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;msgHandler,
+      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;channelHandler,
       boolean&nbsp;fixBuffers)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Server.html#Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-boolean-int-">Server</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
+      java.lang.String&nbsp;host,
+      int&nbsp;port,
+      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Progress.html" title="class in edu.iu.dsc.tws.common.net.tcp">Progress</a>&nbsp;loop,
+      <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;channelHandler,
+      boolean&nbsp;fixBuffers,
+      int&nbsp;backLog)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -251,7 +253,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-">
+<a name="Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-boolean-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -261,10 +263,11 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
               java.lang.String&nbsp;host,
               int&nbsp;port,
               <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Progress.html" title="class in edu.iu.dsc.tws.common.net.tcp">Progress</a>&nbsp;loop,
-              <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;msgHandler)</pre>
+              <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;channelHandler,
+              boolean&nbsp;fixBuffers)</pre>
 </li>
 </ul>
-<a name="Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-boolean-">
+<a name="Server-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-edu.iu.dsc.tws.common.net.tcp.Progress-edu.iu.dsc.tws.common.net.tcp.ChannelHandler-boolean-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -274,8 +277,9 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
               java.lang.String&nbsp;host,
               int&nbsp;port,
               <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Progress.html" title="class in edu.iu.dsc.tws.common.net.tcp">Progress</a>&nbsp;loop,
-              <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;msgHandler,
-              boolean&nbsp;fixBuffers)</pre>
+              <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/ChannelHandler.html" title="interface in edu.iu.dsc.tws.common.net.tcp">ChannelHandler</a>&nbsp;channelHandler,
+              boolean&nbsp;fixBuffers,
+              int&nbsp;backLog)</pre>
 </li>
 </ul>
 </li>

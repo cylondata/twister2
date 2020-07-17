@@ -72,12 +72,10 @@ Once this is set the executors and schedulers can act accordingly.</p>
 <p>The following pseudocode demonstrates the use of compute API. First user creates the <code>ComputeEnvironment</code>.
 Then a <code>ComputeGraphBuilder</code> is created and the graph is constructed. After this tasks are added to the
 graph and graph is built. THen we can use the <code>ComputeEnvironment</code> to execute the graph.</p>
-<pre><code class="hljs css language-java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloTwister2</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IWorker</span> </span>{
+<pre><code class="hljs css language-java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloTwister2</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Twister2Worker</span> </span>{
   <span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
-            workerController, persistentVolume, volatileVolume);
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(WorkerEnvironment workerEnv)</span> </span>{
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     ComputeGraphBuilder computeGraphBuilder = cEnv.newTaskGraph(OperationMode.BATCH);
     
     <span class="hljs-comment">// build the graph by creating the tasks and adding them</span>

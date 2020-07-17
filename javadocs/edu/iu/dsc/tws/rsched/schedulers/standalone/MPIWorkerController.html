@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,8 +47,8 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorker.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/SlurmCommand.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPILauncher.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerStarter.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" target="_top">Frames</a></li>
@@ -132,8 +132,9 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#MPIWorkerController-int-java.util.Map-">MPIWorkerController</a></span>(int&nbsp;thisWorkerID,
-                   java.util.Map&lt;java.lang.Integer,JobMasterAPI.WorkerInfo&gt;&nbsp;processNames)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#MPIWorkerController-int-java.util.Map-int-">MPIWorkerController</a></span>(int&nbsp;workerID,
+                   java.util.Map&lt;java.lang.Integer,JobMasterAPI.WorkerInfo&gt;&nbsp;workers,
+                   int&nbsp;restartCount)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -151,9 +152,8 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#add-java.lang.String-java.lang.Object-">add</a></span>(java.lang.String&nbsp;name,
-   java.lang.Object&nbsp;obj)</code>&nbsp;</td>
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#addAllJoinedListener-edu.iu.dsc.tws.api.resource.IAllJoinedListener-">addAllJoinedListener</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/resource/IAllJoinedListener.html" title="interface in edu.iu.dsc.tws.api.resource">IAllJoinedListener</a>&nbsp;iAllJoinedListener)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>java.util.List&lt;JobMasterAPI.WorkerInfo&gt;</code></td>
@@ -180,29 +180,44 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 </td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code>java.lang.Object</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></span>(java.lang.String&nbsp;name)</code>
-<div class="block">Get object with a given name</div>
-</td>
-</tr>
-<tr id="i6" class="altColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#getWorkerInfo--">getWorkerInfo</a></span>()</code>
 <div class="block">return the WorkerInfo object for this worker</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#getWorkerInfoForID-int-">getWorkerInfoForID</a></span>(int&nbsp;id)</code>
 <div class="block">return the WorkerInfo object for the given ID</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#waitOnBarrier--">waitOnBarrier</a></span>()</code>
 <div class="block">wait for all workers in the job to arrive at this barrier
  After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
  if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></span>(long&nbsp;timeLimit)</code>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></span>()</code>
+<div class="block">this barrier is used when initializing the workers.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html#workerRestartCount--">workerRestartCount</a></span>()</code>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
 </td>
 </tr>
 </table>
@@ -234,14 +249,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="MPIWorkerController-int-java.util.Map-">
+<a name="MPIWorkerController-int-java.util.Map-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>MPIWorkerController</h4>
-<pre>public&nbsp;MPIWorkerController(int&nbsp;thisWorkerID,
-                           java.util.Map&lt;java.lang.Integer,JobMasterAPI.WorkerInfo&gt;&nbsp;processNames)</pre>
+<pre>public&nbsp;MPIWorkerController(int&nbsp;workerID,
+                           java.util.Map&lt;java.lang.Integer,JobMasterAPI.WorkerInfo&gt;&nbsp;workers,
+                           int&nbsp;restartCount)</pre>
 </li>
 </ul>
 </li>
@@ -339,6 +355,22 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 </dl>
 </li>
 </ul>
+<a name="workerRestartCount--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>workerRestartCount</h4>
+<pre>public&nbsp;int&nbsp;workerRestartCount()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">IWorkerController</a></code></span></div>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">workerRestartCount</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+</dl>
+</li>
+</ul>
 <a name="waitOnBarrier--">
 <!--   -->
 </a>
@@ -359,39 +391,53 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 </dl>
 </li>
 </ul>
-<a name="add-java.lang.String-java.lang.Object-">
+<a name="waitOnBarrier-long-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>add</h4>
-<pre>public&nbsp;void&nbsp;add(java.lang.String&nbsp;name,
-                java.lang.Object&nbsp;obj)</pre>
-</li>
-</ul>
-<a name="getRuntimeObject-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getRuntimeObject</h4>
-<pre>public&nbsp;java.lang.Object&nbsp;getRuntimeObject(java.lang.String&nbsp;name)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">IWorkerController</a></code></span></div>
-<div class="block">Get object with a given name</div>
+<h4>waitOnBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnBarrier(long&nbsp;timeLimit)
+                   throws <a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a>,
+                          <a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">IWorkerController</a></code></span></div>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>name</code> - name</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>the object</dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnInitBarrier--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnInitBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnInitBarrier()
+                       throws <a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">IWorkerController</a></code></span></div>
+<div class="block">this barrier is used when initializing the workers.
+ when there is a failure in the job,
+ workers synchronize with this barrier
+ this must not be used in other parts of the system</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
 </dl>
 </li>
 </ul>
 <a name="getCheckpointingClient--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getCheckpointingClient</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;getCheckpointingClient()</pre>
@@ -399,6 +445,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 </dl>
+</li>
+</ul>
+<a name="addAllJoinedListener-edu.iu.dsc.tws.api.resource.IAllJoinedListener-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>addAllJoinedListener</h4>
+<pre>public&nbsp;boolean&nbsp;addAllJoinedListener(<a href="../../../../../../../edu/iu/dsc/tws/api/resource/IAllJoinedListener.html" title="interface in edu.iu.dsc.tws.api.resource">IAllJoinedListener</a>&nbsp;iAllJoinedListener)</pre>
 </li>
 </ul>
 </li>
@@ -428,8 +483,8 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerCont
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorker.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/SlurmCommand.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPILauncher.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerStarter.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" target="_top">Frames</a></li>

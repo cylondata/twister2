@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9};
+var methods = {"i0":9,"i1":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/resource/Network.html" target="_top">Frames</a></li>
@@ -152,6 +152,12 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/Network.html#initializeChannel-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.resource.IWorkerController-">initializeChannel</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
                  <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;wController)</code>&nbsp;</td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/Network.html#isReachable-java.lang.String-">isReachable</a></span>(java.lang.String&nbsp;targetHostName)</code>
+<div class="block">check whether a host is reachable</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -194,11 +200,26 @@ extends java.lang.Object</pre>
 <a name="initializeChannel-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.resource.IWorkerController-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>initializeChannel</h4>
 <pre>public static&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/comms/channel/TWSChannel.html" title="interface in edu.iu.dsc.tws.api.comms.channel">TWSChannel</a>&nbsp;initializeChannel(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
                                            <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;wController)</pre>
+</li>
+</ul>
+<a name="isReachable-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isReachable</h4>
+<pre>public static&nbsp;boolean&nbsp;isReachable(java.lang.String&nbsp;targetHostName)</pre>
+<div class="block">check whether a host is reachable</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>targetHostName</code> - </dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
 </li>
 </ul>
 </li>
@@ -229,7 +250,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/resource/Network.html" target="_top">Frames</a></li>

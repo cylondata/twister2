@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":10,"i4":9,"i5":10,"i6":9,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":10,"i5":9,"i6":10,"i7":10,"i8":9,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,7 +47,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMSenderToDriver.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMDriverAgent.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.ClientConnectHandler.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -187,79 +187,87 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#addWorkerFailureListener-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">addWorkerFailureListener</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;workerFailureListener)</code>
+<div class="block">only one IWorkerFailureListener can be added
+ if the second IWorkerFailureListener tried to be added, returns false</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#close--">close</a></span>()</code>
 <div class="block">stop the JMWorkerAgent</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerAgent</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#createJMWorkerAgent-edu.iu.dsc.tws.api.config.Config-WorkerInfo-java.lang.String-int-int-JobMasterAPI.WorkerState-">createJMWorkerAgent</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#createJMWorkerAgent-edu.iu.dsc.tws.api.config.Config-WorkerInfo-java.lang.String-int-int-int-">createJMWorkerAgent</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
                    WorkerInfo&nbsp;thisWorker,
                    java.lang.String&nbsp;jmAddress,
                    int&nbsp;jmPort,
                    int&nbsp;numberOfWorkers,
-                   JobMasterAPI.WorkerState&nbsp;initialState)</code>
+                   int&nbsp;restartCount)</code>
 <div class="block">create the singleton JMWorkerAgent
  if it is already created, return the previous one.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/checkpointing/client/CheckpointingClientImpl.html" title="class in edu.iu.dsc.tws.checkpointing.client">CheckpointingClientImpl</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getCheckpointClient--">getCheckpointClient</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMDriverAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMDriverAgent</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getDriverAgent--">getDriverAgent</a></span>()</code>
+<div class="block">return JMSenderToDriver for this worker</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerAgent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getJMWorkerAgent--">getJMWorkerAgent</a></span>()</code>
 <div class="block">return the singleton agent object</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerController</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getJMWorkerController--">getJMWorkerController</a></span>()</code>
 <div class="block">return JMWorkerController for this worker</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMSenderToDriver.html" title="class in edu.iu.dsc.tws.master.worker">JMSenderToDriver</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getSenderToDriver--">getSenderToDriver</a></span>()</code>
-<div class="block">return JMSenderToDriver for this worker</div>
-</td>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerStatusUpdater</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getStatusUpdater--">getStatusUpdater</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#getWorkerInfo--">getWorkerInfo</a></span>()</code>
 <div class="block">return WorkerInfo for this worker</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
-<td class="colFirst"><code>void</code></td>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#reconnect-java.lang.String-">reconnect</a></span>(java.lang.String&nbsp;jobMasterAddress)</code>
-<div class="block">this method is called after job master is restarted
+<div class="block">this method is called after the connection is lost to job master
+ it can be called after the jm restarted
  it reconnects the worker to the job master</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#sendWorkerCompletedMessage--">sendWorkerCompletedMessage</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i12" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#sendWorkerToDriverMessage-Message-">sendWorkerToDriverMessage</a></span>(Message&nbsp;message)</code>&nbsp;</td>
-</tr>
 <tr id="i13" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#sendWorkerCompletedMessage-JobMasterAPI.WorkerState-">sendWorkerCompletedMessage</a></span>(JobMasterAPI.WorkerState&nbsp;finalState)</code>&nbsp;</td>
+</tr>
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#startBlocking--">startBlocking</a></span>()</code>
 <div class="block">start the Job Master Client in a blocking call</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>java.lang.Thread</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#startThreaded--">startThreaded</a></span>()</code>
 <div class="block">start the Job Master Client in a Thread</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html#tryUntilConnected-long-">tryUntilConnected</a></span>(long&nbsp;timeLimit)</code>
 <div class="block">try connecting until the time limit is reached</div>
@@ -287,7 +295,7 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="createJMWorkerAgent-edu.iu.dsc.tws.api.config.Config-WorkerInfo-java.lang.String-int-int-JobMasterAPI.WorkerState-">
+<a name="createJMWorkerAgent-edu.iu.dsc.tws.api.config.Config-WorkerInfo-java.lang.String-int-int-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -298,7 +306,7 @@ extends java.lang.Object</pre>
                                                 java.lang.String&nbsp;jmAddress,
                                                 int&nbsp;jmPort,
                                                 int&nbsp;numberOfWorkers,
-                                                JobMasterAPI.WorkerState&nbsp;initialState)</pre>
+                                                int&nbsp;restartCount)</pre>
 <div class="block">create the singleton JMWorkerAgent
  if it is already created, return the previous one.</div>
 </li>
@@ -349,8 +357,9 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>reconnect</h4>
-<pre>public&nbsp;void&nbsp;reconnect(java.lang.String&nbsp;jobMasterAddress)</pre>
-<div class="block">this method is called after job master is restarted
+<pre>public&nbsp;boolean&nbsp;reconnect(java.lang.String&nbsp;jobMasterAddress)</pre>
+<div class="block">this method is called after the connection is lost to job master
+ it can be called after the jm restarted
  it reconnects the worker to the job master</div>
 </li>
 </ul>
@@ -374,14 +383,23 @@ extends java.lang.Object</pre>
 <div class="block">return JMWorkerController for this worker</div>
 </li>
 </ul>
-<a name="getSenderToDriver--">
+<a name="getDriverAgent--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getSenderToDriver</h4>
-<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/master/worker/JMSenderToDriver.html" title="class in edu.iu.dsc.tws.master.worker">JMSenderToDriver</a>&nbsp;getSenderToDriver()</pre>
+<h4>getDriverAgent</h4>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/master/worker/JMDriverAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMDriverAgent</a>&nbsp;getDriverAgent()</pre>
 <div class="block">return JMSenderToDriver for this worker</div>
+</li>
+</ul>
+<a name="getStatusUpdater--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getStatusUpdater</h4>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerStatusUpdater</a>&nbsp;getStatusUpdater()</pre>
 </li>
 </ul>
 <a name="getCheckpointClient--">
@@ -426,22 +444,24 @@ extends java.lang.Object</pre>
  if the second IReceiverFromDriver tried to be added, returns false</div>
 </li>
 </ul>
-<a name="sendWorkerCompletedMessage--">
+<a name="addWorkerFailureListener-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addWorkerFailureListener</h4>
+<pre>public static&nbsp;boolean&nbsp;addWorkerFailureListener(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;workerFailureListener)</pre>
+<div class="block">only one IWorkerFailureListener can be added
+ if the second IWorkerFailureListener tried to be added, returns false</div>
+</li>
+</ul>
+<a name="sendWorkerCompletedMessage-JobMasterAPI.WorkerState-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>sendWorkerCompletedMessage</h4>
-<pre>public&nbsp;boolean&nbsp;sendWorkerCompletedMessage()</pre>
-</li>
-</ul>
-<a name="sendWorkerToDriverMessage-Message-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>sendWorkerToDriverMessage</h4>
-<pre>public&nbsp;boolean&nbsp;sendWorkerToDriverMessage(Message&nbsp;message)</pre>
+<pre>public&nbsp;boolean&nbsp;sendWorkerCompletedMessage(JobMasterAPI.WorkerState&nbsp;finalState)</pre>
 </li>
 </ul>
 <a name="close--">
@@ -481,7 +501,7 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMSenderToDriver.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMDriverAgent.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.ClientConnectHandler.html" title="class in edu.iu.dsc.tws.master.worker"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

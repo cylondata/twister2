@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -160,7 +160,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#AllReduceTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">AllReduceTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#AllReduceTLink-edu.iu.dsc.tws.tset.env.BatchEnvironment-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">AllReduceTLink</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a>&nbsp;tSetEnv,
               <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;rFn,
               int&nbsp;sourceParallelism,
               <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</code>&nbsp;</td>
@@ -181,10 +181,36 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#cache--">cache</a></span>()</code>
+<div class="block">Runs this TSet and caches the data to an in-memory
+ <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a> and exposes the data as another TSet.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#getEdge--">getEdge</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#lazyCache--">lazyCache</a></span>()</code>
+<div class="block">Performs caching lazily.</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#lazyPersist--">lazyPersist</a></span>()</code>
+<div class="block">Performs persisting lazily.</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#persist--">persist</a></span>()</code>
+<div class="block">Similar to cache, but the data is stored in a disk based
+ <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a>.</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">AllReduceTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html#setName-java.lang.String-">setName</a></span>(java.lang.String&nbsp;n)</code>
 <div class="block">Name of the TSet and return the same tlink</div>
@@ -196,7 +222,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.links.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchSingleLink</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#cache--">cache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#flatmap-edu.iu.dsc.tws.api.tset.fn.FlatMapFunc-">flatmap</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#forEach-edu.iu.dsc.tws.api.tset.fn.ApplyFunc-">forEach</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyCache--">lazyCache</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyForEach-edu.iu.dsc.tws.api.tset.fn.ApplyFunc-">lazyForEach</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyPersist--">lazyPersist</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#map-edu.iu.dsc.tws.api.tset.fn.MapFunc-">map</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#persist--">persist</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#flatmap-edu.iu.dsc.tws.api.tset.fn.FlatMapFunc-">flatmap</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#forEach-edu.iu.dsc.tws.api.tset.fn.ApplyFunc-">forEach</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyForEach-edu.iu.dsc.tws.api.tset.fn.ApplyFunc-">lazyForEach</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#map-edu.iu.dsc.tws.api.tset.fn.MapFunc-">map</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.links.batch.BatchTLinkImpl">
@@ -261,13 +287,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="AllReduceTLink-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<a name="AllReduceTLink-edu.iu.dsc.tws.tset.env.BatchEnvironment-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>AllReduceTLink</h4>
-<pre>public&nbsp;AllReduceTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<pre>public&nbsp;AllReduceTLink(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a>&nbsp;tSetEnv,
                       <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;rFn,
                       int&nbsp;sourceParallelism,
                       <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;schema)</pre>
@@ -293,7 +319,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <a name="setName-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setName</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">AllReduceTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;setName(java.lang.String&nbsp;n)</pre>
@@ -304,6 +330,86 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingl
 <dd><code>n</code> - name</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>this tlink</dd>
+</dl>
+</li>
+</ul>
+<a name="lazyCache--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>lazyCache</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;lazyCache()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyCache--">StoringData</a></code></span></div>
+<div class="block">Performs caching lazily. i.e. cache operation would only be performed when the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>
+ is evaluated explicitly.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyCache--">lazyCache</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html" title="interface in edu.iu.dsc.tws.api.tset">StoringData</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyCache--">lazyCache</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchSingleLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Cached TSet</dd>
+</dl>
+</li>
+</ul>
+<a name="cache--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>cache</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;cache()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#cache--">StoringData</a></code></span></div>
+<div class="block">Runs this TSet and caches the data to an in-memory
+ <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a> and exposes the data as another TSet.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#cache--">cache</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html" title="interface in edu.iu.dsc.tws.api.tset">StoringData</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#cache--">cache</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchSingleLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Cached TSet</dd>
+</dl>
+</li>
+</ul>
+<a name="lazyPersist--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>lazyPersist</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;lazyPersist()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyPersist--">StoringData</a></code></span></div>
+<div class="block">Performs persisting lazily.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyPersist--">lazyPersist</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html" title="interface in edu.iu.dsc.tws.api.tset">StoringData</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyPersist--">lazyPersist</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchSingleLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Persisted / Checkpointed TSets</dd>
+</dl>
+</li>
+</ul>
+<a name="persist--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>persist</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;&nbsp;persist()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#persist--">StoringData</a></code></span></div>
+<div class="block">Similar to cache, but the data is stored in a disk based
+ <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a>. This method would also expose the
+ checkpointing ability to <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#persist--">persist</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html" title="interface in edu.iu.dsc.tws.api.tset">StoringData</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#persist--">persist</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">BatchSingleLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="type parameter in AllReduceTLink">T</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Persisted / Checkpointed TSets</dd>
 </dl>
 </li>
 </ul>

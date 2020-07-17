@@ -72,7 +72,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.edu.iu.dsc.tws.tset.sinks.StoreIterSink">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -126,7 +126,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a>, <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;java.util.Iterator&lt;T&gt;&gt;, <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;java.util.Iterator&lt;T&gt;,java.util.Iterator&lt;T&gt;&gt;, java.io.Serializable</dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;java.util.Iterator&lt;T&gt;&gt;, <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;java.util.Iterator&lt;T&gt;,java.util.Iterator&lt;T&gt;&gt;, java.io.Serializable</dd>
 </dl>
 <hr>
 <br>
@@ -143,21 +143,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== NESTED CLASS SUMMARY ======== -->
-<ul class="blockList">
-<li class="blockList"><a name="nested.class.summary">
-<!--   -->
-</a>
-<h3>Nested Class Summary</h3>
-<ul class="blockList">
-<li class="blockList"><a name="nested.classes.inherited.from.class.edu.iu.dsc.tws.tset.sinks.StoreIterSink">
-<!--   -->
-</a>
-<h3>Nested classes/interfaces inherited from class&nbsp;edu.iu.dsc.tws.tset.sinks.<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.ValueExtractor.html" title="interface in edu.iu.dsc.tws.tset.sinks">StoreIterSink.ValueExtractor</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.ValueExtractor.html" title="type parameter in StoreIterSink.ValueExtractor">O</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.ValueExtractor.html" title="type parameter in StoreIterSink.ValueExtractor">I</a>&gt;</code></li>
-</ul>
-</li>
-</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -188,15 +173,15 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>protected <a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">CollectionPartition</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html#getPartition--">getPartition</a></span>()</code>
-<div class="block">Returns the <a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition"><code>CollectionPartition</code></a> that would accept the values.</div>
+<td class="colFirst"><code>protected <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html#extractValue-T-">extractValue</a></span>(<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&nbsp;input)</code>
+<div class="block">Extracts value from an input value of the iterator</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>protected <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.ValueExtractor.html" title="interface in edu.iu.dsc.tws.tset.sinks">StoreIterSink.ValueExtractor</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html#getValueExtractor--">getValueExtractor</a></span>()</code>
-<div class="block">A map function that would extract value type T1 from input type T</div>
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">CollectionPartition</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html#get--">get</a></span>()</code>
+<div class="block">Returns the <a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition"><code>CollectionPartition</code></a> that would accept the values.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
@@ -211,7 +196,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sinks.<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#add-java.util.Iterator-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#get--">get</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#add-java.util.Iterator-">add</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.tset.fn.BaseTFunction">
@@ -232,14 +217,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.tset.fn.<a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#close--">close</a></code></li>
-</ul>
-<ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Closable">
-<!--   -->
-</a>
-<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.compute.modifiers.<a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#reset--">reset</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#close--">close</a>, <a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#end--">end</a></code></li>
 </ul>
 </li>
 </ul>
@@ -291,38 +269,40 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 </dl>
 </li>
 </ul>
-<a name="getPartition--">
+<a name="get--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getPartition</h4>
-<pre>protected&nbsp;<a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">CollectionPartition</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;&nbsp;getPartition()</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#getPartition--">StoreIterSink</a></code></span></div>
+<h4>get</h4>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition">CollectionPartition</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;&nbsp;get()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#get--">StoreIterSink</a></code></span></div>
 <div class="block">Returns the <a href="../../../../../../edu/iu/dsc/tws/dataset/partition/CollectionPartition.html" title="class in edu.iu.dsc.tws.dataset.partition"><code>CollectionPartition</code></a> that would accept the values. This could be an in-mem
  collection or a disk-backed collection</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#getPartition--">getPartition</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html#get--">get</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;java.util.Iterator&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#get--">get</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>collection partition</dd>
 </dl>
 </li>
 </ul>
-<a name="getValueExtractor--">
+<a name="extractValue-java.lang.Object-">
+<!--   -->
+</a><a name="extractValue-T-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>getValueExtractor</h4>
-<pre>protected&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.ValueExtractor.html" title="interface in edu.iu.dsc.tws.tset.sinks">StoreIterSink.ValueExtractor</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;&nbsp;getValueExtractor()</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#getValueExtractor--">StoreIterSink</a></code></span></div>
-<div class="block">A map function that would extract value type T1 from input type T</div>
+<h4>extractValue</h4>
+<pre>protected&nbsp;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&nbsp;extractValue(<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&nbsp;input)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#extractValue-T-">StoreIterSink</a></code></span></div>
+<div class="block">Extracts value from an input value of the iterator</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#getValueExtractor--">getValueExtractor</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>value extractor</dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html#extractValue-T-">extractValue</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html" title="class in edu.iu.dsc.tws.tset.sinks">StoreIterSink</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>,<a href="../../../../../../edu/iu/dsc/tws/tset/sinks/CacheIterSink.html" title="type parameter in CacheIterSink">T</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -378,7 +358,7 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/sinks/StoreIterSink.html"
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.edu.iu.dsc.tws.tset.sinks.StoreIterSink">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

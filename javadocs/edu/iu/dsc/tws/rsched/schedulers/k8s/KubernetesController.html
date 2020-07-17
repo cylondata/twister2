@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":9,"i15":10,"i16":10,"i17":10,"i18":10,"i19":9,"i20":10,"i21":9,"i22":10,"i23":9};
+var methods = {"i0":10,"i1":9,"i2":10,"i3":9,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":9,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":10,"i26":10,"i27":10,"i28":10,"i29":10,"i30":10,"i31":10,"i32":10,"i33":10,"i34":9,"i35":10,"i36":10,"i37":9,"i38":10,"i39":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -74,13 +74,13 @@ var activeTableTab = "activeTableTab";
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>
@@ -107,7 +107,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <hr>
 <br>
-<pre>public class <span class="typeNameLabel">KubernetesController</span>
+<pre>public final class <span class="typeNameLabel">KubernetesController</span>
 extends java.lang.Object</pre>
 <div class="block">a controller class to talk to the Kubernetes Master to manage jobs</div>
 </li>
@@ -116,23 +116,6 @@ extends java.lang.Object</pre>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== CONSTRUCTOR SUMMARY ======== -->
-<ul class="blockList">
-<li class="blockList"><a name="constructor.summary">
-<!--   -->
-</a>
-<h3>Constructor Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Constructor Summary table, listing constructors, and an explanation">
-<caption><span>Constructors</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colOne" scope="col">Constructor and Description</th>
-</tr>
-<tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#KubernetesController--">KubernetesController</a></span>()</code>&nbsp;</td>
-</tr>
-</table>
-</li>
-</ul>
 <!-- ========== METHOD SUMMARY =========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.summary">
@@ -146,36 +129,60 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#addConfigMapParam-java.lang.String-java.lang.String-java.lang.String-">addConfigMapParam</a></span>(java.lang.String&nbsp;jobID,
+                 java.lang.String&nbsp;keyName,
+                 java.lang.String&nbsp;value)</code>
+<div class="block">add a new parameter the job ConfigMap</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#close--">close</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createConfigMap-V1ConfigMap-">createConfigMap</a></span>(V1ConfigMap&nbsp;configMap)</code>
+<div class="block">create the given ConfigMap on Kubernetes master</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static CoreV1Api</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createCoreV1Api--">createCoreV1Api</a></span>()</code>
 <div class="block">create CoreV1Api that does not time out</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolume-V1PersistentVolume-">createPersistentVolume</a></span>(V1PersistentVolume&nbsp;pv)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createPersistentVolumeClaim-V1PersistentVolumeClaim-">createPersistentVolumeClaim</a></span>(V1PersistentVolumeClaim&nbsp;pvc)</code>
 <div class="block">create the given PersistentVolumeClaim on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createService-V1Service-">createService</a></span>(V1Service&nbsp;service)</code>
 <div class="block">create the given service on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#createStatefulSet-V1StatefulSet-">createStatefulSet</a></span>(V1StatefulSet&nbsp;statefulSet)</code>
 <div class="block">create the given StatefulSet on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteConfigMap-java.lang.String-">deleteConfigMap</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">delete the given ConfigMap from Kubernetes master</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteJobPackage-java.util.List-java.lang.String-">deleteJobPackage</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;uploaderPods,
                 java.lang.String&nbsp;jobPackageName)</code>
@@ -184,107 +191,195 @@ extends java.lang.Object</pre>
  so, It is not in use</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deletePersistentVolume-java.lang.String-">deletePersistentVolume</a></span>(java.lang.String&nbsp;pvName)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deletePersistentVolumeClaim-java.lang.String-">deletePersistentVolumeClaim</a></span>(java.lang.String&nbsp;pvcName)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deletePersistentVolumeClaim-java.lang.String-">deletePersistentVolumeClaim</a></span>(java.lang.String&nbsp;jobID)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteService-java.lang.String-">deleteService</a></span>(java.lang.String&nbsp;serviceName)</code>
 <div class="block">delete the given service from Kubernetes master</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#deleteStatefulSet-java.lang.String-">deleteStatefulSet</a></span>(java.lang.String&nbsp;statefulSetName)</code>
 <div class="block">delete the given StatefulSet from Kubernetes master</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existPersistentVolumeClaim-java.lang.String-">existPersistentVolumeClaim</a></span>(java.lang.String&nbsp;pvcName)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existConfigMap-java.lang.String-">existConfigMap</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return true if there is already a ConfigMap object with the same name on Kubernetes master,
+ otherwise return false</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existPersistentVolumeClaim-java.lang.String-">existPersistentVolumeClaim</a></span>(java.lang.String&nbsp;jobID)</code>
 <div class="block">check whether the given PersistentVolumeClaim exist on Kubernetes master</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existSecret-java.lang.String-">existSecret</a></span>(java.lang.String&nbsp;secretName)</code>
 <div class="block">return true if the Secret object with that name exists in Kubernetes master,
  otherwise return false</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existServices-java.util.List-">existServices</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;serviceNames)</code>
 <div class="block">return existing service name if one of the services exist in Kubernetes master,
  otherwise return null</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#existStatefulSets-java.util.List-">existStatefulSets</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;statefulSetNames)</code>
-<div class="block">return the StatefulSet object if it exists in the Kubernetes master,
- otherwise return null</div>
+<div class="block">check whether given StatefulSet objects exist Kubernetes master,</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static ApiClient</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getApiClient--">getApiClient</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i20" class="altColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getConfigMapParam-java.lang.String-java.lang.String-">getConfigMapParam</a></span>(java.lang.String&nbsp;jobID,
+                 java.lang.String&nbsp;keyName)</code>
+<div class="block">return configMap parameter value for the given jobID
+ if there is no value for the key, return null</div>
+</td>
+</tr>
+<tr id="i21" class="rowColor">
+<td class="colFirst"><code>java.util.Map&lt;java.lang.String,java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getConfigMapParams-java.lang.String-">getConfigMapParams</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return all configMap parameters for the given jobID
+ if there is no ConfigMap, throw an exception</div>
+</td>
+</tr>
+<tr id="i22" class="altColor">
+<td class="colFirst"><code>V1ConfigMap</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getJobConfigMap-java.lang.String-">getJobConfigMap</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return the ConfigMap object of this job, if it exists,
+ otherwise return null</div>
+</td>
+</tr>
+<tr id="i23" class="rowColor">
+<td class="colFirst"><code>V1PersistentVolumeClaim</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getJobPersistentVolumeClaim-java.lang.String-">getJobPersistentVolumeClaim</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">get PersistentVolumeClaim object for this job</div>
+</td>
+</tr>
+<tr id="i24" class="altColor">
+<td class="colFirst"><code>java.util.List&lt;V1Service&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getJobServices-java.lang.String-">getJobServices</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return the list of services that belong to this job
+ otherwise return an empty list</div>
+</td>
+</tr>
+<tr id="i25" class="rowColor">
+<td class="colFirst"><code>java.util.List&lt;V1StatefulSet&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getJobStatefulSets-java.lang.String-">getJobStatefulSets</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return the list of StatefulSet objects for this job,
+ otherwise return null</div>
+</td>
+</tr>
+<tr id="i26" class="altColor">
+<td class="colFirst"><code>java.util.ArrayList&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getJobWorkerStatefulSets-java.lang.String-">getJobWorkerStatefulSets</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">return the list of worker StatefulSet names for this job
+ they must be in the form of "jobID-index"
+ otherwise return an empty ArrayList</div>
+</td>
+</tr>
+<tr id="i27" class="rowColor">
 <td class="colFirst"><code>java.util.ArrayList&lt;JobMasterAPI.NodeInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getNodeInfo-java.lang.String-java.lang.String-">getNodeInfo</a></span>(java.lang.String&nbsp;rackLabelKey,
            java.lang.String&nbsp;datacenterLabelKey)</code>
 <div class="block">get NodeInfoUtils objects for the nodes on this cluster</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i28" class="altColor">
 <td class="colFirst"><code>V1PersistentVolume</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getPersistentVolume-java.lang.String-">getPersistentVolume</a></span>(java.lang.String&nbsp;pvName)</code>&nbsp;</td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i29" class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getRestartCount-java.lang.String-java.lang.String-">getRestartCount</a></span>(java.lang.String&nbsp;jobID,
+               java.lang.String&nbsp;keyName)</code>
+<div class="block">return restart count for the given workerID
+ if there is no key for the given workerID, return -1</div>
+</td>
+</tr>
+<tr id="i30" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getServiceIP-java.lang.String-">getServiceIP</a></span>(java.lang.String&nbsp;serviceName)</code>
 <div class="block">get the IP address of the given service
  otherwise return null</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
-<td class="colFirst"><code>java.util.ArrayList&lt;java.lang.String&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getStatefulSetsForJobWorkers-java.lang.String-">getStatefulSetsForJobWorkers</a></span>(java.lang.String&nbsp;jobID)</code>
-<div class="block">return the list of StatefulSet names that matches this jobs StatefulSet names for workers
- they must be in the form of "jobID-index"
- otherwise return an empty ArrayList</div>
+<tr id="i31" class="rowColor">
+<td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getTwister2ConfigMapNames--">getTwister2ConfigMapNames</a></span>()</code>
+<div class="block">return the ConfigMap object names that belong to Twister2
+ otherwise return empty list
+ ConfigMap names correspond to jobIDs
+ There is a ConfigMap for each running job
+ So, this list shows the currently running jobs</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
-<td class="colFirst"><code>static java.util.List&lt;java.lang.String&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getUploaderWebServerPods-java.lang.String-java.lang.String-">getUploaderWebServerPods</a></span>(java.lang.String&nbsp;ns,
-                        java.lang.String&nbsp;uploaderLabel)</code>&nbsp;</td>
+<tr id="i32" class="altColor">
+<td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getTwister2PersistentVolumeClaims--">getTwister2PersistentVolumeClaims</a></span>()</code>
+<div class="block">return the PersistentVolumeClaim object names that belong to Twister2
+ otherwise return empty list</div>
+</td>
 </tr>
-<tr id="i20" class="altColor">
-<td class="colFirst"><code>void</code></td>
+<tr id="i33" class="rowColor">
+<td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#getUploaderWebServerPods-java.lang.String-">getUploaderWebServerPods</a></span>(java.lang.String&nbsp;uploaderLabel)</code>&nbsp;</td>
+</tr>
+<tr id="i34" class="altColor">
+<td class="colFirst"><code>static <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#init-java.lang.String-">init</a></span>(java.lang.String&nbsp;nspace)</code>&nbsp;</td>
 </tr>
-<tr id="i21" class="rowColor">
-<td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#initApiInstances--">initApiInstances</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i22" class="altColor">
+<tr id="i35" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#patchStatefulSet-java.lang.String-int-">patchStatefulSet</a></span>(java.lang.String&nbsp;ssName,
                 int&nbsp;replicas)</code>
 <div class="block">scale up or down the given StatefulSet</div>
 </td>
 </tr>
-<tr id="i23" class="rowColor">
+<tr id="i36" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#removeRestartCount-java.lang.String-java.lang.String-">removeRestartCount</a></span>(java.lang.String&nbsp;jobID,
+                  java.lang.String&nbsp;keyName)</code>
+<div class="block">remove a restart count from the job ConfigMap
+ this is used when the job is scaled down</div>
+</td>
+</tr>
+<tr id="i37" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#runProcess-java.lang.String:A-">runProcess</a></span>(java.lang.String[]&nbsp;command)</code>
 <div class="block">sending a command to shell</div>
+</td>
+</tr>
+<tr id="i38" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#updateConfigMapJobParam-JobAPI.Job-">updateConfigMapJobParam</a></span>(JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+</tr>
+<tr id="i39" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html#updateConfigMapParam-java.lang.String-java.lang.String-java.lang.String-">updateConfigMapParam</a></span>(java.lang.String&nbsp;jobID,
+                    java.lang.String&nbsp;paramName,
+                    java.lang.String&nbsp;paramValue)</code>
+<div class="block">update a parameter value in the job ConfigMap</div>
 </td>
 </tr>
 </table>
@@ -303,23 +398,6 @@ extends java.lang.Object</pre>
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
-<!-- ========= CONSTRUCTOR DETAIL ======== -->
-<ul class="blockList">
-<li class="blockList"><a name="constructor.detail">
-<!--   -->
-</a>
-<h3>Constructor Detail</h3>
-<a name="KubernetesController--">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>KubernetesController</h4>
-<pre>public&nbsp;KubernetesController()</pre>
-</li>
-</ul>
-</li>
-</ul>
 <!-- ============ METHOD DETAIL ========== -->
 <ul class="blockList">
 <li class="blockList"><a name="method.detail">
@@ -332,7 +410,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>init</h4>
-<pre>public&nbsp;void&nbsp;init(java.lang.String&nbsp;nspace)</pre>
+<pre>public static&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;init(java.lang.String&nbsp;nspace)</pre>
 </li>
 </ul>
 <a name="getApiClient--">
@@ -344,15 +422,6 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;ApiClient&nbsp;getApiClient()</pre>
 </li>
 </ul>
-<a name="initApiInstances--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>initApiInstances</h4>
-<pre>public static&nbsp;void&nbsp;initApiInstances()</pre>
-</li>
-</ul>
 <a name="createCoreV1Api--">
 <!--   -->
 </a>
@@ -361,9 +430,26 @@ extends java.lang.Object</pre>
 <h4>createCoreV1Api</h4>
 <pre>public static&nbsp;CoreV1Api&nbsp;createCoreV1Api()</pre>
 <div class="block">create CoreV1Api that does not time out</div>
-<dl>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
+</li>
+</ul>
+<a name="close--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>close</h4>
+<pre>public static&nbsp;void&nbsp;close()</pre>
+</li>
+</ul>
+<a name="getJobStatefulSets-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobStatefulSets</h4>
+<pre>public&nbsp;java.util.List&lt;V1StatefulSet&gt;&nbsp;getJobStatefulSets(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return the list of StatefulSet objects for this job,
+ otherwise return null</div>
 </li>
 </ul>
 <a name="existStatefulSets-java.util.List-">
@@ -373,18 +459,17 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>existStatefulSets</h4>
 <pre>public&nbsp;boolean&nbsp;existStatefulSets(java.util.List&lt;java.lang.String&gt;&nbsp;statefulSetNames)</pre>
-<div class="block">return the StatefulSet object if it exists in the Kubernetes master,
- otherwise return null</div>
+<div class="block">check whether given StatefulSet objects exist Kubernetes master,</div>
 </li>
 </ul>
-<a name="getStatefulSetsForJobWorkers-java.lang.String-">
+<a name="getJobWorkerStatefulSets-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getStatefulSetsForJobWorkers</h4>
-<pre>public&nbsp;java.util.ArrayList&lt;java.lang.String&gt;&nbsp;getStatefulSetsForJobWorkers(java.lang.String&nbsp;jobID)</pre>
-<div class="block">return the list of StatefulSet names that matches this jobs StatefulSet names for workers
+<h4>getJobWorkerStatefulSets</h4>
+<pre>public&nbsp;java.util.ArrayList&lt;java.lang.String&gt;&nbsp;getJobWorkerStatefulSets(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return the list of worker StatefulSet names for this job
  they must be in the form of "jobID-index"
  otherwise return an empty ArrayList</div>
 </li>
@@ -428,6 +513,17 @@ extends java.lang.Object</pre>
 <h4>createService</h4>
 <pre>public&nbsp;boolean&nbsp;createService(V1Service&nbsp;service)</pre>
 <div class="block">create the given service on Kubernetes master</div>
+</li>
+</ul>
+<a name="getJobServices-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobServices</h4>
+<pre>public&nbsp;java.util.List&lt;V1Service&gt;&nbsp;getJobServices(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return the list of services that belong to this job
+ otherwise return an empty list</div>
 </li>
 </ul>
 <a name="existServices-java.util.List-">
@@ -478,8 +574,29 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>existPersistentVolumeClaim</h4>
-<pre>public&nbsp;boolean&nbsp;existPersistentVolumeClaim(java.lang.String&nbsp;pvcName)</pre>
+<pre>public&nbsp;boolean&nbsp;existPersistentVolumeClaim(java.lang.String&nbsp;jobID)</pre>
 <div class="block">check whether the given PersistentVolumeClaim exist on Kubernetes master</div>
+</li>
+</ul>
+<a name="getJobPersistentVolumeClaim-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobPersistentVolumeClaim</h4>
+<pre>public&nbsp;V1PersistentVolumeClaim&nbsp;getJobPersistentVolumeClaim(java.lang.String&nbsp;jobID)</pre>
+<div class="block">get PersistentVolumeClaim object for this job</div>
+</li>
+</ul>
+<a name="getTwister2PersistentVolumeClaims--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getTwister2PersistentVolumeClaims</h4>
+<pre>public&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;getTwister2PersistentVolumeClaims()</pre>
+<div class="block">return the PersistentVolumeClaim object names that belong to Twister2
+ otherwise return empty list</div>
 </li>
 </ul>
 <a name="createPersistentVolumeClaim-V1PersistentVolumeClaim-">
@@ -498,7 +615,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>deletePersistentVolumeClaim</h4>
-<pre>public&nbsp;boolean&nbsp;deletePersistentVolumeClaim(java.lang.String&nbsp;pvcName)</pre>
+<pre>public&nbsp;boolean&nbsp;deletePersistentVolumeClaim(java.lang.String&nbsp;jobID)</pre>
 </li>
 </ul>
 <a name="getPersistentVolume-java.lang.String-">
@@ -555,20 +672,19 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="getUploaderWebServerPods-java.lang.String-java.lang.String-">
+<a name="getUploaderWebServerPods-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getUploaderWebServerPods</h4>
-<pre>public static&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;getUploaderWebServerPods(java.lang.String&nbsp;ns,
-                                                                        java.lang.String&nbsp;uploaderLabel)</pre>
+<pre>public&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;getUploaderWebServerPods(java.lang.String&nbsp;uploaderLabel)</pre>
 </li>
 </ul>
 <a name="deleteJobPackage-java.util.List-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>deleteJobPackage</h4>
 <pre>public&nbsp;boolean&nbsp;deleteJobPackage(java.util.List&lt;java.lang.String&gt;&nbsp;uploaderPods,
@@ -576,6 +692,142 @@ extends java.lang.Object</pre>
 <div class="block">delete job package file from uploader web server pods
  currently it does not delete job package file from multiple uploader pods
  so, It is not in use</div>
+</li>
+</ul>
+<a name="createConfigMap-V1ConfigMap-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createConfigMap</h4>
+<pre>public&nbsp;boolean&nbsp;createConfigMap(V1ConfigMap&nbsp;configMap)</pre>
+<div class="block">create the given ConfigMap on Kubernetes master</div>
+</li>
+</ul>
+<a name="deleteConfigMap-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>deleteConfigMap</h4>
+<pre>public&nbsp;boolean&nbsp;deleteConfigMap(java.lang.String&nbsp;jobID)</pre>
+<div class="block">delete the given ConfigMap from Kubernetes master</div>
+</li>
+</ul>
+<a name="existConfigMap-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>existConfigMap</h4>
+<pre>public&nbsp;boolean&nbsp;existConfigMap(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return true if there is already a ConfigMap object with the same name on Kubernetes master,
+ otherwise return false</div>
+</li>
+</ul>
+<a name="getTwister2ConfigMapNames--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getTwister2ConfigMapNames</h4>
+<pre>public&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;getTwister2ConfigMapNames()</pre>
+<div class="block">return the ConfigMap object names that belong to Twister2
+ otherwise return empty list
+ ConfigMap names correspond to jobIDs
+ There is a ConfigMap for each running job
+ So, this list shows the currently running jobs</div>
+</li>
+</ul>
+<a name="getJobConfigMap-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobConfigMap</h4>
+<pre>public&nbsp;V1ConfigMap&nbsp;getJobConfigMap(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return the ConfigMap object of this job, if it exists,
+ otherwise return null</div>
+</li>
+</ul>
+<a name="getConfigMapParam-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getConfigMapParam</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getConfigMapParam(java.lang.String&nbsp;jobID,
+                                          java.lang.String&nbsp;keyName)</pre>
+<div class="block">return configMap parameter value for the given jobID
+ if there is no value for the key, return null</div>
+</li>
+</ul>
+<a name="getConfigMapParams-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getConfigMapParams</h4>
+<pre>public&nbsp;java.util.Map&lt;java.lang.String,java.lang.String&gt;&nbsp;getConfigMapParams(java.lang.String&nbsp;jobID)</pre>
+<div class="block">return all configMap parameters for the given jobID
+ if there is no ConfigMap, throw an exception</div>
+</li>
+</ul>
+<a name="getRestartCount-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getRestartCount</h4>
+<pre>public&nbsp;int&nbsp;getRestartCount(java.lang.String&nbsp;jobID,
+                           java.lang.String&nbsp;keyName)</pre>
+<div class="block">return restart count for the given workerID
+ if there is no key for the given workerID, return -1</div>
+</li>
+</ul>
+<a name="addConfigMapParam-java.lang.String-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addConfigMapParam</h4>
+<pre>public&nbsp;boolean&nbsp;addConfigMapParam(java.lang.String&nbsp;jobID,
+                                 java.lang.String&nbsp;keyName,
+                                 java.lang.String&nbsp;value)</pre>
+<div class="block">add a new parameter the job ConfigMap</div>
+</li>
+</ul>
+<a name="updateConfigMapParam-java.lang.String-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>updateConfigMapParam</h4>
+<pre>public&nbsp;boolean&nbsp;updateConfigMapParam(java.lang.String&nbsp;jobID,
+                                    java.lang.String&nbsp;paramName,
+                                    java.lang.String&nbsp;paramValue)</pre>
+<div class="block">update a parameter value in the job ConfigMap</div>
+</li>
+</ul>
+<a name="updateConfigMapJobParam-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>updateConfigMapJobParam</h4>
+<pre>public&nbsp;boolean&nbsp;updateConfigMapJobParam(JobAPI.Job&nbsp;job)</pre>
+</li>
+</ul>
+<a name="removeRestartCount-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>removeRestartCount</h4>
+<pre>public&nbsp;boolean&nbsp;removeRestartCount(java.lang.String&nbsp;jobID,
+                                  java.lang.String&nbsp;keyName)</pre>
+<div class="block">remove a restart count from the job ConfigMap
+ this is used when the job is scaled down</div>
 </li>
 </ul>
 </li>
@@ -632,13 +884,13 @@ extends java.lang.Object</pre>
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>

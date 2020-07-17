@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -149,30 +149,23 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#barrierDir-java.lang.String-java.lang.String-">barrierDir</a></span>(java.lang.String&nbsp;rootPath,
-          java.lang.String&nbsp;jobID)</code>
-<div class="block">construct barrier directory path for the job</div>
-</td>
-</tr>
-<tr id="i1" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#closeClient--">closeClient</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>static CuratorFramework</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#connectToServer-java.lang.String-">connectToServer</a></span>(java.lang.String&nbsp;zkServers)</code>
 <div class="block">connect to ZooKeeper server</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static CuratorFramework</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#connectToServer-java.lang.String-int-">connectToServer</a></span>(java.lang.String&nbsp;zkServers,
                int&nbsp;sessionTimeoutMs)</code>
 <div class="block">connect to ZooKeeper server</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static PersistentNode</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#createPersistentEphemeralZnode-java.lang.String-byte:A-">createPersistentEphemeralZnode</a></span>(java.lang.String&nbsp;path,
                               byte[]&nbsp;payload)</code>
@@ -182,7 +175,7 @@ extends java.lang.Object</pre>
  it will be persistent for occasional network problems</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static PersistentNode</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#createPersistentZnode-java.lang.String-byte:A-">createPersistentZnode</a></span>(java.lang.String&nbsp;path,
                      byte[]&nbsp;payload)</code>
@@ -191,34 +184,37 @@ extends java.lang.Object</pre>
  it will be persistent for occasional network problems</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#deleteJobZNodes-CuratorFramework-java.lang.String-java.lang.String-">deleteJobZNodes</a></span>(CuratorFramework&nbsp;clnt,
-               java.lang.String&nbsp;rootPath,
-               java.lang.String&nbsp;jobID)</code>
-<div class="block">delete job related znode from previous sessions</div>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#defaultBarrierDir-java.lang.String-java.lang.String-">defaultBarrierDir</a></span>(java.lang.String&nbsp;rootPath,
+                 java.lang.String&nbsp;jobID)</code>
+<div class="block">construct default barrier directory path for the job</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#encodeJobMasterZnode-java.lang.String-int-">encodeJobMasterZnode</a></span>(java.lang.String&nbsp;masterAddress,
                     int&nbsp;state)</code>
 <div class="block">encode the given WorkerInfo object as a byte array.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#ephemDir-java.lang.String-java.lang.String-">ephemDir</a></span>(java.lang.String&nbsp;rootPath,
         java.lang.String&nbsp;jobID)</code>
 <div class="block">construct ephemeral directory path for the job</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#eventsDir-java.lang.String-java.lang.String-">eventsDir</a></span>(java.lang.String&nbsp;rootPath,
          java.lang.String&nbsp;jobID)</code>
 <div class="block">construct events directory path for the job</div>
 </td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>static CuratorFramework</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#getClient--">getClient</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>static int</code></td>
@@ -235,11 +231,10 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i12" class="altColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#isThereJobZNodes-CuratorFramework-java.lang.String-java.lang.String-">isThereJobZNodes</a></span>(CuratorFramework&nbsp;clnt,
-                java.lang.String&nbsp;rootPath,
-                java.lang.String&nbsp;jobID)</code>
-<div class="block">check whether there is an active job</div>
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#initBarrierDir-java.lang.String-java.lang.String-">initBarrierDir</a></span>(java.lang.String&nbsp;rootPath,
+              java.lang.String&nbsp;jobID)</code>
+<div class="block">construct init barrier directory path for the job</div>
 </td>
 </tr>
 <tr id="i13" class="rowColor">
@@ -265,20 +260,26 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i16" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#jobEndTimePath-java.lang.String-java.lang.String-">jobEndTimePath</a></span>(java.lang.String&nbsp;rootPath,
+              java.lang.String&nbsp;jobID)</code>
+<div class="block">construct the job end time znode path</div>
+</td>
+</tr>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#jobSubmisionTimePath-java.lang.String-java.lang.String-">jobSubmisionTimePath</a></span>(java.lang.String&nbsp;rootPath,
+                    java.lang.String&nbsp;jobID)</code>
+<div class="block">construct the job submission time znode path</div>
+</td>
+</tr>
+<tr id="i18" class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#persDir-java.lang.String-java.lang.String-">persDir</a></span>(java.lang.String&nbsp;rootPath,
        java.lang.String&nbsp;jobID)</code>
 <div class="block">construct persistent directory path for the job</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#terminateJob-java.lang.String-java.lang.String-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;zkServers,
-            java.lang.String&nbsp;rootPath,
-            java.lang.String&nbsp;jobID)</code>
-<div class="block">delete all znodes related to the given jobID</div>
-</td>
-</tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKUtils.html#workerPath-java.lang.String-int-">workerPath</a></span>(java.lang.String&nbsp;workersDir,
           int&nbsp;workerID)</code>
@@ -324,6 +325,15 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="getClient--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getClient</h4>
+<pre>public static&nbsp;CuratorFramework&nbsp;getClient()</pre>
+</li>
+</ul>
 <a name="connectToServer-java.lang.String-">
 <!--   -->
 </a>
@@ -403,15 +413,26 @@ extends java.lang.Object</pre>
 <div class="block">construct events directory path for the job</div>
 </li>
 </ul>
-<a name="barrierDir-java.lang.String-java.lang.String-">
+<a name="defaultBarrierDir-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>barrierDir</h4>
-<pre>public static&nbsp;java.lang.String&nbsp;barrierDir(java.lang.String&nbsp;rootPath,
-                                          java.lang.String&nbsp;jobID)</pre>
-<div class="block">construct barrier directory path for the job</div>
+<h4>defaultBarrierDir</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;defaultBarrierDir(java.lang.String&nbsp;rootPath,
+                                                 java.lang.String&nbsp;jobID)</pre>
+<div class="block">construct default barrier directory path for the job</div>
+</li>
+</ul>
+<a name="initBarrierDir-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>initBarrierDir</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;initBarrierDir(java.lang.String&nbsp;rootPath,
+                                              java.lang.String&nbsp;jobID)</pre>
+<div class="block">construct init barrier directory path for the job</div>
 </li>
 </ul>
 <a name="workerPath-java.lang.String-int-">
@@ -445,6 +466,28 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;java.lang.String&nbsp;jmEphemPath(java.lang.String&nbsp;rootPath,
                                            java.lang.String&nbsp;jobID)</pre>
 <div class="block">construct the job master path for an ephemeral znode that will watch JM liveness</div>
+</li>
+</ul>
+<a name="jobSubmisionTimePath-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>jobSubmisionTimePath</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;jobSubmisionTimePath(java.lang.String&nbsp;rootPath,
+                                                    java.lang.String&nbsp;jobID)</pre>
+<div class="block">construct the job submission time znode path</div>
+</li>
+</ul>
+<a name="jobEndTimePath-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>jobEndTimePath</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;jobEndTimePath(java.lang.String&nbsp;rootPath,
+                                              java.lang.String&nbsp;jobID)</pre>
+<div class="block">construct the job end time znode path</div>
 </li>
 </ul>
 <a name="getWorkerIDFromEphemPath-java.lang.String-">
@@ -505,7 +548,7 @@ extends java.lang.Object</pre>
 <a name="encodeJobMasterZnode-java.lang.String-int-">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>encodeJobMasterZnode</h4>
 <pre>public static&nbsp;byte[]&nbsp;encodeJobMasterZnode(java.lang.String&nbsp;masterAddress,
@@ -513,42 +556,6 @@ extends java.lang.Object</pre>
 <div class="block">encode the given WorkerInfo object as a byte array.
  First put the worker state as a 4 byte array to the beginning
  resulting byte array has the state bytes and workerInfo object after that</div>
-</li>
-</ul>
-<a name="isThereJobZNodes-CuratorFramework-java.lang.String-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>isThereJobZNodes</h4>
-<pre>public static&nbsp;boolean&nbsp;isThereJobZNodes(CuratorFramework&nbsp;clnt,
-                                       java.lang.String&nbsp;rootPath,
-                                       java.lang.String&nbsp;jobID)</pre>
-<div class="block">check whether there is an active job</div>
-</li>
-</ul>
-<a name="terminateJob-java.lang.String-java.lang.String-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>terminateJob</h4>
-<pre>public static&nbsp;boolean&nbsp;terminateJob(java.lang.String&nbsp;zkServers,
-                                   java.lang.String&nbsp;rootPath,
-                                   java.lang.String&nbsp;jobID)</pre>
-<div class="block">delete all znodes related to the given jobID</div>
-</li>
-</ul>
-<a name="deleteJobZNodes-CuratorFramework-java.lang.String-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>deleteJobZNodes</h4>
-<pre>public static&nbsp;boolean&nbsp;deleteJobZNodes(CuratorFramework&nbsp;clnt,
-                                      java.lang.String&nbsp;rootPath,
-                                      java.lang.String&nbsp;jobID)</pre>
-<div class="block">delete job related znode from previous sessions</div>
 </li>
 </ul>
 </li>

@@ -129,7 +129,7 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerStarter.html#addShutdownHook--">addShutdownHook</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerStarter.html#addShutdownHook-edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater-">addShutdownHook</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a>&nbsp;workerStatusUpdater)</code>
 <div class="block">if the worker is killed by scaling down,
  we need to let ZooKeeper know about it and delete worker znode
  if zookeeper is used</div>
@@ -140,7 +140,7 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerStarter.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>static void</code></td>
+<td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerStarter.html#startWorker-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-">startWorker</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
            <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv)</code>
 <div class="block">start the Worker class specified in conf files</div>
@@ -211,18 +211,18 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>startWorker</h4>
-<pre>public static&nbsp;void&nbsp;startWorker(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
-                               <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv)</pre>
+<pre>public static&nbsp;boolean&nbsp;startWorker(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
+                                  <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;pv)</pre>
 <div class="block">start the Worker class specified in conf files</div>
 </li>
 </ul>
-<a name="addShutdownHook--">
+<a name="addShutdownHook-edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>addShutdownHook</h4>
-<pre>public static&nbsp;void&nbsp;addShutdownHook()</pre>
+<pre>public static&nbsp;void&nbsp;addShutdownHook(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a>&nbsp;workerStatusUpdater)</pre>
 <div class="block">if the worker is killed by scaling down,
  we need to let ZooKeeper know about it and delete worker znode
  if zookeeper is used</div>

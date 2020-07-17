@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/driver/IScaler.html" title="interface in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScalar.html" title="class in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScaler.html" title="class in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/driver/IScalerPerCluster.html" target="_top">Frames</a></li>
@@ -99,7 +99,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/driver/K8sScaler.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s.driver">K8sScaler</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/driver/MesosScaler.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos.driver">MesosScaler</a>, <a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScalar.html" title="class in edu.iu.dsc.tws.api.driver">NullScalar</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/driver/K8sScaler.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s.driver">K8sScaler</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/driver/MesosScaler.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos.driver">MesosScaler</a>, <a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScaler.html" title="class in edu.iu.dsc.tws.api.driver">NullScaler</a></dd>
 </dl>
 <hr>
 <br>
@@ -134,7 +134,8 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html#scaleDownWorkers-int-">scaleDownWorkers</a></span>(int&nbsp;instancesToRemove)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html#scaleDownWorkers-int-int-">scaleDownWorkers</a></span>(int&nbsp;instancesToRemove,
+                int&nbsp;numberOfWorkers)</code>
 <div class="block">remove some instances of the workers from the job</div>
 </td>
 </tr>
@@ -189,17 +190,19 @@ var activeTableTab = "activeTableTab";
 </dl>
 </li>
 </ul>
-<a name="scaleDownWorkers-int-">
+<a name="scaleDownWorkers-int-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>scaleDownWorkers</h4>
-<pre>boolean&nbsp;scaleDownWorkers(int&nbsp;instancesToRemove)</pre>
+<pre>boolean&nbsp;scaleDownWorkers(int&nbsp;instancesToRemove,
+                         int&nbsp;numberOfWorkers)</pre>
 <div class="block">remove some instances of the workers from the job</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>instancesToRemove</code> - </dd>
+<dd><code>numberOfWorkers</code> - number of workers before the scale down</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>true if successful</dd>
 </dl>
@@ -233,7 +236,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/driver/IScaler.html" title="interface in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScalar.html" title="class in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/driver/NullScaler.html" title="class in edu.iu.dsc.tws.api.driver"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/driver/IScalerPerCluster.html" target="_top">Frames</a></li>

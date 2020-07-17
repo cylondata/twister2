@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -73,13 +73,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -116,6 +116,33 @@ extends java.lang.Object</pre>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected &lt;any&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#clientChannels">clientChannels</a></span></code>
+<div class="block">client channels with workerIDs</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected &lt;any&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#serverChannels">serverChannels</a></span></code>
+<div class="block">server channels with workerIDs</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -149,50 +176,54 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#closeConnection-int-">closeConnection</a></span>(int&nbsp;workerID)</code>&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPMessage.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPMessage</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#iRecv-java.nio.ByteBuffer-int-int-int-">iRecv</a></span>(java.nio.ByteBuffer&nbsp;buffer,
      int&nbsp;size,
-     int&nbsp;procId,
+     int&nbsp;workerID,
      int&nbsp;edge)</code>
 <div class="block">Receive a message</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPMessage.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPMessage</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#iSend-java.nio.ByteBuffer-int-int-int-">iSend</a></span>(java.nio.ByteBuffer&nbsp;buffer,
      int&nbsp;size,
-     int&nbsp;procId,
+     int&nbsp;workerID,
      int&nbsp;edge)</code>
 <div class="block">Send a buffer</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#progress--">progress</a></span>()</code>
 <div class="block">Progress the communication</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#startConnections-java.util.List-">startConnections</a></span>(java.util.List&lt;<a href="../../../../../../../edu/iu/dsc/tws/common/net/NetworkInfo.html" title="class in edu.iu.dsc.tws.common.net">NetworkInfo</a>&gt;&nbsp;workerInfo)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#startConnections-java.util.List-">startConnections</a></span>(java.util.List&lt;<a href="../../../../../../../edu/iu/dsc/tws/common/net/NetworkInfo.html" title="class in edu.iu.dsc.tws.common.net">NetworkInfo</a>&gt;&nbsp;workerInfos)</code>
 <div class="block">Start the connections to the servers</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#startListening--">startListening</a></span>()</code>
 <div class="block">Start listening</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#stop--">stop</a></span>()</code>
 <div class="block">Stop all the connections</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#waitForConnections--">waitForConnections</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPChannel.html#waitForConnections-long-">waitForConnections</a></span>(long&nbsp;timeLimit)</code>
 <div class="block">Wait for handshakes to happen between servers and clients</div>
 </td>
 </tr>
@@ -212,6 +243,34 @@ extends java.lang.Object</pre>
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="clientChannels">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>clientChannels</h4>
+<pre>protected&nbsp;&lt;any&gt; clientChannels</pre>
+<div class="block">client channels with workerIDs</div>
+</li>
+</ul>
+<a name="serverChannels">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>serverChannels</h4>
+<pre>protected&nbsp;&lt;any&gt; serverChannels</pre>
+<div class="block">server channels with workerIDs</div>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -258,11 +317,11 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>startConnections</h4>
-<pre>public&nbsp;void&nbsp;startConnections(java.util.List&lt;<a href="../../../../../../../edu/iu/dsc/tws/common/net/NetworkInfo.html" title="class in edu.iu.dsc.tws.common.net">NetworkInfo</a>&gt;&nbsp;workerInfo)</pre>
+<pre>public&nbsp;void&nbsp;startConnections(java.util.List&lt;<a href="../../../../../../../edu/iu/dsc/tws/common/net/NetworkInfo.html" title="class in edu.iu.dsc.tws.common.net">NetworkInfo</a>&gt;&nbsp;workerInfos)</pre>
 <div class="block">Start the connections to the servers</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>workerInfo</code> - information about all the workers</dd>
+<dd><code>workerInfos</code> - information about all the workers</dd>
 </dl>
 </li>
 </ul>
@@ -274,14 +333,14 @@ extends java.lang.Object</pre>
 <h4>iSend</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPMessage.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPMessage</a>&nbsp;iSend(java.nio.ByteBuffer&nbsp;buffer,
                         int&nbsp;size,
-                        int&nbsp;procId,
+                        int&nbsp;workerID,
                         int&nbsp;edge)</pre>
 <div class="block">Send a buffer</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>buffer</code> - buffer</dd>
 <dd><code>size</code> - size of the buffer, we assume start from 0th position</dd>
-<dd><code>procId</code> - the worker id</dd>
+<dd><code>workerID</code> - the worker id</dd>
 <dd><code>edge</code> - the edg</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the reference message created</dd>
@@ -296,14 +355,14 @@ extends java.lang.Object</pre>
 <h4>iRecv</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPMessage.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPMessage</a>&nbsp;iRecv(java.nio.ByteBuffer&nbsp;buffer,
                         int&nbsp;size,
-                        int&nbsp;procId,
+                        int&nbsp;workerID,
                         int&nbsp;edge)</pre>
 <div class="block">Receive a message</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>buffer</code> - buffer</dd>
 <dd><code>size</code> - size of the buffer, we assume start from 0th position</dd>
-<dd><code>procId</code> - the worker id</dd>
+<dd><code>workerID</code> - the worker id</dd>
 <dd><code>edge</code> - the edg</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the reference message created</dd>
@@ -330,14 +389,23 @@ extends java.lang.Object</pre>
 <div class="block">Stop all the connections</div>
 </li>
 </ul>
-<a name="waitForConnections--">
+<a name="waitForConnections-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitForConnections</h4>
+<pre>public&nbsp;void&nbsp;waitForConnections(long&nbsp;timeLimit)</pre>
+<div class="block">Wait for handshakes to happen between servers and clients</div>
+</li>
+</ul>
+<a name="closeConnection-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>waitForConnections</h4>
-<pre>public&nbsp;void&nbsp;waitForConnections()</pre>
-<div class="block">Wait for handshakes to happen between servers and clients</div>
+<h4>closeConnection</h4>
+<pre>public&nbsp;void&nbsp;closeConnection(int&nbsp;workerID)</pre>
 </li>
 </ul>
 </li>
@@ -393,13 +461,13 @@ extends java.lang.Object</pre>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

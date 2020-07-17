@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -277,6 +277,12 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 </td>
 </tr>
 <tr id="i14" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedPipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedPipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedPipe--">keyedPipe</a></span>()</code>
+<div class="block">Pipe implementation</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedReduceTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html#keyedReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">keyedReduce</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;&nbsp;reduceFn)</code>
 <div class="block">Reduces data by key for <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><code>BatchTupleTSet</code></a>s</div>
@@ -411,6 +417,25 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 <dd><code>partitionFn</code> - partition function</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Keyed Partition TLink</dd>
+</dl>
+</li>
+</ul>
+<a name="keyedPipe--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>keyedPipe</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedPipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedPipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;&nbsp;keyedPipe()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html#keyedPipe--">BatchTupleTSet</a></code></span></div>
+<div class="block">Pipe implementation</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html#keyedPipe--">keyedPipe</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTupleTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#keyedPipe--">keyedPipe</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTupleTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedStoredTSet.html" title="type parameter in KeyedStoredTSet">V</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Keyed Pipe TLink</dd>
 </dl>
 </li>
 </ul>

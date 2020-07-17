@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9};
+var methods = {"i0":9,"i1":9,"i2":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -144,14 +144,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html#SERVER_ADDRESSES">SERVER_ADDRESSES</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html#ZK_BASED_GROUP_MANAGEMENT">ZK_BASED_GROUP_MANAGEMENT</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html#ZK_BASED_GROUP_MANAGEMENT_DEFAULT">ZK_BASED_GROUP_MANAGEMENT_DEFAULT</a></span></code>&nbsp;</td>
-</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.edu.iu.dsc.tws.api.config.Context">
@@ -188,17 +180,13 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html#serverAddresses-edu.iu.dsc.tws.api.config.Config-">serverAddresses</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html#zkBasedGroupManagement-edu.iu.dsc.tws.api.config.Config-">zkBasedGroupManagement</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
-</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.config.Context">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.api.config.<a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title="class in edu.iu.dsc.tws.api.config">Context</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#auroraScript-edu.iu.dsc.tws.api.config.Config-">auroraScript</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointCofigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointCofigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointConfigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#clusterType-edu.iu.dsc.tws.api.config.Config-">clusterType</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#commonConfDir-edu.iu.dsc.tws.api.config.Config-">commonConfDir</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#conf-edu.iu.dsc.tws.api.config.Config-">conf</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#containerId-edu.iu.dsc.tws.api.config.Config-">containerId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#dataConfigurationFile-edu.iu.dsc.tws.api.config.Config-">dataConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#distDirectory-edu.iu.dsc.tws.api.config.Config-">distDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDefaults--">getDefaults</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDoublePropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-double-">getDoublePropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getIntPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-">getIntPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getLongPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">getLongPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getStringPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-java.lang.String-">getStringPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#verbose-edu.iu.dsc.tws.api.config.Config-">verbose</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#workerInstances-edu.iu.dsc.tws.api.config.Config-">workerInstances</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#auroraScript-edu.iu.dsc.tws.api.config.Config-">auroraScript</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointCofigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointCofigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#checkpointConfigurationFile-edu.iu.dsc.tws.api.config.Config-">checkpointConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#clusterType-edu.iu.dsc.tws.api.config.Config-">clusterType</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#commonConfDir-edu.iu.dsc.tws.api.config.Config-">commonConfDir</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#conf-edu.iu.dsc.tws.api.config.Config-">conf</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#containerId-edu.iu.dsc.tws.api.config.Config-">containerId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#dataConfigurationFile-edu.iu.dsc.tws.api.config.Config-">dataConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#distDirectory-edu.iu.dsc.tws.api.config.Config-">distDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDefaults--">getDefaults</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getDoublePropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-double-">getDoublePropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getIntPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-int-">getIntPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getLongPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-long-">getLongPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#getStringPropertyValue-edu.iu.dsc.tws.api.config.Config-java.lang.String-java.lang.String-">getStringPropertyValue</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#isKubernetesCluster-edu.iu.dsc.tws.api.config.Config-">isKubernetesCluster</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#verbose-edu.iu.dsc.tws.api.config.Config-">verbose</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#workerInstances-edu.iu.dsc.tws.api.config.Config-">workerInstances</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -221,32 +209,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="ZK_BASED_GROUP_MANAGEMENT">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>ZK_BASED_GROUP_MANAGEMENT</h4>
-<pre>public static final&nbsp;java.lang.String ZK_BASED_GROUP_MANAGEMENT</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.common.zk.ZKContext.ZK_BASED_GROUP_MANAGEMENT">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
-<a name="ZK_BASED_GROUP_MANAGEMENT_DEFAULT">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>ZK_BASED_GROUP_MANAGEMENT_DEFAULT</h4>
-<pre>public static final&nbsp;boolean ZK_BASED_GROUP_MANAGEMENT_DEFAULT</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../constant-values.html#edu.iu.dsc.tws.common.zk.ZKContext.ZK_BASED_GROUP_MANAGEMENT_DEFAULT">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
 <a name="ROOT_NODE">
 <!--   -->
 </a>
@@ -310,15 +272,6 @@ extends <a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html" title
 <li class="blockList">
 <h4>serverAddresses</h4>
 <pre>public static&nbsp;java.lang.String&nbsp;serverAddresses(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
-</li>
-</ul>
-<a name="zkBasedGroupManagement-edu.iu.dsc.tws.api.config.Config-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>zkBasedGroupManagement</h4>
-<pre>public static&nbsp;boolean&nbsp;zkBasedGroupManagement(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
 <a name="isZooKeeperServerUsed-edu.iu.dsc.tws.api.config.Config-">

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":6,"i2":6,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":6,"i4":10,"i5":6,"i6":10,"i7":10,"i8":10,"i9":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIContext.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html" target="_top">Frames</a></li>
@@ -174,28 +174,49 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getScriptPath--">getScriptPath</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getClasspath-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">getClasspath</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
+            JobAPI.Job&nbsp;job)</code>&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getMapBy-JobAPI.Job-">getMapBy</a></span>(JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getNumberOfWorkers-JobAPI.Job-">getNumberOfWorkers</a></span>(JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>protected abstract java.lang.String[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#killCommand--">killCommand</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>protected abstract java.util.List&lt;java.lang.String&gt;</code></td>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#ldLibraryPath--">ldLibraryPath</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>protected abstract java.lang.String[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpiCommand-java.lang.String-JobAPI.Job-">mpiCommand</a></span>(java.lang.String&nbsp;wd,
           JobAPI.Job&nbsp;job)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>protected java.util.Map&lt;java.lang.String,java.lang.Object&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpiCommandArguments-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">mpiCommandArguments</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-                   JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpirunPath--">mpirunPath</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected java.util.List&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#readFromFile-java.lang.String-">readFromFile</a></span>(java.lang.String&nbsp;filename)</code>
 <div class="block">Read all the data from a text file line by line
  For now lets keep this util function here.</div>
 </td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#submittingTwister2Home--">submittingTwister2Home</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>protected abstract void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#updateRestartCount-java.lang.String:A-int-">updateRestartCount</a></span>(java.lang.String[]&nbsp;cmd,
+                  int&nbsp;restartCount)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -280,13 +301,23 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="getScriptPath--">
+<a name="getNumberOfWorkers-JobAPI.Job-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getScriptPath</h4>
-<pre>protected&nbsp;java.lang.String&nbsp;getScriptPath()</pre>
+<h4>getNumberOfWorkers</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;getNumberOfWorkers(JobAPI.Job&nbsp;job)</pre>
+</li>
+</ul>
+<a name="getClasspath-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getClasspath</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;getClasspath(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
+                                        JobAPI.Job&nbsp;job)</pre>
 </li>
 </ul>
 <a name="killCommand--">
@@ -298,24 +329,60 @@ extends java.lang.Object</pre>
 <pre>protected abstract&nbsp;java.lang.String[]&nbsp;killCommand()</pre>
 </li>
 </ul>
-<a name="mpiCommandArguments-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">
+<a name="mpiCommand-java.lang.String-JobAPI.Job-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>mpiCommandArguments</h4>
-<pre>protected&nbsp;java.util.Map&lt;java.lang.String,java.lang.Object&gt;&nbsp;mpiCommandArguments(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-                                                                               JobAPI.Job&nbsp;job)</pre>
+<h4>mpiCommand</h4>
+<pre>protected abstract&nbsp;java.lang.String[]&nbsp;mpiCommand(java.lang.String&nbsp;wd,
+                                                 JobAPI.Job&nbsp;job)</pre>
 </li>
 </ul>
-<a name="mpiCommand-java.lang.String-JobAPI.Job-">
+<a name="updateRestartCount-java.lang.String:A-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>updateRestartCount</h4>
+<pre>protected abstract&nbsp;void&nbsp;updateRestartCount(java.lang.String[]&nbsp;cmd,
+                                           int&nbsp;restartCount)</pre>
+</li>
+</ul>
+<a name="mpirunPath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>mpirunPath</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;mpirunPath()</pre>
+</li>
+</ul>
+<a name="ldLibraryPath--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ldLibraryPath</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;ldLibraryPath()</pre>
+</li>
+</ul>
+<a name="getMapBy-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getMapBy</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;getMapBy(JobAPI.Job&nbsp;job)</pre>
+</li>
+</ul>
+<a name="submittingTwister2Home--">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>mpiCommand</h4>
-<pre>protected abstract&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;mpiCommand(java.lang.String&nbsp;wd,
-                                                               JobAPI.Job&nbsp;job)</pre>
+<h4>submittingTwister2Home</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;submittingTwister2Home()</pre>
 </li>
 </ul>
 </li>
@@ -346,7 +413,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIContext.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html" target="_top">Frames</a></li>

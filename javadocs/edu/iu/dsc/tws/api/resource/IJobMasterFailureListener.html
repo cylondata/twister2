@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IAllJoinedListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IManagedFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/InitBarrierListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html" target="_top">Frames</a></li>
@@ -97,6 +97,10 @@ var activeTableTab = "activeTableTab";
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Known Implementing Classes:</dt>
+<dd><a href="../../../../../../edu/iu/dsc/tws/rsched/worker/MPIWorkerManager.html" title="class in edu.iu.dsc.tws.rsched.worker">MPIWorkerManager</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/worker/WorkerManager.html" title="class in edu.iu.dsc.tws.rsched.worker">WorkerManager</a></dd>
+</dl>
 <hr>
 <br>
 <pre>public interface <span class="typeNameLabel">IJobMasterFailureListener</span></pre>
@@ -120,13 +124,13 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html#failed--">failed</a></span>()</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html#jmFailed--">jmFailed</a></span>()</code>
 <div class="block">informs when the job master fails.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html#restarted-java.lang.String-">restarted</a></span>(java.lang.String&nbsp;jobMasterAddress)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html#jmRestarted-java.lang.String-">jmRestarted</a></span>(java.lang.String&nbsp;jobMasterAddress)</code>
 <div class="block">informs when the job master rejoins after failure</div>
 </td>
 </tr>
@@ -145,23 +149,23 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="failed--">
+<a name="jmFailed--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>failed</h4>
-<pre>void&nbsp;failed()</pre>
+<h4>jmFailed</h4>
+<pre>void&nbsp;jmFailed()</pre>
 <div class="block">informs when the job master fails.</div>
 </li>
 </ul>
-<a name="restarted-java.lang.String-">
+<a name="jmRestarted-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>restarted</h4>
-<pre>void&nbsp;restarted(java.lang.String&nbsp;jobMasterAddress)</pre>
+<h4>jmRestarted</h4>
+<pre>void&nbsp;jmRestarted(java.lang.String&nbsp;jobMasterAddress)</pre>
 <div class="block">informs when the job master rejoins after failure</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -197,7 +201,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IAllJoinedListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/IManagedFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/InitBarrierListener.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html" target="_top">Frames</a></li>

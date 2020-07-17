@@ -57,7 +57,7 @@
         </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Developing a Twister2 Applications</h1></header><article><div><span><p>This guide walks you through creating a simple application using Twister2.</p>
 <h2><a class="anchor" aria-hidden="true" id="pre-requisites"></a><a href="#pre-requisites" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Pre-Requisites</h2>
 <p>Twister2 Applications are developed as Java Applications. We recommend using Java 1.8 or higher.</p>
-<p>It is easier use Maven build tool to build the application.</p>
+<p>It is easier to use Maven build tool to build the application.</p>
 <h2><a class="anchor" aria-hidden="true" id="creating-the-maven-application"></a><a href="#creating-the-maven-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Creating the Maven application</h2>
 <p>Lets create an empty Maven application and after that add the Twister2 dependencies.</p>
 <pre><code class="hljs css language-bash">mvn archetype:generate -DgroupId=<span class="hljs-string">"helloworld"</span> -DartifactId=<span class="hljs-string">"helloworld"</span> -DarchetypeArtifactId=<span class="hljs-string">"maven-archetype-quickstart"</span>  -DinteractiveMode=<span class="hljs-literal">false</span>
@@ -133,17 +133,13 @@ pom.xml  src
 <pre><code class="hljs css language-java"><span class="hljs-keyword">package</span> helloworld;
 
 <span class="hljs-keyword">import</span> java.util.HashMap;
-<span class="hljs-keyword">import</span> java.util.logging.Level;
 <span class="hljs-keyword">import</span> java.util.logging.Logger;
 
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.JobConfig;
-
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.Twister2Job;
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.config.Config;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IPersistentVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IVolatileVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorker;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorkerController;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.Twister2Worker;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -151,21 +147,35 @@ pom.xml  src
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */</span>
-<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloWorld</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IWorker</span> </span>{
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloWorld</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Twister2Worker</span> </span>{
 
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Logger LOG = Logger.getLogger(HelloWorld<span class="hljs-class">.<span class="hljs-keyword">class</span>.<span class="hljs-title">getName</span>())</span>;
 
   <span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(WorkerEnvironment workerEnvironment)</span> </span>{
+
+    <span class="hljs-keyword">int</span> workerID = workerEnvironment.getWorkerId();
+    Config config = workerEnvironment.getConfig();
+
     <span class="hljs-comment">// lets retrieve the configuration set in the job config</span>
     String helloKeyValue = config.getStringValue(<span class="hljs-string">"hello-key"</span>);
 
     <span class="hljs-comment">// lets do a log to indicate we are running</span>
-    LOG.log(Level.INFO, String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
+    LOG.info(String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
             + <span class="hljs-string">"and I got a message: %s"</span>, workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
+        workerEnvironment.getNumberOfWorkers(), helloKeyValue));
+
+    waitSeconds(<span class="hljs-number">30</span>);
+  }
+
+  <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">waitSeconds</span><span class="hljs-params">(<span class="hljs-keyword">long</span> seconds)</span> </span>{
+
+    <span class="hljs-keyword">try</span> {
+      LOG.info(<span class="hljs-string">"Sleeping "</span> + seconds + <span class="hljs-string">" seconds. Will complete after that."</span>);
+      Thread.sleep(seconds * <span class="hljs-number">1000</span>);
+    } <span class="hljs-keyword">catch</span> (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
@@ -185,7 +195,7 @@ pom.xml  src
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName(<span class="hljs-string">"hello-world-job"</span>)
         .setWorkerClass(HelloWorld<span class="hljs-class">.<span class="hljs-keyword">class</span>)
-        .<span class="hljs-title">addComputeResource</span>(2, 1024, <span class="hljs-title">numberOfWorkers</span>)
+        .<span class="hljs-title">addComputeResource</span>(.2, 128, <span class="hljs-title">numberOfWorkers</span>)
         .<span class="hljs-title">setConfig</span>(<span class="hljs-title">jobConfig</span>)
         .<span class="hljs-title">build</span>()</span>;
     <span class="hljs-comment">// now submit the job</span>

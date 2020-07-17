@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,7 +47,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/BarrierHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobFailureWatcher.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.ServerConnectHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -228,15 +228,15 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#addShutdownHook-boolean-">addShutdownHook</a></span>(boolean&nbsp;clearJobResourcesOnKill)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#addShutdownHook-boolean-">addShutdownHook</a></span>(boolean&nbsp;clearK8sJobResourcesOnKill)</code>
 <div class="block">A job can be terminated in two ways:
- a) successful completion: all workers complete their work and send a COMPLETED message
- to the Job Master.</div>
+ a) workers end a job: workers either successfully complete or fail
+   all workers complete their work and send COMPLETED messages to the Job Master.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#completeJob-edu.iu.dsc.tws.master.dashclient.models.JobState-">completeJob</a></span>(<a href="../../../../../../edu/iu/dsc/tws/master/dashclient/models/JobState.html" title="enum in edu.iu.dsc.tws.master.dashclient.models">JobState</a>&nbsp;jobFinalState)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#endJob-JobAPI.JobState-">endJob</a></span>(JobAPI.JobState&nbsp;finalState1)</code>
 <div class="block">this method finishes the job
  It is executed when the worker completed message received from all workers</div>
 </td>
@@ -246,7 +246,7 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#getDriver--">getDriver</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">WorkerHandler</a></code></td>
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/master/server/JMWorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">JMWorkerHandler</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#getWorkerHandler--">getWorkerHandler</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
@@ -254,18 +254,28 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#getZkMasterController--">getZkMasterController</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#jmFailed--">jmFailed</a></span>()</code>
+<div class="block">this method is called when JobMaster fails because of some uncaught exception
+ ıt is called by the JobMasterStarter program
+
+ It closes all threads started by JM
+ It marks its state at ZK persistent storage as FAILED</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>java.lang.Thread</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#startDriverThread--">startDriverThread</a></span>()</code>
 <div class="block">start Driver in a Thread</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#startJobMasterBlocking--">startJobMasterBlocking</a></span>()</code>
 <div class="block">start the Job Master in a blocking call</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>java.lang.Thread</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html#startJobMasterThreaded--">startJobMasterThreaded</a></span>()</code>
 <div class="block">start the Job Master in a Thread</div>
@@ -429,16 +439,30 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>getWorkerHandler</h4>
-<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">WorkerHandler</a>&nbsp;getWorkerHandler()</pre>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/master/server/JMWorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">JMWorkerHandler</a>&nbsp;getWorkerHandler()</pre>
 </li>
 </ul>
-<a name="completeJob-edu.iu.dsc.tws.master.dashclient.models.JobState-">
+<a name="jmFailed--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>completeJob</h4>
-<pre>public&nbsp;void&nbsp;completeJob(<a href="../../../../../../edu/iu/dsc/tws/master/dashclient/models/JobState.html" title="enum in edu.iu.dsc.tws.master.dashclient.models">JobState</a>&nbsp;jobFinalState)</pre>
+<h4>jmFailed</h4>
+<pre>public&nbsp;void&nbsp;jmFailed()</pre>
+<div class="block">this method is called when JobMaster fails because of some uncaught exception
+ ıt is called by the JobMasterStarter program
+
+ It closes all threads started by JM
+ It marks its state at ZK persistent storage as FAILED</div>
+</li>
+</ul>
+<a name="endJob-JobAPI.JobState-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>endJob</h4>
+<pre>public&nbsp;void&nbsp;endJob(JobAPI.JobState&nbsp;finalState1)</pre>
 <div class="block">this method finishes the job
  It is executed when the worker completed message received from all workers</div>
 </li>
@@ -449,23 +473,24 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>addShutdownHook</h4>
-<pre>public&nbsp;void&nbsp;addShutdownHook(boolean&nbsp;clearJobResourcesOnKill)</pre>
+<pre>public&nbsp;void&nbsp;addShutdownHook(boolean&nbsp;clearK8sJobResourcesOnKill)</pre>
 <div class="block">A job can be terminated in two ways:
- a) successful completion: all workers complete their work and send a COMPLETED message
- to the Job Master. Job master clears all job resources from the cluster and
- informs Dashboard. This is handled in the method: completeJob()
- b) forced killing: user chooses to terminate the job explicitly by executing job kill command
- not all workers successfully complete in this case.
- JobMaster does not get COMPLETED message from all workers.
- So completeJob() method is not called.
- Instead, the JobMaster pod or the JobMaster process in the submitting client is deleted.
- ShutDown Hook gets executed.
+ a) workers end a job: workers either successfully complete or fail
+   all workers complete their work and send COMPLETED messages to the Job Master.
+   some workers send FULLY_FAILED message to JM
+ Job master clears all job resources from the cluster and informs Dashboard.
+ This is handled in the method: endJob()
+ b) client kills the job: users kill the job explicitly by either
+ executing job kill command or killing the client process if JM is running on the  client.
+ JobMaster endJob() method is not called.
+ JM ShutDown Hook gets executed.
  <p>
- In this case, it can either clear job resources or just send a message to Dashboard
+ In this case, it can either clear job resources on k8s or does not
  based on the parameter that is provided when the shut down hook is registered.
- If the job master runs in the client, it should clear resources.
+ If the job master runs in the client, it should clear k8s resources,
+ because the job is ended by killing JM process.
  when the job master runs in the cluster, it should not clear resources.
- The resources should be cleared by the job killing process.</div>
+ The resources should be cleared by the twister2 client.</div>
 </li>
 </ul>
 <a name="getDriver--">
@@ -504,7 +529,7 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/BarrierHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobFailureWatcher.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.ServerConnectHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
