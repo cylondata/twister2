@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -107,13 +107,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHandler.html" title="interface in edu.iu.dsc.tws.api.net.request">MessageHandler</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">JMWorkerStatusUpdater</span>
 extends java.lang.Object
-implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a></pre>
+implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a>, <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHandler.html" title="interface in edu.iu.dsc.tws.api.net.request">MessageHandler</a></pre>
 </li>
 </ul>
 </div>
@@ -132,7 +132,9 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusU
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#JMWorkerStatusUpdater-edu.iu.dsc.tws.master.worker.JMWorkerAgent-">JMWorkerStatusUpdater</a></span>(<a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerAgent</a>&nbsp;jmWorkerAgent)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#JMWorkerStatusUpdater-edu.iu.dsc.tws.common.net.tcp.request.RRClient-int-edu.iu.dsc.tws.api.config.Config-">JMWorkerStatusUpdater</a></span>(<a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
+                     int&nbsp;workerID,
+                     <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -150,12 +152,27 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusU
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#addWorkerFailureListener-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">addWorkerFailureListener</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;workerFailureListener1)</code>
+<div class="block">only one IWorkerFailureListener can be added
+ if the second IWorkerFailureListener tried to be added, returns false</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerState</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#getWorkerStatusForID-int-">getWorkerStatusForID</a></span>(int&nbsp;id)</code>
 <div class="block">return the status of any worker in the job</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#onMessage-edu.iu.dsc.tws.api.net.request.RequestID-int-Message-">onMessage</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>&nbsp;id,
+         int&nbsp;workerId,
+         Message&nbsp;message)</code>
+<div class="block">Handles a specific message type</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerStatusUpdater.html#updateWorkerStatus-JobMasterAPI.WorkerState-">updateWorkerStatus</a></span>(JobMasterAPI.WorkerState&nbsp;newState)</code>
 <div class="block">update the status of this worker in the job
@@ -187,13 +204,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusU
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JMWorkerStatusUpdater-edu.iu.dsc.tws.master.worker.JMWorkerAgent-">
+<a name="JMWorkerStatusUpdater-edu.iu.dsc.tws.common.net.tcp.request.RRClient-int-edu.iu.dsc.tws.api.config.Config-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>JMWorkerStatusUpdater</h4>
-<pre>public&nbsp;JMWorkerStatusUpdater(<a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerAgent.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerAgent</a>&nbsp;jmWorkerAgent)</pre>
+<pre>public&nbsp;JMWorkerStatusUpdater(<a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
+                             int&nbsp;workerID,
+                             <a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</pre>
 </li>
 </ul>
 </li>
@@ -224,10 +243,21 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusU
 </dl>
 </li>
 </ul>
+<a name="addWorkerFailureListener-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addWorkerFailureListener</h4>
+<pre>public&nbsp;boolean&nbsp;addWorkerFailureListener(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;workerFailureListener1)</pre>
+<div class="block">only one IWorkerFailureListener can be added
+ if the second IWorkerFailureListener tried to be added, returns false</div>
+</li>
+</ul>
 <a name="getWorkerStatusForID-int-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getWorkerStatusForID</h4>
 <pre>public&nbsp;JobMasterAPI.WorkerState&nbsp;getWorkerStatusForID(int&nbsp;id)</pre>
@@ -237,6 +267,27 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusU
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html#getWorkerStatusForID-int-">getWorkerStatusForID</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a></code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
+</dl>
+</li>
+</ul>
+<a name="onMessage-edu.iu.dsc.tws.api.net.request.RequestID-int-Message-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>onMessage</h4>
+<pre>public&nbsp;void&nbsp;onMessage(<a href="../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>&nbsp;id,
+                      int&nbsp;workerId,
+                      Message&nbsp;message)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHandler.html#onMessage-edu.iu.dsc.tws.api.net.request.RequestID-int-Message-">MessageHandler</a></code></span></div>
+<div class="block">Handles a specific message type</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHandler.html#onMessage-edu.iu.dsc.tws.api.net.request.RequestID-int-Message-">onMessage</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHandler.html" title="interface in edu.iu.dsc.tws.api.net.request">MessageHandler</a></code></dd>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>id</code> - request id</dd>
+<dd><code>workerId</code> - worker id</dd>
+<dd><code>message</code> - protbuf message</dd>
 </dl>
 </li>
 </ul>

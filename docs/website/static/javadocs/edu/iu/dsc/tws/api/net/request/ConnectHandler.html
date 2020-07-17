@@ -129,12 +129,12 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/net/request/ConnectHandler.html#onConnect-java.nio.channels.SocketChannel-edu.iu.dsc.tws.api.net.StatusCode-">onConnect</a></span>(java.nio.channels.SocketChannel&nbsp;channel,
-         <a href="../../../../../../../edu/iu/dsc/tws/api/net/StatusCode.html" title="enum in edu.iu.dsc.tws.api.net">StatusCode</a>&nbsp;status)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/net/request/ConnectHandler.html#onConnect-java.nio.channels.SocketChannel-">onConnect</a></span>(java.nio.channels.SocketChannel&nbsp;channel)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/net/request/ConnectHandler.html#onError-java.nio.channels.SocketChannel-">onError</a></span>(java.nio.channels.SocketChannel&nbsp;channel)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/net/request/ConnectHandler.html#onError-java.nio.channels.SocketChannel-edu.iu.dsc.tws.api.net.StatusCode-">onError</a></span>(java.nio.channels.SocketChannel&nbsp;channel,
+       <a href="../../../../../../../edu/iu/dsc/tws/api/net/StatusCode.html" title="enum in edu.iu.dsc.tws.api.net">StatusCode</a>&nbsp;status)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -151,23 +151,23 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="onError-java.nio.channels.SocketChannel-">
+<a name="onError-java.nio.channels.SocketChannel-edu.iu.dsc.tws.api.net.StatusCode-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>onError</h4>
-<pre>void&nbsp;onError(java.nio.channels.SocketChannel&nbsp;channel)</pre>
+<pre>void&nbsp;onError(java.nio.channels.SocketChannel&nbsp;channel,
+             <a href="../../../../../../../edu/iu/dsc/tws/api/net/StatusCode.html" title="enum in edu.iu.dsc.tws.api.net">StatusCode</a>&nbsp;status)</pre>
 </li>
 </ul>
-<a name="onConnect-java.nio.channels.SocketChannel-edu.iu.dsc.tws.api.net.StatusCode-">
+<a name="onConnect-java.nio.channels.SocketChannel-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>onConnect</h4>
-<pre>void&nbsp;onConnect(java.nio.channels.SocketChannel&nbsp;channel,
-               <a href="../../../../../../../edu/iu/dsc/tws/api/net/StatusCode.html" title="enum in edu.iu.dsc.tws.api.net">StatusCode</a>&nbsp;status)</pre>
+<pre>void&nbsp;onConnect(java.nio.channels.SocketChannel&nbsp;channel)</pre>
 </li>
 </ul>
 <a name="onClose-java.nio.channels.SocketChannel-">

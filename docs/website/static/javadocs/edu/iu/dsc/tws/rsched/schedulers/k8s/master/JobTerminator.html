@@ -132,7 +132,8 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html#JobTerminator-edu.iu.dsc.tws.api.config.Config-">JobTerminator</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html#JobTerminator-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-">JobTerminator</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+             <a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -151,7 +152,8 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html#terminateJob-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html#terminateJob-java.lang.String-JobAPI.JobState-">terminateJob</a></span>(java.lang.String&nbsp;jobID,
+            JobAPI.JobState&nbsp;finalState)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -175,13 +177,14 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JobTerminator-edu.iu.dsc.tws.api.config.Config-">
+<a name="JobTerminator-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>JobTerminator</h4>
-<pre>public&nbsp;JobTerminator(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config)</pre>
+<pre>public&nbsp;JobTerminator(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                     <a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller)</pre>
 </li>
 </ul>
 </li>
@@ -192,16 +195,17 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="terminateJob-java.lang.String-">
+<a name="terminateJob-java.lang.String-JobAPI.JobState-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>terminateJob</h4>
-<pre>public&nbsp;boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID)</pre>
+<pre>public&nbsp;boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID,
+                            JobAPI.JobState&nbsp;finalState)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html#terminateJob-java.lang.String-">terminateJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html" title="interface in edu.iu.dsc.tws.master">IJobTerminator</a></code></dd>
+<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html#terminateJob-java.lang.String-JobAPI.JobState-">terminateJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html" title="interface in edu.iu.dsc.tws.master">IJobTerminator</a></code></dd>
 </dl>
 </li>
 </ul>

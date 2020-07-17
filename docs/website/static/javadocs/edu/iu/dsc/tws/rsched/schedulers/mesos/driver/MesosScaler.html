@@ -159,7 +159,8 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPer
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/driver/MesosScaler.html#scaleDownWorkers-int-">scaleDownWorkers</a></span>(int&nbsp;instancesToRemove)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/driver/MesosScaler.html#scaleDownWorkers-int-int-">scaleDownWorkers</a></span>(int&nbsp;instancesToRemove,
+                int&nbsp;numberOfWorkers)</code>
 <div class="block">remove workers from the scalable compute resource</div>
 </td>
 </tr>
@@ -246,19 +247,21 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPer
 </dl>
 </li>
 </ul>
-<a name="scaleDownWorkers-int-">
+<a name="scaleDownWorkers-int-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>scaleDownWorkers</h4>
-<pre>public&nbsp;boolean&nbsp;scaleDownWorkers(int&nbsp;instancesToRemove)</pre>
+<pre>public&nbsp;boolean&nbsp;scaleDownWorkers(int&nbsp;instancesToRemove,
+                                int&nbsp;numberOfWorkers)</pre>
 <div class="block">remove workers from the scalable compute resource</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html#scaleDownWorkers-int-">scaleDownWorkers</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html" title="interface in edu.iu.dsc.tws.api.driver">IScalerPerCluster</a></code></dd>
+<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html#scaleDownWorkers-int-int-">scaleDownWorkers</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/driver/IScalerPerCluster.html" title="interface in edu.iu.dsc.tws.api.driver">IScalerPerCluster</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>instancesToRemove</code> - </dd>
+<dd><code>numberOfWorkers</code> - number of workers before the scale down</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 </dl>
 </li>

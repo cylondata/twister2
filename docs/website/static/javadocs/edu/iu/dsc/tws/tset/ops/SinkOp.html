@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -176,25 +176,31 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html#endExecute--">endExecute</a></span>()</code>
+<div class="block">Callback that is gets called when the stream ends</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html#execute-edu.iu.dsc.tws.api.compute.IMessage-">execute</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/IMessage.html" title="interface in edu.iu.dsc.tws.api.compute">IMessage</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html" title="type parameter in SinkOp">T</a>&gt;&nbsp;message)</code>
 <div class="block">Execute with an incoming message</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset">DataPartition</a>&lt;?&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html#get-java.lang.String-">get</a></span>(java.lang.String&nbsp;name)</code>
 <div class="block">returns the collected data partition only when it matches the provided name</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/IONames.html" title="class in edu.iu.dsc.tws.api.compute.modifiers">IONames</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html#getCollectibleNames--">getCollectibleNames</a></span>()</code>
 <div class="block">This method should return a set of collectible names, that can be collected from this
  collector.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html#prepare-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.compute.TaskContext-">prepare</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
        <a href="../../../../../../edu/iu/dsc/tws/api/compute/TaskContext.html" title="interface in edu.iu.dsc.tws.api.compute">TaskContext</a>&nbsp;ctx)</code>
@@ -207,7 +213,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.ops.<a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html" title="class in edu.iu.dsc.tws.tset.ops">BaseOp</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#add-java.lang.String-edu.iu.dsc.tws.api.dataset.DataPartition-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#getReceivableNames--">getReceivableNames</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#add-java.lang.String-edu.iu.dsc.tws.api.dataset.DataPartition-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#getReceivableNames--">getReceivableNames</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#gettSetContext--">gettSetContext</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -325,6 +331,21 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="endExecute--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>endExecute</h4>
+<pre>public&nbsp;void&nbsp;endExecute()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html#endExecute--">ICompute</a></code></span></div>
+<div class="block">Callback that is gets called when the stream ends</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html#endExecute--">endExecute</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">ICompute</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/ops/SinkOp.html" title="type parameter in SinkOp">T</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>

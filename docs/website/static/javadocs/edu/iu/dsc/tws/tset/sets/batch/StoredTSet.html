@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -236,29 +236,33 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 </td>
 </tr>
 <tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataObject.html" title="interface in edu.iu.dsc.tws.api.dataset">DataObject</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getDataObject--">getDataObject</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/nodes/INode.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">INode</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getINode--">getINode</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getStoredSourceTSet--">getStoredSourceTSet</a></span>()</code>
 <div class="block">Once a cache TSet is run, it will produce data and store data in the data executor with the
  tset ID as the key.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>&lt;K,V&gt;&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedTSet</a>&lt;K,V&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">MapFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;K,V&gt;,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;generateTuple)</code>
 <div class="block">Creates a <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TupleTSet</code></a> based on the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/MapFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn"><code>MapFunc</code></a> provided.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PartitionTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">partition</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;partitionFn)</code>
 <div class="block">Same as above, but the parallelism will be preserved in the target <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PartitionTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PartitionTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">partition</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/PartitionFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">PartitionFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;partitionFn,
          int&nbsp;targetParallelism)</code>
@@ -266,26 +270,30 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
  provided.</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#pipe--">pipe</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/ReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">ReduceTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">reduce</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;reduceFn)</code>
 <div class="block">Returns a Reduce <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a> that reduce data on to the target TSet instance (in the runtime)
  with index 0.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/ReplicateTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">ReplicateTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#replicate-int-">replicate</a></span>(int&nbsp;replications)</code>
 <div class="block">Returns a Replicate <a href="../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a> that would clone/broadcast the data from this <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>.</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/ComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">ComputeTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>,java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-java.util.Collection-">union</a></span>(java.util.Collection&lt;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&gt;&nbsp;tSets)</code>
 <div class="block">Same as above, but accepts a <code>Collection</code> of <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/ComputeTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">ComputeTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>,java.util.Iterator&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;other)</code>
 <div class="block">Returns a single <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> that create a union of data in both <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
@@ -411,6 +419,21 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#direct--">direct</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Direct TLink</dd>
+</dl>
+</li>
+</ul>
+<a name="pipe--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>pipe</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/PipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">PipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;pipe()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#pipe--">pipe</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html#pipe--">pipe</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -686,12 +709,12 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 <h4>getStoredSourceTSet</h4>
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;getStoredSourceTSet()</pre>
 <div class="block">Once a cache TSet is run, it will produce data and store data in the data executor with the
- tset ID as the key. This will be exposed to other operations as a <code>SourceTSet<T></code></div>
+ tset ID as the key. This will be exposed to other operations as a <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch"><code>SourceTSet</code></a></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html#getStoredSourceTSet--">getStoredSourceTSet</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd><code>SourceTSet<T></code> source tset from data
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch"><code>SourceTSet</code></a> source tset from data
  <p></dd>
 </dl>
 </li>
@@ -699,7 +722,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 <a name="getData--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getData</h4>
 <pre>public&nbsp;java.util.List&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;getData()</pre>
@@ -713,6 +736,19 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTB
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html#getData--">getData</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>dataObject</dd>
+</dl>
+</li>
+</ul>
+<a name="getDataObject--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getDataObject</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataObject.html" title="interface in edu.iu.dsc.tws.api.dataset">DataObject</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;&nbsp;getDataObject()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html#getDataObject--">getDataObject</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="type parameter in StoredTSet">T</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
