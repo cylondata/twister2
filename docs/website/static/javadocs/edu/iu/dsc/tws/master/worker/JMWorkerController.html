@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
+var methods = {"i0":9,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -132,16 +132,11 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-edu.iu.dsc.tws.common.net.tcp.request.RRClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">JMWorkerController</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-                  JobMasterAPI.WorkerInfo&nbsp;thisWorker,
-                  <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
-                  <a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-edu.iu.dsc.tws.common.net.tcp.request.RRClient-int-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">JMWorkerController</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-                  JobMasterAPI.WorkerInfo&nbsp;thisWorker,
-                  <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-int-int-edu.iu.dsc.tws.common.net.tcp.request.RRClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">JMWorkerController</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                  JobMasterAPI.WorkerInfo&nbsp;workerInfo,
                   int&nbsp;numberOfWorkers,
+                  int&nbsp;restartCount,
+                  <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
                   <a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</code>&nbsp;</td>
 </tr>
 </table>
@@ -224,6 +219,27 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
  if some workers still could not arrive at the barrier, throw an exception</div>
 </td>
 </tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></span>(long&nbsp;timeLimit)</code>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></span>()</code>
+<div class="block">this barrier is used when initializing the workers.</div>
+</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html#workerRestartCount--">workerRestartCount</a></span>()</code>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -237,7 +253,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.resource.<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getFailureListener--">getFailureListener</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getFailureListener--">getFailureListener</a></code></li>
 </ul>
 </li>
 </ul>
@@ -253,28 +269,17 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-edu.iu.dsc.tws.common.net.tcp.request.RRClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>JMWorkerController</h4>
-<pre>public&nbsp;JMWorkerController(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-                          JobMasterAPI.WorkerInfo&nbsp;thisWorker,
-                          <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
-                          <a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</pre>
-</li>
-</ul>
-<a name="JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-edu.iu.dsc.tws.common.net.tcp.request.RRClient-int-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">
+<a name="JMWorkerController-edu.iu.dsc.tws.api.config.Config-JobMasterAPI.WorkerInfo-int-int-edu.iu.dsc.tws.common.net.tcp.request.RRClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>JMWorkerController</h4>
 <pre>public&nbsp;JMWorkerController(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-                          JobMasterAPI.WorkerInfo&nbsp;thisWorker,
-                          <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
+                          JobMasterAPI.WorkerInfo&nbsp;workerInfo,
                           int&nbsp;numberOfWorkers,
+                          int&nbsp;restartCount,
+                          <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRClient</a>&nbsp;rrClient,
                           <a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</pre>
 </li>
 </ul>
@@ -425,6 +430,47 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 </dl>
 </li>
 </ul>
+<a name="waitOnBarrier-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnBarrier(long&nbsp;timeLimit)
+                   throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">IWorkerController</a></code></span></div>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnInitBarrier--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnInitBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnInitBarrier()
+                       throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">IWorkerController</a></code></span></div>
+<div class="block">this barrier is used when initializing the workers.
+ when there is a failure in the job,
+ workers synchronize with this barrier
+ this must not be used in other parts of the system</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
 <a name="convertStringToIP-java.lang.String-">
 <!--   -->
 </a>
@@ -438,13 +484,29 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <a name="getCheckpointingClient--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getCheckpointingClient</h4>
 <pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;getCheckpointingClient()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="workerRestartCount--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>workerRestartCount</h4>
+<pre>public&nbsp;int&nbsp;workerRestartCount()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">IWorkerController</a></code></span></div>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">workerRestartCount</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 </dl>
 </li>
 </ul>

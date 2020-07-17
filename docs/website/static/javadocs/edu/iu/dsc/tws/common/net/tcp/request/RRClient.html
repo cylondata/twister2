@@ -184,10 +184,11 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html#sendRequest-Message-">sendRequest</a></span>(Message&nbsp;message)</code>&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a></code></td>
+<td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>,Message&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html#sendRequestWaitResponse-Message-long-">sendRequestWaitResponse</a></span>(Message&nbsp;message,
                        long&nbsp;waitLimit)</code>
-<div class="block">throw an exception with the failure reason</div>
+<div class="block">return requestID and response message
+ throw an exception with the failure reason</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -196,7 +197,7 @@ extends java.lang.Object</pre>
               int&nbsp;port)</code>&nbsp;</td>
 </tr>
 <tr id="i9" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRClient.html#tryConnecting--">tryConnecting</a></span>()</code>&nbsp;</td>
 </tr>
 </table>
@@ -268,7 +269,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>tryConnecting</h4>
-<pre>public&nbsp;boolean&nbsp;tryConnecting()</pre>
+<pre>public&nbsp;void&nbsp;tryConnecting()</pre>
 </li>
 </ul>
 <a name="disconnect--">
@@ -304,10 +305,11 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>sendRequestWaitResponse</h4>
-<pre>public&nbsp;<a href="../../../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>&nbsp;sendRequestWaitResponse(Message&nbsp;message,
-                                         long&nbsp;waitLimit)
-                                  throws <a href="../../../../../../../../edu/iu/dsc/tws/api/exceptions/net/BlockingSendException.html" title="class in edu.iu.dsc.tws.api.exceptions.net">BlockingSendException</a></pre>
-<div class="block">throw an exception with the failure reason</div>
+<pre>public&nbsp;<a href="../../../../../../../../edu/iu/dsc/tws/api/comms/structs/Tuple.html" title="class in edu.iu.dsc.tws.api.comms.structs">Tuple</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>,Message&gt;&nbsp;sendRequestWaitResponse(Message&nbsp;message,
+                                                        long&nbsp;waitLimit)
+                                                 throws <a href="../../../../../../../../edu/iu/dsc/tws/api/exceptions/net/BlockingSendException.html" title="class in edu.iu.dsc.tws.api.exceptions.net">BlockingSendException</a></pre>
+<div class="block">return requestID and response message
+ throw an exception with the failure reason</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>message</code> - message</dd>

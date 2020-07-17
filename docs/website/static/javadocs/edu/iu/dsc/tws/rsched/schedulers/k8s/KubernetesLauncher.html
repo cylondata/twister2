@@ -107,13 +107,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a>, <a href="../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html" title="interface in edu.iu.dsc.tws.master">IJobTerminator</a>, java.lang.AutoCloseable</dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a>, java.lang.AutoCloseable</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">KubernetesLauncher</span>
 extends java.lang.Object
-implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a>, <a href="../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html" title="interface in edu.iu.dsc.tws.master">IJobTerminator</a></pre>
+implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></pre>
 </li>
 </ul>
 </div>
@@ -162,15 +162,15 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/Twister2JobState.html" title="class in edu.iu.dsc.tws.api.scheduler">Twister2JobState</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#launch-JobAPI.Job-">launch</a></span>(JobAPI.Job&nbsp;job)</code>
-<div class="block">Launch the processes according to the resource plan.</div>
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#killJob-java.lang.String-">killJob</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">Kill the Kubernetes Job</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#terminateJob-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;jobID)</code>
-<div class="block">Terminate the Kubernetes Job</div>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/Twister2JobState.html" title="class in edu.iu.dsc.tws.api.scheduler">Twister2JobState</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html#launch-JobAPI.Job-">launch</a></span>(JobAPI.Job&nbsp;job)</code>
+<div class="block">Launch the processes according to the resource plan.</div>
 </td>
 </tr>
 </table>
@@ -261,19 +261,17 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 </dl>
 </li>
 </ul>
-<a name="terminateJob-java.lang.String-">
+<a name="killJob-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>terminateJob</h4>
-<pre>public&nbsp;boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID)</pre>
-<div class="block">Terminate the Kubernetes Job</div>
+<h4>killJob</h4>
+<pre>public&nbsp;boolean&nbsp;killJob(java.lang.String&nbsp;jobID)</pre>
+<div class="block">Kill the Kubernetes Job</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html#terminateJob-java.lang.String-">terminateJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></code></dd>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html#terminateJob-java.lang.String-">terminateJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/master/IJobTerminator.html" title="interface in edu.iu.dsc.tws.master">IJobTerminator</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html#killJob-java.lang.String-">killJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></code></dd>
 </dl>
 </li>
 </ul>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -192,6 +192,27 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
  if some workers still could not arrive at the barrier, throw an exception</div>
 </td>
 </tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/local/mock/MockWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></span>(long&nbsp;timeLimit)</code>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/local/mock/MockWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></span>()</code>
+<div class="block">this barrier is used when initializing the workers.</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/local/mock/MockWorkerController.html#workerRestartCount--">workerRestartCount</a></span>()</code>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -205,7 +226,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.resource.<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getFailureListener--">getFailureListener</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getFailureListener--">getFailureListener</a></code></li>
 </ul>
 </li>
 </ul>
@@ -325,10 +346,26 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 </dl>
 </li>
 </ul>
+<a name="workerRestartCount--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>workerRestartCount</h4>
+<pre>public&nbsp;int&nbsp;workerRestartCount()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">IWorkerController</a></code></span></div>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">workerRestartCount</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+</dl>
+</li>
+</ul>
 <a name="waitOnBarrier--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>waitOnBarrier</h4>
 <pre>public&nbsp;void&nbsp;waitOnBarrier()
@@ -340,6 +377,49 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier--">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnBarrier-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnBarrier(long&nbsp;timeLimit)
+                   throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a>,
+                          <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">IWorkerController</a></code></span></div>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnInitBarrier--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>waitOnInitBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnInitBarrier()
+                       throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">IWorkerController</a></code></span></div>
+<div class="block">this barrier is used when initializing the workers.
+ when there is a failure in the job,
+ workers synchronize with this barrier
+ this must not be used in other parts of the system</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
 </dl>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":18,"i2":18,"i3":6,"i4":6,"i5":18,"i6":6,"i7":6,"i8":6};
+var methods = {"i0":6,"i1":18,"i2":18,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -99,7 +99,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/MesosWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos">MesosWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/local/mock/MockWorkerController.html" title="class in edu.iu.dsc.tws.local.mock">MockWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIJobWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPIJobWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPIWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html" title="class in edu.iu.dsc.tws.common.zk">ZKWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/bootstrap/ZKWorkerController.html" title="class in edu.iu.dsc.tws.rsched.bootstrap">ZKWorkerController</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/master/worker/JMWorkerController.html" title="class in edu.iu.dsc.tws.master.worker">JMWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/MesosWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos">MesosWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/local/mock/MockWorkerController.html" title="class in edu.iu.dsc.tws.local.mock">MockWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPIWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html" title="class in edu.iu.dsc.tws.common.zk">ZKWorkerController</a></dd>
 </dl>
 <hr>
 <br>
@@ -154,29 +154,44 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code>default java.lang.Object</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></span>(java.lang.String&nbsp;name)</code>
-<div class="block">Get object with a given name</div>
-</td>
-</tr>
-<tr id="i6" class="altColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getWorkerInfo--">getWorkerInfo</a></span>()</code>
 <div class="block">return the WorkerInfo object for this worker</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getWorkerInfoForID-int-">getWorkerInfoForID</a></span>(int&nbsp;id)</code>
 <div class="block">return the WorkerInfo object for the given ID</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier--">waitOnBarrier</a></span>()</code>
 <div class="block">wait for all workers in the job to arrive at this barrier
  After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
  if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></span>(long&nbsp;timeLimit)</code>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></span>()</code>
+<div class="block">this barrier is used when initializing the workers.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">workerRestartCount</a></span>()</code>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
 </td>
 </tr>
 </table>
@@ -225,6 +240,17 @@ var activeTableTab = "activeTableTab";
  including non-started ones and finished ones</div>
 </li>
 </ul>
+<a name="workerRestartCount--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>workerRestartCount</h4>
+<pre>int&nbsp;workerRestartCount()</pre>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+</li>
+</ul>
 <a name="getJoinedWorkers--">
 <!--   -->
 </a>
@@ -265,10 +291,49 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <h4>waitOnBarrier</h4>
 <pre>void&nbsp;waitOnBarrier()
-            throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+            throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a>,
+                   <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></pre>
 <div class="block">wait for all workers in the job to arrive at this barrier
  After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
  if some workers still could not arrive at the barrier, throw an exception</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnBarrier-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnBarrier</h4>
+<pre>void&nbsp;waitOnBarrier(long&nbsp;timeLimit)
+            throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a>,
+                   <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></pre>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeLimit,
+ if some workers still could not arrive at the barrier, throw an exception</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/JobFaultyException.html" title="class in edu.iu.dsc.tws.api.exceptions">JobFaultyException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnInitBarrier--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnInitBarrier</h4>
+<pre>void&nbsp;waitOnInitBarrier()
+                throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block">this barrier is used when initializing the workers.
+ when there is a failure in the job,
+ workers synchronize with this barrier
+ this must not be used in other parts of the system</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
@@ -286,22 +351,6 @@ var activeTableTab = "activeTableTab";
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the failure listener</dd>
-</dl>
-</li>
-</ul>
-<a name="getRuntimeObject-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getRuntimeObject</h4>
-<pre>default&nbsp;java.lang.Object&nbsp;getRuntimeObject(java.lang.String&nbsp;name)</pre>
-<div class="block">Get object with a given name</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>name</code> - name</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>the object</dd>
 </dl>
 </li>
 </ul>

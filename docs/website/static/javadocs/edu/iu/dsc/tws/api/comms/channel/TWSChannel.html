@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -171,12 +171,18 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/comms/channel/TWSChannel.html#reInit-java.util.List-">reInit</a></span>(java.util.List&lt;JobMasterAPI.WorkerInfo&gt;&nbsp;restartedWorkers)</code>
+<div class="block">re-initialize the channel with restarted workers</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/comms/channel/TWSChannel.html#releaseBuffers-int-int-">releaseBuffers</a></span>(int&nbsp;wId,
               int&nbsp;e)</code>
 <div class="block">Release the buffers for worker and edge</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/api/comms/channel/TWSChannel.html#sendMessage-int-edu.iu.dsc.tws.api.comms.messaging.ChannelMessage-edu.iu.dsc.tws.api.comms.channel.ChannelListener-">sendMessage</a></span>(int&nbsp;id,
            <a href="../../../../../../../edu/iu/dsc/tws/api/comms/messaging/ChannelMessage.html" title="class in edu.iu.dsc.tws.api.comms.messaging">ChannelMessage</a>&nbsp;message,
@@ -311,7 +317,7 @@ var activeTableTab = "activeTableTab";
 <a name="releaseBuffers-int-int-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>releaseBuffers</h4>
 <pre>void&nbsp;releaseBuffers(int&nbsp;wId,
@@ -321,6 +327,20 @@ var activeTableTab = "activeTableTab";
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>wId</code> - worker</dd>
 <dd><code>e</code> - edge</dd>
+</dl>
+</li>
+</ul>
+<a name="reInit-java.util.List-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>reInit</h4>
+<pre>void&nbsp;reInit(java.util.List&lt;JobMasterAPI.WorkerInfo&gt;&nbsp;restartedWorkers)</pre>
+<div class="block">re-initialize the channel with restarted workers</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>restartedWorkers</code> - </dd>
 </dl>
 </li>
 </ul>

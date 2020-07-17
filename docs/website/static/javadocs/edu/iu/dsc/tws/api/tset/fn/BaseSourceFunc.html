@@ -110,11 +110,11 @@
 </dl>
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SourceFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/examples/ml/svm/tset/DataLoadingTask.html" title="class in edu.iu.dsc.tws.examples.ml.svm.tset">DataLoadingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DataPartitionSourceFunc.html" title="class in edu.iu.dsc.tws.tset.sources">DataPartitionSourceFunc</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSource.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSource</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSourceWrapper.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSourceWrapper</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/batch/kmeans/KMeansTsetJob.CenterSource.html" title="class in edu.iu.dsc.tws.examples.batch.kmeans">KMeansTsetJob.CenterSource</a>, <a href="../../../../../../../org/apache/beam/runners/twister2/translation/wrappers/Twister2BoundedSource.html" title="class in org.apache.beam.runners.twister2.translation.wrappers">Twister2BoundedSource</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/ml/svm/tset/WeightVectorLoad.html" title="class in edu.iu.dsc.tws.examples.ml.svm.tset">WeightVectorLoad</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/fn/impl/ArrowBasedSourceFunction.html" title="class in edu.iu.dsc.tws.tset.fn.impl">ArrowBasedSourceFunction</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/fn/impl/CSVBasedSourceFunction.html" title="class in edu.iu.dsc.tws.tset.fn.impl">CSVBasedSourceFunction</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/ml/svm/tset/DataLoadingTask.html" title="class in edu.iu.dsc.tws.examples.ml.svm.tset">DataLoadingTask</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DataPartitionSourceFunc.html" title="class in edu.iu.dsc.tws.tset.sources">DataPartitionSourceFunc</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSource.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSource</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSourceWrapper.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSourceWrapper</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/batch/kmeans/KMeansTsetJob.CenterSource.html" title="class in edu.iu.dsc.tws.examples.batch.kmeans">KMeansTsetJob.CenterSource</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/fn/impl/TextBasedSourceFunction.html" title="class in edu.iu.dsc.tws.tset.fn.impl">TextBasedSourceFunction</a>, <a href="../../../../../../../org/apache/beam/runners/twister2/translation/wrappers/Twister2BoundedSource.html" title="class in org.apache.beam.runners.twister2.translation.wrappers">Twister2BoundedSource</a>, <a href="../../../../../../../edu/iu/dsc/tws/examples/ml/svm/tset/WeightVectorLoad.html" title="class in edu.iu.dsc.tws.examples.ml.svm.tset">WeightVectorLoad</a></dd>
 </dl>
 <hr>
 <br>
@@ -181,14 +181,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SourceFunc.h
 <!--   -->
 </a>
 <h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.tset.fn.<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#prepare-edu.iu.dsc.tws.api.tset.TSetContext-">prepare</a></code></li>
-</ul>
-<ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Closable">
-<!--   -->
-</a>
-<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.compute.modifiers.<a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#reset--">reset</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#end--">end</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#prepare-edu.iu.dsc.tws.api.tset.TSetContext-">prepare</a></code></li>
 </ul>
 </li>
 </ul>

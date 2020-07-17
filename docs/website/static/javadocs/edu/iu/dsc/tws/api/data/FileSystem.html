@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":10,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":10,"i10":6,"i11":10,"i12":10,"i13":6,"i14":6,"i15":6,"i16":6,"i17":6,"i18":6,"i19":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":10,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":10,"i11":6,"i12":10,"i13":10,"i14":6,"i15":6,"i16":6,"i17":6,"i18":6,"i19":6,"i20":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -182,24 +182,33 @@ implements java.io.Serializable</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#create-edu.iu.dsc.tws.api.data.Path-">create</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#create-edu.iu.dsc.tws.api.data.Path-">create</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>
+<div class="block">Create a file system with the OVERWRITE</div>
+</td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#create-edu.iu.dsc.tws.api.data.Path-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-">create</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f,
+      <a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode)</code>
+<div class="block">Create a file system with the specific write mdoe</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>abstract boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#delete-edu.iu.dsc.tws.api.data.Path-boolean-">delete</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f,
       boolean&nbsp;recursive)</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#exists-edu.iu.dsc.tws.api.data.Path-">exists</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;path)</code>
 <div class="block">Check if the given path exsits</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>abstract long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#getDefaultBlockSize--">getDefaultBlockSize</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/BlockLocation.html" title="interface in edu.iu.dsc.tws.api.data">BlockLocation</a>[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#getFileBlockLocations-edu.iu.dsc.tws.api.data.FileStatus-long-long-">getFileBlockLocations</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/FileStatus.html" title="interface in edu.iu.dsc.tws.api.data">FileStatus</a>&nbsp;file,
                      long&nbsp;start,
@@ -208,84 +217,84 @@ implements java.io.Serializable</pre>
  portions of the given file.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FileStatus.html" title="interface in edu.iu.dsc.tws.api.data">FileStatus</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#getFileStatus-edu.iu.dsc.tws.api.data.Path-">getFileStatus</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>
 <div class="block">Return a file status object that represents the path.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>abstract java.net.URI</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#getUri--">getUri</a></span>()</code>
 <div class="block">Returns a URI whose scheme and authority identify this file system.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#getWorkingDirectory--">getWorkingDirectory</a></span>()</code>
 <div class="block">Get the working Directory</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>abstract void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#initialize-java.net.URI-">initialize</a></span>(java.net.URI&nbsp;name)</code>
 <div class="block">Called after a new FileSystem instance is constructed.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#isDirectory-edu.iu.dsc.tws.api.data.Path-">isDirectory</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;path)</code>
 <div class="block">Check if directory</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>abstract boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#isDistributedFS--">isDistributedFS</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#isFile-edu.iu.dsc.tws.api.data.Path-">isFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;path)</code>
 <div class="block">Check if file</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#isSymlink-edu.iu.dsc.tws.api.data.Path-">isSymlink</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;path)</code>
 <div class="block">check if isSymlink</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FileStatus.html" title="interface in edu.iu.dsc.tws.api.data">FileStatus</a>[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#listFiles-edu.iu.dsc.tws.api.data.Path-">listFiles</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>
 <div class="block">List the statuses of the files/directories in the given path if the path is
  a directory.</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FileStatus.html" title="interface in edu.iu.dsc.tws.api.data">FileStatus</a>[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#listStatus-edu.iu.dsc.tws.api.data.Path-">listStatus</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>abstract boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#mkdirs-edu.iu.dsc.tws.api.data.Path-">mkdirs</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataInputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataInputStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#open-edu.iu.dsc.tws.api.data.Path-">open</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)</code>
 <div class="block">Opens an FSDataInputStream at the indicated Path.</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>abstract <a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataInputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataInputStream</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#open-edu.iu.dsc.tws.api.data.Path-int-">open</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f,
     int&nbsp;bufferSize)</code>&nbsp;</td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>abstract boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#rename-edu.iu.dsc.tws.api.data.Path-edu.iu.dsc.tws.api.data.Path-">rename</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;src,
       <a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;dst)</code>&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>abstract void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.html#setWorkingDirectory-edu.iu.dsc.tws.api.data.Path-">setWorkingDirectory</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;path)</code>
 <div class="block">Set the working Directory</div>
@@ -530,9 +539,35 @@ implements java.io.Serializable</pre>
 <h4>create</h4>
 <pre>public abstract&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a>&nbsp;create(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f)
                                    throws java.io.IOException</pre>
+<div class="block">Create a file system with the OVERWRITE</div>
 <dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>f</code> - path</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the output stream</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.io.IOException</code></dd>
+<dd><code>java.io.IOException</code> - if an error occurs</dd>
+</dl>
+</li>
+</ul>
+<a name="create-edu.iu.dsc.tws.api.data.Path-edu.iu.dsc.tws.api.data.FileSystem.WriteMode-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>create</h4>
+<pre>public abstract&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/data/FSDataOutputStream.html" title="class in edu.iu.dsc.tws.api.data">FSDataOutputStream</a>&nbsp;create(<a href="../../../../../../edu/iu/dsc/tws/api/data/Path.html" title="class in edu.iu.dsc.tws.api.data">Path</a>&nbsp;f,
+                                          <a href="../../../../../../edu/iu/dsc/tws/api/data/FileSystem.WriteMode.html" title="enum in edu.iu.dsc.tws.api.data">FileSystem.WriteMode</a>&nbsp;writeMode)
+                                   throws java.io.IOException</pre>
+<div class="block">Create a file system with the specific write mdoe</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>f</code> - path</dd>
+<dd><code>writeMode</code> - weather overwrite or not, when creating new files</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the output stream</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code> - if an error occurs</dd>
 </dl>
 </li>
 </ul>

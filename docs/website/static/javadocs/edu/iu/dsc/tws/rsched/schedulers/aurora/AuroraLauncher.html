@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":9,"i2":10,"i3":10,"i4":9,"i5":10};
+var methods = {"i0":10,"i1":9,"i2":10,"i3":10,"i4":10,"i5":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -171,21 +171,21 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 </td>
 </tr>
 <tr id="i3" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/aurora/AuroraLauncher.html#killJob-java.lang.String-">killJob</a></span>(java.lang.String&nbsp;jobID)</code>
+<div class="block">Terminate the Aurora Job</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/Twister2JobState.html" title="class in edu.iu.dsc.tws.api.scheduler">Twister2JobState</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/aurora/AuroraLauncher.html#launch-JobAPI.Job-">launch</a></span>(JobAPI.Job&nbsp;job)</code>
 <div class="block">Launch the processes according to the resource plan.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/aurora/AuroraLauncher.html#logEnvVariables-java.util.Map-">logEnvVariables</a></span>(java.util.Map&lt;<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/aurora/AuroraField.html" title="enum in edu.iu.dsc.tws.rsched.schedulers.aurora">AuroraField</a>,java.lang.String&gt;&nbsp;envs)</code>
 <div class="block">print all environment variables for debugging purposes</div>
-</td>
-</tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/aurora/AuroraLauncher.html#terminateJob-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;jobID)</code>
-<div class="block">Terminate the Aurora Job</div>
 </td>
 </tr>
 </table>
@@ -276,17 +276,17 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.
 </dl>
 </li>
 </ul>
-<a name="terminateJob-java.lang.String-">
+<a name="killJob-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>terminateJob</h4>
-<pre>public&nbsp;boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID)</pre>
+<h4>killJob</h4>
+<pre>public&nbsp;boolean&nbsp;killJob(java.lang.String&nbsp;jobID)</pre>
 <div class="block">Terminate the Aurora Job</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html#terminateJob-java.lang.String-">terminateJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></code></dd>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html#killJob-java.lang.String-">killJob</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/scheduler/ILauncher.html" title="interface in edu.iu.dsc.tws.api.scheduler">ILauncher</a></code></dd>
 </dl>
 </li>
 </ul>

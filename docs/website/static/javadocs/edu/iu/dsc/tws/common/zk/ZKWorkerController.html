@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -116,23 +116,29 @@ extends java.lang.Object
 implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerStatusUpdater.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerStatusUpdater</a></pre>
 <div class="block">we assume each worker is assigned a unique ID outside of this class.
  <p>
- We create following directories for a job by the submitting client.
+ We create following directories for a job by Job Master:
    persistent state znode (directory)
    ephemeral state znode (directory)
-   barrier znode (directory)
+   default barrier znode (directory)
+   init barrier znode (directory)
    events znode (directory)
 
  We create a persistent znode for each worker under the job persistent state znode.
-   It has WorkerInfo object and the latest WorkerState
+   It has WorkerInfo object, the latest WorkerState and worker restart count.
    Job Master watches the children of this znode for worker state changes.
-   We also use these znodes for checking whether workers are coming from failure.
 
  We create an ephemeral znode for each worker under the job ephemeral state znode.
    The children of this znode is used for watching for worker failures and joins.
    Job Master watches the children of this znode.
+   Persistent znodes for workers must be created before ephemeral znodes,
+   because, JM gets workerInfo from persistent znode
 
- We create a barrier znode for each worker under the job barrier znode,
-   when a barrier operation started.
+ We have two types of barriers: default and init
+ Workers wait at the init barrier when they are starting.
+ They also come back to the init barrier in case of a failure.
+ They all proceed from the init barrier after a failure
+
+ We create a barrier znode for each worker under the barrier znode,
    When all workers created their znodes under this directory, all workers arrived on the barrier.
    Job master watches the children of this znode and informs all workers by publishing an event.
    Each worker is responsible for deletion of their znodes under the barrier directory,
@@ -140,18 +146,9 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
    Job Master deletes the worker barrier znodes in case of scaling down or job termination.
 
  <p>
- When the job completes, job terminator deletes all job znodes.
- Sometimes, job terminator may not be invoked or it may fail before cleaning up job resources.
- Therefore, when a job is being submitted,
- we check whether the directories that will be used by the job exists,
- if so, job submission will fail.
- User need to first run job termination or should use another job name.
-
- <p>
- Events
- All events except the job scaling event is published on the events znode (directory)
- as new child znodes with sequential numerical names
- Workers get job scaling events by watching persistent job znode</div>
+ Events:
+ All events are published on the events znode (directory)
+ as new child znodes with sequential numerical names</div>
 </li>
 </ul>
 </div>
@@ -228,7 +225,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#addJMFailureListener-edu.iu.dsc.tws.api.resource.IJobMasterFailureListener-">addJMFailureListener</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IJobMasterFailureListener</a>&nbsp;iJobMasterFailureListener)</code>
 <div class="block">TODO: jm restarted implemented, but jm failed not implemented yet
  Supports multiple IJobMasterFailureListeners</div>
@@ -259,59 +256,64 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 </td>
 </tr>
 <tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;WorkerInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getCurrentWorkers--">getCurrentWorkers</a></span>()</code>
 <div class="block">Get current list of workers
  This list does not have the workers that have failed or already completed</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getFailureListener--">getFailureListener</a></span>()</code>
 <div class="block">Get the failure listener</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;WorkerInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getJoinedWorkers--">getJoinedWorkers</a></span>()</code>
 <div class="block">get all joined workers in this job, including the ones finished execution
  if there are some workers that have not joined yet, they may not be included in this list.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getNumberOfCurrentWorkers--">getNumberOfCurrentWorkers</a></span>()</code>
 <div class="block">get number of current workers in the job as seen from this worker</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getNumberOfWorkers--">getNumberOfWorkers</a></span>()</code>
 <div class="block">return the number of all workers in this job,
  including non-started ones and finished ones</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getWorkerInfo--">getWorkerInfo</a></span>()</code>
 <div class="block">return the WorkerInfo object for this worker</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getWorkerInfoForID-int-">getWorkerInfoForID</a></span>(int&nbsp;id)</code>
 <div class="block">return the WorkerInfo object for the given ID</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>WorkerState</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#getWorkerStatusForID-int-">getWorkerStatusForID</a></span>(int&nbsp;id)</code>
 <div class="block">return the status of any worker in the job</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#initialize-WorkerState-">initialize</a></span>(WorkerState&nbsp;initState)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#initialize-int-long-">initialize</a></span>(int&nbsp;restartCount1,
+          long&nbsp;jsTime)</code>
 <div class="block">Initialize this ZKWorkerController
  Connect to the ZK server
  create a persistent znode for this worker
@@ -322,21 +324,51 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
  initialState has to be either: WorkerState.STARTED or WorkerState.RESTARTED</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#isRestarted--">isRestarted</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i18" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#setCheckpointingClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">setCheckpointingClient</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</code>&nbsp;</td>
+</tr>
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#updateWorkerStatus-WorkerState-">updateWorkerStatus</a></span>(WorkerState&nbsp;newStatus)</code>
 <div class="block">Update worker status with new state
  return true if successful</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#waitOnBarrier--">waitOnBarrier</a></span>()</code>
-<div class="block">All workers create a znode on the job barrier directory
- Job master watches for directory creations/removals
- when the number of znodes on that directory reaches the number of workers in thr job,
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
+ if some workers still could not arrive at the barrier, throw an exception</div>
+</td>
+</tr>
+<tr id="i21" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></span>(long&nbsp;timeLimit)</code>
+<div class="block">All workers create a znode on the barrier directory
+ Job master watches znode creations/removals on this directory
+ when the number of znodes on that directory reaches the number of workers in the job,
  Job master publishes AllArrivedOnBarrier event
  Workers proceed when they get this event or when they time out</div>
+</td>
+</tr>
+<tr id="i22" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></span>()</code>
+<div class="block">init barrier
+ the same algorithm as the default barrier</div>
+</td>
+</tr>
+<tr id="i23" class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKWorkerController.html#workerRestartCount--">workerRestartCount</a></span>()</code>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
 </td>
 </tr>
 </table>
@@ -346,13 +378,6 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
-</ul>
-<ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.resource.IWorkerController">
-<!--   -->
-</a>
-<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.resource.<a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a>, <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getRuntimeObject-java.lang.String-">getRuntimeObject</a></code></li>
 </ul>
 </li>
 </ul>
@@ -406,13 +431,14 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="initialize-WorkerState-">
+<a name="initialize-int-long-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>initialize</h4>
-<pre>public&nbsp;void&nbsp;initialize(WorkerState&nbsp;initState)
+<pre>public&nbsp;void&nbsp;initialize(int&nbsp;restartCount1,
+                       long&nbsp;jsTime)
                 throws java.lang.Exception</pre>
 <div class="block">Initialize this ZKWorkerController
  Connect to the ZK server
@@ -429,6 +455,24 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.lang.Exception</code></dd>
 </dl>
+</li>
+</ul>
+<a name="setCheckpointingClient-edu.iu.dsc.tws.api.checkpointing.CheckpointingClient-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setCheckpointingClient</h4>
+<pre>public&nbsp;void&nbsp;setCheckpointingClient(<a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;checkpointingClient)</pre>
+</li>
+</ul>
+<a name="isRestarted--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isRestarted</h4>
+<pre>public&nbsp;boolean&nbsp;isRestarted()</pre>
 </li>
 </ul>
 <a name="updateWorkerStatus-WorkerState-">
@@ -605,7 +649,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <ul class="blockList">
 <li class="blockList">
 <h4>addJMFailureListener</h4>
-<pre>public&nbsp;boolean&nbsp;addJMFailureListener(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IJobMasterFailureListener</a>&nbsp;iJobMasterFailureListener)</pre>
+<pre>public&nbsp;void&nbsp;addJMFailureListener(<a href="../../../../../../edu/iu/dsc/tws/api/resource/IJobMasterFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IJobMasterFailureListener</a>&nbsp;iJobMasterFailureListener)</pre>
 <div class="block">TODO: jm restarted implemented, but jm failed not implemented yet
  Supports multiple IJobMasterFailureListeners</div>
 </li>
@@ -644,13 +688,33 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <h4>waitOnBarrier</h4>
 <pre>public&nbsp;void&nbsp;waitOnBarrier()
                    throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
-<div class="block">All workers create a znode on the job barrier directory
- Job master watches for directory creations/removals
- when the number of znodes on that directory reaches the number of workers in thr job,
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier--">IWorkerController</a></code></span></div>
+<div class="block">wait for all workers in the job to arrive at this barrier
+ After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
+ if some workers still could not arrive at the barrier, throw an exception</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier--">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnBarrier-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnBarrier(long&nbsp;timeLimit)
+                   throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block">All workers create a znode on the barrier directory
+ Job master watches znode creations/removals on this directory
+ when the number of znodes on that directory reaches the number of workers in the job,
  Job master publishes AllArrivedOnBarrier event
  Workers proceed when they get this event or when they time out
  <p>
- Worker remove their znodes after they proceed through the barrier
+ Workers remove their znodes after they proceed through the barrier
  so that they can wait on the barrier again
  Workers are responsible for creating and removing znodes on the barrier
  Job master removes barrier znode after the job completion or scale down.
@@ -658,9 +722,43 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
  if timeout is reached, throws TimeoutException.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier--">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnBarrier-long-">waitOnBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="waitOnInitBarrier--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>waitOnInitBarrier</h4>
+<pre>public&nbsp;void&nbsp;waitOnInitBarrier()
+                       throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></pre>
+<div class="block">init barrier
+ the same algorithm as the default barrier</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#waitOnInitBarrier--">waitOnInitBarrier</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/TimeoutException.html" title="class in edu.iu.dsc.tws.api.exceptions">TimeoutException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="workerRestartCount--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>workerRestartCount</h4>
+<pre>public&nbsp;int&nbsp;workerRestartCount()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">IWorkerController</a></code></span></div>
+<div class="block">get worker restartCount
+ zero means starting for the first time</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#workerRestartCount--">workerRestartCount</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -678,6 +776,19 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerControl
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getFailureListener--">getFailureListener</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the failure listener</dd>
+</dl>
+</li>
+</ul>
+<a name="getCheckpointingClient--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCheckpointingClient</h4>
+<pre>public&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/checkpointing/CheckpointingClient.html" title="interface in edu.iu.dsc.tws.api.checkpointing">CheckpointingClient</a>&nbsp;getCheckpointingClient()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html#getCheckpointingClient--">getCheckpointingClient</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></dd>
 </dl>
 </li>
 </ul>

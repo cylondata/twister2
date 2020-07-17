@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":18,"i3":6,"i4":18};
+var methods = {"i0":18,"i1":6,"i2":18,"i3":18,"i4":18};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -126,7 +126,7 @@ var activeTableTab = "activeTableTab";
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
+<td class="colFirst"><code>default void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html#commit-int-int-">commit</a></span>(int&nbsp;source,
       int&nbsp;obtained)</code>
 <div class="block">Say that we have used the obtained destination</div>
@@ -148,7 +148,7 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>void</code></td>
+<td class="colFirst"><code>default void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html#prepare-edu.iu.dsc.tws.api.comms.Communicator-java.util.Set-java.util.Set-">prepare</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
        java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
        java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations)</code>
@@ -187,9 +187,9 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>prepare</h4>
-<pre>void&nbsp;prepare(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
-             java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-             java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations)</pre>
+<pre>default&nbsp;void&nbsp;prepare(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
+                     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
+                     java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations)</pre>
 <div class="block">Prepare the destination selector</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -266,8 +266,8 @@ var activeTableTab = "activeTableTab";
 <ul class="blockListLast">
 <li class="blockList">
 <h4>commit</h4>
-<pre>void&nbsp;commit(int&nbsp;source,
-            int&nbsp;obtained)</pre>
+<pre>default&nbsp;void&nbsp;commit(int&nbsp;source,
+                    int&nbsp;obtained)</pre>
 <div class="block">Say that we have used the obtained destination</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

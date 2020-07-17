@@ -201,7 +201,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTS
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html#CheckpointedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource-int-edu.iu.dsc.tws.api.tset.schema.Schema-">CheckpointedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html#CheckpointedTSet-edu.iu.dsc.tws.tset.env.BatchEnvironment-edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource-int-edu.iu.dsc.tws.api.tset.schema.Schema-">CheckpointedTSet</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a>&nbsp;tSetEnv,
                 <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSource.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSource</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="type parameter in CheckpointedTSet">T</a>&gt;&nbsp;sourceFn,
                 int&nbsp;parallelism,
                 <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</code>&nbsp;</td>
@@ -251,7 +251,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTS
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.sets.batch.<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">StoredTSet</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#allGather--">allGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#allReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">allReduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#direct--">direct</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#gather--">gather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getData--">getData</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">reduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#replicate-int-">replicate</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-java.util.Collection-">union</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#allGather--">allGather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#allReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">allReduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#direct--">direct</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#gather--">gather</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getData--">getData</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getDataObject--">getDataObject</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#mapToTuple-edu.iu.dsc.tws.api.tset.fn.MapFunc-">mapToTuple</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#partition-edu.iu.dsc.tws.api.tset.fn.PartitionFunc-int-">partition</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#pipe--">pipe</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">reduce</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#replicate-int-">replicate</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-java.util.Collection-">union</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl">
@@ -316,13 +316,13 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTS
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="CheckpointedTSet-edu.iu.dsc.tws.tset.env.BatchTSetEnvironment-edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
+<a name="CheckpointedTSet-edu.iu.dsc.tws.tset.env.BatchEnvironment-edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource-int-edu.iu.dsc.tws.api.tset.schema.Schema-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>CheckpointedTSet</h4>
-<pre>public&nbsp;CheckpointedTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;tSetEnv,
+<pre>public&nbsp;CheckpointedTSet(<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a>&nbsp;tSetEnv,
                         <a href="../../../../../../../edu/iu/dsc/tws/tset/sources/DiskPartitionBackedSource.html" title="class in edu.iu.dsc.tws.tset.sources">DiskPartitionBackedSource</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="type parameter in CheckpointedTSet">T</a>&gt;&nbsp;sourceFn,
                         int&nbsp;parallelism,
                         <a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/Schema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">Schema</a>&nbsp;inputSchema)</pre>
@@ -345,14 +345,14 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTS
 <pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">SourceTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="type parameter in CheckpointedTSet">T</a>&gt;&nbsp;getStoredSourceTSet()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getStoredSourceTSet--">StoredTSet</a></code></span></div>
 <div class="block">Once a cache TSet is run, it will produce data and store data in the data executor with the
- tset ID as the key. This will be exposed to other operations as a <code>SourceTSet<T></code></div>
+ tset ID as the key. This will be exposed to other operations as a <a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch"><code>SourceTSet</code></a></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html#getStoredSourceTSet--">getStoredSourceTSet</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="type parameter in CheckpointedTSet">T</a>&gt;</code></dd>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html#getStoredSourceTSet--">getStoredSourceTSet</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/StoredTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">StoredTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CheckpointedTSet.html" title="type parameter in CheckpointedTSet">T</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd><code>SourceTSet<T></code> source tset from data
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/SourceTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch"><code>SourceTSet</code></a> source tset from data
  <p></dd>
 </dl>
 </li>

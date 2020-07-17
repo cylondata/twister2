@@ -231,11 +231,12 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
 </td>
 </tr>
 <tr id="i12" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/Client.html#tryConnecting--">tryConnecting</a></span>()</code>
 <div class="block">this method may be called when the target machine may not be up yet
  this method may be called repeatedly, until it connects
- the exception message, that is thrown in case the other endpoint is not up, is ignored</div>
+ connection exceptions are ignored, they are not propagated to connection handler
+ connection attempt fails silently</div>
 </td>
 </tr>
 </table>
@@ -304,11 +305,6 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
 <pre>public&nbsp;void&nbsp;setHostAndPort(java.lang.String&nbsp;host,
                            int&nbsp;port)</pre>
 <div class="block">this method must be called when the client is disconnected</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>host</code> - </dd>
-<dd><code>port</code> - </dd>
-</dl>
 </li>
 </ul>
 <a name="connect--">
@@ -326,13 +322,11 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/common/net/tcp/SelectHan
 <ul class="blockList">
 <li class="blockList">
 <h4>tryConnecting</h4>
-<pre>public&nbsp;boolean&nbsp;tryConnecting()</pre>
+<pre>public&nbsp;void&nbsp;tryConnecting()</pre>
 <div class="block">this method may be called when the target machine may not be up yet
  this method may be called repeatedly, until it connects
- the exception message, that is thrown in case the other endpoint is not up, is ignored</div>
-<dl>
-<dt><span class="returnLabel">Returns:</span></dt>
-</dl>
+ connection exceptions are ignored, they are not propagated to connection handler
+ connection attempt fails silently</div>
 </li>
 </ul>
 <a name="isConnected--">

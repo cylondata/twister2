@@ -162,14 +162,16 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/executor/comms/AbstractPara
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/executor/comms/batch/JoinBatchOperation.html#JoinBatchOperation-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-">JoinBatchOperation</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/executor/comms/batch/JoinBatchOperation.html#JoinBatchOperation-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-java.util.Map-java.util.Map-">JoinBatchOperation</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
                   <a href="../../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;network,
                   <a href="../../../../../../../edu/iu/dsc/tws/api/comms/LogicalPlan.html" title="class in edu.iu.dsc.tws.api.comms">LogicalPlan</a>&nbsp;tPlan,
                   java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources1,
                   java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources2,
                   java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
                   <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;leftEdge,
-                  <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge)</code>
+                  <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge,
+                  java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;srcGlobalToIndex,
+                  java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;tgtsGlobalToIndex)</code>
 <div class="block">Creates an instance of <a href="../../../../../../../edu/iu/dsc/tws/executor/comms/batch/JoinBatchOperation.html" title="class in edu.iu.dsc.tws.executor.comms.batch"><code>JoinBatchOperation</code></a></div>
 </td>
 </tr>
@@ -271,7 +273,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/executor/comms/AbstractPara
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="JoinBatchOperation-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-">
+<a name="JoinBatchOperation-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.comms.Communicator-edu.iu.dsc.tws.api.comms.LogicalPlan-java.util.Set-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.compute.graph.Edge-edu.iu.dsc.tws.api.compute.graph.Edge-java.util.Map-java.util.Map-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -284,7 +286,9 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/executor/comms/AbstractPara
                           java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources2,
                           java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
                           <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;leftEdge,
-                          <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge)</pre>
+                          <a href="../../../../../../../edu/iu/dsc/tws/api/compute/graph/Edge.html" title="class in edu.iu.dsc.tws.api.compute.graph">Edge</a>&nbsp;rightEdge,
+                          java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;srcGlobalToIndex,
+                          java.util.Map&lt;java.lang.Integer,java.lang.Integer&gt;&nbsp;tgtsGlobalToIndex)</pre>
 <div class="block">Creates an instance of <a href="../../../../../../../edu/iu/dsc/tws/executor/comms/batch/JoinBatchOperation.html" title="class in edu.iu.dsc.tws.executor.comms.batch"><code>JoinBatchOperation</code></a></div>
 </li>
 </ul>
