@@ -11,11 +11,9 @@ You can download source code from [Github](https://github.com/DSC-SPIDAL/twister
 
 ## Features of this release
 
-1. Support for UCX 
-2. Performance improvements of shuffle operations
-3. Hash Join implementation
-4. Windowing support for TSet API
-5. CSV data readers
+1. Fault Tolerance enhancements; Automated fault detection and recovery
+2. Table API(experimental)
+3. TSet API improvements; Pipe capability and TSetEnvironement
  
 ## Minor features
 
@@ -23,8 +21,10 @@ Apart from these, we have done many code improvements and bug fixes.
 
 ## Next Release
 
-In the next release we are working to improve the Fault tolerance, fix issues and integrate with AI
-systems.
+In the next release we are working to,
+
+* Improve and release Table API
+* TSQL; Adding SQL support
 
 ## Components in Twister2
 
