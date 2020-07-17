@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/DriverExample.html" title="class in edu.iu.dsc.tws.examples.internal.rsched"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li>Next&nbsp;Class</li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/TCPChannelExample.html" title="class in edu.iu.dsc.tws.examples.internal.rsched"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html" target="_top">Frames</a></li>
@@ -129,7 +129,51 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#createCM-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-JobAPI.Job-">createCM</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+        JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#createCMWatcher-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">createCMWatcher</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+               java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#getJobFromConfigMap-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">getJobFromConfigMap</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                   java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#test1-JobAPI.Job-">test1</a></span>(JobAPI.Job&nbsp;job)</code>
+<div class="block">test method</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#testJM-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">testJM</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+      java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#testPVC-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">testPVC</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+       <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+       java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#testUploader-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">testUploader</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+            <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+            java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html#testWorker-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-int-">testWorker</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+          java.lang.String&nbsp;jobID,
+          int&nbsp;wID)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -156,10 +200,98 @@ extends java.lang.Object</pre>
 <a name="main-java.lang.String:A-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>main</h4>
-<pre>public static&nbsp;void&nbsp;main(java.lang.String[]&nbsp;args)</pre>
+<pre>public static&nbsp;void&nbsp;main(java.lang.String[]&nbsp;args)
+                 throws java.lang.InterruptedException</pre>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.InterruptedException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="testUploader-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>testUploader</h4>
+<pre>public static&nbsp;void&nbsp;testUploader(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                                <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                                java.lang.String&nbsp;jobID)</pre>
+</li>
+</ul>
+<a name="testPVC-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>testPVC</h4>
+<pre>public static&nbsp;void&nbsp;testPVC(<a href="../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+                           <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                           java.lang.String&nbsp;jobID)</pre>
+</li>
+</ul>
+<a name="createCM-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createCM</h4>
+<pre>public static&nbsp;void&nbsp;createCM(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                            JobAPI.Job&nbsp;job)</pre>
+</li>
+</ul>
+<a name="createCMWatcher-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createCMWatcher</h4>
+<pre>public static&nbsp;void&nbsp;createCMWatcher(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                                   java.lang.String&nbsp;jobID)</pre>
+</li>
+</ul>
+<a name="getJobFromConfigMap-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJobFromConfigMap</h4>
+<pre>public static&nbsp;void&nbsp;getJobFromConfigMap(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                                       java.lang.String&nbsp;jobID)</pre>
+</li>
+</ul>
+<a name="testWorker-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>testWorker</h4>
+<pre>public static&nbsp;void&nbsp;testWorker(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                              java.lang.String&nbsp;jobID,
+                              int&nbsp;wID)</pre>
+</li>
+</ul>
+<a name="testJM-edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>testJM</h4>
+<pre>public static&nbsp;void&nbsp;testJM(<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesController</a>&nbsp;controller,
+                          java.lang.String&nbsp;jobID)</pre>
+</li>
+</ul>
+<a name="test1-JobAPI.Job-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>test1</h4>
+<pre>public static&nbsp;void&nbsp;test1(JobAPI.Job&nbsp;job)</pre>
+<div class="block">test method</div>
 </li>
 </ul>
 </li>
@@ -190,7 +322,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/DriverExample.html" title="class in edu.iu.dsc.tws.examples.internal.rsched"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li>Next&nbsp;Class</li>
+<li><a href="../../../../../../../edu/iu/dsc/tws/examples/internal/rsched/TCPChannelExample.html" title="class in edu.iu.dsc.tws.examples.internal.rsched"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../../index.html?edu/iu/dsc/tws/examples/internal/rsched/K8sControllerExample.html" target="_top">Frames</a></li>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -136,9 +136,16 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#getHostIP--">getHostIP</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#getHostIP-edu.iu.dsc.tws.api.config.Config-">getHostIP</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#getLocalIPFromNetworkInterfaces-java.util.List-">getLocalIPFromNetworkInterfaces</a></span>(java.util.List&lt;java.lang.String&gt;&nbsp;interfaceNames)</code>
+<div class="block">get ipv4 address of first matching network interface in the given list
+ network interface can not be loop back and it has to be up</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#getOutgoingHostIP--">getOutgoingHostIP</a></span>()</code>
 <div class="block">get the IP address of the host machine
@@ -151,7 +158,14 @@ extends java.lang.Object</pre>
  this only works if the host is connected to outside Internet</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#isValidIPv4-java.lang.String-">isValidIPv4</a></span>(java.lang.String&nbsp;ip)</code>
+<div class="block">this is from:
+ https://stackoverflow.com/questions/5667371/validate-ipv4-address-in-java</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#setupWorkingDirectory-java.lang.String-java.lang.String-java.lang.String-java.lang.String-boolean-">setupWorkingDirectory</a></span>(java.lang.String&nbsp;jobName,
                      java.lang.String&nbsp;workingDirectory,
@@ -159,7 +173,7 @@ extends java.lang.Object</pre>
                      java.lang.String&nbsp;jobPackageURI,
                      boolean&nbsp;isVerbose)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/ResourceSchedulerUtils.html#setupWorkingDirectory-java.lang.String-java.lang.String-java.lang.String-java.lang.String-boolean-boolean-">setupWorkingDirectory</a></span>(java.lang.String&nbsp;jobId,
                      java.lang.String&nbsp;workingDirectory,
@@ -229,19 +243,19 @@ extends java.lang.Object</pre>
                                      boolean&nbsp;isVerbose)</pre>
 </li>
 </ul>
-<a name="getHostIP--">
+<a name="getHostIP-edu.iu.dsc.tws.api.config.Config-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getHostIP</h4>
-<pre>public static&nbsp;java.lang.String&nbsp;getHostIP()</pre>
+<pre>public static&nbsp;java.lang.String&nbsp;getHostIP(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
 <a name="getOutgoingHostIP--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getOutgoingHostIP</h4>
 <pre>public static&nbsp;java.lang.String&nbsp;getOutgoingHostIP()</pre>
@@ -256,6 +270,38 @@ extends java.lang.Object</pre>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>hostIP address tha is used to communicate with outside world</dd>
+</dl>
+</li>
+</ul>
+<a name="getLocalIPFromNetworkInterfaces-java.util.List-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getLocalIPFromNetworkInterfaces</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;getLocalIPFromNetworkInterfaces(java.util.List&lt;java.lang.String&gt;&nbsp;interfaceNames)</pre>
+<div class="block">get ipv4 address of first matching network interface in the given list
+ network interface can not be loop back and it has to be up</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>interfaceNames</code> - </dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+</dl>
+</li>
+</ul>
+<a name="isValidIPv4-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isValidIPv4</h4>
+<pre>public static&nbsp;boolean&nbsp;isValidIPv4(java.lang.String&nbsp;ip)</pre>
+<div class="block">this is from:
+ https://stackoverflow.com/questions/5667371/validate-ipv4-address-in-java</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>ip</code> - </dd>
+<dt><span class="returnLabel">Returns:</span></dt>
 </dl>
 </li>
 </ul>

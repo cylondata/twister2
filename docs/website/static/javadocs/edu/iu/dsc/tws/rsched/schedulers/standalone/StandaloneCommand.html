@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -166,13 +166,22 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalon
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>protected java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/StandaloneCommand.html#illegalAccessWarn--">illegalAccessWarn</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected java.lang.String[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/StandaloneCommand.html#killCommand--">killCommand</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code>protected java.util.List&lt;java.lang.String&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/StandaloneCommand.html#mpiCommand-java.lang.String-JobAPI.Job-">mpiCommand</a></span>(java.lang.String&nbsp;workingDirectory,
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>java.lang.String[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/StandaloneCommand.html#mpiCommand-java.lang.String-JobAPI.Job-">mpiCommand</a></span>(java.lang.String&nbsp;workingDir,
           JobAPI.Job&nbsp;job)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>protected void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/StandaloneCommand.html#updateRestartCount-java.lang.String:A-int-">updateRestartCount</a></span>(java.lang.String[]&nbsp;cmd,
+                  int&nbsp;restartCount)</code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -180,7 +189,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalon
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.rsched.schedulers.standalone.<a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPICommand</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getScriptPath--">getScriptPath</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpiCommandArguments-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">mpiCommandArguments</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#readFromFile-java.lang.String-">readFromFile</a></code></li>
+<code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getClasspath-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-">getClasspath</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getMapBy-JobAPI.Job-">getMapBy</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#getNumberOfWorkers-JobAPI.Job-">getNumberOfWorkers</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#ldLibraryPath--">ldLibraryPath</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpirunPath--">mpirunPath</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#readFromFile-java.lang.String-">readFromFile</a>, <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#submittingTwister2Home--">submittingTwister2Home</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -237,14 +246,37 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalon
 <a name="mpiCommand-java.lang.String-JobAPI.Job-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>mpiCommand</h4>
-<pre>protected&nbsp;java.util.List&lt;java.lang.String&gt;&nbsp;mpiCommand(java.lang.String&nbsp;workingDirectory,
-                                                      JobAPI.Job&nbsp;job)</pre>
+<pre>public&nbsp;java.lang.String[]&nbsp;mpiCommand(java.lang.String&nbsp;workingDir,
+                                     JobAPI.Job&nbsp;job)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#mpiCommand-java.lang.String-JobAPI.Job-">mpiCommand</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPICommand</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="illegalAccessWarn--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>illegalAccessWarn</h4>
+<pre>protected&nbsp;java.lang.String&nbsp;illegalAccessWarn()</pre>
+</li>
+</ul>
+<a name="updateRestartCount-java.lang.String:A-int-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>updateRestartCount</h4>
+<pre>protected&nbsp;void&nbsp;updateRestartCount(java.lang.String[]&nbsp;cmd,
+                                  int&nbsp;restartCount)</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html#updateRestartCount-java.lang.String:A-int-">updateRestartCount</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPICommand.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPICommand</a></code></dd>
 </dl>
 </li>
 </ul>

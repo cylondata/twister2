@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":9,"i7":9,"i8":10,"i9":10,"i10":10,"i11":10,"i12":9,"i13":9,"i14":9,"i15":9};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":9,"i8":9,"i9":10,"i10":10,"i11":9,"i12":10,"i13":10,"i14":9,"i15":9,"i16":9,"i17":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,7 +47,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Network.html" title="class in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">
@@ -147,54 +147,62 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getConfig--">getConfig</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code>JobAPI.Job</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getJob--">getJob</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getNumberOfWorkers--">getNumberOfWorkers</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getPersistentVolume--">getPersistentVolume</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static java.lang.Object</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getSharedValue-java.lang.String-">getSharedValue</a></span>(java.lang.String&nbsp;key)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getSharedValue-java.lang.String-java.lang.Class-">getSharedValue</a></span>(java.lang.String&nbsp;key,
               java.lang.Class&lt;T&gt;&nbsp;clazz)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getVolatileVolume--">getVolatileVolume</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getWorkerController--">getWorkerController</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getWorkerEnv--">getWorkerEnv</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getWorkerId--">getWorkerId</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>java.util.List&lt;JobMasterAPI.WorkerInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#getWorkerList--">getWorkerList</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static <a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#init-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">init</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-    int&nbsp;workerId,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">init</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
+    JobAPI.Job&nbsp;job,
     <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
     <a href="../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
     <a href="../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</code>
 <div class="block">Initialize the worker environment, this is a singleton and every job should call this method</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#putSharedValue-java.lang.String-java.lang.Object-">putSharedValue</a></span>(java.lang.String&nbsp;key,
               java.lang.Object&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#putWeakSharedValue-java.lang.String-java.lang.Object-">putWeakSharedValue</a></span>(java.lang.String&nbsp;key,
                   java.lang.Object&nbsp;value)</code>
@@ -202,7 +210,7 @@ extends java.lang.Object</pre>
  key-value store.</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html#removeSharedValue-java.lang.String-">removeSharedValue</a></span>(java.lang.String&nbsp;key)</code>&nbsp;</td>
 </tr>
@@ -244,6 +252,15 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>getWorkerId</h4>
 <pre>public&nbsp;int&nbsp;getWorkerId()</pre>
+</li>
+</ul>
+<a name="getJob--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getJob</h4>
+<pre>public&nbsp;JobAPI.Job&nbsp;getJob()</pre>
 </li>
 </ul>
 <a name="getNumberOfWorkers--">
@@ -319,14 +336,14 @@ extends java.lang.Object</pre>
 <div class="block">Close the worker environment</div>
 </li>
 </ul>
-<a name="init-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">
+<a name="init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>init</h4>
 <pre>public static&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a>&nbsp;init(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;config,
-                                     int&nbsp;workerId,
+                                     JobAPI.Job&nbsp;job,
                                      <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
                                      <a href="../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
                                      <a href="../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</pre>
@@ -334,7 +351,7 @@ extends java.lang.Object</pre>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>config</code> - configuration</dd>
-<dd><code>workerId</code> - this worker id</dd>
+<dd><code>job</code> - job object for this Twister2 job</dd>
 <dd><code>workerController</code> - worker controller</dd>
 <dd><code>persistentVolume</code> - persistent volume</dd>
 <dd><code>volatileVolume</code> - volatile volume</dd>
@@ -386,11 +403,20 @@ extends java.lang.Object</pre>
 <a name="getSharedValue-java.lang.String-java.lang.Class-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getSharedValue</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;T&nbsp;getSharedValue(java.lang.String&nbsp;key,
                                    java.lang.Class&lt;T&gt;&nbsp;clazz)</pre>
+</li>
+</ul>
+<a name="getWorkerEnv--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getWorkerEnv</h4>
+<pre>public static&nbsp;<a href="../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a>&nbsp;getWorkerEnv()</pre>
 </li>
 </ul>
 </li>
@@ -420,7 +446,7 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Network.html" title="class in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li>Next&nbsp;Class</li>
 </ul>
 <ul class="navList">

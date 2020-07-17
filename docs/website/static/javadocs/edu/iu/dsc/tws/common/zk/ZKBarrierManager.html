@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -148,53 +148,136 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">createBarrierDir</a></span>(CuratorFramework&nbsp;client,
-                java.lang.String&nbsp;rootPath,
-                java.lang.String&nbsp;jobID)</code>
-<div class="block">create parent directory for ephemeral worker znodes</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createBarrierDir-CuratorFramework-java.lang.String-">createBarrierDir</a></span>(CuratorFramework&nbsp;client,
+                java.lang.String&nbsp;barrierDirPath)</code>
+<div class="block">create parent directory for barrier</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">createWorkerZNode</a></span>(CuratorFramework&nbsp;client,
-                 java.lang.String&nbsp;rootPath,
-                 java.lang.String&nbsp;jobID,
-                 int&nbsp;workerID)</code>
-<div class="block">create a worker znode at the barrier directory</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createDefaultBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">createDefaultBarrierDir</a></span>(CuratorFramework&nbsp;client,
+                       java.lang.String&nbsp;rootPath,
+                       java.lang.String&nbsp;jobID)</code>
+<div class="block">create parent directory for default barrier</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#deleteWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">deleteWorkerZNode</a></span>(CuratorFramework&nbsp;client,
-                 java.lang.String&nbsp;rootPath,
-                 java.lang.String&nbsp;jobID,
-                 int&nbsp;workerID)</code>
-<div class="block">create a worker znode at the barrier directory</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createInitBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">createInitBarrierDir</a></span>(CuratorFramework&nbsp;client,
+                    java.lang.String&nbsp;rootPath,
+                    java.lang.String&nbsp;jobID)</code>
+<div class="block">create parent directory for init barrier</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#existWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">existWorkerZNode</a></span>(CuratorFramework&nbsp;client,
-                java.lang.String&nbsp;rootPath,
-                java.lang.String&nbsp;jobID,
-                int&nbsp;workerID)</code>
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createWorkerZNode-CuratorFramework-java.lang.String-long-">createWorkerZNode</a></span>(CuratorFramework&nbsp;client,
+                 java.lang.String&nbsp;workerPath,
+                 long&nbsp;timeout)</code>
 <div class="block">create a worker znode at the barrier directory</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createWorkerZNodeAtDefault-CuratorFramework-java.lang.String-java.lang.String-int-long-">createWorkerZNodeAtDefault</a></span>(CuratorFramework&nbsp;client,
+                          java.lang.String&nbsp;rootPath,
+                          java.lang.String&nbsp;jobID,
+                          int&nbsp;workerID,
+                          long&nbsp;timeout)</code>
+<div class="block">create a worker znode at the default barrier directory</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#createWorkerZNodeAtInit-CuratorFramework-java.lang.String-java.lang.String-int-long-">createWorkerZNodeAtInit</a></span>(CuratorFramework&nbsp;client,
+                       java.lang.String&nbsp;rootPath,
+                       java.lang.String&nbsp;jobID,
+                       int&nbsp;workerID,
+                       long&nbsp;timeout)</code>
+<div class="block">create a worker znode at the init barrier directory</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#deleteWorkerZNode-CuratorFramework-java.lang.String-">deleteWorkerZNode</a></span>(CuratorFramework&nbsp;client,
+                 java.lang.String&nbsp;workerPath)</code>
+<div class="block">delete the worker znode at a barrier directory</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#deleteWorkerZNodeFromDefault-CuratorFramework-java.lang.String-java.lang.String-int-">deleteWorkerZNodeFromDefault</a></span>(CuratorFramework&nbsp;client,
+                            java.lang.String&nbsp;rootPath,
+                            java.lang.String&nbsp;jobID,
+                            int&nbsp;workerID)</code>
+<div class="block">delete the worker znode at the default barrier directory</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#deleteWorkerZNodeFromInit-CuratorFramework-java.lang.String-java.lang.String-int-">deleteWorkerZNodeFromInit</a></span>(CuratorFramework&nbsp;client,
+                         java.lang.String&nbsp;rootPath,
+                         java.lang.String&nbsp;jobID,
+                         int&nbsp;workerID)</code>
+<div class="block">delete the worker znode at the init barrier directory</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#existWorkerZNode-CuratorFramework-java.lang.String-">existWorkerZNode</a></span>(CuratorFramework&nbsp;client,
+                java.lang.String&nbsp;workerPath)</code>
+<div class="block">check existence of a worker znode at a barrier directory</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#existWorkerZNodeAtDefault-CuratorFramework-java.lang.String-java.lang.String-int-">existWorkerZNodeAtDefault</a></span>(CuratorFramework&nbsp;client,
+                         java.lang.String&nbsp;rootPath,
+                         java.lang.String&nbsp;jobID,
+                         int&nbsp;workerID)</code>
+<div class="block">check existence of a worker znode at the default barrier directory</div>
+</td>
+</tr>
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#existWorkerZNodeAtInit-CuratorFramework-java.lang.String-java.lang.String-int-">existWorkerZNodeAtInit</a></span>(CuratorFramework&nbsp;client,
+                      java.lang.String&nbsp;rootPath,
+                      java.lang.String&nbsp;jobID,
+                      int&nbsp;workerID)</code>
+<div class="block">check existence of a worker znode at the init barrier directory</div>
+</td>
+</tr>
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#getNumberOfWorkersAtBarrier-CuratorFramework-java.lang.String-java.lang.String-">getNumberOfWorkersAtBarrier</a></span>(CuratorFramework&nbsp;client,
                            java.lang.String&nbsp;rootPath,
                            java.lang.String&nbsp;jobID)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i13" class="rowColor">
+<td class="colFirst"><code>static long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#readWorkerTimeout-CuratorFramework-java.lang.String-">readWorkerTimeout</a></span>(CuratorFramework&nbsp;client,
+                 java.lang.String&nbsp;workerPath)</code>
+<div class="block">read a worker znode at the barrier directory</div>
+</td>
+</tr>
+<tr id="i14" class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#removeScaledDownZNodes-CuratorFramework-java.lang.String-int-int-">removeScaledDownZNodes</a></span>(CuratorFramework&nbsp;client,
+                      java.lang.String&nbsp;barrierDir,
+                      int&nbsp;minID,
+                      int&nbsp;maxID)</code>
+<div class="block">When a job is scaled down, we must delete the znodes of killed workers.</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKBarrierManager.html#removeScaledDownZNodes-CuratorFramework-java.lang.String-java.lang.String-int-int-">removeScaledDownZNodes</a></span>(CuratorFramework&nbsp;client,
                       java.lang.String&nbsp;rootPath,
                       java.lang.String&nbsp;jobID,
                       int&nbsp;minID,
                       int&nbsp;maxID)</code>
-<div class="block">When a job is scaled down, we must delete the znodes of killed workers.</div>
+<div class="block">Remove barrier znodes from both default and init barriers
+ minID inclusive, maxID exclusive</div>
 </td>
 </tr>
 </table>
@@ -236,33 +319,50 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="createBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">
+<a name="createBarrierDir-CuratorFramework-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createBarrierDir</h4>
 <pre>public static&nbsp;void&nbsp;createBarrierDir(CuratorFramework&nbsp;client,
-                                    java.lang.String&nbsp;rootPath,
-                                    java.lang.String&nbsp;jobID)
-                             throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
-<div class="block">create parent directory for ephemeral worker znodes</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
-</dl>
+                                    java.lang.String&nbsp;barrierDirPath)</pre>
+<div class="block">create parent directory for barrier</div>
 </li>
 </ul>
-<a name="createWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">
+<a name="createDefaultBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createDefaultBarrierDir</h4>
+<pre>public static&nbsp;void&nbsp;createDefaultBarrierDir(CuratorFramework&nbsp;client,
+                                           java.lang.String&nbsp;rootPath,
+                                           java.lang.String&nbsp;jobID)</pre>
+<div class="block">create parent directory for default barrier</div>
+</li>
+</ul>
+<a name="createInitBarrierDir-CuratorFramework-java.lang.String-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createInitBarrierDir</h4>
+<pre>public static&nbsp;void&nbsp;createInitBarrierDir(CuratorFramework&nbsp;client,
+                                        java.lang.String&nbsp;rootPath,
+                                        java.lang.String&nbsp;jobID)</pre>
+<div class="block">create parent directory for init barrier</div>
+</li>
+</ul>
+<a name="createWorkerZNode-CuratorFramework-java.lang.String-long-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createWorkerZNode</h4>
 <pre>public static&nbsp;void&nbsp;createWorkerZNode(CuratorFramework&nbsp;client,
-                                     java.lang.String&nbsp;rootPath,
-                                     java.lang.String&nbsp;jobID,
-                                     int&nbsp;workerID)
+                                     java.lang.String&nbsp;workerPath,
+                                     long&nbsp;timeout)
                               throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
 <div class="block">create a worker znode at the barrier directory</div>
 <dl>
@@ -271,36 +371,177 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="deleteWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">
+<a name="readWorkerTimeout-CuratorFramework-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>readWorkerTimeout</h4>
+<pre>public static&nbsp;long&nbsp;readWorkerTimeout(CuratorFramework&nbsp;client,
+                                     java.lang.String&nbsp;workerPath)
+                              throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">read a worker znode at the barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="createWorkerZNodeAtDefault-CuratorFramework-java.lang.String-java.lang.String-int-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createWorkerZNodeAtDefault</h4>
+<pre>public static&nbsp;void&nbsp;createWorkerZNodeAtDefault(CuratorFramework&nbsp;client,
+                                              java.lang.String&nbsp;rootPath,
+                                              java.lang.String&nbsp;jobID,
+                                              int&nbsp;workerID,
+                                              long&nbsp;timeout)
+                                       throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">create a worker znode at the default barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="createWorkerZNodeAtInit-CuratorFramework-java.lang.String-java.lang.String-int-long-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createWorkerZNodeAtInit</h4>
+<pre>public static&nbsp;void&nbsp;createWorkerZNodeAtInit(CuratorFramework&nbsp;client,
+                                           java.lang.String&nbsp;rootPath,
+                                           java.lang.String&nbsp;jobID,
+                                           int&nbsp;workerID,
+                                           long&nbsp;timeout)
+                                    throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">create a worker znode at the init barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="deleteWorkerZNode-CuratorFramework-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>deleteWorkerZNode</h4>
 <pre>public static&nbsp;void&nbsp;deleteWorkerZNode(CuratorFramework&nbsp;client,
-                                     java.lang.String&nbsp;rootPath,
-                                     java.lang.String&nbsp;jobID,
-                                     int&nbsp;workerID)
+                                     java.lang.String&nbsp;workerPath)
                               throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
-<div class="block">create a worker znode at the barrier directory</div>
+<div class="block">delete the worker znode at a barrier directory</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
 </dl>
 </li>
 </ul>
-<a name="existWorkerZNode-CuratorFramework-java.lang.String-java.lang.String-int-">
+<a name="deleteWorkerZNodeFromDefault-CuratorFramework-java.lang.String-java.lang.String-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>deleteWorkerZNodeFromDefault</h4>
+<pre>public static&nbsp;void&nbsp;deleteWorkerZNodeFromDefault(CuratorFramework&nbsp;client,
+                                                java.lang.String&nbsp;rootPath,
+                                                java.lang.String&nbsp;jobID,
+                                                int&nbsp;workerID)
+                                         throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">delete the worker znode at the default barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="deleteWorkerZNodeFromInit-CuratorFramework-java.lang.String-java.lang.String-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>deleteWorkerZNodeFromInit</h4>
+<pre>public static&nbsp;void&nbsp;deleteWorkerZNodeFromInit(CuratorFramework&nbsp;client,
+                                             java.lang.String&nbsp;rootPath,
+                                             java.lang.String&nbsp;jobID,
+                                             int&nbsp;workerID)
+                                      throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">delete the worker znode at the init barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="existWorkerZNode-CuratorFramework-java.lang.String-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>existWorkerZNode</h4>
 <pre>public static&nbsp;boolean&nbsp;existWorkerZNode(CuratorFramework&nbsp;client,
-                                       java.lang.String&nbsp;rootPath,
-                                       java.lang.String&nbsp;jobID,
-                                       int&nbsp;workerID)
+                                       java.lang.String&nbsp;workerPath)
                                 throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
-<div class="block">create a worker znode at the barrier directory</div>
+<div class="block">check existence of a worker znode at a barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="existWorkerZNodeAtDefault-CuratorFramework-java.lang.String-java.lang.String-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>existWorkerZNodeAtDefault</h4>
+<pre>public static&nbsp;boolean&nbsp;existWorkerZNodeAtDefault(CuratorFramework&nbsp;client,
+                                                java.lang.String&nbsp;rootPath,
+                                                java.lang.String&nbsp;jobID,
+                                                int&nbsp;workerID)
+                                         throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">check existence of a worker znode at the default barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="existWorkerZNodeAtInit-CuratorFramework-java.lang.String-java.lang.String-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>existWorkerZNodeAtInit</h4>
+<pre>public static&nbsp;boolean&nbsp;existWorkerZNodeAtInit(CuratorFramework&nbsp;client,
+                                             java.lang.String&nbsp;rootPath,
+                                             java.lang.String&nbsp;jobID,
+                                             int&nbsp;workerID)
+                                      throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">check existence of a worker znode at the init barrier directory</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="removeScaledDownZNodes-CuratorFramework-java.lang.String-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>removeScaledDownZNodes</h4>
+<pre>public static&nbsp;void&nbsp;removeScaledDownZNodes(CuratorFramework&nbsp;client,
+                                          java.lang.String&nbsp;barrierDir,
+                                          int&nbsp;minID,
+                                          int&nbsp;maxID)
+                                   throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
+<div class="block">When a job is scaled down, we must delete the znodes of killed workers.
+ minID inclusive, maxID exclusive</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></code></dd>
@@ -319,7 +560,7 @@ extends java.lang.Object</pre>
                                           int&nbsp;minID,
                                           int&nbsp;maxID)
                                    throws <a href="../../../../../../edu/iu/dsc/tws/api/exceptions/Twister2Exception.html" title="class in edu.iu.dsc.tws.api.exceptions">Twister2Exception</a></pre>
-<div class="block">When a job is scaled down, we must delete the znodes of killed workers.
+<div class="block">Remove barrier znodes from both default and init barriers
  minID inclusive, maxID exclusive</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>

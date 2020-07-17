@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6};
+var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,7 +47,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li>Prev&nbsp;Class</li>
+<li><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchRowTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -193,30 +193,34 @@ extends <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html"
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/batch/BatchTLink.html" title="interface in edu.iu.dsc.tws.api.tset.link.batch">BatchTLink</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>,<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#pipe--">pipe</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/batch/BatchTLink.html" title="interface in edu.iu.dsc.tws.api.tset.link.batch">BatchTLink</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>,<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">reduce</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;&nbsp;reduceFn)</code>
 <div class="block">Returns a Reduce <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a> that reduce data on to the target TSet instance (in the runtime)
  with index 0.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/batch/BatchTLink.html" title="interface in edu.iu.dsc.tws.api.tset.link.batch">BatchTLink</a>&lt;java.util.Iterator&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;,<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#replicate-int-">replicate</a></span>(int&nbsp;replications)</code>
 <div class="block">Returns a Replicate <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/TLink.html" title="interface in edu.iu.dsc.tws.api.tset.link"><code>TLink</code></a> that would clone/broadcast the data from this <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTSet</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#setName-java.lang.String-">setName</a></span>(java.lang.String&nbsp;name)</code>
 <div class="block">Sets the name</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTSet</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#union-java.util.Collection-">union</a></span>(java.util.Collection&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;&gt;&nbsp;tSets)</code>
 <div class="block">Same as above, but accepts a <code>Collection</code> of <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTSet</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html#union-edu.iu.dsc.tws.api.tset.sets.TSet-">union</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TSet</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;&nbsp;unionTSet)</code>
 <div class="block">Returns a single <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a> that create a union of data in both <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>s.</div>
@@ -291,6 +295,15 @@ extends <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html"
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Direct TLink</dd>
 </dl>
+</li>
+</ul>
+<a name="pipe--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>pipe</h4>
+<pre><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/link/batch/BatchTLink.html" title="interface in edu.iu.dsc.tws.api.tset.link.batch">BatchTLink</a>&lt;<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>,<a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTSet.html" title="type parameter in BatchTSet">T</a>&gt;&nbsp;pipe()</pre>
 </li>
 </ul>
 <a name="reduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">
@@ -539,7 +552,7 @@ extends <a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html"
 </div>
 <div class="subNav">
 <ul class="navList">
-<li>Prev&nbsp;Class</li>
+<li><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchRowTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

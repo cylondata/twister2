@@ -126,7 +126,7 @@ var activeTableTab = "activeTableTab";
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">AllReduceTLink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/ReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">ReduceTLink</a></dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/AllReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">AllReduceTLink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedPipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedPipeTLink</a>, <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/ReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">ReduceTLink</a></dd>
 </dl>
 <hr>
 <br>
@@ -155,7 +155,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#cache--">cache</a></span>()</code>
 <div class="block">Runs this TSet and caches the data to an in-memory
  <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a> and exposes the data as another TSet.</div>
@@ -174,7 +174,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyCache--">lazyCache</a></span>()</code>
 <div class="block">Performs caching lazily.</div>
 </td>
@@ -184,7 +184,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyForEach-edu.iu.dsc.tws.api.tset.fn.ApplyFunc-">lazyForEach</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ApplyFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ApplyFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;applyFunction)</code>&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#lazyPersist--">lazyPersist</a></span>()</code>
 <div class="block">Performs persisting lazily.</div>
 </td>
@@ -203,7 +203,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 </td>
 </tr>
 <tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html#persist--">persist</a></span>()</code>
 <div class="block">Similar to cache, but the data is stored in a disk based
  <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a>.</div>
@@ -370,7 +370,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <ul class="blockList">
 <li class="blockList">
 <h4>lazyCache</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;lazyCache()</pre>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;lazyCache()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyCache--">StoringData</a></code></span></div>
 <div class="block">Performs caching lazily. i.e. cache operation would only be performed when the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TSet</code></a>
  is evaluated explicitly.</div>
@@ -386,7 +386,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <ul class="blockList">
 <li class="blockList">
 <h4>cache</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/CachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">CachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;cache()</pre>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;cache()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#cache--">StoringData</a></code></span></div>
 <div class="block">Runs this TSet and caches the data to an in-memory
  <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a> and exposes the data as another TSet.</div>
@@ -406,7 +406,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <ul class="blockList">
 <li class="blockList">
 <h4>lazyPersist</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;lazyPersist()</pre>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;lazyPersist()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#lazyPersist--">StoringData</a></code></span></div>
 <div class="block">Performs persisting lazily.</div>
 <dl>
@@ -421,7 +421,7 @@ extends <a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchTLink
 <ul class="blockListLast">
 <li class="blockList">
 <h4>persist</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/PersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">PersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;persist()</pre>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/StorableTBase.html" title="interface in edu.iu.dsc.tws.api.tset.sets">StorableTBase</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/BatchSingleLink.html" title="type parameter in BatchSingleLink">T</a>&gt;&nbsp;persist()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/StoringData.html#persist--">StoringData</a></code></span></div>
 <div class="block">Similar to cache, but the data is stored in a disk based
  <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a>. This method would also expose the

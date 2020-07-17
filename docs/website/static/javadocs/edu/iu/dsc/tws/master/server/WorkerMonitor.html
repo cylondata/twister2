@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -47,8 +47,8 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.ServerConnectHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/master/server/WorkerMonitor.html" target="_top">Frames</a></li>
@@ -144,12 +144,13 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#WorkerMonitor-edu.iu.dsc.tws.master.server.JobMaster-edu.iu.dsc.tws.common.net.tcp.request.RRServer-edu.iu.dsc.tws.master.dashclient.DashboardClient-JobAPI.Job-edu.iu.dsc.tws.api.driver.IDriver-boolean-">WorkerMonitor</a></span>(<a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html" title="class in edu.iu.dsc.tws.master.server">JobMaster</a>&nbsp;jobMaster,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#WorkerMonitor-edu.iu.dsc.tws.master.server.JobMaster-edu.iu.dsc.tws.common.net.tcp.request.RRServer-edu.iu.dsc.tws.master.dashclient.DashboardClient-edu.iu.dsc.tws.master.server.ZKJobUpdater-JobAPI.Job-edu.iu.dsc.tws.api.driver.IDriver-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">WorkerMonitor</a></span>(<a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html" title="class in edu.iu.dsc.tws.master.server">JobMaster</a>&nbsp;jobMaster,
              <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRServer.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRServer</a>&nbsp;rrServer,
              <a href="../../../../../../edu/iu/dsc/tws/master/dashclient/DashboardClient.html" title="class in edu.iu.dsc.tws.master.dashclient">DashboardClient</a>&nbsp;dashClient,
+             <a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server">ZKJobUpdater</a>&nbsp;zkJobUpdater,
              JobAPI.Job&nbsp;job,
              <a href="../../../../../../edu/iu/dsc/tws/api/driver/IDriver.html" title="interface in edu.iu.dsc.tws.api.driver">IDriver</a>&nbsp;driver,
-             boolean&nbsp;faultTolerant)</code>&nbsp;</td>
+             <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;failureListener)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -201,48 +202,56 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 </td>
 </tr>
 <tr id="i6" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#fullyFailed-int-">fullyFailed</a></span>(int&nbsp;workerID)</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getNumberOfWorkers--">getNumberOfWorkers</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;java.lang.Integer&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkerIDs--">getWorkerIDs</a></span>()</code>
 <div class="block">get the list of workerIDs sorted</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>JobMasterAPI.WorkerInfo</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkerInfoForID-int-">getWorkerInfoForID</a></span>(int&nbsp;id)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;JobMasterAPI.WorkerInfo&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkerInfoList--">getWorkerInfoList</a></span>()</code>
 <div class="block">get the list of workerIDs sorted</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>java.util.Collection&lt;<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkerList--">getWorkerList</a></span>()</code>
 <div class="block">get the list of currently registered workers</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkersListSize--">getWorkersListSize</a></span>()</code>
 <div class="block">get the size of workers list</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
+<td class="colFirst"><code>JobMasterAPI.WorkerState</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#getWorkerState-int-">getWorkerState</a></span>(int&nbsp;workerID)</code>&nbsp;</td>
+</tr>
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#informDriverForAllJoined--">informDriverForAllJoined</a></span>()</code>
 <div class="block">inform the driver on restarts if all workers already joined</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#isAllJoined--">isAllJoined</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#onMessage-edu.iu.dsc.tws.api.net.request.RequestID-int-Message-">onMessage</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/net/request/RequestID.html" title="class in edu.iu.dsc.tws.api.net.request">RequestID</a>&nbsp;id,
          int&nbsp;workerId,
@@ -250,32 +259,36 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <div class="block">Handles a specific message type</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
-<td class="colFirst"><code>java.lang.String</code></td>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#restarted-edu.iu.dsc.tws.common.zk.WorkerWithState-">restarted</a></span>(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</code>
 <div class="block">if the worker is coming from failure</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#sendMessageToWorkerList-Message-java.util.List-">sendMessageToWorkerList</a></span>(Message&nbsp;message,
                        java.util.List&lt;java.lang.Integer&gt;&nbsp;workerList)</code>
 <div class="block">send a protocol buffer message to a list of workers</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
-<td class="colFirst"><code>java.lang.String</code></td>
+<tr id="i19" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#setWorkerEventSender-edu.iu.dsc.tws.master.server.IWorkerEventSender-">setWorkerEventSender</a></span>(<a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a>&nbsp;workerEventSender)</code>&nbsp;</td>
+</tr>
+<tr id="i20" class="altColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#started-edu.iu.dsc.tws.common.zk.WorkerWithState-">started</a></span>(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</code>
 <div class="block">new worker joins for the first time
  returns null if the join is successful,
  otherwise, it returns an explanation for the failure</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#workersScaledDown-int-">workersScaledDown</a></span>(int&nbsp;instancesRemoved)</code>&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerMonitor.html#workersScaledUp-int-">workersScaledUp</a></span>(int&nbsp;instancesAdded)</code>&nbsp;</td>
 </tr>
@@ -301,7 +314,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="WorkerMonitor-edu.iu.dsc.tws.master.server.JobMaster-edu.iu.dsc.tws.common.net.tcp.request.RRServer-edu.iu.dsc.tws.master.dashclient.DashboardClient-JobAPI.Job-edu.iu.dsc.tws.api.driver.IDriver-boolean-">
+<a name="WorkerMonitor-edu.iu.dsc.tws.master.server.JobMaster-edu.iu.dsc.tws.common.net.tcp.request.RRServer-edu.iu.dsc.tws.master.dashclient.DashboardClient-edu.iu.dsc.tws.master.server.ZKJobUpdater-JobAPI.Job-edu.iu.dsc.tws.api.driver.IDriver-edu.iu.dsc.tws.api.resource.IWorkerFailureListener-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -310,9 +323,10 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <pre>public&nbsp;WorkerMonitor(<a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html" title="class in edu.iu.dsc.tws.master.server">JobMaster</a>&nbsp;jobMaster,
                      <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/request/RRServer.html" title="class in edu.iu.dsc.tws.common.net.tcp.request">RRServer</a>&nbsp;rrServer,
                      <a href="../../../../../../edu/iu/dsc/tws/master/dashclient/DashboardClient.html" title="class in edu.iu.dsc.tws.master.dashclient">DashboardClient</a>&nbsp;dashClient,
+                     <a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server">ZKJobUpdater</a>&nbsp;zkJobUpdater,
                      JobAPI.Job&nbsp;job,
                      <a href="../../../../../../edu/iu/dsc/tws/api/driver/IDriver.html" title="interface in edu.iu.dsc.tws.api.driver">IDriver</a>&nbsp;driver,
-                     boolean&nbsp;faultTolerant)</pre>
+                     <a href="../../../../../../edu/iu/dsc/tws/api/resource/IWorkerFailureListener.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerFailureListener</a>&nbsp;failureListener)</pre>
 </li>
 </ul>
 </li>
@@ -323,6 +337,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="setWorkerEventSender-edu.iu.dsc.tws.master.server.IWorkerEventSender-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setWorkerEventSender</h4>
+<pre>public&nbsp;void&nbsp;setWorkerEventSender(<a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a>&nbsp;workerEventSender)</pre>
+</li>
+</ul>
 <a name="getNumberOfWorkers--">
 <!--   -->
 </a>
@@ -359,6 +382,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <li class="blockList">
 <h4>getWorkerInfoForID</h4>
 <pre>public&nbsp;JobMasterAPI.WorkerInfo&nbsp;getWorkerInfoForID(int&nbsp;id)</pre>
+</li>
+</ul>
+<a name="getWorkerState-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getWorkerState</h4>
+<pre>public&nbsp;JobMasterAPI.WorkerState&nbsp;getWorkerState(int&nbsp;workerID)</pre>
 </li>
 </ul>
 <a name="getWorkerIDs--">
@@ -427,7 +459,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <ul class="blockList">
 <li class="blockList">
 <h4>started</h4>
-<pre>public&nbsp;java.lang.String&nbsp;started(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</pre>
+<pre>public&nbsp;void&nbsp;started(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</pre>
 <div class="block">new worker joins for the first time
  returns null if the join is successful,
  otherwise, it returns an explanation for the failure</div>
@@ -439,7 +471,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <ul class="blockList">
 <li class="blockList">
 <h4>restarted</h4>
-<pre>public&nbsp;java.lang.String&nbsp;restarted(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</pre>
+<pre>public&nbsp;void&nbsp;restarted(<a href="../../../../../../edu/iu/dsc/tws/common/zk/WorkerWithState.html" title="class in edu.iu.dsc.tws.common.zk">WorkerWithState</a>&nbsp;workerWithState)</pre>
 <div class="block">if the worker is coming from failure</div>
 </li>
 </ul>
@@ -461,6 +493,15 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 <h4>failed</h4>
 <pre>public&nbsp;void&nbsp;failed(int&nbsp;workerID)</pre>
 <div class="block">called when a worker FAILED</div>
+</li>
+</ul>
+<a name="fullyFailed-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>fullyFailed</h4>
+<pre>public&nbsp;void&nbsp;fullyFailed(int&nbsp;workerID)</pre>
 </li>
 </ul>
 <a name="workersScaledDown-int-">
@@ -564,8 +605,8 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/net/request/MessageHand
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.ServerConnectHandler.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/master/server/WorkerMonitor.html" target="_top">Frames</a></li>
