@@ -11,7 +11,7 @@ You can download source code from [Github](https://github.com/DSC-SPIDAL/twister
 
 ## Features of this release
 
-1. Fault Tolerence enhancements; Automated fault detection and recovery
+1. Fault Tolerance enhancements; Automated fault detection and recovery
 2. Table API(experimental)
 3. TSet API improvements; Pipe capability and TSetEnvironement
  
