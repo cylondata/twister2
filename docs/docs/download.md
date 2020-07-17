@@ -14,7 +14,7 @@ Twister2 is released as source code tarballs. The downloads are distributed via 
 
 | Version | Release Artificats | Source Release | Release Notes |
 | :--- | :--- | :--- | :--- |
-| 0.7.0 | 2020 Jul 17 | [Source](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_5_0.md) |
+| 0.7.0 | 2020 Jul 17 | [Source](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_7_0.md) |
 | 0.4.0 | 2019 Nov 27 | [Source](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_4_0.md) |
 | 0.3.0 | 2019 Aug 25 | [Source](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_3_0.md) |
 | 0.2.2 | 2019 June 14 |[Source](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_2.md) |
