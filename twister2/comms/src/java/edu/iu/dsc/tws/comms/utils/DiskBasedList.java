@@ -160,7 +160,8 @@ public class DiskBasedList implements List {
 
   @Override
   public Iterator iterator() {
-    final DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
+    final DataPartitionConsumer consumer = this.collectionPartition.getConsumer();
+    //final DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
     return new Iterator() {
       @Override
       public boolean hasNext() {
@@ -169,8 +170,9 @@ public class DiskBasedList implements List {
 
       @Override
       public Object next() {
-        byte[] next = consumer.next();
-        return dataType.getDataPacker().unpackFromByteArray(next);
+        //byte[] next = consumer.next();
+        //return dataType.getDataPacker().unpackFromByteArray(next);
+        return consumer.next();
       }
     };
   }
