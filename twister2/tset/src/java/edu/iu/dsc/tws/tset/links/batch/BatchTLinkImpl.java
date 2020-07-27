@@ -12,18 +12,22 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
@@ -40,6 +44,10 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
   @Override
   public BatchEnvironment getTSetEnv() {
     return (BatchEnvironment) super.getTSetEnv();
+  }
+
+  private <P, C extends TFunction<T1, P>, T extends BatchTSet<>> BatchTSet<P> doCompute(String n, ComputeFunc<T1, P> computeFunction){
+
   }
 
   public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<T1, P> computeFunction) {
@@ -63,6 +71,27 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     } else {
       set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
     }
+    addChildToGraph(set);
+
+    return set;
+  }
+
+
+  @Override
+  public <K, O> KeyedTSet<K, O> computeToTuple(ComputeFunc<T1, Tuple<K, O>> genTupleFn) {
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), genTupleFn, getTargetParallelism(),
+        getSchema());
+
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  @Override
+  public <K, O> KeyedTSet<K, O> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, O>> genTupleFn) {
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), genTupleFn, getTargetParallelism(),
+        getSchema());
+
     addChildToGraph(set);
 
     return set;

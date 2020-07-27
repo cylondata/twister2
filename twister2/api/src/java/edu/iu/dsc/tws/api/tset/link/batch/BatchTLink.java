@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
@@ -51,6 +52,12 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0>, StoringData<T0> {
 
   @Override
   <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
+
+  @Override
+  <K, V> BatchTupleTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc);
+
+  @Override
+  <K, V> BatchTupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>> computeFunc);
 
   @Override
   TBase sink(SinkFunc<T1> sinkFunction);

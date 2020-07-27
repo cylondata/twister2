@@ -93,6 +93,19 @@ public interface TLink<T1, T0> extends TBase {
   <K, V> TupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
 
   /**
+   * Computes the data passed through the TLink to {@link Tuple} based on a {@link MapFunc} and thereby
+   * creating a {@link TupleTSet}
+   *
+   * @param computeFunc {@link MapFunc} to generate a {@link Tuple}
+   * @param <K>        key type
+   * @param <V>        value type
+   * @return Keyed TSet
+   */
+  <K, V> TupleTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc);
+
+  <K, V> TupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>> computeFunc);
+
+  /**
    * Applies a function elementwise. Similar to compute, but the {@link ApplyFunc} does not
    * return anything.
    *

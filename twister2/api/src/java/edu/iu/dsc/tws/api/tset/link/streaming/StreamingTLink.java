@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 
@@ -49,6 +50,12 @@ public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
 
   @Override
   <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
+
+  @Override
+  <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeFunc<T0, Tuple<K, V>> computeFunc);
+
+  @Override
+  <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T0, Tuple<K, V>> computeFunc);
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);
