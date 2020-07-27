@@ -11,14 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sinks;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
 public class StreamingCacheSink<T> extends BaseSinkFunc<T> {
-  private static final Logger LOG = Logger.getLogger(StreamingCacheSink.class.getName());
 
   private CollectionPartition<T> partition;
 
@@ -30,7 +27,6 @@ public class StreamingCacheSink<T> extends BaseSinkFunc<T> {
 
   @Override
   public boolean add(T value) {
-//    LOG.info("Streaming sink - " + value.toString());
     this.partition.add(value);
     return true;
   }
