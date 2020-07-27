@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
@@ -142,7 +141,7 @@ public class SvmSgdTsetRunner implements Twister2Worker, Serializable {
     for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
       LOG.info(String.format("Iteration %d", i));
 
-      ComputeTSet<double[], Iterator<double[][]>> svmTrainTset =
+      ComputeTSet<double[]> svmTrainTset =
           trainingData.direct()
               .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
 
@@ -192,7 +191,7 @@ public class SvmSgdTsetRunner implements Twister2Worker, Serializable {
 
     this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0));
 
-    ComputeTSet<Double, Iterator<double[][]>> svmTestTset =
+    ComputeTSet<Double> svmTestTset =
         testingData.direct()
             .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
 

@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -42,11 +41,11 @@ public class EvaluateExample extends BatchTsetExample {
     DirectTLink<Integer> direct = src.direct().setName("direct");
 
     LOG.info("test foreach");
-    ComputeTSet<Object, Iterator<Integer>> tset1 =
+    ComputeTSet<Object> tset1 =
         direct.lazyForEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    ComputeTSet<Object, Iterator<String>> tset2 =
+    ComputeTSet<Object> tset2 =
         direct.map(i -> i.toString() + "$$").setName("map")
             .direct()
             .lazyForEach(s -> LOG.info("map: " + s));

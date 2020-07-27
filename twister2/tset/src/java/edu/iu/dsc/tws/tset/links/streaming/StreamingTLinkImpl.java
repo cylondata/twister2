@@ -43,8 +43,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return (StreamingEnvironment) super.getTSetEnv();
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<T1, P> computeFunction) {
-    SComputeTSet<P, T1> set;
+  public <P> SComputeTSet<P> compute(String n, ComputeFunc<T1, P> computeFunction) {
+    SComputeTSet<P> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
           getSchema());
@@ -70,8 +70,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return set;
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
-    SComputeTSet<P, T1> set;
+  public <P> SComputeTSet<P> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
+    SComputeTSet<P> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
           getSchema());
@@ -84,12 +84,12 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeFunc<T1, P> computeFunction) {
+  public <P> SComputeTSet<P> compute(ComputeFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeCollectorFunc<T1, P> computeFunction) {
+  public <P> SComputeTSet<P> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 

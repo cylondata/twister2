@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -69,7 +68,7 @@ public class HelloTSet implements Twister2Worker, Serializable {
 
     PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
-    ComputeTSet<int[], Iterator<int[]>> mapedPartition = partitioned.map(
+    ComputeTSet<int[]> mapedPartition = partitioned.map(
         (MapFunc<int[], int[]>) input -> Arrays.stream(input).map(a -> a * 2).toArray()
     );
 

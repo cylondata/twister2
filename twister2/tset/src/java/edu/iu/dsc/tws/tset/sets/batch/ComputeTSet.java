@@ -22,59 +22,59 @@ import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
-public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
-  private TFunction<I, O> computeFunc;
+public class ComputeTSet<O> extends BatchTSetImpl<O> {
+  private TFunction<?, O> computeFunc;
 
   public ComputeTSet() {
     //non arg constructor needed for kryo
     super();
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, ComputeFunc<I, O> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, ComputeFunc<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
     this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, ComputeCollectorFunc<I, O> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, ComputeCollectorFunc<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, String name, ComputeFunc<I, O> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, String name, ComputeFunc<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   public ComputeTSet(BatchEnvironment tSetEnv, String name,
-                     ComputeCollectorFunc<I, O> computeFn, int parallelism, Schema inputSchema) {
+                     ComputeCollectorFunc<?, O> computeFn, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   @Override
-  public ComputeTSet<O, I> setName(String name) {
+  public ComputeTSet<O> setName(String name) {
     rename(name);
     return this;
   }
 
   @Override
-  public ComputeTSet<O, I> addInput(String key, StorableTBase<?> input) {
-    return (ComputeTSet<O, I>) super.addInput(key, input);
+  public ComputeTSet<O> addInput(String key, StorableTBase<?> input) {
+    return (ComputeTSet<O>) super.addInput(key, input);
   }
 
   @Override
-  public ComputeTSet<O, I> withSchema(Schema schema) {
-    return (ComputeTSet<O, I>) super.withSchema(schema);
+  public ComputeTSet<O> withSchema(Schema schema) {
+    return (ComputeTSet<O>) super.withSchema(schema);
   }
 
   @Override
-  public ICompute<I> getINode() {
+  public ICompute<?> getINode() {
 
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<>((ComputeFunc<I, O>) computeFunc, this, getInputs());
+      return new ComputeOp<>((ComputeFunc<?, O>) computeFunc, this, getInputs());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<I, O>) computeFunc, this,
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<?, O>) computeFunc, this,
           getInputs());
     }
 
@@ -86,7 +86,7 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
    *
    * @return the compute function
    */
-  public TFunction<I, O> getComputeFunc() {
+  public TFunction<?, O> getComputeFunc() {
     return computeFunc;
   }
 }

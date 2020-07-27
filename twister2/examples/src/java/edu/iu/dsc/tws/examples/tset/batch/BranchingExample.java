@@ -13,12 +13,10 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
@@ -48,13 +46,13 @@ public class BranchingExample extends BatchTsetExample {
         CommunicationContext.JoinType.INNER, Integer::compareTo).setName("join");
 
 
-    ComputeTSet<String, Iterator<JoinedTuple<Integer, Integer, Integer>>> map
+    ComputeTSet<String> map
         = join.map(t -> "(" + t.getKey() + " " + t.getLeftValue() + " " + t.getRightValue() + ")")
         .setName("map***");
 
-    ComputeTSet<String, Iterator<String>> map1 = map.direct().map(s -> "###" + s).setName("map@@");
+    ComputeTSet<String> map1 = map.direct().map(s -> "###" + s).setName("map@@");
 
-    ComputeTSet<String, Iterator<String>> union = map.union(map1).setName("union");
+    ComputeTSet<String> union = map.union(map1).setName("union");
 
     union.direct().forEach(s -> LOG.info(s));
   }

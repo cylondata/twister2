@@ -24,7 +24,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -76,7 +75,7 @@ public class FileBasedWordCount implements Twister2Worker, Serializable {
     SourceTSet<String> lines = env.createSource(new WordCountFileSource(), 1);
 
     // distribute the lines among the workers and performs a flatmap operation to extract words
-    ComputeTSet<String, Iterator<String>> words =
+    ComputeTSet<String> words =
         lines.partition(new HashingPartitioner<>(), sourcePar)
             .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
               StringTokenizer itr = new StringTokenizer(l);

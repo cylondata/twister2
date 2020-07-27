@@ -42,24 +42,24 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public <P> ComputeTSet<P, T> map(MapFunc<T, P> mapFn) {
+  public <P> ComputeTSet<P> map(MapFunc<T, P> mapFn) {
     return compute("map", new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<T, P> mapFn) {
+  public <P> ComputeTSet<P> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("flatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = lazyForEach(applyFunction);
+    ComputeTSet<Object> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
   }
 
   @Override
-  public ComputeTSet<Object, T> lazyForEach(ApplyFunc<T> applyFunction) {
+  public ComputeTSet<Object> lazyForEach(ApplyFunc<T> applyFunction) {
     return compute("foreach", new ForEachCompute<>(applyFunction));
   }
 
@@ -83,7 +83,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
   @Override
   public StorableTBase<T> cache() {
-    return (CachedTSet<T>) super.cache();
+    return super.cache();
   }
 
   @Override
@@ -99,6 +99,6 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
   @Override
   public StorableTBase<T> persist() {
-    return (PersistedTSet<T>) super.persist();
+    return super.persist();
   }
 }

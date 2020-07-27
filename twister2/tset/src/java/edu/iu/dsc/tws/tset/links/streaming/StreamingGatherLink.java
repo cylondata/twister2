@@ -60,13 +60,13 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   }*/
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<T, O> mapFn) {
+  public <O> SComputeTSet<O> map(MapFunc<T, O> mapFn) {
     GatherMapCompute<T, O> comp = new GatherMapCompute<>(mapFn);
     return compute("smap", comp);
   }
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<T, O> mapFn) {
+  public <O> SComputeTSet<O> flatmap(FlatMapFunc<T, O> mapFn) {
     GatherFlatMapCompute<T, O> comp = new GatherFlatMapCompute<>(mapFn);
     return compute("smap", comp);
   }
@@ -82,7 +82,7 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
-    SComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
+    SComputeTSet<Object> foreach =
         compute("sforeach", comp);
     addChildToGraph(foreach);
   }
