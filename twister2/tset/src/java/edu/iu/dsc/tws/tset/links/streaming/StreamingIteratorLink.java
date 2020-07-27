@@ -39,12 +39,12 @@ public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterat
   }
 
   @Override
-  public <P> SComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P, Iterator<T>> map(MapFunc<T, P> mapFn) {
     return compute("smap", new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> SComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("sflatmap", new FlatMapIterCompute<>(mapFn));
   }
 
@@ -56,7 +56,7 @@ public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterat
   }
 
   @Override
-  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupFn) {
     SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
         getTargetParallelism(), getSchema());
 

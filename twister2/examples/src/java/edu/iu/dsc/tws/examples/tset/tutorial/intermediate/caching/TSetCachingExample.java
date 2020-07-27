@@ -100,7 +100,7 @@ public class TSetCachingExample implements Twister2Worker, Serializable {
     }, 4);
 
     ComputeTSet<Integer, Iterator<Integer>> calc = sourceZ.direct().compute(
-        new ComputeCollectorFunc<Integer, Iterator<Integer>>() {
+        new ComputeCollectorFunc<Iterator<Integer>, Integer>() {
 
           private DataPartitionConsumer<Integer> xValues;
 

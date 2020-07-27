@@ -75,7 +75,7 @@ public class DirectExample extends BatchTsetExample {
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
+    direct.compute((ComputeFunc<Iterator<Integer>, String>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next();
@@ -87,7 +87,7 @@ public class DirectExample extends BatchTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+    direct.compute((ComputeCollectorFunc<Iterator<Integer>, String>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {

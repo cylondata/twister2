@@ -79,7 +79,7 @@ public class PersistExample extends BatchTsetExample {
 
     LOG.info("test compute");
     cTset.direct()
-        .compute((ComputeFunc<String, Iterator<Integer>>) input -> {
+        .compute((ComputeFunc<Iterator<Integer>, String>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
@@ -91,7 +91,7 @@ public class PersistExample extends BatchTsetExample {
 
     LOG.info("test computec");
     cTset.direct()
-        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+        .compute((ComputeCollectorFunc<Iterator<Integer>, String>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {

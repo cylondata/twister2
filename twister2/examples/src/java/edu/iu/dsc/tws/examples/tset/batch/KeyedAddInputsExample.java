@@ -59,8 +59,8 @@ public class KeyedAddInputsExample extends BatchTsetExample {
     KeyedCachedTSet<String, Integer> cache1 = src1.cache();
 
     ComputeTSet<String, Iterator<Tuple<String, Integer>>> comp =
-        cache0.keyedDirect().compute(new BaseComputeCollectorFunc<String,
-            Iterator<Tuple<String, Integer>>>() {
+        cache0.keyedDirect().compute(new BaseComputeCollectorFunc<Iterator<Tuple<String, Integer>>, String
+            >() {
           private Map<String, Integer> input1 = new HashMap<>();
 
           @Override

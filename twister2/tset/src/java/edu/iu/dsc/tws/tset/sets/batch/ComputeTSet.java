@@ -23,31 +23,31 @@ import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
 public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
-  private TFunction<O, I> computeFunc;
+  private TFunction<I, O> computeFunc;
 
   public ComputeTSet() {
     //non arg constructor needed for kryo
     super();
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, ComputeFunc<O, I> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, ComputeFunc<I, O> computeFn,
                      int parallelism, Schema inputSchema) {
     this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, ComputeCollectorFunc<O, I> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, ComputeCollectorFunc<I, O> computeFn,
                      int parallelism, Schema inputSchema) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, String name, ComputeFunc<O, I> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, String name, ComputeFunc<I, O> computeFn,
                      int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 
   public ComputeTSet(BatchEnvironment tSetEnv, String name,
-                     ComputeCollectorFunc<O, I> computeFn, int parallelism, Schema inputSchema) {
+                     ComputeCollectorFunc<I, O> computeFn, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
@@ -72,9 +72,9 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   public ICompute<I> getINode() {
 
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this, getInputs());
+      return new ComputeOp<>((ComputeFunc<I, O>) computeFunc, this, getInputs());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<I, O>) computeFunc, this,
           getInputs());
     }
 
@@ -86,7 +86,7 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
    *
    * @return the compute function
    */
-  public TFunction<O, I> getComputeFunc() {
+  public TFunction<I, O> getComputeFunc() {
     return computeFunc;
   }
 }

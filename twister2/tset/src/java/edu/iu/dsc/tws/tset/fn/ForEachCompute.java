@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 
-public class ForEachCompute<T> implements ComputeFunc<Object, T> {
+public class ForEachCompute<T> implements ComputeFunc<T, Object> {
   private ApplyFunc<T> applyFn;
 
   public ForEachCompute(ApplyFunc<T> applyFunction) {

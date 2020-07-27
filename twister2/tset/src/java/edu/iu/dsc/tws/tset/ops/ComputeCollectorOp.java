@@ -29,15 +29,15 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <O> Collector type
  * @param <I> Input message content type
  */
-public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
+public class ComputeCollectorOp<I, O> extends BaseComputeOp<I> {
 
-  private ComputeCollectorFunc<O, I> computeFunction;
+  private ComputeCollectorFunc<I, O> computeFunction;
   private RecordCollector<O> output;
 
   public ComputeCollectorOp() {
   }
 
-  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin,
+  public ComputeCollectorOp(ComputeCollectorFunc<I, O> computeFunction, BaseTSet origin,
                             Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;

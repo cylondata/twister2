@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.common.table.Row;
 
-public class RowForEachCompute implements ComputeCollectorFunc<Row, Iterator<Row>> {
+public class RowForEachCompute implements ComputeCollectorFunc<Iterator<Row>, Row> {
   private static final Logger LOG = Logger.getLogger(RowForEachCompute.class.getName());
 
   private ApplyFunc<Row> applyFn;

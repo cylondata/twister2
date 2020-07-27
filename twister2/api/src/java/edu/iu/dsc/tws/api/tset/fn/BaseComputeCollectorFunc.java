@@ -19,7 +19,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public abstract class BaseComputeCollectorFunc<O, I> extends BaseTFunction<O, I> implements
-    ComputeCollectorFunc<O, I> {
+public abstract class BaseComputeCollectorFunc<I, O> extends BaseTFunction<I, O> implements
+    ComputeCollectorFunc<I, O> {
 
 }

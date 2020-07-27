@@ -43,7 +43,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return (StreamingEnvironment) super.getTSetEnv();
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<T1, P> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
@@ -56,8 +56,8 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return set;
   }
 
-  private <P> WindowComputeTSet<P, Iterator<T1>> window(String n) {
-    WindowComputeTSet<P, Iterator<T1>> set;
+  private <P> WindowComputeTSet<Iterator<T1>, P> window(String n) {
+    WindowComputeTSet<Iterator<T1>, P> set;
     if (n != null && !n.isEmpty()) {
       set = new WindowComputeTSet<>(getTSetEnv(), n, getTargetParallelism(),
           this.windowParameter, getSchema());
@@ -70,7 +70,7 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return set;
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
@@ -84,12 +84,12 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(ComputeFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 
@@ -101,26 +101,26 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return sinkTSet;
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen) {
+  public <P> WindowComputeTSet<Iterator<T1>, P> countWindow(long windowLen) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingCountWindow(windowLen);
     return window("w-count-tumbling-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen, long slidingLen) {
+  public <P> WindowComputeTSet<Iterator<T1>, P> countWindow(long windowLen, long slidingLen) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withSlidingingCountWindow(windowLen, slidingLen);
     return window("w-count-sliding-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
+  public <P> WindowComputeTSet<Iterator<T1>, P> timeWindow(long windowLen,
                                                            TimeUnit windowLenTimeUnit) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingDurationWindow(windowLen, windowLenTimeUnit);
     return window("w-duration-tumbling-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
+  public <P> WindowComputeTSet<Iterator<T1>, P> timeWindow(long windowLen,
                                                            TimeUnit windowLenTimeUnit,
                                                            long slidingLen,
                                                            TimeUnit slidingWindowTimeUnit) {

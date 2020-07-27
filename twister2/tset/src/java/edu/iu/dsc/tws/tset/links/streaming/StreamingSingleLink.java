@@ -37,12 +37,12 @@ public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
   }
 
   @Override
-  public <P> SComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P, T> map(MapFunc<T, P> mapFn) {
     return compute("smap", new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> SComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P, T> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("sflatmap", new FlatMapCompute<>(mapFn));
   }
 
@@ -52,7 +52,7 @@ public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
   }
 
   @Override
-  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
+  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
     SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
         getTargetParallelism(), getSchema());
 

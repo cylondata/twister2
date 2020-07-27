@@ -73,7 +73,7 @@ public class KMeansTsetJob implements Twister2Worker, Serializable {
     SourceTSet<String[]> pointSource = env.createCSVSource(dataDirectory, dsize, parallelism,
         "split");
     ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String[]>>() {
+        new ComputeFunc<Iterator<String[]>, double[][]>() {
           private double[][] localPoints = new double[dsize / parallelism][dimension];
           @Override
           public double[][] compute(Iterator<String[]> input) {
@@ -94,7 +94,7 @@ public class KMeansTsetJob implements Twister2Worker, Serializable {
     SourceTSet<String[]> centerSource = env.createCSVSource(centroidDirectory, csize, parallelism,
         "complete");
     ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String[]>>() {
+        new ComputeFunc<Iterator<String[]>, double[][]>() {
           private double[][] localCenters = new double[csize][dimension];
           @Override
           public double[][] compute(Iterator<String[]> input) {

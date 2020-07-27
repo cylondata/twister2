@@ -40,12 +40,12 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public <P> ComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P, T> map(MapFunc<T, P> mapFn) {
     return compute("map", new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("flatmap", new FlatMapCompute<>(mapFn));
   }
 
@@ -62,7 +62,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
+  public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
     KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
         getTargetParallelism(), getSchema());
 

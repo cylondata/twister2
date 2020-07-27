@@ -74,14 +74,14 @@ public class ReduceExample extends BatchTsetExample {
 
     LOG.info("test compute");
     reduce
-        .compute((ComputeFunc<String, Integer>) input -> "sum=" + input)
+        .compute((ComputeFunc<Integer, String>) input -> "sum=" + input)
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
     reduce
-        .compute((ComputeCollectorFunc<String, Integer>)
+        .compute((ComputeCollectorFunc<Integer, String>)
             (input, output) -> output.collect("sum=" + input))
         .withSchema(PrimitiveSchemas.STRING)
         .direct()

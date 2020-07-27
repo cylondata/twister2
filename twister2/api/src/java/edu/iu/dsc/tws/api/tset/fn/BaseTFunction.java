@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.fn;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public abstract class BaseTFunction<O, I> implements TFunction<O, I> {
+public abstract class BaseTFunction<I, O> implements TFunction<I, O> {
   /**
    * The runtime context that is made available to users who create functions that
    * extend from the TBaseFunction abstract class

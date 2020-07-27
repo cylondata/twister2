@@ -42,17 +42,17 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<T, P> mapFn) {
     return compute("map", new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("flatmap", new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
         getTargetParallelism(), getSchema());
 

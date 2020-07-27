@@ -67,7 +67,7 @@ public class SetSchemaExample implements Twister2Worker, Serializable {
     src.withSchema(PrimitiveSchemas.INTEGER).direct().forEach(ii -> LOG.info("out1: " + ii));
 
     ComputeTSet<String, Integer> map = src.allReduce(Integer::sum).map(
-        new BaseMapFunc<String, Integer>() {
+        new BaseMapFunc<Integer, String>() {
           @Override
           public void prepare(TSetContext ctx) {
             super.prepare(ctx);
@@ -86,7 +86,7 @@ public class SetSchemaExample implements Twister2Worker, Serializable {
     map.withSchema(PrimitiveSchemas.STRING).direct().forEach(ii -> LOG.info("out3: " + ii));
 
     KeyedTSet<String, Integer> keyed = map.mapToTuple(
-        new BaseMapFunc<Tuple<String, Integer>, String>() {
+        new BaseMapFunc<String, Tuple<String, Integer>>() {
           @Override
           public void prepare(TSetContext ctx) {
             super.prepare(ctx);

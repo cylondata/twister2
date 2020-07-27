@@ -59,7 +59,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
   }
 
   protected RowComputeTSet compute(String n,
-                                ComputeCollectorFunc<Row, Iterator<Row>> computeFunction) {
+                                ComputeCollectorFunc<Iterator<Row>, Row> computeFunction) {
     RowComputeTSet set;
     if (n != null && !n.isEmpty()) {
       set = new RowComputeTSet(getTSetEnv(), n, computeFunction, getTargetParallelism(),
@@ -74,7 +74,7 @@ public abstract class RowBatchTLinkImpl extends BaseTLinkWithSchema<Row, Row>
   }
 
   @Override
-  public RowComputeTSet compute(ComputeCollectorFunc<Row, Iterator<Row>> computeFunction) {
+  public RowComputeTSet compute(ComputeCollectorFunc<Iterator<Row>, Row> computeFunction) {
     return compute(null, computeFunction);
   }
 

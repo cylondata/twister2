@@ -54,19 +54,19 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
-    GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
+  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<T, O> mapFn) {
+    GatherMapCompute<T, O> comp = new GatherMapCompute<>(mapFn);
     return compute("map", comp);
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
-    GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
+  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<T, O> mapFn) {
+    GatherFlatMapCompute<T, O> comp = new GatherFlatMapCompute<>(mapFn);
     return compute("map", comp);
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> genTupleFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
         getTargetParallelism(), getSchema());
 

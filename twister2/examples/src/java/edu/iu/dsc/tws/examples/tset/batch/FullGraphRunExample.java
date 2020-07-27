@@ -47,11 +47,11 @@ public class FullGraphRunExample extends BatchTsetExample {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     src.direct()
-        .flatmap((FlatMapFunc<Object, Integer>)
+        .flatmap((FlatMapFunc<Integer, Object>)
             (integer, collector) -> LOG.info("dir= " + integer));
 
     src.reduce(Integer::sum)
-        .flatmap((FlatMapFunc<Object, Integer>)
+        .flatmap((FlatMapFunc<Integer, Object>)
             (integer, collector) -> LOG.info("red= " + integer));
 
 //    env.run();

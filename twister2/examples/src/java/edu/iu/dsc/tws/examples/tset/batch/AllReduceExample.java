@@ -74,7 +74,7 @@ public class AllReduceExample extends BatchTsetExample {
 
     LOG.info("test computec");
     src.allReduce(Integer::sum)
-        .compute((ComputeCollectorFunc<String, Integer>)
+        .compute((ComputeCollectorFunc<Integer, String>)
             (input, output) -> output.collect("sum=" + input))
         .direct()
         .forEach(s -> LOG.info("computec: " + s));

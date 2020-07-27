@@ -38,19 +38,19 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0>, StoringData<T0> {
   BatchTLink<T1, T0> setName(String name);
 
   @Override
-  <O> BatchTSet<O> compute(ComputeFunc<O, T1> computeFunction);
+  <O> BatchTSet<O> compute(ComputeFunc<T1, O> computeFunction);
 
   @Override
-  <O> BatchTSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
+  <O> BatchTSet<O> compute(ComputeCollectorFunc<T1, O> computeFunction);
 
   @Override
-  <O> BatchTSet<O> map(MapFunc<O, T0> mapFn);
+  <O> BatchTSet<O> map(MapFunc<T0, O> mapFn);
 
   @Override
-  <O> BatchTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+  <O> BatchTSet<O> flatmap(FlatMapFunc<T0, O> mapFn);
 
   @Override
-  <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
+  <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
 
   @Override
   TBase sink(SinkFunc<T1> sinkFunction);

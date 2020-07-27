@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
  * @param <V> data (value) type
  */
 public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
-  private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
+  private TFunction<?, Tuple<K, V>> mapToTupleFunc;
 
-  public SKeyedTSet(StreamingEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFn,
+  public SKeyedTSet(StreamingEnvironment tSetEnv, TFunction<?, Tuple<K, V>> mapFn,
                     int parallelism, Schema inputSchema) {
     super(tSetEnv, "skeyed", parallelism, inputSchema);
     this.mapToTupleFunc = mapFn;
@@ -57,13 +57,13 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   public ICompute getINode() {
 
     if (mapToTupleFunc instanceof MapCompute) {
-      return new ComputeToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeToTupleOp<>((MapCompute<?, Tuple<K, V>>) mapToTupleFunc, this,
           Collections.emptyMap());
     } else if (mapToTupleFunc instanceof MapIterCompute) {
-      return new ComputeCollectorToTupleOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeCollectorToTupleOp<>((MapIterCompute<?, Tuple<K, V>>) mapToTupleFunc, this,
           Collections.emptyMap());
     } else if (mapToTupleFunc instanceof GatherMapCompute) {
-      return new ComputeCollectorToTupleOp<>((GatherMapCompute<Tuple<K, V>, ?>) mapToTupleFunc,
+      return new ComputeCollectorToTupleOp<>((GatherMapCompute<?, Tuple<K, V>>) mapToTupleFunc,
           this, Collections.emptyMap());
     }
 

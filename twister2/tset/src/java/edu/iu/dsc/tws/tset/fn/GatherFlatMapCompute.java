@@ -20,11 +20,11 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
-public class GatherFlatMapCompute<O, I> implements
-    ComputeCollectorFunc<O, Iterator<Tuple<Integer, I>>> {
-  private FlatMapFunc<O, I> mapFn;
+public class GatherFlatMapCompute<I, O> implements
+    ComputeCollectorFunc<Iterator<Tuple<Integer, I>>, O> {
+  private FlatMapFunc<I, O> mapFn;
 
-  public GatherFlatMapCompute(FlatMapFunc<O, I> mapFunction) {
+  public GatherFlatMapCompute(FlatMapFunc<I, O> mapFunction) {
     this.mapFn = mapFunction;
   }
 

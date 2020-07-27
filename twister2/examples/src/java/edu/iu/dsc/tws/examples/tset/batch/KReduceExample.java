@@ -63,7 +63,7 @@ public class KReduceExample extends BatchTsetExample {
 
     LOG.info("test compute");
     kreduce.compute(
-        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+        (ComputeFunc<Iterator<Tuple<Integer, Integer>>, String>) input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
             s.append(input.next().toString()).append(" ");
@@ -74,7 +74,7 @@ public class KReduceExample extends BatchTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    kreduce.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    kreduce.compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Integer>>, String>)
         (input, output) -> {
           while (input.hasNext()) {
             output.collect(input.next().toString());

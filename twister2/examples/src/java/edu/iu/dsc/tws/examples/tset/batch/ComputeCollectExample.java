@@ -51,7 +51,7 @@ public class ComputeCollectExample extends BatchTsetExample {
     SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM).setName("src");
 
     ComputeTSet<String, Iterator<Integer>> modify = src.direct().compute(
-        (ComputeCollectorFunc<String, Iterator<Integer>>) (input, collector) -> {
+        (ComputeCollectorFunc<Iterator<Integer>, String>) (input, collector) -> {
           while (input.hasNext()) {
             collector.collect(input.next() + "##");
           }

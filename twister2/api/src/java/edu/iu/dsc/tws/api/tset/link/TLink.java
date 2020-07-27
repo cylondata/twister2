@@ -52,7 +52,7 @@ public interface TLink<T1, T0> extends TBase {
    * @param <O>             output tset base type
    * @return Compute TSet
    */
-  <O> TSet<O> compute(ComputeFunc<O, T1> computeFunction);
+  <O> TSet<O> compute(ComputeFunc<T1, O> computeFunction);
 
   /**
    * Creates a Compute {@link TSet} based on the {@link ComputeCollectorFunc} provided.
@@ -61,7 +61,7 @@ public interface TLink<T1, T0> extends TBase {
    * @param <O>             output type (for the {@link edu.iu.dsc.tws.api.tset.fn.RecordCollector})
    * @return Compute TSet
    */
-  <O> TSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
+  <O> TSet<O> compute(ComputeCollectorFunc<T1, O> computeFunction);
 
   /**
    * Performs elementwise map operation based on the {@link MapFunc} provided
@@ -70,7 +70,7 @@ public interface TLink<T1, T0> extends TBase {
    * @param <O>   output type
    * @return Compute tset
    */
-  <O> TSet<O> map(MapFunc<O, T0> mapFn);
+  <O> TSet<O> map(MapFunc<T0, O> mapFn);
 
   /**
    * Performs flat map operation based on the {@link FlatMapFunc} provided
@@ -79,7 +79,7 @@ public interface TLink<T1, T0> extends TBase {
    * @param <O>   map function to T0 to multiple elements of {@literal <O>}
    * @return Compute TSet
    */
-  <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+  <O> TSet<O> flatmap(FlatMapFunc<T0, O> mapFn);
 
   /**
    * Maps the data passed through the TLink to {@link Tuple} based on a {@link MapFunc} and thereby
@@ -90,7 +90,7 @@ public interface TLink<T1, T0> extends TBase {
    * @param <V>        value type
    * @return Keyed TSet
    */
-  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
 
   /**
    * Applies a function elementwise. Similar to compute, but the {@link ApplyFunc} does not

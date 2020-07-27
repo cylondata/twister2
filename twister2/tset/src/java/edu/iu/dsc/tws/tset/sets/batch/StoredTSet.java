@@ -109,7 +109,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> generateTuple) {
     return getStoredSourceTSet().mapToTuple(generateTuple);
   }
 

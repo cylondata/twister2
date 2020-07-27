@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 
-public class GatherForEachCompute<T> implements ComputeFunc<Object, Iterator<Tuple<Integer, T>>> {
+public class GatherForEachCompute<T> implements ComputeFunc<Iterator<Tuple<Integer, T>>, Object> {
   private ApplyFunc<T> applyFn;
 
   public GatherForEachCompute(ApplyFunc<T> applyFunction) {

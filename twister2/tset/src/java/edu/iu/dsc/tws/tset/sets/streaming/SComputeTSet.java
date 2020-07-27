@@ -24,26 +24,26 @@ import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
 public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
-  private TFunction<O, I> computeFunc;
+  private TFunction<I, O> computeFunc;
 
-  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeFunc<I, O> computeFunction,
                       int parallelism, Schema inputSchema) {
     this(tSetEnv, "scompute", computeFunction, parallelism, inputSchema);
   }
 
-  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
+  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeCollectorFunc<I, O> compOp,
                       int parallelism, Schema inputSchema) {
     this(tSetEnv, "scomputec", compOp, parallelism, inputSchema);
   }
 
   public SComputeTSet(StreamingEnvironment tSetEnv, String name,
-                      ComputeFunc<O, I> computeFunction, int parallelism, Schema inputSchema) {
+                      ComputeFunc<I, O> computeFunction, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFunction;
   }
 
   public SComputeTSet(StreamingEnvironment tSetEnv, String name,
-                      ComputeCollectorFunc<O, I> compOp, int parallelism, Schema inputSchema) {
+                      ComputeCollectorFunc<I, O> compOp, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = compOp;
   }
@@ -63,10 +63,10 @@ public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   public ICompute<I> getINode() {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this,
+      return new ComputeOp<>((ComputeFunc<I, O>) computeFunc, this,
           Collections.emptyMap());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<I, O>) computeFunc, this,
           Collections.emptyMap());
     }
 

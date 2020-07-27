@@ -30,10 +30,10 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
-public class FlatMapCompute<O, I> implements ComputeCollectorFunc<O, I> {
-  private FlatMapFunc<O, I> mapFn;
+public class FlatMapCompute<I, O> implements ComputeCollectorFunc<I, O> {
+  private final FlatMapFunc<I, O> mapFn;
 
-  public FlatMapCompute(FlatMapFunc<O, I> mapFunction) {
+  public FlatMapCompute(FlatMapFunc<I, O> mapFunction) {
     this.mapFn = mapFunction;
   }
 

@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
  * @param <O> Output type of TSet
  * @param <I> Input Type of TSet
  */
-public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
-  private TFunction<O, I> computeFunc;
+public class WindowComputeTSet<I, O> extends StreamingTSetImpl<O> {
+  private TFunction<I, O> computeFunc;
 
   private WindowParameter windowParameter;
 
@@ -78,7 +78,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 //  }
 
   @Override
-  public WindowComputeTSet<O, I> setName(String name) {
+  public WindowComputeTSet<I, O> setName(String name) {
     rename(name);
     return this;
   }
@@ -88,14 +88,14 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
   public ICompute<I> getINode() {
     // todo: fix empty map (will have to handle inputs to window functions)
     if (computeFunc instanceof ComputeFunc) {
-      return new WindowComputeOp<>((ComputeFunc<O, Iterator<I>>) computeFunc, this,
+      return new WindowComputeOp<>((ComputeFunc<Iterator<I>, O>) computeFunc, this,
           Collections.emptyMap(), windowParameter);
     } else {
       throw new RuntimeException("Unknown function type for window compute: " + computeFunc);
     }
   }
 
-  public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
+  public WindowComputeTSet<I, O> process(WindowComputeFunc<I, O> processFunction) {
     if (this.computeFunc == null) {
       this.computeFunc = processFunction;
       return this;
@@ -111,9 +111,9 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
    * @param aggregateFunction reduce function definition
    * @return reduced value of type O
    */
-  public WindowComputeTSet<O, I> aggregate(AggregateFunc<O> aggregateFunction) {
+  public WindowComputeTSet<I, O> aggregate(AggregateFunc<O> aggregateFunction) {
 
-    this.process(new WindowComputeFunc<O, I>() {
+    this.process(new WindowComputeFunc<I, O>() {
       @Override
       public O compute(I input) {
         O initial = null;
@@ -136,7 +136,7 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
     return this;
   }
 
-  public WindowComputeTSet<O, I> withSchema(Schema schema) {
-    return (WindowComputeTSet<O, I>) super.withSchema(schema);
+  public WindowComputeTSet<I, O> withSchema(Schema schema) {
+    return (WindowComputeTSet<I, O>) super.withSchema(schema);
   }
 }

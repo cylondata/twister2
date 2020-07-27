@@ -47,7 +47,7 @@ public class CSVTSetSourceExample implements Twister2Worker, Serializable {
     SourceTSet<String[]> pointSource = env.createCSVSource("/tmp/dinput", dsize,
         parallelism, "split");
     ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String[]>>() {
+        new ComputeFunc<Iterator<String[]>, double[][]>() {
           private double[][] localPoints = new double[dsize / parallelism][dimension];
           @Override
           public double[][] compute(Iterator<String[]> input) {
