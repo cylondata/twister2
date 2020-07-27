@@ -39,18 +39,18 @@ public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterat
   }
 
   @Override
-  public <P> SComputeTSet<P, Iterator<T>> map(MapFunc<T, P> mapFn) {
+  public <P> SComputeTSet<P> map(MapFunc<T, P> mapFn) {
     return compute("smap", new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> SComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<T, P> mapFn) {
+  public <P> SComputeTSet<P> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("sflatmap", new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    SComputeTSet<Object, Iterator<T>> set = compute("sforeach",
+    SComputeTSet<Object> set = compute("sforeach",
         new ForEachIterCompute<>(applyFunction)
     );
   }

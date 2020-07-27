@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -124,12 +123,12 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
+  public ComputeTSet<T> union(TSet<T> other) {
     throw new UnsupportedOperationException("Union on StoredTSet is not supported");
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
+  public ComputeTSet<T> union(Collection<TSet<T>> tSets) {
     throw new UnsupportedOperationException("Union on StoredTSet is not supported");
   }
 

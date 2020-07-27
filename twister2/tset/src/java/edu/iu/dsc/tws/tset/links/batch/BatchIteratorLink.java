@@ -42,12 +42,12 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<T, P> mapFn) {
+  public <P> ComputeTSet<P> map(MapFunc<T, P> mapFn) {
     return compute("map", new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<T, P> mapFn) {
+  public <P> ComputeTSet<P> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("flatmap", new FlatMapIterCompute<>(mapFn));
   }
 
@@ -62,13 +62,13 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
   }
 
   @Override
-  public ComputeTSet<Object, Iterator<T>> lazyForEach(ApplyFunc<T> applyFunction) {
+  public ComputeTSet<Object> lazyForEach(ApplyFunc<T> applyFunction) {
     return compute("foreach", new ForEachIterCompute<>(applyFunction));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, Iterator<T>> set = lazyForEach(applyFunction);
+    ComputeTSet<Object> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
   }

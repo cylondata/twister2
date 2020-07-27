@@ -42,8 +42,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     return (BatchEnvironment) super.getTSetEnv();
   }
 
-  public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<T1, P> computeFunction) {
-    ComputeTSet<P, T1> set;
+  public <P> ComputeTSet<P> compute(String n, ComputeFunc<T1, P> computeFunction) {
+    ComputeTSet<P> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
           getSchema());
@@ -55,8 +55,8 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     return set;
   }
 
-  public <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
-    ComputeTSet<P, T1> set;
+  public <P> ComputeTSet<P> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
+    ComputeTSet<P> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
           getSchema());
@@ -69,12 +69,12 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(ComputeFunc<T1, P> computeFunction) {
+  public <P> ComputeTSet<P> compute(ComputeFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(ComputeCollectorFunc<T1, P> computeFunction) {
+  public <P> ComputeTSet<P> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 

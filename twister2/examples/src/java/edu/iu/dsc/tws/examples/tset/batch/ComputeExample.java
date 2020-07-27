@@ -53,7 +53,7 @@ public class ComputeExample extends BatchTsetExample {
         .setName("src")
         .withSchema(PrimitiveSchemas.INTEGER);
 
-    ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
+    ComputeTSet<Integer> sum = src.direct().compute(
         (ComputeFunc<Iterator<Integer>, Integer>) input -> {
           int s = 0;
           while (input.hasNext()) {

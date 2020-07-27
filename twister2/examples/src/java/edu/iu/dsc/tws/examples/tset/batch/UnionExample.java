@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -35,7 +34,7 @@ public class UnionExample extends BatchTsetExample {
     SourceTSet<Integer> src1 = dummySource(env, start, COUNT, PARALLELISM).setName("src1");
     SourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
 
-    ComputeTSet<Integer, Iterator<Integer>> unionTSet = src1.union(src2);
+    ComputeTSet<Integer> unionTSet = src1.union(src2);
     LOG.info("test source union");
     unionTSet.direct().forEach(s -> LOG.info("map: " + s));
   }

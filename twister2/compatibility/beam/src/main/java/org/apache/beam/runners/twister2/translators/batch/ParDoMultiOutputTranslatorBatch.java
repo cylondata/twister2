@@ -18,7 +18,11 @@
 package org.apache.beam.runners.twister2.translators.batch;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.beam.runners.core.construction.ParDoTranslation;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
@@ -92,7 +96,7 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
       }
     }
 
-    ComputeTSet<RawUnionValue, Iterator<WindowedValue<IT>>> outputTSet =
+    ComputeTSet<RawUnionValue> outputTSet =
         inputTTSet
             .direct()
             .<RawUnionValue>compute(
@@ -109,8 +113,8 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
                     outputMap));
 
     for (Map.Entry<TupleTag<?>, PValue> output : outputs.entrySet()) {
-      ComputeTSet<WindowedValue<OT>, Iterator<RawUnionValue>> tempTSet =
-          outputTSet.direct().compute(new OutputTagFilter(outputMap.get(output.getKey())));
+      ComputeTSet<WindowedValue<OT>> tempTSet =
+          outputTSet.direct().compute(new OutputTagFilter<>(outputMap.get(output.getKey())));
       context.setOutputDataSet((PCollection) output.getValue(), tempTSet);
     }
   }

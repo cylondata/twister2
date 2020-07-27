@@ -58,7 +58,7 @@ public class KeyedAddInputsExample extends BatchTsetExample {
     KeyedCachedTSet<String, Integer> cache0 = src0.cache();
     KeyedCachedTSet<String, Integer> cache1 = src1.cache();
 
-    ComputeTSet<String, Iterator<Tuple<String, Integer>>> comp =
+    ComputeTSet<String> comp =
         cache0.keyedDirect().compute(
             new BaseComputeCollectorFunc<Iterator<Tuple<String, Integer>>, String>() {
               private Map<String, Integer> input1 = new HashMap<>();
@@ -92,7 +92,7 @@ public class KeyedAddInputsExample extends BatchTsetExample {
 
     LOG.info("Test lazy cache!");
 
-    ComputeTSet<Object, Iterator<String>> forEach = comp.direct()
+    ComputeTSet<Object> forEach = comp.direct()
         .lazyForEach(i -> LOG.info("comp-lazy: " + i));
 
     for (int i = 0; i < 4; i++) {
