@@ -59,33 +59,34 @@ public class KeyedAddInputsExample extends BatchTsetExample {
     KeyedCachedTSet<String, Integer> cache1 = src1.cache();
 
     ComputeTSet<String, Iterator<Tuple<String, Integer>>> comp =
-        cache0.keyedDirect().compute(new BaseComputeCollectorFunc<Iterator<Tuple<String, Integer>>, String
-            >() {
-          private Map<String, Integer> input1 = new HashMap<>();
+        cache0.keyedDirect().compute(
+            new BaseComputeCollectorFunc<Iterator<Tuple<String, Integer>>, String>() {
+              private Map<String, Integer> input1 = new HashMap<>();
 
-          @Override
-          public void prepare(TSetContext ctx) {
-            super.prepare(ctx);
+              @Override
+              public void prepare(TSetContext ctx) {
+                super.prepare(ctx);
 
-            // populate the hashmap with values from the input
-            DataPartitionConsumer<Tuple<String, Integer>> part =
-                (DataPartitionConsumer<Tuple<String, Integer>>) getInput("input").getConsumer();
-            while (part.hasNext()) {
-              Tuple<String, Integer> next = part.next();
-              input1.put(next.getKey(), next.getValue());
-            }
-          }
+                // populate the hashmap with values from the input
+                DataPartitionConsumer<Tuple<String, Integer>> part =
+                    (DataPartitionConsumer<Tuple<String, Integer>>) getInput("input")
+                        .getConsumer();
+                while (part.hasNext()) {
+                  Tuple<String, Integer> next = part.next();
+                  input1.put(next.getKey(), next.getValue());
+                }
+              }
 
-          @Override
-          public void compute(Iterator<Tuple<String, Integer>> input,
-                              RecordCollector<String> output) {
-            while (input.hasNext()) {
-              Tuple<String, Integer> next = input.next();
-              output.collect(next.getKey() + " -> " + next.getValue() + ", "
-                  + input1.get(next.getKey()));
-            }
-          }
-        }).addInput("input", cache1);
+              @Override
+              public void compute(Iterator<Tuple<String, Integer>> input,
+                                  RecordCollector<String> output) {
+                while (input.hasNext()) {
+                  Tuple<String, Integer> next = input.next();
+                  output.collect(next.getKey() + " -> " + next.getValue() + ", "
+                      + input1.get(next.getKey()));
+                }
+              }
+            }).addInput("input", cache1);
 
     comp.direct().forEach(i -> LOG.info("comp: " + i));
 
