@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
 import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
@@ -45,7 +46,13 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
    */
   public KeyedTSet(BatchEnvironment tSetEnv, TFunction<?, Tuple<K, V>> mapFunc,
                    int parallelism, Schema inputSchema) {
-    super(tSetEnv, "keyed", parallelism, inputSchema);
+    this(tSetEnv, null, mapFunc, parallelism, inputSchema);
+  }
+
+  public KeyedTSet(BatchEnvironment tSetEnv, String name, TFunction<?, Tuple<K, V>> mapFunc,
+                   int parallelism, Schema inputSchema) {
+    super(tSetEnv, TSetUtils.resolveComputeName(name, mapFunc, true, false),
+        parallelism, inputSchema);
     this.mapToTupleFunc = mapFunc;
   }
 

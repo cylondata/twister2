@@ -53,12 +53,7 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
 
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupFn) {
-    KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+    return this.computeToTuple("map2tup", new MapIterCompute<>(mapToTupFn));
   }
 
   @Override

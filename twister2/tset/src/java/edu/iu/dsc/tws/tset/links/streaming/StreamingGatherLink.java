@@ -73,10 +73,7 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> genTupleFn) {
-    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-    addChildToGraph(set);
-    return set;
+    return this.computeToTuple("smap2tup", new GatherMapCompute<>(genTupleFn));
   }
 
   @Override

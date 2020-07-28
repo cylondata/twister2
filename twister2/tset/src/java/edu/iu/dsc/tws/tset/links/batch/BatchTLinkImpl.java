@@ -12,9 +12,11 @@
 
 package edu.iu.dsc.tws.tset.links.batch;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
@@ -24,6 +26,7 @@ import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CheckpointedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 
@@ -42,48 +45,17 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
     return (BatchEnvironment) super.getTSetEnv();
   }
 
-  public <P> ComputeTSet<P> compute(String n, ComputeFunc<T1, P> computeFunction) {
-    ComputeTSet<P> set;
-    if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
+  public <P> ComputeTSet<P> compute(String name, TFunction<T1, P> computeFunction) {
+    ComputeTSet<P> set = new ComputeTSet<>(getTSetEnv(), name, computeFunction,
+        getTargetParallelism(), getSchema());
     addChildToGraph(set);
 
     return set;
   }
 
-  public <P> ComputeTSet<P> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
-    ComputeTSet<P> set;
-    if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
-    addChildToGraph(set);
-
-    return set;
-  }
-
-
-  @Override
-  public <K, O> KeyedTSet<K, O> computeToTuple(ComputeFunc<T1, Tuple<K, O>> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), genTupleFn, getTargetParallelism(),
+  public <K, O> KeyedTSet<K, O> computeToTuple(String n, TFunction<T1, Tuple<K, O>> genTupleFn) {
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), n, genTupleFn, getTargetParallelism(),
         getSchema());
-
-    addChildToGraph(set);
-
-    return set;
-  }
-
-  @Override
-  public <K, O> KeyedTSet<K, O> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, O>> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), genTupleFn, getTargetParallelism(),
-        getSchema());
-
     addChildToGraph(set);
 
     return set;
@@ -97,6 +69,17 @@ public abstract class BatchTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1, T0>
   @Override
   public <P> ComputeTSet<P> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
+  }
+
+  @Override
+  public <K, V> KeyedTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc) {
+    return computeToTuple(null, computeFunc);
+  }
+
+  @Override
+  public <K, V> KeyedTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>>
+                                                   computeFunc) {
+    return computeToTuple(null, computeFunc);
   }
 
   @Override

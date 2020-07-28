@@ -53,11 +53,6 @@ public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
 
   @Override
   public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
-    SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+    return this.computeToTuple("smap2tup", new MapCompute<>(genTupleFn));
   }
 }

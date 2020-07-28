@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
@@ -36,9 +37,10 @@ import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
 public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   private TFunction<?, Tuple<K, V>> mapToTupleFunc;
 
-  public SKeyedTSet(StreamingEnvironment tSetEnv, TFunction<?, Tuple<K, V>> mapFn,
+  public SKeyedTSet(StreamingEnvironment tSetEnv, String name, TFunction<?, Tuple<K, V>> mapFn,
                     int parallelism, Schema inputSchema) {
-    super(tSetEnv, "skeyed", parallelism, inputSchema);
+    super(tSetEnv, TSetUtils.resolveComputeName(name, mapFn, true, true),
+        parallelism, inputSchema);
     this.mapToTupleFunc = mapFn;
   }
 

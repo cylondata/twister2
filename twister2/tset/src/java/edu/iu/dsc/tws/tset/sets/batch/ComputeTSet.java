@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
@@ -32,23 +33,18 @@ public class ComputeTSet<O> extends BatchTSetImpl<O> {
 
   public ComputeTSet(BatchEnvironment tSetEnv, ComputeFunc<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
-    this(tSetEnv, "compute", computeFn, parallelism, inputSchema);
+    this(tSetEnv, null, computeFn, parallelism, inputSchema);
   }
 
   public ComputeTSet(BatchEnvironment tSetEnv, ComputeCollectorFunc<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
-    this(tSetEnv, "computec", computeFn, parallelism, inputSchema);
+    this(tSetEnv, null, computeFn, parallelism, inputSchema);
   }
 
-  public ComputeTSet(BatchEnvironment tSetEnv, String name, ComputeFunc<?, O> computeFn,
+  public ComputeTSet(BatchEnvironment tSetEnv, String name, TFunction<?, O> computeFn,
                      int parallelism, Schema inputSchema) {
-    super(tSetEnv, name, parallelism, inputSchema);
-    this.computeFunc = computeFn;
-  }
-
-  public ComputeTSet(BatchEnvironment tSetEnv, String name,
-                     ComputeCollectorFunc<?, O> computeFn, int parallelism, Schema inputSchema) {
-    super(tSetEnv, name, parallelism, inputSchema);
+    super(tSetEnv, TSetUtils.resolveComputeName(name, computeFn, false, false),
+        parallelism, inputSchema);
     this.computeFunc = computeFn;
   }
 

@@ -16,15 +16,19 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
@@ -43,19 +47,6 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return (StreamingEnvironment) super.getTSetEnv();
   }
 
-  public <P> SComputeTSet<P> compute(String n, ComputeFunc<T1, P> computeFunction) {
-    SComputeTSet<P> set;
-    if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
-    addChildToGraph(set);
-
-    return set;
-  }
-
   private <P> WindowComputeTSet<Iterator<T1>, P> window(String n) {
     WindowComputeTSet<Iterator<T1>, P> set;
     if (n != null && !n.isEmpty()) {
@@ -70,14 +61,18 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return set;
   }
 
-  public <P> SComputeTSet<P> compute(String n, ComputeCollectorFunc<T1, P> computeFunction) {
-    SComputeTSet<P> set;
-    if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
+  public <P> SComputeTSet<P> compute(String n, TFunction<T1, P> computeFunction) {
+    SComputeTSet<P> set = new SComputeTSet<>(getTSetEnv(), n, computeFunction,
+        getTargetParallelism(), getSchema());
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  public <K, V> SKeyedTSet<K, V> computeToTuple(String n,
+                                                TFunction<T1, Tuple<K, V>> computeFunction) {
+    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), n, computeFunction,
+        getTargetParallelism(), getSchema());
     addChildToGraph(set);
 
     return set;
@@ -91,6 +86,17 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
   @Override
   public <P> SComputeTSet<P> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
+  }
+
+  @Override
+  public <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc) {
+    return computeToTuple(null, computeFunc);
+  }
+
+  @Override
+  public <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>>
+                                                            computeFunc) {
+    return computeToTuple(null, computeFunc);
   }
 
   @Override

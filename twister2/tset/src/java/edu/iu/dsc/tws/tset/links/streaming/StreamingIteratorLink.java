@@ -57,11 +57,6 @@ public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterat
 
   @Override
   public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupFn) {
-    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+    return this.computeToTuple("smap2tup", new MapIterCompute<>(mapToTupFn));
   }
 }

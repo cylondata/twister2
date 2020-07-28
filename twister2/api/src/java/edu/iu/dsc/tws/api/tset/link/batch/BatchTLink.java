@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 

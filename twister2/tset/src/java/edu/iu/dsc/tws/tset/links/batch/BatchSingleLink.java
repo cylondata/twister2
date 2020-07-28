@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
@@ -65,12 +63,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
   @Override
   public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+    return this.computeToTuple("map2tup", new MapCompute<>(genTupleFn));
   }
 
   @Override
