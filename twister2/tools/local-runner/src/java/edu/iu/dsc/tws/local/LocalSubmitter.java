@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.local.mock.MockWorker;
+import edu.iu.dsc.tws.local.util.FileConstants;
 import edu.iu.dsc.tws.local.util.LocalClassLoader;
 
 public final class LocalSubmitter {
@@ -106,12 +107,14 @@ public final class LocalSubmitter {
         files.add(new File(commonConfig, f));
         files.add(new File(standaloneConfig, f));
       }
-      files.add(new File(commonConfig, "logger.properties"));
+      File loggerProperties = new File(commonConfig, "logger.properties");
+      files.add(loggerProperties);
 
       directories.forEach(File::mkdir);
       for (File file : files) {
         file.createNewFile();
       }
+      Files.write(loggerProperties.toPath(), FileConstants.getLoggerContent().getBytes());
       return prepare(tempDir.getAbsolutePath());
     } catch (IOException e) {
       throw new Twister2RuntimeException("Failed to create a mock config directory");

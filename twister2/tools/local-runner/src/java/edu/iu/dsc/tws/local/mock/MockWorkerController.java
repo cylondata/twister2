@@ -91,8 +91,6 @@ public class MockWorkerController implements IWorkerController {
   @Override
   public void waitOnBarrier() throws TimeoutException {
     try {
-      System.out.println("Called barrier by " + Thread.currentThread().getName());
-      LOG.info("Called barrier by" + Thread.currentThread().getName());
       this.cyclicBarrier.await();
     } catch (InterruptedException | BrokenBarrierException e) {
       throw new TimeoutException("Timeout on barrier");
