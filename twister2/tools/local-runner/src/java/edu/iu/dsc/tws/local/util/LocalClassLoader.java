@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
-import edu.iu.dsc.tws.tset.TBaseGraph;
 
 /**
  * This class loader will be used to virtually create isolated contexts for Worker instances.
@@ -39,9 +38,12 @@ public class LocalClassLoader extends SecureClassLoader {
 
   private static final Logger LOG = Logger.getLogger(LocalClassLoader.class.getName());
 
-  public Set<String> twsClassesToExclude = new HashSet<>();
-  public Set<String> twsPackagesToExclude = new HashSet<>();
-  public Set<String> classesToLoad = new HashSet<>();
+  private static final Set<String> APP_SPECIFIC_CLASS_EXCLUSIONS = new HashSet<>();
+  private static final Set<String> APP_SPECIFIC_PACKAGE_EXCLUSIONS = new HashSet<>();
+
+  private Set<String> twsClassesToExclude = new HashSet<>();
+  private Set<String> twsPackagesToExclude = new HashSet<>();
+  private Set<String> classesToLoad = new HashSet<>();
 
   public LocalClassLoader(ClassLoader parent) {
     super(parent);
@@ -49,13 +51,29 @@ public class LocalClassLoader extends SecureClassLoader {
     twsClassesToExclude.add(Twister2Job.class.getName());
     twsClassesToExclude.add(Config.class.getName());
     twsClassesToExclude.add(Config.Builder.class.getName());
-    twsClassesToExclude.add(TBaseGraph.class.getName());
+    //twsClassesToExclude.add(TBaseGraph.class.getName()); This shouldn't be uncommented
+
+    twsClassesToExclude.addAll(APP_SPECIFIC_CLASS_EXCLUSIONS);
 
     // delegating following packages to parent class loader
     twsPackagesToExclude.add("edu.iu.dsc.tws.proto");
-    twsPackagesToExclude.add("edu.iu.dsc.tws");
+    // twsPackagesToExclude.add("edu.iu.dsc.tws"); This shouldn't be uncommented
     twsPackagesToExclude.add("jep"); // to support python debugging
     twsPackagesToExclude.add("edu.iu.dsc.tws.python.processors.JepInstance");
+
+    twsClassesToExclude.addAll(APP_SPECIFIC_PACKAGE_EXCLUSIONS);
+  }
+
+  public static <T> void excludeClass(Class<T> clazz) {
+    APP_SPECIFIC_CLASS_EXCLUSIONS.add(clazz.getName());
+  }
+
+  public static void excludeClass(String fullyQualifiedClassName) {
+    APP_SPECIFIC_CLASS_EXCLUSIONS.add(fullyQualifiedClassName);
+  }
+
+  public static void excludePackage(String packageName) {
+    APP_SPECIFIC_PACKAGE_EXCLUSIONS.add(packageName);
   }
 
   public void addJobClass(String jobClass) {
