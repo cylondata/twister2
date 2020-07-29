@@ -134,6 +134,13 @@ http_archive(
     urls = ["https://github.com/openucx/ucx/archive/b57b32df58b3755d876cd4d2da4b27bc54733ccc.zip"],
 )
 
+http_archive(
+    name = "cylon",
+    build_file = "@//:third_party/cylon/cylon.BUILD",
+    strip_prefix = "cylon-00f90e020491c5b3b001afdc3ee7d2d9ac77eefa",
+    urls = ["https://github.com/chathurawidanage/cylon/archive/00f90e020491c5b3b001afdc3ee7d2d9ac77eefa.zip"],
+)
+
 load("//:t2_workspace_defs.bzl", "load_modules")
 
 load_modules()
