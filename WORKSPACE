@@ -137,8 +137,8 @@ http_archive(
 http_archive(
     name = "cylon",
     build_file = "@//:third_party/cylon/cylon.BUILD",
-    strip_prefix = "cylon-00f90e020491c5b3b001afdc3ee7d2d9ac77eefa",
-    urls = ["https://github.com/chathurawidanage/cylon/archive/00f90e020491c5b3b001afdc3ee7d2d9ac77eefa.zip"],
+    strip_prefix = "cylon-a560e3850ae345ec5b1201e95106bf437571bf3f",
+    urls = ["https://github.com/cylondata/cylon/archive/a560e3850ae345ec5b1201e95106bf437571bf3f.zip"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")

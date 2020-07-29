@@ -2,7 +2,7 @@ licenses(["notice"])
 
 package(default_visibility = ["//visibility:public"])
 
-out_files = ["java/target/cylon-0.1.0-jar-with-dependencies.jar",]
+out_files = ["cylon-0.1.0-jar-with-dependencies.jar",]
 
 genrule(
     name = "cylon-srcs",
@@ -16,7 +16,8 @@ genrule(
         'mkdir -p $$TMP_DIR',
         'cp -pLR $$(pwd)/external/cylon/* $$TMP_DIR',
         'cd $$TMP_DIR',
-        './build.sh -pyenv ENV/ -bpath $$INSTALL_DIR/build -ipath $$(pwd)/intall --java',
+        './build.sh -pyenv ENV/ -bpath $$TMP_DIR/build --java',
+        'cp $$TMP_DIR/java/target/cylon-0.1.0-jar-with-dependencies.jar $$INSTALL_DIR',
         'rm -rf $$TMP_DIR',
     ]),
 )
