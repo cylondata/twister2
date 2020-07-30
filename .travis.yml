@@ -39,6 +39,7 @@ before_install:
   - sudo ./bootstrap
   - sudo make
   - sudo make install
+  - cd ../
   - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
 
 jobs:
