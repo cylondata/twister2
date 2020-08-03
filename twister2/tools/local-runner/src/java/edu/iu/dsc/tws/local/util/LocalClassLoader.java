@@ -61,7 +61,7 @@ public class LocalClassLoader extends SecureClassLoader {
     twsPackagesToExclude.add("jep"); // to support python debugging
     twsPackagesToExclude.add("edu.iu.dsc.tws.python.processors.JepInstance");
 
-    twsClassesToExclude.addAll(APP_SPECIFIC_PACKAGE_EXCLUSIONS);
+    twsPackagesToExclude.addAll(APP_SPECIFIC_PACKAGE_EXCLUSIONS);
   }
 
   public static <T> void excludeClass(Class<T> clazz) {
@@ -105,6 +105,8 @@ public class LocalClassLoader extends SecureClassLoader {
         }
         byte[] bytes = baos.toByteArray();
         return defineClass(name, bytes, 0, bytes.length);
+      } catch (NullPointerException nex) {
+        throw new ClassNotFoundException(name);
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Error loading " + name, e);
         throw new Twister2RuntimeException(e);
