@@ -33,6 +33,7 @@ before_install:
   - echo "Installing C++ and Python"
   - sudo apt-get update && sudo apt-get install -y --no-install-recommends --no-install-suggests g++ python-dev python-pip python3-dev python3-pip maven libnuma-dev libc-dev openmpi-bin libopenmpi-dev
   - cp /var/cache/apt/archives/*.deb $HOME/.cache/apt/
+  - pip install wheel && pip3 install wheel
 
 jobs:
   include:
