@@ -14,11 +14,11 @@ package edu.iu.dsc.tws.tset.sinks;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.tset.TSetUtils;
 
 public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
-  private DiskBackedCollectionPartition<T> partition;
+  private BufferedCollectionPartition<T> partition;
 
   private final String referencePrefix;
 
@@ -36,8 +36,8 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
     String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
-    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
-        reference);
+    this.partition = TSetUtils.getCollectionPartition(0,
+        ctx.getConfig(), reference);
   }
 
   @Override
@@ -52,7 +52,7 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   }
 
   @Override
-  public DiskBackedCollectionPartition<T> get() {
+  public BufferedCollectionPartition<T> get() {
     return partition;
   }
 }
