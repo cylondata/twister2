@@ -18,9 +18,9 @@ cache:
 before_install:
   - echo "s:======================================"
   - echo "Downloading bazel"
-  - wget https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel_3.1.0-linux-x86_64.deb
-  - sha256sum -c tools/bazel_3.1.0-linux-x86_64.deb.sha256
-  - sudo dpkg -i bazel_3.1.0-linux-x86_64.deb
+  - wget https://github.com/bazelbuild/bazel/releases/download/3.4.1/bazel_3.4.1-linux-x86_64.deb
+  - sha256sum -c tools/bazel_3.4.1-linux-x86_64.deb.sha256
+  - sudo dpkg -i bazel_3.4.1-linux-x86_64.deb
   - |
     exist() {
         [ -e "$1" ]
