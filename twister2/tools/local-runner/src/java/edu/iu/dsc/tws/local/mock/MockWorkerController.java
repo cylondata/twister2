@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
@@ -24,6 +25,8 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MockWorkerController implements IWorkerController {
+
+  private static final Logger LOG = Logger.getLogger(MockWorkerController.class.getName());
 
   private Twister2Job twister2Job;
   private Config config;
