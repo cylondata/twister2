@@ -23,10 +23,13 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
+@SuppressWarnings("rawtypes")
 public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartition<T> {
 
   private static final String CONFIG_FS_ROOT = "twister2.data.fs.root";
   private static final String FS_PROTO = "file://";
+
+  public static final String CONFIG = "local";
 
   public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
                                        long bufferedBytes, Config config, String reference) {
