@@ -164,7 +164,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   @Override
-  public void add(T val) {
+  public synchronized void add(T val) {
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
@@ -263,6 +263,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   public void flush() {
+    if (this.buffers.isEmpty()) {
+      return;
+    }
     Path filePath = new Path(this.rootPath, (this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
       outputStream.writeLong(this.buffers.size());
