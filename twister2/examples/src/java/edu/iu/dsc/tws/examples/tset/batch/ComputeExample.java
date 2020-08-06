@@ -27,23 +27,30 @@ package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
 public class ComputeExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
+  private static final Logger LOG = Logger.getLogger(ComputeExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src")
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM)
+        .setName("src")
         .withSchema(PrimitiveSchemas.INTEGER);
 
     ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
@@ -56,9 +63,9 @@ public class ComputeExample extends BatchTsetExample {
         }).withSchema(PrimitiveSchemas.INTEGER).setName("sum");
 
 
-    sum.direct().forEach(data -> System.out.println("val: " + data));
+    sum.direct().forEach(data -> LOG.info("val: " + data));
 
-    sum.reduce(Integer::sum).forEach(i -> System.out.println("red: " + i));
+    sum.reduce(Integer::sum).forEach(i -> LOG.info("red: " + i));
   }
 
 

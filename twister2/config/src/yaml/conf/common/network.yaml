@@ -6,6 +6,10 @@
 # it will use the first network interface in this list that is up and not loop back address
 # twister2.network.interfaces.for.workers: ['interface1', 'interface2']
 
+# max wait time for twister2 workers to connect to each other after the barrier operation
+# default is 30 seconds
+# twister2.network.max.connection.establishment.time: 30000
+
 ### DEFAULT CONFIGURATION FOR ALL OPERATIONS, THESE ARE OVERRIDDEN AT THE BOTTOM for specific
 ### operations
 #############################################################################################
@@ -38,7 +42,6 @@ twister2.network.message.grouping.size: 20000
 # For disk based operations, this directory list will be used to persist incoming messages.
 # This can be used to balance the load between multiple devices, by specifying directory locations
 # from different devices.
-# twister2.network.ops.persistent.dirs: ["/scratch/skamburu/terasort"]
 twister2.network.ops.persistent.dirs: ["/twister2-volatile"]
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
@@ -55,6 +58,11 @@ twister2.network.shuffle.parallel.io: 1
 
 # the partitioning algorithm
 twister2.network.alltoall.algorithm.batch: "ring"
+
+# the overridden job master ip for the twister2 server. Usually the job master ip is derived from the network
+# interface with the outgoing internet connection but in special cases this ip can be overridden to use
+# some other network interface
+# twister2.job.master.provided.ip: "127.0.0.1"
 
 ##### streaming operations ###########
 ######################################

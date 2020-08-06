@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.local.mock.MockWorker;
+import edu.iu.dsc.tws.local.util.FileConstants;
 import edu.iu.dsc.tws.local.util.LocalClassLoader;
 
 public final class LocalSubmitter {
@@ -105,12 +107,14 @@ public final class LocalSubmitter {
         files.add(new File(commonConfig, f));
         files.add(new File(standaloneConfig, f));
       }
-      files.add(new File(commonConfig, "logger.properties"));
+      File loggerProperties = new File(commonConfig, "logger.properties");
+      files.add(loggerProperties);
 
       directories.forEach(File::mkdir);
       for (File file : files) {
         file.createNewFile();
       }
+      Files.write(loggerProperties.toPath(), FileConstants.getLoggerContent().getBytes());
       return prepare(tempDir.getAbsolutePath());
     } catch (IOException e) {
       throw new Twister2RuntimeException("Failed to create a mock config directory");
@@ -159,18 +163,35 @@ public final class LocalSubmitter {
 
     CyclicBarrier cyclicBarrier = new CyclicBarrier(twister2Job.getNumberOfWorkers());
 
+    List<Thread> threads = new ArrayList<>();
     for (int i = 0; i < twister2Job.getNumberOfWorkers(); i++) {
-      startWorker(twister2Job, newConfig, i, cyclicBarrier);
+      Thread thread = startWorker(twister2Job, newConfig, i, cyclicBarrier);
+      threads.add(thread);
     }
+
+    for (Thread workerThred : threads) {
+      try {
+        workerThred.join();
+      } catch (InterruptedException e) {
+        failed = true;
+        fault = e;
+      }
+    }
+
     if (failed) {
+      LOG.log(Level.SEVERE, "Job failed unexpectedly", fault);
       state.setJobstate(DriverJobState.FAILED);
-      state.setCause((Exception) fault);
+      if (fault instanceof Exception) {
+        state.setCause((Exception) fault);
+      } else {
+        state.setCause(new Twister2RuntimeException(fault));
+      }
     } else {
       state.setJobstate(DriverJobState.COMPLETED);
     }
     //reset the local state for next job
     failed = false;
-    fault =  null;
+    fault = null;
     return state;
   }
 
@@ -180,6 +201,7 @@ public final class LocalSubmitter {
   private static Config overrideConfigs(Config config) {
     return Config.newBuilder()
         .putAll(config)
+        .put("twister2.directory.home", System.getProperty("twister2_home"))
         .put("twister2.network.channel.class", "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel")
         .put("twister2.job.master.used", false)
         .put("twister2.checkpointing.enable", false)
@@ -189,14 +211,11 @@ public final class LocalSubmitter {
   /**
    * This method starts a new worker instance on a separate thread.
    */
-  private static void startWorker(Twister2Job twister2Job,
-                                  Config config, int workerId, CyclicBarrier cyclicBarrier) {
-    Thread.UncaughtExceptionHandler hndler = new Thread.UncaughtExceptionHandler() {
-      public void uncaughtException(Thread th, Throwable ex) {
-        failed = true;
-        fault = ex;
-        return;
-      }
+  private static Thread startWorker(Twister2Job twister2Job,
+                                    Config config, int workerId, CyclicBarrier cyclicBarrier) {
+    Thread.UncaughtExceptionHandler hndler = (th, ex) -> {
+      failed = true;
+      fault = ex;
     };
     LocalClassLoader localClassLoader = new LocalClassLoader(LocalSubmitter.class.getClassLoader());
     localClassLoader.addJobClass(twister2Job.getWorkerClass());
@@ -214,15 +233,13 @@ public final class LocalSubmitter {
       thread.setName("worker-" + workerId);
       thread.setUncaughtExceptionHandler(hndler);
       thread.start();
-      thread.join();
+      return thread;
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | IllegalAccessException
         | InstantiationException
         | InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      throw new Twister2RuntimeException("Failed to start the worker thread", e);
     }
   }
 }

@@ -28,7 +28,8 @@ public interface DestinationSelector {
    * @param sources sources
    * @param destinations destination
    */
-  void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations);
+  default void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
+  };
 
   /**
    * Prepare the destination selector, if this method is not overridden to support keyType
@@ -72,5 +73,6 @@ public interface DestinationSelector {
    * @param source source
    * @param obtained obtained destination
    */
-  void commit(int source, int obtained);
+  default void commit(int source, int obtained) {
+  }
 }

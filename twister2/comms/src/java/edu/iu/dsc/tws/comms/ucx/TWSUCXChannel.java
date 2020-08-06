@@ -88,7 +88,10 @@ public class TWSUCXChannel implements TWSChannel {
 
   private void createUXCWorker(IWorkerController iWorkerController) {
     UcpContext context = new UcpContext(new UcpParams().requestTagFeature()
-        .setMtWorkersShared(false));
+        .setMtWorkersShared(false)
+        .setConfig("UCX_SOCKADDR_CM_ENABLE", "y")
+        .setConfig("UCX_SOCKADDR_TLS_PRIORITY", "tcp")
+    );
     this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
     this.closeables.push(ucpWorker);
@@ -305,5 +308,10 @@ public class TWSUCXChannel implements TWSChannel {
         Collections.emptyMap()).getOrDefault(e, Collections.emptySet())) {
       receiveProgress.close();
     }
+  }
+
+  @Override
+  public void reInit(List<JobMasterAPI.WorkerInfo> restartedWorkers) {
+
   }
 }

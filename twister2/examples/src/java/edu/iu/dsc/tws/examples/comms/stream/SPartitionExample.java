@@ -43,7 +43,7 @@ public class SPartitionExample extends BenchWorker {
   private int recvrInWorker0 = -1;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),

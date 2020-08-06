@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
 
 import edu.iu.dsc.tws.api.data.BlockLocation;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -146,6 +147,13 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   public HadoopDataOutputStream create(final Path f) throws IOException {
     final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream =
         this.hadoopFileSystem.create(toHadoopPath(f));
+    return new HadoopDataOutputStream(fsDataOutputStream);
+  }
+
+  @Override
+  public FSDataOutputStream create(Path f, WriteMode writeMode) throws IOException {
+    final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream =
+        this.hadoopFileSystem.create(toHadoopPath(f), writeMode == WriteMode.OVERWRITE);
     return new HadoopDataOutputStream(fsDataOutputStream);
   }
 

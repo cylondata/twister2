@@ -18,9 +18,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedCachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
@@ -29,7 +31,8 @@ public class KeyedOperationsExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(KeyedOperationsExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     KeyedSourceTSet<String, Integer> kSource = dummyKeyedSource(env, COUNT, PARALLELISM);
 
     KeyedDirectTLink<String, Integer> kDirect = kSource.keyedDirect();

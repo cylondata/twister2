@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
@@ -107,6 +108,10 @@ public class MesosWorkerController implements IWorkerController {
     return zkWorkerController.getJoinedWorkers();
   }
 
+  @Override
+  public int workerRestartCount() {
+    return 0;
+  }
 
   public void initializeWithZooKeeper() {
 
@@ -121,8 +126,10 @@ public class MesosWorkerController implements IWorkerController {
         new ZKWorkerController(config, job.getJobId(), numberOfWorkers, thisWorker);
 
     try {
-      //TODO: real starting state needs to be given
-      zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTED);
+      //TODO: real restartCount needs to be given
+      int restartCount = 0;
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -158,6 +165,16 @@ public class MesosWorkerController implements IWorkerController {
   @Override
   public void waitOnBarrier() throws TimeoutException {
     zkWorkerController.waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    zkWorkerController.waitOnBarrier(timeLimit);
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    zkWorkerController.waitOnInitBarrier();
   }
 
   /**

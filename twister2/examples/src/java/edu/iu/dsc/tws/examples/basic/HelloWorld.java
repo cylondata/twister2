@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -43,21 +44,22 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
   private int workerID;
 
   @Override
-  public void execute(Config config, int wID,
+  public void execute(Config config,
+                      JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    this.workerID = wID;
+    this.workerID = workerController.getWorkerInfo().getWorkerID();
     jobSubmitTime = config.getLongValue("JOB_SUBMIT_TIME", -1);
     LOG.info("jobSubmitTime: " + jobSubmitTime);
     long workerStartTime = System.currentTimeMillis();
     LOG.info("timestamp workerStart: " + workerStartTime);
-    LOG.severe("workerStartDelay: " + wID + " " + (workerStartTime - jobSubmitTime));
+    LOG.severe("workerStartDelay: " + workerID + " " + (workerStartTime - jobSubmitTime));
 
     boolean added = WorkerRuntime.addAllJoinedListener(this);
     if (!added) {
-      LOG.warning(wID + " Can not register IAllJoinedListener.");
+      LOG.warning(workerID + " Can not register IAllJoinedListener.");
       return;
     }
 
@@ -66,7 +68,7 @@ public class HelloWorld implements IWorker, IAllJoinedListener {
       waitAllWorkersToJoin();
     }
 
-    LOG.severe(wID + " All workers joined. Number of joined workers: " + workerList.size());
+    LOG.severe(workerID + " All workers joined. Number of joined workers: " + workerList.size());
   }
 
   private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workers) {

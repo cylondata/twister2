@@ -45,10 +45,8 @@ import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -66,7 +64,7 @@ import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import mpi.MPI;
 import mpi.MPIException;
 
-public class ConstraintTaskExample implements IWorker {
+public class ConstraintTaskExample implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(ConstraintTaskExample.class.getName());
 
@@ -120,15 +118,15 @@ public class ConstraintTaskExample implements IWorker {
   }
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnv) {
 
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
     long startTime = System.currentTimeMillis();
 
-    LOG.log(Level.INFO, "Task worker starting: " + workerID);
+    LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
-        persistentVolume, volatileVolume);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     String dinput = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
@@ -137,7 +135,7 @@ public class ConstraintTaskExample implements IWorker {
         = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.PARALLELISM_VALUE)));
     int dsize = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DSIZE)));
 
-    DataGenerator dataGenerator = new DataGenerator(config, workerID);
+    DataGenerator dataGenerator = new DataGenerator(config, workerId);
     dataGenerator.generate(new Path(dinput), dsize, dimension);
 
     ComputeGraph firstGraph = buildFirstGraph(

@@ -32,11 +32,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -45,8 +47,10 @@ public class GatherExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     GatherTLink<Integer> gather = src.gather();
 
@@ -54,7 +58,8 @@ public class GatherExample extends BatchTsetExample {
     gather.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    gather.map(i -> i.toString() + "$$").withSchema(PrimitiveSchemas.STRING)
+    gather.map(i -> i.toString() + "$$")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 

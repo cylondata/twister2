@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.Type.html" title="enum in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/config/TokenSub.html" title="class in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/config/MPIContext.html" title="class in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/config/Context.html" target="_top">Frames</a></li>
@@ -107,7 +107,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.html" title="class in edu.iu.dsc.tws.api.comms">CommunicationContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/DataContext.html" title="class in edu.iu.dsc.tws.data.utils">DataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/ExecutorContext.html" title="class in edu.iu.dsc.tws.api.compute.executor">ExecutorContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" title="class in edu.iu.dsc.tws.api.faulttolerance">FaultToleranceContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/HdfsDataContext.html" title="class in edu.iu.dsc.tws.data.utils">HdfsDataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/master/JobMasterContext.html" title="class in edu.iu.dsc.tws.master">JobMasterContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/lmdb/LMDBMemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory.lmdb">LMDBMemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/MemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory">MemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/scheduler/SchedulerContext.html" title="class in edu.iu.dsc.tws.api.scheduler">SchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tsched/spi/common/TaskSchedulerContext.html" title="class in edu.iu.dsc.tws.tsched.spi.common">TaskSchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPContext.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html" title="class in edu.iu.dsc.tws.common.zk">ZKContext</a>, <a href="../../../../../../edu/iu/dsc/tws/rsched/bootstrap/ZKContext.html" title="class in edu.iu.dsc.tws.rsched.bootstrap">ZKContext</a></dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/api/comms/CommunicationContext.html" title="class in edu.iu.dsc.tws.api.comms">CommunicationContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/DataContext.html" title="class in edu.iu.dsc.tws.data.utils">DataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/executor/ExecutorContext.html" title="class in edu.iu.dsc.tws.api.compute.executor">ExecutorContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/faulttolerance/FaultToleranceContext.html" title="class in edu.iu.dsc.tws.api.faulttolerance">FaultToleranceContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/utils/HdfsDataContext.html" title="class in edu.iu.dsc.tws.data.utils">HdfsDataContext</a>, <a href="../../../../../../edu/iu/dsc/tws/master/JobMasterContext.html" title="class in edu.iu.dsc.tws.master">JobMasterContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/lmdb/LMDBMemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory.lmdb">LMDBMemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/data/memory/MemoryManagerContext.html" title="class in edu.iu.dsc.tws.data.memory">MemoryManagerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/api/config/SchedulerContext.html" title="class in edu.iu.dsc.tws.api.config">SchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/tsched/spi/common/TaskSchedulerContext.html" title="class in edu.iu.dsc.tws.tsched.spi.common">TaskSchedulerContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/net/tcp/TCPContext.html" title="class in edu.iu.dsc.tws.common.net.tcp">TCPContext</a>, <a href="../../../../../../edu/iu/dsc/tws/common/zk/ZKContext.html" title="class in edu.iu.dsc.tws.common.zk">ZKContext</a></dd>
 </dl>
 <hr>
 <br>
@@ -402,46 +402,50 @@ extends java.lang.Object</pre>
                       java.lang.String&nbsp;def)</code>&nbsp;</td>
 </tr>
 <tr id="i14" class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#isKubernetesCluster-edu.iu.dsc.tws.api.config.Config-">isKubernetesCluster</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i15" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobId-edu.iu.dsc.tws.api.config.Config-">jobId</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i16" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#jobName-edu.iu.dsc.tws.api.config.Config-">jobName</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i17" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#libDirectory-edu.iu.dsc.tws.api.config.Config-">libDirectory</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i18" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#networkConfigurationFile-edu.iu.dsc.tws.api.config.Config-">networkConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i19" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#resourceSchedulerConfigurationFile-edu.iu.dsc.tws.api.config.Config-">resourceSchedulerConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i20" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#systemConfigurationFile-edu.iu.dsc.tws.api.config.Config-">systemConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i21" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#taskConfigurationFile-edu.iu.dsc.tws.api.config.Config-">taskConfigurationFile</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i22" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#twister2Home-edu.iu.dsc.tws.api.config.Config-">twister2Home</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
 <tr id="i23" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#userName-edu.iu.dsc.tws.api.config.Config-">userName</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
+</tr>
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static java.lang.Boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#verbose-edu.iu.dsc.tws.api.config.Config-">verbose</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/api/config/Context.html#workerInstances-edu.iu.dsc.tws.api.config.Config-">workerInstances</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</code>&nbsp;</td>
 </tr>
@@ -1132,6 +1136,15 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;int&nbsp;workerInstances(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
 </li>
 </ul>
+<a name="isKubernetesCluster-edu.iu.dsc.tws.api.config.Config-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isKubernetesCluster</h4>
+<pre>public static&nbsp;boolean&nbsp;isKubernetesCluster(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg)</pre>
+</li>
+</ul>
 <a name="getDefaults--">
 <!--   -->
 </a>
@@ -1213,7 +1226,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../../../edu/iu/dsc/tws/api/config/ConfigEntry.Type.html" title="enum in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../../../edu/iu/dsc/tws/api/config/TokenSub.html" title="class in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/api/config/MPIContext.html" title="class in edu.iu.dsc.tws.api.config"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/api/config/Context.html" target="_top">Frames</a></li>

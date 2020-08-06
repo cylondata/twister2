@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
 import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
 
@@ -43,7 +43,7 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
    * {@link edu.iu.dsc.tws.api.tset.link.TLink}. Hence the input schema is a not a
    * {@link KeyedSchema}
    */
-  public KeyedTSet(BatchTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFunc,
+  public KeyedTSet(BatchEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFunc,
                    int parallelism, Schema inputSchema) {
     super(tSetEnv, "keyed", parallelism, inputSchema);
     this.mapToTupleFunc = mapFunc;

@@ -107,13 +107,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></dd>
+<dd><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource">Twister2Worker</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">WordCountWorker</span>
 extends java.lang.Object
-implements <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></pre>
+implements <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource">Twister2Worker</a></pre>
 </li>
 </ul>
 </div>
@@ -151,12 +151,8 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/examples/batch/wordcount/comms/WordCountWorker.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-       int&nbsp;workerID,
-       <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
-       <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
-       <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</code>
-<div class="block">Execute with the resources configured</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/examples/batch/wordcount/comms/WordCountWorker.html#execute-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">execute</a></span>(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a>&nbsp;wEnv)</code>
+<div class="block">This is the main point of entry for Twister2 jobs.</div>
 </td>
 </tr>
 </table>
@@ -198,28 +194,26 @@ implements <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">
+<a name="execute-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>execute</h4>
-<pre>public&nbsp;void&nbsp;execute(<a href="../../../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cfg,
-                    int&nbsp;workerID,
-                    <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorkerController.html" title="interface in edu.iu.dsc.tws.api.resource">IWorkerController</a>&nbsp;workerController,
-                    <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IPersistentVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IPersistentVolume</a>&nbsp;persistentVolume,
-                    <a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IVolatileVolume.html" title="interface in edu.iu.dsc.tws.api.resource">IVolatileVolume</a>&nbsp;volatileVolume)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">IWorker</a></code></span></div>
-<div class="block">Execute with the resources configured</div>
+<pre>public&nbsp;void&nbsp;execute(<a href="../../../../../../../../edu/iu/dsc/tws/api/resource/WorkerEnvironment.html" title="class in edu.iu.dsc.tws.api.resource">WorkerEnvironment</a>&nbsp;wEnv)</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html#execute-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">Twister2Worker</a></code></span></div>
+<div class="block">This is the main point of entry for Twister2 jobs.
+ Every job should implement this interface.
+ When a job is submitted, a class implementing this interface gets instantiated
+ and executed by Twister2.
+
+ As the first thing in the execute method,
+ users are expected to initialize the proper environment object:
+   for batch jobs: BatchTSetEnvironment
+   for streaming jobs: StreamingTSetEnvironment</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html#execute-edu.iu.dsc.tws.api.config.Config-int-edu.iu.dsc.tws.api.resource.IWorkerController-edu.iu.dsc.tws.api.resource.IPersistentVolume-edu.iu.dsc.tws.api.resource.IVolatileVolume-">execute</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/IWorker.html" title="interface in edu.iu.dsc.tws.api.resource">IWorker</a></code></dd>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>cfg</code> - configuration</dd>
-<dd><code>workerID</code> - the worker id</dd>
-<dd><code>workerController</code> - the worker controller</dd>
-<dd><code>persistentVolume</code> - information about persistent file system</dd>
-<dd><code>volatileVolume</code> - information about volatile file system</dd>
+<dd><code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html#execute-edu.iu.dsc.tws.api.resource.WorkerEnvironment-">execute</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../../edu/iu/dsc/tws/api/resource/Twister2Worker.html" title="interface in edu.iu.dsc.tws.api.resource">Twister2Worker</a></code></dd>
 </dl>
 </li>
 </ul>

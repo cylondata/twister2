@@ -28,6 +28,7 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -40,7 +41,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 
 //TODO: publish jm restarted to dashboard
 
-public class ZKMasterController {
+public class ZKMasterController implements IWorkerEventSender {
   public static final Logger LOG = Logger.getLogger(ZKMasterController.class.getName());
 
   // number of workers in this job
@@ -54,7 +55,6 @@ public class ZKMasterController {
   protected String rootPath;
   protected String persDir;
   protected String ephemDir;
-  protected String barrierDir;
 
   // Job Master IP address
   private String jmAddress;
@@ -67,9 +67,6 @@ public class ZKMasterController {
 
   // children cache for persistent worker znodes for watching status changes
   protected PathChildrenCache persChildrenCache;
-
-  // children cache for barrier directory for determining barrier arrival of all workers
-  protected PathChildrenCache barrierChildrenCache;
 
   // persistent ephemeral znode for the job master for workers to watch the job master
   private PersistentNode masterEphemZNode;
@@ -96,7 +93,6 @@ public class ZKMasterController {
     rootPath = ZKContext.rootNode(config);
     persDir = ZKUtils.persDir(rootPath, jobID);
     ephemDir = ZKUtils.ephemDir(rootPath, jobID);
-    barrierDir = ZKUtils.barrierDir(rootPath, jobID);
   }
 
   /**
@@ -135,12 +131,6 @@ public class ZKMasterController {
         persChildrenCache.start();
       }
 
-
-      // We listen for status updates for persistent path
-      barrierChildrenCache = new PathChildrenCache(client, barrierDir, true);
-      addBarrierChildrenCacheListener(barrierChildrenCache);
-      barrierChildrenCache.start();
-
       // TODO: we nay need to create ephemeral job master znode so that
       //   workers can know when jm fails
       //   createJobMasterZnode(initialState);
@@ -154,6 +144,10 @@ public class ZKMasterController {
     }
   }
 
+  /**
+   * initialize JM when it is coming from failure
+   * @throws Exception
+   */
   private void initRestarting() throws Exception {
     LOG.info("Job Master restarting .... ");
 
@@ -173,7 +167,7 @@ public class ZKMasterController {
 
     // get all joined workers and provide them to workerMonitor
     List<WorkerWithState> joinedWorkers = new LinkedList<>();
-    for (ChildData child: joinedWorkerZnodes) {
+    for (ChildData child : joinedWorkerZnodes) {
       String fullPath = child.getPath();
       int workerID = ZKUtils.getWorkerIDFromEphemPath(fullPath);
 
@@ -186,26 +180,25 @@ public class ZKMasterController {
     }
 
     // publish jm restarted event
-    publishJobMasterRestarted();
+    jmRestarted();
 
     // if all workers joined and allJoined event has not been published, publish it
     boolean allJoined = workerMonitor.addJoinedWorkers(joinedWorkers);
     if (allJoined && !allJoinedPublished()) {
       LOG.info("Publishing AllJoined event when restarting, since it is not previously published.");
-      publishAllJoined();
+      allJoined();
     }
   }
 
   /**
    * check whether allJoined event published previously for current number of workers
-   * @return
    */
   private boolean allJoinedPublished() throws Exception {
 
     TreeMap<Integer, JobMasterAPI.JobEvent> events =
         ZKEventsManager.getAllEvents(client, rootPath, jobID);
 
-    for (JobMasterAPI.JobEvent event: events.values()) {
+    for (JobMasterAPI.JobEvent event : events.values()) {
       // allJoined event with highest index, must have the same number of workers
       // if so, allJoined event already published, otherwise not published yet
       if (event.hasAllJoined()) {
@@ -218,27 +211,6 @@ public class ZKMasterController {
     }
 
     return false;
-  }
-
-  /**
-   * this method invoked by WorkerMonitor, when the job is scaled up
-   * @param newNumberOfWorkers
-   */
-  public void jobScaledUp(int newNumberOfWorkers) {
-    this.numberOfWorkers = newNumberOfWorkers;
-  }
-
-  /**
-   * this method invoked by WorkerMonitor, when the job is scaled down
-   * @param newNumberOfWorkers
-   */
-  public void jobScaledDown(int newNumberOfWorkers) {
-    scaledDownWorkers = new LinkedList<>();
-    for (int i = newNumberOfWorkers; i < numberOfWorkers; i++) {
-      scaledDownWorkers.add(i);
-    }
-
-    this.numberOfWorkers = newNumberOfWorkers;
   }
 
   /**
@@ -265,7 +237,6 @@ public class ZKMasterController {
 
   /**
    * create the listener for ephemeral worker znodes to determine worker joins and failures
-   * @param cache
    */
   private void addEphemChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
@@ -291,7 +262,6 @@ public class ZKMasterController {
 
   /**
    * create the listener for persistent worker znodes to determine worker status changes
-   * @param cache
    */
   private void addPersChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
@@ -302,29 +272,6 @@ public class ZKMasterController {
 
           case CHILD_UPDATED:
             childZnodeUpdated(event);
-            break;
-
-          default:
-            // nothing to do
-        }
-      }
-    };
-    cache.getListenable().addListener(listener);
-  }
-
-  /**
-   * create the listener for worker znodes in the barrier directory
-   * to determine whether all workers arrived on the barrier
-   * @param cache
-   */
-  private void addBarrierChildrenCacheListener(PathChildrenCache cache) {
-    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
-
-      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
-
-        switch (event.getType()) {
-          case CHILD_ADDED:
-            barrierZnodeAdded(event);
             break;
 
           default:
@@ -355,7 +302,6 @@ public class ZKMasterController {
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
 
       workerMonitor.restarted(workerWithState);
-      publishWorkerRestarted(workerWithState);
 
     } else if (workerWithState.getState() == JobMasterAPI.WorkerState.STARTED) {
 
@@ -372,14 +318,13 @@ public class ZKMasterController {
     // if this is the last worker to join the job and currently all workers joined the job,
     // let all workers know that all joined
     if (!initialAllJoined && workerMonitor.isAllJoined()) {
-      publishAllJoined();
+      allJoined();
     }
   }
 
   /**
    * get WorkerWithState from the local cache if exists,
    * otherwise, get it from the server
-   * @return
    */
   private WorkerWithState getWorkerWithState(int workerID) {
     String workerPersPath = ZKUtils.workerPath(persDir, workerID);
@@ -396,83 +341,14 @@ public class ZKMasterController {
     }
   }
 
-  public void publishWorkerRestarted(WorkerWithState workerWithState) {
-    // generate en event and inform all other workers
-    JobMasterAPI.WorkerRestarted workerRestarted = JobMasterAPI.WorkerRestarted.newBuilder()
-        .setWorkerInfo(workerWithState.getInfo())
-        .build();
-
-    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-        .setRestarted(workerRestarted)
-        .build();
-    try {
-      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
-  public void publishWorkerFailed(int failedID) {
-    JobMasterAPI.WorkerFailed workerFailed = JobMasterAPI.WorkerFailed.newBuilder()
-        .setWorkerID(failedID)
-        .build();
-
-    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-        .setFailed(workerFailed)
-        .build();
-
-    try {
-      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
-  /**
-   * generate and publish all joined event
-   */
-  public void publishAllJoined() {
-    List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
-
-    JobMasterAPI.AllWorkersJoined allWorkersJoined = JobMasterAPI.AllWorkersJoined.newBuilder()
-        .addAllWorkerInfo(workers)
-        .setNumberOfWorkers(workers.size())
-        .build();
-    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-        .setAllJoined(allWorkersJoined)
-        .build();
-    try {
-      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
-  public void publishJobMasterRestarted() {
-    // generate en event and inform all other workers
-    JobMasterAPI.JobMasterRestarted jmRestarted = JobMasterAPI.JobMasterRestarted.newBuilder()
-        .setNumberOfWorkers(numberOfWorkers)
-        .setJmAddress(jmAddress)
-        .build();
-
-    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-        .setJmRestarted(jmRestarted)
-        .build();
-    try {
-      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
   /**
    * when a worker znode is removed from the ephemeral znode of this job znode,
    * take necessary actions
    * Possibilities:
-   *   that worker may have completed and deleted its znode,
-   *   that worker may have failed
-   *   that worker may have been removed by scaling down
-   *   a failed and restarted worker may have deleted the znode from its previous run
+   * that worker may have completed and deleted its znode,
+   * that worker may have failed
+   * that worker may have been removed by scaling down
+   * a failed and restarted worker may have deleted the znode from its previous run
    */
   private void workerZnodeRemoved(PathChildrenCacheEvent event) {
 
@@ -486,6 +362,13 @@ public class ZKMasterController {
     if (scaledDownWorkers.contains(removedWorkerID)) {
       scaledDownWorkers.remove(Integer.valueOf(removedWorkerID));
       LOG.info("Removed scaled down worker: " + removedWorkerID);
+      return;
+    }
+
+    // if the worker state is COMPLETED or FULLY_FAILED in workerMonitor, ignore this event.
+    // those events are already handled by persistent state cache updates
+    JobMasterAPI.WorkerState ws = workerMonitor.getWorkerState(removedWorkerID);
+    if (ws == JobMasterAPI.WorkerState.COMPLETED || ws == JobMasterAPI.WorkerState.FULLY_FAILED) {
       return;
     }
 
@@ -511,10 +394,10 @@ public class ZKMasterController {
     // if the workerID of removed worker is higher than the number of workers in the job,
     // it means that is a scaled down worker.
     // otherwise, the worker failed. We inform the failureListener.
+    if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED
+        || workerWithState.getState() == JobMasterAPI.WorkerState.FULLY_FAILED) {
 
-    if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
-
-      // removed event received for completed worker, nothing to do
+      // removed event received for completed or fullyfailed worker, nothing to do
       return;
 
     } else if (ZKEphemStateManager.DELETE_TAG.equals(workerBodyText)) {
@@ -530,14 +413,18 @@ public class ZKMasterController {
 
       workerMonitor.failed(removedWorkerID);
 
-      try {
-        ZKPersStateManager.updateWorkerStatus(
-            client, rootPath, jobID, workerWithState.getInfo(), JobMasterAPI.WorkerState.FAILED);
-      } catch (Twister2Exception e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
+      // if the worker state is not FAILED, make it failed
+      // workers may mark their status as FAILED before failing
+      if (workerWithState.getState() != JobMasterAPI.WorkerState.FAILED) {
+        try {
+          ZKPersStateManager.updateWorkerStatus(client, rootPath, jobID,
+              workerWithState.getInfo(),
+              workerWithState.getRestartCount(),
+              JobMasterAPI.WorkerState.FAILED);
+        } catch (Twister2Exception e) {
+          LOG.log(Level.SEVERE, e.getMessage(), e);
+        }
       }
-
-      publishWorkerFailed(workerWithState.getWorkerID());
     }
   }
 
@@ -557,27 +444,109 @@ public class ZKMasterController {
     if (workerWithState.getState() == JobMasterAPI.WorkerState.COMPLETED) {
       workerMonitor.completed(workerID);
     }
+
+    if (workerWithState.getState() == JobMasterAPI.WorkerState.FULLY_FAILED) {
+      workerMonitor.fullyFailed(workerID);
+    }
   }
 
-  /**
-   * a worker znode added to the job barrier directory
-   * @param event
-   */
-  private void barrierZnodeAdded(PathChildrenCacheEvent event) {
+  @Override
+  public void workerFailed(int workerID) {
+    JobMasterAPI.WorkerFailed workerFailed = JobMasterAPI.WorkerFailed.newBuilder()
+        .setWorkerID(workerID)
+        .build();
 
-    if (barrierChildrenCache.getCurrentData().size() == numberOfWorkers) {
-      JobMasterAPI.AllArrivedOnBarrier allArrived = JobMasterAPI.AllArrivedOnBarrier.newBuilder()
-          .setNumberOfWorkers(numberOfWorkers)
-          .build();
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setFailed(workerFailed)
+        .build();
 
-      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-          .setAllArrived(allArrived)
-          .build();
-      try {
-        ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
-      } catch (Twister2Exception e) {
-        LOG.log(Level.SEVERE, e.getMessage(), e);
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void workerRestarted(JobMasterAPI.WorkerInfo workerInfo) {
+    // generate en event and inform all other workers
+    JobMasterAPI.WorkerRestarted workerRestarted = JobMasterAPI.WorkerRestarted.newBuilder()
+        .setWorkerInfo(workerInfo)
+        .build();
+
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setRestarted(workerRestarted)
+        .build();
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void allJoined() {
+    List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
+
+    JobMasterAPI.AllJoined allWorkersJoined = JobMasterAPI.AllJoined.newBuilder()
+        .addAllWorkerInfo(workers)
+        .setNumberOfWorkers(workers.size())
+        .build();
+
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setAllJoined(allWorkersJoined)
+        .build();
+
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void jobScaled(int change, int numberOfWorkers1) {
+
+    if (change < 0) {
+      scaledDownWorkers = new LinkedList<>();
+      for (int i = numberOfWorkers1; i < numberOfWorkers; i++) {
+        scaledDownWorkers.add(i);
       }
+    }
+    this.numberOfWorkers = numberOfWorkers1;
+
+    // generate en event and inform all other workers
+    JobMasterAPI.JobScaled jobScaled = JobMasterAPI.JobScaled.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers1)
+        .setChange(change)
+        .build();
+
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setJobScaled(jobScaled)
+        .build();
+
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  public void jmRestarted() {
+    // generate en event and inform all other workers
+    JobMasterAPI.JobMasterRestarted jmRestarted = JobMasterAPI.JobMasterRestarted.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers)
+        .setJmAddress(jmAddress)
+        .build();
+
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setJmRestarted(jmRestarted)
+        .build();
+
+    try {
+      ZKEventsManager.publishEvent(client, rootPath, jobID, jobEvent);
+    } catch (Twister2Exception e) {
+      throw new Twister2RuntimeException(e);
     }
   }
 
@@ -587,7 +556,6 @@ public class ZKMasterController {
   public void close() {
     CloseableUtils.closeQuietly(ephemChildrenCache);
     CloseableUtils.closeQuietly(persChildrenCache);
-    CloseableUtils.closeQuietly(barrierChildrenCache);
 
     if (masterEphemZNode != null) {
       CloseableUtils.closeQuietly(masterEphemZNode);

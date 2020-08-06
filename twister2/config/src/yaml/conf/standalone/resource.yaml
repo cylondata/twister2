@@ -7,14 +7,14 @@ twsiter2.resource.scheduler.mpi.mode: "standalone"
 # the job id file
 twister2.resource.scheduler.mpi.job.id: ""
 
-# slurm script to run
-twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
+# mpi worker script to run
+twister2.resource.scheduler.mpi.shell.script: "mpiworker.sh"
 
 # the mpirun command location
 twister2.resource.scheduler.mpi.home: ""
 
 # the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"
 
 # the launcher class
 twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
@@ -50,3 +50,8 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.Local
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
 twister2.resource.uploader.download.method: "HTTP"
+# OpenMPI parameters:
+# -np, --hostfile and --mapby are specified by Twister2
+# you can specify other OpenMPI parameters that will be provided in mpirun command
+# for example:
+#    twister2.resource.scheduler.mpi.params: '--mca btl vader,self'

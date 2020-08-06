@@ -22,7 +22,6 @@ from twister2.tools.cli.src.python.log import Log
 
 ################################################################################
 
-
 def create_parser(subparsers, action, help_arg):
     '''
     :param subparsers:
@@ -38,7 +37,32 @@ def create_parser(subparsers, action, help_arg):
 
     args.add_titles(parser)
     args.add_cluster_role_env(parser)
-    args.add_job(parser)
+    args.add_job_id(parser)
+
+    args.add_config(parser)
+    args.add_verbose(parser)
+
+    parser.set_defaults(subcommand=action)
+    return parser
+
+
+################################################################################
+
+def create_parser_without_jobid(subparsers, action, help_arg):
+    '''
+    :param subparsers:
+    :param action:
+    :param help_arg:
+    :return:
+    '''
+    parser = subparsers.add_parser(
+        action,
+        help=help_arg,
+        usage="%(prog)s [options] cluster",
+        add_help=True)
+
+    args.add_titles(parser)
+    args.add_cluster_role_env(parser)
 
     args.add_config(parser)
     args.add_verbose(parser)
@@ -89,5 +113,48 @@ def run(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
 
     err_msg = "Failed to %s %s" % (action, job_id)
     succ_msg = "Successfully %s %s" % (action, job_id)
+    result.add_context(err_msg, succ_msg)
+    return result
+
+################################################################################
+# pylint: disable=dangerous-default-value
+def run_without_jobid(command, cl_args, action, extra_args=[], extra_lib_jars=[]):
+    '''
+    helper function to take action on topologies
+    :param command:
+    :param cl_args:
+    :param action:        description of action taken
+    :return:
+    '''
+
+    new_args = [
+        "--cluster", cl_args['cluster'],
+        "--twister2_home", config.get_twister2_dir(),
+        "--config_path", config.get_twister2_conf_dir(),
+        "--command", command,
+    ]
+    new_args += extra_args
+
+    lib_jars = config.get_twister2_libs(jars.resource_scheduler_jars() + jars.statemgr_jars())
+    lib_jars += extra_lib_jars
+
+    if Log.getEffectiveLevel() == logging.DEBUG:
+        new_args.append("--verbose")
+
+    java_defines = []
+    conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
+    java_defines.append("java.util.logging.config.file=" + conf_dir_common + "/logger.properties")
+
+    # invoke the runtime manager to kill the job
+    result = execute.twister2_class(
+        'edu.iu.dsc.tws.rsched.core.RuntimeManagerMain',
+        lib_jars,
+        extra_jars=[],
+        args=new_args,
+        java_defines=java_defines
+    )
+
+    err_msg = "Failed to %s" % (action)
+    succ_msg = "Successfully %s" % (action)
     result.add_context(err_msg, succ_msg)
     return result

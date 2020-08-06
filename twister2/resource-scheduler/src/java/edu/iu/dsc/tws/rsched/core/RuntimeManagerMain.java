@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public final class RuntimeManagerMain {
   private static final Logger LOG = Logger.getLogger(RuntimeManagerMain.class.getName());
@@ -62,8 +63,20 @@ public final class RuntimeManagerMain {
     switch (command) {
       case "kill":
         // now load the correct class to terminate the job
-        ResourceAllocator resourceAllocator = new ResourceAllocator();
-        resourceAllocator.terminateJob(Context.jobId(cfg), cfg);
+        ResourceAllocator.killJob(Context.jobId(cfg), cfg);
+        break;
+
+      case "restart":
+        Twister2Submitter.restartJob(Context.jobId(cfg), cfg);
+        break;
+
+      case "clear":
+        Twister2Submitter.clearJob(Context.jobId(cfg), cfg);
+        break;
+
+      case "clearall":
+        Twister2Submitter.clearAllJobs(cfg);
+        break;
     }
   }
 
@@ -85,7 +98,8 @@ public final class RuntimeManagerMain {
         .put(Context.TWISTER2_HOME.getKey(), twister2Home)
         .put(SchedulerContext.CONFIG_DIR, configDir)
         .put(Context.JOB_ID, jobID)
-        .put(Context.TWISTER2_CLUSTER_TYPE, cluster).build();
+        .put(Context.TWISTER2_CLUSTER_TYPE, cluster)
+        .build();
   }
 
   /**
@@ -133,7 +147,6 @@ public final class RuntimeManagerMain {
         .longOpt("job_id")
         .hasArgs()
         .argName("job id")
-        .required()
         .build();
     options.addOption(twister2Home);
     options.addOption(cluster);

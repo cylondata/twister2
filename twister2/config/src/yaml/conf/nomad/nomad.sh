@@ -16,7 +16,7 @@ echo $debug
 
 # download the package
 #wget http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz .
-#wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.6.0-SNAPSHOT.tar.gz .
+#wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.8.0-SNAPSHOT.tar.gz .
 
 method=$10
 
@@ -25,13 +25,13 @@ method=$10
 
 if [ $method = "LOCAL" ]; then
   cp $11/twister2-job.tar.gz .
-  cp $11/twister2-core-0.6.0-SNAPSHOT.tar.gz .
+  cp $11/twister2-core-0.8.0-SNAPSHOT.tar.gz .
 else
   wget $8 .
   wget $9 .
 fi
 
-tar -xvf twister2-core-0.6.0-SNAPSHOT.tar.gz
+tar -xvf twister2-core-0.8.0-SNAPSHOT.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=
@@ -39,7 +39,7 @@ debug=
 
 ls
 cp="*:twister2-core/lib/*"
-#cp="*:twister2-0.6.0-SNAPSHOT/lib/*"
+#cp="*:twister2-0.8.0-SNAPSHOT/lib/*"
 echo $cp
 echo "1" $1
 echo "2" $2

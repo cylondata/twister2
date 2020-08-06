@@ -54,6 +54,8 @@ public interface BatchTSet<T> extends TSet<T>, AcceptingData<T>, StoringData<T> 
   @Override
   BatchTLink<Iterator<T>, T> direct();
 
+  BatchTLink<T, T> pipe();
+
   @Override
   BatchTLink<T, T> reduce(ReduceFunc<T> reduceFn);
 

@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheGatherSink;
-import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherIterSink;
 
 /**
  * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
@@ -41,11 +41,11 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherSink;
  */
 public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  BatchGatherLink(BatchEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  BatchGatherLink(BatchEnvironment env, String n, int sourceP, int targetP,
                   Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
@@ -105,15 +105,13 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   @Override
   public PersistedTSet<T> lazyPersist() {
     PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
-        new DiskPersistGatherSink<>(), getTargetParallelism(), getSchema());
+        new DiskPersistGatherIterSink<>(this.getId()), getTargetParallelism(), getSchema());
     addChildToGraph(persistedTSet);
     return persistedTSet;
   }
 
   @Override
   public PersistedTSet<T> persist() {
-    PersistedTSet<T> persistedTSet = lazyPersist();
-    getTSetEnv().run(persistedTSet);
-    return persistedTSet;
+    return (PersistedTSet<T>) super.persist();
   }
 }

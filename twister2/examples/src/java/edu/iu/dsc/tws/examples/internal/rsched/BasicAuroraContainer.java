@@ -16,18 +16,19 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class BasicAuroraContainer implements IWorker {
 
   @Override
-  public void execute(Config config, int workerID,
+  public void execute(Config config, JobAPI.Job job,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
     try {
-      System.out.println("I am the worker: " + workerID);
+      System.out.println("I am the worker: " + job);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");
       Thread.sleep(duration);
     } catch (InterruptedException e) {

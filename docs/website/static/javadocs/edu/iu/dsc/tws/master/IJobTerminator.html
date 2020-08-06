@@ -99,7 +99,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/master/JobTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos.master">JobTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s.master">JobTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/KubernetesLauncher.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s">KubernetesLauncher</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/MesosJobTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos">MesosJobTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/nomad/NomadTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.nomad">NomadTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/examples/internal/jobmaster/ZKJobTerminator.html" title="class in edu.iu.dsc.tws.examples.internal.jobmaster">ZKJobTerminator</a></dd>
+<dd><a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/mesos/master/JobTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.mesos.master">JobTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/master/JobTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers.k8s.master">JobTerminator</a>, <a href="../../../../../edu/iu/dsc/tws/rsched/schedulers/NullTerminator.html" title="class in edu.iu.dsc.tws.rsched.schedulers">NullTerminator</a></dd>
 </dl>
 <hr>
 <br>
@@ -126,7 +126,8 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../edu/iu/dsc/tws/master/IJobTerminator.html#terminateJob-java.lang.String-">terminateJob</a></span>(java.lang.String&nbsp;jobID)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../edu/iu/dsc/tws/master/IJobTerminator.html#terminateJob-java.lang.String-JobAPI.JobState-">terminateJob</a></span>(java.lang.String&nbsp;jobID,
+            JobAPI.JobState&nbsp;finalState)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -143,13 +144,14 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="terminateJob-java.lang.String-">
+<a name="terminateJob-java.lang.String-JobAPI.JobState-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>terminateJob</h4>
-<pre>boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID)</pre>
+<pre>boolean&nbsp;terminateJob(java.lang.String&nbsp;jobID,
+                     JobAPI.JobState&nbsp;finalState)</pre>
 </li>
 </ul>
 </li>

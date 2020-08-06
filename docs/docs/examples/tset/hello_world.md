@@ -20,19 +20,19 @@ provision those resources for your application.
 <!--Java-->
 Job should be defined within the main method of the main class.
 ```java
-public static void main(String[] args) {
+  public static void main(String[] args) {
 
     JobConfig jobConfig = new JobConfig();
 
     Twister2Job job = Twister2Job.newBuilder()
-        .setJobName(TSetCheckptExample.class.getName())
+        .setJobName("hello-twister2")
         .setConfig(jobConfig)
-        .setWorkerClass(TSetCheckptExample.class)
+        .setWorkerClass(HelloTwister2.class)
         .addComputeResource(1, 512, 4)
         .build();
 
     Twister2Submitter.submitJob(job);
-}
+  }
 ```
 
 <!--Python-->
@@ -50,16 +50,19 @@ Job definition code runs only at the client(machine where you submit the job to 
 
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->
-Your worker class can be extended by BatchTSetIWorker to make it executable inside twister2 processes.
-You may or may not, make your main class itself an IWorker.
+Your worker class should implement Twister2Worker interface. That interface has only one method: execute. 
+This execute method will be executed by Twister2 runtime on all workers.
+Inside the execute method, you need to initialize the proper environment object as the first thing. 
+In this example, we initialize BatchEnvironment. 
 
 ```java
-public class HelloTwister2 implements BatchTSetIWorker {
+public class HelloTwister2 implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(HelloTwister2.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
   }
 }

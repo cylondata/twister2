@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -29,7 +30,7 @@ public class JobTerminator implements IJobTerminator {
   }
   @Override
   //mesos needs frameworkd Id to kill it
-  public boolean terminateJob(String jobID) {
+  public boolean terminateJob(String jobID, JobAPI.JobState finalState) {
 
 //    MesosController.schedulerDriver.killTask(Protos.TaskID.newBuilder()
 //        .setValue(Integer.toString(2)).build());

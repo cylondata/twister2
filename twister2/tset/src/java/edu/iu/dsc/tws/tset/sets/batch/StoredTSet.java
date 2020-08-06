@@ -30,12 +30,13 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.PipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
@@ -56,7 +57,7 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
-  StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
+  StoredTSet(BatchEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
              int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.storingSinkFunc = sinkFunc;
@@ -71,6 +72,10 @@ public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable
   @Override
   public DirectTLink<T> direct() {
     return getStoredSourceTSet().direct();
+  }
+
+  public PipeTLink<T> pipe() {
+    return getStoredSourceTSet().pipe();
   }
 
   @Override

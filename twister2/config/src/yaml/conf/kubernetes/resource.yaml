@@ -11,10 +11,10 @@ twister2.resource.worker.compute.resources:
 # Kubernetes Docker Image and related settings
 ################################################################################
 # Twister2 Docker image for Kubernetes
-twister2.resource.kubernetes.docker.image: "auyar/twister2-k8s:0.6.0-SNAPSHOT"
+twister2.resource.kubernetes.docker.image: "auyar/twister2-k8s:0.8.0-SNAPSHOT"
 
 # the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"
 
 twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 

@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
@@ -24,13 +25,13 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * takes care of preparing the compute instances and creating the
  * {@link MultiEdgeOpAdapter}
  */
-public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
+public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I>, Closable {
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
 
-  BaseComputeOp() {
+  protected BaseComputeOp() {
   }
 
-  BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
+  protected BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
     super(originTSet, receivablesTSets);
   }
 
@@ -44,11 +45,11 @@ public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
 
   public abstract TFunction getFunction();
 
-  <T> void writeToEdges(T output) {
+  protected <T> void writeToEdges(T output) {
     multiEdgeOpAdapter.writeToEdges(output);
   }
 
-  void writeEndToEdges() {
+  protected void writeEndToEdges() {
     multiEdgeOpAdapter.writeEndToEdges();
   }
 

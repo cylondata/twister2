@@ -21,13 +21,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.apache.arrow.memory.RootAllocator;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
+import edu.iu.dsc.tws.common.table.arrow.TableRuntime;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.fn.impl.ListBasedSourceFunction;
@@ -36,7 +41,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Entry point to tset operations. This is a singleton which initializes as
- * {@link BatchTSetEnvironment} or {@link StreamingTSetEnvironment}
+ * {@link BatchEnvironment} or {@link StreamingEnvironment}
  */
 public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
@@ -53,6 +58,12 @@ public abstract class TSetEnvironment {
 
   private static volatile TSetEnvironment thisTSetEnv;
 
+  /**
+   * to determine whether the worker is re-executed after a failure
+   * when the worker is executed for the first time, executeCount is 1
+   */
+  private static int executeCount = 1;
+
   protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
 
@@ -60,6 +71,10 @@ public abstract class TSetEnvironment {
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
+
+    // create the table runtime here
+    WorkerEnvironment.putSharedValue(TableRuntime.TABLE_RUNTIME_CONF,
+        new TableRuntime(new RootAllocator()));
   }
 
   /**
@@ -68,6 +83,10 @@ public abstract class TSetEnvironment {
   protected TSetEnvironment() {
     this.isCDFW = true;
     this.tBaseGraph = new TBaseGraph(getOperationMode());
+  }
+
+  public WorkerEnvironment getWorkerEnv() {
+    return workerEnv;
   }
 
   /**
@@ -80,9 +99,9 @@ public abstract class TSetEnvironment {
   /**
    * Creates a source TSet based on the {@link SourceFunc}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
@@ -90,10 +109,10 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <T>         data type
+   * @param <T> data type
    * @return Source TSet
    */
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
@@ -102,16 +121,18 @@ public abstract class TSetEnvironment {
                                                      int parallelism, String type);
 
   public abstract BaseTSet<String> createTextSource(String filePath, int dataSize,
-                                                     int parallelism, String type);
+                                                    int parallelism, String type);
+
+  public abstract BaseTSet<Integer> createArrowSource(String filePath, int parallelism);
 
   /**
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.
    *
-   * @param name        name of the tset
-   * @param list        list to be parallelized
+   * @param name name of the tset
+   * @param list list to be parallelized
    * @param parallelism no of sources to be created
-   * @param <T>         data type of the list
+   * @param <T> data type of the list
    * @return Source TSet
    */
   public <T> BaseTSet<T> parallelize(String name, List<T> list, int parallelism) {
@@ -124,9 +145,9 @@ public abstract class TSetEnvironment {
    * This method will create a source based on the list and each source will read only a part
    * of the list specified.
    *
-   * @param list        list to be parallelized
+   * @param list list to be parallelized
    * @param parallelism no of sources to be created
-   * @param <T>         data type of the list
+   * @param <T> data type of the list
    * @return Source TSet
    */
   public <T> BaseTSet<T> parallelize(List<T> list, int parallelism) {
@@ -160,10 +181,10 @@ public abstract class TSetEnvironment {
   /**
    * Creates a Keyed Source TSet based on the {@link SourceFunc} that produces a {@link Tuple}
    *
-   * @param source      source function
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
@@ -172,11 +193,11 @@ public abstract class TSetEnvironment {
   /**
    * Same as above, but a source tset name can be provided at the instantiation
    *
-   * @param name        name for the tset
-   * @param source      source function
+   * @param name name for the tset
+   * @param source source function
    * @param parallelism parallelism
-   * @param <K>         key type
-   * @param <V>         value type
+   * @param <K> key type
+   * @param <V> value type
    * @return Keyed Source TSet
    */
   public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
@@ -241,17 +262,17 @@ public abstract class TSetEnvironment {
    * @return bool
    */
   public boolean isCheckpointingEnabled() {
-    return CheckpointingConfigurations.isCheckpointingEnabled(this.getConfig())
-        && this instanceof CheckpointingTSetEnv;
+    return CheckpointingContext.isCheckpointingEnabled(this.getConfig())
+        && this instanceof BatchChkPntEnvironment;
   }
 
   /**
    * Adds a {@link edu.iu.dsc.tws.api.tset.sets.TSet} to another
    * {@link edu.iu.dsc.tws.api.tset.sets.TSet} as an input that will be identified by the inputKey
    *
-   * @param tSetID      TSet ID
+   * @param tSetID TSet ID
    * @param inputTSetID input TSet ID
-   * @param inputKey    key given to the input TSet
+   * @param inputKey key given to the input TSet
    */
   public void addInput(String tSetID, String inputTSetID, String inputKey) {
     if (tSetInputMap.containsKey(tSetID)) {
@@ -279,8 +300,8 @@ public abstract class TSetEnvironment {
    * @param wEnv worker environment
    * @return BatchTSetEnvironment
    */
-  public static BatchTSetEnvironment initBatch(WorkerEnvironment wEnv) {
-    return (BatchTSetEnvironment) init(wEnv, OperationMode.BATCH);
+  public static BatchEnvironment initBatch(WorkerEnvironment wEnv) {
+    return (BatchEnvironment) init(wEnv, OperationMode.BATCH);
   }
 
   /**
@@ -289,8 +310,25 @@ public abstract class TSetEnvironment {
    * @param wEnv worker environment
    * @return StreamingTSetEnvironment
    */
-  public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
-    return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);
+  public static StreamingEnvironment initStreaming(WorkerEnvironment wEnv) {
+    return (StreamingEnvironment) init(wEnv, OperationMode.STREAMING);
+  }
+
+  /**
+   * initialize the Tset environment for checkpointing {@link OperationMode}
+   *
+   * @param wEnv worker environment
+   * @return CheckpointingTSetEnv
+   */
+  public static BatchChkPntEnvironment initCheckpointing(WorkerEnvironment wEnv) {
+    if (CheckpointingContext.isCheckpointingEnabled(wEnv.getConfig())) {
+      return (BatchChkPntEnvironment) init(wEnv, OperationMode.BATCH_CHECKPOINTING);
+    } else {
+      String msg = "Can not initialize CheckpointingTSetEnv. Either checkpointing is not enabled "
+          + "or JobMaster is not used. Make sure checkpointing is enabled with the config "
+          + " parameter twister2.checkpointing.enable and JobMaster is used.";
+      throw new Twister2RuntimeException(msg);
+    }
   }
 
   /**
@@ -329,20 +367,30 @@ public abstract class TSetEnvironment {
   }
 
   // TSetEnvironment singleton initialization
-  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
-    if (thisTSetEnv == null) {
-      synchronized (TSetEnvironment.class) {
-        if (thisTSetEnv == null) {
-          if (opMode == OperationMode.BATCH) {
-            thisTSetEnv = new BatchTSetEnvironment(wEnv);
-          } else { // streaming
-            thisTSetEnv = new StreamingTSetEnvironment(wEnv);
-          }
-        }
+  private static synchronized TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
+    if (isWorkerReExecuting() || thisTSetEnv == null) {
+      if (opMode == OperationMode.BATCH) {
+        thisTSetEnv = new BatchEnvironment(wEnv);
+      } else if (opMode == OperationMode.STREAMING) {
+        thisTSetEnv = new StreamingEnvironment(wEnv);
+      } else if (opMode == OperationMode.BATCH_CHECKPOINTING) {
+        thisTSetEnv = new BatchChkPntEnvironment(wEnv);
+      } else {
+        throw new Twister2RuntimeException("Non-valid OperationMode: " + opMode);
       }
     }
 
     return thisTSetEnv;
+  }
+
+  /**
+   * this method will return true only once for each re-execution
+   * so, the singleton object will be created only for once
+   */
+  private static boolean isWorkerReExecuting() {
+    boolean reExecuting = executeCount < JobProgress.getWorkerExecuteCount();
+    executeCount = JobProgress.getWorkerExecuteCount();
+    return reExecuting;
   }
 
   /**

@@ -19,13 +19,14 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.system.JobExecutionState;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 
 /**
@@ -73,19 +74,17 @@ public abstract class TaskWorker implements IWorker {
   protected ComputeEnvironment computeEnvironment;
 
   @Override
-  public void execute(Config cfg, int workerID,
+  public void execute(Config cfg, JobAPI.Job job,
                       IWorkerController wController, IPersistentVolume pVolume,
                       IVolatileVolume vVolume) {
     this.config = cfg;
-    this.workerId = workerID;
+    this.workerId = wController.getWorkerInfo().getWorkerID();
     this.workerController = wController;
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
-    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+    ISenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getDriverAgent();
 
-    workerEnvironment = WorkerEnvironment.init(config, workerID,
-        workerController, pVolume, vVolume);
-
+    workerEnvironment = WorkerEnvironment.init(config, job, workerController, pVolume, vVolume);
     computeEnvironment = ComputeEnvironment.init(workerEnvironment);
 
     // to keep backward compatibility
@@ -113,7 +112,7 @@ public abstract class TaskWorker implements IWorker {
             .setWorkerMessage("Worker Completed")
             .build();
     senderToDriver.sendToDriver(workerState);
-    LOG.log(Level.FINE, String.format("%d Worker done", workerID));
+    LOG.log(Level.FINE, String.format("%d Worker done", workerId));
   }
 
   /**

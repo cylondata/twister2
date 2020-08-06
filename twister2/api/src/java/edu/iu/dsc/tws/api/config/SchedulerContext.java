@@ -64,7 +64,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.6.0-SNAPSHOT.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.8.0-SNAPSHOT.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -94,8 +94,6 @@ public class SchedulerContext extends Context {
 
   public static final String COPY_SYSTEM_PACKAGE = "twister2.resource.systempackage.copy";
 
-  public static final String FAILURE_RETRIES = "twister2.resource.faulttlerence.retries";
-
   // we define these variables in this file because
   // KubernetesContext is not reachable from WorkerEnvironment class
   public static final boolean K8S_CHECK_PODS_REACHABLE_DEFAULT = false;
@@ -103,8 +101,15 @@ public class SchedulerContext extends Context {
 
   public static final String NETWORK_INTERFACES = "twister2.network.interfaces.for.workers";
 
+  public static final String JOB_MASTER_PROVIDED_IP = "twister2.job.master.provided.ip";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
+  }
+
+  public static boolean isLocalFileSystemUploader(Config cfg) {
+    return SchedulerContext.uploaderClass(cfg)
+        .equals("edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader");
   }
 
   public static String launcherClass(Config cfg) {
@@ -133,7 +138,7 @@ public class SchedulerContext extends Context {
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -212,10 +217,6 @@ public class SchedulerContext extends Context {
     return portNameList == null ? 0 : portNameList.size();
   }
 
-  public static int failureRetries(Config cfg, int def) {
-    return cfg.getIntegerValue(FAILURE_RETRIES, def);
-  }
-
   public static boolean checkPodsReachable(Config cfg) {
     return cfg.getBooleanValue(K8S_CHECK_PODS_REACHABLE, K8S_CHECK_PODS_REACHABLE_DEFAULT);
   }
@@ -262,4 +263,7 @@ public class SchedulerContext extends Context {
     return null;
   }
 
+  public static String getJobMasterProvidedIp(Config cfg) {
+    return getStringPropertyValue(cfg, JOB_MASTER_PROVIDED_IP, "");
+  }
 }

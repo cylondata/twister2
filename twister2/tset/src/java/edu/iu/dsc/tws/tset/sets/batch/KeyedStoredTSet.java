@@ -29,12 +29,13 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedPipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
@@ -47,7 +48,7 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
   private SinkFunc<Iterator<Tuple<K, V>>> storingSinkFunc;
   protected KeyedSourceTSet<K, V> storedSource;
 
-  KeyedStoredTSet(BatchTSetEnvironment tSetEnv, String name,
+  KeyedStoredTSet(BatchEnvironment tSetEnv, String name,
                   SinkFunc<Iterator<Tuple<K, V>>> storingSinkFn, int parallelism,
                   KeyedSchema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
@@ -63,6 +64,11 @@ public abstract class KeyedStoredTSet<K, V> extends BatchTupleTSetImpl<K, V>
   @Override
   public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     return getStoredSourceTSet().keyedPartition(partitionFn);
+  }
+
+  @Override
+  public KeyedPipeTLink<K, V> keyedPipe() {
+    return getStoredSourceTSet().keyedPipe();
   }
 
   @Override

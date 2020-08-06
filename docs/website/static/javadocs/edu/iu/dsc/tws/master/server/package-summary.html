@@ -73,6 +73,21 @@
 <div class="contentContainer">
 <ul class="blockList">
 <li class="blockList">
+<table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Interface Summary table, listing interfaces, and an explanation">
+<caption><span>Interface Summary</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Interface</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/IWorkerEventSender.html" title="interface in edu.iu.dsc.tws.master.server">IWorkerEventSender</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList">
 <table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Class Summary table, listing classes, and an explanation">
 <caption><span>Class Summary</span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
@@ -81,15 +96,20 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/BarrierHandler.html" title="class in edu.iu.dsc.tws.master.server">BarrierHandler</a></td>
+<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/JMWorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">JMWorkerHandler</a></td>
 <td class="colLast">
-<div class="block">all workers in a job may wait on a barrier point
- BarrierHandler will get barrier requests from all workers
- It will send response message to all workers,
- when it gets the request from the last worker in a job</div>
+<div class="block">Handles JobMaster to worker messaging
+ It handles following message types:
+ JobMasterAPI.RegisterWorker
+ JobMasterAPI.WorkerStateChange
+ JobMasterAPI.ListWorkersRequest</div>
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobFailureWatcher.html" title="class in edu.iu.dsc.tws.master.server">JobFailureWatcher</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/JobMaster.html" title="class in edu.iu.dsc.tws.master.server">JobMaster</a></td>
 <td class="colLast">
 <div class="block">JobMaster class
@@ -98,16 +118,6 @@
  worker discovery
  barrier method
  Ping service</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/WorkerHandler.html" title="class in edu.iu.dsc.tws.master.server">WorkerHandler</a></td>
-<td class="colLast">
-<div class="block">Handles JobMaster to worker messaging
- It handles following message types:
- JobMasterAPI.RegisterWorker
- JobMasterAPI.WorkerStateChange
- JobMasterAPI.ListWorkersRequest</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -122,6 +132,10 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKJobUpdater.html" title="class in edu.iu.dsc.tws.master.server">ZKJobUpdater</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../../edu/iu/dsc/tws/master/server/ZKMasterController.html" title="class in edu.iu.dsc.tws.master.server">ZKMasterController</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>

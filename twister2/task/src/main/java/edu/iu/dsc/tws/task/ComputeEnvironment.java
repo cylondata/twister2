@@ -18,15 +18,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IManagedFailureListener;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -51,21 +46,18 @@ public final class ComputeEnvironment {
    */
   private static int taskGraphIndex = 0;
 
-  private ComputeEnvironment(Config config, int workerId, IWorkerController wController,
-                             IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    this(WorkerEnvironment.init(config, workerId, wController, pVolume, vVolume));
-  }
+  /**
+   * Singleton environment
+   */
+  private static volatile ComputeEnvironment computeEnv;
 
   private ComputeEnvironment(WorkerEnvironment workerEnv) {
     this.workerEnvironment = workerEnv;
     this.taskExecutor = new TaskExecutor(workerEnv);
 
     // if checkpointing enabled lets register for receiving faults
-    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnv.getConfig())) {
-      IWorkerFailureListener listener = workerEnv.getWorkerController().getFailureListener();
-      if (listener instanceof IManagedFailureListener) {
-        ((IManagedFailureListener) listener).registerFaultAcceptor(taskExecutor);
-      }
+    if (CheckpointingContext.isCheckpointingEnabled(workerEnv.getConfig())) {
+      JobProgress.registerFaultAcceptor(taskExecutor);
     }
   }
 
@@ -115,28 +107,20 @@ public final class ComputeEnvironment {
   }
 
   /**
-   * Initialize the task environment
-   *
-   * @param config configuration
-   * @param workerId worker id
-   * @param wController worker controller
-   * @param pVolume persisent volume
-   * @param vVolume volatile volume
-   * @return the compute environment
-   */
-  public static ComputeEnvironment init(Config config, int workerId, IWorkerController wController,
-                                        IPersistentVolume pVolume, IVolatileVolume vVolume) {
-    return new ComputeEnvironment(config, workerId, wController, pVolume, vVolume);
-  }
-
-  /**
    * Initialize the compute environment with the worker environment
    *
    * @param workerEnv worker environment
    * @return the compute environment
    */
   public static ComputeEnvironment init(WorkerEnvironment workerEnv) {
-    return new ComputeEnvironment(workerEnv);
+    if (computeEnv == null) {
+      synchronized (ComputeEnvironment.class) {
+        if (computeEnv == null) {
+          computeEnv = new ComputeEnvironment(workerEnv);
+        }
+      }
+    }
+    return computeEnv;
   }
 
   /**
@@ -152,12 +136,8 @@ public final class ComputeEnvironment {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
     // if checkpointing enabled lets register for receiving faults
-    if (CheckpointingConfigurations.isCheckpointingEnabled(workerEnvironment.getConfig())) {
-      IWorkerFailureListener listener =
-          workerEnvironment.getWorkerController().getFailureListener();
-      if (listener instanceof IManagedFailureListener) {
-        ((IManagedFailureListener) listener).unRegisterFaultAcceptor(taskExecutor);
-      }
+    if (CheckpointingContext.isCheckpointingEnabled(workerEnvironment.getConfig())) {
+      JobProgress.unRegisterFaultAcceptor(taskExecutor);
     }
     // close the task executor
     taskExecutor.close();

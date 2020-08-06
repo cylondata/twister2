@@ -46,7 +46,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);

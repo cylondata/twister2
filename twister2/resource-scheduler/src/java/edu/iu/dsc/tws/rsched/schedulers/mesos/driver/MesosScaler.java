@@ -101,7 +101,7 @@ public class MesosScaler implements IScalerPerCluster {
    * @return
    */
   @Override
-  public boolean scaleDownWorkers(int instancesToRemove) {
+  public boolean scaleDownWorkers(int instancesToRemove, int numberOfWorkers) {
 
 //    if (instancesToRemove % workersPerPod != 0) {
 //      LOG.severe("instancesToRemove has to be a multiple of workersPerPod=" + workersPerPod);

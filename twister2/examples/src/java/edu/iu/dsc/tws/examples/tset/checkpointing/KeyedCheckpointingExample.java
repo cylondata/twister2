@@ -21,21 +21,23 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedPersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
-public class KeyedCheckpointingExample implements CheckpointingBatchTSetIWorker, Serializable {
+public class KeyedCheckpointingExample implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(KeyedCheckpointingExample.class.getName());
   private static final int PAR = 2;
 
-  private KeyedSourceTSet<String, Integer> dummySource(CheckpointingTSetEnv env, int count,
+  private KeyedSourceTSet<String, Integer> dummySource(BatchChkPntEnvironment env, int count,
                                                        int init) {
     return env.createKeyedSource(new SourceFunc<Tuple<String, Integer>>() {
       private int c = init;
@@ -54,7 +56,9 @@ public class KeyedCheckpointingExample implements CheckpointingBatchTSetIWorker,
   }
 
   @Override
-  public void execute(CheckpointingTSetEnv env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
     int count = 5;
 
     KeyedSourceTSet<String, Integer> src = dummySource(env, count, 0);

@@ -28,10 +28,12 @@ public class WorkerWithState {
 
   private WorkerInfo info;
   private WorkerState state;
+  private int restartCount;
 
-  public WorkerWithState(WorkerInfo info, WorkerState state) {
+  public WorkerWithState(WorkerInfo info, WorkerState state, int restartCount) {
     this.info = info;
     this.state = state;
+    this.restartCount = restartCount;
   }
 
   public WorkerInfo getInfo() {
@@ -40,6 +42,10 @@ public class WorkerWithState {
 
   public WorkerState getState() {
     return state;
+  }
+
+  public int getRestartCount() {
+    return restartCount;
   }
 
   public int getWorkerID() {
@@ -60,8 +66,9 @@ public class WorkerWithState {
     }
     byte[] stateLengthBytes = Ints.toByteArray(stateNameBytes.length);
     byte[] workerInfoBytes = info.toByteArray();
+    byte[] restartCountBytes = Ints.toByteArray(restartCount);
 
-    return Bytes.concat(stateLengthBytes, stateNameBytes, workerInfoBytes);
+    return Bytes.concat(stateLengthBytes, stateNameBytes, restartCountBytes, workerInfoBytes);
   }
 
   public static WorkerWithState decode(byte[] encodedBytes) {
@@ -74,11 +81,21 @@ public class WorkerWithState {
     String stateName = new String(encodedBytes, 4, stateLength);
     WorkerState workerState = WorkerState.valueOf(stateName);
 
+    // next 4 bytes is restartCount
+    int rcIndex = 4 + stateLength;
+    int restartCount = Ints.fromBytes(encodedBytes[rcIndex],
+        encodedBytes[rcIndex + 1],
+        encodedBytes[rcIndex + 2],
+        encodedBytes[rcIndex + 3]);
+
+    // remaining bytes are WorkerInfo object
+    int workerInfoLength = encodedBytes.length - 4 - stateLength - 4;
+    int workerInfoIndex = rcIndex + 4;
     try {
       WorkerInfo workerInfo = WorkerInfo.newBuilder()
-          .mergeFrom(encodedBytes, 4 + stateLength, encodedBytes.length - 4 - stateLength)
+          .mergeFrom(encodedBytes, workerInfoIndex, workerInfoLength)
           .build();
-      return new WorkerWithState(workerInfo, workerState);
+      return new WorkerWithState(workerInfo, workerState, restartCount);
     } catch (InvalidProtocolBufferException e) {
       LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
       return null;

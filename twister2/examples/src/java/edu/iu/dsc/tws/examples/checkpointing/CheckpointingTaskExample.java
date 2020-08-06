@@ -23,31 +23,27 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
-public class CheckpointingTaskExample implements IWorker {
+public class CheckpointingTaskExample implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(CheckpointingTaskExample.class.getName());
 
   @Override
-  public void execute(Config config, int workerID,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment computeEnvironment = ComputeEnvironment.init(
-        config, workerID, workerController, persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+
+    ComputeEnvironment computeEnvironment = ComputeEnvironment.init(workerEnv);
 
     ComputeGraphBuilder computeGraphBuilder =
         computeEnvironment.newTaskGraph(OperationMode.STREAMING);
 
-    int parallelism = config.getIntegerValue("parallelism", 1);
+    int parallelism = workerEnv.getConfig().getIntegerValue("parallelism", 1);
 
     computeGraphBuilder.addSource("source", new SourceTask(), parallelism);
 

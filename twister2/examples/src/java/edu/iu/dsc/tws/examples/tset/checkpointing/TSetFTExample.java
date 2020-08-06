@@ -18,15 +18,17 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
-public class TSetFTExample implements CheckpointingBatchTSetIWorker, Serializable {
+public class TSetFTExample implements Twister2Worker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetFTExample.class.getName());
 
@@ -36,7 +38,7 @@ public class TSetFTExample implements CheckpointingBatchTSetIWorker, Serializabl
     JobConfig jobConfig = new JobConfig();
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName(TSetFTExample.class.getName())
+        .setJobName("TSetFTExample")
         .setWorkerClass(TSetFTExample.class)
         .addComputeResource(1, 512, 2)
         .setConfig(jobConfig)
@@ -46,7 +48,9 @@ public class TSetFTExample implements CheckpointingBatchTSetIWorker, Serializabl
   }
 
   @Override
-  public void execute(CheckpointingTSetEnv env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
     LOG.info("Starting worker...");
 
     // testing variable loading

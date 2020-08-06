@@ -107,7 +107,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a>, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
+<dd><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">SinkFunc</a>&lt;T&gt;, <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;T,T&gt;, java.io.Serializable</dd>
 </dl>
 <hr>
 <br>
@@ -162,9 +162,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.htm
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../org/apache/beam/runners/twister2/translators/functions/SideInputSinkFunction.html#close--">close</a></span>()</code>
-<div class="block">Close method for cleaning up the resources</div>
-</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../org/apache/beam/runners/twister2/translators/functions/SideInputSinkFunction.html#close--">close</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset">DataPartition</a>&lt;?&gt;</code></td>
@@ -187,11 +185,11 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.htm
 <code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
 </ul>
 <ul class="blockList">
-<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Closable">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.tset.fn.TFunction">
 <!--   -->
 </a>
-<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.compute.modifiers.<a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></h3>
-<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#reset--">reset</a></code></li>
+<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.tset.fn.<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a></h3>
+<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#end--">end</a></code></li>
 </ul>
 </li>
 </ul>
@@ -252,11 +250,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/SinkFunc.htm
 <li class="blockList">
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#close--">Closable</a></code></span></div>
-<div class="block">Close method for cleaning up the resources</div>
 <dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></code></dd>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a>&lt;<a href="../../../../../../../org/apache/beam/runners/twister2/translators/functions/SideInputSinkFunction.html" title="type parameter in SideInputSinkFunction">T</a>,<a href="../../../../../../../org/apache/beam/runners/twister2/translators/functions/SideInputSinkFunction.html" title="type parameter in SideInputSinkFunction">T</a>&gt;</code></dd>
 </dl>

@@ -81,7 +81,7 @@ public abstract class BaseNetworkChannel {
       TCPMessage readRequest = readRequest(socketChannel);
 
       if (readRequest != null) {
-        readRequest.setComplete(true);
+        readRequest.setComplete();
         channelHandler.onReceiveComplete(socketChannel, readRequest);
       } else {
         break;
@@ -125,12 +125,13 @@ public abstract class BaseNetworkChannel {
         break;
       } else if (writeState < 0) {
         LOG.severe("Something bad happened while writing to channel");
+        writeRequest.setError();
         selectHandler.handleError(socketChannel);
         return;
       } else {
         // remove the request
         pendingSends.poll();
-        writeRequest.setComplete(true);
+        writeRequest.setComplete();
         // notify the handler
         channelHandler.onSendComplete(socketChannel, writeRequest);
         if (pendingSends.size() == 0) {

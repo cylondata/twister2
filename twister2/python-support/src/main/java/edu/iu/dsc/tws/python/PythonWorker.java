@@ -23,25 +23,25 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.api.config.MPIContext;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIContext;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 import mpi.Info;
 import mpi.MPI;
 import mpi.MPIException;
-
 import py4j.DefaultGatewayServerListener;
 import py4j.GatewayServer;
 import py4j.Py4JServerConnection;
 
-public class PythonWorker implements BatchTSetIWorker {
+public class PythonWorker implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(PythonWorker.class.getName());
 
@@ -148,7 +148,12 @@ public class PythonWorker implements BatchTSetIWorker {
     return py4jServer;
   }
 
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnvironment);
+    execute(env);
+  }
+
+  public void execute(BatchEnvironment env) {
     int port = env.getConfig().getIntegerValue(PYTHON_PORT_OFFSET) + env.getWorkerID();
     Twister2Environment twister2Environment = new Twister2Environment(env);
     String tw2Home = env.getConfig().getStringValue("twister2.directory.home");
@@ -182,12 +187,13 @@ public class PythonWorker implements BatchTSetIWorker {
   /**
    * This class will be used when twister2 is started with checkpointing enabled
    */
-  public static class CheckpointablePythonWorker implements CheckpointingBatchTSetIWorker {
+  public static class CheckpointablePythonWorker implements Twister2Worker {
 
     private PythonWorker pythonWorker = new PythonWorker();
 
     @Override
-    public void execute(CheckpointingTSetEnv env) {
+    public void execute(WorkerEnvironment workerEnvironment) {
+      BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
       pythonWorker.execute(env);
     }
   }
@@ -228,7 +234,7 @@ public class PythonWorker implements BatchTSetIWorker {
     Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
         .setJobName(bootstrapPoint.getJobName())
         .setWorkerClass(
-            CheckpointingConfigurations.isCheckpointingEnabled(config)
+            CheckpointingContext.isCheckpointingEnabled(config)
                 ? CheckpointablePythonWorker.class : PythonWorker.class
         )
         .setConfig(jobConfig);

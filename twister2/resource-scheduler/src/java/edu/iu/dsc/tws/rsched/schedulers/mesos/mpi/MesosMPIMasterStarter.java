@@ -86,7 +86,7 @@ public final class MesosMPIMasterStarter {
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
     int numberOfWorkers = 0;
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + mpiMaster.jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + mpiMaster.jobName + ".job");
     try {
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
 
@@ -175,11 +175,11 @@ public final class MesosMPIMasterStarter {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
 
-    //TODO: should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        jobMasterPort, numberOfWorkers, initialState);
+        jobMasterPort, numberOfWorkers, restartCount);
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method

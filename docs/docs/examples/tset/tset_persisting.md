@@ -158,10 +158,13 @@ To enable checkpointing `twister2.checkpointing.enable` configuration of `checkp
 
 <!--DOCUSAURUS_CODE_TABS-->
 <!--Java-->
-Extend your Worker from `CheckpointingBatchTSetIWorker` instead of `BatchTSetIWorker`.
+Initialize checkpointing environment as the first thing in the worker execute method.
 ```bash
-public class TSetCheckptExample implements CheckpointingBatchTSetIWorker, Serializable {
-
+public class TSetCheckptExample implements Twister2Worker, Serializable {
+  public void execute(WorkerEnvironment workerEnvironment) {
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
+    ...
+  }
 }
 ```
 
@@ -173,7 +176,7 @@ There is nothing to be changed. Checkpointing will get automatically enabled whe
 
 ## Restarting a checkpointed job
 
-Every twister2 job has an ID. The ID of the twister2 job can be found in initial set of logs.
+Every twister2 job has an ID. The ID of the twister2 job can be found in the initial set of logs.
 
 ```bash
  _____           _     _           ____  

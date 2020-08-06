@@ -53,6 +53,10 @@ public final class ZKUtils {
   private ZKUtils() {
   }
 
+  public static CuratorFramework getClient() {
+    return client;
+  }
+
   /**
    * connect to ZooKeeper server
    * @param zkServers
@@ -123,10 +127,17 @@ public final class ZKUtils {
   }
 
   /**
-   * construct barrier directory path for the job
+   * construct default barrier directory path for the job
    */
-  public static String barrierDir(String rootPath, String jobID) {
-    return jobDir(rootPath, jobID) + "/barrier";
+  public static String defaultBarrierDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/defaultBarrier";
+  }
+
+  /**
+   * construct init barrier directory path for the job
+   */
+  public static String initBarrierDir(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/initBarrier";
   }
 
   /**
@@ -148,6 +159,20 @@ public final class ZKUtils {
    */
   public static String jmEphemPath(String rootPath, String jobID) {
     return jobDir(rootPath, jobID) + "/jm-ephem-state";
+  }
+
+  /**
+   * construct the job submission time znode path
+   */
+  public static String jobSubmisionTimePath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/job-submission-time";
+  }
+
+  /**
+   * construct the job end time znode path
+   */
+  public static String jobEndTimePath(String rootPath, String jobID) {
+    return jobDir(rootPath, jobID) + "/job-end-time";
   }
 
   /**

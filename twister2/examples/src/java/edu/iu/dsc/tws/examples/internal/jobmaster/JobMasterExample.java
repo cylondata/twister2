@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter;
@@ -99,17 +100,13 @@ public final class JobMasterExample {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       if ("start".equalsIgnoreCase(args[0])) {
 
-        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
 
       } else if ("restart".equalsIgnoreCase(args[0])) {
 
-        initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        initialState = JobMasterAPI.JobMasterState.JM_RESTARTED;
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
         job = JobMasterStarter.job;
-
-        if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
-          LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
-          return;
-        }
 
       } else {
         LOG.info("usage: java JobMasterExample start/restart");
@@ -135,9 +132,9 @@ public final class JobMasterExample {
     }
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
-    KubernetesController controller = new KubernetesController();
+    KubernetesController controller = KubernetesController.init("default");
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = null;
+    IJobTerminator jobTerminator = new NullTerminator();
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);

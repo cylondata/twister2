@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -69,17 +70,17 @@ public class CDFWWorker implements IWorker {
   protected CDFWRuntime taskExecutor;
 
   @Override
-  public void execute(Config cfg, int workerID,
+  public void execute(Config cfg, JobAPI.Job job,
                       IWorkerController wController, IPersistentVolume pVolume,
                       IVolatileVolume vVolume) {
     this.config = cfg;
-    this.workerId = workerID;
+    this.workerId = wController.getWorkerInfo().getWorkerID();
     this.workerController = wController;
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
     // create the executor
-    taskExecutor = new CDFWRuntime(config, workerID, wController);
+    taskExecutor = new CDFWRuntime(config, workerId, wController);
 
     // register driver listener
     JMWorkerAgent.addReceiverFromDriver(taskExecutor);

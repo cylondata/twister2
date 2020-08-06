@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 
 /**
  * This is the entry point for creating a task graph by the user.
@@ -211,7 +211,7 @@ public final class ComputeGraphBuilder {
   }
 
   private void addFTGatherSink(String sourceName) {
-    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)
+    if (!CheckpointingContext.isCheckpointingEnabled(cfg)
         || this.mode.equals(OperationMode.BATCH)) {
       return;
     }

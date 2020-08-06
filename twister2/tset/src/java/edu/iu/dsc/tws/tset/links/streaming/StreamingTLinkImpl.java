@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
@@ -33,14 +33,14 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
 
   private WindowParameter windowParameter;
 
-  StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingTLinkImpl(StreamingEnvironment env, String n, int sourceP, int targetP,
                      Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
   @Override
-  public StreamingTSetEnvironment getTSetEnv() {
-    return (StreamingTSetEnvironment) super.getTSetEnv();
+  public StreamingEnvironment getTSetEnv() {
+    return (StreamingEnvironment) super.getTSetEnv();
   }
 
   public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {

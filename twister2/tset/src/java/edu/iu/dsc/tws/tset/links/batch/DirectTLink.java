@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
@@ -27,11 +27,11 @@ public class DirectTLink<T> extends BatchIteratorLinkWrapper<T> {
     //non arg constructor for kryp
   }
 
-  public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism, Schema schema) {
+  public DirectTLink(BatchEnvironment tSetEnv, int sourceParallelism, Schema schema) {
     super(tSetEnv, "direct", sourceParallelism, schema);
   }
 
-  public DirectTLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism,
+  public DirectTLink(BatchEnvironment tSetEnv, String name, int sourceParallelism,
                      Schema schema) {
     super(tSetEnv, name, sourceParallelism, schema);
   }

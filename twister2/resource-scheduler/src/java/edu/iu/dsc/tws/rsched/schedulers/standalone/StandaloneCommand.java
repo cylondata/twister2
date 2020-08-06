@@ -13,13 +13,14 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class StandaloneCommand extends MPICommand {
@@ -35,74 +36,69 @@ public class StandaloneCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(String workingDirectory, JobAPI.Job job) {
-    String twister2Home = Paths.get(workingDirectory, job.getJobId()).toString();
-    String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobId(), SchedulerContext.clusterType(config)).toString();
-    String nodesFileName = MPIContext.nodeFiles(config);
+  public String[] mpiCommand(String workingDir, JobAPI.Job job) {
+    String twister2Home = Paths.get(workingDir, job.getJobId()).toString();
+    String confDir = Paths.get(
+        workingDir, job.getJobId(), SchedulerContext.clusterType(config))
+        .toString();
+    String hostfile = Paths.get(confDir, MPIContext.nodesFile(config)).toString();
 
-    // lets construct the mpi command to launch
-    List<String> mpiCommand = mpiCommand(getScriptPath());
-    Map<String, Object> map = mpiCommandArguments(config, job);
+    String[] mpirunCmd = new String[] {
+        mpirunPath(),
+        "-np", getNumberOfWorkers(job),
+        "--map-by", getMapBy(job),
+        "--hostfile", hostfile,
+        "-x", "LD_LIBRARY_PATH=" + ldLibraryPath(),
+        "-x", "XMX_VALUE=" + getMemory(job) + "m",
+        "-x", "XMS_VALUE=" + getMemory(job) + "m",
+        "-x", "SUBMITTING_TWISTER2_HOME=" + submittingTwister2Home(),
+        "-x", "CLASSPATH=" + getClasspath(config, job),
+        "-x", "ILLEGAL_ACCESS_WARN=" + illegalAccessWarn(),
+        "-x", "DEBUG=" + getDebug(),
+        "-x", "JOB_ID=" + job.getJobId(),
+        "-x", "TWISTER2_HOME=" + twister2Home,
+        "-x", "CONFIG_DIR=" + twister2Home,
+        "-x", "JOB_MASTER_IP=" + config.getStringValue("__job_master_ip__", "ip"),
+        "-x", "JOB_MASTER_PORT=" + config.getIntegerValue("__job_master_port__", 0) + "",
+        "-x", "RESTORE_JOB= " + CheckpointingContext.startingFromACheckpoint(config)
+    };
 
-    mpiCommand.add(map.get("procs").toString());
-    mpiCommand.add(map.get("java_props").toString());
-    mpiCommand.add(map.get("classpath").toString());
-    mpiCommand.add(map.get("container_class").toString());
-    mpiCommand.add(job.getJobId());
-    mpiCommand.add(twister2Home);
-    mpiCommand.add(twister2Home);
-    mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
-    String mpiRunFile = MPIContext.mpiRunFile(config);
-    if ("ompi/bin/mpirun".equals(mpiRunFile)) {
-      if (SchedulerContext.copySystemPackage(config)) {
-        mpiCommand.add("twister2-core" + "/" + mpiRunFile);
-      } else {
-        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
-      }
-    } else {
-      mpiCommand.add(mpiRunFile);
-    }
-    mpiCommand.add("-Xmx" + getMemory(job) + "m");
-    mpiCommand.add("-Xms" + getMemory(job) + "m");
-    mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
-    mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
+    List<String> cmdList = new ArrayList<>();
+    cmdList.addAll(Arrays.asList(mpirunCmd));
 
-    //making use of PE of -map-by  of MPI
-    int cpusPerProc = 1;
-    if (job.getComputeResourceCount() > 0) {
-      double cpu = job.getComputeResource(0).getCpu();
-      cpusPerProc = (int) Math.ceil(cpu);
-    }
-    mpiCommand.add(MPIContext.mpiMapBy(config, cpusPerProc));
-
-    if (config.getBooleanValue(SchedulerContext.DEBUG, false)) {
-      mpiCommand.add("debug");
-    } else {
-      mpiCommand.add("no-debug");
+    // add mpi parameters
+    String mpiParams = MPIContext.mpiParams(config);
+    if (mpiParams != null && !mpiParams.trim().isEmpty()) {
+      cmdList.addAll(Arrays.asList(mpiParams.split(" ")));
     }
 
-    //todo remove this once kryo is updated to 5+
-    if (getJavaVersion() >= 9) {
-      mpiCommand.add("suppress_illegal_access_warn");
-    } else {
-      mpiCommand.add("allow_illegal_access_warn");
-    }
+    // add restart count as the last parameter
+    // restart count has to be added as the last parameter
+    // since we are updating it in subsequent resubmissions in case of failures
+    cmdList.add("-x");
+    cmdList.add("RESTART_COUNT=" + 0);
 
-    // we are adding the submitting twister2 home at the end
-    if (SchedulerContext.copySystemPackage(config)) {
-      mpiCommand.add("twister2-core");
-    } else {
-      mpiCommand.add(SchedulerContext.twister2Home(config));
-    }
+    // add mpi script to run as the last command
+    cmdList.add(MPIContext.mpiScriptWithPath(config));
 
-    return mpiCommand;
+    return cmdList.toArray(new String[]{});
   }
 
-  private List<String> mpiCommand(String mpiScript) {
-    List<String> slurmCmd;
-    slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
-    return slurmCmd;
+  private String getDebug() {
+    if (config.getBooleanValue(SchedulerContext.DEBUG, false)) {
+      return "debug";
+    } else {
+      return "no-debug";
+    }
+  }
+
+  protected String illegalAccessWarn() {
+    //todo remove this once kryo is updated to 5+
+    if (getJavaVersion() >= 9) {
+      return "suppress_illegal_access_warn";
+    } else {
+      return "allow_illegal_access_warn";
+    }
   }
 
   /**
@@ -123,4 +119,10 @@ public class StandaloneCommand extends MPICommand {
     LOG.info("Java version : " + version);
     return Integer.parseInt(version);
   }
+
+  @Override
+  protected void updateRestartCount(String[] cmd, int restartCount) {
+    cmd[cmd.length - 2] = "RESTART_COUNT=" + restartCount;
+  }
+
 }

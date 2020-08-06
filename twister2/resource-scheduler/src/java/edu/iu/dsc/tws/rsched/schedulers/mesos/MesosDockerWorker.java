@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -80,8 +79,7 @@ public class MesosDockerWorker {
 
     MesosWorkerController workerController = null;
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-        + jobID + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
     try {
 
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
@@ -141,18 +139,7 @@ public class MesosDockerWorker {
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
-    String workerClass = job.getWorkerClassName();
-    LOG.info("Worker class---->>>" + workerClass);
-    IWorker worker;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      worker = (IWorker) object;
-      LOG.info("Loaded worker class..: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("Failed to load the worker class %s", workerClass));
-      throw new RuntimeException(e);
-    }
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
 
     MesosVolatileVolume volatileVolume = null;
     //TODO method SchedulerContext.volatileDiskRequested deleted
@@ -169,7 +156,8 @@ public class MesosDockerWorker {
 //    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
 //        workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.execute(config, workerId, jobMasterAgent.getJMWorkerController(),
+    IWorker worker = JobUtils.initializeIWorker(job);
+    worker.execute(config, job, jobMasterAgent.getJMWorkerController(),
         pv, volatileVolume);
   }
 
@@ -190,11 +178,11 @@ public class MesosDockerWorker {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
 
-    //TODO: should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        jobMasterPort, numberOfWorkers, initialState);
+        jobMasterPort, numberOfWorkers, restartCount);
     jobMasterAgent.startThreaded();
 
     // No need for sending workerStarting message anymore

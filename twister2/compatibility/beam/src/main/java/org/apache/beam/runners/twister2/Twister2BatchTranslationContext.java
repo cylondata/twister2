@@ -20,7 +20,7 @@ package org.apache.beam.runners.twister2;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
@@ -42,6 +42,6 @@ public class Twister2BatchTranslationContext extends Twister2TranslationContext 
 
   @Override
   public void eval(SinkTSet<?> tSet) {
-    ((BatchTSetEnvironment) getEnvironment()).run(tSet);
+    ((BatchEnvironment) getEnvironment()).run(tSet);
   }
 }

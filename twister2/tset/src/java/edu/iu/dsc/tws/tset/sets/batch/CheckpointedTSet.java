@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.CheckpointedSourceOp;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSource;
 import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.tset.sources.DiskPartitionBackedSourceWrapper;
 public class CheckpointedTSet<T> extends PersistedTSet<T> {
   private DiskPartitionBackedSource<T> sourceFunc;
 
-  public CheckpointedTSet(BatchTSetEnvironment tSetEnv, DiskPartitionBackedSource<T> sourceFn,
+  public CheckpointedTSet(BatchEnvironment tSetEnv, DiskPartitionBackedSource<T> sourceFn,
                           int parallelism, Schema inputSchema) {
     super(tSetEnv, null, parallelism, inputSchema);
     this.sourceFunc = sourceFn;

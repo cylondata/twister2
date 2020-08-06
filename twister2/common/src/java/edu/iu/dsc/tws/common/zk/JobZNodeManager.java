@@ -13,20 +13,20 @@ package edu.iu.dsc.tws.common.zk;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.primitives.Longs;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.JobUtils;
 
 public final class JobZNodeManager {
   public static final Logger LOG = Logger.getLogger(JobZNodeManager.class.getName());
-
-  private static final long MAX_WAIT_TIME_FOR_ZNODE_DELETE = 5000;
 
   private JobZNodeManager() {
   }
@@ -36,8 +36,7 @@ public final class JobZNodeManager {
    * Assumes that there is no znode exists in the ZooKeeper
    * Add job object as its body
    */
-  public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
-      throws Twister2Exception {
+  public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job) {
 
     String jobDir = ZKUtils.jobDir(rootPath, job.getJobId());
     JobWithState jobWithState = new JobWithState(job, JobAPI.JobState.STARTING);
@@ -52,7 +51,7 @@ public final class JobZNodeManager {
       LOG.info("Job ZNode created: " + jobDir);
 
     } catch (Exception e) {
-      throw new Twister2Exception("Job ZNode can not be created for the path: " + jobDir, e);
+      throw new Twister2RuntimeException("Job ZNode can not be created for the path: " + jobDir, e);
     }
   }
 
@@ -60,8 +59,7 @@ public final class JobZNodeManager {
    * read the body of job directory znode
    * decode and return
    */
-  public static JobWithState readJobZNode(CuratorFramework client, String rootPath, String jobID)
-      throws Twister2Exception {
+  public static JobWithState readJobZNode(CuratorFramework client, String rootPath, String jobID) {
 
     String jobDir = ZKUtils.jobDir(rootPath, jobID);
 
@@ -69,7 +67,7 @@ public final class JobZNodeManager {
       byte[] jobBytes = client.getData().forPath(jobDir);
       return JobWithState.decode(jobBytes);
     } catch (Exception e) {
-      throw new Twister2Exception("Could not read job znode body: " + e.getMessage(), e);
+      throw new Twister2RuntimeException("Could not read job znode body: " + e.getMessage(), e);
     }
   }
 
@@ -82,15 +80,14 @@ public final class JobZNodeManager {
       // check whether the job znode exists, if not, return false, nothing to do
       String jobDir = ZKUtils.jobDir(rootPath, jobID);
       if (clnt.checkExists().forPath(jobDir) != null) {
-        ZKUtils.LOG.info("Job Znode exists: " + jobDir);
+        LOG.fine("Job Znode exists: " + jobDir);
         return true;
       }
 
       return false;
 
     } catch (Exception e) {
-      ZKEphemStateManager.LOG.log(Level.SEVERE, e.getMessage(), e);
-      return false;
+      throw new Twister2RuntimeException("Could not check job znode existence.", e);
     }
   }
 
@@ -121,65 +118,21 @@ public final class JobZNodeManager {
   }
 
   /**
-   * delete job related znode from previous sessions
+   * delete job znode from zk server
    */
-  public static boolean deleteJobZNodes(CuratorFramework clnt, String rootPath, String jobID) {
-
-    boolean allDeleted = true;
-
-    // delete workers ephemeral znode directory
-    String jobPath = ZKUtils.ephemDir(rootPath, jobID);
-    try {
-      if (clnt.checkExists().forPath(jobPath) != null) {
-
-        // wait for workers to be deleted
-        long delay = 0;
-        long start = System.currentTimeMillis();
-        List<String> list = clnt.getChildren().forPath(jobPath);
-        int children = list.size();
-
-        while (children != 0 && delay < MAX_WAIT_TIME_FOR_ZNODE_DELETE) {
-          try {
-            Thread.sleep(200);
-          } catch (InterruptedException e) {
-          }
-
-          delay = System.currentTimeMillis() - start;
-          list = clnt.getChildren().forPath(jobPath);
-          children = list.size();
-        }
-
-        if (list.size() != 0) {
-          ZKUtils.LOG.info("Waited " + delay + " ms before deleting job znode. Children: " + list);
-        }
-
-        clnt.delete().deletingChildrenIfNeeded().forPath(jobPath);
-        ZKUtils.LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
-      } else {
-        ZKUtils.LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
-      }
-    } catch (Exception e) {
-      ZKUtils.LOG.log(Level.FINE, "", e);
-      ZKUtils.LOG.info("Following exception is thrown when deleting the job znode: " + jobPath
-          + "; " + e.getMessage());
-      allDeleted = false;
-    }
+  public static void deleteJobZNode(CuratorFramework client, String rootPath, String jobID) {
 
     try {
-      // delete job directory
       String jobDir = ZKUtils.jobDir(rootPath, jobID);
-      if (clnt.checkExists().forPath(jobDir) != null) {
-        clnt.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
-        ZKUtils.LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);
+      if (client.checkExists().forPath(jobDir) != null) {
+        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
+        LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);
       } else {
-        ZKUtils.LOG.info("JobDirectory does not exist at ZooKeeper: " + jobDir);
+        LOG.info("JobDirectory does not exist at ZooKeeper: " + jobDir);
       }
     } catch (Exception e) {
-      ZKUtils.LOG.log(Level.WARNING, "", e);
-      allDeleted = false;
+      throw new Twister2RuntimeException("Can not delete job znode.");
     }
-
-    return allDeleted;
   }
 
   /**
@@ -221,5 +174,111 @@ public final class JobZNodeManager {
     }
   }
 
+  /**
+   * Create job submission time znode
+   */
+  public static void createJstZNode(CuratorFramework client,
+                                    String rootPath,
+                                    String jobID,
+                                    long jsTime) {
+
+    String jstPath = ZKUtils.jobSubmisionTimePath(rootPath, jobID);
+
+    try {
+      client
+          .create()
+          .creatingParentsIfNeeded()
+          .withMode(CreateMode.PERSISTENT)
+          .forPath(jstPath, Longs.toByteArray(jsTime));
+
+      LOG.info("Job Submission Time ZNode created: " + jstPath);
+
+    } catch (Exception e) {
+      throw new Twister2RuntimeException("Can not create job submission time znode: " + jstPath, e);
+    }
+  }
+
+  /**
+   * Create job end time znode
+   */
+  public static void createJobEndTimeZNode(CuratorFramework client,
+                                           String rootPath,
+                                           String jobID) {
+
+    String endTimePath = ZKUtils.jobEndTimePath(rootPath, jobID);
+    long endTime = System.currentTimeMillis();
+
+    try {
+      client
+          .create()
+          .creatingParentsIfNeeded()
+          .withMode(CreateMode.PERSISTENT)
+          .forPath(endTimePath, Longs.toByteArray(endTime));
+
+      LOG.info("Job End Time ZNode created: " + endTimePath);
+
+    } catch (Exception e) {
+      throw new Twister2RuntimeException("Can not create job end time znode: " + endTimePath, e);
+    }
+  }
+
+  /**
+   * Job master creates job submission time znode under job znode,
+   * as the last action to create job related znodes at ZK server
+   * workers wait for the job master to create this znode.
+   * They proceed after seeing that this jst znode is created
+   * <p>
+   * this jst znode may exist from previous runs in the case of restarting from a checkpoint
+   * because of this, its value has to be compared
+   */
+  public static boolean checkJstZNodeWaitIfNeeded(CuratorFramework client,
+                                                  String rootPath,
+                                                  String jobID,
+                                                  long jsTime) throws Twister2Exception {
+
+    String jstPath = ZKUtils.jobSubmisionTimePath(rootPath, jobID);
+
+    long timeLimit = 100000; // 100 seconds
+    long sleepInterval = 300;
+    long duration = 0;
+    long startTime = System.currentTimeMillis();
+
+    // log interval in milliseconds
+    long logInterval = 3000;
+    long nextLogTime = logInterval;
+    int checkCount = 1;
+
+    while (duration < timeLimit) {
+      try {
+        if (client.checkExists().forPath(jstPath) != null) {
+          byte[] jstBytes = client.getData().forPath(jstPath);
+          long jstAtZK = Longs.fromByteArray(jstBytes);
+          if (jstAtZK == jsTime) {
+            LOG.info("matched job submission times. Proceeding. checkCount: " + checkCount);
+            return true;
+          }
+        }
+      } catch (Exception e) {
+        throw new Twister2Exception("Can not get job submission znode data.", e);
+      }
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleeping thread interrupted.");
+      }
+
+      duration = System.currentTimeMillis() - startTime;
+      checkCount++;
+
+      if (duration > nextLogTime) {
+        LOG.info("Still waiting for job submission time znode to be created: " + jstPath);
+        nextLogTime += logInterval;
+      }
+    }
+
+    throw new Twister2Exception("Job Submission Time znode is not created by job master "
+        + "on the time limit: " + timeLimit + " ms");
+  }
 
 }

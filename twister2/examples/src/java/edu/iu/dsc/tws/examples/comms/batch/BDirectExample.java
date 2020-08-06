@@ -42,7 +42,7 @@ public class BDirectExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     if (!jobParameters.getTaskStages().get(0).equals(jobParameters.getTaskStages().get(1))) {
       int min = Math.min(jobParameters.getTaskStages().get(0),
           jobParameters.getTaskStages().get(1));

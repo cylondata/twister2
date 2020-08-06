@@ -29,8 +29,10 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 
 /**
  * Represent a data set create by a all reduce opration
@@ -40,7 +42,7 @@ import edu.iu.dsc.tws.tset.links.TLinkUtils;
 public class AllReduceTLink<T> extends BatchSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
-  public AllReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism,
+  public AllReduceTLink(BatchEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism,
                         Schema schema) {
     super(tSetEnv, "allreduce", sourceParallelism, schema);
     this.reduceFn = rFn;
@@ -57,5 +59,25 @@ public class AllReduceTLink<T> extends BatchSingleLink<T> {
   public AllReduceTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return (CachedTSet<T>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    return (CachedTSet<T>) super.cache();
+  }
+
+  @Override
+  public PersistedTSet<T> lazyPersist() {
+    return (PersistedTSet<T>) super.lazyPersist();
+  }
+
+  @Override
+  public PersistedTSet<T> persist() {
+    return (PersistedTSet<T>) super.persist();
   }
 }

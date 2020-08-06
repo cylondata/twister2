@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 
 public class ScpUploader implements IUploader {
@@ -62,7 +61,7 @@ public class ScpUploader implements IUploader {
 
 
   @Override
-  public void initialize(Config conf, JobAPI.Job job) {
+  public void initialize(Config conf, String jobID) {
     this.config = conf;
     this.controller = getScpController();
     this.destinationDirectory = ScpContext.uploaderJobDirectory(conf);
@@ -99,7 +98,7 @@ public class ScpUploader implements IUploader {
   }
 
   @Override
-  public boolean undo(Config cnfg, String jobID) {
+  public boolean undo() {
     LOG.info("Clean uploaded jar");
     File file = new File(destinationDirectory);
     return file.delete();

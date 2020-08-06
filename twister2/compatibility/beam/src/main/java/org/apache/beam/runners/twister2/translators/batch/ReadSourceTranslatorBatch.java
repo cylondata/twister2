@@ -27,7 +27,7 @@ import org.apache.beam.sdk.io.Read;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PCollection;
 
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -45,7 +45,7 @@ public class ReadSourceTranslatorBatch<T> implements BatchTransformTranslator<Re
     final TSetEnvironment tsetEnv = context.getEnvironment();
     // TODO: need to set paralliem value
     SourceTSet<WindowedValue<T>> sourceTSet =
-        ((BatchTSetEnvironment) tsetEnv).createSource(twister2BoundedSource, 1);
+        ((BatchEnvironment) tsetEnv).createSource(twister2BoundedSource, 1);
     PCollection<T> output = context.getOutput(transform);
     context.setOutputDataSet(output, sourceTSet);
   }

@@ -25,12 +25,13 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedPipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
 
@@ -51,7 +52,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
    * @param parallelism par
    * @param inputSchema Schema from the preceding {@link edu.iu.dsc.tws.api.tset.link.TLink}
    */
-  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism,
+  BatchTupleTSetImpl(BatchEnvironment tSetEnv, String name, int parallelism,
                      Schema inputSchema) {
     // since the output schema will be a KeyedSchema, it needs to be initialized by a KeyedSchema
     // of OBJECT type
@@ -64,13 +65,21 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSetWithSchema<V> imp
 
   // since keyed tset is the base impl for BatchTupleTSet, it needs to override the env getter
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   @Override
   public KeyedDirectTLink<K, V> keyedDirect() {
     KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism(),
+        getOutputSchema());
+    addChildToGraph(kDirect);
+    return kDirect;
+  }
+
+  @Override
+  public KeyedPipeTLink<K, V> keyedPipe() {
+    KeyedPipeTLink<K, V> kDirect = new KeyedPipeTLink<>(getTSetEnv(), getParallelism(),
         getOutputSchema());
     addChildToGraph(kDirect);
     return kDirect;

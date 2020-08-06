@@ -53,6 +53,7 @@ java_tests(
         "edu.iu.dsc.tws.comms.dfw.io.KeyedSerializerLargeTest",
         "edu.iu.dsc.tws.comms.dfw.io.AggregatorListTest",
         "edu.iu.dsc.tws.comms.routing.BinaryTreeTest",
+        "edu.iu.dsc.tws.comms.selectors.HashingSelectorTest",
     ],
     runtime_deps = [
         ":comms-tests",

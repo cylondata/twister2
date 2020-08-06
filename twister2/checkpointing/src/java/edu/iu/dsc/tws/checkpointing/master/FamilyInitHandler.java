@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointing.master;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.request.RequestID;
@@ -24,10 +23,11 @@ public class FamilyInitHandler {
   private static final Logger LOG = Logger.getLogger(FamilyInitHandler.class.getName());
 
   private int count;
-  private Set<RequestID> pendingResponses;
+  private HashMap<Integer, RequestID> pendingResponses;
   private RRServer rrServer;
   private String family;
   private Long familyVersion;
+  private boolean pause; // should be paused when cluster is unstable
 
   public FamilyInitHandler(RRServer rrServer,
                            String family,
@@ -35,20 +35,53 @@ public class FamilyInitHandler {
     this.rrServer = rrServer;
     this.family = family;
     this.familyVersion = familyVersion;
-    this.pendingResponses = new HashSet<>();
+    this.pendingResponses = new HashMap<>();
     this.count = count;
   }
 
-  public boolean scheduleResponse(RequestID requestID) {
-    this.pendingResponses.add(requestID);
+  private void sendRejectedResponse(RequestID requestID) {
+    this.rrServer.sendResponse(requestID,
+        Checkpoint.FamilyInitializeResponse.newBuilder()
+            .setFamily(this.family)
+            .setVersion(this.familyVersion)
+            .setStatus(Checkpoint.FamilyInitializeResponse.Status.REJECTED)
+            .build());
+  }
+
+  public void pause() {
+    this.pause = true;
+
+    // send the response to the waiting workers
+    this.pendingResponses.values().forEach(this::sendRejectedResponse);
+    this.pendingResponses.clear();
+  }
+
+  public void resume() {
+    this.pendingResponses.clear();
+    this.pause = false;
+  }
+
+  public boolean scheduleResponse(int workerId, RequestID requestID) {
+    if (this.pause) {
+      LOG.info("Handler is in paused mode, due to cluster instability. "
+          + "Ignored a request from " + workerId);
+      this.sendRejectedResponse(requestID);
+      return false;
+    }
+    RequestID previousRequest = this.pendingResponses.put(workerId, requestID);
+    if (previousRequest != null) {
+      LOG.warning("Duplicate request received for " + this.family
+          + " from worker : " + workerId + ". Workers might be coming after a failure.");
+    }
     if (this.pendingResponses.size() == count) {
-      for (RequestID pendingRespons : this.pendingResponses) {
+      for (RequestID pendingRespons : this.pendingResponses.values()) {
         this.rrServer.sendResponse(pendingRespons,
             Checkpoint.FamilyInitializeResponse.newBuilder()
                 .setFamily(this.family)
                 .setVersion(this.familyVersion)
                 .build());
       }
+      this.pendingResponses.clear();
       return true;
     } else {
       return false;
@@ -57,5 +90,16 @@ public class FamilyInitHandler {
 
   public long getVersion() {
     return this.familyVersion;
+  }
+
+  @Override
+  public String toString() {
+    return "FamilyInitHandler{" + "count=" + count
+        + ", family='" + family + '\''
+        + ", familyVersion=" + familyVersion + '}';
+  }
+
+  public void setFamilyVersion(long minVersion) {
+    this.familyVersion = minVersion;
   }
 }

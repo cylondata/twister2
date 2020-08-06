@@ -46,7 +46,7 @@ public class SGatherExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTargets() != 1) {
       LOG.warning("Setting targets to 1. Found, "
           + jobParameters.getTargets());

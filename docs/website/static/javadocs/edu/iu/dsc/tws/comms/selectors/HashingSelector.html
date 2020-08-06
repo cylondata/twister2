@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/LoadBalanceSelector.html" title="class in edu.iu.dsc.tws.comms.selectors"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/HashingSelectorTest.html" title="class in edu.iu.dsc.tws.comms.selectors"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/comms/selectors/HashingSelector.html" target="_top">Frames</a></li>
@@ -176,7 +176,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/HashingSelector.html#prepare-edu.iu.dsc.tws.api.comms.Communicator-java.util.Set-java.util.Set-">prepare</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
        java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-       java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations)</code>
+       java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests)</code>
 <div class="block">Prepare the destination selector</div>
 </td>
 </tr>
@@ -184,7 +184,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/HashingSelector.html#prepare-edu.iu.dsc.tws.api.comms.Communicator-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">prepare</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
        java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-       java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations,
+       java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
        <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;kType,
        <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;dType)</code>
 <div class="block">Prepare the destination selector, if this method is not overridden to support keyType
@@ -238,7 +238,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <h4>prepare</h4>
 <pre>public&nbsp;void&nbsp;prepare(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
                     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-                    java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations)</pre>
+                    java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests)</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html#prepare-edu.iu.dsc.tws.api.comms.Communicator-java.util.Set-java.util.Set-">DestinationSelector</a></code></span></div>
 <div class="block">Prepare the destination selector</div>
 <dl>
@@ -247,7 +247,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>comm</code> - the communicator</dd>
 <dd><code>sources</code> - sources</dd>
-<dd><code>destinations</code> - destination</dd>
+<dd><code>dests</code> - destination</dd>
 </dl>
 </li>
 </ul>
@@ -259,7 +259,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <h4>prepare</h4>
 <pre>public&nbsp;void&nbsp;prepare(<a href="../../../../../../edu/iu/dsc/tws/api/comms/Communicator.html" title="class in edu.iu.dsc.tws.api.comms">Communicator</a>&nbsp;comm,
                     java.util.Set&lt;java.lang.Integer&gt;&nbsp;sources,
-                    java.util.Set&lt;java.lang.Integer&gt;&nbsp;destinations,
+                    java.util.Set&lt;java.lang.Integer&gt;&nbsp;dests,
                     <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;kType,
                     <a href="../../../../../../edu/iu/dsc/tws/api/comms/messaging/types/MessageType.html" title="interface in edu.iu.dsc.tws.api.comms.messaging.types">MessageType</a>&nbsp;dType)</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelector.html#prepare-edu.iu.dsc.tws.api.comms.Communicator-java.util.Set-java.util.Set-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-edu.iu.dsc.tws.api.comms.messaging.types.MessageType-">DestinationSelector</a></code></span></div>
@@ -271,7 +271,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>comm</code> - the communicator</dd>
 <dd><code>sources</code> - sources</dd>
-<dd><code>destinations</code> - destination</dd>
+<dd><code>dests</code> - destination</dd>
 <dd><code>kType</code> - type of key that this selector handles</dd>
 <dd><code>dType</code> - type of data that this selector handles</dd>
 </dl>
@@ -368,7 +368,7 @@ implements <a href="../../../../../../edu/iu/dsc/tws/api/comms/DestinationSelect
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/LoadBalanceSelector.html" title="class in edu.iu.dsc.tws.comms.selectors"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../../edu/iu/dsc/tws/comms/selectors/HashingSelectorTest.html" title="class in edu.iu.dsc.tws.comms.selectors"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../../index.html?edu/iu/dsc/tws/comms/selectors/HashingSelector.html" target="_top">Frames</a></li>

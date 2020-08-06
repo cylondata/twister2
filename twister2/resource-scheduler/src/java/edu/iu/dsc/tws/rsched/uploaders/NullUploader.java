@@ -17,7 +17,6 @@ import java.net.URISyntaxException;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.IUploader;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * a class to use when no uploading is necessary
@@ -27,7 +26,7 @@ public class NullUploader implements IUploader {
   /**
    * Initialize the uploader
    */
-  public void initialize(Config config, JobAPI.Job job) {
+  public void initialize(Config config, String jobID) {
     // nothing to do
   }
 
@@ -45,10 +44,8 @@ public class NullUploader implements IUploader {
   /**
    * If subsequent stages fail, undo will be called to free resources used by
    * uploading package. Ideally, this should try to remove the uploaded package.
-   * @param cnfg
-   * @param jobID
    */
-  public boolean undo(Config cnfg, String jobID) {
+  public boolean undo() {
     return true;
   }
 

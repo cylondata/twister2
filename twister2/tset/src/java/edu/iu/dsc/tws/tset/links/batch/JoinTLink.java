@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.schema.JoinSchema;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
@@ -47,13 +47,13 @@ public class JoinTLink<K, VL, VR> extends BatchIteratorLinkWrapper<JoinedTuple<K
 
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
-  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
+  public JoinTLink(BatchEnvironment env, CommunicationContext.JoinType type,
                    Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT,
                    JoinSchema joinSchema) {
     this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT, joinSchema);
   }
 
-  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
+  public JoinTLink(BatchEnvironment env, CommunicationContext.JoinType type,
                    Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
                    TupleTSet rightT, JoinSchema joinSchema) {
     super(env, "join", ((BuildableTSet) leftT).getParallelism(), joinSchema);

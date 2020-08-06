@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
@@ -29,11 +29,11 @@ import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T> {
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  BatchIteratorLink(BatchEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  BatchIteratorLink(BatchEnvironment env, String n, int sourceP, int targetP,
                     Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }

@@ -19,11 +19,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -34,23 +36,27 @@ public class PersistExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     // test direct().cache() which has IterLink semantics
     PersistedTSet<Integer> cache = src.direct().persist();
     runOps(env, cache);
 
     // test reduce().cache() which has SingleLink semantics
+    LOG.info("test persist after reduce");
     PersistedTSet<Integer> cache1 = src.reduce(Integer::sum).persist();
     runOps(env, cache1);
 
     // test gather.cache() which has TupleValueIterLink
+    LOG.info("test persist after gather");
     PersistedTSet<Integer> cache2 = src.gather().persist();
     runOps(env, cache2);
   }
 
-  private void runOps(BatchTSetEnvironment env, PersistedTSet<Integer> cTset) {
+  private void runOps(BatchEnvironment env, PersistedTSet<Integer> cTset) {
     LOG.info("test foreach");
     cTset.direct()
         .forEach(i -> LOG.info("foreach: " + i));

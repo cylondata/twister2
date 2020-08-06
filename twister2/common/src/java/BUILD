@@ -22,7 +22,16 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
     "//third_party:ompi_javabinding_java",
+    "@maven//:org_apache_arrow_arrow_vector",
+    "@maven//:org_apache_arrow_arrow_memory",
+    "@maven//:org_apache_arrow_arrow_format",
+    "@maven//:com_google_flatbuffers_flatbuffers_java",
+    "@maven//:io_netty_netty_buffer",
+    "@maven//:io_netty_netty_all",
+    "@maven//:io_netty_netty_transport",
+    "@maven//:io_netty_netty_transport_native_epoll",
 ]
 
 t2_java_lib(
