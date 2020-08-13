@@ -220,7 +220,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
               byte[] data = new byte[size];
               int readSoFar = 0;
               while (readSoFar < size) {
-                int readSize = reader.read(data, readSoFar, data.length);
+                int readSize = reader.read(data, readSoFar, data.length - readSoFar);
                 if (readSize == -1) {
                   throw new Twister2RuntimeException("Reached the EOF unexpectedly");
                 }
