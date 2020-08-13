@@ -15,6 +15,7 @@ import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -218,7 +219,11 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
             for (long i = 0; i < noOfFrames; i++) {
               int size = reader.readInt();
               byte[] data = new byte[size];
-              reader.read(data);
+              int readSoFar = 0;
+              while (readSoFar < size) {
+                int readSize = reader.read(data, readSoFar, data.length);
+                readSoFar += readSize;
+              }
               this.bufferFromDisk.add(data);
             }
             return next();

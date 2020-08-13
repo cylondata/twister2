@@ -33,13 +33,7 @@ public final class HadoopDataInputStream extends FSDataInputStream {
 
   @Override
   public void seek(long seekPosition) throws IOException {
-    long delta = seekPosition - getPos();
-
-    if (delta > 0L && delta <= MIN_SKIP_BYTES) {
-      skipFully(delta);
-    } else if (delta != 0L) {
-      forceSeek(seekPosition);
-    }
+    fosInputStream.seek(seekPosition);
   }
 
   @Override
