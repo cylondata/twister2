@@ -221,6 +221,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
               int readSoFar = 0;
               while (readSoFar < size) {
                 int readSize = reader.read(data, readSoFar, data.length);
+                if (readSize == -1) {
+                  throw new Twister2RuntimeException("Reached the EOF unexpectedly");
+                }
                 readSoFar += readSize;
               }
               this.bufferFromDisk.add(data);
