@@ -46,11 +46,11 @@ public class JobMasterContext extends Context {
   public static final String JOB_MASTER_RAM = "twister2.job.master.ram";
 
   // job master volatile disk size in GB
-  public static final double VOLATILE_VOLUME_DEFAULT = 1.0;
+  public static final double VOLATILE_VOLUME_DEFAULT = 0.0;
   public static final String VOLATILE_VOLUME = "twister2.job.master.volatile.volume.size";
 
   // job master volatile disk size in GB
-  public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
+  public static final double PERSISTENT_VOLUME_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
 
   // the number of http connections from job master to Twister2 Dashboard
