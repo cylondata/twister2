@@ -17,3 +17,5 @@ twister2.data.hdfs.namenode.port: "9001"
 twister2.data.fs.root: "${TWISTER2_HOME}/persistent"
 
 twister2.data.hdfs.root: "/twister2/persistent/data"
+
+twister2.tset.data.persist.fs: "local"

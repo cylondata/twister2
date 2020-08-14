@@ -16,6 +16,12 @@ java_import(
 )
 
 java_import(
+    name = "cylon_javabinding_java",
+    jars = ["@cylon//:cylon-jar-file"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
     name = "harp_collective",
     jars = ["harp/harp-collective-0.1.0.jar"],
     visibility = ["//visibility:public"],

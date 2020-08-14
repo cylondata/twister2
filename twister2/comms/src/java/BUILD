@@ -15,6 +15,7 @@ t2_java_lib(
     artifact_name = "Twsiter2 Communication",
     deps = [
         "//third_party:ompi_javabinding_java",
+        "//third_party:cylon_javabinding_java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
