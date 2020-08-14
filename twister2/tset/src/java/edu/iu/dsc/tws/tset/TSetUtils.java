@@ -21,12 +21,12 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
-import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 
 public final class TSetUtils {
 
