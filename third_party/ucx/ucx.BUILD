@@ -4,7 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 lib_files = ["lib/libuct.so","lib/libucs.so","lib/libucp.so","lib/libucm.so","lib/libjucx.so"]
 
-jar_files = ["lib/jucx-1.9.0.jar"]
+jar_files = ["lib/jucx-1.10.0.jar"]
 
 out_files = jar_files + lib_files
 

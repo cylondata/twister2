@@ -17,13 +17,16 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class MockWorker implements Runnable {
 
   private Config config;
   private int workerId;
-  private IWorker iWorker;
+  private Twister2Worker twister2Worker;
+  private IWorker iworker; // keeping backward compatibility
   private MockWorkerController mockWorkerController;
   private JobAPI.Job job;
 
@@ -36,8 +39,16 @@ public class MockWorker implements Runnable {
     this.job = twister2Job.serialize();
 
     try {
-      this.iWorker = (IWorker) this.getClass().getClassLoader()
+      Object worker = this.getClass().getClassLoader()
           .loadClass(twister2Job.getWorkerClass()).newInstance();
+
+      if (worker instanceof Twister2Worker) {
+        this.twister2Worker = (Twister2Worker) worker;
+      } else if (worker instanceof IWorker) {
+        this.iworker = (IWorker) worker;
+      } else {
+        throw new Twister2RuntimeException("Unsupported Worker class type " + worker.getClass());
+      }
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new Twister2RuntimeException("Error in creating worker instance", e);
     }
@@ -48,13 +59,14 @@ public class MockWorker implements Runnable {
 
   @Override
   public void run() {
-    this.iWorker.execute(
-        this.config,
-        this.job,
-        this.mockWorkerController,
-        null,
-        null
-    );
+    if (this.twister2Worker != null) {
+      WorkerEnvironment workerEnvironment = WorkerEnvironment.init(this.config, this.job,
+          this.mockWorkerController,
+          null, null);
+      this.twister2Worker.execute(workerEnvironment);
+    } else {
+      this.iworker.execute(this.config, this.job, this.mockWorkerController, null, null);
+    }
   }
 
 

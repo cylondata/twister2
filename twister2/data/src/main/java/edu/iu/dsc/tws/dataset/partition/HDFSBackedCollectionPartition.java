@@ -27,6 +27,8 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
   private static final String CONFIG_HDFS_ROOT = "twister2.data.hdfs.root";
   private static final String HDFS_PROTO = "hdfs://";
 
+  public static final String CONFIG = "hdfs";
+
   public HDFSBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
                                        int bufferedBytes, Config config, String reference) {
     super(maxFramesInMemory, dataType, bufferedBytes, config, reference);
@@ -34,6 +36,10 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, Config config) {
     super(maxFramesInMemory, config);
+  }
+
+  public HDFSBackedCollectionPartition(int maxFramesInMemory, Config config, String reference) {
+    super(maxFramesInMemory, config, reference);
   }
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, MessageType dataType, Config config) {

@@ -17,13 +17,21 @@ import java.util.StringJoiner;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 public final class TSetUtils {
+
+  private static final String CONFIG_PERSIST_FS = "twister2.tset.data.persist.fs";
+
   private TSetUtils() {
   }
 
@@ -92,6 +100,19 @@ public final class TSetUtils {
       return (streaming ? "s" : "") + "compc" + (keyed ? "2tup" : "");
     } else {
       throw new RuntimeException("Unsupported function passed a compute TSet");
+    }
+  }
+
+  public static <T> BufferedCollectionPartition<T> getCollectionPartition(int maxFramesInMemory,
+                                                                          Config config,
+                                                                          String reference) {
+    switch (config.getStringValue(CONFIG_PERSIST_FS, DiskBackedCollectionPartition.CONFIG)) {
+      case DiskBackedCollectionPartition.CONFIG:
+        return new DiskBackedCollectionPartition<>(maxFramesInMemory, config, reference);
+      case HDFSBackedCollectionPartition.CONFIG:
+        return new HDFSBackedCollectionPartition<T>(maxFramesInMemory, config, reference);
+      default:
+        throw new Twister2RuntimeException("Unsupported persistent file system specified");
     }
   }
 }

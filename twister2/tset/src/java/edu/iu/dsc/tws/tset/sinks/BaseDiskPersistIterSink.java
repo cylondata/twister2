@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.tset.sinks;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.tset.TSetUtils;
 
 /**
@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.tset.TSetUtils;
  * @param <T> TSet data type
  */
 public abstract class BaseDiskPersistIterSink<T, T1> extends StoreIterSink<T, T1> {
-  private DiskBackedCollectionPartition<T1> partition;
+  private BufferedCollectionPartition<T1> partition;
 
   private final String referencePrefix;
 
@@ -29,7 +29,7 @@ public abstract class BaseDiskPersistIterSink<T, T1> extends StoreIterSink<T, T1
    * Creates an instance of {@link DiskPersistIterIterSink} with a referencePrefix
    *
    * @param referencePrefix referencePrefix will be used to uniquely identify the set of
-   *                        disk partitions created with this function
+   * disk partitions created with this function
    */
   public BaseDiskPersistIterSink(String referencePrefix) {
     this.referencePrefix = referencePrefix;
@@ -41,9 +41,8 @@ public abstract class BaseDiskPersistIterSink<T, T1> extends StoreIterSink<T, T1
     super.prepare(ctx);
     String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
     // buffered partition with 0 frames in memory. Then everything will be written to the memory
-    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig(),
-        reference);
-
+    this.partition = TSetUtils.getCollectionPartition(0,
+        ctx.getConfig(), reference);
   }
 
   @Override
@@ -55,7 +54,7 @@ public abstract class BaseDiskPersistIterSink<T, T1> extends StoreIterSink<T, T1
 
   // StoreIterSink methods
   @Override
-  public DiskBackedCollectionPartition<T1> get() {
+  public BufferedCollectionPartition<T1> get() {
     return partition;
   }
 }
