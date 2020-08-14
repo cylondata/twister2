@@ -36,4 +36,4 @@ twister2.fault.tolerance.max.worker.restarts: 5
 
 # maximum number of times to re-start mpi jobs in case of failures
 # default value is 3
-twister2.fault.tolerance.max.mpijob.restarts: 3
+twister2.fault.tolerance.max.mpijob.restarts: 1
