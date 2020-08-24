@@ -21,16 +21,20 @@
 # Twister2 Job Master related settings
 ###################################################################
 
-twister2.job.master.used: true
+# by default, job master is used
+# twister2.job.master.used: true
 
 # if true, the job master runs in the submitting client
 # if false, job master runs as a separate process in the cluster
-# by default, it is true
 # when the job master runs in the submitting client,
-#  this client has to be submitting the job from a machine in the cluster
-twister2.job.master.runs.in.client: true
+# Twister2 client has to be submitting the job from a machine in the cluster
+# by default, it is false
+# twister2.job.master.runs.in.client: false
 
-twister2.worker.to.job.master.response.wait.duration: 100000
+# the amount of time workers will wait for a response from Job Master
+# for request/response messages
+# by default, it is 100000ms (100 seconds)
+# twister2.worker.to.job.master.response.wait.duration: 100000
 
 ###################################################################################
 # WorkerController related config parameters

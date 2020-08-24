@@ -1,3 +1,6 @@
+###################################################################
+# Twister2 Job Master related settings
+###################################################################
 # by default we are setting this to false for slurm as we are only supporting MPI at the moment
 twister2.job.master.used: false
 
