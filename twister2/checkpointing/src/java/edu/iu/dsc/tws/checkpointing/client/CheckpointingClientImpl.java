@@ -47,8 +47,6 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
 
   private static final Logger LOG = Logger.getLogger(CheckpointingClientImpl.class.getName());
 
-  public static final String CONFIG_WAIT_TIME = "twister2.checkpointing.request.timeout";
-
   private RRClient rrClient;
   private long waitTime;
   private Map<RequestID, Message> blockingResponse = new ConcurrentHashMap<>();

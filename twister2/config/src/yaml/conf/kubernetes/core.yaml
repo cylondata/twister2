@@ -6,46 +6,33 @@
 # By default, it is %80
 # If memory based volume is used more, or
 # you want to give OpenMPI or UCX more memory, this can be decreased.
-twister2.kubernetes.jvm.memory.fraction: 0.8
+# twister2.kubernetes.jvm.memory.fraction: 0.8
 
 ###################################################################
 # Twister2 Job Master related settings
 ###################################################################
 
-# if true, the job master runs in the submitting client
-# if false, job master runs as a separate process in the cluster 
-# by default, it is true
-# when the job master runs in the submitting client,
-# this client has to be submitting the job from a machine in the cluster
-# getLocalHost must return a reachable IP address to the job master
-twister2.job.master.runs.in.client: false
-
 # twister2 job master port number
 # default value is 11011
-twister2.job.master.port: 11011
-
-# worker to job master response wait time in milliseconds
-# this is for messages that wait for a response from the job master
-# default value is 10seconds = 10000
-twister2.worker.to.job.master.response.wait.duration: 10000
+# twister2.job.master.port: 11011
 
 # twister2 job master volatile volume size in GB
-# default value is 1.0 Gi
+# default value is 0.0 Gi
 # if this value is 0, volatile volume is not setup for job master
-twister2.job.master.volatile.volume.size: 0.0
+# twister2.job.master.volatile.volume.size: 0.0
 
 # twister2 job master persistent volume size in GB
-# default value is 1.0 Gi
+# default value is 0.0 Gi
 # if this value is 0, persistent volume is not setup for job master
-twister2.job.master.persistent.volume.size: 0.0
+# twister2.job.master.persistent.volume.size: 0.0
 
 # twister2 job master cpu request
 # default value is 0.2 percentage
-twister2.job.master.cpu: 0.2
+# twister2.job.master.cpu: 0.2
 
 # twister2 job master RAM request in MB
 # default value is 1024 MB
-twister2.job.master.ram: 1024
+# twister2.job.master.ram: 1024
 
 ###################################################################
 # Dashboard related settings
@@ -59,5 +46,5 @@ twister2.job.master.ram: 1024
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
 # twister2.dashboard.host: "http://<ip-or-host>:<port>"
-# if dashboard is running as a statefulset in the cluster
-twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"
+# if dashboard is running as a statefulset in the cluster, set it as:
+# twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"

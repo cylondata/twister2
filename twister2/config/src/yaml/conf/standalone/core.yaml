@@ -1,0 +1,10 @@
+###################################################################
+# Twister2 Job Master related settings
+###################################################################
+
+# by default Job Master does not run in the client.
+# in standalone clusters, by default,
+# we run the JobMaster in the client
+# Job submitting client has to be running in a machine in the cluster,
+# so that workers can connect to it.
+twister2.job.master.runs.in.client: true

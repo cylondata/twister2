@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -194,10 +195,8 @@ public final class JMWorkerAgent {
     rrClient.registerResponseHandler(JobMasterAPI.AllJoined.newBuilder(), handler);
 
     // create checkpointing client
-    this.checkpointClient = new CheckpointingClientImpl(rrClient, this.config.getLongValue(
-        CheckpointingClientImpl.CONFIG_WAIT_TIME,
-        10000
-    ));
+    this.checkpointClient =
+        new CheckpointingClientImpl(rrClient, CheckpointingContext.getRequestTimeout(config));
 
     workerController = new JMWorkerController(
         config, thisWorker, numberOfWorkers, restartCount, rrClient, this.checkpointClient);

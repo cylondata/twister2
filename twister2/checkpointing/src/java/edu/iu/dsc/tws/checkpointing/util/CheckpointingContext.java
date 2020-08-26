@@ -22,6 +22,10 @@ public final class CheckpointingContext {
   public static final String CHECKPOINTING_SOURCE_FREQUNCY
       = "twister2.checkpointing.source.frequency";
 
+  // by default 600 seconds
+  public static final int REQUEST_TIMEOUT_DEFAULT = 600;
+  public static final String REQUEST_TIMEOUT = "twister2.checkpointing.request.timeout";
+
   public static final String CHECKPOINTING_RESTORE_JOB = "twister2.checkpointing.restore.job";
 
   private CheckpointingContext() {
@@ -43,6 +47,10 @@ public final class CheckpointingContext {
 
   public static long getCheckPointingFrequency(Config config) {
     return config.getLongValue(CHECKPOINTING_SOURCE_FREQUNCY, 1000);
+  }
+
+  public static long getRequestTimeout(Config config) {
+    return 1000L * config.getIntegerValue(REQUEST_TIMEOUT, REQUEST_TIMEOUT_DEFAULT);
   }
 
   //todo: can checkpointing data be saved to nfs even above parameter is LocalFileStateStore
