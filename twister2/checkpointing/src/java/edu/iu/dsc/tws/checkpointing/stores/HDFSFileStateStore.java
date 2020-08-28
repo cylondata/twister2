@@ -24,13 +24,12 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.FileSystemContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class HDFSFileStateStore implements StateStore {
 
-  private static final String CHECKPOINTING_STORE_HDFS_DIR
-      = "twister2.checkpointing.store.hdfs.dir";
   private static final String HDFS_PROTO = "hdfs://";
 
   private String parentPath;
@@ -38,8 +37,9 @@ public class HDFSFileStateStore implements StateStore {
 
   @Override
   public void init(Config config, String... path) {
-    String finalPath = HDFS_PROTO + String.join(File.separator,
-        config.getStringValue(CHECKPOINTING_STORE_HDFS_DIR), String.join(File.separator, path));
+    String finalPath =
+        HDFS_PROTO + String.join(File.separator, FileSystemContext.persistentStorageRoot(config),
+            String.join(File.separator, path));
     this.parentPath = finalPath;
     try {
       this.hdfs = FileSystemUtils.get(URI.create(finalPath), config);

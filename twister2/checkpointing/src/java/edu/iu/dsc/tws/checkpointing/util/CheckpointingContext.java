@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.checkpointing.util;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FileSystemContext;
+import edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore;
 import edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore;
 
 public final class CheckpointingContext {
@@ -37,8 +39,21 @@ public final class CheckpointingContext {
   }
 
   public static String getCheckpointingStoreClass(Config config) {
-    return config.getStringValue(CHECKPOINTING_STORE_CLASS,
-        LocalFileStateStore.class.getCanonicalName());
+    String type = FileSystemContext.persistentStorageType(config);
+
+    switch (type) {
+      case "hdfs":
+        return HDFSFileStateStore.class.getCanonicalName();
+
+      case "nfs":
+        return LocalFileStateStore.class.getCanonicalName();
+
+      case "local":
+        return LocalFileStateStore.class.getCanonicalName();
+
+      default:
+        return LocalFileStateStore.class.getCanonicalName();
+    }
   }
 
   public static boolean startingFromACheckpoint(Config config) {

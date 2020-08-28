@@ -1,15 +1,18 @@
 # Enable or disable checkpointing
 twister2.checkpointing.enable: false
 
-# The implementation of the store to be used
-#twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore
-twister2.checkpointing.store: edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore
+# persistent storage type
+# could be: hdfs, nfs, local
+# by default, it is local
+twister2.persistent.storage.type: hdfs
 
-# Root directory of local file system based store
-twister2.checkpointing.store.fs.dir: "${TWISTER2_HOME}/persistent/"
-
-# Root directory of hdfs based store
-twister2.checkpointing.store.hdfs.dir: "/twister2/persistent/"
+# persistent storage root
+# a directory with jobID is created under this directory
+# all persistent storage related files are stored under that directory for the job
+# for hdfs, it can be something like:
+twister2.persistent.storage.root: "/twister2/"
+# for nfs or local, it can be something like
+# twister2.persistent.storage.root: "${HOME}/.twister2/jobs/"
 
 # Source triggering frequency
 # in milliseconds
