@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 
 public final class TSetUtils {
 
-  private static final String CONFIG_PERSIST_FS = "twister2.tset.data.persist.fs";
+  private static final String CONFIG_PERSIST_FS = "twister2.tset.storage.type";
 
   private TSetUtils() {
   }

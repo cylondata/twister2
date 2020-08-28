@@ -19,6 +19,7 @@ import java.net.URI;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.FileSystemContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
@@ -26,9 +27,7 @@ import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 @SuppressWarnings("rawtypes")
 public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartition<T> {
 
-  private static final String CONFIG_FS_ROOT = "twister2.data.fs.root";
   private static final String FS_PROTO = "file://";
-
   public static final String CONFIG = "local";
 
   public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
@@ -60,9 +59,8 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
   }
 
   protected String getRootPathStr(Config config) {
-    return FS_PROTO + String.join(File.separator,
-        config.getStringValue(CONFIG_FS_ROOT, "/tmp"), String.join(File.separator,
-            this.getReference()));
+    return FS_PROTO + String.join(File.separator, FileSystemContext.volatileStorageRoot(config),
+        "tsetdata", this.getReference());
   }
 
   @Override

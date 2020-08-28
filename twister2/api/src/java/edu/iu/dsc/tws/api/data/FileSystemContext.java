@@ -13,12 +13,15 @@ package edu.iu.dsc.tws.api.data;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public class FileSystemContext {
 
   public static final String PERSISTENT_STORAGE_TYPE = "twister2.persistent.storage.type";
-
   public static final String PERSISTENT_STORAGE_ROOT = "twister2.persistent.storage.root";
+
+  public static final String VOLATILE_STORAGE_ROOT_DEFAULT = "/tmp/twister2/volatile";
+  public static final String VOLATILE_STORAGE_ROOT = "twister2.volatile.storage.root";
 
   protected FileSystemContext() { }
 
@@ -29,7 +32,7 @@ public class FileSystemContext {
   public static String persistentStorageRoot(Config config) {
     String rootPath = config.getStringValue(PERSISTENT_STORAGE_ROOT);
     if (rootPath == null) {
-      return null;
+      throw new Twister2RuntimeException(PERSISTENT_STORAGE_ROOT + " is not specified in configs");
     }
 
     //TODO: we can replace slash with filesystem specific separator
@@ -37,26 +40,14 @@ public class FileSystemContext {
     return rootPath + "/" + Context.jobId(config);
   }
 
-  public static String checkpointingStoreClass(Config config) {
-    String type = persistentStorageType(config);
-    if (type == null) {
-      return null;
-    }
+  public static String volatileStorageRoot(Config config) {
+    String rootPath = config.getStringValue(VOLATILE_STORAGE_ROOT, VOLATILE_STORAGE_ROOT_DEFAULT);
 
-    switch (type) {
-      case "hdfs":
-        return "edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore";
-
-      case "nfs":
-        return "edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore";
-
-      case "local":
-        return "edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore";
-
-      default:
-        return null;
-    }
+    //TODO: we can replace slash with filesystem specific separator
+    //      however, slash should work with NFS and HDFS
+    return rootPath + "/" + Context.jobId(config);
   }
+
 
 
 

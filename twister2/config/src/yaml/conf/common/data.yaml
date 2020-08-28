@@ -1,3 +1,36 @@
+###################################################################
+# Persistent and Volatile Storage related settings
+###################################################################
+
+# persistent storage type
+# could be: hdfs, nfs, local
+# by default, it is local
+# twister2.persistent.storage.type: "local"
+
+# persistent storage root
+# a directory with jobID is created under this directory
+# all persistent storage related files are stored under that directory for the job
+# for hdfs, it can be something like:
+# twister2.persistent.storage.root: "/twister2"
+# for nfs or local, it can be something like
+twister2.persistent.storage.root: "${HOME}/.twister2/jobs"
+
+# volatile storage root
+# when twister2 can not fit the tset data into the memory and useDisk is specified,
+# it saves to this location during the computation
+# by default, it is "/tmp/twister2/volatile"
+# twister2.volatile.storage.root: "/tmp/twister2/volatile"
+
+# tset data can be saved to disk when the data can not fit into the memory
+# by default, it is saved to the local disk
+# it can also be saved to hdfs
+# supported values: "local" or "hdfs"
+# twister2.tset.storage.type: "local"
+
+###################################################################
+# HDFS related settings
+###################################################################
+
 #Home directory of the hadoop
 twister2.data.hadoop.home: "${HADOOP_HOME}"
 
@@ -12,10 +45,3 @@ twister2.data.hdfs.namenode: "localhost"
 
 #Specify the namenode port
 twister2.data.hdfs.namenode.port: "9001"
-
-# twister2.data.fs.root: "${TWISTER2_HOME}/persistent/data"
-twister2.data.fs.root: "${TWISTER2_HOME}/persistent"
-
-twister2.data.hdfs.root: "/twister2/persistent/data"
-
-twister2.tset.data.persist.fs: "local"
