@@ -71,7 +71,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.FileSystemContext;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 
 public class LocalFileStateStore implements StateStore {
 

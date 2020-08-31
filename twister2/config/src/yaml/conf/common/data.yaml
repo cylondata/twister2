@@ -17,9 +17,15 @@ twister2.persistent.storage.root: "${HOME}/.twister2/jobs"
 
 # volatile storage root
 # when twister2 can not fit the tset data into the memory and useDisk is specified,
-# it saves to this location during the computation
-# by default, it is "/tmp/twister2/volatile"
-# twister2.volatile.storage.root: "/tmp/twister2/volatile"
+#   it saves to this location during the computation
+# when twister2 networking can not fit the data into the allocated memory,
+#   it saves to this location
+# networking component may also save to multiple disks concurrently
+#   for that to happen, multiple roots need to be specified
+#   tset component currently saves to a single disk only.
+#   (first one in the list when there are multiple)
+# by default, it is ["/tmp/twister2/volatile"]
+# twister2.volatile.storage.root: ["/tmp/twister2/volatile"]
 
 # tset data can be saved to disk when the data can not fit into the memory
 # by default, it is saved to the local disk

@@ -18,8 +18,8 @@ import java.net.URI;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.api.data.FileSystem;
-import edu.iu.dsc.tws.api.data.FileSystemContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;

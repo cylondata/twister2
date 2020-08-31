@@ -6,7 +6,5 @@ t2_java_lib(
     name = "data-api-java",
     srcs = glob(["**/*.java"]),
     artifact_name = "Twiter2 Data API",
-    deps = [
-      "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
-    ],
+    deps = [],
 )

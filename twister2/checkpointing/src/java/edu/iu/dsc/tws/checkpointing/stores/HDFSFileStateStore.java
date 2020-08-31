@@ -21,10 +21,10 @@ import org.apache.hadoop.io.IOUtils;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.api.data.FSDataInputStream;
 import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 import edu.iu.dsc.tws.api.data.FileSystem;
-import edu.iu.dsc.tws.api.data.FileSystemContext;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 

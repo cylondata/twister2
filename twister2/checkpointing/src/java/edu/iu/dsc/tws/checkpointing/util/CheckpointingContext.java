@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.checkpointing.util;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.FileSystemContext;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore;
 import edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore;
 

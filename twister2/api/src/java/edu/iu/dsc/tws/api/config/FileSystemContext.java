@@ -9,10 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.data;
+package edu.iu.dsc.tws.api.config;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 public class FileSystemContext {
@@ -35,20 +38,31 @@ public class FileSystemContext {
       throw new Twister2RuntimeException(PERSISTENT_STORAGE_ROOT + " is not specified in configs");
     }
 
-    //TODO: we can replace slash with filesystem specific separator
-    //      however, slash should work with NFS and HDFS
-    return rootPath + "/" + Context.jobId(config);
+    return rootPath + File.separator + Context.jobId(config);
   }
 
   public static String volatileStorageRoot(Config config) {
-    String rootPath = config.getStringValue(VOLATILE_STORAGE_ROOT, VOLATILE_STORAGE_ROOT_DEFAULT);
+    List<String> rootPaths = config.getListValue(VOLATILE_STORAGE_ROOT);
+    String rootPath;
+    if (rootPaths == null || rootPaths.size() == 0) {
+      rootPath = VOLATILE_STORAGE_ROOT_DEFAULT;
+    } else {
+      rootPath = rootPaths.get(0);
+    }
 
-    //TODO: we can replace slash with filesystem specific separator
-    //      however, slash should work with NFS and HDFS
-    return rootPath + "/" + Context.jobId(config);
+    return rootPath + File.separator + Context.jobId(config);
   }
 
+  public static List<String> volatileStorageRoots(Config config) {
+    List<String> rootPaths = config.getListValue(VOLATILE_STORAGE_ROOT);
+    if (rootPaths == null || rootPaths.size() == 0) {
+      rootPaths = new LinkedList<>();
+      rootPaths.add(VOLATILE_STORAGE_ROOT_DEFAULT);
+    }
 
-
+    return rootPaths.stream()
+        .map(path -> path + File.separator + Context.jobId(config))
+        .collect(Collectors.toList());
+  }
 
 }
