@@ -33,6 +33,13 @@ twister2.persistent.storage.root: "${HOME}/.twister2/jobs"
 # supported values: "local" or "hdfs"
 # twister2.tset.storage.type: "local"
 
+# logging storage type
+# twister2 can save logs to volatile or persistent storage
+# however, we do not support hdfs as the persistent storage for logging yet
+# supported values: "volatile" or "persistent"
+# by default, it is "volatile"
+twister2.logging.storage.type: "volatile"
+
 ###################################################################
 # HDFS related settings
 ###################################################################

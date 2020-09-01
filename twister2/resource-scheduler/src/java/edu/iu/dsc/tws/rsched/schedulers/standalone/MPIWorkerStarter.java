@@ -18,7 +18,6 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +37,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.MPIContext;
 import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
@@ -54,6 +52,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -65,7 +64,6 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
-import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
@@ -294,11 +292,9 @@ public final class MPIWorkerStarter {
    * @param intracomm communication
    */
   private void startWorker(Intracomm intracomm) {
-
     try {
-      String twister2Home = Context.twister2Home(config);
       // initialize the logger
-      initLogger(config, intracomm.getRank(), twister2Home);
+      initWorkerLogger(config, intracomm.getRank());
 
       // now create the worker
       IWorkerController wc = WorkerRuntime.getWorkerController();
@@ -318,8 +314,10 @@ public final class MPIWorkerStarter {
    * Start the JobMaster
    */
   private void startMaster() {
-
     try {
+      // init the logger
+      initJMLogger(config);
+
       int port = JobMasterContext.jobMasterPort(config);
       String hostAddress = ResourceSchedulerUtils.getHostIP(config);
       LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
@@ -626,7 +624,7 @@ public final class MPIWorkerStarter {
    * @param cfg the configuration
    * @param workerID worker id
    */
-  private void initLogger(Config cfg, int workerID, String logDirectory) {
+  public static void initWorkerLogger(Config cfg, int workerID) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     // LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
@@ -634,20 +632,7 @@ public final class MPIWorkerStarter {
     // set logging level
     // LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
-    String persistentJobDir;
-    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobId = NomadContext.jobId(cfg);
-    if (NomadContext.getLoggingSandbox(cfg)) {
-      persistentJobDir = Paths.get(jobWorkingDirectory, jobId).toString();
-    } else {
-      persistentJobDir = logDirectory;
-    }
-
-    // if no persistent volume requested, return
-    if (persistentJobDir == null) {
-      return;
-    }
-    String logDir = persistentJobDir + "/logs/worker-" + workerID;
+    String logDir = LoggingContext.loggingDir(cfg);
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
@@ -655,9 +640,32 @@ public final class MPIWorkerStarter {
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
-    LOG.fine(String.format("Logging is setup with file %s", logDir));
+    LOG.fine(String.format("Logging is setup with the file %s", logDir));
   }
 
+  /**
+   * Initialize the logger for job master
+   *
+   * @param cfg the configuration
+   */
+  public static void initJMLogger(Config cfg) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    // LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // set logging level
+    // LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+
+    String logDir = LoggingContext.loggingDir(cfg);
+    File directory = new File(logDir);
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new RuntimeException("Failed to create log directory: " + logDir);
+      }
+    }
+    LoggingHelper.setupLogging(cfg, logDir, "job-master");
+    LOG.fine(String.format("Logging is setup with the file %s", logDir));
+  }
 
   private IPersistentVolume initPersistenceVolume(Config cfg, int rank) {
     File baseDir = new File(MPIContext.fileSystemMount(cfg));

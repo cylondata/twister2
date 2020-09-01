@@ -116,11 +116,11 @@ public final class LoggingHelper {
         foundAndInit = true;
       }
     }
-    if (!foundAndInit) {
-      Twister2FileLogHandler twister2FileLogHandler = new Twister2FileLogHandler();
-      twister2FileLogHandler.init(logDir, logFile, config);
-      LoggingHelper.addLoggingHandler(twister2FileLogHandler);
-    }
+//    if (!foundAndInit) {
+//      Twister2FileLogHandler twister2FileLogHandler = new Twister2FileLogHandler();
+//      twister2FileLogHandler.init(logDir, logFile, config);
+//      LoggingHelper.addLoggingHandler(twister2FileLogHandler);
+//    }
   }
 
   /**
