@@ -3,16 +3,17 @@
 ###################################################################
 
 # persistent storage type
-# could be: hdfs, nfs, local
-# by default, it is local
-# twister2.persistent.storage.type: "local"
+# could be: hdfs, mounted, none
+# mounted can be local disk or a network mounted disk such as nfs
+# by default, it is "mounted"
+# twister2.persistent.storage.type: "mounted"
 
 # persistent storage root
 # a directory with jobID is created under this directory
 # all persistent storage related files are stored under that directory for the job
 # for hdfs, it can be something like:
 # twister2.persistent.storage.root: "/twister2"
-# for nfs or local, it can be something like
+# for mounted disks, it can be something like
 twister2.persistent.storage.root: "${HOME}/.twister2/jobs"
 
 # volatile storage root
@@ -28,17 +29,17 @@ twister2.persistent.storage.root: "${HOME}/.twister2/jobs"
 # twister2.volatile.storage.root: ["/tmp/twister2/volatile"]
 
 # tset data can be saved to disk when the data can not fit into the memory
-# by default, it is saved to the local disk
+# by default, it is saved to the mounted disk
 # it can also be saved to hdfs
-# supported values: "local" or "hdfs"
-# twister2.tset.storage.type: "local"
+# supported values: "mounted" or "hdfs"
+# twister2.tset.storage.type: "mounted"
 
 # logging storage type
 # twister2 can save logs to volatile or persistent storage
 # however, we do not support hdfs as the persistent storage for logging yet
 # supported values: "volatile" or "persistent"
 # by default, it is "volatile"
-twister2.logging.storage.type: "volatile"
+# twister2.logging.storage.type: "volatile"
 
 ###################################################################
 # HDFS related settings

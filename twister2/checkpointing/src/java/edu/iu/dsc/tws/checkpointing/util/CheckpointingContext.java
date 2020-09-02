@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.checkpointing.util;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.FileSystemContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.checkpointing.stores.HDFSFileStateStore;
 import edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore;
 
@@ -45,14 +46,14 @@ public final class CheckpointingContext {
       case "hdfs":
         return HDFSFileStateStore.class.getCanonicalName();
 
-      case "nfs":
+      case "mounted":
         return LocalFileStateStore.class.getCanonicalName();
 
-      case "local":
-        return LocalFileStateStore.class.getCanonicalName();
+      case "none":
+        return null;
 
       default:
-        return LocalFileStateStore.class.getCanonicalName();
+        throw new Twister2RuntimeException("unsupported persistent storage type: " + type);
     }
   }
 

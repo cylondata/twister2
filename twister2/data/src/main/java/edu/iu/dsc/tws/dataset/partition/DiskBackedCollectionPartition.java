@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartition<T> {
 
   private static final String FS_PROTO = "file://";
-  public static final String CONFIG = "local";
+  public static final String CONFIG = "mounted";
 
   public DiskBackedCollectionPartition(long maxFramesInMemory, MessageType dataType,
                                        long bufferedBytes, Config config, String reference) {

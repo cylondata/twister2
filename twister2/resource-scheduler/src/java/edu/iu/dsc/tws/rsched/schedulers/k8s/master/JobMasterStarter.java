@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
@@ -87,7 +88,8 @@ public final class JobMasterStarter {
         .build();
 
     // init logger
-    K8sWorkerUtils.initLogger(config, "jobMaster");
+    K8sWorkerUtils
+        .initLogger(config, "jobMaster", JobMasterContext.persistentVolumeRequested(config));
 
     LOG.info("JobMaster is starting. Current time: " + System.currentTimeMillis());
     LOG.info("Number of configuration parameters: " + config.size());

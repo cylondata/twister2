@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -26,8 +27,6 @@ import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 
 public final class TSetUtils {
-
-  private static final String CONFIG_PERSIST_FS = "twister2.tset.storage.type";
 
   private TSetUtils() {
   }
@@ -88,7 +87,7 @@ public final class TSetUtils {
   public static <T> BufferedCollectionPartition<T> getCollectionPartition(int maxFramesInMemory,
                                                                           Config config,
                                                                           String reference) {
-    switch (config.getStringValue(CONFIG_PERSIST_FS, DiskBackedCollectionPartition.CONFIG)) {
+    switch (FileSystemContext.tsetStorageType(config)) {
       case DiskBackedCollectionPartition.CONFIG:
         return new DiskBackedCollectionPartition<>(maxFramesInMemory, config, reference);
       case HDFSBackedCollectionPartition.CONFIG:
