@@ -36,11 +36,9 @@ import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -80,62 +78,47 @@ public final class K8sWorkerUtils {
    * initialize the logger
    */
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
-
-    if (pv != null && LoggingContext.fileLoggingRequested()) {
-
-      if (LoggingContext.redirectSysOutErr()) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String logFile = K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID;
-      LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(), logFile);
-
-      LOG.info("Persistent logging to file initialized.");
-    }
+    initLogger(cnfg, "worker-" + workerID, pv != null);
   }
 
   /**
    * initialize the logger
    * entityName can be "jobMaster", "mpiMaster", etc.
    */
-  public static void initLogger(Config cnfg, String entityName) {
-    // if no persistent volume requested, return
-    if ("jobMaster".equalsIgnoreCase(entityName)
-        && !JobMasterContext.persistentVolumeRequested(cnfg)) {
+  public static void initLogger(Config cnfg, String entityName, boolean pvExists) {
+    // if logging to file is not requested, do nothing
+    if (!LoggingContext.fileLoggingRequested()) {
       return;
     }
 
-    if ("mpiMaster".equalsIgnoreCase(entityName)
-        && !KubernetesContext.persistentVolumeRequested(cnfg)) {
+    if (!pvExists && "persistent".equalsIgnoreCase(LoggingContext.loggingStorageType(cnfg))) {
+      LOG.warning("Persistent logging is requested but no PersistentVolume provided. "
+          + "Not logging to file");
       return;
     }
 
-    // if persistent logging is requested, initialize it
-    if (LoggingContext.fileLoggingRequested()) {
-
-      if (LoggingContext.redirectSysOutErr()) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String logDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/logs";
-      File logDir = new File(logDirName);
-
-      // refresh parent directory the cache
-      logDir.getParentFile().list();
-
-      if (!logDir.exists()) {
-        logDir.mkdirs();
-      }
-
-      String logFileName = entityName;
-
-      LoggingHelper.setupLogging(cnfg, logDirName, logFileName);
-
-      String logFileWithPath = logDirName + "/" + logFileName + ".log.0";
-      LOG.info("Persistent logging to file initialized: " + logFileWithPath);
+    if (LoggingContext.redirectSysOutErr()) {
+      LOG.warning("Redirecting System.out and System.err to the log file. "
+          + "Check the log file for the upcoming log messages. ");
     }
+
+    String logDirName = LoggingContext.loggingDir(cnfg);
+    File logDir = new File(logDirName);
+
+    // refresh parent directory the cache
+    logDir.getParentFile().list();
+
+    if (!logDir.exists()) {
+      if (!logDir.mkdirs()) {
+        throw new Twister2RuntimeException("Failed to create the log directory: " + logDir);
+      }
+    }
+
+    String logFileName = entityName;
+    LoggingHelper.setupLogging(cnfg, logDirName, logFileName);
+
+    String logFileWithPath = logDirName + "/" + logFileName + ".log.0";
+    LOG.info("Logging to file initialized: " + logFileWithPath);
   }
 
   public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, String podName) {

@@ -76,6 +76,11 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 # when this value is zero, twister2 will not try to set up persistent storage for this job
 # twister2.resource.persistent.volume.per.worker: 0.0
 
+# twister2 job master persistent volume size in GB
+# default value is 0.0 Gi
+# if this value is 0, persistent volume is not setup for job master
+# twister2.job.master.persistent.volume.size: 0.0
+
 # cluster admin should provide a storage provisioner.
 # please specify the storage class name that is used by the provisioner
 # Minikube has a default provisioner with storageClass of "standard"

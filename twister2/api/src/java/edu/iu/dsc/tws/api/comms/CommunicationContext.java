@@ -13,13 +13,10 @@ package edu.iu.dsc.tws.api.comms;
 
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.config.TokenSub;
 
 public class CommunicationContext extends Context {
   public static final String REDUCE = "reduce";
@@ -39,8 +36,6 @@ public class CommunicationContext extends Context {
   public static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
   public static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
   public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
-  public static final String PERSISTENT_DIRECTORIES = "twister2.network.ops.persistent.dirs";
-  public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
 
   public static final String ALLTOALL_ALGO_KEY =
       "twister2.network.alltoall.algorithm";
@@ -128,13 +123,6 @@ public class CommunicationContext extends Context {
 
   public static int intraNodeDegree(Config cfg, int defaultValue) {
     return getIntPropertyValue(cfg, INTRA_NODE_DEGREE, defaultValue);
-  }
-
-  public static List<String> persistentDirectory(Config cfg) {
-    return cfg.getListValue(PERSISTENT_DIRECTORIES,
-        Collections.singletonList(PERSISTENT_DIRECTORY_DEFAULT_VALUE))
-        .stream().map(dir -> TokenSub.substitute(cfg, dir, Context.substitutions))
-        .collect(Collectors.toList());
   }
 
   public static String partitionAlgorithm(Config cfg) {

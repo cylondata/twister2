@@ -327,7 +327,7 @@ public class JobMaster {
     //initialize checkpoint manager
     if (CheckpointingContext.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
-      stateStore.init(config, job.getJobId());
+      stateStore.init(config, "checkpoint-manager");
       this.checkpointManager = new CheckpointManager(
           this.rrServer,
           stateStore,
