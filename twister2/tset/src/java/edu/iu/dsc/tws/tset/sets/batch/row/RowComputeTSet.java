@@ -23,17 +23,17 @@ import edu.iu.dsc.tws.tset.ops.row.RowComupteCollectorOp;
 import edu.iu.dsc.tws.tset.ops.row.RowItrComputeCollectorOp;
 
 public class RowComputeTSet extends BatchRowTSetImpl {
-  private TFunction<Row, Iterator<Row>> computeFunc;
+  private TFunction<Iterator<Row>, Row> computeFunc;
   private boolean iterative;
 
   public RowComputeTSet(BatchEnvironment tSetEnv,
-                        ComputeCollectorFunc<Row, Iterator<Row>> computeFn, int parallelism,
+                        ComputeCollectorFunc<Iterator<Row>, Row> computeFn, int parallelism,
                         RowSchema inputSchema, boolean iterative) {
     this(tSetEnv, "computec", computeFn, parallelism, inputSchema, iterative);
   }
 
   public RowComputeTSet(BatchEnvironment tSetEnv, String name,
-                        ComputeCollectorFunc<Row, Iterator<Row>> computeFn,
+                        ComputeCollectorFunc<Iterator<Row>, Row> computeFn,
                         int parallelism, RowSchema inputSchema, boolean iterative) {
     super(tSetEnv, name, parallelism, inputSchema);
     this.computeFunc = computeFn;
@@ -44,10 +44,10 @@ public class RowComputeTSet extends BatchRowTSetImpl {
   public INode getINode() {
     if (computeFunc instanceof ComputeCollectorFunc) {
       if (!iterative) {
-        return new RowComupteCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
+        return new RowComupteCollectorOp((ComputeCollectorFunc<Iterator<Row>, Row>) computeFunc,
             this, getInputs());
       } else {
-        return new RowItrComputeCollectorOp((ComputeCollectorFunc<Row, Iterator<Row>>) computeFunc,
+        return new RowItrComputeCollectorOp((ComputeCollectorFunc<Iterator<Row>, Row>) computeFunc,
             this, getInputs());
       }
     }
@@ -60,7 +60,7 @@ public class RowComputeTSet extends BatchRowTSetImpl {
    *
    * @return the compute function
    */
-  public TFunction<Row, Iterator<Row>> getComputeFunc() {
+  public TFunction<Iterator<Row>, Row> getComputeFunc() {
     return computeFunc;
   }
 }

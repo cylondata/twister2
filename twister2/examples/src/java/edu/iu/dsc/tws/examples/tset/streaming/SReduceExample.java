@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
@@ -44,6 +45,10 @@ public class SReduceExample extends StreamingTsetExample {
 
     link.compute(i -> i + "C")
         .direct().forEach(i -> LOG.info(i));
+
+    link.mapToTuple(i -> new Tuple<>(i, i.toString()))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
 
     link.compute((input, output) -> output.collect(input + "DD"))
         .direct().forEach(s -> LOG.info(s.toString()));

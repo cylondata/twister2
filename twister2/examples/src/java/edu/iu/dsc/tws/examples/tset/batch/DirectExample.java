@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -75,7 +76,7 @@ public class DirectExample extends BatchTsetExample {
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
+    direct.compute((ComputeFunc<Iterator<Integer>, String>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next();
@@ -87,7 +88,7 @@ public class DirectExample extends BatchTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+    direct.compute((ComputeCollectorFunc<Iterator<Integer>, String>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -98,6 +99,11 @@ public class DirectExample extends BatchTsetExample {
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test map2tup");
+    direct.mapToTuple(i -> new Tuple<>(i, i.toString()))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
 
     LOG.info("test sink");
     SinkTSet<Iterator<Integer>> sink = direct.sink((SinkFunc<Iterator<Integer>>) value -> {

@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
  * ByteToWindow function.
  */
 public class ByteToWindowFunction<K, V>
-    implements MapFunc<KV<K, Iterable<WindowedValue<V>>>, Tuple<byte[], Iterator<byte[]>>> {
+    implements MapFunc<Tuple<byte[], Iterator<byte[]>>, KV<K, Iterable<WindowedValue<V>>>> {
   private final Coder<K> keyCoder;
   private final WindowedValueCoder<V> wvCoder;
 

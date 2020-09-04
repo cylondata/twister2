@@ -112,14 +112,14 @@ public abstract class StreamingTSetImpl<T> extends BaseTSetWithSchema<T> impleme
   }
 
   @Override
-  public SComputeTSet<T, T> union(TSet<T> other) {
+  public SComputeTSet<T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((StreamingTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
 
-    SComputeTSet<T, T> union = direct().compute("sunion",
+    SComputeTSet<T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -136,8 +136,8 @@ public abstract class StreamingTSetImpl<T> extends BaseTSetWithSchema<T> impleme
   }
 
   @Override
-  public SComputeTSet<T, T> union(Collection<TSet<T>> tSets) {
-    SComputeTSet<T, T> union = direct().compute("sunion",
+  public SComputeTSet<T> union(Collection<TSet<T>> tSets) {
+    SComputeTSet<T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -156,7 +156,7 @@ public abstract class StreamingTSetImpl<T> extends BaseTSetWithSchema<T> impleme
   }
 
   @Override
-  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);
 //    throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
   }

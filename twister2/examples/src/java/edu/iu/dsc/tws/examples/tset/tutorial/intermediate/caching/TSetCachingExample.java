@@ -70,7 +70,7 @@ public class TSetCachingExample implements Twister2Worker, Serializable {
       }
     }, 4);
 
-    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
+    ComputeTSet<Object> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
         c.collect(i * 5);
       });
@@ -99,8 +99,8 @@ public class TSetCachingExample implements Twister2Worker, Serializable {
       }
     }, 4);
 
-    ComputeTSet<Integer, Iterator<Integer>> calc = sourceZ.direct().compute(
-        new ComputeCollectorFunc<Integer, Iterator<Integer>>() {
+    ComputeTSet<Integer> calc = sourceZ.direct().compute(
+        new ComputeCollectorFunc<Iterator<Integer>, Integer>() {
 
           private DataPartitionConsumer<Integer> xValues;
 

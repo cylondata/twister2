@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class RowComupteCollectorOp extends BaseComputeOp<Table> {
 
-  private ComputeCollectorFunc<Row, Iterator<Row>> computeFunction;
+  private ComputeCollectorFunc<Iterator<Row>, Row> computeFunction;
 
   private TableBuilder builder;
 
@@ -57,7 +57,7 @@ public class RowComupteCollectorOp extends BaseComputeOp<Table> {
   public RowComupteCollectorOp() {
   }
 
-  public RowComupteCollectorOp(ComputeCollectorFunc<Row, Iterator<Row>> computeFunction,
+  public RowComupteCollectorOp(ComputeCollectorFunc<Iterator<Row>, Row> computeFunction,
                                BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;

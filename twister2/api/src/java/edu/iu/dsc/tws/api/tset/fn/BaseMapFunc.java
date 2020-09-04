@@ -17,5 +17,5 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public abstract class BaseMapFunc<O, I> extends BaseTFunction<O, I> implements MapFunc<O, I> {
+public abstract class BaseMapFunc<I, O> extends BaseTFunction<I, O> implements MapFunc<I, O> {
 }

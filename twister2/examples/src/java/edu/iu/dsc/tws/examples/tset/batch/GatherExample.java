@@ -64,7 +64,7 @@ public class GatherExample extends BatchTsetExample {
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    gather.compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+    gather.compute((ComputeFunc<Iterator<Tuple<Integer, Integer>>, String>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next().getValue();
@@ -76,7 +76,7 @@ public class GatherExample extends BatchTsetExample {
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
-    gather.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    gather.compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Integer>>, String>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {

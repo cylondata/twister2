@@ -137,7 +137,7 @@ public interface TSet<T> extends TBase {
    * @param mapToTupleFn Map function
    * @return Tuple TSet
    */
-  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn);
 
   /**
    * Returns a Replicate {@link TLink} that would clone/broadcast the data from this {@link TSet}.

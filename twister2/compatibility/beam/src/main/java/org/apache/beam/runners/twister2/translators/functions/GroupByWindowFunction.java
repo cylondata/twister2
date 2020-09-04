@@ -51,7 +51,7 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
  * GroupBy window function.
  */
 public class GroupByWindowFunction<K, V, W extends BoundedWindow>
-    implements FlatMapFunc<WindowedValue<KV<K, Iterable<V>>>, KV<K, Iterable<WindowedValue<V>>>> {
+    implements FlatMapFunc<KV<K, Iterable<WindowedValue<V>>>, WindowedValue<KV<K, Iterable<V>>>> {
   private static final Logger LOG = Logger.getLogger(GroupByWindowFunction.class.getName());
   private final WindowingStrategy<?, W> windowingStrategy;
   private final SystemReduceFn<K, V, Iterable<V>, Iterable<V>, W> reduceFn;

@@ -36,19 +36,25 @@ public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
   StreamingTLink<T1, T0> setName(String name);
 
   @Override
-  <O> StreamingTSet<O> compute(ComputeFunc<O, T1> computeFunction);
+  <O> StreamingTSet<O> compute(ComputeFunc<T1, O> computeFunction);
 
   @Override
-  <O> StreamingTSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
+  <O> StreamingTSet<O> compute(ComputeCollectorFunc<T1, O> computeFunction);
 
   @Override
-  <O> StreamingTSet<O> map(MapFunc<O, T0> mapFn);
+  <O> StreamingTSet<O> map(MapFunc<T0, O> mapFn);
 
   @Override
-  <O> StreamingTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
+  <O> StreamingTSet<O> flatmap(FlatMapFunc<T0, O> mapFn);
 
   @Override
-  <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T0> genTupleFn);
+  <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<T0, Tuple<K, V>> genTupleFn);
+
+  @Override
+  <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc);
+
+  @Override
+  <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>> computeFunc);
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);

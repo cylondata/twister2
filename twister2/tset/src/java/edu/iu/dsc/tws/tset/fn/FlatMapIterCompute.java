@@ -19,14 +19,14 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
-public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
-  private FlatMapFunc<O, I> mapFn;
+public class FlatMapIterCompute<I, O> implements ComputeCollectorFunc<Iterator<I>, O> {
+  private FlatMapFunc<I, O> mapFn;
 
   public FlatMapIterCompute() {
     //no args constructor for kryo
   }
 
-  public FlatMapIterCompute(FlatMapFunc<O, I> mapFunction) {
+  public FlatMapIterCompute(FlatMapFunc<I, O> mapFunction) {
     this.mapFn = mapFunction;
   }
 

@@ -29,7 +29,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <I> input type
  * @param <O> output type
  */
-public interface MapFunc<O, I> extends TFunction<O, I> {
+public interface MapFunc<I, O> extends TFunction<I, O> {
 
   O map(I input);
 }

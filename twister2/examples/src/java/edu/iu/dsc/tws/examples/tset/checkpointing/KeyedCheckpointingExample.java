@@ -68,7 +68,7 @@ public class KeyedCheckpointingExample implements Twister2Worker, Serializable {
 
     KeyedSourceTSet<String, Integer> src1 = dummySource(env, count, 10);
     src1.keyedDirect().compute(
-        new BaseComputeFunc<String, Iterator<Tuple<String, Integer>>>() {
+        new BaseComputeFunc<Iterator<Tuple<String, Integer>>, String>() {
           private DataPartitionConsumer<Tuple<String, Integer>> in;
 
           @Override

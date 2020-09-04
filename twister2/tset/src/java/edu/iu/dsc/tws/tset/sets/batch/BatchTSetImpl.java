@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -118,19 +117,19 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
 
   // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
+  public ComputeTSet<T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((BatchTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
+    ComputeTSet<T> unionTSet = direct().compute("union",
         new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -147,9 +146,9 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
+  public ComputeTSet<T> union(Collection<TSet<T>> tSets) {
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
+    ComputeTSet<T> unionTSet = direct().compute("union",
         new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet

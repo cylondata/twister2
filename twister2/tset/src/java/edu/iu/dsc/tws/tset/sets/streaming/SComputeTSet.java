@@ -19,54 +19,45 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
-public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
-  private TFunction<O, I> computeFunc;
+public class SComputeTSet<O> extends StreamingTSetImpl<O> {
+  private final TFunction<?, O> computeFunc;
 
-  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
+  public SComputeTSet(StreamingEnvironment tSetEnv, TFunction<?, O> computeFunction,
                       int parallelism, Schema inputSchema) {
-    this(tSetEnv, "scompute", computeFunction, parallelism, inputSchema);
-  }
-
-  public SComputeTSet(StreamingEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
-                      int parallelism, Schema inputSchema) {
-    this(tSetEnv, "scomputec", compOp, parallelism, inputSchema);
+    this(tSetEnv, null, computeFunction, parallelism, inputSchema);
   }
 
   public SComputeTSet(StreamingEnvironment tSetEnv, String name,
-                      ComputeFunc<O, I> computeFunction, int parallelism, Schema inputSchema) {
-    super(tSetEnv, name, parallelism, inputSchema);
+                      TFunction<?, O> computeFunction, int parallelism, Schema inputSchema) {
+    super(tSetEnv, TSetUtils.resolveComputeName(name, computeFunction, false, true),
+        parallelism, inputSchema);
     this.computeFunc = computeFunction;
   }
 
-  public SComputeTSet(StreamingEnvironment tSetEnv, String name,
-                      ComputeCollectorFunc<O, I> compOp, int parallelism, Schema inputSchema) {
-    super(tSetEnv, name, parallelism, inputSchema);
-    this.computeFunc = compOp;
-  }
-
   @Override
-  public SComputeTSet<O, I> setName(String name) {
+  public SComputeTSet<O> setName(String name) {
     rename(name);
     return this;
   }
 
   @Override
-  public SComputeTSet<O, I> withSchema(Schema schema) {
-    return (SComputeTSet<O, I>) super.withSchema(schema);
+  public SComputeTSet<O> withSchema(Schema schema) {
+    return (SComputeTSet<O>) super.withSchema(schema);
   }
 
   @Override
-  public ICompute<I> getINode() {
+  public ICompute<?> getINode() {
     // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this,
+      return new ComputeOp<>((ComputeFunc<?, O>) computeFunc, this,
           Collections.emptyMap());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<?, O>) computeFunc, this,
           Collections.emptyMap());
     }
 

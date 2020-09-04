@@ -70,7 +70,7 @@ public class ArrowTSetSourceExample implements Twister2Worker, Serializable {
         = env.createCSVSource(csvInputDirectory, dsize, parallel, "split");
     SinkTSet<Iterator<Integer>> sinkTSet = csvSource
         .direct()
-        .map((MapFunc<Integer, String[]>) input -> Integer.parseInt(input[0]))
+        .map((MapFunc<String[], Integer>) input -> Integer.parseInt(input[0]))
         .direct()
         .sink(new ArrowBasedSinkFunction<>(arrowInputDirectory, arrowFileName, schema.toJson()));
     env.run(sinkTSet);
@@ -80,7 +80,7 @@ public class ArrowTSetSourceExample implements Twister2Worker, Serializable {
         .direct()
         //At computetset users can give the exact output type. We don't have to carry object type
         .compute(
-            (ComputeFunc<List<Integer>, Iterator<Object>>) input -> {
+            (ComputeFunc<Iterator<Object>, List<Integer>>) input -> {
               List<Integer> integers = new ArrayList<>();
               input.forEachRemaining(i -> integers.add((Integer) i));
               return integers;

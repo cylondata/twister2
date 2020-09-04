@@ -64,7 +64,7 @@ public class CheckpointingExample implements Twister2Worker, Serializable {
 
     SourceTSet<Integer> src1 = dummySource(env, count, 100 * env.getWorkerID() + 10);
     src1.direct().compute(
-        new BaseComputeFunc<String, Iterator<Integer>>() {
+        new BaseComputeFunc<Iterator<Integer>, String>() {
           private DataPartitionConsumer<Integer> in;
 
           @Override

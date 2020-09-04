@@ -22,6 +22,9 @@ import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
@@ -82,6 +85,21 @@ public final class TSetUtils {
 
   public static String getDiskCollectionReference(String prefix, TSetContext ctx) {
     return prefix + "_" + ctx.getIndex();
+  }
+
+  public static String resolveComputeName(String name, TFunction<?, ?> function, boolean keyed,
+                                          boolean streaming) {
+    if (name != null && !name.isEmpty()) {
+      return name;
+    } else if (function instanceof ComputeFunc) {
+      // comp or comp2tup or scomp or scomp2tup
+      return (streaming ? "s" : "") + "comp" + (keyed ? "2tup" : "");
+    } else if (function instanceof ComputeCollectorFunc) {
+      // compc or compc2tup or scompc or scompc2tup
+      return (streaming ? "s" : "") + "compc" + (keyed ? "2tup" : "");
+    } else {
+      throw new RuntimeException("Unsupported function passed a compute TSet");
+    }
   }
 
   public static <T> BufferedCollectionPartition<T> getCollectionPartition(int maxFramesInMemory,

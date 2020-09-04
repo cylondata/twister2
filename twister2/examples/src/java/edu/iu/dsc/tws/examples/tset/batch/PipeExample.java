@@ -41,7 +41,7 @@ public class PipeExample extends BatchTsetExample {
     CachedTSet<Integer> cachedInput = src.pipe().cache();
 
     LOG.info("test direct iteration");
-    ComputeTSet<Object, Integer> lazyForEach = cachedInput.pipe().lazyForEach(
+    ComputeTSet<Object> lazyForEach = cachedInput.pipe().lazyForEach(
         input -> {
           LOG.info("##" + input.toString());
         });

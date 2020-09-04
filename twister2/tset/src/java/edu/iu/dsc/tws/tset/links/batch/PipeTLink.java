@@ -52,18 +52,18 @@ public class PipeTLink<T> extends BatchTLinkImpl<T, T> {
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = lazyForEach(applyFunction);
+    ComputeTSet<Object> set = lazyForEach(applyFunction);
     getTSetEnv().run(set);
   }
 
   @Override
-  public ComputeTSet<Object, T> lazyForEach(ApplyFunc<T> applyFunction) {
+  public ComputeTSet<Object> lazyForEach(ApplyFunc<T> applyFunction) {
     ForEachCompute<T> compute = new ForEachCompute<>(applyFunction);
     return compute("foreach", compute);
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> genTupleFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
         getTargetParallelism(), getSchema());
 
@@ -73,14 +73,14 @@ public class PipeTLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public <O> ComputeTSet<O, T> flatmap(FlatMapFunc<O, T> mapFn) {
-    FlatMapCompute<O, T> comp = new FlatMapCompute<>(mapFn);
+  public <O> ComputeTSet<O> flatmap(FlatMapFunc<T, O> mapFn) {
+    FlatMapCompute<T, O> comp = new FlatMapCompute<>(mapFn);
     return compute("flatmap", comp);
   }
 
   @Override
-  public <O> ComputeTSet<O, T> map(MapFunc<O, T> mapFn) {
-    MapCompute<O, T> comp = new MapCompute<>(mapFn);
+  public <O> ComputeTSet<O> map(MapFunc<T, O> mapFn) {
+    MapCompute<T, O> comp = new MapCompute<>(mapFn);
     return compute("map", comp);
   }
 

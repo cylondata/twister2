@@ -61,7 +61,7 @@ public class HadoopTSet implements IWorker, Serializable {
     configuration.set(TextInputFormat.INPUT_DIR, "/input4");
     SourceTSet<String> source =
         tSetEnv.createHadoopSource(configuration, TextInputFormat.class, 4,
-            new MapFunc<String, Tuple<LongWritable, Text>>() {
+            new MapFunc<Tuple<LongWritable, Text>, String>() {
               @Override
               public String map(Tuple<LongWritable, Text> input) {
                 return input.getKey().toString() + " : " + input.getValue().toString();

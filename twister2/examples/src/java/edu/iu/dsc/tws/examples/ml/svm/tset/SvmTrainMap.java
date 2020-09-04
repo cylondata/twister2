@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap extends BaseTFunction<double[], double[][]>
-    implements MapFunc<double[], double[][]> {
+public class SvmTrainMap extends BaseTFunction<double[][], double[]>
+    implements MapFunc<double[][], double[]> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 

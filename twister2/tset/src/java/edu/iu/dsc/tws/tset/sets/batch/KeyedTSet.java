@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorToTupleOp;
 import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
@@ -32,7 +33,7 @@ import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
  * @param <V> data (value) type
  */
 public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
-  private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
+  private TFunction<?, Tuple<K, V>> mapToTupleFunc;
 
   private KeyedTSet() {
     //non arg constructor for kryo
@@ -43,9 +44,15 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
    * {@link edu.iu.dsc.tws.api.tset.link.TLink}. Hence the input schema is a not a
    * {@link KeyedSchema}
    */
-  public KeyedTSet(BatchEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFunc,
+  public KeyedTSet(BatchEnvironment tSetEnv, TFunction<?, Tuple<K, V>> mapFunc,
                    int parallelism, Schema inputSchema) {
-    super(tSetEnv, "keyed", parallelism, inputSchema);
+    this(tSetEnv, null, mapFunc, parallelism, inputSchema);
+  }
+
+  public KeyedTSet(BatchEnvironment tSetEnv, String name, TFunction<?, Tuple<K, V>> mapFunc,
+                   int parallelism, Schema inputSchema) {
+    super(tSetEnv, TSetUtils.resolveComputeName(name, mapFunc, true, false),
+        parallelism, inputSchema);
     this.mapToTupleFunc = mapFunc;
   }
 
@@ -63,10 +70,10 @@ public class KeyedTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   public ICompute getINode() {
 
     if (mapToTupleFunc instanceof ComputeFunc) {
-      return new ComputeToTupleOp<>((ComputeFunc<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeToTupleOp<>((ComputeFunc<?, Tuple<K, V>>) mapToTupleFunc, this,
           getInputs());
     } else if (mapToTupleFunc instanceof ComputeCollectorFunc) {
-      return new ComputeCollectorToTupleOp<>((ComputeCollectorFunc<Tuple<K, V>, ?>) mapToTupleFunc,
+      return new ComputeCollectorToTupleOp<>((ComputeCollectorFunc<?, Tuple<K, V>>) mapToTupleFunc,
           this, getInputs());
     }
 

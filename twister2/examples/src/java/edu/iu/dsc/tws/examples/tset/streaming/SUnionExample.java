@@ -36,7 +36,7 @@ public class SUnionExample extends StreamingTsetExample {
     SSourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
     SSourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
 //    src.direct().forEach(s -> LOG.info("map sssss: " + s));
-    SComputeTSet<Integer, Integer> unionTSet = src1.union(src2);
+    SComputeTSet<Integer> unionTSet = src1.union(src2);
     LOG.info("test source union");
     unionTSet.direct().forEach(s -> LOG.info("map: " + s));
 

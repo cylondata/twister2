@@ -67,7 +67,7 @@ public class PartitionExample extends BatchTsetExample {
 
     LOG.info("test compute");
     src.partition(new LoadBalancePartitioner<>())
-        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
+        .compute((ComputeFunc<Iterator<Integer>, Integer>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
@@ -79,7 +79,7 @@ public class PartitionExample extends BatchTsetExample {
 
     LOG.info("test computec");
     src.partition(new LoadBalancePartitioner<>())
-        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+        .compute((ComputeCollectorFunc<Iterator<Integer>, String>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {
