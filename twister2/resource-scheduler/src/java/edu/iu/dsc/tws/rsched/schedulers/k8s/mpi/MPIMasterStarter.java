@@ -78,7 +78,8 @@ public final class MPIMasterStarter {
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
-    K8sWorkerUtils.initLogger(config, "mpiMaster");
+    K8sWorkerUtils
+        .initLogger(config, "mpiMaster", KubernetesContext.persistentVolumeRequested(config));
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);

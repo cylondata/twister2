@@ -30,7 +30,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9000;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
-  public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
+  public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = false;
   public static final String NODE_LOCATIONS_FROM_CONFIG
       = "twister2.resource.kubernetes.node.locations.from.config";
 

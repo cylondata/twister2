@@ -89,6 +89,7 @@ public class TeraSort implements Twister2Worker {
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
   private static final String ARG_RESOURCE_INSTANCES = "instances";
   private static final String ARG_RESOURCE_VOLATILE_DISK = "volatileDisk";
+  private static final String ARG_WORKERS_PER_POD = "workersPerPod";
 
   private static final String ARG_TASKS_SOURCES = "sources";
   private static final String ARG_TASKS_SINKS = "sinks";
@@ -565,6 +566,8 @@ public class TeraSort implements Twister2Worker {
         "No. of instances", true));
     options.addOption(createOption(ARG_RESOURCE_VOLATILE_DISK, true,
         "Volatile Disk for each worker at K8s", false));
+    options.addOption(createOption(ARG_WORKERS_PER_POD, true,
+        "Workers per pod in Kubernetes", false));
 
     //tasks and sources counts
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
@@ -622,11 +625,17 @@ public class TeraSort implements Twister2Worker {
       volatileDisk = Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_VOLATILE_DISK));
     }
 
+    // default value is 1
+    int workersPerPod = 1;
+    if (cmd.hasOption(ARG_WORKERS_PER_POD)) {
+      workersPerPod = Integer.valueOf(cmd.getOptionValue(ARG_WORKERS_PER_POD));
+    }
+
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
     jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
     jobConfig.put(ARG_RESOURCE_INSTANCES,
-        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)));
+        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)) * workersPerPod);
 
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
       long maxBytesInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY));
@@ -666,7 +675,8 @@ public class TeraSort implements Twister2Worker {
             Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
             volatileDisk,
-            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)),
+            workersPerPod
         )
         .setConfig(jobConfig)
         .build();

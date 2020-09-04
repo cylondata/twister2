@@ -1,12 +1,10 @@
 ################################################################################
-# Kubernetes Docker Image and related settings
+# Kubernetes Docker Image and Launcher class
 ################################################################################
 # Twister2 Docker image for Kubernetes
 twister2.resource.kubernetes.docker.image: "twister2/twister2-k8s:0.8.0-SNAPSHOT"
 
-# the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"
-
+# Launcher class for Kubernetes
 twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 
 ########################################################################
@@ -16,13 +14,14 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 # default value is "default"
 # kubernetes.namespace: "default"
 
-# image pull policy, by default is IfNotPresent
-# it could also be Always
+# image pull policy, by default it is IfNotPresent
+# it could also be set as Always
+# kubernetes.image.pull.policy: "IfNotPresent"
 # kubernetes.image.pull.policy: "Always"
 
-# get log messages to twister2 client and save in files
+# get log messages to twister2 client and save in files under $HOME/.twister2 directory
 # it is false by default
-# kubernetes.log.in.client: true
+# kubernetes.log.in.client: false
 
 # before connecting to other pods in the job,
 # check whether all pods are reachable from each pod
@@ -30,7 +29,7 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 # when there are networking issues, pods may not be reachable immediately,
 # so this makes sure to wait before all pods become reachable
 # it is false by default
-# kubernetes.check.pods.reachable: true
+# kubernetes.check.pods.reachable: false
 
 ################################################################################
 # Job configuration parameters for submission of twister2 jobs
@@ -39,38 +38,28 @@ twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.Kubernete
 ################################################################################
 
 # twister2 job name
-twister2.resource.job.name: "t2-job"
+# twister2.resource.job.name: "t2-job"
+
+# worker class to run
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
+# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
 
 # A Twister2 job can have multiple sets of compute resources
 # Four fields are mandatory: cpu, ram, disk and instances
 # instances shows the number of compute resources to be started with this specification
 # workersPerPod shows the number of workers on each pod in Kubernetes.
 #    May be omitted in other clusters. default value is 1.
-twister2.resource.worker.compute.resources:
-  - cpu: 0.2  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-    ram: 1024 # ram for each worker as Mega bytes
-    disk: 1.0 # volatile disk for each worker as Giga bytes
-    instances: 4 # number of compute resource instances with this specification
-    scalable: true # only one ComputeResource can be scalable in a job
-    workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+# twister2.resource.worker.compute.resources:
+#   - cpu: 0.2  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+#     ram: 1024 # ram for each worker as Mega bytes
+#     disk: 1.0 # volatile disk for each worker as Giga bytes
+#     instances: 4 # number of compute resource instances with this specification
+#     scalable: true # only one ComputeResource can be scalable in a job
+#     workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
     # number of workers using this compute resource: instances * workersPerPod
-
-#- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-#  ram: 1024 # ram for each worker as Mega bytes
-#  disk: 1.0 # volatile disk for each worker as Giga bytes
-#  instances: 2 # number of compute resource instances with this specification
-#  scalable: false # only one ComputeResource can be scalable in a job
-#  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
 # driver class to run
 # twister2.resource.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
-
-# worker class to run
-# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
-# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
-# twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 
 # by default each worker has one port
 # additional ports can be requested for all workers in a job
@@ -85,20 +74,24 @@ twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.basic.HelloWorld"
 # default value is 0.0Gi
 # set this value to zero, if you have not persistent disk support
 # when this value is zero, twister2 will not try to set up persistent storage for this job
-twister2.resource.persistent.volume.per.worker: 0.0
+# twister2.resource.persistent.volume.per.worker: 0.0
+
+# twister2 job master persistent volume size in GB
+# default value is 0.0 Gi
+# if this value is 0, persistent volume is not setup for job master
+# twister2.job.master.persistent.volume.size: 0.0
 
 # cluster admin should provide a storage provisioner.
 # please specify the storage class name that is used by the provisioner
-twister2.resource.kubernetes.persistent.storage.class: "twister2-nfs-storage"
 # Minikube has a default provisioner with storageClass of "standard"
-# twister2.resource.kubernetes.persistent.storage.class: "standard"
+twister2.resource.kubernetes.persistent.storage.class: "twister2-nfs-storage"
 
 # persistent storage access mode.
 # It shows the access mode for workers to access the shared persistent storage.
-# if it is "ReadWriteMany", many workers can read and write
+# by default it is "ReadWriteMany"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
-twister2.resource.kubernetes.storage.access.mode: "ReadWriteMany"
+# twister2.resource.kubernetes.storage.access.mode: "ReadWriteMany"
 
 #########################################################################
 # K8sUploader Settings
@@ -144,13 +137,13 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.k8s.K8sUpload
 # To use S3Uploader:
 #   Uncomment uploader class below.
 #   Specify bucket name
-#   If your job will run more than 2 hours and it is fault tolerant, update link.expiration.duration
+#   If your job will run more than 2 hours, update link.expiration.duration
 
 # twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.s3.S3Uploader"
 
 # s3 bucket name to upload the job package
 # workers will download the job package from this location
-twister2.s3.bucket.name: "s3://[bucket-name]"
+# twister2.s3.bucket.name: "s3://[bucket-name]"
 
 # job package link will be available this much time
 # by default, it is 2 hours
@@ -162,12 +155,12 @@ twister2.s3.bucket.name: "s3://[bucket-name]"
 
 # If this parameter is set as true,
 # Twister2 will use the below lists for node locations:
-#   kubernetes.datacenters.list
-#   kubernetes.racks.list
+#   twister2.resource.datacenters.list
+#   twister2.resource.racks.list
 # Otherwise, it will try to get these information by querying Kubernetes Master
 # It will use below two labels when querying node locations
 # For this to work, submitting client has to have admin privileges
-twister2.resource.kubernetes.node.locations.from.config: false
+# twister2.resource.kubernetes.node.locations.from.config: false
 
 # rack label key for Kubernetes nodes in a cluster
 # each rack should have a unique label
@@ -176,7 +169,7 @@ twister2.resource.kubernetes.node.locations.from.config: false
 # Better data locality can be achieved
 # Example: rack=rack1, rack=rack2, rack=rack3, etc
 # no default value is specified
-twister2.resource.rack.labey.key: rack
+# twister2.resource.rack.labey.key: rack
 
 # data center label key
 # each data center should have a unique label
@@ -185,16 +178,16 @@ twister2.resource.rack.labey.key: rack
 # Better data locality can be achieved
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
-twister2.resource.datacenter.labey.key: datacenter
+# twister2.resource.datacenter.labey.key: datacenter
 
 # Data center list with rack names
-twister2.resource.datacenters.list:
-  - echo: ['blue-rack', 'green-rack']
+# twister2.resource.datacenters.list:
+#   - echo: ['blue-rack', 'green-rack']
 
 # Rack list with node IPs in them
-twister2.resource.racks.list:
-  - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
-  - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+# twister2.resource.racks.list:
+#   - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
+#   - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
 
 ###################################################################################
 # Kubernetes Mapping and Binding parameters
@@ -204,27 +197,26 @@ twister2.resource.racks.list:
 # Workers do not move from the CPU they are started during computation
 # twister2.cpu_per_container has to be an integer
 # by default, its value is false
-# kubernetes.bind.worker.to.cpu: true
+# kubernetes.bind.worker.to.cpu: false
 
 # kubernetes can map workers to nodes as specified by the user
 # default value is false
-# kubernetes.worker.to.node.mapping: true
+# kubernetes.worker.to.node.mapping: false
 
 # the label key on the nodes that will be used to map workers to nodes
-twister2.resource.kubernetes.worker.mapping.key: "kubernetes.io/hostname"
+# twister2.resource.kubernetes.worker.mapping.key: "kubernetes.io/hostname"
 
-# operator to use when mapping workers to nodes based on key value
+# operator to use when mapping workers to nodes based on the key value
 # possible values: In, NotIn, Exists, DoesNotExist, Gt, Lt
 # Exists/DoesNotExist checks only the existence of the specified key in the node.
 # Ref https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
-twister2.resource.kubernetes.worker.mapping.operator: "In"
+# twister2.resource.kubernetes.worker.mapping.operator: "In"
 
 # values for the mapping key
 # when the mapping operator is either Exists or DoesNotExist, values list must be empty.
-twister2.resource.kubernetes.worker.mapping.values: ['e012', 'e013']
-# kubernetes.worker.mapping.values: []
+# twister2.resource.kubernetes.worker.mapping.values: ['e012', 'e013']
 
 # uniform worker mapping
 # Valid values: all-same-node, all-separate-nodes, none
 # default value is none
-# kubernetes.worker.mapping.uniform: "all-same-node"
+# kubernetes.worker.mapping.uniform: "none"

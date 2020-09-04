@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.config.Context;
  */
 public class JobMasterContext extends Context {
   // weather to use job master
+  public static final boolean JOB_MASTER_USED_DEFAULT = true;
   public static final String JOB_MASTER_USED = "twister2.job.master.used";
 
   // if true, the job master runs in the submitting client
@@ -33,7 +34,7 @@ public class JobMasterContext extends Context {
   public static final String DASHBOARD_HOST = "twister2.dashboard.host";
 
   // worker to master response wait time in milliseconds
-  public static final long WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT = 1000;
+  public static final long WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT = 100000;
   public static final String WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION
       = "twister2.worker.to.job.master.response.wait.duration";
 
@@ -46,11 +47,11 @@ public class JobMasterContext extends Context {
   public static final String JOB_MASTER_RAM = "twister2.job.master.ram";
 
   // job master volatile disk size in GB
-  public static final double VOLATILE_VOLUME_DEFAULT = 1.0;
+  public static final double VOLATILE_VOLUME_DEFAULT = 0.0;
   public static final String VOLATILE_VOLUME = "twister2.job.master.volatile.volume.size";
 
   // job master volatile disk size in GB
-  public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
+  public static final double PERSISTENT_VOLUME_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
 
   // the number of http connections from job master to Twister2 Dashboard
@@ -108,7 +109,7 @@ public class JobMasterContext extends Context {
   }
 
   public static boolean isJobMasterUsed(Config cfg) {
-    return cfg.getBooleanValue(JOB_MASTER_USED, true);
+    return cfg.getBooleanValue(JOB_MASTER_USED, JOB_MASTER_USED_DEFAULT);
   }
 
   public static Config updateDashboardHost(Config cfg, String dashAddress) {
