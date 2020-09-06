@@ -64,7 +64,7 @@ public class KPartitionExample extends BatchTsetExample {
 
     LOG.info("test compute");
     klink.compute(
-        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+        (ComputeFunc<Iterator<Tuple<Integer, Integer>>, String>) input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
             s.append(input.next().toString()).append(" ");
@@ -75,7 +75,7 @@ public class KPartitionExample extends BatchTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    klink.compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Integer>>, String>)
         (input, output) -> {
           while (input.hasNext()) {
             output.collect(input.next().toString());

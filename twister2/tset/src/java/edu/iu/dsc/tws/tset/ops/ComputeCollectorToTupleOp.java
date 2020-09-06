@@ -24,14 +24,14 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private ComputeCollectorFunc<Tuple<K, O>, I> compFunction;
+public class ComputeCollectorToTupleOp<I, K, O> extends BaseComputeOp<I> {
+  private ComputeCollectorFunc<I, Tuple<K, O>> compFunction;
   private RecordCollector<Tuple<K, O>> collector;
 
   public ComputeCollectorToTupleOp() {
   }
 
-  public ComputeCollectorToTupleOp(ComputeCollectorFunc<Tuple<K, O>, I> mapToTupFn,
+  public ComputeCollectorToTupleOp(ComputeCollectorFunc<I, Tuple<K, O>> mapToTupFn,
                                    BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
     this.compFunction = mapToTupFn;

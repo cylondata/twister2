@@ -54,35 +54,30 @@ public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<I
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
-    GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
+  public <O> ComputeTSet<O> map(MapFunc<T, O> mapFn) {
+    GatherMapCompute<T, O> comp = new GatherMapCompute<>(mapFn);
     return compute("map", comp);
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
-    GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
+  public <O> ComputeTSet<O> flatmap(FlatMapFunc<T, O> mapFn) {
+    GatherFlatMapCompute<T, O> comp = new GatherFlatMapCompute<>(mapFn);
     return compute("map", comp);
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
-    KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> genTupleFn) {
+    return this.computeToTuple("map2tup", new GatherMapCompute<>(genTupleFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, Iterator<Tuple<Integer, T>>> set = lazyForEach(applyFunction);
+    ComputeTSet<Object> set = lazyForEach(applyFunction);
     getTSetEnv().run(set);
   }
 
   @Override
-  public ComputeTSet<Object, Iterator<Tuple<Integer, T>>> lazyForEach(ApplyFunc<T> applyFunction) {
+  public ComputeTSet<Object> lazyForEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
     return compute("foreach", comp);
   }

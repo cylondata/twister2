@@ -18,7 +18,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public abstract class BaseComputeFunc<O, I> extends BaseTFunction<O, I> implements
-    ComputeFunc<O, I> {
+public abstract class BaseComputeFunc<I, O> extends BaseTFunction<I, O> implements
+    ComputeFunc<I, O> {
 
 }

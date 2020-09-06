@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.examples.tset.tutorial.intermediate.checkpoint;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -68,7 +67,7 @@ public class TSetCheckptExample implements Twister2Worker, Serializable {
     }, 4);
 
     long t1 = System.currentTimeMillis();
-    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
+    ComputeTSet<Object> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
         c.collect(i * 5);
       });

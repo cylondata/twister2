@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
  * Map to tuple function.
  */
 public class MapToTupleFunction<K, V>
-    implements MapFunc<Tuple<byte[], byte[]>, WindowedValue<KV<K, V>>> {
+    implements MapFunc<WindowedValue<KV<K, V>>, Tuple<byte[], byte[]>> {
 
   private final Coder<K> keyCoder;
   private final WindowedValue.WindowedValueCoder<V> wvCoder;

@@ -72,9 +72,10 @@ public class KMeansTsetJob implements Twister2Worker, Serializable {
 
     SourceTSet<String[]> pointSource = env.createCSVSource(dataDirectory, dsize, parallelism,
         "split");
-    ComputeTSet<double[][], Iterator<String[]>> points = pointSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String[]>>() {
+    ComputeTSet<double[][]> points = pointSource.direct().compute(
+        new ComputeFunc<Iterator<String[]>, double[][]>() {
           private double[][] localPoints = new double[dsize / parallelism][dimension];
+
           @Override
           public double[][] compute(Iterator<String[]> input) {
             for (int i = 0; i < dsize / parallelism && input.hasNext(); i++) {
@@ -93,9 +94,10 @@ public class KMeansTsetJob implements Twister2Worker, Serializable {
 
     SourceTSet<String[]> centerSource = env.createCSVSource(centroidDirectory, csize, parallelism,
         "complete");
-    ComputeTSet<double[][], Iterator<String[]>> centers = centerSource.direct().compute(
-        new ComputeFunc<double[][], Iterator<String[]>>() {
+    ComputeTSet<double[][]> centers = centerSource.direct().compute(
+        new ComputeFunc<Iterator<String[]>, double[][]>() {
           private double[][] localCenters = new double[csize][dimension];
+
           @Override
           public double[][] compute(Iterator<String[]> input) {
             for (int i = 0; i < csize && input.hasNext(); i++) {
@@ -111,8 +113,8 @@ public class KMeansTsetJob implements Twister2Worker, Serializable {
 
     long endTimeData = System.currentTimeMillis();
 
-    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet = points.direct().map(new KMeansMap());
-    ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
+    ComputeTSet<double[][]> kmeansTSet = points.direct().map(new KMeansMap());
+    ComputeTSet<double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
         (t1, t2) -> {
           double[][] newCentroids = new double[t1.length][t1[0].length];
           for (int j = 0; j < t1.length; j++) {

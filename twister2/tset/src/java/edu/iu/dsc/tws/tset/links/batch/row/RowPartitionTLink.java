@@ -48,7 +48,7 @@ public class RowPartitionTLink extends RowBatchTLinkImpl {
   }
 
   protected RowComputeTSet compute(String n,
-                                ComputeCollectorFunc<Row, Iterator<Row>> computeFunction) {
+                                ComputeCollectorFunc<Iterator<Row>, Row> computeFunction) {
     RowComputeTSet set;
     if (n != null && !n.isEmpty()) {
       set = new RowComputeTSet(getTSetEnv(), n, computeFunction, getTargetParallelism(),

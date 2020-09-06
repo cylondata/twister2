@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTestMap implements MapFunc<Double, double[][]> {
+public class SvmTestMap implements MapFunc<double[][], Double> {
 
   private static final Logger LOG = Logger.getLogger(SvmTestMap.class.getName());
 

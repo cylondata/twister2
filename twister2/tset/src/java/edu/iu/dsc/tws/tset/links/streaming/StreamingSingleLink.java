@@ -37,27 +37,22 @@ public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> {
   }
 
   @Override
-  public <P> SComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P> map(MapFunc<T, P> mapFn) {
     return compute("smap", new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> SComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> SComputeTSet<P> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("sflatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    SComputeTSet<Object, T> set = compute("sforeach", new ForEachCompute<>(applyFunction));
+    SComputeTSet<Object> set = compute("sforeach", new ForEachCompute<>(applyFunction));
   }
 
   @Override
-  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
+    return this.computeToTuple("smap2tup", new MapCompute<>(genTupleFn));
   }
 }

@@ -48,13 +48,13 @@ public class KGatherUngroupedExample extends BatchTsetExample {
     );
 
     LOG.info("test map");
-    klink.map((MapFunc<String, Tuple<Integer, Integer>>)
+    klink.map((MapFunc<Tuple<Integer, Integer>, String>)
         input -> input.getKey() + " -> " + input.getValue())
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    klink.compute((ComputeFunc<Iterator<Tuple<Integer, Integer>>, String>)
         input -> {
           StringBuilder sb = new StringBuilder();
           while (input.hasNext()) {
@@ -67,7 +67,7 @@ public class KGatherUngroupedExample extends BatchTsetExample {
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    klink.compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Integer>>, String>)
         (input, output) -> {
           while (input.hasNext()) {
             Tuple<Integer, Integer> next = input.next();

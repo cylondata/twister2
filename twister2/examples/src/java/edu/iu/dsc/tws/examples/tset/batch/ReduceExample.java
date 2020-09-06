@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -74,18 +75,23 @@ public class ReduceExample extends BatchTsetExample {
 
     LOG.info("test compute");
     reduce
-        .compute((ComputeFunc<String, Integer>) input -> "sum=" + input)
+        .compute((ComputeFunc<Integer, String>) input -> "sum=" + input)
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
     reduce
-        .compute((ComputeCollectorFunc<String, Integer>)
+        .compute((ComputeCollectorFunc<Integer, String>)
             (input, output) -> output.collect("sum=" + input))
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test map2tup");
+    reduce.mapToTuple(i -> new Tuple<>(i, i.toString()))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
 
     LOG.info("test sink");
     SinkTSet<Integer> sink = reduce.sink((SinkFunc<Integer>)

@@ -49,7 +49,7 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
  * DoFn function.
  */
 public class DoFnFunction<OT, IT>
-    implements ComputeCollectorFunc<RawUnionValue, Iterator<WindowedValue<IT>>> {
+    implements ComputeCollectorFunc<Iterator<WindowedValue<IT>>, RawUnionValue> {
 
   private final DoFn<IT, OT> doFn;
   private final transient PipelineOptions pipelineOptions;

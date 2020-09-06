@@ -20,16 +20,16 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
-public class GatherMapCompute<O, I> implements
-    ComputeCollectorFunc<O, Iterator<Tuple<Integer, I>>> {
+public class GatherMapCompute<I, O> implements
+    ComputeCollectorFunc<Iterator<Tuple<Integer, I>>, O> {
 
-  private MapFunc<O, I> mapFn;
+  private MapFunc<I, O> mapFn;
 
   private GatherMapCompute() {
     //non arg constructor for kryp
   }
 
-  public GatherMapCompute(MapFunc<O, I> mapFunction) {
+  public GatherMapCompute(MapFunc<I, O> mapFunction) {
     this.mapFn = mapFunction;
   }
 

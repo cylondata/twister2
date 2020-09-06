@@ -17,8 +17,6 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import java.util.Iterator;
-
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
 import org.apache.beam.runners.twister2.translators.functions.AssignWindowsFunction;
@@ -44,7 +42,7 @@ public class AssignWindowTranslatorBatch<T> implements BatchTransformTranslator<
         (WindowingStrategy<T, BoundedWindow>) context.getOutput(transform).getWindowingStrategy();
 
     WindowFn<T, BoundedWindow> windowFn = windowingStrategy.getWindowFn();
-    ComputeTSet<WindowedValue<T>, Iterator<WindowedValue<T>>> outputTSet =
+    ComputeTSet<WindowedValue<T>> outputTSet =
         inputTTSet.direct().compute(new AssignWindowsFunction(windowFn));
     context.setOutputDataSet(context.getOutput(transform), outputTSet);
   }

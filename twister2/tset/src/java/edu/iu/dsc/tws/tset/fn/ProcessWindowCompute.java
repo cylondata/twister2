@@ -16,11 +16,11 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class ProcessWindowCompute<O, I> implements WindowComputeFunc<O, Iterator<I>> {
+public class ProcessWindowCompute<I, O> implements WindowComputeFunc<Iterator<I>, O> {
 
-  private MapFunc<O, Iterator<I>> processFn;
+  private MapFunc<Iterator<I>, O> processFn;
 
-  public ProcessWindowCompute(MapFunc<O, Iterator<I>> procFn) {
+  public ProcessWindowCompute(MapFunc<Iterator<I>, O> procFn) {
     this.processFn = procFn;
   }
 

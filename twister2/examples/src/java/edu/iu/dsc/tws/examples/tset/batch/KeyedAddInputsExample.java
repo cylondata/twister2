@@ -58,40 +58,41 @@ public class KeyedAddInputsExample extends BatchTsetExample {
     KeyedCachedTSet<String, Integer> cache0 = src0.cache();
     KeyedCachedTSet<String, Integer> cache1 = src1.cache();
 
-    ComputeTSet<String, Iterator<Tuple<String, Integer>>> comp =
-        cache0.keyedDirect().compute(new BaseComputeCollectorFunc<String,
-            Iterator<Tuple<String, Integer>>>() {
-          private Map<String, Integer> input1 = new HashMap<>();
+    ComputeTSet<String> comp =
+        cache0.keyedDirect().compute(
+            new BaseComputeCollectorFunc<Iterator<Tuple<String, Integer>>, String>() {
+              private Map<String, Integer> input1 = new HashMap<>();
 
-          @Override
-          public void prepare(TSetContext ctx) {
-            super.prepare(ctx);
+              @Override
+              public void prepare(TSetContext ctx) {
+                super.prepare(ctx);
 
-            // populate the hashmap with values from the input
-            DataPartitionConsumer<Tuple<String, Integer>> part =
-                (DataPartitionConsumer<Tuple<String, Integer>>) getInput("input").getConsumer();
-            while (part.hasNext()) {
-              Tuple<String, Integer> next = part.next();
-              input1.put(next.getKey(), next.getValue());
-            }
-          }
+                // populate the hashmap with values from the input
+                DataPartitionConsumer<Tuple<String, Integer>> part =
+                    (DataPartitionConsumer<Tuple<String, Integer>>) getInput("input")
+                        .getConsumer();
+                while (part.hasNext()) {
+                  Tuple<String, Integer> next = part.next();
+                  input1.put(next.getKey(), next.getValue());
+                }
+              }
 
-          @Override
-          public void compute(Iterator<Tuple<String, Integer>> input,
-                              RecordCollector<String> output) {
-            while (input.hasNext()) {
-              Tuple<String, Integer> next = input.next();
-              output.collect(next.getKey() + " -> " + next.getValue() + ", "
-                  + input1.get(next.getKey()));
-            }
-          }
-        }).addInput("input", cache1);
+              @Override
+              public void compute(Iterator<Tuple<String, Integer>> input,
+                                  RecordCollector<String> output) {
+                while (input.hasNext()) {
+                  Tuple<String, Integer> next = input.next();
+                  output.collect(next.getKey() + " -> " + next.getValue() + ", "
+                      + input1.get(next.getKey()));
+                }
+              }
+            }).addInput("input", cache1);
 
     comp.direct().forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("Test lazy cache!");
 
-    ComputeTSet<Object, Iterator<String>> forEach = comp.direct()
+    ComputeTSet<Object> forEach = comp.direct()
         .lazyForEach(i -> LOG.info("comp-lazy: " + i));
 
     for (int i = 0; i < 4; i++) {

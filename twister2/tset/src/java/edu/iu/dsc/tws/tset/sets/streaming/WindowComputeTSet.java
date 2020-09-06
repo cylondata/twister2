@@ -33,10 +33,9 @@ import edu.iu.dsc.tws.tset.ops.WindowComputeOp;
  * logic.
  *
  * @param <O> Output type of TSet
- * @param <I> Input Type of TSet
  */
-public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
-  private TFunction<O, I> computeFunc;
+public class WindowComputeTSet<O> extends StreamingTSetImpl<O> {
+  private TFunction<?, O> computeFunc;
 
   private WindowParameter windowParameter;
 
@@ -78,24 +77,24 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
 //  }
 
   @Override
-  public WindowComputeTSet<O, I> setName(String name) {
+  public WindowComputeTSet<O> setName(String name) {
     rename(name);
     return this;
   }
 
 
   @Override
-  public ICompute<I> getINode() {
+  public ICompute<?> getINode() {
     // todo: fix empty map (will have to handle inputs to window functions)
     if (computeFunc instanceof ComputeFunc) {
-      return new WindowComputeOp<>((ComputeFunc<O, Iterator<I>>) computeFunc, this,
+      return new WindowComputeOp((ComputeFunc<Iterator<?>, O>) computeFunc, this,
           Collections.emptyMap(), windowParameter);
     } else {
       throw new RuntimeException("Unknown function type for window compute: " + computeFunc);
     }
   }
 
-  public WindowComputeTSet<O, I> process(WindowComputeFunc<O, I> processFunction) {
+  public WindowComputeTSet<O> process(WindowComputeFunc<?, O> processFunction) {
     if (this.computeFunc == null) {
       this.computeFunc = processFunction;
       return this;
@@ -111,32 +110,29 @@ public class WindowComputeTSet<O, I> extends StreamingTSetImpl<O> {
    * @param aggregateFunction reduce function definition
    * @return reduced value of type O
    */
-  public WindowComputeTSet<O, I> aggregate(AggregateFunc<O> aggregateFunction) {
+  public WindowComputeTSet<O> aggregate(AggregateFunc<O> aggregateFunction) {
 
-    this.process(new WindowComputeFunc<O, I>() {
-      @Override
-      public O compute(I input) {
-        O initial = null;
-        if (input instanceof Iterator) {
-          Iterator<O> itr = (Iterator<O>) input;
-          while (itr.hasNext()) {
-            if (initial == null) {
-              initial = itr.next();
-            }
-            O next = itr.next();
-            initial = aggregateFunction.reduce(initial, next);
+    this.process((WindowComputeFunc<Iterator<O>, O>) input -> {
+      O initial = null;
+      if (input != null) {
+        Iterator<O> itr = input;
+        while (itr.hasNext()) {
+          if (initial == null) {
+            initial = itr.next();
           }
-        } else {
-          throw new IllegalArgumentException("Invalid Data Type or Reduce Function Type");
+          O next = itr.next();
+          initial = aggregateFunction.reduce(initial, next);
         }
-        return initial;
+      } else {
+        throw new IllegalArgumentException("Invalid Data Type or Reduce Function Type");
       }
+      return initial;
     });
 
     return this;
   }
 
-  public WindowComputeTSet<O, I> withSchema(Schema schema) {
-    return (WindowComputeTSet<O, I>) super.withSchema(schema);
+  public WindowComputeTSet<O> withSchema(Schema schema) {
+    return (WindowComputeTSet<O>) super.withSchema(schema);
   }
 }

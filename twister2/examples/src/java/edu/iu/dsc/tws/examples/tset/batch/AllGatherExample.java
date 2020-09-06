@@ -67,7 +67,7 @@ public class AllGatherExample extends BatchTsetExample {
 
     LOG.info("test computec");
     src.allGather()
-        .compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+        .compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Integer>>, String>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {
@@ -80,7 +80,7 @@ public class AllGatherExample extends BatchTsetExample {
 
     LOG.info("test compute");
     src.allGather()
-        .compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
+        .compute((ComputeFunc<Iterator<Tuple<Integer, Integer>>, String>)
             input -> {
               int sum = 0;
               while (input.hasNext()) {

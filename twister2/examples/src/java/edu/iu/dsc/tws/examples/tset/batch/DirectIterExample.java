@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -40,7 +39,7 @@ public class DirectIterExample extends BatchTsetExample {
     CachedTSet<Integer> cachedInput = src.direct().cache();
 
     LOG.info("test direct iteration");
-    ComputeTSet<Object, Iterator<Integer>> lazyForEach = cachedInput.direct().lazyForEach(
+    ComputeTSet<Object> lazyForEach = cachedInput.direct().lazyForEach(
         input -> {
           LOG.info("##" + input.toString());
         });

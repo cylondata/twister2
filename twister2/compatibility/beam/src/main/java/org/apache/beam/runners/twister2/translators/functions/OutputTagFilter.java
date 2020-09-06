@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
  * Output tag filter.
  */
 public class OutputTagFilter<OT, IT>
-    implements ComputeCollectorFunc<WindowedValue<OT>, Iterator<RawUnionValue>> {
+    implements ComputeCollectorFunc<Iterator<RawUnionValue>, WindowedValue<OT>> {
 
   private final int tag;
 

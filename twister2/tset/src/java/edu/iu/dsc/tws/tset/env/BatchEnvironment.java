@@ -148,7 +148,7 @@ public class BatchEnvironment extends TSetEnvironment {
 
   public <K, V, F extends InputFormat<K, V>, I> SourceTSet<I> createHadoopSource(
       Configuration configuration, Class<F> inputFormat, int parallel,
-      MapFunc<I, Tuple<K, V>> mapFunc) {
+      MapFunc<Tuple<K, V>, I> mapFunc) {
     SourceTSet<I> sourceT = new SourceTSet<>(this,
         new HadoopSourceWithMap<>(configuration, inputFormat, mapFunc), parallel);
     getGraph().addSourceTSet(sourceT);
@@ -159,7 +159,7 @@ public class BatchEnvironment extends TSetEnvironment {
   public <K, V,
       F extends InputFormat<K, V>, K2, V2> KeyedSourceTSet<K2, V2> createKeyedHadoopSource(
       Configuration configuration, Class<F> inputFormat, int parallel,
-      MapFunc<Tuple<K2, V2>, Tuple<K, V>> mapFunc) {
+      MapFunc<Tuple<K, V>, Tuple<K2, V2>> mapFunc) {
     KeyedSourceTSet<K2, V2> sourceT = new KeyedSourceTSet<>(this,
         new HadoopSourceWithMap<>(configuration, inputFormat, mapFunc), parallel);
     getGraph().addSourceTSet(sourceT);

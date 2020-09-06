@@ -47,7 +47,7 @@ public class AddInputsExample extends BatchTsetExample {
     CachedTSet<Integer> baseSrcCache = baseSrc.direct().cache().setName("baseSrc");
 
     CachedTSet<Integer> out = baseSrcCache.direct().compute(
-        new BaseComputeCollectorFunc<Integer, Iterator<Integer>>() {
+        new BaseComputeCollectorFunc<Iterator<Integer>, Integer>() {
           @Override
           public void compute(Iterator<Integer> input, RecordCollector<Integer> collector) {
             DataPartitionConsumer<Integer> c1 = (DataPartitionConsumer<Integer>)

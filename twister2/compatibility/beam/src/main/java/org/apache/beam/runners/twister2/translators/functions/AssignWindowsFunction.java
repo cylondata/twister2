@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
  * Assign Windows function.
  */
 public class AssignWindowsFunction<T>
-    implements ComputeCollectorFunc<WindowedValue<T>, Iterator<WindowedValue<T>>> {
+    implements ComputeCollectorFunc<Iterator<WindowedValue<T>>, WindowedValue<T>> {
   private static final Logger LOG = Logger.getLogger(AssignWindowsFunction.class.getName());
 
   private final WindowFn<T, BoundedWindow> windowFn;

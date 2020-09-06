@@ -55,7 +55,7 @@ public class BroadcastExample extends BatchTsetExample {
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    replicate.compute((ComputeFunc<String, Iterator<Integer>>)
+    replicate.compute((ComputeFunc<Iterator<Integer>, String>)
         input -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -67,7 +67,7 @@ public class BroadcastExample extends BatchTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    replicate.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+    replicate.compute((ComputeCollectorFunc<Iterator<Integer>, String>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {

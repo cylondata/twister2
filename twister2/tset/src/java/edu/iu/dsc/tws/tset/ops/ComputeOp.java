@@ -22,14 +22,14 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
  */
-public class ComputeOp<O, I> extends BaseComputeOp<I> {
+public class ComputeOp<I, O> extends BaseComputeOp<I> {
 
-  private ComputeFunc<O, I> computeFunction;
+  private ComputeFunc<I, O> computeFunction;
 
   public ComputeOp() {
   }
 
-  public ComputeOp(ComputeFunc<O, I> computeFunction, BaseTSet origin,
+  public ComputeOp(ComputeFunc<I, O> computeFunction, BaseTSet origin,
                    Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;

@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Receptor,
+public class WindowComputeOp<I, O> extends BaseWindowedSink<I> implements Receptor,
     Serializable {
 
   private TSetContext tSetContext = new TSetContext();
@@ -44,16 +44,16 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
 
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
 
-  private ComputeFunc<O, Iterator<I>> computeFunction;
+  private ComputeFunc<Iterator<I>, O> computeFunction;
 
 
-  public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
+  public WindowComputeOp(ComputeFunc<Iterator<I>, O> computeFunction,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
     this.windowParameter = winParam;
   }
 
-  public WindowComputeOp(ComputeFunc<O, Iterator<I>> computeFunction,
+  public WindowComputeOp(ComputeFunc<Iterator<I>, O> computeFunction,
                          BaseTSet originTSet, Map<String, String> receivables,
                          WindowParameter winParam) {
     this.computeFunction = computeFunction;
@@ -180,7 +180,7 @@ public class WindowComputeOp<O, I> extends BaseWindowedSink<I> implements Recept
     return tSetContext;
   }
 
-  public ComputeFunc<O, Iterator<I>> getFunction() {
+  public ComputeFunc<Iterator<I>, O> getFunction() {
     return computeFunction;
   }
 
