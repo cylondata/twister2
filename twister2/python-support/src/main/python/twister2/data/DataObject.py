@@ -19,8 +19,8 @@ class DataObject:
         java_partitions = self.__java_ref.getPartitions()
         python_partitions = []
         for jp in java_partitions:
-          python_partitions.append(DataPartition(jp, self.__env))
+          python_partitions.append(DataPartition(jp, self.__env.numpy_builder))
         return python_partitions
 
     def get_partition(self, partition_id):
-        return DataPartition(self.__java_ref.getPartition(partition_id), self.__env)
+        return DataPartition(self.__java_ref.getPartition(partition_id), self.__env.numpy_builder)
