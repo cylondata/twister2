@@ -13,9 +13,13 @@ package edu.iu.dsc.tws.common.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 
 public final class NetworkUtils {
   private NetworkUtils() {
@@ -44,22 +48,52 @@ public final class NetworkUtils {
   }
 
   /**
-   * Returns a map of free ports on localhost.
-   * @return a map from port name to port number
-   * @throws IllegalStateException if unable to find specified free ports
+   * Returns the list of free ports on localhost.
+   * A ServerSocket is started on each port
+   * These ports must be released after the JMWorkerAgent is started and
+   * before IWorker is started in MPIWorkerManager/WorkerManager
+   * using releaseWorkerPorts method
+   *
+   * @return a list of free ports
    */
-  public static Map<String, ServerSocket> findFreePorts(List<String> portNames) {
+  public static Map<String, Integer> findFreePorts(List<String> portNames) {
+    List<ServerSocket> sockets = new ArrayList<>();
+    Map<String, Integer> freePorts = new HashMap<>();
     try {
-      Map<String, ServerSocket> freePorts = new HashMap<>();
-
       for (String portName : portNames) {
         ServerSocket socket = new ServerSocket(0);
         socket.setReuseAddress(false);
-        freePorts.put(portName, socket);
+        freePorts.put(portName, socket.getLocalPort());
+        sockets.add(socket);
       }
+      WorkerEnvironment.putSharedValue("socketsForFreePorts", sockets);
       return freePorts;
     } catch (IOException e) {
+      throw new Twister2RuntimeException("Could not find free TCP/IP ports");
     }
-    throw new IllegalStateException("Could not find a free TCP/IP port");
+  }
+
+  /**
+   * Release the ServerSockets on the local ports
+   * that are started with findFreePorts method
+   * This method must be called after the JMWorkerAgent is started and
+   * before IWorker is started in MPIWorkerManager/WorkerManager
+   */
+  public static void releaseWorkerPorts() {
+
+    List<ServerSocket> sockets =
+        (List<ServerSocket>) WorkerEnvironment.removeSharedValue("socketsForFreePorts");
+    boolean allSocketsClosed = true;
+    for (ServerSocket socket : sockets) {
+      try {
+        socket.close();
+      } catch (IOException ioException) {
+        allSocketsClosed = false;
+      }
+    }
+
+    if (!allSocketsClosed) {
+      throw new Twister2RuntimeException("Could not release one or more free TCP/IP ports");
+    }
   }
 }

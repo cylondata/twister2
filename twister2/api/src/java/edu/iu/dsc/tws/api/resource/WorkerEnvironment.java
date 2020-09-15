@@ -288,8 +288,8 @@ public final class WorkerEnvironment {
     putSharedValue(key, new WeakReference<>(value));
   }
 
-  public static void removeSharedValue(String key) {
-    sharedKeyValueStore.remove(key);
+  public static Object removeSharedValue(String key) {
+    return sharedKeyValueStore.remove(key);
   }
 
   public static Object getSharedValue(String key) {

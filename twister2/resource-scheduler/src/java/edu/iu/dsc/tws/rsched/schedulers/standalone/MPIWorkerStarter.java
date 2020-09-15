@@ -12,9 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -22,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -585,34 +582,13 @@ public final class MPIWorkerStarter {
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(workerIP, "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
-    final Map<String, Integer> freePorts = new HashMap<>();
     if (portNames == null) {
       portNames = new ArrayList<>();
     }
     portNames.add("__worker__");
-    Map<String, ServerSocket> socketMap = NetworkUtils.findFreePorts(portNames);
 
-    try {
-      MPI.COMM_WORLD.barrier();
-    } catch (MPIException e) {
-      throw new Twister2RuntimeException("MPI Barrier failed at initialization stage");
-    }
-
-    AtomicBoolean closedSuccessfully = new AtomicBoolean(true);
-    socketMap.forEach((k, v) -> {
-      freePorts.put(k, v.getLocalPort());
-      try {
-        v.close();
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, e, () -> "Couldn't close opened server socket : " + k);
-        closedSuccessfully.set(false);
-      }
-    });
-    if (!closedSuccessfully.get()) {
-      throw new IllegalStateException("Could not release one or more free TCP/IP ports");
-    }
-    Integer workerPort = freePorts.get("__worker__");
-    freePorts.remove("__worker__");
+    Map<String, Integer> freePorts = NetworkUtils.findFreePorts(portNames);
+    Integer workerPort = freePorts.remove("__worker__");
     LOG.fine("Worker info host:" + workerIP + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(
         workerId, workerIP, workerPort, nodeInfo, computeResource, freePorts);

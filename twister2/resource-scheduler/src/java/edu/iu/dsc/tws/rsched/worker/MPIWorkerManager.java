@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
@@ -57,6 +58,11 @@ public class MPIWorkerManager implements IWorkerFailureListener, IJobMasterFailu
       firstInitBarrierProceeded = true;
     } catch (TimeoutException e) {
       throw new Twister2RuntimeException("Could not pass through the init barrier", e);
+    }
+
+    // if it is executing for the first time, release worker ports
+    if (JobProgress.getWorkerExecuteCount() == 0) {
+      NetworkUtils.releaseWorkerPorts();
     }
 
     JobProgressImpl.setJobStatus(JobProgress.JobStatus.EXECUTING);
