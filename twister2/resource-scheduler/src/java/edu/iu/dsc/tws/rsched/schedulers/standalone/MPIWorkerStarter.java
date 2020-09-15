@@ -315,6 +315,9 @@ public final class MPIWorkerStarter {
       // init the logger
       initJMLogger(config);
 
+      // release the port for JM
+      NetworkUtils.releaseWorkerPorts();
+
       int port = JobMasterContext.jobMasterPort(config);
       String hostAddress = ResourceSchedulerUtils.getHostIP(config);
       LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
