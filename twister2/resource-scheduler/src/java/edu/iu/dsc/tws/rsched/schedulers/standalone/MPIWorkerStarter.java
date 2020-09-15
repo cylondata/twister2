@@ -615,7 +615,12 @@ public final class MPIWorkerStarter {
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
-        throw new RuntimeException("Failed to create log directory: " + logDir);
+        // this worker may have failed to created the directory,
+        // but another worker may have succeeded.
+        // test it to make sure
+        if (!directory.exists()) {
+          throw new RuntimeException("Failed to create log directory: " + logDir);
+        }
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
