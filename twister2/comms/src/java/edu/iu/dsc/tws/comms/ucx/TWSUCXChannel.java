@@ -91,6 +91,7 @@ public class TWSUCXChannel implements TWSChannel {
         .setMtWorkersShared(false)
         .setConfig("SOCKADDR_CM_ENABLE", "y")
         .setConfig("SOCKADDR_TLS_PRIORITY", "tcp")
+        .setConfig("TCP_CM_ALLOW_ADDR_INUSE", "y")
     );
     this.closeables.push(context);
     this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
