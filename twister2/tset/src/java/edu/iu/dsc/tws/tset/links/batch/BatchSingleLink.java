@@ -9,21 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -31,7 +16,8 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
@@ -44,49 +30,44 @@ import edu.iu.dsc.tws.tset.sinks.DiskPersistSingleSink;
 
 public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, Schema schema) {
+  BatchSingleLink(BatchEnvironment env, String n, int sourceP, Schema schema) {
     super(env, n, sourceP, sourceP, schema);
   }
 
-  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP,
+  BatchSingleLink(BatchEnvironment env, String n, int sourceP, int targetP,
                   Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
   @Override
-  public <P> ComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P> map(MapFunc<T, P> mapFn) {
     return compute("map", new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
+  public <P> ComputeTSet<P> flatmap(FlatMapFunc<T, P> mapFn) {
     return compute("flatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = lazyForEach(applyFunction);
+    ComputeTSet<Object> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
   }
 
   @Override
-  public ComputeTSet<Object, T> lazyForEach(ApplyFunc<T> applyFunction) {
+  public ComputeTSet<Object> lazyForEach(ApplyFunc<T> applyFunction) {
     return compute("foreach", new ForEachCompute<>(applyFunction));
   }
 
   @Override
-  public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-
-    addChildToGraph(set);
-
-    return set;
+  public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<T, Tuple<K, O>> genTupleFn) {
+    return this.computeToTuple("map2tup", new MapCompute<>(genTupleFn));
   }
 
   @Override
-  public CachedTSet<T> lazyCache() {
+  public StorableTBase<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
         getTargetParallelism(), getSchema());
     addChildToGraph(cacheTSet);
@@ -94,12 +75,12 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public CachedTSet<T> cache() {
-    return (CachedTSet<T>) super.cache();
+  public StorableTBase<T> cache() {
+    return super.cache();
   }
 
   @Override
-  public PersistedTSet<T> lazyPersist() {
+  public StorableTBase<T> lazyPersist() {
     DiskPersistSingleSink<T> diskPersistSingleSink = new DiskPersistSingleSink<>(
         this.getId()
     );
@@ -110,7 +91,7 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> {
   }
 
   @Override
-  public PersistedTSet<T> persist() {
-    return (PersistedTSet<T>) super.persist();
+  public StorableTBase<T> persist() {
+    return super.persist();
   }
 }

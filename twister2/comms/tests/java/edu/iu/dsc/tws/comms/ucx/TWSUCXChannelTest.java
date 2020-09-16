@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
@@ -83,12 +84,27 @@ public class TWSUCXChannelTest {
     }
 
     @Override
+    public int workerRestartCount() {
+      return 0;
+    }
+
+    @Override
     public void waitOnBarrier() throws TimeoutException {
       try {
         this.cyclicBarrier.await();
       } catch (InterruptedException | BrokenBarrierException e) {
         throw new Twister2RuntimeException("Failed on barrier");
       }
+    }
+
+    @Override
+    public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+      waitOnBarrier();
+    }
+
+    @Override
+    public void waitOnInitBarrier() throws TimeoutException {
+      waitOnBarrier();
     }
   }
 

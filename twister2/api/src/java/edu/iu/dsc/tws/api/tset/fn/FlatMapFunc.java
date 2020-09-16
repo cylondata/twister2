@@ -29,7 +29,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public interface FlatMapFunc<O, I> extends TFunction<O, I> {
+public interface FlatMapFunc<I, O> extends TFunction<I, O> {
 
   void flatMap(I input, RecordCollector<O> collector);
 }

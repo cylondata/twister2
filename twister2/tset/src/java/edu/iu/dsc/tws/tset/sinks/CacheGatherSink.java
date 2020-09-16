@@ -27,12 +27,12 @@ public class CacheGatherSink<T> extends StoreIterSink<Tuple<Integer, T>, T> {
   }
 
   @Override
-  protected CollectionPartition<T> getPartition() {
+  public CollectionPartition<T> get() {
     return this.partition;
   }
 
   @Override
-  protected ValueExtractor<T, Tuple<Integer, T>> getValueExtractor() {
-    return Tuple::getValue;
+  protected T extractValue(Tuple<Integer, T> input) {
+    return input.getValue();
   }
 }

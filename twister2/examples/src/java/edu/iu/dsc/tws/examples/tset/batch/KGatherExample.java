@@ -19,12 +19,14 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -41,10 +43,12 @@ public class KGatherExample extends BatchTsetExample {
   }
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
-    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 10, i))
         .keyedGather();
 
     LOG.info("test foreach");
@@ -53,7 +57,7 @@ public class KGatherExample extends BatchTsetExample {
     );
 
     LOG.info("test map");
-    klink.map((MapFunc<String, Tuple<Integer, Iterator<Integer>>>)
+    klink.map((MapFunc<Tuple<Integer, Iterator<Integer>>, String>)
         input -> {
           int s = 0;
           while (input.getValue().hasNext()) {
@@ -65,7 +69,7 @@ public class KGatherExample extends BatchTsetExample {
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+    klink.compute((ComputeFunc<Iterator<Tuple<Integer, Iterator<Integer>>>, String>)
         input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
@@ -79,7 +83,7 @@ public class KGatherExample extends BatchTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+    klink.compute((ComputeCollectorFunc<Iterator<Tuple<Integer, Iterator<Integer>>>, String>)
         (input, output) -> {
           while (input.hasNext()) {
             Tuple<Integer, Iterator<Integer>> next = input.next();

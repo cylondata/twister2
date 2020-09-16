@@ -16,12 +16,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.MPIContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class SlurmCommand extends MPICommand {
@@ -50,48 +50,60 @@ public class SlurmCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(String workingDirectory, JobAPI.Job job) {
-    String twister2Home = Paths.get(workingDirectory, job.getJobId()).toString();
-    String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobId(), SchedulerContext.clusterType(config)).toString();
-    String nodesFileName = MPIContext.nodeFiles(config);
+  public String[] mpiCommand(String workingDir, JobAPI.Job job) {
+    String twister2Home = Paths.get(workingDir, job.getJobId()).toString();
 
-    // lets construct the mpi command to launch
-    List<String> mpiCommand = mpiCommand(getScriptPath(), 1, MPIContext.partition(config));
-    Map<String, Object> map = mpiCommandArguments(config, job);
+    List<String> cmd = new ArrayList<>();
+    cmd.add("sbatch");
+    cmd.add("--partition=" + MPIContext.partition(config));
+    String slurmParams = MPIContext.slurmParams(config);
+    if (slurmParams != null && !slurmParams.trim().isEmpty()) {
+      cmd.addAll(Arrays.asList(slurmParams.split(" ")));
+    }
 
-    mpiCommand.add(map.get("procs").toString());
-    mpiCommand.add(map.get("java_props").toString());
-    mpiCommand.add(map.get("classpath").toString());
-    mpiCommand.add(map.get("container_class").toString());
-    mpiCommand.add(job.getJobId());
-    mpiCommand.add(twister2Home);
-    mpiCommand.add(twister2Home);
-    mpiCommand.add(MPIContext.mpiRunFile(config));
-    mpiCommand.add("-Xmx" + getMemory(job) + "m");
-    mpiCommand.add("-Xms" + getMemory(job) + "m");
-    return mpiCommand;
+    // add mpirun and its parameters
+    cmd.add(mpirunPath());
+    String mpiParams = MPIContext.mpiParams(config);
+    if (mpiParams != null && !mpiParams.trim().isEmpty()) {
+      cmd.addAll(Arrays.asList(mpiParams.split(" ")));
+    }
+
+    // add java and jvm parameters
+    cmd.add("java");
+    cmd.add("-Xmx" + getMemory(job) + "m");
+    cmd.add("-Xms" + getMemory(job) + "m");
+    cmd.add("-Djava.util.logging.config.file=common/logger.properties");
+    cmd.add("-cp");
+    cmd.add(getClasspath(config, job));
+
+    // add java class and command line parameters
+    cmd.add("edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerStarter");
+    cmd.add("--job_id");
+    cmd.add(job.getJobId());
+    cmd.add("--twister2_home");
+    cmd.add(twister2Home);
+    cmd.add("--config_dir");
+    cmd.add(twister2Home);
+    cmd.add("--cluster_type");
+    cmd.add("slurm");
+    cmd.add("--job_master_ip");
+    cmd.add(config.getStringValue("__job_master_ip__", "ip"));
+    cmd.add("--job_master_port");
+    cmd.add(config.getIntegerValue("__job_master_port__", 0) + "");
+    cmd.add("--restore_job");
+    cmd.add(Boolean.toString(CheckpointingContext.startingFromACheckpoint(config)));
+    cmd.add("--restart_count");
+    cmd.add("0");
+
+    return cmd.toArray(new String[]{});
   }
 
   protected String getJobIdFilePath() {
     return new File(workingDirectory, MPIContext.jobIdFile(config)).getPath();
   }
 
-  /**
-   * Construct the SLURM Command
-   * @param slurmScript slurm script name
-   * @param containers number of containers
-   * @param slurm partition name
-   * @return list with the command
-   */
-  private List<String> mpiCommand(String slurmScript,
-                                  long containers, String partitionName) {
-
-    String nTasks = String.format("--ntasks=%d", containers);
-    String pName = String.format("--partition=%s", partitionName);
-    List<String> slurmCmd;
-    slurmCmd = new ArrayList<>(Arrays.asList("sbatch", "-N",
-        Long.toString(containers), nTasks, pName, slurmScript));
-    return slurmCmd;
+  @Override
+  protected void updateRestartCount(String[] cmd, int restartCount) {
+    cmd[cmd.length - 1] = "" + restartCount;
   }
 }

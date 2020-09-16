@@ -21,26 +21,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
 
 import mpi.MPI;
 import mpi.MPIException;
@@ -61,13 +63,15 @@ public final class MPIWorkerStarter {
   private MPIWorkerStarter() {
   }
 
+  @SuppressWarnings("RegexpSinglelineJava")
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    String jobMasterIP = MPIMasterStarter.getJobMasterIPCommandLineArgumentValue(args[0]);
-    jobID = args[1];
+    String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP.name());
+    jobID = System.getenv(K8sEnvVariables.JOB_ID.name());
+    boolean restoreJob = Boolean.parseBoolean(System.getenv(K8sEnvVariables.RESTORE_JOB.name()));
 
     if (jobMasterIP == null) {
       throw new RuntimeException("JobMasterIP address is null");
@@ -106,7 +110,7 @@ public final class MPIWorkerStarter {
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobID);
     jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
+    job = JobUtils.readJobFile(jobDescFileName);
     LOG.info("Job description file is loaded: " + jobDescFileName);
 
     // add any configuration from job file to the config object
@@ -120,6 +124,7 @@ public final class MPIWorkerStarter {
     config = Config.newBuilder()
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+        .put(CheckpointingContext.CHECKPOINTING_RESTORE_JOB, restoreJob)
         .build();
 
     InetAddress localHost = null;
@@ -184,22 +189,48 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    JobMasterAPI.WorkerState initialState =
-        K8sWorkerUtils.initialStateAndUpdate(config, jobID, workerInfo);
-    WorkerRuntime.init(config, job, workerInfo, initialState);
+    int restartCount = K8sWorkerUtils.getAndInitRestartCount(config, jobID, workerInfo);
+    WorkerRuntime.init(config, job, workerInfo, restartCount);
 
     /**
      * Interfaces to interact with other workers and Job Master if there is any
      */
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
-    ISenderToDriver senderToDriver = WorkerRuntime.getSenderToDriver();
+
+    // if this worker is restarted equal or more times than max restart config parameter,
+    // finish up this worker
+    if (restartCount >= FaultToleranceContext.maxMpiJobRestarts(config)) {
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+      WorkerRuntime.close();
+      return;
+    }
+
+    // on any uncaught exception,
+    // we will label the worker as FULLY_FAILED and exit JVM with error code 1
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      LOG.log(Level.SEVERE, "Uncaught exception in the thread "
+          + thread + ". Worker FAILED...", throwable);
+
+      if (restartCount >= FaultToleranceContext.maxMpiJobRestarts(config) - 1) {
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+      } else {
+        workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FAILED);
+      }
+      WorkerRuntime.close();
+      System.exit(1);
+    });
 
     // start the worker
-    startWorker(workerController, pv, podName);
+    boolean completed = startWorker(workerController, pv, podName);
 
-    // update worker status to COMPLETED
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+    if (completed) {
+      // update worker status to COMPLETED
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+    } else {
+      // if not successfully completed, it means it is fully failed
+      workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.FULLY_FAILED);
+    }
 
     // finalize MPI
     try {
@@ -213,24 +244,16 @@ public final class MPIWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static boolean startWorker(IWorkerController workerController,
                                  IPersistentVolume pv, String podName) {
-    String workerClass = SchedulerContext.workerClass(config);
-    IWorker worker;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      worker = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("failed to load the worker class %s", workerClass));
-      throw new RuntimeException(e);
-    }
+
+    IWorker worker = JobUtils.initializeIWorker(job);
 
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobID, workerID);
     }
-
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    MPIWorkerManager mpiWorkerManager = new MPIWorkerManager();
+    return mpiWorkerManager.execute(config, job, workerController, pv, volatileVolume, worker);
   }
 }

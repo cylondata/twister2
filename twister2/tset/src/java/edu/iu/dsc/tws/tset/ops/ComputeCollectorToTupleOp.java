@@ -17,21 +17,30 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private ComputeCollectorFunc<Tuple<K, O>, I> compFunction;
+public class ComputeCollectorToTupleOp<I, K, O> extends BaseComputeOp<I> {
+  private ComputeCollectorFunc<I, Tuple<K, O>> compFunction;
+  private RecordCollector<Tuple<K, O>> collector;
 
   public ComputeCollectorToTupleOp() {
   }
 
-  public ComputeCollectorToTupleOp(ComputeCollectorFunc<Tuple<K, O>, I> mapToTupFn,
+  public ComputeCollectorToTupleOp(ComputeCollectorFunc<I, Tuple<K, O>> mapToTupFn,
                                    BaseTSet origin, Map<String, String> receivables) {
     super(origin, receivables);
     this.compFunction = mapToTupFn;
+  }
+
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
+    this.collector = new RecordCollectorImpl<>();
   }
 
   @Override
@@ -41,20 +50,30 @@ public class ComputeCollectorToTupleOp<K, O, I> extends BaseComputeOp<I> {
 
   @Override
   public boolean execute(IMessage<I> content) {
-    compFunction.compute(content.getContent(), new RecordCollector<Tuple<K, O>>() {
-      @Override
-      public void collect(Tuple<K, O> record) {
-        keyedWriteToEdges(record.getKey(), record.getValue());
-      }
-
-      @Override
-      public void close() {
-
-      }
-    });
-
-    writeEndToEdges();
-    compFunction.close();
+    compFunction.compute(content.getContent(), collector);
     return false;
+  }
+
+  private class RecordCollectorImpl<K, O> implements RecordCollector<Tuple<K, O>> {
+    @Override
+    public void collect(Tuple<K, O> record) {
+      keyedWriteToEdges(record.getKey(), record.getValue());
+    }
+
+    @Override
+    public void close() {
+
+    }
+  }
+
+  @Override
+  public void endExecute() {
+    compFunction.end();
+    writeEndToEdges();
+  }
+
+  @Override
+  public void close() {
+    compFunction.close();
   }
 }

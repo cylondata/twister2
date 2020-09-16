@@ -88,4 +88,8 @@ public class LocalDataInputStream extends FSDataInputStream {
   public long skip(final long n) throws IOException {
     return this.fis.skip(n);
   }
+
+  public FileChannel getChannel() {
+    return this.fileChannel;
+  }
 }

@@ -41,7 +41,7 @@ public class SDirectExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),
@@ -89,7 +89,7 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!direct.partition(task, data, flag)) {
+    while (!direct.insert(task, data, flag)) {
       // lets wait a litte and try again
       direct.progress();
     }

@@ -39,10 +39,10 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.api.driver.IDriver;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -67,12 +67,12 @@ public class WorkerMonitor implements MessageHandler {
   private JobMaster jobMaster;
   private RRServer rrServer;
   private DashboardClient dashClient;
+  private ZKJobUpdater zkJobUpdater;
   private IDriver driver;
-  // whether this is a fault tolerant job
-  private boolean faultTolerant;
+  private IWorkerEventSender workerEventSender;
 
   // upto date status of the job
-  private JobState jobState;
+  private JobAPI.JobState jobState;
 
   // a flag to show whether all expected workers has already joined
   private boolean allJoined = false;
@@ -93,22 +93,44 @@ public class WorkerMonitor implements MessageHandler {
 
   private ConcurrentSkipListMap<Integer, WorkerWithState> workers;
 
+  // Inform worker failure events
+  // JobFailureWatcher listens for failure events
+  private IWorkerFailureListener failureListener;
+
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
                        DashboardClient dashClient,
+                       ZKJobUpdater zkJobUpdater,
                        JobAPI.Job job,
                        IDriver driver,
-                       boolean faultTolerant) {
+                       IWorkerFailureListener failureListener) {
 
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.dashClient = dashClient;
+    this.zkJobUpdater = zkJobUpdater;
     this.driver = driver;
     this.numberOfWorkers = job.getNumberOfWorkers();
-    this.faultTolerant = faultTolerant;
-    this.jobState = JobState.STARTING;
+    this.failureListener = failureListener;
 
+    this.jobState = JobAPI.JobState.STARTING;
     workers = new ConcurrentSkipListMap<>();
+
+    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
+        JobMasterAPI.DriverMessage.newBuilder();
+
+    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
+        JobMasterAPI.WorkerMessage.newBuilder();
+    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
+        = JobMasterAPI.WorkerMessageResponse.newBuilder();
+
+    rrServer.registerRequestHandler(driverMessageBuilder, this);
+    rrServer.registerRequestHandler(workerMessageBuilder, this);
+    rrServer.registerRequestHandler(workerResponseBuilder, this);
+  }
+
+  public void setWorkerEventSender(IWorkerEventSender workerEventSender) {
+    this.workerEventSender = workerEventSender;
   }
 
   public int getNumberOfWorkers() {
@@ -136,6 +158,11 @@ public class WorkerMonitor implements MessageHandler {
     } else {
       return workerWithState.getInfo();
     }
+  }
+
+  public JobMasterAPI.WorkerState getWorkerState(int workerID) {
+    WorkerWithState wws = workers.get(workerID);
+    return wws == null ? JobMasterAPI.WorkerState.UNRECOGNIZED : wws.getState();
   }
 
   /**
@@ -185,12 +212,28 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
+  private void jobStateChanged(JobAPI.JobState newState) {
+
+    jobState = newState;
+
+    // update job state at zookeeper if it is used
+    zkJobUpdater.updateState(newState);
+
+    if (dashClient != null) {
+      dashClient.jobStateChange(newState);
+    }
+
+    if (newState == JobAPI.JobState.COMPLETED || newState == JobAPI.JobState.FAILED) {
+      jobMaster.endJob(newState);
+    }
+  }
+
   /**
    * new worker joins for the first time
    * returns null if the join is successful,
    * otherwise, it returns an explanation for the failure
    */
-  public String started(WorkerWithState workerWithState) {
+  public void started(WorkerWithState workerWithState) {
 
     // if the workerID of joined worker is higher than numberOfWorkers in the job,
     // log a warning message.
@@ -203,13 +246,6 @@ public class WorkerMonitor implements MessageHandler {
               + "If this is not because of scaling up, it seems problematic. Joined worker: %s",
           workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
       LOG.warning(warnMessage);
-    }
-
-    if (existWorker(workerWithState.getWorkerID())) {
-      String failMessage = "There is an already registered worker with workerID: "
-          + workerWithState.getWorkerID();
-      LOG.severe(failMessage);
-      return failMessage;
     }
 
     // if it is a regular join event
@@ -223,13 +259,12 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     handleAllJoined();
-    return null;
   }
 
   /**
    * if the worker is coming from failure
    */
-  public String restarted(WorkerWithState workerWithState) {
+  public void restarted(WorkerWithState workerWithState) {
 
     // if the workerID of joined worker is higher than numberOfWorkers in the job,
     // log a warning message.
@@ -249,32 +284,18 @@ public class WorkerMonitor implements MessageHandler {
       dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
-    // if this is not a fault tolerant job, we terminate the job with failure
-    // because, this worker has failed previously and it is coming from failure
-    if (!faultTolerant) {
-      jobState = JobState.FAILED;
-      String failMessage =
-          String.format("worker[%s] is coming from failure in NON-FAULT TOLERANT job. "
-              + "Terminating the job.", workerWithState.getWorkerID());
-      LOG.info(failMessage);
-      jobMaster.completeJob(JobState.FAILED);
-      return failMessage;
-    }
-
-    if (!existWorker(workerWithState.getWorkerID())) {
-      LOG.warning(String.format("The worker[%s] that has not joined the job yet, tries to rejoin. "
-              + "Ignoring this event.",
-          workerWithState.getWorkerID()));
-    }
-
     // update workerInfo and its status in the worker list
     workers.put(workerWithState.getWorkerID(), workerWithState);
     LOG.info("WorkerID: " + workerWithState.getWorkerID() + " rejoined from failure.");
 
+    // inform all workers in the job that this worker restarted
+    workerEventSender.workerRestarted(workerWithState.getInfo());
+
     handleAllJoined();
 
-    // TODO inform checkpoint master
-    return null;
+    if (failureListener != null) {
+      failureListener.restarted(workerWithState.getInfo());
+    }
   }
 
   /**
@@ -289,12 +310,8 @@ public class WorkerMonitor implements MessageHandler {
       informDriverForAllJoined();
 
       // if the job is becoming all joined for the first time, inform dashboard
-      if (jobState == JobState.STARTING) {
-        jobState = JobState.STARTED;
-
-        if (dashClient != null) {
-          dashClient.jobStateChange(JobState.STARTED);
-        }
+      if (jobState == JobAPI.JobState.STARTING) {
+        jobStateChanged(JobAPI.JobState.STARTED);
       }
     }
   }
@@ -315,9 +332,8 @@ public class WorkerMonitor implements MessageHandler {
     // if so, stop the job master
     // if all workers have completed, no need to send the response message back to the client
     if (allWorkersCompleted()) {
-      jobState = JobState.COMPLETED;
       LOG.info("All " + numberOfWorkers + " workers COMPLETED. Terminating the job.");
-      jobMaster.completeJob(JobState.COMPLETED);
+      jobStateChanged(JobAPI.JobState.COMPLETED);
     }
   }
 
@@ -328,7 +344,7 @@ public class WorkerMonitor implements MessageHandler {
 
     WorkerWithState failedWorker = workers.get(workerID);
     if (failedWorker == null) {
-      LOG.warning("The worker[" + workerID + "] that hos not joined the job failed. "
+      LOG.warning("The worker[" + workerID + "] that has not joined the job failed. "
           + "Ignoring this event.");
       return;
     }
@@ -341,13 +357,26 @@ public class WorkerMonitor implements MessageHandler {
       dashClient.workerStateChange(workerID, JobMasterAPI.WorkerState.FAILED);
     }
 
-    // TODO: test whether this works
-    // if this is a non-fault tolerant job, job needs to be terminated
-    if (!faultTolerant) {
-      jobState = JobState.FAILED;
-      LOG.info("A worker failed in a NON-FAULT TOLERANT job. Terminating the job.");
-      jobMaster.completeJob(JobState.FAILED);
+    if (failureListener != null) {
+      failureListener.failed(workerID);
     }
+
+    workerEventSender.workerFailed(workerID);
+  }
+
+  public void fullyFailed(int workerID) {
+
+    LOG.severe("Worker: " + workerID + " FULLY_FAILED.");
+
+    // send worker state change message to dashboard
+    // todo: need to send FULLY_FAILED to dash
+    if (dashClient != null) {
+      dashClient.workerStateChange(workerID, JobMasterAPI.WorkerState.FAILED);
+    }
+
+    // the job shall fail
+    LOG.severe("The job is completing with failure.");
+    jobStateChanged(JobAPI.JobState.FAILED);
   }
 
   public void workersScaledDown(int instancesRemoved) {
@@ -369,15 +398,10 @@ public class WorkerMonitor implements MessageHandler {
 
     LOG.info(strToLog);
 
-    // let either controller to know
-    if (jobMaster.getZkMasterController() != null) {
-      jobMaster.getZkMasterController().jobScaledDown(numberOfWorkers);
-    } else if (jobMaster.getWorkerHandler() != null) {
-      jobMaster.getWorkerHandler().workersScaledDown(instancesRemoved);
-    }
+    int change = 0 - instancesRemoved;
+    workerEventSender.jobScaled(change, numberOfWorkers);
 
     // send Scale message to the dashboard
-    int change = 0 - instancesRemoved;
     if (dashClient != null) {
       dashClient.scaledWorkers(change, numberOfWorkers, killedWorkers);
     }
@@ -390,11 +414,10 @@ public class WorkerMonitor implements MessageHandler {
 
     // keep previous numberOfWorkers and update numberOfWorkers with new value
     numberOfWorkers += instancesAdded;
-    if (jobMaster.getZkMasterController() != null) {
-      jobMaster.getZkMasterController().jobScaledUp(numberOfWorkers);
-    }
+    workerEventSender.jobScaled(instancesAdded, numberOfWorkers);
+
     if (jobMaster.getWorkerHandler() != null) {
-      jobMaster.getWorkerHandler().workersScaledUp(instancesAdded);
+      jobMaster.getWorkerHandler().unsetAllConnected();
     }
 
     // in the case of very unlikely but possible scenario
@@ -402,13 +425,7 @@ public class WorkerMonitor implements MessageHandler {
     // in that case, publish the event
     if (allWorkersJoined()) {
       allJoined = true;
-
-      if (jobMaster.getZkMasterController() != null) {
-        jobMaster.getZkMasterController().publishAllJoined();
-      } else {
-        jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
-      }
-
+      workerEventSender.allJoined();
       informDriverForAllJoined();
     }
 
@@ -429,7 +446,7 @@ public class WorkerMonitor implements MessageHandler {
 
     if (workers.size() == numberOfWorkers && allWorkersJoined()) {
       allJoined = true;
-      jobState = JobState.STARTED;
+      jobState = JobAPI.JobState.STARTED;
 
       LOG.info("All workers have already joined, before the job master restarted.");
       return true;

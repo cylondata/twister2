@@ -26,7 +26,7 @@ twister2.resource.mesos.scheduler.driver.stop.timeout.ms: 5000
 twister2.resource.mesos.native.library.path: "/usr/lib/mesos/0.28.1/lib/"
 
 # the core package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"
 
 
 #overlay network name for docker containers
@@ -50,20 +50,6 @@ twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.Broa
 
 # the Mesos worker class
 twister2.resource.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"
-
-###################################################################################
-# ZooKeeper related config parameters
-###################################################################################
-
-# ZooKeeper server addresses: comma separated host:port pairs
-# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.resource.zookeeper.server.addresses: "localhost:2181"
-
-# the root node path of this job on ZooKeeper
-# the default is "/twister2"
-#twister2.resource.zookeeper.root.node.path: "/twister2"
-
-
 
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.

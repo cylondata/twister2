@@ -94,6 +94,11 @@ def twister2_dashboard_files():
         "//dashboard/server:twister2-dash-server",
     ]
 
+def twister2_deeplearning_files():
+    return [
+        "//deeplearning/pytorch:twister2-deeplearning",
+    ]
+
 def twister2_core_checkpointing_files():
     return [
         "//twister2/checkpointing/src/java:checkpointing-java",
@@ -103,11 +108,6 @@ def twister2_core_tset_files():
     return [
         "//twister2/tset/src/java:tset-java",
         "@maven//:com_google_re2j_re2j"
-    ]
-
-def twister2_core_restarter_files():
-    return [
-        "//twister2/checkpointing/src/java/edu/iu/dsc/tws/restarter:restarter-java",
     ]
 
 def twister2_storm_files():

@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
@@ -55,7 +56,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
   @Override
   public void execute(Config config,
-                      int workerID,
+                      JobAPI.Job job,
                       IWorkerController wController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {

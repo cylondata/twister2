@@ -55,7 +55,7 @@ sudo pip install wheel
 4. Installing maven and configure it as follows :
 
 ```text
-  wget http://apache.mirrors.pair.com/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.tar.gz
+  wget https://archive.apache.org/dist/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.tar.gz
 ```
 
 Extract this to a directory called maven configure the environmental variables

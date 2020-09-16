@@ -217,17 +217,17 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/TarGzipPacker.html#unpack-java.lang.String-">unpack</a></span>(java.lang.String&nbsp;sourceGzip)</code>
-<div class="block">unpack the received job package
- job package needs to be a tar.gz package
- it unpacks to the directory where the job package resides</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/TarGzipPacker.html#unpack-java.nio.file.Path-java.nio.file.Path-">unpack</a></span>(java.nio.file.Path&nbsp;sourceGzip,
+      java.nio.file.Path&nbsp;outputDir)</code>
+<div class="block">unpackage the given tar.gz file to the provided output directory</div>
 </td>
 </tr>
 <tr id="i11" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/TarGzipPacker.html#unpack-java.lang.String-java.io.File-">unpack</a></span>(java.lang.String&nbsp;sourceGzip,
-      java.io.File&nbsp;outputDir)</code>
-<div class="block">unpackage the given tar.gz file to the provided output directory</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/utils/TarGzipPacker.html#unpack-java.lang.String-">unpack</a></span>(java.lang.String&nbsp;sourceGzip)</code>
+<div class="block">unpack the received job package
+ job package needs to be a tar.gz package
+ it unpacks to the directory where the job package resides</div>
 </td>
 </tr>
 </table>
@@ -427,14 +427,14 @@ extends java.lang.Object</pre>
  it unpacks to the directory where the job package resides</div>
 </li>
 </ul>
-<a name="unpack-java.lang.String-java.io.File-">
+<a name="unpack-java.nio.file.Path-java.nio.file.Path-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>unpack</h4>
-<pre>public static&nbsp;boolean&nbsp;unpack(java.lang.String&nbsp;sourceGzip,
-                             java.io.File&nbsp;outputDir)</pre>
+<pre>public static&nbsp;boolean&nbsp;unpack(java.nio.file.Path&nbsp;sourceGzip,
+                             java.nio.file.Path&nbsp;outputDir)</pre>
 <div class="block">unpackage the given tar.gz file to the provided output directory</div>
 </li>
 </ul>

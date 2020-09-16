@@ -12,14 +12,17 @@
 
 package edu.iu.dsc.tws.api.comms;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 
 /**
  * Communicator that keeps the information about.
@@ -63,7 +66,10 @@ public class Communicator {
     this.config = config;
     // first lets try to retrieve through a config
     if (persDirs == null) {
-      this.persistentDirectories = CommunicationContext.persistentDirectory(config);
+      this.persistentDirectories = FileSystemContext.volatileStorageRoots(config);
+      persistentDirectories = persistentDirectories.stream()
+          .map(path -> path + File.separator + "iodata")
+          .collect(Collectors.toList());
       if (this.persistentDirectories.size() > 0) {
         LOG.log(Level.FINE, "The persistence operations will be load balanced between : "
             + this.persistentDirectories);
@@ -88,6 +94,11 @@ public class Communicator {
     this.edgeGenerator = edgeGenerator;
     this.idGenerator = idGenerator;
     this.persistentDirectories = persistentDirectories;
+  }
+
+  public void reInit() {
+    this.edgeGenerator = new EdgeGenerator(0);
+    this.idGenerator = new TaskIdGenerator(100000000);
   }
 
   public TWSChannel getChannel() {

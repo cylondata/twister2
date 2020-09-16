@@ -53,7 +53,7 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
   }
 
   public boolean send(int source, IMessage message, int flags) {
-    return op.partition(source, message.getContent(), flags);
+    return op.insert(source, message.getContent(), flags);
   }
 
   public class DirectReceiver implements SingularReceiver {

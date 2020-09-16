@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class SourceTSet<T> extends BatchTSetImpl<T> {
@@ -40,11 +40,11 @@ public class SourceTSet<T> extends BatchTSetImpl<T> {
     //non arg constructor needed for kryo
   }
 
-  public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+  public SourceTSet(BatchEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     this(tSetEnv, "source", src, parallelism);
   }
 
-  public SourceTSet(BatchTSetEnvironment tSetEnv, String name, SourceFunc<T> src, int parallelism) {
+  public SourceTSet(BatchEnvironment tSetEnv, String name, SourceFunc<T> src, int parallelism) {
     super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }

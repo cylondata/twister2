@@ -26,14 +26,14 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class DiskBasedList implements List {
 
-  private BufferedCollectionPartition collectionPartition;
-  private MessageType dataType;
+  private final BufferedCollectionPartition collectionPartition;
   private int size = 0;
 
   private DataPartitionConsumer currentConsumer;
-  private int consumingIndex = -1;
+  private final int consumingIndex = -1;
 
   public DiskBasedList(Config conf,
                        MessageType dataType) {
@@ -42,7 +42,6 @@ public class DiskBasedList implements List {
 
     this.collectionPartition = new DiskBackedCollectionPartition<>(maxRecordsInMemory,
         dataType, maxBytesInMemory, conf, UUID.randomUUID().toString());
-    this.dataType = dataType;
   }
 
   private Twister2RuntimeException unSupportedException() {
@@ -160,7 +159,8 @@ public class DiskBasedList implements List {
 
   @Override
   public Iterator iterator() {
-    final DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
+    final DataPartitionConsumer consumer = this.collectionPartition.getConsumer();
+    //final DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
     return new Iterator() {
       @Override
       public boolean hasNext() {
@@ -169,8 +169,9 @@ public class DiskBasedList implements List {
 
       @Override
       public Object next() {
-        byte[] next = consumer.next();
-        return dataType.getDataPacker().unpackFromByteArray(next);
+        //byte[] next = consumer.next();
+        //return dataType.getDataPacker().unpackFromByteArray(next);
+        return consumer.next();
       }
     };
   }

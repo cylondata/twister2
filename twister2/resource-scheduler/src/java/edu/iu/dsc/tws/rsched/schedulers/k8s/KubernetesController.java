@@ -14,13 +14,17 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -31,6 +35,8 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapList;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
@@ -46,40 +52,119 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1StatefulSetList;
 import io.kubernetes.client.util.ClientBuilder;
+import okhttp3.OkHttpClient;
 
 /**
  * a controller class to talk to the Kubernetes Master to manage jobs
  */
 
-public class KubernetesController {
+public final class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
-  private String namespace;
+  private static String namespace;
   private static ApiClient client = null;
   private static CoreV1Api coreApi;
   private static AppsV1Api appsApi;
 
-  public void init(String nspace) {
-    this.namespace = nspace;
-    initApiInstances();
+  private static KubernetesController controller;
+
+  private KubernetesController() {
   }
 
-  public static void initApiInstances() {
+  public static synchronized KubernetesController init(String nspace) {
+    if (controller != null) {
+      return controller;
+    }
+
+    namespace = nspace;
+    initApiInstances();
+    controller = new KubernetesController();
+    return controller;
+  }
+
+  public static ApiClient getApiClient() {
+    if (client != null) {
+      return client;
+    }
     try {
-      client = io.kubernetes.client.util.Config.defaultClient();
+      client = ClientBuilder.standard()
+          .setOverridePatchFormat(V1Patch.PATCH_FORMAT_JSON_PATCH)
+          .build();
+      return client;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception when creating ApiClient: ", e);
       throw new RuntimeException(e);
     }
-    Configuration.setDefaultApiClient(client);
+  }
 
+  private static void initApiInstances() {
+    if (client == null) {
+      getApiClient();
+    }
+
+    Configuration.setDefaultApiClient(client);
     coreApi = new CoreV1Api();
     appsApi = new AppsV1Api(client);
   }
 
   /**
-   * return the StatefulSet object if it exists in the Kubernetes master,
+   * create CoreV1Api that does not time out
+   */
+  public static CoreV1Api createCoreV1Api() {
+    if (client == null) {
+      getApiClient();
+    }
+    OkHttpClient httpClient =
+        client.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    client.setHttpClient(httpClient);
+    Configuration.setDefaultApiClient(client);
+    return new CoreV1Api(client);
+  }
+
+  public static void close() {
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().dispatcher() != null
+        && client.getHttpClient().dispatcher().executorService() != null) {
+      client.getHttpClient().dispatcher().executorService().shutdown();
+    }
+
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().connectionPool() != null) {
+      client.getHttpClient().connectionPool().evictAll();
+    }
+
+    if (client != null
+        && client.getHttpClient() != null
+        && client.getHttpClient().cache() != null) {
+      try {
+        client.getHttpClient().cache().close();
+      } catch (IOException e) {
+      }
+    }
+
+    controller = null;
+  }
+
+  /**
+   * return the list of StatefulSet objects for this job,
    * otherwise return null
+   */
+  public List<V1StatefulSet> getJobStatefulSets(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1StatefulSetList setList = appsApi.listNamespacedStatefulSet(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+      return setList.getItems();
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * check whether given StatefulSet objects exist Kubernetes master,
    */
   public boolean existStatefulSets(List<String> statefulSetNames) {
     V1StatefulSetList setList = null;
@@ -103,23 +188,15 @@ public class KubernetesController {
   }
 
   /**
-   * return the list of StatefulSet names that matches this jobs StatefulSet names for workers
+   * return the list of worker StatefulSet names for this job
    * they must be in the form of "jobID-index"
    * otherwise return an empty ArrayList
    */
-  public ArrayList<String> getStatefulSetsForJobWorkers(String jobID) {
-    V1StatefulSetList setList = null;
-    try {
-      setList = appsApi.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
-    } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
-      throw new RuntimeException(e);
-    }
-
+  public ArrayList<String> getJobWorkerStatefulSets(String jobID) {
+    List<V1StatefulSet> ssList = getJobStatefulSets(jobID);
     ArrayList<String> ssNameList = new ArrayList<>();
 
-    for (V1StatefulSet statefulSet : setList.getItems()) {
+    for (V1StatefulSet statefulSet : ssList) {
       String ssName = statefulSet.getMetadata().getName();
       if (ssName.matches(jobID + "-" + "[0-9]+")) {
         ssNameList.add(ssName);
@@ -135,10 +212,9 @@ public class KubernetesController {
   public boolean createStatefulSet(V1StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
-    try {
-      okhttp3.Response response = appsApi.createNamespacedStatefulSetCall(
-          namespace, statefulSet, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.createNamespacedStatefulSetCall(
+        namespace, statefulSet, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
@@ -164,13 +240,12 @@ public class KubernetesController {
    */
   public boolean deleteStatefulSet(String statefulSetName) {
 
-    try {
-      Integer gracePeriodSeconds = 0;
+    Integer gracePeriodSeconds = 0;
 
-      okhttp3.Response response = appsApi.deleteNamespacedStatefulSetCall(
-          statefulSetName, namespace, null, null, gracePeriodSeconds, null,
-          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.deleteNamespacedStatefulSetCall(
+        statefulSetName, namespace, null, null, gracePeriodSeconds, null,
+        KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is deleted.");
@@ -206,22 +281,9 @@ public class KubernetesController {
     String jsonPatchStr =
         "[{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}]";
 
-    // json-patch a deployment
-    ApiClient jsonPatchClient;
-    try {
-      jsonPatchClient =
-          ClientBuilder.standard().setOverridePatchFormat(V1Patch.PATCH_FORMAT_JSON_PATCH).build();
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Error when creating patch client: " + ssName, e);
-      return false;
-    }
-
-    AppsV1Api patchApi = new AppsV1Api(jsonPatchClient);
-
-    try {
-      okhttp3.Response response = patchApi.patchNamespacedStatefulSetScaleCall(
-          ssName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = appsApi.patchNamespacedStatefulSetScaleCall(
+        ssName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + ssName + "] is patched.");
@@ -247,10 +309,9 @@ public class KubernetesController {
   public boolean createService(V1Service service) {
 
     String serviceName = service.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createNamespacedServiceCall(
-          namespace, service, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createNamespacedServiceCall(
+        namespace, service, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "Service [" + serviceName + "] created.");
@@ -269,12 +330,26 @@ public class KubernetesController {
   }
 
   /**
+   * return the list of services that belong to this job
+   * otherwise return an empty list
+   */
+  public List<V1Service> getJobServices(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1ServiceList serviceList = coreApi.listNamespacedService(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+      return serviceList.getItems();
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting service list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * return existing service name if one of the services exist in Kubernetes master,
    * otherwise return null
    */
   public String existServices(List<String> serviceNames) {
-// sending the request with label does not work for list services call
-//    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(
@@ -300,11 +375,10 @@ public class KubernetesController {
 
     Integer gracePeriodsSeconds = 0;
 
-    try {
-      okhttp3.Response response = coreApi.deleteNamespacedServiceCall(
-          serviceName, namespace, null, null, gracePeriodsSeconds, null,
-          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.deleteNamespacedServiceCall(
+        serviceName, namespace, null, null, gracePeriodsSeconds, null,
+        KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.info("Service [" + serviceName + "] is deleted.");
@@ -371,7 +445,8 @@ public class KubernetesController {
   /**
    * check whether the given PersistentVolumeClaim exist on Kubernetes master
    */
-  public boolean existPersistentVolumeClaim(String pvcName) {
+  public boolean existPersistentVolumeClaim(String jobID) {
+    String pvcName = jobID;
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -392,15 +467,59 @@ public class KubernetesController {
   }
 
   /**
+   * get PersistentVolumeClaim object for this job
+   */
+  public V1PersistentVolumeClaim getJobPersistentVolumeClaim(String jobID) {
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      if (pvcList.getItems().size() == 1) {
+        return pvcList.getItems().get(0);
+      } else if (pvcList.getItems().size() > 1) {
+        throw new Twister2RuntimeException(
+            "There are multiple PersistentVolumeClaim objects for this job on Kubernetes master");
+      } else {
+        return null;
+      }
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return the PersistentVolumeClaim object names that belong to Twister2
+   * otherwise return empty list
+   */
+  public List<String> getTwister2PersistentVolumeClaims() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1PersistentVolumeClaimList pvcList = coreApi.listNamespacedPersistentVolumeClaim(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return pvcList.getItems().stream()
+          .map(pvc -> pvc.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * create the given PersistentVolumeClaim on Kubernetes master
    */
   public boolean createPersistentVolumeClaim(V1PersistentVolumeClaim pvc) {
 
     String pvcName = pvc.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
-          namespace, pvc, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
+        namespace, pvc, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is created.");
@@ -420,12 +539,13 @@ public class KubernetesController {
     return false;
   }
 
-  public boolean deletePersistentVolumeClaim(String pvcName) {
+  public boolean deletePersistentVolumeClaim(String jobID) {
 
-    try {
-      okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
-          pvcName, namespace, null, null, null, null, null, null, null)
-          .execute();
+    String pvcName = jobID;
+
+    try (okhttp3.Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
+        pvcName, namespace, null, null, null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is deleted.");
@@ -476,9 +596,8 @@ public class KubernetesController {
   public boolean createPersistentVolume(V1PersistentVolume pv) {
 
     String pvName = pv.getMetadata().getName();
-    try {
-      okhttp3.Response response = coreApi.createPersistentVolumeCall(pv, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.createPersistentVolumeCall(pv, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is created.");
@@ -502,10 +621,9 @@ public class KubernetesController {
 
   public boolean deletePersistentVolume(String pvName) {
 
-    try {
-      okhttp3.Response response = coreApi.deletePersistentVolumeCall(
-          pvName, null, null, null, null, null, null, null)
-          .execute();
+    try (okhttp3.Response response = coreApi.deletePersistentVolumeCall(
+        pvName, null, null, null, null, null, null, null)
+        .execute()) {
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is deleted.");
@@ -602,16 +720,12 @@ public class KubernetesController {
     return nodeInfoList;
   }
 
-  public static List<String> getUploaderWebServerPods(String ns, String uploaderLabel) {
-
-    if (coreApi == null) {
-      initApiInstances();
-    }
+  public List<String> getUploaderWebServerPods(String uploaderLabel) {
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          ns, null, null, null, null, uploaderLabel, null, null, null, null);
+          namespace, null, null, null, null, uploaderLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting uploader pod list.", e);
       throw new RuntimeException(e);
@@ -631,21 +745,17 @@ public class KubernetesController {
    * currently it does not delete job package file from multiple uploader pods
    * so, It is not in use
    */
-  public boolean deleteJobPackage(List<String> uploaderPods, String jobPackageName) {
+  public boolean deleteJobPackage(List<String> uploaderPods,
+                                         String jobPackageName) {
 
-    // command to execute
-    // if [ -f test.txt ]; then rm -f test.txt; else exit 1; fi
-    // if file exist, remove it. Otherwise exit 1
-//    String command = String.format("if [ -f %s ]; then rm -f %s; else exit 1; fi",
-//        jobPackageName, jobPackageName);
-    String command = String.format("rm -f %s", jobPackageName);
+    String command = String.format("rm %s", jobPackageName);
     String[] fullCommand = {"bash", "-c", command};
 
     boolean allDeleted = true;
     for (String uploaderPod : uploaderPods) {
 
       try {
-        Exec exec = new Exec(client);
+        Exec exec = new Exec(getApiClient());
         final Process proc = exec.exec(namespace, uploaderPod, fullCommand, false, false);
         proc.waitFor();
         proc.destroy();
@@ -674,6 +784,289 @@ public class KubernetesController {
     }
 
     return allDeleted;
+  }
+
+  /**
+   * create the given ConfigMap on Kubernetes master
+   */
+  public boolean createConfigMap(V1ConfigMap configMap) {
+
+    String configMapName = configMap.getMetadata().getName();
+
+    try (okhttp3.Response response = coreApi.createNamespacedConfigMapCall(
+        namespace, configMap, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "ConfigMap [" + configMapName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the ConfigMap [" + configMapName
+            + "]: Response: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * delete the given ConfigMap from Kubernetes master
+   */
+  public boolean deleteConfigMap(String jobID) {
+
+    String configMapName = jobID;
+    int gracePeriodSeconds = 0;
+    String propagationPolicy = KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY;
+
+    try (okhttp3.Response response = coreApi.deleteNamespacedConfigMapCall(
+        configMapName, namespace, null, null, gracePeriodSeconds, null, propagationPolicy,
+        null, null).execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.info("ConfigMap [" + configMapName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.warning("There is no ConfigMap [" + configMapName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.severe("Error when deleting the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * return true if there is already a ConfigMap object with the same name on Kubernetes master,
+   * otherwise return false
+   */
+  public boolean existConfigMap(String jobID) {
+    String configMapName = jobID;
+    V1ConfigMapList configMapList = null;
+    try {
+      configMapList = coreApi.listNamespacedConfigMap(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1ConfigMap configMap : configMapList.getItems()) {
+      if (configMapName.equals(configMap.getMetadata().getName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * return the ConfigMap object names that belong to Twister2
+   * otherwise return empty list
+   * ConfigMap names correspond to jobIDs
+   * There is a ConfigMap for each running job
+   * So, this list shows the currently running jobs
+   */
+  public List<String> getTwister2ConfigMapNames() {
+
+    String labelSelector = KubernetesUtils.twister2LabelSelector();
+    try {
+      V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+
+      return configMapList.getItems().stream()
+          .map(cm -> cm.getMetadata().getName())
+          .collect(Collectors.toList());
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return the ConfigMap object of this job, if it exists,
+   * otherwise return null
+   */
+  public V1ConfigMap getJobConfigMap(String jobID) {
+
+    String labelSelector = KubernetesUtils.jobLabelSelector(jobID);
+    try {
+      V1ConfigMapList configMapList = coreApi.listNamespacedConfigMap(namespace,
+          null, null, null, null, labelSelector, null, null, null, null);
+
+      if (configMapList.getItems().size() == 1) {
+        return configMapList.getItems().get(0);
+      } else if (configMapList.getItems().size() > 1) {
+        throw new Twister2RuntimeException(
+            "There are multiple ConfigMaps for this job on Kubernetes master.");
+      } else {
+        return null;
+      }
+
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * return configMap parameter value for the given jobID
+   * if there is no value for the key, return null
+   */
+  public String getConfigMapParam(String jobID, String keyName) {
+    Map<String, String> pairs = getConfigMapParams(jobID);
+    return pairs.get(keyName);
+  }
+
+  /**
+   * return all configMap parameters for the given jobID
+   * if there is no ConfigMap, throw an exception
+   */
+  public Map<String, String> getConfigMapParams(String jobID) {
+    String configMapName = jobID;
+    V1ConfigMap configMap = getJobConfigMap(jobID);
+    if (configMap == null) {
+      throw new RuntimeException("Could not get ConfigMap from K8s master: " + configMapName);
+    }
+
+    Map<String, String> pairs = configMap.getData();
+    if (pairs == null) {
+      throw new RuntimeException("Could not get data from ConfigMap");
+    }
+
+    return pairs;
+  }
+
+  /**
+   * return restart count for the given workerID
+   * if there is no key for the given workerID, return -1
+   */
+  public int getRestartCount(String jobID, String keyName) {
+    String countStr = getConfigMapParam(jobID, keyName);
+    if (countStr == null) {
+      return -1;
+    } else {
+      return Integer.parseInt(countStr);
+    }
+  }
+
+  /**
+   * add a new parameter the job ConfigMap
+   */
+  public boolean addConfigMapParam(String jobID, String keyName, String value) {
+
+    String configMapName = jobID;
+    String valueStr = "\"" + value + "\"";
+
+    String jsonPatchStr =
+        "[{\"op\":\"add\",\"path\":\"/data/" + keyName + "\",\"value\":" + valueStr + "}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter added " + keyName + " = " + value);
+        return true;
+
+      } else {
+        LOG.severe("Error when patching the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * update a parameter value in the job ConfigMap
+   */
+  public boolean updateConfigMapParam(String jobID, String paramName, String paramValue) {
+
+    String configMapName = jobID;
+    String countStr = "\"" + paramValue + "\"";
+
+    String jsonPatchStr =
+        "[{\"op\":\"replace\",\"path\":\"/data/" + paramName + "\",\"value\":" + countStr + "}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter updated " + paramName + " = " + paramValue);
+        return true;
+
+      } else {
+        LOG.severe("Error when patching the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    }
+    return false;
+  }
+
+  public boolean updateConfigMapJobParam(JobAPI.Job job) {
+    String jobAsEncodedStr = Base64.getEncoder().encodeToString(job.toByteArray());
+    return updateConfigMapParam(
+        job.getJobId(), KubernetesConstants.JOB_OBJECT_CM_PARAM, jobAsEncodedStr);
+  }
+
+  /**
+   * remove a restart count from the job ConfigMap
+   * this is used when the job is scaled down
+   */
+  public boolean removeRestartCount(String jobID, String keyName) {
+
+    String configMapName = jobID;
+
+    String jsonPatchStr =
+        "[{\"op\":\"remove\",\"path\":\"/data/" + keyName + "\"}]";
+
+    try (okhttp3.Response response = coreApi.patchNamespacedConfigMapCall(
+        configMapName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null)
+        .execute()) {
+
+      if (response.isSuccessful()) {
+        LOG.fine("ConfigMap parameter removed " + keyName);
+        return true;
+
+      } else {
+        LOG.severe("Error removing restartCount from the ConfigMap ["
+            + configMapName + "]: " + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the ConfigMap: " + configMapName, e);
+    }
+    return false;
   }
 
 }

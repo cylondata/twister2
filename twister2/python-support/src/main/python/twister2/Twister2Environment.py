@@ -1,8 +1,7 @@
 import os
+import sys
 
 import cloudpickle as cp
-import sys
-import time
 from py4j.java_gateway import JavaGateway, GatewayParameters
 
 from twister2.tset.KeyedTSet import KeyedTSet
@@ -22,12 +21,12 @@ class Twister2Environment:
 
         bootstrap = os.environ['T2_BOOTSTRAP'] == "true"
         if mpi_aware and not bootstrap:
-          from mpi4py import MPI
-          comm = MPI.COMM_WORLD
-          rank = comm.Get_rank()
-          port = int(os.environ['T2_PORT']) + rank
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            rank = comm.Get_rank()
+            port = int(os.environ['T2_PORT']) + rank
         else:
-          port = int(os.environ['T2_PORT'])
+            port = int(os.environ['T2_PORT'])
         self.__gateway = JavaGateway(
             gateway_parameters=GatewayParameters(port=port, auto_convert=True))
         self.__entrypoint = self.__gateway.entry_point
@@ -59,6 +58,9 @@ class Twister2Environment:
     @property
     def worker_id(self):
         return self.__entrypoint.getWorkerId()
+
+    def peers(self):
+        return self.__entrypoint.getPeerNetworkInfo()
 
     @property
     def functions(self) -> TSetFunctions:
@@ -106,4 +108,3 @@ class Twister2Environment:
     def numpy_builder(self):
         # should be remove in future releases
         return self.__entrypoint.getNumpyBuilder()
-

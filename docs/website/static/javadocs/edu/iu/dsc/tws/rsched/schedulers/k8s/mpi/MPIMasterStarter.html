@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -140,7 +140,8 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#createHostFile-java.util.ArrayList-">createHostFile</a></span>(java.util.ArrayList&lt;java.lang.String&gt;&nbsp;ipList)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#createHostFile-java.util.ArrayList-int-">createHostFile</a></span>(java.util.ArrayList&lt;java.lang.String&gt;&nbsp;ipList,
+              int&nbsp;workersPerPod)</code>
 <div class="block">create hostfile for mpirun command
  first line in the file is the ip of this pod
  other lines are unordered
@@ -148,41 +149,28 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#createJobMasterIPCommandLineArgument-java.lang.String-">createJobMasterIPCommandLineArgument</a></span>(java.lang.String&nbsp;value)</code>
-<div class="block">we send the jobMaster IP as a command line parameter to workers
- we send it in the form of: "jobMasterIP=ip"</div>
-</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>static boolean</code></td>
+<td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#executeMpirun-java.lang.String:A-">executeMpirun</a></span>(java.lang.String[]&nbsp;command)</code>
 <div class="block">send mpirun command to shell</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static java.lang.String[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#generateCheckSshCommand-java.util.ArrayList-">generateCheckSshCommand</a></span>(java.util.ArrayList&lt;java.lang.String&gt;&nbsp;podIPs)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static java.lang.String[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#generateMPIrunCommand-java.lang.String-int-java.lang.String-java.lang.String-java.lang.String-">generateMPIrunCommand</a></span>(java.lang.String&nbsp;className,
                      int&nbsp;workersPerPod,
                      java.lang.String&nbsp;jobMasterIP,
-                     java.lang.String&nbsp;encodedNodeInfoList,
-                     java.lang.String&nbsp;logPropsFile)</code>&nbsp;</td>
+                     java.lang.String&nbsp;logPropsFile,
+                     java.lang.String&nbsp;jvmMemory)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#getJobMasterIPCommandLineArgumentValue-java.lang.String-">getJobMasterIPCommandLineArgumentValue</a></span>(java.lang.String&nbsp;commandLineArgument)</code>
-<div class="block">retrieve job master ip from the command line parameter</div>
-</td>
-</tr>
-<tr id="i7" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../../edu/iu/dsc/tws/rsched/schedulers/k8s/mpi/MPIMasterStarter.html#runScript-java.lang.String:A-">runScript</a></span>(java.lang.String[]&nbsp;command)</code>
 <div class="block">send check ssh script run command to shell</div>
@@ -219,13 +207,14 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;void&nbsp;main(java.lang.String[]&nbsp;args)</pre>
 </li>
 </ul>
-<a name="createHostFile-java.util.ArrayList-">
+<a name="createHostFile-java.util.ArrayList-int-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createHostFile</h4>
-<pre>public static&nbsp;boolean&nbsp;createHostFile(java.util.ArrayList&lt;java.lang.String&gt;&nbsp;ipList)</pre>
+<pre>public static&nbsp;boolean&nbsp;createHostFile(java.util.ArrayList&lt;java.lang.String&gt;&nbsp;ipList,
+                                     int&nbsp;workersPerPod)</pre>
 <div class="block">create hostfile for mpirun command
  first line in the file is the ip of this pod
  other lines are unordered
@@ -241,8 +230,8 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;java.lang.String[]&nbsp;generateMPIrunCommand(java.lang.String&nbsp;className,
                                                        int&nbsp;workersPerPod,
                                                        java.lang.String&nbsp;jobMasterIP,
-                                                       java.lang.String&nbsp;encodedNodeInfoList,
-                                                       java.lang.String&nbsp;logPropsFile)</pre>
+                                                       java.lang.String&nbsp;logPropsFile,
+                                                       java.lang.String&nbsp;jvmMemory)</pre>
 </li>
 </ul>
 <a name="executeMpirun-java.lang.String:A-">
@@ -251,7 +240,7 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>executeMpirun</h4>
-<pre>public static&nbsp;boolean&nbsp;executeMpirun(java.lang.String[]&nbsp;command)</pre>
+<pre>public static&nbsp;void&nbsp;executeMpirun(java.lang.String[]&nbsp;command)</pre>
 <div class="block">send mpirun command to shell</div>
 </li>
 </ul>
@@ -262,27 +251,6 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>commandAsAString</h4>
 <pre>public static&nbsp;java.lang.String&nbsp;commandAsAString(java.lang.String[]&nbsp;commandArray)</pre>
-</li>
-</ul>
-<a name="createJobMasterIPCommandLineArgument-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>createJobMasterIPCommandLineArgument</h4>
-<pre>public static&nbsp;java.lang.String&nbsp;createJobMasterIPCommandLineArgument(java.lang.String&nbsp;value)</pre>
-<div class="block">we send the jobMaster IP as a command line parameter to workers
- we send it in the form of: "jobMasterIP=ip"</div>
-</li>
-</ul>
-<a name="getJobMasterIPCommandLineArgumentValue-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getJobMasterIPCommandLineArgumentValue</h4>
-<pre>public static&nbsp;java.lang.String&nbsp;getJobMasterIPCommandLineArgumentValue(java.lang.String&nbsp;commandLineArgument)</pre>
-<div class="block">retrieve job master ip from the command line parameter</div>
 </li>
 </ul>
 <a name="generateCheckSshCommand-java.util.ArrayList-">

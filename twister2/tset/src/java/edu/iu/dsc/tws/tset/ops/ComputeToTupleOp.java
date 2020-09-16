@@ -21,14 +21,14 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class ComputeToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private ComputeFunc<Tuple<K, O>, I> computeFunc;
+public class ComputeToTupleOp<I, K, O> extends BaseComputeOp<I> {
+  private ComputeFunc<I, Tuple<K, O>> computeFunc;
 
   public ComputeToTupleOp() {
 
   }
 
-  public ComputeToTupleOp(ComputeFunc<Tuple<K, O>, I> computeFn, BaseTSet origin,
+  public ComputeToTupleOp(ComputeFunc<I, Tuple<K, O>> computeFn, BaseTSet origin,
                           Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunc = computeFn;
@@ -43,8 +43,17 @@ public class ComputeToTupleOp<K, O, I> extends BaseComputeOp<I> {
   public boolean execute(IMessage<I> content) {
     Tuple<K, O> tuple = computeFunc.compute(content.getContent());
     keyedWriteToEdges(tuple.getKey(), tuple.getValue());
-    writeEndToEdges();
-    computeFunc.close();
     return false;
+  }
+
+  @Override
+  public void close() {
+    computeFunc.close();
+  }
+
+  @Override
+  public void endExecute() {
+    computeFunc.end();
+    writeEndToEdges();
   }
 }

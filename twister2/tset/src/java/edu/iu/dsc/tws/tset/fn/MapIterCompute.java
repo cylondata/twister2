@@ -19,14 +19,14 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 
-public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
-  private MapFunc<O, I> mapFn;
+public class MapIterCompute<I, O> implements ComputeCollectorFunc<Iterator<I>, O> {
+  private MapFunc<I, O> mapFn;
 
   private MapIterCompute() {
     //non arg constructor for kryp
   }
 
-  public MapIterCompute(MapFunc<O, I> mapFunction) {
+  public MapIterCompute(MapFunc<I, O> mapFunction) {
     this.mapFn = mapFunction;
   }
 

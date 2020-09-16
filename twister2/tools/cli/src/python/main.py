@@ -12,7 +12,6 @@
 
 ''' main.py '''
 import argparse
-import atexit
 import os
 import shutil
 import sys
@@ -27,6 +26,9 @@ import twister2.tools.cli.src.python.submit as submit
 import twister2.tools.cli.src.python.result as result
 import twister2.tools.cli.src.python.dashboard as dashboard
 import twister2.tools.cli.src.python.restart as restart
+import twister2.tools.cli.src.python.clear as clear
+import twister2.tools.cli.src.python.clearall as clearall
+import twister2.tools.cli.src.python.list as list
 
 Log = log.Log
 
@@ -74,6 +76,9 @@ def create_parser(for_python=False):
     submit.create_parser(subparsers, for_python)
     dashboard.create_parser(subparsers)
     restart.create_parser(subparsers)
+    clear.create_parser(subparsers)
+    clearall.create_parser(subparsers)
+    list.create_parser(subparsers)
 
     return parser
 
@@ -92,7 +97,10 @@ def run(command, parser, command_args, unknown_args):
         'submit':submit,
         'help':cli_help,
         'dash':dashboard,
-        'restart':restart
+        'restart':restart,
+        'clear':clear,
+        'clearall':clearall,
+        'list':list
     }
 
     if command in runners:

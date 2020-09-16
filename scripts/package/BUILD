@@ -27,6 +27,7 @@ load("//tools/rules:twister2_client.bzl", "twister2_client_python_example_files"
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_common_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_executor_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_connector_files")
+load("//tools/rules:twister2_client.bzl", "twister2_ucx_native_libs")
 load("//tools/rules:twister2_core.bzl", "twister2_core_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_conf_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_lib_communication_files")
@@ -38,14 +39,15 @@ load("//tools/rules:twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools/rules:twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools/rules:twister2_core.bzl", "twister2_dashboard_files")
+load("//tools/rules:twister2_core.bzl", "twister2_deeplearning_files")
 load("//tools/rules:twister2_core.bzl", "twister2_storm_files")
 load("//tools/rules:twister2_core.bzl", "twister2_beam_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_checkpointing_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_tset_files")
-load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools/rules:twister2_core.bzl", "twister2_python_support_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_jersey_files")
+load("//tools/rules:twister2_client.bzl", "twister2_arrow_lib_files")
 load(":pack_functions.bzl", "pack_tw2")
 load("//:t2_meta.bzl", "T2_VERSION")
 
@@ -85,6 +87,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-checkpointing",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
@@ -113,6 +116,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-beam",
         ":twister2-checkpointing",
         ":twister2-core-lib-api",
@@ -255,6 +259,13 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-arrow-lib",
+    srcs = twister2_arrow_lib_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-core-lib-executor",
     srcs = twister2_client_lib_executor_files(),
     package_dir = "lib",
@@ -293,6 +304,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-bin",
         ":twister2-checkpointing",
         ":twister2-communication",
@@ -307,6 +319,7 @@ pack_tw2(
         ":twister2-core-lib-executor",
         ":twister2-curator-zookeeper-libs",
         ":twister2-dashboard",
+        ":twister2-deeplearning",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-fault-tolerance",
@@ -325,8 +338,9 @@ pack_tw2(
         ":twister2-master-lib",
         ":twister2-python-examples",
         ":twister2-python-support",
-        ":twister2-restarter",
         ":twister2-tset",
+        ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -337,6 +351,7 @@ pack_tw2(
     package_dir = "twister2-%s" % T2_VERSION,
     version = T2_VERSION,
     deps = [
+        ":twister2-arrow-lib",
         ":twister2-beam",
         ":twister2-bin",
         ":twister2-checkpointing",
@@ -353,6 +368,7 @@ pack_tw2(
         ":twister2-core-lib-executor",
         ":twister2-curator-zookeeper-libs",
         ":twister2-dashboard",
+        ":twister2-deeplearning",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
@@ -374,7 +390,6 @@ pack_tw2(
         ":twister2-ompi-lib",
         ":twister2-python-examples",
         ":twister2-python-support",
-        ":twister2-restarter",
         ":twister2-storm",
         ":twister2-test",
         ":twister2-test-tests",
@@ -387,6 +402,8 @@ pack_tw2(
         ":twister2-test-util",
         ":twister2-test-values",
         ":twister2-tset",
+        ":twister2-ucx-native-libs",
+        ":twister2-ucx-native-libs-dir"
     ],
 )
 
@@ -580,6 +597,13 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-deeplearning",
+    srcs = twister2_deeplearning_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-storm",
     srcs = twister2_storm_files(),
     package_dir = "lib",
@@ -610,13 +634,6 @@ pack_tw2(
 pack_tw2(
     name = "twister2-tset",
     srcs = twister2_core_tset_files(),
-    package_dir = "lib",
-    version = T2_VERSION,
-)
-
-pack_tw2(
-    name = "twister2-restarter",
-    srcs = twister2_core_restarter_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
@@ -688,5 +705,19 @@ pack_tw2(
     name = "twister2-test-tests-integration-task",
     srcs = ["//util/test:test_tests_integration_task"],
     package_dir = "util/test/tests/integration/task",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-ucx-native-libs",
+    srcs = twister2_ucx_native_libs(),
+    package_dir = "lib/ucx",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-ucx-native-libs-dir",
+    srcs = ["EMPTY"],
+    package_dir = "lib/ucx/ucx",
     version = T2_VERSION,
 )

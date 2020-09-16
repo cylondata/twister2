@@ -1,0 +1,43 @@
+###################################################################
+# Persistent and Volatile Storage related settings
+###################################################################
+
+# persistent storage type
+# for kubernetes, it could be: hdfs, mounted or none
+# by default, it is "mounted"
+# "mounted" means any k8s persistent volume mounted to the twister2 pods
+# to mount a persistent volume, please specify "persistent volume related settings" in resource.yaml
+# twister2.persistent.storage.type: "mounted"
+
+# persistent storage root
+# persistent storage root is specified only for hdfs in Kubernetes
+# it is "/persistent" for mounted persistent volumes in Kubernetes.
+#    That can not be changed with config parameters
+# for hdfs, a directory with jobID is created under this directory
+# all persistent storage related files are stored under that directory for the job
+# for hdfs, it can be something like:
+# twister2.persistent.storage.root: "/twister2"
+
+# volatile storage root
+# when twister2 can not fit the tset data into the memory and useDisk is specified,
+#   it saves to this location during the computation
+# when twister2 networking can not fit the data into the allocated memory,
+#   it saves to this location
+# in Kubernetes, volatile storage root is always "/twister2-volatile".
+# volatile root path can not be changed in Kubernetes
+# volatile disk is specified when creating Twister2Job object.
+
+# tset data can be saved to disk when the data can not fit into the memory
+# by default, it is saved to the mounted disk
+# it can also be saved to hdfs
+# supported values: "mounted" or "hdfs"
+# twister2.tset.storage.type: "mounted"
+
+# logging storage type
+# twister2 can save logs to volatile or persistent storage
+# however, we do not support hdfs as the persistent storage for logging yet
+# supported values: "volatile" or "persistent"
+# by default, it is "volatile"
+# you can also save the logs to the submitting client by enabling the following parameter in resource.yaml:
+#    kubernetes.log.in.client
+# twister2.logging.storage.type: "volatile"

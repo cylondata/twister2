@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -30,7 +31,11 @@ import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.PipeBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.table.DirectOperation;
+import edu.iu.dsc.tws.executor.comms.batch.table.PartitionOperation;
+import edu.iu.dsc.tws.executor.comms.batch.table.PipeOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
@@ -57,12 +62,14 @@ public class ParallelOperationFactory {
 
   public IParallelOperation build(Edge leftEdge, Edge rightEdge, Set<Integer> sources1,
                                   Set<Integer> sources2,
-                                  Set<Integer> dests, OperationMode operationMode) {
+                                  Set<Integer> dests, OperationMode operationMode,
+                                  Map<Integer, Integer> srcGlobalToIndx,
+                                  Map<Integer, Integer> tgtsGlobalToIndx) {
     if (operationMode.equals(OperationMode.BATCH)) {
       if (leftEdge.isKeyed() && rightEdge.isKeyed()) {
         if (OperationNames.JOIN.equals(leftEdge.getOperation())) {
           return new JoinBatchOperation(config, channel, logicalPlan, sources1, sources2,
-              dests, leftEdge, rightEdge);
+              dests, leftEdge, rightEdge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       }
     }
@@ -74,12 +81,15 @@ public class ParallelOperationFactory {
    * the sub cateogories depends on the communication used for each edge in the task graph.
    */
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
-                                  OperationMode operationMode) {
+                                  OperationMode operationMode,
+                                  Map<Integer, Integer> srcGlobalToIndx,
+                                  Map<Integer, Integer> tgtsGlobalToIndx) {
 
     if (operationMode.equals(OperationMode.BATCH)) {
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
-          return new PartitionBatchOperation(config, channel, logicalPlan, sources, dests, edge);
+          return new PartitionBatchOperation(config, channel, logicalPlan, sources, dests, edge,
+              srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           return new BroadcastBatchOperation(config, channel, logicalPlan,
               sources, dests, edge);
@@ -97,24 +107,35 @@ public class ParallelOperationFactory {
               channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
           return new DirectBatchOperation(config, channel, logicalPlan, sources, dests, edge);
+        } else if (OperationNames.PIPE.equals(edge.getOperation())) {
+          return new PipeBatchOperation(config, channel, logicalPlan, sources, dests, edge);
+        } else if (OperationNames.TABLE_PARTITION.equals(edge.getOperation())) {
+          return new PartitionOperation(config, channel, logicalPlan, sources,
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
+        } else if (OperationNames.TABLE_PIPE.equals(edge.getOperation())) {
+          return new PipeOperation(config, channel, logicalPlan, sources,
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
+        } else if (OperationNames.TABLE_DIRECT.equals(edge.getOperation())) {
+          return new DirectOperation(config, channel, logicalPlan, sources,
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           return new KeyedReduceBatchOperation(config, channel, logicalPlan, sources,
-              dests, edge);
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherBatchOperation(config, channel, logicalPlan, sources,
-              dests, edge);
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, logicalPlan, sources,
-              dests, edge);
+              dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
           return new PartitionStreamingOperation(config, channel,
-              logicalPlan, sources, dests, edge);
+              logicalPlan, sources, dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           return new BroadcastStreamingOperation(config, channel,
               logicalPlan, sources, dests, edge);
@@ -138,13 +159,14 @@ public class ParallelOperationFactory {
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           return new KeyedReduceStreamingOperation(
-              config, channel, logicalPlan, sources, dests, edge);
+              config, channel, logicalPlan, sources, dests, edge,
+              srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherStreamingOperation(config, channel, logicalPlan,
-              sources, dests, edge);
+              sources, dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionStreamOperation(config, channel, logicalPlan,
-              sources, dests, edge);
+              sources, dests, edge, srcGlobalToIndx, tgtsGlobalToIndx);
         }
       }
     }

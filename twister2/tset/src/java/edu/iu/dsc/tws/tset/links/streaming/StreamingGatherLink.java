@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
@@ -38,11 +38,11 @@ import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 public abstract class StreamingGatherLink<T>
     extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, Schema schema) {
+  StreamingGatherLink(StreamingEnvironment env, String n, int sourceP, Schema schema) {
     this(env, n, sourceP, sourceP, schema);
   }
 
-  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingGatherLink(StreamingEnvironment env, String n, int sourceP, int targetP,
                       Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
@@ -60,29 +60,26 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   }*/
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
-    GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
+  public <O> SComputeTSet<O> map(MapFunc<T, O> mapFn) {
+    GatherMapCompute<T, O> comp = new GatherMapCompute<>(mapFn);
     return compute("smap", comp);
   }
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
-    GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
+  public <O> SComputeTSet<O> flatmap(FlatMapFunc<T, O> mapFn) {
+    GatherFlatMapCompute<T, O> comp = new GatherFlatMapCompute<>(mapFn);
     return compute("smap", comp);
   }
 
   @Override
-  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> genTupleFn) {
-    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new GatherMapCompute<>(genTupleFn),
-        getTargetParallelism(), getSchema());
-    addChildToGraph(set);
-    return set;
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> genTupleFn) {
+    return this.computeToTuple("smap2tup", new GatherMapCompute<>(genTupleFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
-    SComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
+    SComputeTSet<Object> foreach =
         compute("sforeach", comp);
     addChildToGraph(foreach);
   }

@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.master.NomadMasterStarter;
@@ -42,7 +42,7 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean killJob(String jobID) {
     LOG.log(Level.INFO, "Terminating job for cluster: ",
         NomadContext.clusterType(config));
 
@@ -57,7 +57,7 @@ public class NomadLauncher implements ILauncher {
 
     jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobID).toAbsolutePath().toString();
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobWorkingDirectory, jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    JobAPI.Job job = JobUtils.readJobFile(jobDescFile);
 
     return controller.kill(job);
   }
@@ -73,7 +73,7 @@ public class NomadLauncher implements ILauncher {
     master.initialize(job, config);
     boolean start = master.launch();
     // now we need to terminate the job
-    if (!terminateJob(job.getJobId())) {
+    if (!killJob(job.getJobId())) {
       LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobId());
     }
     state.setRequestGranted(start);

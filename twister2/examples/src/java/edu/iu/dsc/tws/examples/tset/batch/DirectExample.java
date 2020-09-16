@@ -30,13 +30,16 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -47,8 +50,11 @@ public class DirectExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM)
+        .setName("src");
 
     DirectTLink<Integer> direct = src.direct().setName("direct");
 
@@ -56,29 +62,33 @@ public class DirectExample extends BatchTsetExample {
     direct.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    direct.map(i -> i.toString() + "$$").setName("map").withSchema(PrimitiveSchemas.STRING)
+    direct.map(i -> i.toString() + "$$")
+        .setName("map")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    direct.flatmap((i, c) -> c.collect(i.toString() + "##")).setName("flatmap")
+    direct.flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .setName("flatmap")
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
+    direct.compute((ComputeFunc<Iterator<Integer>, String>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next();
       }
       return "sum" + sum;
-    }).setName("compute").withSchema(PrimitiveSchemas.STRING)
+    }).setName("compute")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+    direct.compute((ComputeCollectorFunc<Iterator<Integer>, String>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -90,6 +100,11 @@ public class DirectExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 
+    LOG.info("test map2tup");
+    direct.mapToTuple(i -> new Tuple<>(i, i.toString()))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
+
     LOG.info("test sink");
     SinkTSet<Iterator<Integer>> sink = direct.sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
@@ -98,9 +113,7 @@ public class DirectExample extends BatchTsetExample {
       return true;
     });
     env.run(sink);
-
   }
-
 
   public static void main(String[] args) {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());

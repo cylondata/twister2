@@ -20,25 +20,28 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.KeyedSchema;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 
-public class SetSchemaExample implements BatchTSetIWorker, Serializable {
+public class SetSchemaExample implements Twister2Worker, Serializable {
   private static final long serialVersionUID = -2753072757838198105L;
   private static final Logger LOG = Logger.getLogger(SetSchemaExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     SourceTSet<Integer> src = env.createSource(new BaseSourceFunc<Integer>() {
       private int i = 0;
 
@@ -63,8 +66,8 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
 
     src.withSchema(PrimitiveSchemas.INTEGER).direct().forEach(ii -> LOG.info("out1: " + ii));
 
-    ComputeTSet<String, Integer> map = src.allReduce(Integer::sum).map(
-        new BaseMapFunc<String, Integer>() {
+    ComputeTSet<String> map = src.allReduce(Integer::sum).map(
+        new BaseMapFunc<Integer, String>() {
           @Override
           public void prepare(TSetContext ctx) {
             super.prepare(ctx);
@@ -83,7 +86,7 @@ public class SetSchemaExample implements BatchTSetIWorker, Serializable {
     map.withSchema(PrimitiveSchemas.STRING).direct().forEach(ii -> LOG.info("out3: " + ii));
 
     KeyedTSet<String, Integer> keyed = map.mapToTuple(
-        new BaseMapFunc<Tuple<String, Integer>, String>() {
+        new BaseMapFunc<String, Tuple<String, Integer>>() {
           @Override
           public void prepare(TSetContext ctx) {
             super.prepare(ctx);

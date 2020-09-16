@@ -14,13 +14,14 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -33,17 +34,18 @@ public class EvaluateExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     SourceTSet<Integer> src = dummyReplayableSource(env, COUNT, PARALLELISM).setName("src");
 
     DirectTLink<Integer> direct = src.direct().setName("direct");
 
     LOG.info("test foreach");
-    ComputeTSet<Object, Iterator<Integer>> tset1 =
+    ComputeTSet<Object> tset1 =
         direct.lazyForEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    ComputeTSet<Object, Iterator<String>> tset2 =
+    ComputeTSet<Object> tset2 =
         direct.map(i -> i.toString() + "$$").setName("map")
             .direct()
             .lazyForEach(s -> LOG.info("map: " + s));

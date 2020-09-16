@@ -218,6 +218,10 @@ public class Context {
     return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
   }
 
+  public static boolean isKubernetesCluster(Config cfg) {
+    return "kubernetes".equalsIgnoreCase(clusterType(cfg));
+  }
+
   public static Map<String, Object> getDefaults() {
     return defaults;
   }

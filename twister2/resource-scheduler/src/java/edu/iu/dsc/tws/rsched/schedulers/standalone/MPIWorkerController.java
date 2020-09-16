@@ -15,60 +15,84 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+import mpi.MPI;
+import mpi.MPIException;
+
 public class MPIWorkerController implements IWorkerController {
-  private int thisWorkerID;
 
-  private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
+  private static final Logger LOG = Logger.getLogger(MPIWorkerController.class.getName());
 
-  private Map<String, Object> runtimeObjects = new HashMap<>();
+  private int workerID;
+  private int restartCount;
 
-  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> processNames) {
-    this.thisWorkerID = thisWorkerID;
-    this.networkInfoMap = processNames;
+  private Map<Integer, JobMasterAPI.WorkerInfo> workerInfoMap = new HashMap<>();
+
+  public MPIWorkerController(int workerID,
+                             Map<Integer, JobMasterAPI.WorkerInfo> workers,
+                             int restartCount) {
+    this.workerID = workerID;
+    this.workerInfoMap = workers;
+    this.restartCount = restartCount;
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return networkInfoMap.get(thisWorkerID);
+    return workerInfoMap.get(workerID);
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
-    return networkInfoMap.get(id);
+    return workerInfoMap.get(id);
   }
 
   @Override
   public int getNumberOfWorkers() {
-    return networkInfoMap.size();
+    return workerInfoMap.size();
   }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
-    return new ArrayList<>(networkInfoMap.values());
+    return new ArrayList<>(workerInfoMap.values());
   }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
-    return new ArrayList<>(networkInfoMap.values());
+    return new ArrayList<>(workerInfoMap.values());
+  }
+
+  @Override
+  public int workerRestartCount() {
+    return restartCount;
   }
 
   @Override
   public void waitOnBarrier() throws TimeoutException {
-  }
-
-  public void add(String name, Object obj) {
-    runtimeObjects.put(name, obj);
+    try {
+      MPI.COMM_WORLD.barrier();
+    } catch (MPIException e) {
+      throw new Twister2RuntimeException("Failed to wait on barrier");
+    }
   }
 
   @Override
-  public Object getRuntimeObject(String name) {
-    return runtimeObjects.get(name);
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    waitOnBarrier();
   }
 
   @Override
@@ -76,4 +100,21 @@ public class MPIWorkerController implements IWorkerController {
     return null;
   }
 
+  public boolean addAllJoinedListener(IAllJoinedListener iAllJoinedListener) {
+
+    // deliver worker list in a thread
+    new Thread("Twister2-MPIWorkerController-AllJoinedSupplier") {
+      @Override
+      public void run() {
+        try {
+          iAllJoinedListener.allWorkersJoined(getAllWorkers());
+        } catch (TimeoutException e) {
+          LOG.log(Level.SEVERE, e.getMessage(), e);
+        }
+        LOG.fine("AllWorkersJoined event delivered from cache.");
+      }
+    }.start();
+
+    return true;
+  }
 }

@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
  * @param <O> TSet Window Output
  * @param <I> TSet Window Input
  */
-public interface WindowComputeFunc<O, I> extends ComputeFunc<O, I> {
+public interface WindowComputeFunc<I, O> extends ComputeFunc<I, O> {
 
 
 }

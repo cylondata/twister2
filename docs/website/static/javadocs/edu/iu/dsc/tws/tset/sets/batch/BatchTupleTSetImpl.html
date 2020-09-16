@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -211,7 +211,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/Batc
 </td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a></code></td>
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#getTSetEnv--">getTSetEnv</a></span>()</code>
 <div class="block">tset env</div>
 </td>
@@ -284,37 +284,43 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/Batc
 </td>
 </tr>
 <tr id="i14" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedPipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedPipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#keyedPipe--">keyedPipe</a></span>()</code>
+<div class="block">Pipe implementation</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedReduceTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedReduceTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#keyedReduce-edu.iu.dsc.tws.api.tset.fn.ReduceFunc-">keyedReduce</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/fn/ReduceFunc.html" title="interface in edu.iu.dsc.tws.api.tset.fn">ReduceFunc</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;&nbsp;reduceFn)</code>
 <div class="block">Reduces data by key for <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch"><code>BatchTupleTSet</code></a>s</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedCachedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedCachedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#lazyCache--">lazyCache</a></span>()</code>
 <div class="block">Performs caching lazily.</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedPersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedPersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#lazyPersist--">lazyPersist</a></span>()</code>
 <div class="block">Performs persisting lazily.</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/KeyedPersistedTSet.html" title="class in edu.iu.dsc.tws.tset.sets.batch">KeyedPersistedTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#persist--">persist</a></span>()</code>
 <div class="block">Similar to cache, but the data is stored in a disk based
  <a href="../../../../../../../edu/iu/dsc/tws/api/dataset/DataPartition.html" title="interface in edu.iu.dsc.tws.api.dataset"><code>DataPartition</code></a>.</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTupleTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#setName-java.lang.String-">setName</a></span>(java.lang.String&nbsp;n)</code>
 <div class="block">Name of the tset</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="class in edu.iu.dsc.tws.tset.sets.batch">BatchTupleTSetImpl</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html#withSchema-edu.iu.dsc.tws.api.tset.schema.TupleSchema-">withSchema</a></span>(<a href="../../../../../../../edu/iu/dsc/tws/api/tset/schema/TupleSchema.html" title="interface in edu.iu.dsc.tws.api.tset.schema">TupleSchema</a>&nbsp;schema)</code>
 <div class="block">Sets the data type of the <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets"><code>TupleTSet</code></a> output.</div>
@@ -400,7 +406,7 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/Batc
 <ul class="blockList">
 <li class="blockList">
 <h4>getTSetEnv</h4>
-<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchTSetEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchTSetEnvironment</a>&nbsp;getTSetEnv()</pre>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/env/BatchEnvironment.html" title="class in edu.iu.dsc.tws.tset.env">BatchEnvironment</a>&nbsp;getTSetEnv()</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/tset/Buildable.html#getTSetEnv--">Buildable</a></code></span></div>
 <div class="block">tset env</div>
 <dl>
@@ -429,6 +435,23 @@ implements <a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/Batc
 <dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html#keyedDirect--">keyedDirect</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/TupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets">TupleTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Keyed Direct TLink</dd>
+</dl>
+</li>
+</ul>
+<a name="keyedPipe--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>keyedPipe</h4>
+<pre>public&nbsp;<a href="../../../../../../../edu/iu/dsc/tws/tset/links/batch/KeyedPipeTLink.html" title="class in edu.iu.dsc.tws.tset.links.batch">KeyedPipeTLink</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;&nbsp;keyedPipe()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html#keyedPipe--">BatchTupleTSet</a></code></span></div>
+<div class="block">Pipe implementation</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html#keyedPipe--">keyedPipe</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../../../edu/iu/dsc/tws/api/tset/sets/batch/BatchTupleTSet.html" title="interface in edu.iu.dsc.tws.api.tset.sets.batch">BatchTupleTSet</a>&lt;<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">K</a>,<a href="../../../../../../../edu/iu/dsc/tws/tset/sets/batch/BatchTupleTSetImpl.html" title="type parameter in BatchTupleTSetImpl">V</a>&gt;</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Keyed Pipe TLink</dd>
 </dl>
 </li>
 </ul>

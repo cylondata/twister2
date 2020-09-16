@@ -21,9 +21,12 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
+import edu.iu.dsc.tws.api.faulttolerance.JobProgress;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
@@ -37,35 +40,36 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 public class JMWorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
 
-  private JobMasterAPI.WorkerInfo thisWorker;
+  private JobMasterAPI.WorkerInfo workerInfo;
   private ArrayList<JobMasterAPI.WorkerInfo> workerList;
   private int numberOfWorkers;
+  private int restartCount;
 
   private RRClient rrClient;
   private CheckpointingClient checkpointingClient;
   private Config config;
 
-  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
-                            RRClient rrClient, CheckpointingClient checkpointingClient) {
-    this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config),
-        checkpointingClient);
-  }
-
-  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
-                            RRClient rrClient, int numberOfWorkers,
+  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo workerInfo,
+                            int numberOfWorkers, int restartCount, RRClient rrClient,
                             CheckpointingClient checkpointingClient) {
     this.config = config;
+    this.workerInfo = workerInfo;
     this.numberOfWorkers = numberOfWorkers;
-    this.thisWorker = thisWorker;
+    this.restartCount = restartCount;
     this.rrClient = rrClient;
     this.checkpointingClient = checkpointingClient;
     workerList = new ArrayList<>();
-    workerList.add(thisWorker);
+    workerList.add(workerInfo);
+
+    rrClient.registerResponseHandler(JobMasterAPI.ListWorkersRequest.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.ListWorkersResponse.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.BarrierRequest.newBuilder(), this);
+    rrClient.registerResponseHandler(JobMasterAPI.BarrierResponse.newBuilder(), this);
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return thisWorker;
+    return workerInfo;
   }
 
   /**
@@ -137,7 +141,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
                                         long timeLimit) {
 
     ListWorkersRequest listRequest = ListWorkersRequest.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerID(workerInfo.getWorkerID())
         .setRequestType(requestType)
         .build();
 
@@ -163,12 +167,12 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
           listResponse.getWorkerList();
 
       workerList.clear();
-      workerList.add(thisWorker);
+      workerList.add(workerInfo);
 
       for (JobMasterAPI.WorkerInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
-        if (receivedWorkerInfo.getWorkerID() != thisWorker.getWorkerID()) {
+        if (receivedWorkerInfo.getWorkerID() != workerInfo.getWorkerID()) {
           workerList.add(receivedWorkerInfo);
         }
       }
@@ -182,21 +186,62 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
+  @Override
   public void waitOnBarrier() throws TimeoutException {
+    waitOnBarrier(ControllerContext.maxWaitTimeOnBarrier(config));
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException {
+    // if the cluster is in a faulty state,
+    // do not wait on the barrier
+    if (JobProgress.isJobFaulty()) {
+      throw new JobFaultyException("Can not wait on the barrier, since the job is faulty.");
+    }
+
+    sendBarrierRequest(JobMasterAPI.BarrierType.DEFAULT, timeLimit);
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    sendBarrierRequest(
+        JobMasterAPI.BarrierType.INIT, ControllerContext.maxWaitTimeOnInitBarrier(config));
+  }
+
+  private void sendBarrierRequest(JobMasterAPI.BarrierType barrierType, long timeLimit)
+      throws TimeoutException {
 
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerID(workerInfo.getWorkerID())
+        .setBarrierType(barrierType)
+        .setTimeout(timeLimit)
         .build();
 
     LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
-      rrClient.sendRequestWaitResponse(barrierRequest,
-          ControllerContext.maxWaitTimeOnBarrier(config));
-    } catch (BlockingSendException e) {
-      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
-          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.", e);
-    }
+      // set the local wait time for the barrier response to (2 * timeLimit)
+      // if the requested time limit is more than half of the long max value,
+      // set it to the long max value
+      long tl = timeLimit > Long.MAX_VALUE / 2 ? Long.MAX_VALUE : timeLimit * 2;
 
+      Tuple<RequestID, Message> response =
+          rrClient.sendRequestWaitResponse(barrierRequest, tl);
+      JobMasterAPI.BarrierResponse barrierResponse =
+          (JobMasterAPI.BarrierResponse) response.getValue();
+
+      if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.SUCCESS) {
+        return;
+      } else if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.JOB_FAULTY) {
+        throw new JobFaultyException("Job became faulty and Default Barrier failed.");
+      } else if (barrierResponse.getResult() == JobMasterAPI.BarrierResult.TIMED_OUT) {
+        throw new TimeoutException("Barrier timed out. Not all workers arrived at the barrier "
+            + "on the time limit: " + timeLimit + "ms");
+      }
+
+    } catch (BlockingSendException e) {
+      throw new TimeoutException("Not all workers arrived at the barrier on the time limit: "
+          + timeLimit + "ms.", e);
+    }
   }
 
 
@@ -217,4 +262,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     return this.checkpointingClient;
   }
 
+  @Override
+  public int workerRestartCount() {
+    return restartCount;
+  }
 }

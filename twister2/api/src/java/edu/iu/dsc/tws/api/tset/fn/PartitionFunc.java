@@ -43,7 +43,8 @@ public interface PartitionFunc<T> extends Serializable, TaskPartitioner<T> {
    * @param sources      source
    * @param destinations destinations
    */
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
+  default void prepare(Set<Integer> sources, Set<Integer> destinations) {
+  }
 
   /**
    * Computes the partition for the given key.
@@ -59,5 +60,6 @@ public interface PartitionFunc<T> extends Serializable, TaskPartitioner<T> {
    * @param source    the source
    * @param partition partition
    */
-  void commit(int source, int partition);
+  default void commit(int source, int partition) {
+  }
 }

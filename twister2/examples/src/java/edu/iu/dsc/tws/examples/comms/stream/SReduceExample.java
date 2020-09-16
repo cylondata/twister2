@@ -42,7 +42,7 @@ public class SReduceExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTargets() != 1) {
       LOG.warning("Setting targets to 1. Found, " + jobParameters.getTargets());
       jobParameters.getTaskStages().set(1, 1);

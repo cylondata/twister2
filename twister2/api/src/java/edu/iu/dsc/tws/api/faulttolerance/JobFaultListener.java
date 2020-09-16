@@ -1,0 +1,31 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.api.faulttolerance;
+
+/**
+ * This interface will be implemented by CheckpointManager
+ * It will get events from JobMaster when some faults occur and the job state is restored
+ */
+public interface JobFaultListener {
+
+  /**
+   * this is called when a worker failed in the job
+   * it is also called when a worker is restarted before its failure message received
+   */
+  void faultOccurred();
+
+  /**
+   * this is called when all workers restored
+   * and they all come to a barrier after the barrier
+   */
+  void faultRestored();
+}

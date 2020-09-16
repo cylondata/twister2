@@ -120,6 +120,21 @@ def twister2_curator_zookeeper_lib_files():
         "@maven//:org_apache_zookeeper_zookeeper_jute",
     ]
 
+def twister2_arrow_lib_files():
+    return [
+        "@maven//:org_apache_arrow_arrow_vector",
+        "@maven//:org_apache_arrow_arrow_memory",
+        "@maven//:org_apache_arrow_arrow_format",
+        "@maven//:com_google_flatbuffers_flatbuffers_java",
+        "@maven//:javax_annotation_javax_annotation_api",
+        "@maven//:io_netty_netty_buffer",
+        "@maven//:io_netty_netty_all",
+        "@maven//:io_netty_netty_common",
+        "@maven//:io_netty_netty_transport",
+        "@maven//:io_netty_netty_transport_native_epoll",
+
+    ]
+
 def twister2_client_lib_api_files():
     return [
         "//twister2/api/src/java:api-java",
@@ -211,6 +226,12 @@ def twister2_client_lib_communication_files():
     ] + select({
         "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": ["//third_party:ucx_javabinding_java"],
+    })
+
+def twister2_ucx_native_libs():
+    return select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["@ucx//:ucx-so-files"],
     })
 
 def twister2_client_lib_common_files():

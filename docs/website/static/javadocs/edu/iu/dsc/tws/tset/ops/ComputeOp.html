@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -117,7 +117,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Receptor.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Receptor</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">ICompute</a>&lt;I&gt;, <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/INode.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">INode</a>, java.io.Serializable</dd>
+<dd><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Receptor.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Receptor</a>, <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">ICompute</a>&lt;I&gt;, <a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/INode.html" title="interface in edu.iu.dsc.tws.api.compute.nodes">INode</a>, java.io.Serializable</dd>
 </dl>
 <hr>
 <br>
@@ -169,12 +169,24 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" t
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html#close--">close</a></span>()</code>
+<div class="block">Close method for cleaning up the resources</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html#endExecute--">endExecute</a></span>()</code>
+<div class="block">Callback that is gets called when the stream ends</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html#execute-edu.iu.dsc.tws.api.compute.IMessage-">execute</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/compute/IMessage.html" title="interface in edu.iu.dsc.tws.api.compute">IMessage</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html" title="type parameter in ComputeOp">I</a>&gt;&nbsp;content)</code>
 <div class="block">Execute with an incoming message</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../edu/iu/dsc/tws/api/tset/fn/TFunction.html" title="interface in edu.iu.dsc.tws.api.tset.fn">TFunction</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html#getFunction--">getFunction</a></span>()</code>&nbsp;</td>
 </tr>
@@ -184,14 +196,14 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" t
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.ops.<a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" title="class in edu.iu.dsc.tws.tset.ops">BaseComputeOp</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html#prepare-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.compute.TaskContext-">prepare</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html#prepare-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.api.compute.TaskContext-">prepare</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html#writeEndToEdges--">writeEndToEdges</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html#writeToEdges-T-">writeToEdges</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.tset.ops.BaseOp">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;edu.iu.dsc.tws.tset.ops.<a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html" title="class in edu.iu.dsc.tws.tset.ops">BaseOp</a></h3>
-<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#add-java.lang.String-edu.iu.dsc.tws.api.dataset.DataPartition-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#getReceivableNames--">getReceivableNames</a></code></li>
+<code><a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#add-java.lang.String-edu.iu.dsc.tws.api.dataset.DataPartition-">add</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#getReceivableNames--">getReceivableNames</a>, <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseOp.html#gettSetContext--">gettSetContext</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -199,6 +211,13 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" t
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Closable">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;edu.iu.dsc.tws.api.compute.modifiers.<a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html" title="interface in edu.iu.dsc.tws.api.compute.modifiers">Closable</a></h3>
+<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#reset--">reset</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.edu.iu.dsc.tws.api.compute.modifiers.Receptor">
@@ -265,12 +284,34 @@ extends <a href="../../../../../../edu/iu/dsc/tws/tset/ops/BaseComputeOp.html" t
 <a name="execute-edu.iu.dsc.tws.api.compute.IMessage-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>execute</h4>
 <pre>public&nbsp;boolean&nbsp;execute(<a href="../../../../../../edu/iu/dsc/tws/api/compute/IMessage.html" title="interface in edu.iu.dsc.tws.api.compute">IMessage</a>&lt;<a href="../../../../../../edu/iu/dsc/tws/tset/ops/ComputeOp.html" title="type parameter in ComputeOp">I</a>&gt;&nbsp;content)</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html#execute-edu.iu.dsc.tws.api.compute.IMessage-">ICompute</a></code></span></div>
 <div class="block">Execute with an incoming message</div>
+</li>
+</ul>
+<a name="close--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>close</h4>
+<pre>public&nbsp;void&nbsp;close()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/modifiers/Closable.html#close--">Closable</a></code></span></div>
+<div class="block">Close method for cleaning up the resources</div>
+</li>
+</ul>
+<a name="endExecute--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>endExecute</h4>
+<pre>public&nbsp;void&nbsp;endExecute()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../edu/iu/dsc/tws/api/compute/nodes/ICompute.html#endExecute--">ICompute</a></code></span></div>
+<div class="block">Callback that is gets called when the stream ends</div>
 </li>
 </ul>
 </li>

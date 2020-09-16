@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchRowTLink;
 import edu.iu.dsc.tws.tset.env.BuildContext;
 import edu.iu.dsc.tws.tset.graph.DAGMutableGraph;
 import edu.iu.dsc.tws.tset.graph.MutableGraph;
@@ -214,8 +215,12 @@ public class TBaseGraph implements Serializable {
           }
         }
 
-        if (t instanceof TLink && !allAdjNodesTraversed((TLink) t, buildSequence,
-            adjNodesExtractor)) {
+        if (t instanceof TLink
+            && !allAdjNodesTraversed((TLink) t, buildSequence, adjNodesExtractor)) {
+          queue.add(t);
+          continue;
+        } else if (t instanceof BatchRowTLink
+            && !allAdjNodesTraversed((BatchRowTLink) t, buildSequence, adjNodesExtractor)) {
           queue.add(t);
           continue;
         }
@@ -229,6 +234,17 @@ public class TBaseGraph implements Serializable {
 
   interface AdjNodesExtractor {
     Set<TBase> extract(TBase node);
+  }
+
+  private boolean allAdjNodesTraversed(BatchRowTLink node, Set<TBase> buildSeq,
+                                       AdjNodesExtractor adjNodesExtractor) {
+    // all adj nodes needs to be in the build sequence
+    for (TBase adj : adjNodesExtractor.extract(node)) {
+      if (!buildSeq.contains(adj)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private boolean allAdjNodesTraversed(TLink node, Set<TBase> buildSeq,

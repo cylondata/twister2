@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
@@ -24,10 +24,13 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
+  public static final boolean K8S_LOG_IN_CLIENT_DEFAULT = false;
+  public static final String K8S_LOG_IN_CLIENT = "kubernetes.log.in.client";
+
   public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9000;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
-  public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
+  public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = false;
   public static final String NODE_LOCATIONS_FROM_CONFIG
       = "twister2.resource.kubernetes.node.locations.from.config";
 
@@ -87,12 +90,22 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_UPLOADER_WEB_SERVER_LABEL =
       "twister2.kubernetes.uploader.web.server.label";
 
+  public static final boolean K8S_CHECK_PWD_FREE_SSH_DEFAULT = false;
+  public static final String K8S_CHECK_PWD_FREE_SSH = "twister2.kubernetes.check.pwd.free.ssh";
+
+  public static final double K8S_JVM_MEMORY_FRACTION_DEFAULT = 0.8;
+  public static final String K8S_JVM_MEMORY_FRACTION = "twister2.kubernetes.jvm.memory.fraction";
+
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
   }
 
   public static String namespace(Config cfg) {
     return cfg.getStringValue(KUBERNETES_NAMESPACE, KUBERNETES_NAMESPACE_DEFAULT);
+  }
+
+  public static boolean logInClient(Config cfg) {
+    return cfg.getBooleanValue(K8S_LOG_IN_CLIENT, K8S_LOG_IN_CLIENT_DEFAULT);
   }
 
   public static boolean nodeLocationsFromConfig(Config cfg) {
@@ -176,4 +189,13 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getStringValue(K8S_UPLOADER_WEB_SERVER_LABEL,
         K8S_UPLOADER_WEB_SERVER_LABEL_DEFAULT);
   }
+
+  public static boolean checkPwdFreeSsh(Config cfg) {
+    return cfg.getBooleanValue(K8S_CHECK_PWD_FREE_SSH, K8S_CHECK_PWD_FREE_SSH_DEFAULT);
+  }
+
+  public static double jvmMemoryFraction(Config cfg) {
+    return cfg.getDoubleValue(K8S_JVM_MEMORY_FRACTION, K8S_JVM_MEMORY_FRACTION_DEFAULT);
+  }
+
 }

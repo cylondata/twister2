@@ -22,12 +22,13 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.faulttolerance.JobFaultListener;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
-public class CheckpointManager implements MessageHandler {
+public class CheckpointManager implements MessageHandler, JobFaultListener {
 
   private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
   private static final String STR_UNDERSCORE = "_";
@@ -134,6 +135,12 @@ public class CheckpointManager implements MessageHandler {
         );
         //update in memory cache
         this.familyVersionMap.put(versionUpdateMsg.getFamily(), minVersion);
+        // update family init handlers
+        FamilyInitHandler familyInitHandler =
+            this.familyInitHandlers.get(versionUpdateMsg.getFamily());
+        if (familyInitHandler != null) {
+          familyInitHandler.setFamilyVersion(minVersion);
+        }
       } catch (IOException e) {
         LOG.severe(() -> "Failed to persist the version of " + versionUpdateMsg.getFamily());
       }
@@ -177,8 +184,9 @@ public class CheckpointManager implements MessageHandler {
     }
   }
 
-  private void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
-    LOG.fine("Family init request received from " + message.getContainerIndex());
+  private synchronized void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
+    LOG.fine("Family init request received from " + message.getContainerIndex()
+        + ". Family : " + message.getFamily());
 
     FamilyInitHandler familyInitHandler = this.familyInitHandlers.get(message.getFamily());
 
@@ -203,10 +211,27 @@ public class CheckpointManager implements MessageHandler {
       }
     }
 
-    boolean sentResponses = familyInitHandler.scheduleResponse(id);
+    boolean sentResponses = familyInitHandler.scheduleResponse(message.getContainerIndex(), id);
     if (sentResponses) {
       LOG.info("Family " + message.getFamily() + " will start with version "
           + familyInitHandler.getVersion());
+    } else {
+      LOG.fine("Scheduled family init response for family : " + message.getFamily()
+          + " for worker id " + message.getContainerIndex());
+    }
+  }
+
+  @Override
+  public synchronized void faultOccurred() {
+    for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
+      familyInitHandler.pause();
+    }
+  }
+
+  @Override
+  public synchronized void faultRestored() {
+    for (FamilyInitHandler familyInitHandler : this.familyInitHandlers.values()) {
+      familyInitHandler.resume();
     }
   }
 }

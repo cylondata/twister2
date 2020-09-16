@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,26 +25,29 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class HelloTSet implements BatchTSetIWorker, Serializable {
+public class HelloTSet implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(HelloTSet.class.getName());
 
   private static final long serialVersionUID = -2;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     LOG.info("Strating Hello TSet Example");
     int para = env.getConfig().getIntegerValue("para", 4);
 
@@ -66,7 +68,7 @@ public class HelloTSet implements BatchTSetIWorker, Serializable {
 
     PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
-    ComputeTSet<int[], Iterator<int[]>> mapedPartition = partitioned.map(
+    ComputeTSet<int[]> mapedPartition = partitioned.map(
         (MapFunc<int[], int[]>) input -> Arrays.stream(input).map(a -> a * 2).toArray()
     );
 

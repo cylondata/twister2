@@ -33,14 +33,18 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -64,46 +68,60 @@ public final class JobMasterExample {
   public static void main(String[] args) {
 
     if (args.length != 1) {
-      LOG.info("usage: java JobMasterExample start/restart");
+      LOG.info("usage: java JobMasterExample numberOfWorkers");
       return;
     }
+
+    int numberOfWorkers = Integer.parseInt(args[0]);
+    String host = "0.0.0.0";
 
     // we assume that the twister2Home is the current directory
 //    String configDir = "../twister2/config/src/yaml/";
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
+    config = JobMasterClientExample.updateConfig(config, config, host);
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
-    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+//    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName("hello-world-job")
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(.2, 128, numberOfWorkers)
+        .build();
     twister2Job.setUserName(System.getProperty("user.name"));
 
     JobAPI.Job job = twister2Job.serialize();
     LOG.info("JobID: " + job.getJobId());
 
-    String host = "localhost";
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    JobMasterStarter.job = job;
 
-    JobMasterAPI.JobMasterState initialState;
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      if ("start".equalsIgnoreCase(args[0])) {
 
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
 
-    if ("start".equalsIgnoreCase(args[0])) {
+      } else if ("restart".equalsIgnoreCase(args[0])) {
 
-      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
+        initialState = JobMasterAPI.JobMasterState.JM_RESTARTED;
+        JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host, initialState);
+        job = JobMasterStarter.job;
 
-    } else if ("restart".equalsIgnoreCase(args[0])) {
-
-      initialState = JobMasterStarter.initializeZooKeeper(config, job.getJobId(), host);
-      job = JobMasterStarter.job;
-
-      if (initialState != JobMasterAPI.JobMasterState.JM_RESTARTED) {
-        LOG.severe("initialState: " + initialState + " must be JM_RESTARTED");
+      } else {
+        LOG.info("usage: java JobMasterExample start/restart");
         return;
       }
-
-    } else {
-      LOG.info("usage: java JobMasterExample start/restart");
-      return;
     }
+
+    // write jobID to file
+    String dir = System.getProperty("user.home") + "/.twister2";
+    if (!FileUtils.isDirectoryExists(dir)) {
+      FileUtils.createDirectory(dir);
+    }
+    String filename = dir + "/last-job-id.txt";
+    FileUtils.writeToFile(filename, (job.getJobId() + "").getBytes(), true);
+    LOG.info("Written jobID to file: " + job.getJobId());
 
     String ip = null;
     try {
@@ -114,16 +132,15 @@ public final class JobMasterExample {
     }
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
-    KubernetesController controller = new KubernetesController();
-//    controller.init(KubernetesContext.namespace(config));
+    KubernetesController controller = KubernetesController.init("default");
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = new ZKJobTerminator(config);
-//    IJobTerminator jobTerminator = new JobTerminator(config);
+    IJobTerminator jobTerminator = new NullTerminator();
 
     JobMaster jobMaster =
         new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
     try {
-      jobMaster.startJobMasterThreaded();
+//      jobMaster.startJobMasterThreaded();
+      jobMaster.startJobMasterBlocking();
     } catch (Twister2Exception e) {
       LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
       throw new RuntimeException(e);
@@ -135,10 +152,4 @@ public final class JobMasterExample {
     );
 
   }
-
-  public static void printUsage() {
-    LOG.info("Usage:\n"
-        + "java JobMasterExample");
-  }
-
 }

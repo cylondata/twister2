@@ -61,7 +61,7 @@ def do_arg_map(arg, numpy_builder=None):
             return np.array(arg.getNumpy(), dtype = arg.getType())
         if hasattr(arg, "getInput"):
             # TSetContext
-            return TSetContext(arg)
+            return TSetContext(arg, numpy_builder)
         if hasattr(arg, "getKey") and hasattr(arg, "getValue"):
             # class edu.iu.dsc.tws.api.comms.structs.Tuple
             return arg.getKey(), arg.getValue()

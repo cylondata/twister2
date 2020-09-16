@@ -15,14 +15,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MockWorkerController implements IWorkerController {
+
+  private static final Logger LOG = Logger.getLogger(MockWorkerController.class.getName());
 
   private Twister2Job twister2Job;
   private Config config;
@@ -80,12 +84,27 @@ public class MockWorkerController implements IWorkerController {
   }
 
   @Override
+  public int workerRestartCount() {
+    return 0;
+  }
+
+  @Override
   public void waitOnBarrier() throws TimeoutException {
     try {
       this.cyclicBarrier.await();
     } catch (InterruptedException | BrokenBarrierException e) {
       throw new TimeoutException("Timeout on barrier");
     }
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    waitOnBarrier();
   }
 
 }

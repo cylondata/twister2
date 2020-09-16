@@ -44,10 +44,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -57,7 +55,7 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class BatchTaskSchedulerExample implements IWorker {
+public class BatchTaskSchedulerExample implements Twister2Worker {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskSchedulerExample.class.getName());
 
@@ -135,15 +133,15 @@ public class BatchTaskSchedulerExample implements IWorker {
   }
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public void execute(WorkerEnvironment workerEnv) {
 
+    int workerId = workerEnv.getWorkerId();
+    Config config = workerEnv.getConfig();
     long startTime = System.currentTimeMillis();
 
-    LOG.log(Level.FINE, "Task worker starting: " + workerID);
+    LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
-        persistentVolume, volatileVolume);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     //Independent Graph and it has collector

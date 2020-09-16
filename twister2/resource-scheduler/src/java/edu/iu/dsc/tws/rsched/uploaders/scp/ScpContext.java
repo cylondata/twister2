@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.rsched.uploaders.scp;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.config.TokenSub;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public class ScpContext extends SchedulerContext {
   public static final String UPLOAD_DIRECTORY = "twister2.resource.uploader.directory";

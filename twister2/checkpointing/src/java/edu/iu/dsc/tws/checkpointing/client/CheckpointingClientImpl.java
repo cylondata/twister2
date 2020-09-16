@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
@@ -46,11 +48,13 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
   private static final Logger LOG = Logger.getLogger(CheckpointingClientImpl.class.getName());
 
   private RRClient rrClient;
+  private long waitTime;
   private Map<RequestID, Message> blockingResponse = new ConcurrentHashMap<>();
   private Map<RequestID, MessageHandler> asyncHandlers = new ConcurrentHashMap<>();
 
-  public CheckpointingClientImpl(RRClient rrClient) {
+  public CheckpointingClientImpl(RRClient rrClient, long waitTime) {
     this.rrClient = rrClient;
+    this.waitTime = waitTime;
   }
 
   public void init() {
@@ -70,14 +74,15 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
   @Override
   public Checkpoint.ComponentDiscoveryResponse sendDiscoveryMessage(
       String family, int index) throws BlockingSendException {
-    RequestID requestID = this.rrClient.sendRequestWaitResponse(
+
+    Tuple<RequestID, Message> response = this.rrClient.sendRequestWaitResponse(
         Checkpoint.ComponentDiscovery.newBuilder()
             .setFamily(family)
             .setIndex(index)
             .build(),
-        10000
+        this.waitTime
     );
-    return (Checkpoint.ComponentDiscoveryResponse) this.blockingResponse.remove(requestID);
+    return (Checkpoint.ComponentDiscoveryResponse) this.blockingResponse.remove(response.getKey());
   }
 
   @Override
@@ -86,16 +91,23 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
                                                         String family,
                                                         Set<Integer> members)
       throws BlockingSendException {
-    RequestID requestID = this.rrClient.sendRequestWaitResponse(
+
+    Tuple<RequestID, Message> response = this.rrClient.sendRequestWaitResponse(
         Checkpoint.FamilyInitialize.newBuilder()
             .setFamily(family)
             .addAllMembers(members)
             .setContainerIndex(containerIndex)
             .setContainers(containersCount)
             .build(),
-        10000
+        this.waitTime
     );
-    return (Checkpoint.FamilyInitializeResponse) this.blockingResponse.remove(requestID);
+    Checkpoint.FamilyInitializeResponse initReso =
+        (Checkpoint.FamilyInitializeResponse) this.blockingResponse.remove(response.getKey());
+    if (initReso.getStatus().equals(Checkpoint.FamilyInitializeResponse.Status.REJECTED)) {
+      throw new JobFaultyException("Checkpointing initialization of "
+          + family + " failed. CheckpointManager rejected the request due to cluster instability.");
+    }
+    return initReso;
   }
 
   @Override

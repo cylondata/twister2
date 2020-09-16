@@ -45,7 +45,7 @@ public class SAllReduceExample extends BenchWorker {
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
-  protected void execute(WorkerEnvironment workerEnv) {
+  protected void compute(WorkerEnvironment workerEnv) {
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),

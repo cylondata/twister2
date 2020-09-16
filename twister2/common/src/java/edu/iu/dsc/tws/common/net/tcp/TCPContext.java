@@ -32,6 +32,10 @@ public class TCPContext extends Context {
   public static final String NETWORK_HOSTNAME = "twister2.tcp.hostname";
   public static final String NETWORK_PORT = "twister2.tcp.port";
 
+  public static final String MAX_CONN_EST_TIME
+      = "twister2.network.max.connection.establishment.time";
+  public static final long MAX_CONN_EST_TIME_DEFAULT = 30000;
+
   public static int getNetworkWriteBatchSize(Config cfg, int def) {
     return cfg.getIntegerValue(TWISTER2_WRITE_SIZE, def);
   }
@@ -66,5 +70,9 @@ public class TCPContext extends Context {
 
   public static int getPort(NetworkInfo networkInfo) {
     return (int) networkInfo.getProperties().get(NETWORK_PORT);
+  }
+
+  public static long maxConnEstTime(Config cfg) {
+    return cfg.getLongValue(MAX_CONN_EST_TIME, MAX_CONN_EST_TIME_DEFAULT);
   }
 }

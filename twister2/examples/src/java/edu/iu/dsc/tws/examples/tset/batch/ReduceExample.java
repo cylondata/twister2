@@ -28,13 +28,16 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -46,8 +49,10 @@ public class ReduceExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    int start = env.getWorkerID() * 100;
+    SourceTSet<Integer> src = dummySource(env, start, COUNT, PARALLELISM);
 
     ReduceTLink<Integer> reduce = src.reduce(Integer::sum);
 
@@ -56,31 +61,37 @@ public class ReduceExample extends BatchTsetExample {
 
     LOG.info("test map");
     reduce
-        .map(i -> i.toString() + "$$").withSchema(PrimitiveSchemas.STRING)
+        .map(i -> i.toString() + "$$")
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
     reduce
-        .flatmap((i, c) -> c.collect(i.toString() + "##")).withSchema(PrimitiveSchemas.STRING)
+        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
     reduce
-        .compute((ComputeFunc<String, Integer>)
-            input -> "sum=" + input)
+        .compute((ComputeFunc<Integer, String>) input -> "sum=" + input)
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
     reduce
-        .compute((ComputeCollectorFunc<String, Integer>)
+        .compute((ComputeCollectorFunc<Integer, String>)
             (input, output) -> output.collect("sum=" + input))
         .withSchema(PrimitiveSchemas.STRING)
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test map2tup");
+    reduce.mapToTuple(i -> new Tuple<>(i, i.toString()))
+        .keyedDirect()
+        .forEach(i -> LOG.info("mapToTuple: " + i.toString()));
 
     LOG.info("test sink");
     SinkTSet<Integer> sink = reduce.sink((SinkFunc<Integer>)

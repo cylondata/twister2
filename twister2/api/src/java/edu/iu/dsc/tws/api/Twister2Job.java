@@ -21,10 +21,13 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.util.JobIDUtils;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 
@@ -300,8 +303,21 @@ public final class Twister2Job {
     }
 
     public Twister2JobBuilder setWorkerClass(String workerClass) {
-      twister2Job.workerClass = workerClass;
-      return this;
+      try {
+        Object object = ReflectionUtils.newInstance(workerClass);
+        if (object instanceof IWorker || object instanceof Twister2Worker) {
+          twister2Job.workerClass = workerClass;
+          return this;
+        } else {
+          throw new Twister2RuntimeException(String.format(
+              "Worker class [%s] is neither an instance of IWorker nor Twister2Worker interfaces.",
+              workerClass));
+        }
+
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        LOG.severe(String.format("failed to load the worker class %s", workerClass));
+        throw new RuntimeException(e);
+      }
     }
 
     public Twister2JobBuilder setDriverClass(String driverClass) {
@@ -309,9 +325,8 @@ public final class Twister2Job {
       return this;
     }
 
-    public Twister2JobBuilder setWorkerClass(Class<? extends IWorker> workerClass) {
-      twister2Job.workerClass = workerClass.getName();
-      return this;
+    public Twister2JobBuilder setWorkerClass(Class workerClass) {
+      return setWorkerClass(workerClass.getCanonicalName());
     }
 
     public Twister2JobBuilder addComputeResource(double cpu,

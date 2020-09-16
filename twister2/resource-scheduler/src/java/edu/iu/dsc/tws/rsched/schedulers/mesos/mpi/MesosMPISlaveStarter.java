@@ -55,8 +55,7 @@ public final class MesosMPISlaveStarter {
     List<JobMasterAPI.WorkerInfo> workerNetworkInfoList = new ArrayList<>();
     try {
 
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
+      JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
       workerController = new MesosWorkerController(config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerID, computeResource,

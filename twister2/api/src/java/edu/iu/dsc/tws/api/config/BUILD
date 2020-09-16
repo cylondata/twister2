@@ -8,5 +8,7 @@ t2_java_lib(
     artifact_name = "Twiter2 Configuration API",
     deps = [
       "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+      "//twister2/proto:proto-java",
+      "//twister2/proto/utils:proto-utils-java",
     ],
 )

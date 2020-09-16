@@ -56,7 +56,7 @@ public interface StreamingTSet<T> extends TSet<T> {
   StreamingTLink<Iterator<Tuple<Integer, T>>, T> allGather();
 
   @Override
-  <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> StreamingTupleTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn);
 
   @Override
   StreamingTLink<T, T> replicate(int replications);

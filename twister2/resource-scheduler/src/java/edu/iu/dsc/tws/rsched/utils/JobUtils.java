@@ -34,10 +34,15 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
+import edu.iu.dsc.tws.rsched.worker.Twister2WorkerStarter;
 
 public final class JobUtils {
   private static final Logger LOG = Logger.getLogger(JobUtils.class.getName());
@@ -57,7 +62,7 @@ public final class JobUtils {
   /**
    * Read the job file
    */
-  public static JobAPI.Job readJobFile(Config cfg, String fileName) {
+  public static JobAPI.Job readJobFile(String fileName) {
     try {
       byte[] fileBytes = FileUtils.readFromFile(fileName);
       JobAPI.Job.Builder builder = JobAPI.Job.newBuilder();
@@ -183,6 +188,15 @@ public final class JobUtils {
     return jobStr;
   }
 
+  public static String computeResourcesToPrint(JobAPI.Job job) {
+    String cmStr = ComputeResourceUtils.toString(job.getComputeResource(0));
+    for (int i = 1; i < job.getComputeResourceList().size(); i++) {
+      cmStr += System.lineSeparator() + ComputeResourceUtils.toString(job.getComputeResource(i));
+    }
+
+    return cmStr;
+  }
+
   public static String createJobPackageFileName(String jobID) {
     return jobID + ".tar.gz";
   }
@@ -213,5 +227,34 @@ public final class JobUtils {
     }
 
     return true;
+  }
+
+  /**
+   * if the worker class is an instance of IWorker
+   * initialize that
+   * if
+   * @param job
+   * @return
+   */
+  public static IWorker initializeIWorker(JobAPI.Job job) {
+
+    String workerClass = job.getWorkerClassName();
+    try {
+      Object object = ReflectionUtils.newInstance(workerClass);
+      if (object instanceof IWorker) {
+        LOG.info("loaded worker class: " + workerClass);
+        return (IWorker) object;
+      } else if (object instanceof Twister2Worker) {
+        return new Twister2WorkerStarter();
+      } else {
+        throw new Twister2RuntimeException(String.format(
+            "Worker class [%s] is neither an instance of IWorker nor Twister2Worker interfaces.",
+            workerClass));
+      }
+
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.severe(String.format("failed to load the worker class %s", workerClass));
+      throw new RuntimeException(e);
+    }
   }
 }

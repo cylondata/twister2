@@ -28,7 +28,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
   public void read() {
     TCPMessage readRequest = readRequest(socketChannel);
     while (readRequest != null) {
-      readRequest.setComplete(true);
+      readRequest.setComplete();
       channelHandler.onReceiveComplete(socketChannel, readRequest);
       readRequest = readRequest(socketChannel);
     }

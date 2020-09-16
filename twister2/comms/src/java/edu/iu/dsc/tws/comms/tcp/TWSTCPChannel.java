@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
-import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -50,6 +49,10 @@ public class TWSTCPChannel implements TWSChannel {
   private int sendCount = 0;
 
   private int pendingSendCount = 0;
+
+  private TCPChannel channel;
+  private IWorkerController workerController;
+  private long maxConnEstTime;
 
   @SuppressWarnings("VisibilityModifier")
   private class Request {
@@ -121,11 +124,6 @@ public class TWSTCPChannel implements TWSChannel {
   private IterativeLinkedList<TCPSendRequests> waitForCompletionSends;
 
   /**
-   * The tcp channel
-   */
-  private TCPChannel comm;
-
-  /**
    * Holds requests that are pending for close
    */
   private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
@@ -141,13 +139,16 @@ public class TWSTCPChannel implements TWSChannel {
     int workerPort = wController.getWorkerInfo().getPort();
     String localIp = wController.getWorkerInfo().getWorkerIP();
 
-    TCPChannel channel = createChannel(config, localIp, workerPort, index);
+    workerController = wController;
+    maxConnEstTime = TCPContext.maxConnEstTime(config);
+
+    channel = createChannel(config, localIp, workerPort, index);
     // now lets start listening before sending the ports to master,
     channel.startListening();
 
     // wait for everyone to start the job master
     try {
-      wController.waitOnBarrier();
+      workerController.waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       throw new Twister2RuntimeException(timeoutException);
@@ -155,7 +156,7 @@ public class TWSTCPChannel implements TWSChannel {
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step
-    List<JobMasterAPI.WorkerInfo> wInfo = wController.getJoinedWorkers();
+    List<JobMasterAPI.WorkerInfo> wInfo = workerController.getJoinedWorkers();
 
     // lets start the client connections now
     List<NetworkInfo> nInfos = new ArrayList<>();
@@ -169,7 +170,7 @@ public class TWSTCPChannel implements TWSChannel {
     // start the connections
     channel.startConnections(nInfos);
     // now lets wait for connections to be established
-    channel.waitForConnections();
+    channel.waitForConnections(maxConnEstTime);
 
     int pendingSize = CommunicationContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
@@ -177,9 +178,38 @@ public class TWSTCPChannel implements TWSChannel {
     this.groupedRegisteredReceives = new Int2ObjectArrayMap<>();
     this.waitForCompletionSends = new IterativeLinkedList<>();
     this.executor = wController.getWorkerInfo().getWorkerID();
-    this.comm = channel;
   }
 
+  @Override
+  public void reInit(List<JobMasterAPI.WorkerInfo> restartedWorkers) {
+
+    // close previous connections
+    for (JobMasterAPI.WorkerInfo wInfo: restartedWorkers) {
+      channel.closeConnection(wInfo.getWorkerID());
+    }
+
+    // wait for everyone to start the job master
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      throw new Twister2RuntimeException(timeoutException);
+    }
+
+    // lets start the client connections now
+    List<NetworkInfo> nInfos = new ArrayList<>();
+    for (JobMasterAPI.WorkerInfo w : restartedWorkers) {
+      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      nInfos.add(networkInfo);
+    }
+
+    // start the connections
+    channel.startConnections(nInfos);
+    // now lets wait for connections to be established
+    channel.waitForConnections(maxConnEstTime);
+  }
   /**
    * Start the TCP servers here
    *
@@ -236,7 +266,7 @@ public class TWSTCPChannel implements TWSChannel {
         || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
       this.progress();
     }
-    comm.stop();
+    channel.stop();
   }
 
   @Override
@@ -259,7 +289,7 @@ public class TWSTCPChannel implements TWSChannel {
     for (int i = 0; i < message.getNormalBuffers().size(); i++) {
       sendCount++;
       DataBuffer buffer = message.getNormalBuffers().get(i);
-      TCPMessage request = comm.iSend(buffer.getByteBuffer(), buffer.getSize(),
+      TCPMessage request = channel.iSend(buffer.getByteBuffer(), buffer.getSize(),
           requests.rank, message.getHeader().getEdge());
       // register to the loop to make communicationProgress on the send
       requests.pendingSends.add(new Request(request, buffer));
@@ -284,7 +314,7 @@ public class TWSTCPChannel implements TWSChannel {
    * @return the request
    */
   private TCPMessage postReceive(int rank, int stream, DataBuffer byteBuffer) {
-    return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
+    return channel.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 
   private void internalProgressReceives(List<TCPReceiveRequests> requests) {
@@ -302,8 +332,8 @@ public class TWSTCPChannel implements TWSChannel {
         if (r == null || r.request == null) {
           continue;
         }
-        TCPStatus status = r.request.testStatus();
-        if (status == TCPStatus.COMPLETE) {
+
+        if (r.request.isComplete()) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
 
@@ -324,7 +354,7 @@ public class TWSTCPChannel implements TWSChannel {
 
     internalProgressReceives(registeredReceives);
 
-    comm.progress();
+    channel.progress();
   }
 
   @Override
@@ -346,10 +376,12 @@ public class TWSTCPChannel implements TWSChannel {
           = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
         Request r = (Request) requestIterator.next();
-        TCPStatus status = r.request.testStatus();
         // this request has finished
-        if (status == TCPStatus.COMPLETE) {
+        if (r.request.isComplete()) {
           requestIterator.remove();
+        } else if (r.request.isError()) {
+          throw new Twister2RuntimeException("Error when sending a message to worker: "
+              + sendRequests.rank);
         }
       }
 

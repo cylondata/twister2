@@ -54,10 +54,8 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
@@ -76,7 +74,7 @@ import static edu.iu.dsc.tws.api.comms.CommunicationContext.SHUFFLE_MAX_FILE_SIZ
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
-public class TeraSort implements IWorker {
+public class TeraSort implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(TeraSort.class.getName());
 
   private static final String ARG_INPUT_FILE = "inputFile";
@@ -91,6 +89,7 @@ public class TeraSort implements IWorker {
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
   private static final String ARG_RESOURCE_INSTANCES = "instances";
   private static final String ARG_RESOURCE_VOLATILE_DISK = "volatileDisk";
+  private static final String ARG_WORKERS_PER_POD = "workersPerPod";
 
   private static final String ARG_TASKS_SOURCES = "sources";
   private static final String ARG_TASKS_SINKS = "sinks";
@@ -112,10 +111,11 @@ public class TeraSort implements IWorker {
   private static volatile AtomicInteger tasksCount = new AtomicInteger();
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
-        persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+
+    int workerID = workerEnv.getWorkerId();
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
+    Config config = workerEnv.getConfig();
 
     resultsRecorder = new BenchmarkResultsRecorder(config, workerID == 0);
     Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
@@ -566,6 +566,8 @@ public class TeraSort implements IWorker {
         "No. of instances", true));
     options.addOption(createOption(ARG_RESOURCE_VOLATILE_DISK, true,
         "Volatile Disk for each worker at K8s", false));
+    options.addOption(createOption(ARG_WORKERS_PER_POD, true,
+        "Workers per pod in Kubernetes", false));
 
     //tasks and sources counts
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
@@ -623,11 +625,17 @@ public class TeraSort implements IWorker {
       volatileDisk = Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_VOLATILE_DISK));
     }
 
+    // default value is 1
+    int workersPerPod = 1;
+    if (cmd.hasOption(ARG_WORKERS_PER_POD)) {
+      workersPerPod = Integer.valueOf(cmd.getOptionValue(ARG_WORKERS_PER_POD));
+    }
+
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
     jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
     jobConfig.put(ARG_RESOURCE_INSTANCES,
-        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)));
+        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)) * workersPerPod);
 
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
       long maxBytesInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY));
@@ -667,7 +675,8 @@ public class TeraSort implements IWorker {
             Double.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
             volatileDisk,
-            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)),
+            workersPerPod
         )
         .setConfig(jobConfig)
         .build();

@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.net.StatusCode;
 
 public class Server implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Server.class.getName());
@@ -64,21 +63,31 @@ public class Server implements SelectHandler {
    */
   private boolean fixedBuffers;
 
+  /**
+   * minimum value for backLog
+   * if given backLog value is equal or less than this,
+   * we do not set it
+   */
+  private static final int MIN_BACK_LOG = 50;
+
+  /**
+   * TCP backLog value: The maximum number of pending connections
+   */
+  private int backLog;
+
   public Server(Config cfg, String host, int port, Progress loop,
-                ChannelHandler msgHandler) {
-    this.config = cfg;
-    this.progress = loop;
-    this.address = new InetSocketAddress(host, port);
-    this.channelHandler = msgHandler;
+                ChannelHandler channelHandler, boolean fixBuffers) {
+    this(cfg, host, port, loop, channelHandler, fixBuffers, 0);
   }
 
   public Server(Config cfg, String host, int port, Progress loop,
-                ChannelHandler msgHandler, boolean fixBuffers) {
+                ChannelHandler channelHandler, boolean fixBuffers, int backLog) {
     this.config = cfg;
     this.progress = loop;
     this.address = new InetSocketAddress(host, port);
-    this.channelHandler = msgHandler;
+    this.channelHandler = channelHandler;
     this.fixedBuffers = fixBuffers;
+    this.backLog = backLog;
   }
 
   /**
@@ -90,7 +99,12 @@ public class Server implements SelectHandler {
     try {
       serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
-      serverSocketChannel.socket().bind(address);
+      if (backLog > MIN_BACK_LOG) {
+        LOG.fine("Setting backLog to: " + backLog);
+        serverSocketChannel.socket().bind(address, backLog);
+      } else {
+        serverSocketChannel.socket().bind(address);
+      }
       LOG.log(Level.INFO, String.format("Starting server on %s:%d",
           address.getHostName(), address.getPort()));
       progress.registerAccept(serverSocketChannel, this);
@@ -218,7 +232,9 @@ public class Server implements SelectHandler {
     try {
       SocketChannel socketChannel = serverSocketChannel.accept();
       LOG.log(Level.FINE, "Accepted connection: " + socketChannel);
-      if (socketChannel != null) {
+      if (socketChannel == null) {
+        LOG.log(Level.WARNING, "Accepted connection but SocketChannel is null: " + socketChannel);
+      } else {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);
         BaseNetworkChannel channel;
@@ -234,7 +250,7 @@ public class Server implements SelectHandler {
         channel.enableWriting();
         connectedChannels.put(socketChannel, channel);
 
-        channelHandler.onConnect(socketChannel, StatusCode.SUCCESS);
+        channelHandler.onConnect(socketChannel);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Error while accepting a new connection ", e);

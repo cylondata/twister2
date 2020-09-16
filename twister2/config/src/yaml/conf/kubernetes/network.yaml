@@ -12,6 +12,20 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"
 # Its name must be specified here
 kubernetes.secret.name: "twister2-openmpi-ssh-key"
 
+# when pods are started in OpenMPI enabled jobs,
+# password free ssh is setup among pods
+# password free ssh can be checked before running mpirun explicitly
+# by default it is false
+# twister2.kubernetes.check.pwd.free.ssh: true
+
+# MPI parameters in OpenMPI enabled jobs:
+# you can specify MPI parameters that will be provided in mpirun command
+# with the below config
+# following mpirun parameters are already specified by Twister2
+#    --hostfile, --allow-run-as-root, -npernode (workersPerPod), -tag-output
+#
+# twister2.resource.scheduler.mpi.params: ''
+
 #############################################################################
 # Worker port settings
 #############################################################################

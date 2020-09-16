@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
-import java.io.File;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -29,20 +28,20 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerStarter;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
 
 //import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
@@ -64,6 +63,8 @@ public final class NomadWorkerStarter {
    * The worker controller
    */
   private IWorkerController workerController;
+
+  private JobAPI.Job job;
 
   private NomadWorkerStarter(String[] args) {
     Options cmdOptions = null;
@@ -179,7 +180,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -199,7 +200,6 @@ public final class NomadWorkerStarter {
     this.workerController = createWorkerController();
     JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
-    String workerClass = SchedulerContext.workerClass(config);
     try {
       LOG.log(Level.INFO, "Worker IP..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
@@ -212,21 +212,9 @@ public final class NomadWorkerStarter {
       return;
     }
 
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IWorker container = (IWorker) object;
-        // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
-      } else {
-        throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
-      }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
+    IWorker worker = JobUtils.initializeIWorker(job);
+    MPIWorkerManager workerManager = new MPIWorkerManager();
+    workerManager.execute(config, job, workerController, null, null, worker);
   }
 
   /**
@@ -239,15 +227,12 @@ public final class NomadWorkerStarter {
 
     int workerID = Integer.valueOf(indexEnv);
 
-    initLogger(config, workerID);
+    MPIWorkerStarter.initWorkerLogger(config, workerID);
     LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, workerID));
 
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    String jobID = NomadContext.jobId(config);
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobID, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
@@ -307,12 +292,12 @@ public final class NomadWorkerStarter {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    //should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers, initialState);
+        workerInfo, masterHost, masterPort, numberContainers, restartCount);
     LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
 
     jobMasterAgent.startThreaded();
@@ -341,47 +326,6 @@ public final class NomadWorkerStarter {
     return ports;
   }
 
-  /**
-   * Initialize the loggers to log into the task local directory
-   *
-   * @param cfg the configuration
-   * @param workerID worker id
-   */
-  private void initLogger(Config cfg, int workerID) {
-    // we can not initialize the logger fully yet,
-    // but we need to set the format as the first thing
-    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
-
-    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobID = NomadContext.jobId(cfg);
-
-    NomadPersistentVolume pv =
-        new NomadPersistentVolume(controller.createPersistentJobDirName(jobID), workerID);
-    String persistentJobDir = pv.getJobDir().getAbsolutePath();
-    //LOG.log(Level.INFO, "PERSISTENT LOG DIR is ......: " + persistentJobDir);
-    //String persistentJobDir = getTaskDirectory();
-    // if no persistent volume requested, return
-    if (persistentJobDir == null) {
-      return;
-    }
-
-//    if (NomadContext.getLoggingSandbox(cfg)) {
-//      persistentJobDir = Paths.get(jobWorkingDirectory, jobID).toString();
-//    }
-    //nfs/shared/twister2/
-    //String logDir = "/etc/nomad.d/"; //"/nfs/shared/twister2" + "/logs";
-    String logDir = persistentJobDir + "/logs";
-
-    LOG.log(Level.INFO, "LOG DIR is ......: " + logDir);
-    File directory = new File(logDir);
-    if (!directory.exists()) {
-      if (!directory.mkdirs()) {
-        throw new RuntimeException("Failed to create log directory: " + logDir);
-      }
-    }
-    LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
-  }
-
   private String getTaskDirectory() {
     return System.getenv("NOMAD_TASK_DIR");
   }
@@ -401,7 +345,7 @@ public final class NomadWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
+    masterClient.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
     masterClient.close();
   }
 

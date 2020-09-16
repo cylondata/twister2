@@ -37,17 +37,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
-
-//import java.util.List;
 
 
 public final class MesosMPIMasterStarter {
@@ -88,12 +86,9 @@ public final class MesosMPIMasterStarter {
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
     int numberOfWorkers = 0;
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + mpiMaster.jobName + ".job");
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + mpiMaster.jobName + ".job");
-
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
-
 
       workerController = new MesosWorkerController(mpiMaster.config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerId, computeResource,
@@ -109,8 +104,7 @@ public final class MesosMPIMasterStarter {
       LOG.severe("Host unkown " + e.getMessage());
     }
 
-
-    ZKJobMasterFinder finder = new ZKJobMasterFinder(mpiMaster.config);
+    ZKJobMasterFinder finder = new ZKJobMasterFinder(mpiMaster.config, job.getJobId());
     finder.initialize();
 
     String jobMasterIPandPort = finder.getJobMasterIPandPort();
@@ -123,7 +117,6 @@ public final class MesosMPIMasterStarter {
     }
 
     finder.close();
-
 
     //old way of finding
     //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
@@ -168,7 +161,7 @@ public final class MesosMPIMasterStarter {
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
 
-    mpiMaster.jobMasterAgent.sendWorkerCompletedMessage();
+    mpiMaster.jobMasterAgent.sendWorkerCompletedMessage(JobMasterAPI.WorkerState.COMPLETED);
     mpiMaster.jobMasterAgent.close();
     workerController.close();
     LOG.info("Job DONE");
@@ -182,11 +175,11 @@ public final class MesosMPIMasterStarter {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
 
-    //TODO: should be either WorkerState.STARTED or WorkerState.RESTARTED
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
+    //TODO: zero means starting for the first time
+    int restartCount = 0;
 
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        jobMasterPort, numberOfWorkers, initialState);
+        jobMasterPort, numberOfWorkers, restartCount);
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method

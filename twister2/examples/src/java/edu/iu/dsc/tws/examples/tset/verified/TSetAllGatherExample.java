@@ -19,11 +19,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -32,8 +34,9 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllGatherExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
-    super.execute(env);
+  public void execute(WorkerEnvironment workerEnv) {
+    super.execute(workerEnv);
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
 
     // set the parallelism of source to task stage 0
     List<Integer> taskStages = jobParameters.getTaskStages();

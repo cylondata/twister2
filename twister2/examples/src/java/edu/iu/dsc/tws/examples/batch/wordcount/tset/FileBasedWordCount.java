@@ -24,7 +24,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -40,6 +39,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
@@ -50,29 +51,31 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 /**
  * A word count where we read text files with words
  */
-public class FileBasedWordCount implements BatchTSetIWorker, Serializable {
+public class FileBasedWordCount implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(FileBasedWordCount.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+
     int sourcePar = (int) env.getConfig().get("PAR");
 
     // read the file line by line by using a single worker
     SourceTSet<String> lines = env.createSource(new WordCountFileSource(), 1);
 
     // distribute the lines among the workers and performs a flatmap operation to extract words
-    ComputeTSet<String, Iterator<String>> words =
+    ComputeTSet<String> words =
         lines.partition(new HashingPartitioner<>(), sourcePar)
             .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
               StringTokenizer itr = new StringTokenizer(l);

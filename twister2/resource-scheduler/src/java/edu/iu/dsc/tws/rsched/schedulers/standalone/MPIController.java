@@ -13,13 +13,13 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.MPIContext;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -65,12 +65,11 @@ public class MPIController implements IController {
   @Override
   public boolean start(JobAPI.Job job) {
     if (job == null || job.getNumberOfWorkers() == 0) {
-      LOG.log(Level.SEVERE, "No container requested. Can't schedule");
+      LOG.log(Level.SEVERE, "No worker requested. Can't deploy the job");
       return false;
     }
-    long containers = job.getNumberOfWorkers();
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of workers = %d",
-        MPIContext.clusterType(config), containers));
+        MPIContext.clusterType(config), job.getNumberOfWorkers()));
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobId()).toString();
     boolean jobCreated = createJob(this.workingDirectory, jobDirectory, job);
@@ -105,33 +104,40 @@ public class MPIController implements IController {
    * @return true if the job creation is successful
    */
   public boolean createJob(String jobWorkingDirectory, String twister2Home, JobAPI.Job job) {
-    // get the command to run the job on Slurm cluster
-    List<String> cmds = command.mpiCommand(jobWorkingDirectory, job);
-    // change the empty strings of command args to "", because batch
-    // doesn't recognize space as an arguments
-    List<String> transformedArgs = new ArrayList<>();
-    for (int i = 0; i < cmds.size(); i++) {
-      String arg = cmds.get(i);
-      if (arg == null || arg.trim().equals("")) {
-        transformedArgs.add("\"\"");
-      } else {
-        transformedArgs.add(arg);
-      }
-    }
-    // add the args to the command
-    String[] cmdArray = transformedArgs.toArray(new String[0]);
-    LOG.log(Level.FINE, "Executing job [" + jobWorkingDirectory + "]:",
-        Arrays.toString(cmdArray));
+    String[] mpiCmd = command.mpiCommand(jobWorkingDirectory, job);
+    LOG.fine("Executing job [" + jobWorkingDirectory + "]: " + Arrays.toString(mpiCmd));
     StringBuilder stderr = new StringBuilder();
-    return runProcess(twister2Home, cmdArray, stderr);
+    return runProcess(twister2Home, mpiCmd, stderr);
   }
 
   /**
-   * This is for unit testing
+   * Submit the job
+   * resubmit it if it fails
    */
-  protected boolean runProcess(String jobWorkingDirectory, String[] slurmCmd,
-                               StringBuilder stderr) {
-    File file = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
-    return 0 == ProcessUtils.runSyncProcess(false, slurmCmd, stderr, file, true);
+  protected boolean runProcess(String jobWorkingDirectory, String[] cmd, StringBuilder stderr) {
+    File workingDir = jobWorkingDirectory == null ? null : new File(jobWorkingDirectory);
+
+    int tryCount = 0;
+
+    while (tryCount++ < FaultToleranceContext.maxMpiJobRestarts(config)) {
+      int statusCode = ProcessUtils.runSyncProcess(false, cmd, stderr, workingDir, true);
+      if (statusCode == 0) {
+        LOG.info("MPI job succeeded.");
+        return true;
+      } else if (tryCount < FaultToleranceContext.maxMpiJobRestarts(config)) {
+        LOG.severe(
+            "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                + "\nFailed to execute mpirun. Will try again. STDERR: " + stderr.toString()
+                + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+        // clear error buffer
+        stderr.setLength(0);
+
+        // update restartCount at the mpi command
+        command.updateRestartCount(cmd, tryCount);
+      }
+    }
+
+    return false;
   }
 }

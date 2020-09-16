@@ -37,10 +37,11 @@ public class  DriverExample implements IDriver {
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     waitAllWorkersToJoin();
+    BasicK8sWorker.sleepSomeTime("driver", 600);
 
 //    scalingExampleCLI(scaler);
-    scalingExample(scaler, messenger);
-    broadcastExample(messenger);
+//    scalingExample(scaler, messenger);
+//    broadcastExample(messenger);
 //    sendCompleteMessage(messenger);
 
     LOG.info("Driver has finished execution.");
@@ -129,28 +130,28 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-//    int toRemove = 3;
-//    LOG.info("removing " + toRemove + " workers.");
-//    scaler.scaleDownWorkers(toRemove);
-//
-//    try {
-//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-//      Thread.sleep(sleepDuration);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-//
-//    LOG.info("Adding " + toAdd + " new workers.");
-//    scaler.scaleUpWorkers(toAdd);
-//
-//    waitAllWorkersToJoin();
-//
-//    try {
-//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-//      Thread.sleep(sleepDuration);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+    int toRemove = 3;
+    LOG.info("removing " + toRemove + " workers.");
+    scaler.scaleDownWorkers(toRemove);
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Adding " + toAdd + " new workers.");
+    scaler.scaleUpWorkers(toAdd);
+
+    waitAllWorkersToJoin();
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
   }
 

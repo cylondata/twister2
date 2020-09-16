@@ -16,8 +16,8 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.driver;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController;
 
@@ -101,7 +101,7 @@ public class MesosScaler implements IScalerPerCluster {
    * @return
    */
   @Override
-  public boolean scaleDownWorkers(int instancesToRemove) {
+  public boolean scaleDownWorkers(int instancesToRemove, int numberOfWorkers) {
 
 //    if (instancesToRemove % workersPerPod != 0) {
 //      LOG.severe("instancesToRemove has to be a multiple of workersPerPod=" + workersPerPod);

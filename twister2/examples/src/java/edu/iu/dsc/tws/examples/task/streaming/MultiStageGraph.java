@@ -24,30 +24,28 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
-public class MultiStageGraph implements IWorker {
+public class MultiStageGraph implements Twister2Worker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
-        workerController, persistentVolume, volatileVolume);
+  public void execute(WorkerEnvironment workerEnv) {
+
+    ComputeEnvironment cEnv = ComputeEnvironment.init(workerEnv);
+
     GeneratorTask g = new GeneratorTask();
     ReduceTask rt = new ReduceTask();
     PartitionTask r = new PartitionTask();
 
-    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(workerEnv.getConfig());
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source").viaEdge("partition-edge").withDataType(MessageTypes.OBJECT);

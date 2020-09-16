@@ -19,18 +19,20 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
-public class TSetCachingExample implements BatchTSetIWorker, Serializable {
+public class TSetCachingExample implements Twister2Worker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetCachingExample.class.getName());
 
@@ -49,7 +51,8 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
   }
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
     SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
@@ -67,7 +70,7 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
+    ComputeTSet<Object> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
         c.collect(i * 5);
       });
@@ -96,8 +99,8 @@ public class TSetCachingExample implements BatchTSetIWorker, Serializable {
       }
     }, 4);
 
-    ComputeTSet<Integer, Iterator<Integer>> calc = sourceZ.direct().compute(
-        new ComputeCollectorFunc<Integer, Iterator<Integer>>() {
+    ComputeTSet<Integer> calc = sourceZ.direct().compute(
+        new ComputeCollectorFunc<Iterator<Integer>, Integer>() {
 
           private DataPartitionConsumer<Integer> xValues;
 

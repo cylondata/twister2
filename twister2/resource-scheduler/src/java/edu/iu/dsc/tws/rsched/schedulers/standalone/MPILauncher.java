@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -26,22 +24,24 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.MPIContext;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.DriverJobState;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.api.driver.NullScalar;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.Twister2JobState;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
-import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
@@ -60,6 +60,14 @@ public class MPILauncher implements ILauncher {
 
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      LOG.warning("ZooKeeper is not supported in Standalone mode. Ignoring it.");
+      config = Config.newBuilder()
+          .putAll(config)
+          .put(ZKContext.SERVER_ADDRESSES, null)
+          .build();
+    }
   }
 
   @Override
@@ -68,7 +76,7 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean terminateJob(String jobID) {
+  public boolean killJob(String jobID) {
     // not implemented yet
     return false;
   }
@@ -190,6 +198,10 @@ public class MPILauncher implements ILauncher {
         MPIContext.clusterType(config));
     Twister2JobState state = new Twister2JobState(false);
 
+    if (!configsOK()) {
+      return state;
+    }
+
     //distributing bundle if not running in shared file system
     if (!MPIContext.isSharedFs(config)) {
       LOG.info("Configured as NON SHARED file system. "
@@ -208,8 +220,9 @@ public class MPILauncher implements ILauncher {
       }
     }
 
-    config = Config.newBuilder().putAll(config).put(
-        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
+    config = Config.newBuilder().putAll(config)
+        .put(SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory)
+        .build();
 
     JobMaster jobMaster = null;
     Thread jmThread = null;
@@ -222,28 +235,26 @@ public class MPILauncher implements ILauncher {
         int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
         if (hostAddress == null) {
-          hostAddress = InetAddress.getLocalHost().getHostAddress();
+          hostAddress = ResourceSchedulerUtils.getHostIP(config);
         }
         // add the port and ip to config
-        config = Config.newBuilder().putAll(config).put("__job_master_port__", port).
-            put("__job_master_ip__", hostAddress).build();
+        config = Config.newBuilder().putAll(config)
+            .put("__job_master_port__", port)
+            .put("__job_master_ip__", hostAddress)
+            .build();
 
         LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
-        JobMasterAPI.NodeInfo jobMasterNodeInfo = NodeInfoUtils.createNodeInfo(hostAddress,
-            "default", "default");
+        JobMasterAPI.NodeInfo jobMasterNodeInfo =
+            NodeInfoUtils.createNodeInfo(hostAddress, "default", "default");
 
-        IScalerPerCluster nullScaler = new NullScalar();
+        IScalerPerCluster nullScaler = new NullScaler();
         JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
-        NomadTerminator nt = new NomadTerminator();
+        NullTerminator nt = new NullTerminator();
 
         jobMaster = new JobMaster(
-            config, hostAddress, port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
+            config, "0.0.0.0", port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
-        ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-        throw new RuntimeException(e);
       } catch (Twister2Exception e) {
         LOG.log(Level.SEVERE, "Exception when starting Job master: ", e);
         throw new RuntimeException(e);
@@ -257,6 +268,7 @@ public class MPILauncher implements ILauncher {
       controller.initialize(config);
       start[0] = controller.start(job);
     });
+    controllerThread.setName("MPIController");
     controllerThread.start();
     // wait until the controller finishes
     try {
@@ -268,7 +280,7 @@ public class MPILauncher implements ILauncher {
     if (jmThread != null && JobMasterContext.isJobMasterUsed(config)
         && JobMasterContext.jobMasterRunsInClient(config)) {
       try {
-        jmThread.join(10000);
+        jmThread.join();
       } catch (InterruptedException ignore) {
       }
     }
@@ -305,5 +317,17 @@ public class MPILauncher implements ILauncher {
         jobPackageURI,
         Context.verbose(config),
         SchedulerContext.copySystemPackage(config));
+  }
+
+  private boolean configsOK() {
+    if (config.getBooleanValue(CheckpointingContext.CHECKPOINTING_ENABLED)
+        && !JobMasterContext.isJobMasterUsed(config)) {
+      LOG.severe("Checkpointing enabled but JobMaster is not used. "
+          + " Checkpointing requires JobMaster. "
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+      return false;
+    }
+
+    return true;
   }
 }

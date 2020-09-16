@@ -88,10 +88,10 @@ public class HadoopSourceWithMap<K, V, F extends InputFormat<K, V>, I>
   /**
    * Map function
    */
-  private MapFunc<I, Tuple<K, V>> mapFunc;
+  private MapFunc<Tuple<K, V>, I> mapFunc;
 
   public HadoopSourceWithMap(Configuration conf, Class<F> inputClazz,
-                             MapFunc<I, Tuple<K, V>> mapFunc) {
+                             MapFunc<Tuple<K, V>, I> mapFunc) {
     this.inputClazz = inputClazz;
     this.wrappedConfiguration = new HadoopConfSerializeWrapper(conf);
     this.mapFunc = mapFunc;

@@ -11,16 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.driver;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.driver.IScaler;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.api.driver.NullScalar;
-import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.proto.utils.JobUtils;
+import edu.iu.dsc.tws.master.server.ZKJobUpdater;
 
 public class Scaler implements IScaler {
 
@@ -29,20 +26,17 @@ public class Scaler implements IScaler {
   private IScalerPerCluster clusterScaler;
   private WorkerMonitor workerMonitor;
   private ZKJobUpdater zkJobUpdater;
-  private JobAPI.Job job;
 
-  public Scaler(JobAPI.Job job,
-                IScalerPerCluster clusterScaler,
+  public Scaler(IScalerPerCluster clusterScaler,
                 WorkerMonitor workerMonitor,
                 ZKJobUpdater zkJobUpdater) {
 
-    this.job = job;
     this.workerMonitor = workerMonitor;
     this.clusterScaler = clusterScaler;
     this.zkJobUpdater = zkJobUpdater;
 
     if (this.clusterScaler == null) {
-      this.clusterScaler = new NullScalar();
+      this.clusterScaler = new NullScaler();
     }
   }
 
@@ -53,7 +47,7 @@ public class Scaler implements IScaler {
 
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
-    LOG.info("Current numberOfWorkers: " + job.getNumberOfWorkers()
+    LOG.info("Current numberOfWorkers: " + workerMonitor.getNumberOfWorkers()
         + ", new workers to be added: " + instancesToAdd);
 
     if (!isScalable()) {
@@ -73,7 +67,7 @@ public class Scaler implements IScaler {
     }
 
     workerMonitor.workersScaledUp(instancesToAdd);
-    return updateJobInZK(instancesToAdd);
+    return zkJobUpdater.updateWorkers(instancesToAdd);
   }
 
   @Override
@@ -89,36 +83,22 @@ public class Scaler implements IScaler {
       return false;
     }
 
-    boolean scaledDown = clusterScaler.scaleDownWorkers(instancesToRemove);
+    boolean scaledDown =
+        clusterScaler.scaleDownWorkers(instancesToRemove, workerMonitor.getNumberOfWorkers());
     if (!scaledDown) {
       return false;
     }
 
+    int maxID = workerMonitor.getNumberOfWorkers();
     workerMonitor.workersScaledDown(instancesToRemove);
 
     // min and max of workers that will be killed by scale down
-    int minID = job.getNumberOfWorkers() - instancesToRemove;
-    int maxID = job.getNumberOfWorkers();
-
-    boolean updatedJobInZK = updateJobInZK(0 - instancesToRemove);
-    boolean checkZNodesDeleted =
-        zkJobUpdater.removeInitialStateZNodes(job.getJobId(), minID, maxID);
+    int minID = maxID - instancesToRemove;
+    int workerChange = 0 - instancesToRemove;
+    boolean updatedJobInZK = zkJobUpdater.updateWorkers(workerChange);
+    boolean checkZNodesDeleted = zkJobUpdater.removeInitialStateZNodes(minID, maxID);
 
     return updatedJobInZK && checkZNodesDeleted;
   }
 
-  private boolean updateJobInZK(int workerChange) {
-
-    // update the job object
-    job = JobUtils.scaleJob(job, workerChange);
-
-    // update the job in ZooKeeper if it is used
-    try {
-      zkJobUpdater.updateJob(job);
-      return true;
-    } catch (Twister2Exception e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return false;
-    }
-  }
 }

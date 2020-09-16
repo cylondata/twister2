@@ -60,9 +60,9 @@ public final class CheckpointUtils {
   }
 
   public static StateStore getStateStore(Config config) {
-    String checkpointingStoreClass = CheckpointingConfigurations.getCheckpointingStoreClass(config);
+    String checkpointingStoreClass = CheckpointingContext.getCheckpointingStoreClass(config);
     try {
-      return (StateStore) CheckpointingConfigurations.class.getClassLoader()
+      return (StateStore) CheckpointingContext.class.getClassLoader()
           .loadClass(checkpointingStoreClass).newInstance();
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("Couldn't find checkpointing store class : "

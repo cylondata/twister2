@@ -7,17 +7,14 @@ twsiter2.resource.scheduler.mpi.mode: "slurm"
 # the job id file
 twister2.resource.scheduler.mpi.job.id: ""
 
-# slurm script to run
-twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
-
 # slurm partition
-twister2.resource.scheduler.slurm.partition: "juliet"
+twister2.resource.scheduler.slurm.partition: "general"
 
 # the mpirun command location
 twister2.resource.scheduler.mpi.home: ""
 
 # the package uri
-twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.6.0-SNAPSHOT.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.8.0-SNAPSHOT.tar.gz"
 
 # the launcher class
 twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
@@ -26,7 +23,7 @@ twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.M
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
-twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
+twister2.resource.scheduler.mpi.mpirun.file: "ompi/bin/mpirun"
 
 # the uploader directory
 twister2.resource.uploader.directory: "${HOME}/.twister2/repository"
@@ -37,3 +34,15 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.Local
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
 twister2.resource.uploader.download.method: "HTTP"
+
+# Slurm sbatch parameters:
+# partition parameter is set by default:
+# --partition=$twister2.resource.scheduler.slurm.partition
+# you can add other sbatch parameters to below variable
+twister2.resource.scheduler.slurm.params: '-N 1 --ntasks=1'
+
+# MPI parameters:
+# you can specify MPI parameters that will be provided in mpirun command
+# with the below config
+# for example:
+# twister2.resource.scheduler.mpi.params: '--mca btl vader,self'

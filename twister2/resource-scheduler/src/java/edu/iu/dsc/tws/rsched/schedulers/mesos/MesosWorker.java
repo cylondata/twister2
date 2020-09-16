@@ -23,16 +23,14 @@ import org.apache.mesos.MesosExecutorDriver;
 import org.apache.mesos.Protos;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static java.lang.Math.toIntExact;
 
 public class MesosWorker implements Executor {
@@ -73,18 +71,7 @@ public class MesosWorker implements Executor {
 
     //jobID = SchedulerContext.jobID(config);
     //System.out.println("job name is " + jobID);
-    String workerClass = SchedulerContext.workerClass(config);
-    IWorker container;
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      container = (IWorker) object;
-      LOG.info("loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
 
-    }
     long port = 0;
     for (Protos.Resource r : taskInfo.getResourcesList()) {
       if (r.getName().equals("ports")) {
@@ -96,7 +83,7 @@ public class MesosWorker implements Executor {
 
     MesosWorkerController workerController;
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobID + ".job");
+      JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobID + ".job");
       workerController = new MesosWorkerController(config, job,
           InetAddress.getLocalHost().getHostAddress(), toIntExact(port), id);
       LOG.info("Initializing with zookeeper");
@@ -104,7 +91,8 @@ public class MesosWorker implements Executor {
       LOG.info("Waiting for all workers to join");
       workerController.getAllWorkers();
       LOG.info("Everyone has joined");
-      container.execute(config, id, workerController, null, null);
+      IWorker worker = JobUtils.initializeIWorker(job);
+      worker.execute(config, job, workerController, null, null);
       workerController.close();
     } catch (UnknownHostException e) {
       LOG.severe("Host unkown " + e.getMessage());

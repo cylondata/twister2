@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -196,11 +196,18 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/core/WorkerRuntime.html#init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-WorkerInfo-JobMasterAPI.WorkerState-">init</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/core/WorkerRuntime.html#init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-WorkerInfo-int-">init</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
     JobAPI.Job&nbsp;jb,
     WorkerInfo&nbsp;wInfo,
-    JobMasterAPI.WorkerState&nbsp;initialState)</code>
+    int&nbsp;restartCount)</code>
 <div class="block">Initialize connections to Job Master or ZooKeeper</div>
+</td>
+</tr>
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../edu/iu/dsc/tws/rsched/core/WorkerRuntime.html#init-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController-">init</a></span>(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+    <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPIWorkerController</a>&nbsp;wc)</code>
+<div class="block">Initialize WorkerRuntime with MPIWorkerController</div>
 </td>
 </tr>
 </table>
@@ -225,7 +232,18 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-WorkerInfo-JobMasterAPI.WorkerState-">
+<a name="init-edu.iu.dsc.tws.api.config.Config-edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorkerController-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>init</h4>
+<pre>public static&nbsp;boolean&nbsp;init(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
+                           <a href="../../../../../../edu/iu/dsc/tws/rsched/schedulers/standalone/MPIWorkerController.html" title="class in edu.iu.dsc.tws.rsched.schedulers.standalone">MPIWorkerController</a>&nbsp;wc)</pre>
+<div class="block">Initialize WorkerRuntime with MPIWorkerController</div>
+</li>
+</ul>
+<a name="init-edu.iu.dsc.tws.api.config.Config-JobAPI.Job-WorkerInfo-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -234,7 +252,7 @@ extends java.lang.Object</pre>
 <pre>public static&nbsp;boolean&nbsp;init(<a href="../../../../../../edu/iu/dsc/tws/api/config/Config.html" title="class in edu.iu.dsc.tws.api.config">Config</a>&nbsp;cnfg,
                            JobAPI.Job&nbsp;jb,
                            WorkerInfo&nbsp;wInfo,
-                           JobMasterAPI.WorkerState&nbsp;initialState)</pre>
+                           int&nbsp;restartCount)</pre>
 <div class="block">Initialize connections to Job Master or ZooKeeper</div>
 </li>
 </ul>

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendFailureReason;
@@ -72,6 +73,17 @@ public class RRClient {
 
   private final Object responseWaitObject = new Object();
   private RequestID requestIdOfWaitedResponse = null;
+  private Message waitedResponseMessage = null;
+
+  /**
+   * a flag to show whether the response received for the message that waits for the response
+   */
+  private boolean responseReceived = false;
+
+  /**
+   * a flag to show whether an error occurred when sending sending a message that needs a response
+   */
+  private boolean errorWhenSending = false;
 
   /**
    * The communicationProgress loop
@@ -94,8 +106,8 @@ public class RRClient {
     return client.connect();
   }
 
-  public boolean tryConnecting() {
-    return client.tryConnecting();
+  public void tryConnecting() {
+    client.tryConnecting();
   }
 
   public void disconnect() {
@@ -111,12 +123,13 @@ public class RRClient {
   }
 
   /**
+   * return requestID and response message
    * throw an exception with the failure reason
    * @param message message
    * @param waitLimit waitlimit
    * @return request id
    */
-  public RequestID sendRequestWaitResponse(Message message, long waitLimit)
+  public Tuple<RequestID, Message> sendRequestWaitResponse(Message message, long waitLimit)
       throws BlockingSendException {
 
     // if this method is already called and waiting for a response
@@ -126,8 +139,12 @@ public class RRClient {
     }
 
     synchronized (responseWaitObject) {
+      responseReceived = false;
+      errorWhenSending = false;
+
       RequestID requestID = sendRequest(message);
       requestIdOfWaitedResponse = requestID;
+
       if (requestIdOfWaitedResponse == null) {
         throw new BlockingSendException(BlockingSendFailureReason.ERROR_WHEN_TRYING_TO_SEND,
             "Problem when trying to send the message.", null);
@@ -135,16 +152,20 @@ public class RRClient {
 
       try {
         responseWaitObject.wait(waitLimit);
-        if (requestIdOfWaitedResponse != null) {
-          requestIdOfWaitedResponse = null;
+        if (errorWhenSending) {
+          throw new BlockingSendException(BlockingSendFailureReason.CONNECTION_LOST_WHEN_SENDING,
+              "Connection lost when sending the message.", null);
+        }
+        if (!responseReceived) {
           throw new BlockingSendException(BlockingSendFailureReason.TIME_LIMIT_REACHED,
-              "Wait limit has been reached. Response message has not been received.", null);
+              "Response not received for Wait limit[" + waitLimit + "ms].", null);
         }
       } catch (InterruptedException e) {
         throw new BlockingSendException(BlockingSendFailureReason.EXCEPTION_WHEN_WAITING,
             "Exception when waiting the response.", e);
       }
-      return requestID;
+
+      return new Tuple(requestID, waitedResponseMessage);
     }
   }
 
@@ -201,23 +222,30 @@ public class RRClient {
 
   private class Handler implements ChannelHandler {
     @Override
-    public void onError(SocketChannel ch) {
+    public void onError(SocketChannel ch, StatusCode status) {
       LOG.severe("Error happened");
-      connectHandler.onError(ch);
       loop.removeAllInterest(ch);
 
       try {
         ch.close();
         LOG.log(Level.FINEST, "Closed the channel: " + ch);
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to close channel: " + ch, e);
+        LOG.log(Level.SEVERE, "Failed to close the channel: " + ch, e);
+      }
+      connectHandler.onError(ch, status);
+      // notify if this response is waited
+      synchronized (responseWaitObject) {
+        requestIdOfWaitedResponse = null;
+        errorWhenSending = true;
+        waitedResponseMessage = null;
+        responseWaitObject.notify();
       }
     }
 
     @Override
-    public void onConnect(SocketChannel ch, StatusCode status) {
+    public void onConnect(SocketChannel ch) {
       channel = ch;
-      connectHandler.onConnect(ch, status);
+      connectHandler.onConnect(ch);
     }
 
     @Override
@@ -267,10 +295,11 @@ public class RRClient {
         }
 
         // notify if this response is waited
-
         synchronized (responseWaitObject) {
           if (requestID.equals(requestIdOfWaitedResponse)) {
             requestIdOfWaitedResponse = null;
+            responseReceived = true;
+            waitedResponseMessage = m;
             responseWaitObject.notify();
           }
         }

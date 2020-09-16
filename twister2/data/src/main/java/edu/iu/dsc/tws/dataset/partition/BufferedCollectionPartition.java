@@ -164,11 +164,10 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   @Override
-  public void add(T val) {
+  public synchronized void add(T val) {
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
-      LOG.info("Writing to disk...");
       // write to buffer
       byte[] bytes = dataType.getDataPacker().packToByteArray(val);
       this.buffers.add(bytes);
@@ -219,7 +218,14 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
             for (long i = 0; i < noOfFrames; i++) {
               int size = reader.readInt();
               byte[] data = new byte[size];
-              reader.read(data);
+              int readSoFar = 0;
+              while (readSoFar < size) {
+                int readSize = reader.read(data, readSoFar, data.length - readSoFar);
+                if (readSize == -1) {
+                  throw new Twister2RuntimeException("Reached the EOF unexpectedly");
+                }
+                readSoFar += readSize;
+              }
               this.bufferFromDisk.add(data);
             }
             return next();
@@ -264,6 +270,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   public void flush() {
+    if (this.buffers.isEmpty()) {
+      return;
+    }
     Path filePath = new Path(this.rootPath, (this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
       outputStream.writeLong(this.buffers.size());

@@ -18,10 +18,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -30,7 +32,8 @@ public class PartitionMtoNExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     int n = 4;
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
@@ -61,7 +64,7 @@ public class PartitionMtoNExample extends BatchTsetExample {
 
     LOG.info("test compute");
     src.partition(new LoadBalancePartitioner<>(), n)
-        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
+        .compute((ComputeFunc<Iterator<Integer>, Integer>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
@@ -73,7 +76,7 @@ public class PartitionMtoNExample extends BatchTsetExample {
 
     LOG.info("test computec");
     src.partition(new LoadBalancePartitioner<>(), n)
-        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+        .compute((ComputeCollectorFunc<Iterator<Integer>, String>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {

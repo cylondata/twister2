@@ -20,21 +20,23 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
-public class CheckpointingExample implements CheckpointingBatchTSetIWorker, Serializable {
+public class CheckpointingExample implements Twister2Worker, Serializable {
   private static final Logger LOG = Logger.getLogger(CheckpointingExample.class.getName());
   private static final int PAR = 2;
 
-  private SourceTSet<Integer> dummySource(CheckpointingTSetEnv env, int count,
+  private SourceTSet<Integer> dummySource(BatchChkPntEnvironment env, int count,
                                           int init) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = init;
@@ -52,15 +54,17 @@ public class CheckpointingExample implements CheckpointingBatchTSetIWorker, Seri
   }
 
   @Override
-  public void execute(CheckpointingTSetEnv env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
     int count = 5;
 
-    SourceTSet<Integer> src = dummySource(env, count, 0);
+    SourceTSet<Integer> src = dummySource(env, count, 100 * env.getWorkerID());
     PersistedTSet<Integer> persist = src.direct().persist();
 
-    SourceTSet<Integer> src1 = dummySource(env, count, 10);
+    SourceTSet<Integer> src1 = dummySource(env, count, 100 * env.getWorkerID() + 10);
     src1.direct().compute(
-        new BaseComputeFunc<String, Iterator<Integer>>() {
+        new BaseComputeFunc<Iterator<Integer>, String>() {
           private DataPartitionConsumer<Integer> in;
 
           @Override

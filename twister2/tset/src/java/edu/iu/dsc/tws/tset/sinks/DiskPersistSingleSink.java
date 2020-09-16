@@ -14,18 +14,19 @@ package edu.iu.dsc.tws.tset.sinks;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
+import edu.iu.dsc.tws.tset.TSetUtils;
 
 public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
-  private DiskBackedCollectionPartition<T> partition;
+  private BufferedCollectionPartition<T> partition;
 
-  private String referencePrefix;
+  private final String referencePrefix;
 
   /**
    * Creates an instance of {@link DiskPersistSingleSink} with a referencePrefix
    *
    * @param referencePrefix referencePrefix will be used to uniquely identify the set of
-   *                        disk partitions created with this function
+   * disk partitions created with this function
    */
   public DiskPersistSingleSink(String referencePrefix) {
     this.referencePrefix = referencePrefix;
@@ -34,8 +35,8 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    String reference = referencePrefix + ctx.getIndex();
-    partition = new DiskBackedCollectionPartition<>(0,
+    String reference = TSetUtils.getDiskCollectionReference(this.referencePrefix, ctx);
+    this.partition = TSetUtils.getCollectionPartition(0,
         ctx.getConfig(), reference);
   }
 
@@ -51,7 +52,7 @@ public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
   }
 
   @Override
-  public DiskBackedCollectionPartition<T> get() {
+  public BufferedCollectionPartition<T> get() {
     return partition;
   }
 }

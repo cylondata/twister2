@@ -20,7 +20,8 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.schema.TupleSchema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
@@ -34,11 +35,12 @@ import edu.iu.dsc.tws.tset.ops.ComputeToTupleOp;
  * @param <V> data (value) type
  */
 public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
-  private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
+  private TFunction<?, Tuple<K, V>> mapToTupleFunc;
 
-  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, TFunction<Tuple<K, V>, ?> mapFn,
+  public SKeyedTSet(StreamingEnvironment tSetEnv, String name, TFunction<?, Tuple<K, V>> mapFn,
                     int parallelism, Schema inputSchema) {
-    super(tSetEnv, "skeyed", parallelism, inputSchema);
+    super(tSetEnv, TSetUtils.resolveComputeName(name, mapFn, true, true),
+        parallelism, inputSchema);
     this.mapToTupleFunc = mapFn;
   }
 
@@ -57,13 +59,13 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   public ICompute getINode() {
 
     if (mapToTupleFunc instanceof MapCompute) {
-      return new ComputeToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeToTupleOp<>((MapCompute<?, Tuple<K, V>>) mapToTupleFunc, this,
           Collections.emptyMap());
     } else if (mapToTupleFunc instanceof MapIterCompute) {
-      return new ComputeCollectorToTupleOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+      return new ComputeCollectorToTupleOp<>((MapIterCompute<?, Tuple<K, V>>) mapToTupleFunc, this,
           Collections.emptyMap());
     } else if (mapToTupleFunc instanceof GatherMapCompute) {
-      return new ComputeCollectorToTupleOp<>((GatherMapCompute<Tuple<K, V>, ?>) mapToTupleFunc,
+      return new ComputeCollectorToTupleOp<>((GatherMapCompute<?, Tuple<K, V>>) mapToTupleFunc,
           this, Collections.emptyMap());
     }
 

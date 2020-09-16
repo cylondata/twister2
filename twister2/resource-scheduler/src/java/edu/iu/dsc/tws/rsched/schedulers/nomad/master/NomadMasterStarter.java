@@ -18,17 +18,18 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.scheduler.IController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadController;
-import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 
@@ -82,9 +83,9 @@ public final class NomadMasterStarter {
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
 
         JobMasterAPI.NodeInfo jobMasterNodeInfo = NomadContext.getNodeInfo(config, hostAddress);
-        IScalerPerCluster clusterScaler = null;
+        IScalerPerCluster clusterScaler = new NullScaler();
         JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
-        NomadTerminator nt = new NomadTerminator();
+        NullTerminator nt = new NullTerminator();
 
         jobMaster = new JobMaster(
             config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);

@@ -13,16 +13,16 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
@@ -32,7 +32,8 @@ public class BranchingExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(BranchingExample.class.getName());
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void execute(WorkerEnvironment workerEnv) {
+    BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     int para = 2;
     SourceTSet<Integer> src = dummySource(env, COUNT, para).setName("src0");
 
@@ -45,13 +46,13 @@ public class BranchingExample extends BatchTsetExample {
         CommunicationContext.JoinType.INNER, Integer::compareTo).setName("join");
 
 
-    ComputeTSet<String, Iterator<JoinedTuple<Integer, Integer, Integer>>> map
+    ComputeTSet<String> map
         = join.map(t -> "(" + t.getKey() + " " + t.getLeftValue() + " " + t.getRightValue() + ")")
         .setName("map***");
 
-    ComputeTSet<String, Iterator<String>> map1 = map.direct().map(s -> "###" + s).setName("map@@");
+    ComputeTSet<String> map1 = map.direct().map(s -> "###" + s).setName("map@@");
 
-    ComputeTSet<String, Iterator<String>> union = map.union(map1).setName("union");
+    ComputeTSet<String> union = map.union(map1).setName("union");
 
     union.direct().forEach(s -> LOG.info(s));
   }

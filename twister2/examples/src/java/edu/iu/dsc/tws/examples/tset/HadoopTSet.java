@@ -34,9 +34,10 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.data.utils.HdfsDataContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -45,11 +46,13 @@ public class HadoopTSet implements IWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(HadoopTSet.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, IWorkerController workerController,
+  public void execute(Config config, JobAPI.Job job, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
+
+    int workerId = workerController.getWorkerInfo().getWorkerID();
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, job, workerController,
         persistentVolume, volatileVolume);
-    BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
+    BatchEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
 
     Configuration configuration = new Configuration();
 
@@ -58,7 +61,7 @@ public class HadoopTSet implements IWorker, Serializable {
     configuration.set(TextInputFormat.INPUT_DIR, "/input4");
     SourceTSet<String> source =
         tSetEnv.createHadoopSource(configuration, TextInputFormat.class, 4,
-            new MapFunc<String, Tuple<LongWritable, Text>>() {
+            new MapFunc<Tuple<LongWritable, Text>, String>() {
               @Override
               public String map(Tuple<LongWritable, Text> input) {
                 return input.getKey().toString() + " : " + input.getValue().toString();

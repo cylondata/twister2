@@ -17,6 +17,7 @@ import java.net.URI;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
@@ -24,8 +25,8 @@ import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartition<T> {
 
-  private static final String CONFIG_HDFS_ROOT = "twister2.data.hdfs.root";
   private static final String HDFS_PROTO = "hdfs://";
+  public static final String CONFIG = "hdfs";
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
                                        int bufferedBytes, Config config, String reference) {
@@ -34,6 +35,10 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, Config config) {
     super(maxFramesInMemory, config);
+  }
+
+  public HDFSBackedCollectionPartition(int maxFramesInMemory, Config config, String reference) {
+    super(maxFramesInMemory, config, reference);
   }
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, MessageType dataType, Config config) {
@@ -50,9 +55,8 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
   }
 
   protected String getRootPathStr(Config config) {
-    return HDFS_PROTO + String.join(File.separator,
-        config.getStringValue(CONFIG_HDFS_ROOT), String.join(File.separator,
-            this.getReference()));
+    return HDFS_PROTO + String.join(File.separator, FileSystemContext.persistentStorageRoot(config),
+        "tsetdata", this.getReference());
   }
 
   @Override

@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.master.dashclient.messages;
 
 import edu.iu.dsc.tws.master.dashclient.models.ComputeResource;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.master.dashclient.models.Node;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -48,7 +47,7 @@ public class RegisterJob {
     this.jobID = jobID;
     this.jobName = job.getJobName();
     this.numberOfWorkers = job.getNumberOfWorkers();
-    this.state = JobState.STARTING.name();
+    this.state = JobAPI.JobState.STARTING.name();
     this.workerClass = job.getWorkerClassName();
     this.node = new Node(nodeInfo);
 

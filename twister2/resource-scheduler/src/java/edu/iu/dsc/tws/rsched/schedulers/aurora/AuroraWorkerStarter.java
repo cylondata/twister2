@@ -20,18 +20,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 
 public final class AuroraWorkerStarter {
@@ -71,7 +70,7 @@ public final class AuroraWorkerStarter {
 
     // TODO: need to provide all parameters
     worker.execute(workerStarter.config,
-        workerStarter.zkWorkerController.getWorkerInfo().getWorkerID(),
+        workerStarter.job,
         null, null, null);
 
     // close the things, let others know that it is done
@@ -119,7 +118,7 @@ public final class AuroraWorkerStarter {
   private void readJobDescFile() {
     String jobDescFile = System.getProperty(SchedulerContext.JOB_DESCRIPTION_FILE_CMD_VAR);
     jobDescFile = JOB_ARCHIVE_DIRECTORY + "/" + jobDescFile;
-    job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(jobDescFile);
 
     // printing for testing
     LOG.log(Level.INFO, "Job description file is read: " + jobDescFile);
@@ -169,15 +168,22 @@ public final class AuroraWorkerStarter {
   public void initializeWithZooKeeper() {
 
     long startTime = System.currentTimeMillis();
-    String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
-    int numberOfWorkers = job.getNumberOfWorkers();
 
     // TODO: need to put at least nodeIP to this NodeInfoUtils object
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(null, null, null);
+    //TODO: workerID has to be assigned properly to work it correctly
+    int workerID = 0;
+    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
+        workerID, workerAddress.getHostAddress(), workerPort, nodeInfo);
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort,
-            numberOfWorkers, nodeInfo, null);
-    zkWorkerController.initialize();
+        new ZKWorkerController(config, job.getJobId(), job.getNumberOfWorkers(), workerInfo);
+    try {
+      int restartCount = 0;
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");

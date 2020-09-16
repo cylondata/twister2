@@ -18,7 +18,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public interface ComputeFunc<O, I> extends TFunction<O, I> {
+public interface ComputeFunc<I, O> extends TFunction<I, O> {
 
   O compute(I input);
 }

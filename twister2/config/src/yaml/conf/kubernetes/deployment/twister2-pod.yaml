@@ -1,0 +1,51 @@
+################################################
+# A sample pod using Twister2 K8s Container
+# To list jobs from ZooKeeper and for testing using plain pods
+# 
+# It starts and sleeps
+# User is expected to run commands in this pod using kubectl exec
+################################################
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: twister2-pod
+  namespace: default
+  labels:
+    app: twister2-pod
+spec:
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 0
+
+  containers:
+    - image: twister2/twister2-k8s:0.8.0-SNAPSHOT
+      name: twister2-container
+      command: ["bash"]
+      args: ["-c", "echo sleeping to infinity ........... ; sleep infinity"]
+
+      resources:
+        requests:
+          memory: "128Mi"
+          cpu: "0.1"
+        limits:
+          memory: "256Mi"
+          cpu: "1.0"
+      volumeMounts:
+        - name: twister2-shared-dir
+          mountPath: /twister2-shared
+      env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_MEMORY_VOLUME
+          value: "/twister2-memory-dir"
+  volumes:
+    - name: twister2-shared-dir
+      emptyDir: {medium: Memory}

@@ -14,9 +14,12 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
@@ -26,6 +29,8 @@ public class K8sScaler implements IScalerPerCluster {
 
   private Config config;
   private KubernetesController k8sController;
+  private String jobID;
+  private JobAPI.Job job;
 
   // values for scalable ComputeResource in the job
   private String scalableSSName;
@@ -36,6 +41,8 @@ public class K8sScaler implements IScalerPerCluster {
   public K8sScaler(Config config, JobAPI.Job job, KubernetesController k8sController) {
     this.k8sController = k8sController;
     this.config = config;
+    this.job = job;
+    jobID = job.getJobId();
 
     int computeResourceIndex = job.getComputeResourceCount() - 1;
     JobAPI.ComputeResource scalableCompRes = job.getComputeResource(computeResourceIndex);
@@ -81,6 +88,7 @@ public class K8sScaler implements IScalerPerCluster {
       return false;
     }
 
+    updateConfigMap(instancesToAdd);
     replicas = replicas + podsToAdd;
 
     return true;
@@ -92,7 +100,7 @@ public class K8sScaler implements IScalerPerCluster {
    * @return
    */
   @Override
-  public boolean scaleDownWorkers(int instancesToRemove) {
+  public boolean scaleDownWorkers(int instancesToRemove, int numberOfWorkers) {
 
     if (instancesToRemove % workersPerPod != 0) {
       LOG.severe("instancesToRemove has to be a multiple of workersPerPod=" + workersPerPod);
@@ -112,10 +120,31 @@ public class K8sScaler implements IScalerPerCluster {
       return false;
     }
 
+    updateConfigMap(0 - instancesToRemove);
+
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      for (int wID = numberOfWorkers - instancesToRemove; wID < numberOfWorkers; wID++) {
+        String keyName = KubernetesUtils.createRestartWorkerKey(wID);
+        boolean removed = k8sController.removeRestartCount(jobID, keyName);
+        if (!removed) {
+          return false;
+        }
+      }
+    }
+
     // update replicas
     replicas = replicas - podsToRemove;
 
     return true;
+  }
+
+  private void updateConfigMap(int workerChange) {
+
+    job = JobUtils.scaleJob(job, workerChange);
+    boolean cmUpdated = k8sController.updateConfigMapJobParam(job);
+    if (!cmUpdated) {
+      throw new Twister2RuntimeException("Can not update job object at ConfigMap");
+    }
   }
 
 }

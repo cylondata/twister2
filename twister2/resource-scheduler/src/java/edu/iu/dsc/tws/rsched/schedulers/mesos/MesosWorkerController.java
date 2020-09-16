@@ -20,14 +20,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.JobFaultyException;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
-
 
 public class MesosWorkerController implements IWorkerController {
 
@@ -108,6 +108,10 @@ public class MesosWorkerController implements IWorkerController {
     return zkWorkerController.getJoinedWorkers();
   }
 
+  @Override
+  public int workerRestartCount() {
+    return 0;
+  }
 
   public void initializeWithZooKeeper() {
 
@@ -118,13 +122,17 @@ public class MesosWorkerController implements IWorkerController {
 //    NodeInfoUtils nodeInfo = new NodeInfoUtils(workerIp, null, null);
     JobMasterAPI.NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
 
-    //TODO: need to provide real ComputeResource object
-    JobAPI.ComputeResource computeResource = null;
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobId(), workerHostPort, numberOfWorkers,
-            nodeInfo, computeResource);
+        new ZKWorkerController(config, job.getJobId(), numberOfWorkers, thisWorker);
 
-    zkWorkerController.initialize(workerIdd);
+    try {
+      //TODO: real restartCount needs to be given
+      int restartCount = 0;
+      // startTime should come from job submission client
+      zkWorkerController.initialize(restartCount, startTime);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+    }
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
@@ -147,12 +155,9 @@ public class MesosWorkerController implements IWorkerController {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
       workerList = zkWorkerController.getJoinedWorkers();
-      LOG.info("list of current workers in the job: ");
-      zkWorkerController.printWorkers(workerList);
+      LOG.info("list of current workers in the job: \n" + workerList);
 
-      LOG.info("list of all joined workers to the job: ");
-      zkWorkerController.printWorkers(zkWorkerController.getJoinedWorkers());
-
+      LOG.info("list of all joined workers to the job: \n" + zkWorkerController.getJoinedWorkers());
     }
     return workerList;
   }
@@ -160,6 +165,16 @@ public class MesosWorkerController implements IWorkerController {
   @Override
   public void waitOnBarrier() throws TimeoutException {
     zkWorkerController.waitOnBarrier();
+  }
+
+  @Override
+  public void waitOnBarrier(long timeLimit) throws TimeoutException, JobFaultyException {
+    zkWorkerController.waitOnBarrier(timeLimit);
+  }
+
+  @Override
+  public void waitOnInitBarrier() throws TimeoutException {
+    zkWorkerController.waitOnInitBarrier();
   }
 
   /**

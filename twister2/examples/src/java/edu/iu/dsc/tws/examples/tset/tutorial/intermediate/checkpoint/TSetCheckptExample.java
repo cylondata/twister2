@@ -13,20 +13,21 @@
 package edu.iu.dsc.tws.examples.tset.tutorial.intermediate.checkpoint;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.resource.Twister2Worker;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.tset.env.CheckpointingTSetEnv;
+import edu.iu.dsc.tws.tset.env.BatchChkPntEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.tset.worker.CheckpointingBatchTSetIWorker;
 
-public class TSetCheckptExample implements CheckpointingBatchTSetIWorker, Serializable {
+public class TSetCheckptExample implements Twister2Worker, Serializable {
 
   private static final Logger LOG = Logger.getLogger(TSetCheckptExample.class.getName());
 
@@ -45,7 +46,9 @@ public class TSetCheckptExample implements CheckpointingBatchTSetIWorker, Serial
   }
 
   @Override
-  public void execute(CheckpointingTSetEnv env) {
+  public void execute(WorkerEnvironment workerEnvironment) {
+
+    BatchChkPntEnvironment env = TSetEnvironment.initCheckpointing(workerEnvironment);
     LOG.info(String.format("Hello from worker %d", env.getWorkerID()));
 
     SourceTSet<Integer> sourceX = env.createSource(new SourceFunc<Integer>() {
@@ -64,7 +67,7 @@ public class TSetCheckptExample implements CheckpointingBatchTSetIWorker, Serial
     }, 4);
 
     long t1 = System.currentTimeMillis();
-    ComputeTSet<Object, Iterator<Object>> twoComputes = sourceX.direct().compute((itr, c) -> {
+    ComputeTSet<Object> twoComputes = sourceX.direct().compute((itr, c) -> {
       itr.forEachRemaining(i -> {
         c.collect(i * 5);
       });

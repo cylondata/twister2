@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.driver.IScalerPerCluster;
+import edu.iu.dsc.tws.api.driver.NullScaler;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -77,8 +78,7 @@ public final class MesosJobMasterStarter {
 
     edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController controller;
     controller = new edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController(config);
-    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-        + jobName + ".job");
+    JobAPI.Job job = JobUtils.readJobFile("twister2-job/" + jobName + ".job");
 //    try {
 //      workerController = new MesosWorkerController(config, job,
 //          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
@@ -120,7 +120,7 @@ public final class MesosJobMasterStarter {
       try {
         String workerIp = Inet4Address.getLocalHost().getHostAddress();
         JobMasterAPI.NodeInfo jobMasterNodeInfo = MesosContext.getNodeInfo(config, workerIp);
-        IScalerPerCluster clusterScaler = null;
+        IScalerPerCluster clusterScaler = new NullScaler();
         MesosScaler mesosScaler = new MesosScaler(config, job, controller);
         mesosScaler.setFrameWorkId(System.getenv("FRAMEWORK_ID"));
         JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;

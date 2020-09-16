@@ -17,13 +17,13 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.links.TLinkUtils;
 
 public class ReplicateTLink<T> extends BatchIteratorLinkWrapper<T> {
   private boolean useDisk = false;
 
-  public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps, Schema schema) {
+  public ReplicateTLink(BatchEnvironment tSetEnv, int reps, Schema schema) {
     super(tSetEnv, "replicate", 1, reps, schema);
   }
 

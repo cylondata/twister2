@@ -119,11 +119,11 @@ public class RRServer {
   protected int pendingSendCount = 0;
 
   public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
-                  ConnectHandler cHandler) {
+                  ConnectHandler cHandler, int backLog) {
     this.connectHandler = cHandler;
     this.loop = looper;
     this.serverID = serverID;
-    server = new Server(cfg, host, port, loop, new Handler(), false);
+    server = new Server(cfg, host, port, loop, new Handler(), false, backLog);
   }
 
   public void registerRequestHandler(Message.Builder builder, MessageHandler handler) {
@@ -255,10 +255,10 @@ public class RRServer {
 
   private class Handler implements ChannelHandler {
     @Override
-    public void onError(SocketChannel channel) {
+    public void onError(SocketChannel channel, StatusCode status) {
       workerChannels.remove(channel);
       connectedChannels.remove(channel);
-      connectHandler.onError(channel);
+      connectHandler.onError(channel, status);
 
       loop.removeAllInterest(channel);
 
@@ -271,9 +271,9 @@ public class RRServer {
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
+    public void onConnect(SocketChannel channel) {
       connectedChannels.add(channel);
-      connectHandler.onConnect(channel, status);
+      connectHandler.onConnect(channel);
     }
 
     @Override

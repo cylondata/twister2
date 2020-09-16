@@ -20,6 +20,10 @@ import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.FileSystemContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+
 public final class LoggingContext {
 
   public static final String LOGGER_PROPERTIES_FILE = "common/logger.properties";
@@ -56,6 +60,8 @@ public final class LoggingContext {
 
   // whether redirect System.out and System.err to log files
   public static final boolean REDIRECT_SYS_OUT_ERR_DEFAULT = false;
+
+  public static final String LOGGING_STORAGE_TYPE = "twister2.logging.storage.type";
 
   public static String loggingLevel() {
     //giving priority to logger.properties
@@ -145,5 +151,32 @@ public final class LoggingContext {
     }
 
     return definedFormat;
+  }
+
+  public static String loggingStorageType(Config config) {
+    return config.getStringValue(LOGGING_STORAGE_TYPE, "volatile");
+  }
+
+  public static String loggingDir(Config config) {
+    String storageType = loggingStorageType(config);
+    String rootDir;
+    switch (storageType) {
+      case "volatile":
+        rootDir = FileSystemContext.volatileStorageRoot(config);
+        break;
+      case "persistent":
+        if (FileSystemContext.persistentStorageType(config).equals("hdfs")) {
+          throw new Twister2RuntimeException("hdfs is not supported for logging. "
+              + "Please either specify logging.storage.type as volatile or "
+              + "persistent.storage.type as nfs or local.");
+        }
+        rootDir = FileSystemContext.persistentStorageRoot(config);
+        break;
+
+      default:
+        throw new Twister2RuntimeException("unsupported logging storage type: " + storageType);
+    }
+
+    return rootDir + File.separator + "logs";
   }
 }

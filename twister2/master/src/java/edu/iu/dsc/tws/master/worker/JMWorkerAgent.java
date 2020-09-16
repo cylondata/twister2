@@ -12,13 +12,12 @@
 
 package edu.iu.dsc.tws.master.worker;
 
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.protobuf.Any;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -30,12 +29,15 @@ import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
 /**
  * JMWorkerAgent class
@@ -74,31 +76,16 @@ public final class JMWorkerAgent {
   private RRClient rrClient;
 
   private JMWorkerController workerController;
-  private JMSenderToDriver senderToDriver;
+  private JMDriverAgent driverAgent;
+  private JMWorkerStatusUpdater statusUpdater;
 
   private boolean registrationSucceeded;
+  private boolean disconnected = false;
 
   private boolean reconnect = false;
   private boolean reconnected = false;
 
   private int numberOfWorkers;
-
-  /**
-   * to control the connection error when we repeatedly try connecting
-   */
-  private boolean connectionRefused = false;
-
-  /**
-   * workers can register an IReceiverFromDriver
-   * to receive messages from the driver
-   */
-  private IReceiverFromDriver receiverFromDriver;
-
-  /**
-   * if messages arrive before IReceiverFromDriver added,
-   * buffer those messages in this list and deliver them when an IReceiverFromDriver added
-   */
-  private LinkedList<JobMasterAPI.DriverMessage> messageBuffer = new LinkedList<>();
 
   /**
    * workers can register an IScalerListener to receive events from the driver actions
@@ -109,7 +96,7 @@ public final class JMWorkerAgent {
    * if events arrive before IScalerListener added,
    * buffer those events in this list and deliver them when an IScalerListener added
    */
-  private LinkedList<JobMasterAPI.WorkersScaled> scaledEventBuffer = new LinkedList<>();
+  private LinkedList<JobMasterAPI.JobScaled> scaledEventBuffer = new LinkedList<>();
 
 
   /**
@@ -121,7 +108,7 @@ public final class JMWorkerAgent {
    * if events arrive before IScalerListener added,
    * buffer those events in this list and deliver them when an IScalerListener added
    */
-  private LinkedList<JobMasterAPI.WorkersJoined> allJoinedEventBuffer = new LinkedList<>();
+  private LinkedList<JobMasterAPI.AllJoined> allJoinedEventBuffer = new LinkedList<>();
 
   /**
    * This is a singleton class
@@ -136,6 +123,7 @@ public final class JMWorkerAgent {
 
   private CheckpointingClientImpl checkpointClient;
 
+  private int restartCount;
   private JobMasterAPI.WorkerState initialState;
 
   /**
@@ -146,13 +134,14 @@ public final class JMWorkerAgent {
                         String jmAddress,
                         int jmPort,
                         int numberOfWorkers,
-                        JobMasterAPI.WorkerState initialState) {
+                        int restartCount) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.jmAddress = jmAddress;
     this.jmPort = jmPort;
     this.numberOfWorkers = numberOfWorkers;
-    this.initialState = initialState;
+    this.restartCount = restartCount;
+    this.initialState = restartCount > 0 ? WorkerState.RESTARTED : WorkerState.STARTED;
   }
 
   /**
@@ -164,13 +153,13 @@ public final class JMWorkerAgent {
                                                   String jmAddress,
                                                   int jmPort,
                                                   int numberOfWorkers,
-                                                  JobMasterAPI.WorkerState initialState) {
+                                                  int restartCount) {
     if (workerAgent != null) {
       return workerAgent;
     }
 
     workerAgent = new JMWorkerAgent(
-        config, thisWorker, jmAddress, jmPort, numberOfWorkers, initialState);
+        config, thisWorker, jmAddress, jmPort, numberOfWorkers, restartCount);
     return workerAgent;
   }
 
@@ -194,45 +183,23 @@ public final class JMWorkerAgent {
     rrClient = new RRClient(jmAddress, jmPort, null, looper,
         thisWorker.getWorkerID(), connectHandler);
 
-    senderToDriver = new JMSenderToDriver(this);
+    driverAgent = new JMDriverAgent(rrClient, thisWorker.getWorkerID());
+    statusUpdater = new JMWorkerStatusUpdater(rrClient, thisWorker.getWorkerID(), config);
 
     // protocol buffer message registrations
-    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
-        JobMasterAPI.RegisterWorker.newBuilder();
-    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
-        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
+    ResponseMessageHandler handler = new ResponseMessageHandler();
+    rrClient.registerResponseHandler(JobMasterAPI.RegisterWorker.newBuilder(), handler);
+    rrClient.registerResponseHandler(JobMasterAPI.RegisterWorkerResponse.newBuilder(), handler);
 
-    JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
-        JobMasterAPI.WorkerStateChange.newBuilder();
-    JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
-        = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
+    rrClient.registerResponseHandler(JobMasterAPI.JobScaled.newBuilder(), handler);
+    rrClient.registerResponseHandler(JobMasterAPI.AllJoined.newBuilder(), handler);
 
-    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
-        JobMasterAPI.WorkerMessage.newBuilder();
-    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
-        = JobMasterAPI.WorkerMessageResponse.newBuilder();
+    // create checkpointing client
+    this.checkpointClient =
+        new CheckpointingClientImpl(rrClient, CheckpointingContext.getRequestTimeout(config));
 
-    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
-        JobMasterAPI.WorkersScaled.newBuilder();
-
-    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
-        JobMasterAPI.DriverMessage.newBuilder();
-
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
-
-    ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
-    rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
-
-    rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
-
-    rrClient.registerResponseHandler(workerMessageBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(workerResponseBuilder, responseMessageHandler);
-
-    rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(driverMessageBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(joinedBuilder, responseMessageHandler);
+    workerController = new JMWorkerController(
+        config, thisWorker, numberOfWorkers, restartCount, rrClient, this.checkpointClient);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -240,32 +207,8 @@ public final class JMWorkerAgent {
     if (!rrClient.isConnected()) {
       throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
-  }
 
-  /**
-   * this will be initialized after worker registration
-   * since WorkerInfo may change when job master assigns workerIDs
-   */
-  private void initJMWorkerController() {
-
-    this.checkpointClient = new CheckpointingClientImpl(rrClient);
-    workerController = new JMWorkerController(config, thisWorker, rrClient,
-        numberOfWorkers, this.checkpointClient);
-
-    JobMasterAPI.ListWorkersRequest.Builder listRequestBuilder =
-        JobMasterAPI.ListWorkersRequest.newBuilder();
-    JobMasterAPI.ListWorkersResponse.Builder listResponseBuilder =
-        JobMasterAPI.ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, workerController);
-    rrClient.registerResponseHandler(listResponseBuilder, workerController);
-
-    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
-        JobMasterAPI.BarrierRequest.newBuilder();
-    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
-        JobMasterAPI.BarrierResponse.newBuilder();
-    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
-    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
-
+    // initialize checkpointing client
     this.checkpointClient.init();
   }
 
@@ -282,15 +225,15 @@ public final class JMWorkerAgent {
         LOG.fine("Worker is disconnecting from JobMaster from previous session.");
         rrClient.disconnect();
 
-        // update jmHost anf jmPort
+        // update jmHost and jmPort
         rrClient.setHostAndPort(jmAddress, jmPort);
 
         // reconnect
         reconnected = tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
         if (reconnected) {
-          LOG.info("Worker Re-connected to JobMaster.");
+          LOG.info("Worker " + thisWorker.getWorkerID() + " Re-connected to JobMaster.");
         } else {
-          LOG.info("Worker could not re-connect to JobMaster.");
+          LOG.info("Worker " + thisWorker.getWorkerID() + " could not re-connect to JobMaster.");
         }
 
         reconnect = false;
@@ -309,14 +252,31 @@ public final class JMWorkerAgent {
 
     Thread jmThread = new Thread(this::startLooping);
 
-    jmThread.setName("JM Agent");
+    jmThread.setName("JM-Agent-WorkerID " + thisWorker.getWorkerID());
     jmThread.setDaemon(true);
     jmThread.start();
 
-    boolean registered = registerWorker(initialState);
-    if (registered) {
-      initJMWorkerController();
-    } else {
+    boolean registered = registerWorker();
+
+    // if there was a connection problem when registering,
+    // re-try that two more times
+    if (!registered && disconnected) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+      }
+      registered = reconnect(jmAddress);
+    }
+
+    if (!registered && disconnected) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+      }
+      registered = reconnect(jmAddress);
+    }
+
+    if (!registered) {
       this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
@@ -334,10 +294,8 @@ public final class JMWorkerAgent {
     startLooping();
 
     //TODO: this should be tested
-    boolean registered = registerWorker(initialState);
-    if (registered) {
-      initJMWorkerController();
-    } else {
+    boolean registered = registerWorker();
+    if (!registered) {
       this.close();
       throw new RuntimeException("Could not register Worker with JobMaster. Exiting .....");
     }
@@ -349,41 +307,40 @@ public final class JMWorkerAgent {
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
-    long sleepInterval = 50;
+    long connectAttemptInterval = 100;
+    long maxConnectAttemptInterval = 1000;
 
     // log interval in milliseconds
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
-    // allow the first connection attempt
-    connectionRefused = true;
-
-    while (duration < timeLimit) {
+    while (duration < timeLimit && !rrClient.isConnected()) {
       // try connecting
-      if (connectionRefused) {
-        rrClient.tryConnecting();
-        connectionRefused = false;
-      }
+      rrClient.tryConnecting();
 
       // loop to connect
-      looper.loop();
+      try {
+        looper.loop();
+      } catch (CancelledKeyException cke) {
+        LOG.severe(cke.getMessage() + " Will try to reconnect ...");
+        rrClient.disconnect();
+      }
 
       if (rrClient.isConnected()) {
         return true;
       }
 
       try {
-        Thread.sleep(sleepInterval);
+        Thread.sleep(connectAttemptInterval);
       } catch (InterruptedException e) {
         LOG.warning("Sleep interrupted.");
       }
 
-      if (rrClient.isConnected()) {
-        return true;
+      if (connectAttemptInterval < maxConnectAttemptInterval) {
+        connectAttemptInterval = Math.min(connectAttemptInterval * 2, maxConnectAttemptInterval);
       }
 
       duration = System.currentTimeMillis() - startTime;
-
       if (duration > nextLogTime) {
         LOG.info("Still trying to connect to the Job Master: " + jmAddress + ":" + jmPort);
         nextLogTime += logInterval;
@@ -394,10 +351,11 @@ public final class JMWorkerAgent {
   }
 
   /**
-   * this method is called after job master is restarted
+   * this method is called after the connection is lost to job master
+   * it can be called after the jm restarted
    * it reconnects the worker to the job master
    */
-  public void reconnect(String jobMasterAddress) {
+  public boolean reconnect(String jobMasterAddress) {
 
     this.jmAddress = jobMasterAddress;
     reconnect = true;
@@ -424,7 +382,7 @@ public final class JMWorkerAgent {
 
     // register the worker
     LOG.info("Worker re-registering with JobMaster to initialize things.");
-    registerWorker(initialState);
+    return registerWorker();
   }
 
   /**
@@ -444,8 +402,12 @@ public final class JMWorkerAgent {
   /**
    * return JMSenderToDriver for this worker
    */
-  public JMSenderToDriver getSenderToDriver() {
-    return senderToDriver;
+  public JMDriverAgent getDriverAgent() {
+    return driverAgent;
+  }
+
+  public JMWorkerStatusUpdater getStatusUpdater() {
+    return statusUpdater;
   }
 
   public CheckpointingClientImpl getCheckpointClient() {
@@ -491,28 +453,27 @@ public final class JMWorkerAgent {
    * if the second IReceiverFromDriver tried to be added, returns false
    */
   public static boolean addReceiverFromDriver(IReceiverFromDriver receiverFromDriver) {
-    if (workerAgent.receiverFromDriver != null) {
-      return false;
-    }
+    return workerAgent.getDriverAgent().addReceiverFromDriver(receiverFromDriver);
+  }
 
-    workerAgent.receiverFromDriver = receiverFromDriver;
-
-    // deliver buffered messages if any
-    workerAgent.deliverBufferedMessages();
-
-    return true;
+  /**
+   * only one IWorkerFailureListener can be added
+   * if the second IWorkerFailureListener tried to be added, returns false
+   */
+  public static boolean addWorkerFailureListener(IWorkerFailureListener workerFailureListener) {
+    return workerAgent.getStatusUpdater().addWorkerFailureListener(workerFailureListener);
   }
 
   /**
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    */
-  private boolean registerWorker(JobMasterAPI.WorkerState initState) {
+  private boolean registerWorker() {
 
     JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerInfo(thisWorker)
-        .setInitialState(initState)
+        .setRestartCount(restartCount)
         .build();
 
     LOG.fine("Sending RegisterWorker message: \n" + registerWorker);
@@ -533,43 +494,9 @@ public final class JMWorkerAgent {
     }
   }
 
-  public boolean sendWorkerCompletedMessage() {
-
-    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
-        .setState(JobMasterAPI.WorkerState.COMPLETED)
-        .build();
-
-    LOG.fine("Sending Worker COMPLETED message: \n" + workerStateChange);
-    try {
-      rrClient.sendRequestWaitResponse(workerStateChange,
-          JobMasterContext.responseWaitDuration(config));
-    } catch (BlockingSendException e) {
-      LOG.log(Level.SEVERE, String.format("%d Worker completed message failed",
-          thisWorker.getWorkerID()), e);
-      return false;
-    }
-
-    return true;
+  public boolean sendWorkerCompletedMessage(JobMasterAPI.WorkerState finalState) {
+    return statusUpdater.updateWorkerStatus(finalState);
   }
-
-  public boolean sendWorkerToDriverMessage(Message message) {
-
-    JobMasterAPI.WorkerMessage workerMessage = JobMasterAPI.WorkerMessage.newBuilder()
-        .setData(Any.pack(message).toByteString())
-        .setWorkerID(thisWorker.getWorkerID())
-        .build();
-
-    RequestID requestID = rrClient.sendRequest(workerMessage);
-    if (requestID == null) {
-      LOG.severe("Could not send WorkerToDriver message.");
-      return false;
-    }
-
-    LOG.fine("Sent WorkerToDriver message: \n" + workerMessage);
-    return true;
-  }
-
 
   /**
    * stop the JMWorkerAgent
@@ -600,19 +527,9 @@ public final class JMWorkerAgent {
   }
 
   /**
-   * deliver all buffered messages to the IReceiverFromDriver
-   */
-  private void deliverBufferedMessages() {
-
-    while (!messageBuffer.isEmpty()) {
-      deliverMessageToReceiver(messageBuffer.poll());
-    }
-  }
-
-  /**
    * deliver the received event to IScalerListener
    */
-  private void deliverToScalerListener(JobMasterAPI.WorkersScaled event) {
+  private void deliverToScalerListener(JobMasterAPI.JobScaled event) {
 
     if (event.getChange() > 0) {
       scalerListener.workersScaledUp(event.getChange());
@@ -624,22 +541,9 @@ public final class JMWorkerAgent {
   /**
    * deliver the received event to AllJoinedListener
    */
-  private void deliverToAllJoinedListener(JobMasterAPI.WorkersJoined event) {
+  private void deliverToAllJoinedListener(JobMasterAPI.AllJoined event) {
 
-    allJoinedListener.allWorkersJoined(event.getWorkerList());
-  }
-
-  /**
-   * deliver the received message to IReceiverFromDriver
-   */
-  private void deliverMessageToReceiver(JobMasterAPI.DriverMessage message) {
-
-    try {
-      Any any = Any.parseFrom(message.getData());
-      receiverFromDriver.driverMessageReceived(any);
-    } catch (InvalidProtocolBufferException e) {
-      LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
-    }
+    allJoinedListener.allWorkersJoined(event.getWorkerInfoList());
   }
 
   class ResponseMessageHandler implements MessageHandler {
@@ -656,28 +560,13 @@ public final class JMWorkerAgent {
 
         registrationSucceeded = responseMessage.getResult();
 
-      } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
-        LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
-
         // nothing to do
-      } else if (message instanceof JobMasterAPI.WorkerMessageResponse) {
-        LOG.fine("Received a WorkerMessageResponse from the master. \n" + message);
-
-      } else if (message instanceof JobMasterAPI.DriverMessage) {
-
-        JobMasterAPI.DriverMessage driverMessage = (JobMasterAPI.DriverMessage) message;
-        if (receiverFromDriver == null) {
-          messageBuffer.add(driverMessage);
-        } else {
-          deliverMessageToReceiver(driverMessage);
-        }
-
-      } else if (message instanceof JobMasterAPI.WorkersScaled) {
+      } else if (message instanceof JobMasterAPI.JobScaled) {
 
         LOG.fine("Received " + message.getClass().getSimpleName()
             + " message from the master. \n" + message);
 
-        JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+        JobMasterAPI.JobScaled scaledMessage = (JobMasterAPI.JobScaled) message;
         if (scalerListener == null) {
           scaledEventBuffer.add(scaledMessage);
         } else {
@@ -686,9 +575,9 @@ public final class JMWorkerAgent {
 
         workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
 
-      } else if (message instanceof JobMasterAPI.WorkersJoined) {
+      } else if (message instanceof JobMasterAPI.AllJoined) {
 
-        JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+        JobMasterAPI.AllJoined joinedMessage = (JobMasterAPI.AllJoined) message;
         if (allJoinedListener == null) {
           allJoinedEventBuffer.add(joinedMessage);
         } else {
@@ -704,19 +593,14 @@ public final class JMWorkerAgent {
 
   public class ClientConnectHandler implements ConnectHandler {
     @Override
-    public void onError(SocketChannel channel) {
-
+    public void onError(SocketChannel channel, StatusCode status) {
+      disconnected = true;
     }
 
     @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
-      if (status == StatusCode.SUCCESS) {
-        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
-      }
-
-      if (status == StatusCode.CONNECTION_REFUSED) {
-        connectionRefused = true;
-      }
+    public void onConnect(SocketChannel channel) {
+      disconnected = false;
+      LOG.info("Worker " + thisWorker.getWorkerID() + " connected to JobMaster: " + channel);
     }
 
     @Override

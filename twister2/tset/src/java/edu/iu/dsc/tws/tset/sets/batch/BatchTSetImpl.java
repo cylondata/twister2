@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -23,13 +22,14 @@ import edu.iu.dsc.tws.api.tset.schema.Schema;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
+import edu.iu.dsc.tws.tset.links.batch.PipeTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSetWithSchema;
@@ -49,13 +49,13 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
    * @param parallelism par
    * @param inputSchema Schema from the preceding {@link edu.iu.dsc.tws.api.tset.link.TLink}
    */
-  BatchTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism, Schema inputSchema) {
+  BatchTSetImpl(BatchEnvironment tSetEnv, String name, int parallelism, Schema inputSchema) {
     super(tSetEnv, name, parallelism, inputSchema);
   }
 
   @Override
-  public BatchTSetEnvironment getTSetEnv() {
-    return (BatchTSetEnvironment) super.getTSetEnv();
+  public BatchEnvironment getTSetEnv() {
+    return (BatchEnvironment) super.getTSetEnv();
   }
 
   @Override
@@ -63,6 +63,12 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism(), getOutputSchema());
     addChildToGraph(direct);
     return direct;
+  }
+
+  public PipeTLink<T> pipe() {
+    PipeTLink<T> pipe = new PipeTLink<>(getTSetEnv(), getParallelism(), getOutputSchema());
+    addChildToGraph(pipe);
+    return pipe;
   }
 
   @Override
@@ -111,19 +117,19 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
 
   // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
-  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
+  public ComputeTSet<T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((BatchTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
+    ComputeTSet<T> unionTSet = direct().compute("union",
         new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -140,9 +146,9 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
   }
 
   @Override
-  public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
+  public ComputeTSet<T> union(Collection<TSet<T>> tSets) {
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
+    ComputeTSet<T> unionTSet = direct().compute("union",
         new MapIterCompute<>(new IdentityFunction<>()));
     // now the following relationship is created
     // this -- directThis -- unionTSet

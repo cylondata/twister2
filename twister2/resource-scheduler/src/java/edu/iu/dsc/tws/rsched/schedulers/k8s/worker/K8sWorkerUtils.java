@@ -26,20 +26,21 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.JobZNodeManager;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
@@ -77,62 +78,47 @@ public final class K8sWorkerUtils {
    * initialize the logger
    */
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
-
-    if (pv != null && LoggingContext.fileLoggingRequested()) {
-
-      if (LoggingContext.redirectSysOutErr()) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String logFile = K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID;
-      LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(), logFile);
-
-      LOG.info("Persistent logging to file initialized.");
-    }
+    initLogger(cnfg, "worker-" + workerID, pv != null);
   }
 
   /**
    * initialize the logger
    * entityName can be "jobMaster", "mpiMaster", etc.
    */
-  public static void initLogger(Config cnfg, String entityName) {
-    // if no persistent volume requested, return
-    if ("jobMaster".equalsIgnoreCase(entityName)
-        && !JobMasterContext.persistentVolumeRequested(cnfg)) {
+  public static void initLogger(Config cnfg, String entityName, boolean pvExists) {
+    // if logging to file is not requested, do nothing
+    if (!LoggingContext.fileLoggingRequested()) {
       return;
     }
 
-    if ("mpiMaster".equalsIgnoreCase(entityName)
-        && !KubernetesContext.persistentVolumeRequested(cnfg)) {
+    if (!pvExists && "persistent".equalsIgnoreCase(LoggingContext.loggingStorageType(cnfg))) {
+      LOG.warning("Persistent logging is requested but no PersistentVolume provided. "
+          + "Not logging to file");
       return;
     }
 
-    // if persistent logging is requested, initialize it
-    if (LoggingContext.fileLoggingRequested()) {
-
-      if (LoggingContext.redirectSysOutErr()) {
-        LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-      }
-
-      String logDirName = KubernetesConstants.PERSISTENT_VOLUME_MOUNT + "/logs";
-      File logDir = new File(logDirName);
-
-      // refresh parent directory the cache
-      logDir.getParentFile().list();
-
-      if (!logDir.exists()) {
-        logDir.mkdirs();
-      }
-
-      String logFileName = entityName;
-
-      LoggingHelper.setupLogging(cnfg, logDirName, logFileName);
-
-      String logFileWithPath = logDirName + "/" + logFileName + ".log.0";
-      LOG.info("Persistent logging to file initialized: " + logFileWithPath);
+    if (LoggingContext.redirectSysOutErr()) {
+      LOG.warning("Redirecting System.out and System.err to the log file. "
+          + "Check the log file for the upcoming log messages. ");
     }
+
+    String logDirName = LoggingContext.loggingDir(cnfg);
+    File logDir = new File(logDirName);
+
+    // refresh parent directory the cache
+    logDir.getParentFile().list();
+
+    if (!logDir.exists()) {
+      if (!logDir.mkdirs()) {
+        throw new Twister2RuntimeException("Failed to create the log directory: " + logDir);
+      }
+    }
+
+    String logFileName = entityName;
+    LoggingHelper.setupLogging(cnfg, logDirName, logFileName);
+
+    String logFileWithPath = logDirName + "/" + logFileName + ".log.0";
+    LOG.info("Logging to file initialized: " + logFileWithPath);
   }
 
   public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, String podName) {
@@ -308,42 +294,92 @@ public final class K8sWorkerUtils {
     }
   }
 
+  public static int getAndInitRestartCount(Config cnfg,
+                                           String jbID,
+                                           JobMasterAPI.WorkerInfo wInfo) {
+    // initialize the controller to talk to Kubernetes master
+    KubernetesController controller = KubernetesController.init(KubernetesContext.namespace(cnfg));
+    String keyName = KubernetesUtils.createRestartWorkerKey(wInfo.getWorkerID());
+
+    int restartCount = initRestartFromCM(controller, jbID, keyName);
+    LOG.info("Worker restartCount: " + restartCount);
+
+    // close the controller
+    controller.close();
+
+    return restartCount;
+  }
+
   /**
    * worker is either starting for the first time, or it is coming from failure
-   * We return either WorkerState.STARTED or WorkerState.RESTARTED
-   *
-   * TODO: If ZooKeeper is not used,
-   *   currently we just return STARTED. We do not determine real initial status.
-   * @return
+   * We return restartCount. If it is 0, it is WorkerState.STARTED
+   * If it is more than zero, it is WorkerState.RESTARTED
    */
-  public static JobMasterAPI.WorkerState initialStateAndUpdate(Config cnfg,
-                                                               String jbID,
-                                                               JobMasterAPI.WorkerInfo wInfo) {
+  public static int initRestartFromZK(Config cnfg,
+                                      String jbID,
+                                      JobMasterAPI.WorkerInfo wInfo,
+                                      long jstTime) {
 
-    if (ZKContext.isZooKeeperServerUsed(cnfg)) {
-      String zkServerAddresses = ZKContext.serverAddresses(cnfg);
-      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
-      CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
-      String rootPath = ZKContext.rootNode(cnfg);
+    String zkServerAddresses = ZKContext.serverAddresses(cnfg);
+    int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(cnfg);
+    CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+    String rootPath = ZKContext.rootNode(cnfg);
 
-      try {
-        if (ZKPersStateManager.isWorkerRestarting(client, rootPath, jbID, wInfo)) {
-          return JobMasterAPI.WorkerState.RESTARTED;
-        }
+    try {
+      int restartCount = ZKPersStateManager.initAndGetRestartCount(client, rootPath, jbID, wInfo);
+      if (restartCount > 0) {
+        return restartCount;
+      }
 
-        if (ZKPersStateManager.checkPersDirWaitIfNeeded(client, rootPath, jbID)) {
-          ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
-        }
+      if (JobZNodeManager.checkJstZNodeWaitIfNeeded(client, rootPath, jbID, jstTime)) {
+        ZKPersStateManager.createWorkerPersState(client, rootPath, jbID, wInfo);
+      }
 
-        return JobMasterAPI.WorkerState.STARTED;
+      return 0;
 
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE,
-            "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
-        return JobMasterAPI.WorkerState.STARTED;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not get initial state for the worker. Assuming WorkerState.STARTED", e);
+      return 0;
+    }
+  }
+
+  /**
+   * get restartCount from a ConfigMap in K8s master
+   * if the worker/jm is starting for the first time,
+   * we need to add the config restart count key to the config map
+   * otherwise, we need to increase the restart count at the configmap
+   * <p>
+   * restartCount is returned as zero if the worker/jm is starting for the first time,
+   * if it is more than zero, the worker is restarting
+   */
+  public static int initRestartFromCM(KubernetesController controller,
+                                      String jbID,
+                                      String keyName) {
+
+    int restartCount = controller.getRestartCount(jbID, keyName);
+
+    // increase the count by 1 for the new value
+    restartCount++;
+
+    // if restartCount is 0 after the increase, worker/jm is starting for the first time
+    // add the key to configmap and set its value as zero
+    if (restartCount == 0) {
+      boolean added = controller.addConfigMapParam(jbID, keyName, 0 + "");
+      if (!added) {
+        throw new Twister2RuntimeException("Could not add the restartCount to ConfigMap");
+      }
+
+      // if restartCount is more than 0 after the increase, the worker has started before,
+      // it is coming from failure, set new count
+    } else if (restartCount > 0) {
+      boolean updated = controller.updateConfigMapParam(jbID, keyName, restartCount + "");
+      if (!updated) {
+        throw new Twister2RuntimeException("Could not update the restartCount in ConfigMap");
       }
     }
 
-    return JobMasterAPI.WorkerState.STARTED;
+    return restartCount;
   }
+
 }

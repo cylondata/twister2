@@ -16,6 +16,8 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
@@ -27,35 +29,52 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <O> Collector type
  * @param <I> Input message content type
  */
-public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
+public class ComputeCollectorOp<I, O> extends BaseComputeOp<I> {
 
-  private ComputeCollectorFunc<O, I> computeFunction;
+  private ComputeCollectorFunc<I, O> computeFunction;
+  private RecordCollector<O> output;
 
   public ComputeCollectorOp() {
   }
 
-  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin,
+  public ComputeCollectorOp(ComputeCollectorFunc<I, O> computeFunction, BaseTSet origin,
                             Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }
 
   @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
+    this.output = new RecordCollectorImpl<>();
+  }
+
+  @Override
   public boolean execute(IMessage<I> content) {
-    computeFunction.compute(content.getContent(), new RecordCollector<O>() {
-      @Override
-      public void collect(O record) {
-        writeToEdges(record);
-      }
-
-      @Override
-      public void close() {
-      }
-    });
-
-    writeEndToEdges();
-    computeFunction.close();
+    computeFunction.compute(content.getContent(), output);
     return true;
+  }
+
+  private class RecordCollectorImpl<O> implements RecordCollector<O> {
+    @Override
+    public void collect(O record) {
+      writeToEdges(record);
+    }
+
+    @Override
+    public void close() {
+    }
+  }
+
+  @Override
+  public void close() {
+    computeFunction.close();
+  }
+
+  @Override
+  public void endExecute() {
+    computeFunction.end();
+    writeEndToEdges();
   }
 
   @Override

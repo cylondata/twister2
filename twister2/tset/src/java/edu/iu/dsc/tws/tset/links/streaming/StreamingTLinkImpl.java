@@ -13,18 +13,21 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.task.window.util.WindowParameter;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLinkWithSchema;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.WindowComputeTSet;
 
@@ -33,31 +36,18 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
 
   private WindowParameter windowParameter;
 
-  StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP,
+  StreamingTLinkImpl(StreamingEnvironment env, String n, int sourceP, int targetP,
                      Schema schema) {
     super(env, n, sourceP, targetP, schema);
   }
 
   @Override
-  public StreamingTSetEnvironment getTSetEnv() {
-    return (StreamingTSetEnvironment) super.getTSetEnv();
+  public StreamingEnvironment getTSetEnv() {
+    return (StreamingEnvironment) super.getTSetEnv();
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
-    SComputeTSet<P, T1> set;
-    if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
-    addChildToGraph(set);
-
-    return set;
-  }
-
-  private <P> WindowComputeTSet<P, Iterator<T1>> window(String n) {
-    WindowComputeTSet<P, Iterator<T1>> set;
+  private <P> WindowComputeTSet<P> window(String n) {
+    WindowComputeTSet<P> set;
     if (n != null && !n.isEmpty()) {
       set = new WindowComputeTSet<>(getTSetEnv(), n, getTargetParallelism(),
           this.windowParameter, getSchema());
@@ -70,27 +60,42 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return set;
   }
 
-  public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
-    SComputeTSet<P, T1> set;
-    if (n != null && !n.isEmpty()) {
-      set = new SComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism(),
-          getSchema());
-    } else {
-      set = new SComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism(), getSchema());
-    }
+  public <P> SComputeTSet<P> compute(String n, TFunction<T1, P> computeFunction) {
+    SComputeTSet<P> set = new SComputeTSet<>(getTSetEnv(), n, computeFunction,
+        getTargetParallelism(), getSchema());
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  public <K, V> SKeyedTSet<K, V> computeToTuple(String n,
+                                                TFunction<T1, Tuple<K, V>> computeFunction) {
+    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), n, computeFunction,
+        getTargetParallelism(), getSchema());
     addChildToGraph(set);
 
     return set;
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P> compute(ComputeFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public <P> SComputeTSet<P, T1> compute(ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P> compute(ComputeCollectorFunc<T1, P> computeFunction) {
     return compute(null, computeFunction);
+  }
+
+  @Override
+  public <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeFunc<T1, Tuple<K, V>> computeFunc) {
+    return computeToTuple(null, computeFunc);
+  }
+
+  @Override
+  public <K, V> StreamingTupleTSet<K, V> computeToTuple(ComputeCollectorFunc<T1, Tuple<K, V>>
+                                                            computeFunc) {
+    return computeToTuple(null, computeFunc);
   }
 
   @Override
@@ -101,29 +106,29 @@ public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLinkWithSchema<T1,
     return sinkTSet;
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen) {
+  public <P> WindowComputeTSet<P> countWindow(long windowLen) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingCountWindow(windowLen);
     return window("w-count-tumbling-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> countWindow(long windowLen, long slidingLen) {
+  public <P> WindowComputeTSet<P> countWindow(long windowLen, long slidingLen) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withSlidingingCountWindow(windowLen, slidingLen);
     return window("w-count-sliding-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
-                                                           TimeUnit windowLenTimeUnit) {
+  public <P> WindowComputeTSet<P> timeWindow(long windowLen,
+                                             TimeUnit windowLenTimeUnit) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingDurationWindow(windowLen, windowLenTimeUnit);
     return window("w-duration-tumbling-compute-prev");
   }
 
-  public <P> WindowComputeTSet<P, Iterator<T1>> timeWindow(long windowLen,
-                                                           TimeUnit windowLenTimeUnit,
-                                                           long slidingLen,
-                                                           TimeUnit slidingWindowTimeUnit) {
+  public <P> WindowComputeTSet<P> timeWindow(long windowLen,
+                                             TimeUnit windowLenTimeUnit,
+                                             long slidingLen,
+                                             TimeUnit slidingWindowTimeUnit) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withSlidingDurationWindow(windowLen, windowLenTimeUnit, slidingLen,
         slidingWindowTimeUnit);

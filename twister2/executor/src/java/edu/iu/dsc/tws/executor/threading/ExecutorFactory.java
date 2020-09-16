@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
-import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.executor.threading.ft.AllSharingBatchExecutor;
 import edu.iu.dsc.tws.executor.threading.ft.AllSharingStremingExecutor;
 import edu.iu.dsc.tws.executor.threading.ft.DedicatedComStreamingExecutor;
@@ -58,7 +58,7 @@ public class ExecutorFactory {
                                 ExecutionPlan plan, IExecutionHook hook) {
     IExecutor executor;
     // if checkpointing enabled lets register for receiving faults
-    if (CheckpointingConfigurations.isCheckpointingEnabled(planConfig)) {
+    if (CheckpointingContext.isCheckpointingEnabled(planConfig)) {
       // lets start the execution
       if (operationMode == OperationMode.STREAMING) {
         String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);

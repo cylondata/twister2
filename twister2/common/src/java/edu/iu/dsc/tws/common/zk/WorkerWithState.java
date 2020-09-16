@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,10 +28,12 @@ public class WorkerWithState {
 
   private WorkerInfo info;
   private WorkerState state;
+  private int restartCount;
 
-  public WorkerWithState(WorkerInfo info, WorkerState state) {
+  public WorkerWithState(WorkerInfo info, WorkerState state, int restartCount) {
     this.info = info;
     this.state = state;
+    this.restartCount = restartCount;
   }
 
   public WorkerInfo getInfo() {
@@ -39,6 +42,10 @@ public class WorkerWithState {
 
   public WorkerState getState() {
     return state;
+  }
+
+  public int getRestartCount() {
+    return restartCount;
   }
 
   public int getWorkerID() {
@@ -50,10 +57,18 @@ public class WorkerWithState {
   }
 
   public byte[] toByteArray() {
-    byte[] stateBytes = Ints.toByteArray(state.getNumber());
+    byte[] stateNameBytes;
+    try {
+      stateNameBytes = state.name().getBytes("UTF8");
+    } catch (UnsupportedEncodingException e) {
+      LOG.log(Level.WARNING, "UTF8 Unsupported. Using default encoding instead.");
+      stateNameBytes = state.name().getBytes();
+    }
+    byte[] stateLengthBytes = Ints.toByteArray(stateNameBytes.length);
     byte[] workerInfoBytes = info.toByteArray();
+    byte[] restartCountBytes = Ints.toByteArray(restartCount);
 
-    return Bytes.concat(stateBytes, workerInfoBytes);
+    return Bytes.concat(stateLengthBytes, stateNameBytes, restartCountBytes, workerInfoBytes);
   }
 
   public static WorkerWithState decode(byte[] encodedBytes) {
@@ -61,15 +76,26 @@ public class WorkerWithState {
       return null;
     }
 
-    // first 4 bytes is the status
-    int state = Ints.fromByteArray(encodedBytes);
-    WorkerState workerState = WorkerState.forNumber(state);
+    // first 4 bytes is the length of worker state
+    int stateLength = Ints.fromByteArray(encodedBytes);
+    String stateName = new String(encodedBytes, 4, stateLength);
+    WorkerState workerState = WorkerState.valueOf(stateName);
 
+    // next 4 bytes is restartCount
+    int rcIndex = 4 + stateLength;
+    int restartCount = Ints.fromBytes(encodedBytes[rcIndex],
+        encodedBytes[rcIndex + 1],
+        encodedBytes[rcIndex + 2],
+        encodedBytes[rcIndex + 3]);
+
+    // remaining bytes are WorkerInfo object
+    int workerInfoLength = encodedBytes.length - 4 - stateLength - 4;
+    int workerInfoIndex = rcIndex + 4;
     try {
       WorkerInfo workerInfo = WorkerInfo.newBuilder()
-          .mergeFrom(encodedBytes, 4, encodedBytes.length - 4)
+          .mergeFrom(encodedBytes, workerInfoIndex, workerInfoLength)
           .build();
-      return new WorkerWithState(workerInfo, workerState);
+      return new WorkerWithState(workerInfo, workerState, restartCount);
     } catch (InvalidProtocolBufferException e) {
       LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
       return null;

@@ -14,6 +14,7 @@ common_deps_files = [
     "@maven//:org_apache_zookeeper_zookeeper",
     "@org_yaml_snakeyaml//jar",
     "//twister2/proto:proto-java",
+    "//twister2/proto/utils:proto-utils-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
@@ -21,7 +22,16 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
     "//third_party:ompi_javabinding_java",
+    "@maven//:org_apache_arrow_arrow_vector",
+    "@maven//:org_apache_arrow_arrow_memory",
+    "@maven//:org_apache_arrow_arrow_format",
+    "@maven//:com_google_flatbuffers_flatbuffers_java",
+    "@maven//:io_netty_netty_buffer",
+    "@maven//:io_netty_netty_all",
+    "@maven//:io_netty_netty_transport",
+    "@maven//:io_netty_netty_transport_native_epoll",
 ]
 
 t2_java_lib(

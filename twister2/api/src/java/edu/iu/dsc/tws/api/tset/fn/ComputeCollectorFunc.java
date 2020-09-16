@@ -19,7 +19,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <O> output type
  * @param <I> input type
  */
-public interface ComputeCollectorFunc<O, I> extends TFunction<O, I> {
+public interface ComputeCollectorFunc<I, O> extends TFunction<I, O> {
 
   void compute(I input, RecordCollector<O> output);
 }

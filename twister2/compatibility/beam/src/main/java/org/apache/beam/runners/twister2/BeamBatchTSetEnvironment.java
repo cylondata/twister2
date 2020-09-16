@@ -13,14 +13,14 @@ package org.apache.beam.runners.twister2;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.tset.TBaseGraph;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 /**
  * This is a shell tset environment which is used on as a central driver model to fit what beam
  * expects. This will be used to develop the TSet graph corresponding to the Beam Pipeline
  * which will later be injected into the correct TSetEnvironment one submitted.
  */
-public class BeamBatchTSetEnvironment extends BatchTSetEnvironment {
+public class BeamBatchTSetEnvironment extends BatchEnvironment {
 
   public BeamBatchTSetEnvironment() {
     this.settBaseGraph(new TBaseGraph(getOperationMode()));

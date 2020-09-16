@@ -19,18 +19,18 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.schema.PrimitiveSchemas;
 import edu.iu.dsc.tws.api.tset.schema.Schema;
-import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class SSourceTSet<T> extends StreamingTSetImpl<T> {
   private SourceFunc<T> source;
 
-  public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+  public SSourceTSet(StreamingEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     super(tSetEnv, "ssource", parallelism, PrimitiveSchemas.NULL);
     this.source = src;
   }
 
-  public SSourceTSet(StreamingTSetEnvironment tSetEnv, String name, SourceFunc<T> src,
+  public SSourceTSet(StreamingEnvironment tSetEnv, String name, SourceFunc<T> src,
                      int parallelism) {
     super(tSetEnv, name, parallelism, PrimitiveSchemas.NULL);
     this.source = src;
