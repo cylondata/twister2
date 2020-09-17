@@ -121,8 +121,9 @@ public class TWSUCXChannel implements TWSChannel {
 
       try {
         Thread.sleep(sleepDuration);
-      } catch (InterruptedException e) { }
-      
+      } catch (InterruptedException e) {
+      }
+
       // exponentially increase sleep duration between tries
       sleepDuration *= 2;
     }
