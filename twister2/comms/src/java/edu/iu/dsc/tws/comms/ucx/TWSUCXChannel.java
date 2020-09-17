@@ -80,6 +80,8 @@ public class TWSUCXChannel implements TWSChannel {
   private List<ReceiveProgress> receiveProgresses = new ArrayList<>();
   private Map<Integer, Map<Integer, Set<ReceiveProgress>>> groupReceives = new HashMap<>();
 
+  private static final int MAX_TRY_COUNT = 6;
+
   public TWSUCXChannel(Config config,
                        IWorkerController workerController) {
     this.workerId = workerController.getWorkerInfo().getWorkerID();
@@ -98,10 +100,33 @@ public class TWSUCXChannel implements TWSChannel {
     this.closeables.push(ucpWorker);
 
     // start listener
-    UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
+    UcpListenerParams ucpListenerParams = new UcpListenerParams().setSockAddr(
         new InetSocketAddress(iWorkerController.getWorkerInfo().getWorkerIP(),
             iWorkerController.getWorkerInfo().getPort())
-    ));
+    );
+
+    // if binding to port fails, repeatedly try
+    UcpListener ucpListener = null;
+    int tryCount = 0;
+    long sleepDuration = 100;
+    while (tryCount++ < MAX_TRY_COUNT) {
+      try {
+        ucpListener = ucpWorker.newListener(ucpListenerParams);
+        break;
+      } catch (org.openucx.jucx.UcxException ucxEx) {
+        if (tryCount == MAX_TRY_COUNT) {
+          throw new Twister2RuntimeException("Can not start TWSUCXChannel.", ucxEx);
+        }
+      }
+
+      try {
+        Thread.sleep(sleepDuration);
+      } catch (InterruptedException e) { }
+      
+      // exponentially increase sleep duration between tries
+      sleepDuration *= 2;
+    }
+
     this.closeables.push(ucpListener);
 
     try {
