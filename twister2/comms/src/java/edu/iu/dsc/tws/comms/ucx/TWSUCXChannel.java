@@ -80,7 +80,7 @@ public class TWSUCXChannel implements TWSChannel {
   private List<ReceiveProgress> receiveProgresses = new ArrayList<>();
   private Map<Integer, Map<Integer, Set<ReceiveProgress>>> groupReceives = new HashMap<>();
 
-  private static final int MAX_TRY_COUNT = 6;
+  private static final int MAX_TRY_COUNT = 8;
 
   public TWSUCXChannel(Config config,
                        IWorkerController workerController) {
