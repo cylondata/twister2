@@ -17,11 +17,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 
 public final class NetworkUtils {
+  private static final Logger LOG = Logger.getLogger(NetworkUtils.class.getName());
+
   private NetworkUtils() {
   }
 
@@ -62,7 +66,7 @@ public final class NetworkUtils {
     try {
       for (String portName : portNames) {
         ServerSocket socket = new ServerSocket(0);
-        socket.setReuseAddress(false);
+        socket.setReuseAddress(true);
         freePorts.put(portName, socket.getLocalPort());
         sockets.add(socket);
       }
@@ -84,11 +88,16 @@ public final class NetworkUtils {
     List<ServerSocket> sockets =
         (List<ServerSocket>) WorkerEnvironment.removeSharedValue("socketsForFreePorts");
     boolean allSocketsClosed = true;
+    int port = 0;
     for (ServerSocket socket : sockets) {
       try {
+        port = socket.getLocalPort();
         socket.close();
+        LOG.fine("Temporary socket closed at the port: " + port);
       } catch (IOException ioException) {
         allSocketsClosed = false;
+        LOG.log(Level.SEVERE, "Exception when closing the temporary socket at the port: " + port,
+            ioException);
       }
     }
 
