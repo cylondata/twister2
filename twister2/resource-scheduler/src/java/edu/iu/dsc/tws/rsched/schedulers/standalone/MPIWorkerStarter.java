@@ -51,7 +51,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -62,6 +61,7 @@ import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.NetworkUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
 
@@ -566,11 +566,11 @@ public final class MPIWorkerStarter {
    * @throws MPIException if an error occurs
    */
   private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId) {
-    String workerIP;
+    InetAddress workerIP;
     List<String> networkInterfaces = SchedulerContext.networkInterfaces(cfg);
     if (networkInterfaces == null) {
       try {
-        workerIP = InetAddress.getLocalHost().getHostAddress();
+        workerIP = InetAddress.getLocalHost();
       } catch (UnknownHostException e) {
         throw new RuntimeException("Failed to get ip address", e);
       }
@@ -582,7 +582,8 @@ public final class MPIWorkerStarter {
       }
     }
 
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(workerIP, "default", "default");
+    JobMasterAPI.NodeInfo nodeInfo =
+        NodeInfoUtils.createNodeInfo(workerIP.getHostAddress(), "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
     if (portNames == null) {
@@ -590,11 +591,11 @@ public final class MPIWorkerStarter {
     }
     portNames.add("__worker__");
 
-    Map<String, Integer> freePorts = NetworkUtils.findFreePorts(portNames);
+    Map<String, Integer> freePorts = NetworkUtils.findFreePorts(portNames, config, workerIP);
     Integer workerPort = freePorts.remove("__worker__");
     LOG.fine("Worker info host:" + workerIP + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(
-        workerId, workerIP, workerPort, nodeInfo, computeResource, freePorts);
+        workerId, workerIP.getHostAddress(), workerPort, nodeInfo, computeResource, freePorts);
   }
 
   /**

@@ -24,10 +24,10 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
-import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
+import edu.iu.dsc.tws.rsched.utils.NetworkUtils;
 
 public class MPIWorkerManager implements IWorkerFailureListener, IJobMasterFailureListener {
   private static final Logger LOG = Logger.getLogger(MPIWorkerManager.class.getName());

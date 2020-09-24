@@ -9,9 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.util;
+package edu.iu.dsc.tws.rsched.utils;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,8 +21,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.ucx.TWSUCXChannel;
 
 public final class NetworkUtils {
   private static final Logger LOG = Logger.getLogger(NetworkUtils.class.getName());
@@ -49,6 +53,15 @@ public final class NetworkUtils {
       s += e.toString() + "\n";
     }
     return s;
+  }
+
+  public static Map<String, Integer> findFreePorts(
+      List<String> portNames, Config config, InetAddress workerIP) {
+
+    if (SchedulerContext.usingUCXChannel(config)) {
+      return TWSUCXChannel.findFreeUcxPorts(portNames, workerIP);
+    }
+    return findFreePorts(portNames);
   }
 
   /**
@@ -87,6 +100,10 @@ public final class NetworkUtils {
 
     List<ServerSocket> sockets =
         (List<ServerSocket>) WorkerEnvironment.removeSharedValue("socketsForFreePorts");
+    if (sockets == null) {
+      return;
+    }
+
     boolean allSocketsClosed = true;
     int port = 0;
     for (ServerSocket socket : sockets) {

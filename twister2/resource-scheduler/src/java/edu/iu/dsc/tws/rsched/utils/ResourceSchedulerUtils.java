@@ -153,7 +153,7 @@ public final class ResourceSchedulerUtils {
    * @param interfaceNames
    * @return
    */
-  public static String getLocalIPFromNetworkInterfaces(List<String> interfaceNames) {
+  public static InetAddress getLocalIPFromNetworkInterfaces(List<String> interfaceNames) {
 
     try {
       for (String nwInterfaceName: interfaceNames) {
@@ -164,7 +164,7 @@ public final class ResourceSchedulerUtils {
           List<InterfaceAddress> addressList = networkInterface.getInterfaceAddresses();
           for (InterfaceAddress adress: addressList) {
             if (isValidIPv4(adress.getAddress().getHostAddress())) {
-              return adress.getAddress().getHostAddress();
+              return adress.getAddress();
             }
           }
         }
