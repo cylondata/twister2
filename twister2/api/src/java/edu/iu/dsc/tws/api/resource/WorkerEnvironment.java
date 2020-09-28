@@ -127,7 +127,7 @@ public final class WorkerEnvironment {
     // sometimes it takes some time to populate dns ip values in Kubernetes
     // although all workers is started, some workers may be unreachable by ip address
     if (Context.isKubernetesCluster(config)
-        && !SchedulerContext.useOpenMPI(config)
+        && !SchedulerContext.usingOpenMPI(config)
         && SchedulerContext.checkPodsReachable(config)) {
       checkAllPodsReachable();
     }
@@ -288,8 +288,8 @@ public final class WorkerEnvironment {
     putSharedValue(key, new WeakReference<>(value));
   }
 
-  public static void removeSharedValue(String key) {
-    sharedKeyValueStore.remove(key);
+  public static Object removeSharedValue(String key) {
+    return sharedKeyValueStore.remove(key);
   }
 
   public static Object getSharedValue(String key) {

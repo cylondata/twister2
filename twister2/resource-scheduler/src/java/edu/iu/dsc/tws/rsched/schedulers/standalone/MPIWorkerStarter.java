@@ -12,9 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -22,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,7 +51,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -65,6 +61,7 @@ import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.NullTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.NetworkUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 import edu.iu.dsc.tws.rsched.worker.MPIWorkerManager;
 
@@ -318,6 +315,9 @@ public final class MPIWorkerStarter {
       // init the logger
       initJMLogger(config);
 
+      // release the port for JM
+      NetworkUtils.releaseWorkerPorts();
+
       int port = JobMasterContext.jobMasterPort(config);
       String hostAddress = ResourceSchedulerUtils.getHostIP(config);
       LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
@@ -566,11 +566,11 @@ public final class MPIWorkerStarter {
    * @throws MPIException if an error occurs
    */
   private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId) {
-    String workerIP;
+    InetAddress workerIP;
     List<String> networkInterfaces = SchedulerContext.networkInterfaces(cfg);
     if (networkInterfaces == null) {
       try {
-        workerIP = InetAddress.getLocalHost().getHostAddress();
+        workerIP = InetAddress.getLocalHost();
       } catch (UnknownHostException e) {
         throw new RuntimeException("Failed to get ip address", e);
       }
@@ -582,40 +582,20 @@ public final class MPIWorkerStarter {
       }
     }
 
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(workerIP, "default", "default");
+    JobMasterAPI.NodeInfo nodeInfo =
+        NodeInfoUtils.createNodeInfo(workerIP.getHostAddress(), "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
-    final Map<String, Integer> freePorts = new HashMap<>();
     if (portNames == null) {
       portNames = new ArrayList<>();
     }
     portNames.add("__worker__");
-    Map<String, ServerSocket> socketMap = NetworkUtils.findFreePorts(portNames);
 
-    try {
-      MPI.COMM_WORLD.barrier();
-    } catch (MPIException e) {
-      throw new Twister2RuntimeException("MPI Barrier failed at initialization stage");
-    }
-
-    AtomicBoolean closedSuccessfully = new AtomicBoolean(true);
-    socketMap.forEach((k, v) -> {
-      freePorts.put(k, v.getLocalPort());
-      try {
-        v.close();
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, e, () -> "Couldn't close opened server socket : " + k);
-        closedSuccessfully.set(false);
-      }
-    });
-    if (!closedSuccessfully.get()) {
-      throw new IllegalStateException("Could not release one or more free TCP/IP ports");
-    }
-    Integer workerPort = freePorts.get("__worker__");
-    freePorts.remove("__worker__");
+    Map<String, Integer> freePorts = NetworkUtils.findFreePorts(portNames, config, workerIP);
+    Integer workerPort = freePorts.remove("__worker__");
     LOG.fine("Worker info host:" + workerIP + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(
-        workerId, workerIP, workerPort, nodeInfo, computeResource, freePorts);
+        workerId, workerIP.getHostAddress(), workerPort, nodeInfo, computeResource, freePorts);
   }
 
   /**
@@ -636,7 +616,12 @@ public final class MPIWorkerStarter {
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
-        throw new RuntimeException("Failed to create log directory: " + logDir);
+        // this worker may have failed to created the directory,
+        // but another worker may have succeeded.
+        // test it to make sure
+        if (!directory.exists()) {
+          throw new RuntimeException("Failed to create log directory: " + logDir);
+        }
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
