@@ -11,9 +11,8 @@ You can download source code from [Github](https://github.com/DSC-SPIDAL/twister
 
 ## Features of this release
 
-1. Fault Tolerance enhancements; Automated fault detection and recovery
-2. Table API(experimental)
-3. TSet API improvements; Pipe capability and TSetEnvironement
+1. Fault Tolerance enhancements
+2. Apache Beam integration is now official [Beam Docs](https://beam.apache.org/documentation/runners/twister2/)
  
 ## Minor features
 
