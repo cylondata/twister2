@@ -2,7 +2,7 @@
 # Kubernetes Docker Image and Launcher class
 ################################################################################
 # Twister2 Docker image for Kubernetes
-twister2.resource.kubernetes.docker.image: "twister2/twister2-k8s:0.8.0-SNAPSHOT"
+twister2.resource.kubernetes.docker.image: "twister2/twister2-k8s:0.8.0"
 
 # Launcher class for Kubernetes
 twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
