@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.SchedulerContext;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
 /**
@@ -57,9 +58,7 @@ public final class Network {
   }
 
   public static TWSChannel initializeChannel(Config config, IWorkerController wController) {
-    String channelClass = config.getStringValue(
-        "twister2.network.channel.class",
-        "edu.iu.dsc.tws.comms.mpi.TWSMPIChannel");
+    String channelClass = SchedulerContext.networkClass(config);
     try {
       return (TWSChannel) Network.class.getClassLoader()
           .loadClass(channelClass)

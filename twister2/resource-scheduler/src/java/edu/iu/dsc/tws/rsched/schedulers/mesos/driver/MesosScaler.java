@@ -64,7 +64,7 @@ public class MesosScaler implements IScalerPerCluster {
     }
 
     // if it is an OpenMPI job, it is not scalable
-    if (SchedulerContext.useOpenMPI(config)) {
+    if (SchedulerContext.usingOpenMPI(config)) {
       return false;
     }
 

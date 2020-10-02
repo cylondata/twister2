@@ -194,7 +194,7 @@ public class MesosScheduler implements Scheduler {
                         + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
                     .build();
               } else {
-                if (SchedulerContext.useOpenMPI(config)) {
+                if (SchedulerContext.usingOpenMPI(config)) {
                   if (taskId.getValue().equals("1")) {
                     ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
                     classNameParam = Protos.Parameter.newBuilder().setKey("env")

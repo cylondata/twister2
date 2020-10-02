@@ -37,6 +37,8 @@ fi
 
 CLASSPATH=${CLASSPATH}:${SUBMITTING_TWISTER2_HOME}/lib
 
+export UCX_TCP_CM_ALLOW_ADDR_INUSE=y
+
 $JAVA_HOME/bin/java $illegal_access_warn $debug $profile \
    -Djava.util.logging.config.file=common/logger.properties \
    -Djava.library.path=${LD_LIBRARY_PATH} \

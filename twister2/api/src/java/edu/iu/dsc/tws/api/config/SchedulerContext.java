@@ -40,6 +40,9 @@ public class SchedulerContext extends Context {
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
   public static final String JOB_ARCHIVE_TEMP_DIR = "twister2.job.archive.temp.dir";
 
+  public static final String NETWORK_CLASS = "twister2.network.channel.class";
+  public static final String NETWORK_CLASS_DEFAULT = "edu.iu.dsc.tws.comms.mpi.TWSMPIChannel";
+
   public static final String SYSTEM_PACKAGE_URI = "twister2.resource.system.package.uri";
 
   // Internal configuration for job package url
@@ -114,6 +117,10 @@ public class SchedulerContext extends Context {
 
   public static String launcherClass(Config cfg) {
     return cfg.getStringValue(LAUNCHER_CLASS);
+  }
+
+  public static String networkClass(Config cfg) {
+    return cfg.getStringValue(NETWORK_CLASS, NETWORK_CLASS_DEFAULT);
   }
 
   public static String workerClass(Config cfg) {
@@ -199,9 +206,12 @@ public class SchedulerContext extends Context {
     return cfg.getIntegerValue("twister2.worker.end.sync.time.ms", 30000);
   }
 
-  public static boolean useOpenMPI(Config cfg) {
-    return cfg.getStringValue("twister2.network.channel.class")
-        .equals("edu.iu.dsc.tws.comms.mpi.TWSMPIChannel");
+  public static boolean usingOpenMPI(Config cfg) {
+    return networkClass(cfg).equals("edu.iu.dsc.tws.comms.mpi.TWSMPIChannel");
+  }
+
+  public static boolean usingUCXChannel(Config cfg) {
+    return networkClass(cfg).equals("edu.iu.dsc.tws.comms.ucx.TWSUCXChannel");
   }
 
   public static String downloadMethod(Config cfg) {
