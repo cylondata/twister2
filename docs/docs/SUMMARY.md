@@ -69,6 +69,7 @@
 * [Compatibility API's](compatibility/compatibility.md)  
   * [Apache Storm](compatibility/storm.md)
 * [Releases](release/README.md)  
+  * [Twister2 v0.8.0](release/twister2_release_0_8_0.md)
   * [Twister2 v0.7.0](release/twister2_release_0_7_0.md)
   * [Twister2 v0.5.0](release/twister2_release_0_5_0.md)
   * [Twister2 v0.4.0](release/twister2_release_0_4_0.md)
