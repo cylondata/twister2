@@ -26,7 +26,7 @@ fi
 echo "Looking for bazel..."
 if ! exists bazel; then
   echo "Bazel not found on this system. Installing bazel..." >&2
-  wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel-1.1.0-installer-linux-x86_64.sh -O /tmp/bazel.sh
+  wget https://github.com/bazelbuild/bazel/releases/download/3.5.1/bazel-3.5.1-installer-linux-x86_64.sh -O /tmp/bazel.sh
   chmod 700 /tmp/bazel.sh
   /tmp/bazel.sh --user
   export PATH=$HOME/bin:$PATH
