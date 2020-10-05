@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.dl.data;
 
 import java.io.Serializable;
 
-public interface Tensor<T> extends Serializable {
+public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * @return whether this tensor is an empty tensor. Note that nDimension == 0 is not
@@ -151,7 +151,7 @@ public interface Tensor<T> extends Serializable {
   /**
    * Shortcut of transpose(1, 2) for 2D tensor
    *
-   * @see transpose()
+   * @see Tensor#transpose(int, int)
    */
   Tensor<T> t();
 
@@ -204,8 +204,6 @@ public interface Tensor<T> extends Serializable {
    * If the table length is less than the tensor dimension, each missing dimension is token up by
    * an empty table
    *
-   * @see select
-   * @see narrow
    * @param t The table length should be less than or equal to the tensor dimensions
    * @return
    */
@@ -489,8 +487,6 @@ public interface Tensor<T> extends Serializable {
    */
   Tensor<T>[] split(int dim);
 
-  TensorDataType getType();
-
   /**
    * Compare and print differences between two tensors
    *
@@ -561,11 +557,11 @@ public interface Tensor<T> extends Serializable {
    */
   TensorNumeric<T> getTensorNumeric();
 
-  /**
-   * Return tensor type
-   * @return Dense / Quant
-   */
-  TensorType getTensorType();
+//  /**
+//   * Return tensor type
+//   * @return Dense / Quant
+//   */
+//  TensorType getTensorType();
 
   /**
    * Convert 1D tensor to an array. If the tensor is not 1D, an exception will be thrown out.
