@@ -345,7 +345,7 @@ public class KubernetesLauncher implements ILauncher {
 
     // check the existence of Secret object on Kubernetes master
     // when OpenMPI is enabled, a Secret object has to be available in the cluster
-    if (SchedulerContext.useOpenMPI(config)) {
+    if (SchedulerContext.usingOpenMPI(config)) {
       String secretName = KubernetesContext.secretName(config);
       boolean secretExists = controller.existSecret(secretName);
 
@@ -511,7 +511,7 @@ public class KubernetesLauncher implements ILauncher {
 
     // when OpenMPI is enabled, all pods need to have equal numbers workers
     // we check whether all workersPerPod values are equal to first ComputeResource workersPerPod
-    if (SchedulerContext.useOpenMPI(config)) {
+    if (SchedulerContext.usingOpenMPI(config)) {
       int workersPerPod = job.getComputeResource(0).getWorkersPerPod();
       for (int i = 1; i < job.getComputeResourceList().size(); i++) {
         if (workersPerPod != job.getComputeResource(i).getWorkersPerPod()) {

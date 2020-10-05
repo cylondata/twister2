@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.ucx;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openucx.jucx.UcxCallback;
+import org.openucx.jucx.UcxException;
 import org.openucx.jucx.ucp.UcpContext;
 import org.openucx.jucx.ucp.UcpEndpoint;
 import org.openucx.jucx.ucp.UcpEndpointParams;
@@ -49,6 +52,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -87,21 +91,54 @@ public class TWSUCXChannel implements TWSChannel {
   }
 
   private void createUXCWorker(IWorkerController iWorkerController) {
-    UcpContext context = new UcpContext(new UcpParams().requestTagFeature()
-        .setMtWorkersShared(false)
-        .setConfig("SOCKADDR_CM_ENABLE", "y")
-        .setConfig("SOCKADDR_TLS_PRIORITY", "tcp")
-    );
-    this.closeables.push(context);
-    this.ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
-    this.closeables.push(ucpWorker);
+    UcpContext ucpContext = null;
+    UcpListener ucpListener = null;
 
-    // start listener
-    UcpListener ucpListener = ucpWorker.newListener(new UcpListenerParams().setSockAddr(
-        new InetSocketAddress(iWorkerController.getWorkerInfo().getWorkerIP(),
-            iWorkerController.getWorkerInfo().getPort())
-    ));
-    this.closeables.push(ucpListener);
+    // if UCX socket is already created, use that
+    // this happens in mpi clusters
+    Stack<Closeable> ucxObjects =
+        (Stack<Closeable>) WorkerEnvironment.getSharedValue("ucxSocketsForFreePorts");
+    if (ucxObjects != null && ucxObjects.size() > 2) {
+      //todo: handle the case when there are multiple ucp sockets
+      while (!ucxObjects.isEmpty()) {
+        Closeable ucxObj = ucxObjects.pop();
+        if (ucxObj instanceof UcpListener) {
+          ucpListener = (UcpListener) ucxObj;
+        } else if (ucxObj instanceof UcpContext) {
+          ucpContext = (UcpContext) ucxObj;
+        } else if (ucxObj instanceof UcpWorker) {
+          ucpWorker = (UcpWorker) ucxObj;
+        } else {
+          LOG.warning("Unrecognized UCX object: " + ucxObj);
+        }
+      }
+
+      // add them to closeables
+      closeables.push(ucpContext);
+      closeables.push(ucpWorker);
+      closeables.push(ucpListener);
+
+      // create UCX objects
+    } else {
+
+      ucpContext = initUcpContext();
+      this.closeables.push(ucpContext);
+      this.ucpWorker = ucpContext.newWorker(new UcpWorkerParams().requestThreadSafety());
+      this.closeables.push(ucpWorker);
+
+      UcpListenerParams ucpListenerParams = new UcpListenerParams().setSockAddr(
+          new InetSocketAddress(iWorkerController.getWorkerInfo().getWorkerIP(),
+              iWorkerController.getWorkerInfo().getPort())
+      );
+
+      // start listener
+      try {
+        ucpListener = ucpWorker.newListener(ucpListenerParams);
+        closeables.push(ucpListener);
+      } catch (org.openucx.jucx.UcxException ucxEx) {
+        throw new Twister2RuntimeException("Can not start TWSUCXChannel.", ucxEx);
+      }
+    }
 
     try {
       // wait till everyone add listeners
@@ -120,6 +157,75 @@ public class TWSUCXChannel implements TWSChannel {
         this.closeables.push(ucpEndpoint);
       }
     }
+  }
+
+  /**
+   * create Ucx sockets and return the ports
+   * save the created objects in the the static map of WorkerEnvironment,
+   * so that they can be reused when TWSUCXChannel is initialized
+   * @param portNames
+   * @param wIP
+   * @return
+   */
+  public static Map<String, Integer> findFreeUcxPorts(List<String> portNames, InetAddress wIP) {
+    UcpContext context = initUcpContext();
+
+    Stack<Closeable> ucxObjects = new Stack<>();
+    ucxObjects.push(context);
+
+    UcpWorker ucpWorker = context.newWorker(new UcpWorkerParams().requestThreadSafety());
+    ucxObjects.push(ucpWorker);
+
+    Map<String, Integer> freePorts = new HashMap<>();
+    for (String portName : portNames) {
+      UcpListener ucpListener = createUcpListener(ucpWorker, wIP);
+      ucxObjects.push(ucpListener);
+      int port = ucpListener.getAddress().getPort();
+      LOG.fine("workerPort for ucx channel: " + port);
+      freePorts.put(portName, ucpListener.getAddress().getPort());
+    }
+    WorkerEnvironment.putSharedValue("ucxSocketsForFreePorts", ucxObjects);
+    return freePorts;
+  }
+
+  /**
+   * create a UcpListener on a random port between 15k and 65k
+   * if a chosen port is taken, try other random ports
+   * @param ucpWorker
+   * @param wIP
+   * @return
+   */
+  private static UcpListener createUcpListener(UcpWorker ucpWorker, InetAddress wIP) {
+    Random rg = new Random();
+    UcpListenerParams ucpListenerParams = new UcpListenerParams();
+
+    int tryCount = 0;
+    int maxTryCount = 10;
+
+    while (tryCount++ < maxTryCount) {
+      // generate random port numbers in the range of 15k to 65k
+      int port = rg.nextInt(40000) + 15000;
+      ucpListenerParams.setSockAddr(new InetSocketAddress(wIP.getHostAddress(), port));
+      try {
+        UcpListener ucpListener = ucpWorker.newListener(ucpListenerParams);
+        return ucpListener;
+      } catch (UcxException ucxException) {
+        if (tryCount == maxTryCount) {
+          throw new Twister2RuntimeException(ucxException);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private static UcpContext initUcpContext() {
+    return new UcpContext(new UcpParams().requestTagFeature()
+        .setMtWorkersShared(false)
+        .setConfig("SOCKADDR_CM_ENABLE", "y")
+        .setConfig("SOCKADDR_TLS_PRIORITY", "tcp")
+//        .setConfig("TCP_CM_ALLOW_ADDR_INUSE", "y")
+    );
   }
 
   @Override

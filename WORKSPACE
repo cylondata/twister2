@@ -129,17 +129,17 @@ http_archive(
 http_archive(
     name = "ucx",
     build_file = "@//:third_party/ucx/ucx.BUILD",
-    sha256 = "b56f6030d7076a2e468dde95e53f5bb7a48aac500e4a0e59b37ee9f1b174e665",
-    strip_prefix = "ucx-5909b4d58102da66e929fd7844aff797cd8b2ef1",
-    urls = ["https://github.com/openucx/ucx/archive/5909b4d58102da66e929fd7844aff797cd8b2ef1.zip"],
+    #sha256 = "b56f6030d7076a2e468dde95e53f5bb7a48aac500e4a0e59b37ee9f1b174e665",
+    strip_prefix = "ucx-bf5e7fd72a93a7a07aa3dc5c6c793f6ca4d6e740",
+    urls = ["https://github.com/openucx/ucx/archive/bf5e7fd72a93a7a07aa3dc5c6c793f6ca4d6e740.zip"],
 )
 
-http_archive(
-    name = "cylon",
-    build_file = "@//:third_party/cylon/cylon.BUILD",
-    strip_prefix = "cylon-a560e3850ae345ec5b1201e95106bf437571bf3f",
-    urls = ["https://github.com/cylondata/cylon/archive/a560e3850ae345ec5b1201e95106bf437571bf3f.zip"],
-)
+# http_archive(
+#     name = "cylon",
+#     build_file = "@//:third_party/cylon/cylon.BUILD",
+#     strip_prefix = "cylon-a560e3850ae345ec5b1201e95106bf437571bf3f",
+#     urls = ["https://github.com/cylondata/cylon/archive/a560e3850ae345ec5b1201e95106bf437571bf3f.zip"],
+# )
 
 load("//:t2_workspace_defs.bzl", "load_modules")
 
