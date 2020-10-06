@@ -13,22 +13,28 @@ package edu.iu.dsc.tws.dl.data;
 
 import java.io.Serializable;
 
-public interface Tensor<T> extends Activity, Serializable {
+/**
+ * Tensor class
+ * @param <T> type of tensor.
+ */
+public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
 
   /**
+   * Check if empty
    * @return whether this tensor is an empty tensor. Note that nDimension == 0 is not
-   *         sufficient to determine a tensor is empty, because a scalar tensor's nDimension
-   *         is also 0.
+   * sufficient to determine a tensor is empty, because a scalar tensor's nDimension
+   * is also 0.
    */
   boolean isEmpty();
 
   /**
+   * check if scalar
    * @return whether this tensor is a scalar
    */
   boolean isScalar();
+
   /**
    * Dimension number of the tensor. For empty tensor, its dimension number is 0
-   *
    * @return dimension number
    */
   int nDimension();
@@ -55,7 +61,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * @param dim dimension, count from 1
    * @return size
    */
-  int[] size(int dim);
+  int size(int dim);
 
   /**
    * Jumps between elements on the each dimension in the storage.
@@ -83,7 +89,7 @@ public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * Fill with a given value. It will change the value of the current tensor and return itself
-   *
+   * <p>
    * Note the value should be an instance of T
    *
    * @param v value to fill the tensor
@@ -134,12 +140,11 @@ public interface Tensor<T> extends Activity, Serializable {
   /**
    * Fill with random value(bernoulli distribution).
    * It will change the value of the current tensor and return itself
-   *
    * @return current tensor
    */
   Tensor<T> bernoulli(double p);
 
-  /** *
+  /**
    * Create a new tensor which exchanges the given dimensions of the current tensor
    *
    * @param dim1 dimension to be exchanged, count from one
@@ -165,14 +170,14 @@ public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * Query the value on a given index. Tensor should not be empty
-   *
    * @param indexes the indexes length should be same as the tensor dimension length and each
-   *                value count from 1
+   * value count from 1
    * @return the value on the given index
    */
   T apply(int[] indexes);
 
   /**
+   * Get value
    * @return the value of a scalar. Requires the tensor to be a scalar.
    */
   T value();
@@ -182,7 +187,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * should be equal to the dimension number of the tensor.
    * Tensor should not be empty.
    *
-   * @param d1,( d2, d3, d4, d5) the given position
+   * @param d1 the given position
    * @return the value on a given position
    */
   T valueAt(int d1);
@@ -238,15 +243,17 @@ public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * Set value for a scalar tensor
+   *
    * @param value the written value
    * @return
    */
   Tensor<T> setValue(T value);
+
   /**
    * Write the value on a given position. The number of parameters
    * should be equal to the dimension number of the tensor.
    *
-   * @param d1,( d2, d3, d4, d5) the given position
+   * @param d1 the given position
    * @param value the written value
    * @return
    */
@@ -297,7 +304,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * Get a contiguous tensor from current tensor
    *
    * @return the current tensor if it's contiguous; or a new contiguous tensor with separated
-   *         storage
+   * storage
    */
   Tensor<T> contiguous();
 
@@ -426,15 +433,13 @@ public interface Tensor<T> extends Activity, Serializable {
    * @return new tensor
    */
 
-  Tensor<T> view(int sizes[]);
+  Tensor<T> view(int[] sizes);
 
   /**
-   *
    * Returns a tensor which contains all slices of size @param size
-   * in the dimension @param dim. Step between two slices is given by @param step.
+   * in the dimension. Step between two slices is given by @param step.
    *
-   * @param dim
-   * @param size
+   * @param dim dimension
    * @param step Step between two slices
    * @return new tensor
    */
@@ -447,7 +452,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * @param sizes
    * @return
    */
-  Tensor<T> repeatTensor(int sizes[]);
+  Tensor<T> repeatTensor(int[] sizes);
 
   /**
    * This is equivalent to this.expand(template.size())
@@ -455,7 +460,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * @param template the given tensor
    * @return
    */
-  Tensor<T> expandAs(Tensor<T> template)
+  Tensor<T> expandAs(Tensor<T> template);
 
   /**
    * Expanding a tensor allocates new memory, tensor where singleton dimensions can be expanded
@@ -466,7 +471,7 @@ public interface Tensor<T> extends Activity, Serializable {
    * @param sizes the size that tensor will expend to
    * @return
    */
-  Tensor<T> expand(int sizes[]);
+  Tensor<T> expand(int[] sizes);
 
   /**
    * Splits current tensor along dimension dim into a result table of Tensors of size size
@@ -482,6 +487,7 @@ public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * spilt one tensor into multi tensor along the `dim` dimension
+   *
    * @param dim the specific dimension
    * @return
    */
@@ -499,7 +505,7 @@ public interface Tensor<T> extends Activity, Serializable {
   /**
    * view this.tensor and add a Singleton Dimension to `dim` dimension
    *
-   * @param t source tensor
+   * @param t   source tensor
    * @param dim the specific dimension, default is 1
    * @return this
    */
@@ -508,7 +514,7 @@ public interface Tensor<T> extends Activity, Serializable {
   /**
    * view this.tensor and add multiple Dimensions to `dim` dimension
    *
-   * @param t source tensor
+   * @param t   source tensor
    * @param dim the specific dimension array, default is [1]
    * @return this
    */
@@ -537,7 +543,7 @@ public interface Tensor<T> extends Activity, Serializable {
    *
    * @return true
    */
-  default boolean isTensor(){
+  default boolean isTensor() {
     return true;
   }
 
@@ -547,12 +553,13 @@ public interface Tensor<T> extends Activity, Serializable {
    *
    * @return false
    */
-   default boolean isTable(){
-     return false;
-   }
+  default boolean isTable() {
+    return false;
+  }
 
   /**
    * Return tensor numeric
+   *
    * @return
    */
   TensorNumeric<T> getTensorNumeric();
@@ -565,6 +572,7 @@ public interface Tensor<T> extends Activity, Serializable {
 
   /**
    * Convert 1D tensor to an array. If the tensor is not 1D, an exception will be thrown out.
+   *
    * @return
    */
   T[] toArray();

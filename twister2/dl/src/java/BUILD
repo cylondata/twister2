@@ -28,7 +28,7 @@ t2_java_lib(
         "@com_google_guava_guava",
         "@org_apache_hadoop_hadoop_common//jar",
         "@org_apache_hadoop_hadoop_mapreduce_client_core//jar",
-        "@maven//:com_intel_analytics_bigdl_core_dist_all",
+        "@com_intel_analytics_bigdl_core_dist_all//jar",
         "@maven//:org_apache_commons_commons_math3",
         "@maven//:com_google_flatbuffers_flatbuffers_java",
         "@maven//:javax_annotation_javax_annotation_api",

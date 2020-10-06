@@ -11,11 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data;
 
-import edu.iu.dsc.tws.dl.utils.RandomGenerator;
-import com.intel.analytics.bigdl.mkl.MKL;
-
 import java.io.Serializable;
 import java.util.Arrays;
+
+import com.intel.analytics.bigdl.mkl.MKL;
+
+import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 
 public class TensorNumeric<T> implements Serializable {
   //T one: T = fromType<int>(1)
@@ -45,11 +46,11 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   double exp(double x) {
-    return exp(x);
+    return Math.exp(x);
   }
 
   double log(double x) {
-    return log(x);
+    return Math.log(x);
   }
 
   double max(double x, double y) {
@@ -112,40 +113,40 @@ public class TensorNumeric<T> implements Serializable {
     return RandomGenerator.RNG().normal(0, 1);
   }
 
-  double gemm(char transa, char transb, int m, int n, int k, double alpha, double[] a,
-              int aOffset, int lda, double[] b, int bOffset, int ldb,
-              double beta, double[] c, int cOffset, int ldc) {
+  void gemm(char transa, char transb, int m, int n, int k, double alpha, double[] a,
+            int aOffset, int lda, double[] b, int bOffset, int ldb,
+            double beta, double[] c, int cOffset, int ldc) {
     checkMKL();
     MKL.vdgemm(transa, transb, m, n, k, alpha, a, aOffset, lda, b,
-        bOffset, ldb, beta, c, cOffset, ldc)
+        bOffset, ldb, beta, c, cOffset, ldc);
   }
 
-  double gemv(char trans, int m, int n, double alpha, double[] a, int aoffset, int lda,
-              double[] x, int xOffset, int incx, double beta, double[] y, int yOffset, int incy) {
+  void gemv(char trans, int m, int n, double alpha, double[] a, int aoffset, int lda,
+            double[] x, int xOffset, int incx, double beta, double[] y, int yOffset, int incy) {
     checkMKL();
 
     MKL.vdgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
-        incx, beta, y, yOffset, incy)
+        incx, beta, y, yOffset, incy);
   }
 
-  double axpy(int n, double da, double[] dx, int _dx_offset, int incx, double[] dy,
-              int _dy_offset, int incy) {
+  void axpy(int n, double da, double[] dx, int dxOffset, int incx, double[] dy,
+            int dyOffset, int incy) {
     checkMKL();
 
-    MKL.vdaxpy(n, da, dx, _dx_offset, incx, dy, _dy_offset, incy)
+    MKL.vdaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  double dot(int n, double[] dx, int _dx_offset, int incx, double[] dy, int _dy_offset,
-             int incy) {
+  void dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
+           int incy) {
     checkMKL();
-    MKL.vddot(n, dx, _dx_offset, incx, dy, _dy_offset, incy)
+    MKL.vddot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  double ger(int m, int n, double alpha, double[] x, int _x_offset, int incx, double[] y,
-             int _y_offset, int incy, double[] a, int _a_offset, int lda) {
+  void ger(int m, int n, double alpha, double[] x, int xOffset, int incx, double[] y,
+           int yOffset, int incy, double[] a, int aOffset, int lda) {
     checkMKL();
-    MKL.vdger(m, n, alpha, x, _x_offset, incx, y, _y_offset,
-        incy, a, _a_offset, lda)
+    MKL.vdger(m, n, alpha, x, xOffset, incx, y, yOffset,
+        incy, a, aOffset, lda);
   }
 
   void fill(double[] data, int fromIndex, int toIndex, double value) {
@@ -154,49 +155,49 @@ public class TensorNumeric<T> implements Serializable {
 
   void vPowx(int n, double[] a, int aOffset, double b, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdPowx(n, a, aOffset, b, y, yOffset)
+    MKL.vdPowx(n, a, aOffset, b, y, yOffset);
   }
 
   void vLn(int n, double[] a, int aOffset, double[] y, int yOffset) {
 
     checkMKL();
-    MKL.vdLn(n, a, aOffset, y, yOffset)
+    MKL.vdLn(n, a, aOffset, y, yOffset);
 
   }
 
   void vExp(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdExp(n, a, aOffset, y, yOffset)
+    MKL.vdExp(n, a, aOffset, y, yOffset);
 
   }
 
   void vSqrt(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdSqrt(n, a, aOffset, y, yOffset)
+    MKL.vdSqrt(n, a, aOffset, y, yOffset);
 
   }
 
   void vTanh(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdTanh(n, a, aOffset, y, yOffset)
+    MKL.vdTanh(n, a, aOffset, y, yOffset);
 
   }
 
   void vAbs(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdAbs(n, a, aOffset, y, yOffset)
+    MKL.vdAbs(n, a, aOffset, y, yOffset);
 
   }
 
   void vLog1p(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
-    MKL.vdLog1p(n, a, aOffset, y, yOffset)
+    MKL.vdLog1p(n, a, aOffset, y, yOffset);
 
   }
 
   void scal(int n, double sa, double[] sx, int offset, int incx) {
     checkMKL();
-    MKL.vdscal(n, sa, sx, offset, incx)
+    MKL.vdscal(n, sa, sx, offset, incx);
 
   }
 
@@ -237,12 +238,12 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   void vAdd(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
-    MKL.vdAdd(n, a, aOffset, b, bOffset, y, yOffset)
+    MKL.vdAdd(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
   void vSub(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
-    MKL.vdSub(n, a, aOffset, b, bOffset, y, yOffset)
+    MKL.vdSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
@@ -399,11 +400,11 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   float exp(float x) {
-    return exp(x);
+    return (float) Math.exp(x);
   }
 
   float log(float x) {
-    return log(x);
+    return (float) Math.log(x);
   }
 
   float max(float x, float y) {
@@ -415,11 +416,11 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   float sqrt(float x) {
-    return (float)Math.sqrt(x);
+    return (float) Math.sqrt(x);
   }
 
   float tanh(float x) {
-    return (float)Math.tanh(x);
+    return (float) Math.tanh(x);
   }
 
   float abs(float x) {
@@ -439,15 +440,15 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   float pow(float x) {
-    return (float)Math.pow(x, -1);
+    return (float) Math.pow(x, -1);
   }
 
   float pow(float x, float y) {
-    return (float)Math.pow(x, y);
+    return (float) Math.pow(x, y);
   }
 
   float log1p(float x) {
-    return (float)Math.log1p(x);
+    return (float) Math.log1p(x);
   }
 
   boolean isGreater(float x, float y) {
@@ -458,40 +459,40 @@ public class TensorNumeric<T> implements Serializable {
     return x >= y;
   }
 
-  float gemm(char transa, char transb, int m, int n, int k, float alpha, float[] a,
-             int aOffset, int lda, float[] b, int bOffset, int ldb,
-             float beta, float[] c, int cOffset, int ldc) {
+  void gemm(char transa, char transb, int m, int n, int k, float alpha, float[] a,
+            int aOffset, int lda, float[] b, int bOffset, int ldb,
+            float beta, float[] c, int cOffset, int ldc) {
     checkMKL();
     MKL.vsgemm(transa, transb, m, n, k, alpha, a, aOffset, lda, b,
         bOffset, ldb, beta, c, cOffset, ldc);
   }
 
-  float gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,
-             float[] x, int xOffset, int incx, float beta, float[] y, int yOffset, int incy) {
+  void gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,
+            float[] x, int xOffset, int incx, float beta, float[] y, int yOffset, int incy) {
     checkMKL();
 
     MKL.vsgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
         incx, beta, y, yOffset, incy);
   }
 
-  float axpy(int n, float da, float[] dx, int _dx_offset, int incx, float[] dy,
-             int _dy_offset, int incy) {
+  void axpy(int n, float da, float[] dx, int dxOffset, int incx, float[] dy,
+            int dyOffset, int incy) {
     checkMKL();
 
-    MKL.vsaxpy(n, da, dx, _dx_offset, incx, dy, _dy_offset, incy);
+    MKL.vsaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  float dot(int n, float[] dx, int _dx_offset, int incx, float[] dy, int _dy_offset,
-            int incy) {
+  void dot(int n, float[] dx, int dxOffset, int incx, float[] dy, int dyOffset,
+           int incy) {
     checkMKL();
-    MKL.vsdot(n, dx, _dx_offset, incx, dy, _dy_offset, incy);
+    MKL.vsdot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  float ger(int m, int n, float alpha, float[] x, int _x_offset, int incx, float[] y,
-            int _y_offset, int incy, float[] a, int _a_offset, int lda) {
+  void ger(int m, int n, float alpha, float[] x, int xOffset, int incx, float[] y,
+           int yOffset, int incy, float[] a, int aOffset, int lda) {
     checkMKL();
-    MKL.vsger(m, n, alpha, x, _x_offset, incx, y, _y_offset,
-        incy, a, _a_offset, lda);
+    MKL.vsger(m, n, alpha, x, xOffset, incx, y, yOffset,
+        incy, a, aOffset, lda);
   }
 
   void fill(float[] data, int fromIndex, int toIndex, float value) {
@@ -513,13 +514,11 @@ public class TensorNumeric<T> implements Serializable {
   void vExp(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsExp(n, a, aOffset, y, yOffset);
-
   }
 
   void vSqrt(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsSqrt(n, a, aOffset, y, yOffset);
-
   }
 
   void vTanh(int n, float[] a, int aOffset, float[] y, int yOffset) {
@@ -551,19 +550,19 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   float erf(float v) {
-    return org.apache.commons.math3.special.Erf.erf(v);
+    return (float) org.apache.commons.math3.special.Erf.erf(v);
   }
 
   float erfc(float v) {
-    return org.apache.commons.math3.special.Erf.erfc(v);
+    return (float) org.apache.commons.math3.special.Erf.erfc(v);
   }
 
   float logGamma(float v) {
-    return org.apache.commons.math3.special.Gamma.logGamma(v);
+    return (float) org.apache.commons.math3.special.Gamma.logGamma(v);
   }
 
   float digamma(float v) {
-    return org.apache.commons.math3.special.Gamma.digamma(v);
+    return (float) org.apache.commons.math3.special.Gamma.digamma(v);
   }
 
   void add(int n, float[] a, int offset, float v, int stride) {
@@ -588,7 +587,7 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   void vSub(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
-    MKL.vsSub(n, a, aOffset, b, bOffset, y, yOffset)
+    MKL.vsSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
@@ -682,11 +681,11 @@ public class TensorNumeric<T> implements Serializable {
   }
 
   float floor(float a) {
-    return (float)Math.floor(a);
+    return (float) Math.floor(a);
   }
 
   float ceil(float a) {
-    return (float)Math.ceil(a);
+    return (float) Math.ceil(a);
   }
 
   boolean isFinite(float a) {
@@ -707,16 +706,16 @@ public class TensorNumeric<T> implements Serializable {
 
   float truncate(float a) {
     if (a >= 0) {
-      return (float)Math.floor(a);
+      return (float) Math.floor(a);
     } else if (a == Math.floor(a)) {
       return a;
     } else {
-      return (float)Math.floor(a) + 1;
+      return (float) Math.floor(a) + 1;
     }
   }
 
   float floorDiv(float a, float b) {
-    return (float)Math.floor(a / b);
+    return (float) Math.floor(a / b);
   }
 
   float clip(float a, float lower, float upper) {
@@ -725,11 +724,12 @@ public class TensorNumeric<T> implements Serializable {
     }
     return Math.min(Math.max(a, lower), upper);
   }
+
   /**
    * If MKL is not set throw exception
    */
   private boolean checkMKL() {
-    if (!MKL.isMKLLoaded) {
+    if (!MKL.isMKLLoaded()) {
       throw new IllegalStateException("mkl isn't loaded");
     }
 

@@ -54,37 +54,38 @@ public class Table implements Activity, Serializable {
   public boolean isTable() {
     return true;
   }
-    /**
-     * Empty the Table
-     */
-   public Table clear(){
-      state.clear();
-      topIndex = 0;
-      return this;
+
+  /**
+   * Empty the Table
+   */
+  public Table clear() {
+    state.clear();
+    topIndex = 0;
+    return this;
   }
 
-   public Set keySet() {
+  public Set keySet() {
     return this.state.keySet();
-   }
-
-   public <T> T get(int key) {
-      return (T)state.get(key);
   }
 
-   public <T> T getOrElse(int key, T defaultVal){
-      return (T)state.getOrDefault(key,defaultVal);
+  public <T> T get(int key) {
+    return (T) state.get(key);
   }
 
-   public boolean contains(int key){
-        return state.containsKey(key);
-    }
+  public <T> T getOrElse(int key, T defaultVal) {
+    return (T) state.getOrDefault(key, defaultVal);
+  }
 
-   public <T> T apply(int key){
-        return (T)state.get(key);
-    }
+  public boolean contains(int key) {
+    return state.containsKey(key);
+  }
 
-   public Table update(int key,Object value){
-     state.put(key, value);
+  public <T> T apply(int key) {
+    return (T) state.get(key);
+  }
+
+  public Table update(int key, Object value) {
+    state.put(key, value);
     if (topIndex + 1 == key) {
       topIndex += 1;
       while (state.containsKey(topIndex + 1)) {
@@ -94,14 +95,14 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
-  @Override
-  public Table clone() throws CloneNotSupportedException {
-     Table clone = new Table();
-    for (Object key : state.keySet()) {
-      clone.update((int)key, state.get(key));
-    }
-    return clone;
-  }
+//  @Override
+//  public Table clone() throws CloneNotSupportedException {
+//    Table clone = new Table();
+//    for (Object key : state.keySet()) {
+//      clone.update((int) key, state.get(key));
+//    }
+//    return clone;
+//  }
 
   @Override
   public String toString() {
@@ -116,7 +117,7 @@ public class Table implements Activity, Serializable {
     if (!(obj instanceof Table)) {
       return false;
     }
-    Table other = (Table)obj;
+    Table other = (Table) obj;
     if (this == other) {
       return true;
     }
@@ -131,7 +132,7 @@ public class Table implements Activity, Serializable {
         return false;
       }
     }
-   return true;
+    return true;
   }
 
   @Override
@@ -143,24 +144,26 @@ public class Table implements Activity, Serializable {
       hash = hash * seed + key.hashCode();
       hash = hash * seed + this.state.get(key).hashCode();
     }
-     return hash;
+    return hash;
   }
 
-  public <T> T remove(int index){
-    if(index < 0) return null;
+  public <T> T remove(int index) {
+    if (index < 0) {
+      return null;
+    }
 
     if (topIndex >= index) {
       int i = index;
       Object result = state.get(index);
       while (i < topIndex) {
-        state.put(i, state.get(i+1));
+        state.put(i, state.get(i + 1));
         i += 1;
       }
       state.remove(topIndex);
       topIndex -= 1;
-      return (T)result;
+      return (T) result;
     } else if (state.containsKey(index)) {
-      return (T)state.remove(index);
+      return (T) state.remove(index);
     } else {
       return null;
     }
@@ -174,12 +177,12 @@ public class Table implements Activity, Serializable {
     }
   }
 
-  public <T> Table insert(T obj){
-     return update(topIndex + 1, obj);
+  public <T> Table insert(T obj) {
+    return update(topIndex + 1, obj);
   }
 
-  public <T> Table insert(int index,T obj){
-    if(index < 0){
+  public <T> Table insert(int index, T obj) {
+    if (index < 0) {
       return null;
     }
 
@@ -187,7 +190,7 @@ public class Table implements Activity, Serializable {
       int i = topIndex + 1;
       topIndex += 1;
       while (i > index) {
-        state.put(i, state.get(i-1));
+        state.put(i, state.get(i - 1));
         i -= 1;
       }
       update(index, obj);
@@ -198,15 +201,15 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
-  public int length(){
-     return state.size();
+  public int length() {
+    return state.size();
   }
 
-  public Table save(String path,boolean overWrite){
-     //TODO: needs impl
-     throw new IllegalStateException("Not implemented yet");
-     //File.save(this, path, overWrite);
-     //return this;
+  public Table save(String path, boolean overWrite) {
+    //TODO: needs impl
+    throw new IllegalStateException("Not implemented yet");
+    //File.save(this, path, overWrite);
+    //return this;
   }
 
   /**
@@ -214,11 +217,11 @@ public class Table implements Activity, Serializable {
    *
    * @return the flatten table
    */
-  public Table flatten(){
+  public Table flatten() {
     return flatten(1);
   }
 
-  private Table flatten(int startIndex){
+  private Table flatten(int startIndex) {
     //TODO: needs impl
     throw new IllegalStateException("Not implemented yet");
   }
@@ -229,18 +232,18 @@ public class Table implements Activity, Serializable {
    * @param target the target shape to become
    * @return the inverse flatten the table with the same shape with target
    */
-  public Table inverseFlatten(Table target){
+  public Table inverseFlatten(Table target) {
     return inverseFlatten(target, 1);
   }
 
   /**
    * Recursively inverse flatten the flatten table to the same shape with target
    *
-   * @param target the target shape to become
+   * @param target     the target shape to become
    * @param startIndex for each iteration the start index as an offset
    * @return the inverse flatten the table with the same shape with target
    */
-  private Table inverseFlatten(Table target,int startIndex){
+  private Table inverseFlatten(Table target, int startIndex) {
     //TODO: needs impl
     throw new IllegalStateException("Not implemented yet");
   }

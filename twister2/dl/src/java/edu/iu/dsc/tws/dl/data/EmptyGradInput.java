@@ -17,25 +17,25 @@ public class EmptyGradInput implements Activity, Serializable {
 
   @Override
   public <D> Tensor toTensor(TensorNumeric<D> ev) {
-    throw new UnsupportedOperationException("The gradInput of $moduleName is empty. You should" +
-        "not use it anywhere");
+    throw new UnsupportedOperationException("The gradInput of $moduleName is"
+        + " empty. You should not use it anywhere");
   }
 
   @Override
   public Table toTable() {
-    throw new UnsupportedOperationException("The gradInput of $moduleName is empty. You should" +
-        "not use it anywhere");
+    throw new UnsupportedOperationException("The gradInput of $moduleName is"
+        + " empty. You should not use it anywhere");
   }
 
   @Override
   public boolean isTensor() {
-    throw new UnsupportedOperationException("The gradInput of $moduleName is empty. You should" +
-        "not use it anywhere");
+    throw new UnsupportedOperationException("The gradInput of $moduleName is"
+        + " empty. You should not use it anywhere");
   }
 
   @Override
   public boolean isTable() {
-    throw new UnsupportedOperationException("The gradInput of $moduleName is empty. You should" +
-        "not use it anywhere");
+    throw new UnsupportedOperationException("The gradInput of $moduleName is"
+        + " empty. You should not use it anywhere");
   }
 }
