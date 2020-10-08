@@ -377,6 +377,20 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
   Tensor<T> select(int dim, int index);
 
   /**
+   * Get the storage
+   *
+   * @return storage
+   */
+  Storage<T> storage();
+
+  /**
+   * tensor offset on the storage
+   *
+   * @return storage offset, count from 1
+   */
+  int storageOffset();
+
+  /**
    * Get a subset of the tensor on dim-th dimension. The offset is given by index, and length is
    * given by size. The important difference with select is that it will not reduce the dimension
    * number. For Instance

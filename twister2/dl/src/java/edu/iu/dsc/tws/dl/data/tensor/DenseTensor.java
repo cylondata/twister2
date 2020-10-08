@@ -11,13 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.tensor;
 
-import edu.iu.dsc.tws.dl.data.Table;
-import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.TensorMath;
-import edu.iu.dsc.tws.dl.data.TensorNumeric;
-import edu.iu.dsc.tws.dl.data.TensorPair;
+import edu.iu.dsc.tws.dl.data.*;
+import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
 
 public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
+
+  private ArrayStorage<T> storage;
+  private int storageOffset;
+  private int[] size;
+  private int[] stride;
+  private int nDimension;
+
+  public DenseTensor(ArrayStorage<T> storage, int storageOffset, int[] size, int[] stride, int nDimension) {
+    this.storage = storage;
+    this.storageOffset = storageOffset;
+    this.size = size;
+    this.stride = stride;
+    this.nDimension = nDimension;
+  }
+
+  public DenseTensor(ArrayStorage<T> storage, int storageOffset, int[] size, int[] stride) {
+    this.storage = storage;
+    this.storageOffset = storageOffset;
+    this.size = size;
+    this.stride = stride;
+  }
+
   @Override
   public <D> Tensor toTensor(TensorNumeric<D> ev) {
     return null;
@@ -30,22 +49,22 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
 
   @Override
   public boolean isEmpty() {
-    return false;
+    return this.storage() == null || this.storage().length() == 0;
   }
 
   @Override
   public boolean isScalar() {
-    return false;
+    return !this.isEmpty() && this.nDimension() == 0;
   }
 
   @Override
   public int nDimension() {
-    return 0;
+    return this.nDimension;
   }
 
   @Override
   public int dim() {
-    return 0;
+    return this.nDimension;
   }
 
   @Override
@@ -275,12 +294,32 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
 
   @Override
   public int nElement() {
-    return 0;
+    if (this.isEmpty()) {
+      return 0;
+    } else {
+      int n = 1;
+      int d = 0;
+      while (d < this.nDimension) {
+        n = n * this.size[d];
+        d += 1;
+      }
+     return n;
+    }
   }
 
   @Override
   public Tensor<T> select(int dim, int index) {
     return null;
+  }
+
+  @Override
+  public Storage<T> storage() {
+    return null;
+  }
+
+  @Override
+  public int storageOffset() {
+    return 0;
   }
 
   @Override
@@ -295,17 +334,51 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
 
   @Override
   public Tensor<T> squeeze() {
-    return null;
+    int ndim = 0;
+    int d = 0;
+    while (d < this.nDimension) {
+      if (this.size[d] != 1) {
+        if (d != ndim) {
+          this.size[ndim] = this.size[d];
+          this.stride[ndim] = this.stride[d];
+        }
+        ndim += 1;
+      }
+      d += 1;
+    }
+
+    if (ndim == 0 && this.nDimension > 0) {
+      this.size[0] = 1;
+      this.stride[0] = 1;
+      ndim = 1;
+    }
+
+    this.nDimension = ndim;
+    return  this;
   }
 
   @Override
   public Tensor<T> squeeze(int dim) {
-    return null;
+    if(dim >= 0 && dim < this.nDimension){
+     throw new IllegalArgumentException("dimension out of range");
+    }
+    if (this.size(dim) == 1 && this.nDimension > 1) {
+      int d = dim;
+      while (d < this.nDimension - 1) {
+        this.size[d] = this.size[d + 1];
+        this.stride[d] = this.stride[d + 1];
+        d += 1;
+      }
+
+      this.nDimension -= 1;
+    }
+    return this;
   }
 
   @Override
   public Tensor<T> squeezeNewTensor() {
-    return null;
+    DenseTensor<T> result = new DenseTensor(this.storage, this.storageOffset(), this.size, this.stride);
+    return result.squeeze();
   }
 
   @Override
