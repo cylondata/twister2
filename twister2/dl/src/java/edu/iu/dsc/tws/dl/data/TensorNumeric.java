@@ -18,7 +18,7 @@ import com.intel.analytics.bigdl.mkl.MKL;
 
 import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 
-public class TensorNumeric<T> implements Serializable {
+public class TensorNumeric implements Serializable {
   //T one: T = fromType<int>(1)
 
   //T zero: T = fromType[Int](0)
@@ -29,199 +29,199 @@ public class TensorNumeric<T> implements Serializable {
 
 
   //double opertions
-  double plus(double x, double y) {
+  public static double plus(double x, double y) {
     return x + y;
   }
 
-  double minus(double x, double y) {
+  public static double minus(double x, double y) {
     return x - y;
   }
 
-  double times(double x, double y) {
+  public static double times(double x, double y) {
     return x * y;
   }
 
-  double divide(double x, double y) {
+  public static double divide(double x, double y) {
     return x / y;
   }
 
-  double exp(double x) {
+  public static double exp(double x) {
     return Math.exp(x);
   }
 
-  double log(double x) {
+  public static double log(double x) {
     return Math.log(x);
   }
 
-  double max(double x, double y) {
+  public static double max(double x, double y) {
     return Math.max(x, y);
   }
 
-  double min(double x, double y) {
+  public static double min(double x, double y) {
     return Math.min(x, y);
   }
 
-  double sqrt(double x) {
+  public static double sqrt(double x) {
     return Math.sqrt(x);
   }
 
-  double tanh(double x) {
+  public static double tanh(double x) {
     return Math.tanh(x);
   }
 
-  double abs(double x) {
+  public static double abs(double x) {
     return Math.abs(x);
   }
 
-  double or(double x, double y) {
+  public static double or(double x, double y) {
     throw new UnsupportedOperationException("Operation not supported");
   }
 
-  double and(double x, double y) {
+  public static double and(double x, double y) {
     throw new UnsupportedOperationException("Operation not supported");
   }
 
-  double negative(double x) {
+  public static double negative(double x) {
     return -x;
   }
 
-  double pow(double x) {
+  public static double pow(double x) {
     return Math.pow(x, -1);
   }
 
-  double pow(double x, double y) {
+  public static double pow(double x, double y) {
     return Math.pow(x, y);
   }
 
-  double log1p(double x) {
+  public static double log1p(double x) {
     return Math.log1p(x);
   }
 
-  boolean isGreater(double x, double y) {
+  public static boolean isGreater(double x, double y) {
     return x > y;
   }
 
-  boolean isGreaterEq(double x, double y) {
+  public static boolean isGreaterEq(double x, double y) {
     return x >= y;
   }
 
-  double rand() {
+  public static double rand() {
     return RandomGenerator.RNG().uniform(0, 1);
   }
 
-  double randn() {
+  public static double randn() {
     return RandomGenerator.RNG().normal(0, 1);
   }
 
-  void gemm(char transa, char transb, int m, int n, int k, double alpha, double[] a,
-            int aOffset, int lda, double[] b, int bOffset, int ldb,
-            double beta, double[] c, int cOffset, int ldc) {
+  public static void gemm(char transa, char transb, int m, int n, int k, double alpha, double[] a,
+                          int aOffset, int lda, double[] b, int bOffset, int ldb,
+                          double beta, double[] c, int cOffset, int ldc) {
     checkMKL();
     MKL.vdgemm(transa, transb, m, n, k, alpha, a, aOffset, lda, b,
         bOffset, ldb, beta, c, cOffset, ldc);
   }
 
-  void gemv(char trans, int m, int n, double alpha, double[] a, int aoffset, int lda,
-            double[] x, int xOffset, int incx, double beta, double[] y, int yOffset, int incy) {
+  public static void gemv(char trans, int m, int n, double alpha, double[] a, int aoffset, int lda,
+                          double[] x, int xOffset, int incx, double beta, double[] y, int yOffset, int incy) {
     checkMKL();
 
     MKL.vdgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
         incx, beta, y, yOffset, incy);
   }
 
-  void axpy(int n, double da, double[] dx, int dxOffset, int incx, double[] dy,
-            int dyOffset, int incy) {
+  public static void axpy(int n, double da, double[] dx, int dxOffset, int incx, double[] dy,
+                          int dyOffset, int incy) {
     checkMKL();
 
     MKL.vdaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  void dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
-           int incy) {
+  public static void dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
+                         int incy) {
     checkMKL();
     MKL.vddot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  void ger(int m, int n, double alpha, double[] x, int xOffset, int incx, double[] y,
-           int yOffset, int incy, double[] a, int aOffset, int lda) {
+  public static void ger(int m, int n, double alpha, double[] x, int xOffset, int incx, double[] y,
+                         int yOffset, int incy, double[] a, int aOffset, int lda) {
     checkMKL();
     MKL.vdger(m, n, alpha, x, xOffset, incx, y, yOffset,
         incy, a, aOffset, lda);
   }
 
-  void fill(double[] data, int fromIndex, int toIndex, double value) {
+  public static void fill(double[] data, int fromIndex, int toIndex, double value) {
     Arrays.fill(data, fromIndex, toIndex, value);
   }
 
-  void vPowx(int n, double[] a, int aOffset, double b, double[] y, int yOffset) {
+  public static void vPowx(int n, double[] a, int aOffset, double b, double[] y, int yOffset) {
     checkMKL();
     MKL.vdPowx(n, a, aOffset, b, y, yOffset);
   }
 
-  void vLn(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vLn(int n, double[] a, int aOffset, double[] y, int yOffset) {
 
     checkMKL();
     MKL.vdLn(n, a, aOffset, y, yOffset);
 
   }
 
-  void vExp(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vExp(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
     MKL.vdExp(n, a, aOffset, y, yOffset);
 
   }
 
-  void vSqrt(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vSqrt(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
     MKL.vdSqrt(n, a, aOffset, y, yOffset);
 
   }
 
-  void vTanh(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vTanh(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
     MKL.vdTanh(n, a, aOffset, y, yOffset);
 
   }
 
-  void vAbs(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vAbs(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
     MKL.vdAbs(n, a, aOffset, y, yOffset);
 
   }
 
-  void vLog1p(int n, double[] a, int aOffset, double[] y, int yOffset) {
+  public static void vLog1p(int n, double[] a, int aOffset, double[] y, int yOffset) {
     checkMKL();
     MKL.vdLog1p(n, a, aOffset, y, yOffset);
 
   }
 
-  void scal(int n, double sa, double[] sx, int offset, int incx) {
+  public static void scal(int n, double sa, double[] sx, int offset, int incx) {
     checkMKL();
     MKL.vdscal(n, sa, sx, offset, incx);
 
   }
 
-  double inv(double v) {
+  public static double inv(double v) {
     return 1 / v;
   }
 
-  double erf(double v) {
+  public static double erf(double v) {
     return org.apache.commons.math3.special.Erf.erf(v);
   }
 
-  double erfc(double v) {
+  public static double erfc(double v) {
     return org.apache.commons.math3.special.Erf.erfc(v);
   }
 
-  double logGamma(double v) {
+  public static double logGamma(double v) {
     return org.apache.commons.math3.special.Gamma.logGamma(v);
   }
 
-  double digamma(double v) {
+  public static double digamma(double v) {
     return org.apache.commons.math3.special.Gamma.digamma(v);
   }
 
-  void add(int n, double[] a, int offset, double v, int stride) {
+  public static void add(int n, double[] a, int offset, double v, int stride) {
     int i = 0;
     while (i < n) {
       a[offset + i * stride] += v;
@@ -229,7 +229,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void sub(int n, double[] a, int offset, double v, int stride) {
+  public static void sub(int n, double[] a, int offset, double v, int stride) {
     int i = 0;
     while (i < n) {
       a[offset + i * stride] -= v;
@@ -237,17 +237,17 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void vAdd(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vAdd(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
     MKL.vdAdd(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  void vSub(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vSub(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
     MKL.vdSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  void vMul(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vMul(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
     if (checkMKL()) {
       MKL.vdMul(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -259,7 +259,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void vDiv(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vDiv(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
     if (checkMKL()) {
       MKL.vdDiv(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -271,7 +271,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  double sum(int n, double[] a, int aOffset, int stride) {
+  public static double sum(int n, double[] a, int aOffset, int stride) {
     int i = 0;
     double r = 0.0;
     while (i < n) {
@@ -281,7 +281,7 @@ public class TensorNumeric<T> implements Serializable {
     return r;
   }
 
-  double prod(int n, double[] a, int aOffset, int stride) {
+  public static double prod(int n, double[] a, int aOffset, int stride) {
     int i = 0;
     double r = 1.0;
     while (i < n) {
@@ -291,14 +291,14 @@ public class TensorNumeric<T> implements Serializable {
     return r;
   }
 
-  void arraycopy(double[] src, int srcPos, double[] dest, int destPos, int length) {
+  public static void arraycopy(double[] src, int srcPos, double[] dest, int destPos, int length) {
     System.arraycopy(src, srcPos, dest, destPos, length);
   }
 
-  void addcmul(double value, int n,
-               double[] self, int selfOffset,
-               double[] a, int aOffset,
-               double[] b, int bOffset) {
+  public static void addcmul(double value, int n,
+                             double[] self, int selfOffset,
+                             double[] a, int aOffset,
+                             double[] b, int bOffset) {
     double v = value;
     int i = 0;
     while (i < n) {
@@ -307,10 +307,10 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void addcdiv(double value, int n,
-               double[] self, int selfOffset,
-               double[] a, int aOffset,
-               double[] b, int bOffset) {
+  public static void addcdiv(double value, int n,
+                             double[] self, int selfOffset,
+                             double[] a, int aOffset,
+                             double[] b, int bOffset) {
     double v = value;
     int i = 0;
 
@@ -320,7 +320,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  boolean nearlyEqual(double a, double b, double epsilon) {
+  public static boolean nearlyEqual(double a, double b, double epsilon) {
     double absA = Math.abs(a);
     double absB = Math.abs(b);
     double diff = Math.abs(a - b);
@@ -336,31 +336,31 @@ public class TensorNumeric<T> implements Serializable {
     return result;
   }
 
-  double floor(double a) {
+  public static double floor(double a) {
     return Math.floor(a);
   }
 
-  double ceil(double a) {
+  public static double ceil(double a) {
     return Math.ceil(a);
   }
 
-  boolean isFinite(double a) {
+  public static boolean isFinite(double a) {
     return Double.isFinite(a);
   }
 
-  boolean isNan(double a) {
+  public static boolean isNan(double a) {
     return Double.isNaN(a);
   }
 
-  boolean isInf(double a) {
+  public static boolean isInf(double a) {
     return Double.isInfinite(a);
   }
 
-  double round(double a) {
+  public static double round(double a) {
     return Math.round(a);
   }
 
-  double truncate(double a) {
+  public static double truncate(double a) {
     if (a >= 0) {
       return Math.floor(a);
     } else if (a == Math.floor(a)) {
@@ -370,202 +370,222 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  double floorDiv(double a, double b) {
+  public static double floorDiv(double a, double b) {
     return Math.floor(a / b);
   }
 
-  double clip(double a, double lower, double upper) {
+  public static double clip(double a, double lower, double upper) {
     if (lower <= upper) {
       throw new IllegalStateException("lower bound must be less or equal than upper bound");
     }
     return Math.min(Math.max(a, lower), upper);
   }
 
+  /**
+   * returns the product of each element in the array
+   *
+   * @return product result
+   */
+  public static double product(double[] data) {
+    double result = 1.0;
+    for (double datum : data) {
+      result = result * datum;
+    }
+    return result;
+  }
+
+  public static int product(int[] data) {
+    int result = 1;
+    for (int datum : data) {
+      result = result * datum;
+    }
+    return result;
+  }
 
   // Float operations
-  float plus(float x, float y) {
+  public static float plus(float x, float y) {
     return x + y;
   }
 
-  float minus(float x, float y) {
+  public static float minus(float x, float y) {
     return x - y;
   }
 
-  float times(float x, float y) {
+  public static float times(float x, float y) {
     return x * y;
   }
 
-  float divide(float x, float y) {
+  public static float divide(float x, float y) {
     return x / y;
   }
 
-  float exp(float x) {
+  public static float exp(float x) {
     return (float) Math.exp(x);
   }
 
-  float log(float x) {
+  public static float log(float x) {
     return (float) Math.log(x);
   }
 
-  float max(float x, float y) {
+  public static float max(float x, float y) {
     return Math.max(x, y);
   }
 
-  float min(float x, float y) {
+  public static float min(float x, float y) {
     return Math.min(x, y);
   }
 
-  float sqrt(float x) {
+  public static float sqrt(float x) {
     return (float) Math.sqrt(x);
   }
 
-  float tanh(float x) {
+  public static float tanh(float x) {
     return (float) Math.tanh(x);
   }
 
-  float abs(float x) {
+  public static float abs(float x) {
     return Math.abs(x);
   }
 
-  float or(float x, float y) {
+  public static float or(float x, float y) {
     throw new UnsupportedOperationException("Operation not supported");
   }
 
-  float and(float x, float y) {
+  public static float and(float x, float y) {
     throw new UnsupportedOperationException("Operation not supported");
   }
 
-  float negative(float x) {
+  public static float negative(float x) {
     return -x;
   }
 
-  float pow(float x) {
+  public static float pow(float x) {
     return (float) Math.pow(x, -1);
   }
 
-  float pow(float x, float y) {
+  public static float pow(float x, float y) {
     return (float) Math.pow(x, y);
   }
 
-  float log1p(float x) {
+  public static float log1p(float x) {
     return (float) Math.log1p(x);
   }
 
-  boolean isGreater(float x, float y) {
+  public static boolean isGreater(float x, float y) {
     return x > y;
   }
 
-  boolean isGreaterEq(float x, float y) {
+  public static boolean isGreaterEq(float x, float y) {
     return x >= y;
   }
 
-  void gemm(char transa, char transb, int m, int n, int k, float alpha, float[] a,
-            int aOffset, int lda, float[] b, int bOffset, int ldb,
-            float beta, float[] c, int cOffset, int ldc) {
+  public static void gemm(char transa, char transb, int m, int n, int k, float alpha, float[] a,
+                          int aOffset, int lda, float[] b, int bOffset, int ldb,
+                          float beta, float[] c, int cOffset, int ldc) {
     checkMKL();
     MKL.vsgemm(transa, transb, m, n, k, alpha, a, aOffset, lda, b,
         bOffset, ldb, beta, c, cOffset, ldc);
   }
 
-  void gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,
-            float[] x, int xOffset, int incx, float beta, float[] y, int yOffset, int incy) {
+  public static void gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,
+                          float[] x, int xOffset, int incx, float beta, float[] y, int yOffset, int incy) {
     checkMKL();
 
     MKL.vsgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
         incx, beta, y, yOffset, incy);
   }
 
-  void axpy(int n, float da, float[] dx, int dxOffset, int incx, float[] dy,
-            int dyOffset, int incy) {
+  public static void axpy(int n, float da, float[] dx, int dxOffset, int incx, float[] dy,
+                          int dyOffset, int incy) {
     checkMKL();
 
     MKL.vsaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  void dot(int n, float[] dx, int dxOffset, int incx, float[] dy, int dyOffset,
-           int incy) {
+  public static void dot(int n, float[] dx, int dxOffset, int incx, float[] dy, int dyOffset,
+                         int incy) {
     checkMKL();
     MKL.vsdot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  void ger(int m, int n, float alpha, float[] x, int xOffset, int incx, float[] y,
-           int yOffset, int incy, float[] a, int aOffset, int lda) {
+  public static void ger(int m, int n, float alpha, float[] x, int xOffset, int incx, float[] y,
+                         int yOffset, int incy, float[] a, int aOffset, int lda) {
     checkMKL();
     MKL.vsger(m, n, alpha, x, xOffset, incx, y, yOffset,
         incy, a, aOffset, lda);
   }
 
-  void fill(float[] data, int fromIndex, int toIndex, float value) {
+  public static void fill(float[] data, int fromIndex, int toIndex, float value) {
     Arrays.fill(data, fromIndex, toIndex, value);
   }
 
-  void vPowx(int n, float[] a, int aOffset, float b, float[] y, int yOffset) {
+  public static void vPowx(int n, float[] a, int aOffset, float b, float[] y, int yOffset) {
     checkMKL();
     MKL.vsPowx(n, a, aOffset, b, y, yOffset);
   }
 
-  void vLn(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vLn(int n, float[] a, int aOffset, float[] y, int yOffset) {
 
     checkMKL();
     MKL.vsLn(n, a, aOffset, y, yOffset);
 
   }
 
-  void vExp(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vExp(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsExp(n, a, aOffset, y, yOffset);
   }
 
-  void vSqrt(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vSqrt(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsSqrt(n, a, aOffset, y, yOffset);
   }
 
-  void vTanh(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vTanh(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsTanh(n, a, aOffset, y, yOffset);
 
   }
 
-  void vAbs(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vAbs(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsAbs(n, a, aOffset, y, yOffset);
 
   }
 
-  void vLog1p(int n, float[] a, int aOffset, float[] y, int yOffset) {
+  public static void vLog1p(int n, float[] a, int aOffset, float[] y, int yOffset) {
     checkMKL();
     MKL.vsLog1p(n, a, aOffset, y, yOffset);
 
   }
 
-  void scal(int n, float sa, float[] sx, int offset, int incx) {
+  public static void scal(int n, float sa, float[] sx, int offset, int incx) {
     checkMKL();
     MKL.vsscal(n, sa, sx, offset, incx);
 
   }
 
-  float inv(float v) {
+  public static float inv(float v) {
     return 1 / v;
   }
 
-  float erf(float v) {
+  public static float erf(float v) {
     return (float) org.apache.commons.math3.special.Erf.erf(v);
   }
 
-  float erfc(float v) {
+  public static float erfc(float v) {
     return (float) org.apache.commons.math3.special.Erf.erfc(v);
   }
 
-  float logGamma(float v) {
+  public static float logGamma(float v) {
     return (float) org.apache.commons.math3.special.Gamma.logGamma(v);
   }
 
-  float digamma(float v) {
+  public static float digamma(float v) {
     return (float) org.apache.commons.math3.special.Gamma.digamma(v);
   }
 
-  void add(int n, float[] a, int offset, float v, int stride) {
+  public static void add(int n, float[] a, int offset, float v, int stride) {
     int i = 0;
     while (i < n) {
       a[offset + i * stride] += v;
@@ -573,7 +593,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void sub(int n, float[] a, int offset, float v, int stride) {
+  public static void sub(int n, float[] a, int offset, float v, int stride) {
     int i = 0;
     while (i < n) {
       a[offset + i * stride] -= v;
@@ -581,17 +601,17 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void vAdd(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vAdd(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
     MKL.vsAdd(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  void vSub(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vSub(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
     MKL.vsSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  void vMul(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vMul(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
     if (checkMKL()) {
       MKL.vsMul(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -603,7 +623,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void vDiv(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vDiv(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
     if (checkMKL()) {
       MKL.vsDiv(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -615,7 +635,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  float sum(int n, float[] a, int aOffset, int stride) {
+  public static float sum(int n, float[] a, int aOffset, int stride) {
     int i = 0;
     float r = 0.0f;
     while (i < n) {
@@ -625,7 +645,7 @@ public class TensorNumeric<T> implements Serializable {
     return r;
   }
 
-  float prod(int n, float[] a, int aOffset, int stride) {
+  public static float prod(int n, float[] a, int aOffset, int stride) {
     int i = 0;
     float r = 1.0f;
     while (i < n) {
@@ -635,14 +655,14 @@ public class TensorNumeric<T> implements Serializable {
     return r;
   }
 
-  void arraycopy(float[] src, int srcPos, float[] dest, int destPos, int length) {
+  public static void arraycopy(float[] src, int srcPos, float[] dest, int destPos, int length) {
     System.arraycopy(src, srcPos, dest, destPos, length);
   }
 
-  void addcmul(float value, int n,
-               float[] self, int selfOffset,
-               float[] a, int aOffset,
-               float[] b, int bOffset) {
+  public static void addcmul(float value, int n,
+                             float[] self, int selfOffset,
+                             float[] a, int aOffset,
+                             float[] b, int bOffset) {
     float v = value;
     int i = 0;
     while (i < n) {
@@ -651,10 +671,10 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  void addcdiv(float value, int n,
-               float[] self, int selfOffset,
-               float[] a, int aOffset,
-               float[] b, int bOffset) {
+  public static void addcdiv(float value, int n,
+                             float[] self, int selfOffset,
+                             float[] a, int aOffset,
+                             float[] b, int bOffset) {
     float v = value;
     int i = 0;
 
@@ -664,7 +684,7 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  boolean nearlyEqual(float a, float b, float epsilon) {
+  public static boolean nearlyEqual(float a, float b, float epsilon) {
     float absA = Math.abs(a);
     float absB = Math.abs(b);
     float diff = Math.abs(a - b);
@@ -680,31 +700,31 @@ public class TensorNumeric<T> implements Serializable {
     return result;
   }
 
-  float floor(float a) {
+  public static float floor(float a) {
     return (float) Math.floor(a);
   }
 
-  float ceil(float a) {
+  public static float ceil(float a) {
     return (float) Math.ceil(a);
   }
 
-  boolean isFinite(float a) {
+  public static boolean isFinite(float a) {
     return Double.isFinite(a);
   }
 
-  boolean isNan(float a) {
+  public static boolean isNan(float a) {
     return Double.isNaN(a);
   }
 
-  boolean isInf(float a) {
+  public static boolean isInf(float a) {
     return Double.isInfinite(a);
   }
 
-  float round(float a) {
+  public static float round(float a) {
     return Math.round(a);
   }
 
-  float truncate(float a) {
+  public static float truncate(float a) {
     if (a >= 0) {
       return (float) Math.floor(a);
     } else if (a == Math.floor(a)) {
@@ -714,11 +734,11 @@ public class TensorNumeric<T> implements Serializable {
     }
   }
 
-  float floorDiv(float a, float b) {
+  public static float floorDiv(float a, float b) {
     return (float) Math.floor(a / b);
   }
 
-  float clip(float a, float lower, float upper) {
+  public static float clip(float a, float lower, float upper) {
     if (lower <= upper) {
       throw new IllegalStateException("lower bound must be less or equal than upper bound");
     }
@@ -728,7 +748,7 @@ public class TensorNumeric<T> implements Serializable {
   /**
    * If MKL is not set throw exception
    */
-  private boolean checkMKL() {
+  private static boolean checkMKL() {
     if (!MKL.isMKLLoaded()) {
       throw new IllegalStateException("mkl isn't loaded");
     }

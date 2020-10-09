@@ -13,24 +13,22 @@ package edu.iu.dsc.tws.dl.data;
 
 /**
  * Holds a pair of Tensors
- * @param <T0> tensor type
- * @param <T1> tensor type
  */
-public class TensorPair<T0, T1> {
+public class TensorPair {
 
-  private Tensor<T0> t0;
-  private Tensor<T1> t1;
+  private Tensor t0;
+  private Tensor t1;
 
-  public TensorPair(Tensor<T0> t0, Tensor<T1> t1) {
+  public TensorPair(Tensor t0, Tensor t1) {
     this.t0 = t0;
     this.t1 = t1;
   }
 
-  public Tensor<T0> getValue0() {
+  public Tensor getValue0() {
     return t0;
   }
 
-  public Tensor<T1> getValue1() {
+  public Tensor getValue1() {
     return t1;
   }
 }

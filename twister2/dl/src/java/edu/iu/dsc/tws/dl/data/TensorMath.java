@@ -18,9 +18,9 @@ package edu.iu.dsc.tws.dl.data;
  * will be resized accordingly and filled with the result. This property is especially
  * useful when one wants to have tight control over when memory is allocated.
  *
- * @tparam T should be double or float
+ * @tparam double should be double or float
  */
-public interface TensorMath<T> {
+public interface TensorMath {
   // scalastyle:off methodName
 
   /**
@@ -31,7 +31,7 @@ public interface TensorMath<T> {
    * @return
    */
 
-  Tensor<T> addCopy(T s);
+  Tensor addCopy(double s);
 
   /**
    * Add a Tensor to another one, return the result in new allocated memory.
@@ -41,7 +41,7 @@ public interface TensorMath<T> {
    * @param t
    * @return
    */
-  Tensor<T> addCopy(Tensor<T> t);
+  Tensor addCopy(Tensor t);
 
   /**
    * subtract all elements of this with the value not in place.
@@ -50,7 +50,7 @@ public interface TensorMath<T> {
    * @param s
    * @return
    */
-  Tensor<T> subCopy(T s);
+  Tensor subCopy(double s);
 
   /**
    * Subtract a Tensor from another one, return the result in new allocated memory.
@@ -60,7 +60,7 @@ public interface TensorMath<T> {
    * @param t
    * @return
    */
-  Tensor<T> subCopy(Tensor<T> t);
+  Tensor subCopy(Tensor t);
 
   /**
    * divide all elements of this with value not in place.
@@ -69,7 +69,7 @@ public interface TensorMath<T> {
    * @param s
    * @return
    */
-  Tensor<T> divCopy(T s);
+  Tensor divCopy(double s);
 
   /**
    * Divide a Tensor by another one, return the result in new allocated memory.
@@ -79,7 +79,7 @@ public interface TensorMath<T> {
    * @param t
    * @return
    */
-  Tensor<T> divCopy(Tensor<T> t);
+  Tensor divCopy(Tensor t);
 
   /**
    * multiply all elements of this with value not in place.
@@ -88,7 +88,7 @@ public interface TensorMath<T> {
    * @param s
    * @return
    */
-  Tensor<T> mulCopy(T s);
+  Tensor mulCopy(double s);
 
   /**
    * Multiply a Tensor by another one, return the result in new allocated memory.
@@ -98,7 +98,7 @@ public interface TensorMath<T> {
    * @param t
    * @return
    */
-  Tensor<T> mulCopy(Tensor<T> t);
+  Tensor mulCopy(Tensor t);
   // scalastyle:on methodName
 
   /**
@@ -106,16 +106,16 @@ public interface TensorMath<T> {
    *
    * @return
    */
-  T sum();
+  double sum();
 
   /**
    * returns the product of the elements of this
    *
    * @return
    */
-  T prod();
+  double prod();
 
-  Tensor<T> prod(Tensor<T> x, int dim);
+  Tensor prod(Tensor x, int dim);
 
   /**
    * performs the sum operation over the dimension dim
@@ -123,16 +123,16 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  Tensor<T> sum(int dim);
+  Tensor sum(int dim);
 
-  Tensor<T> sum(Tensor<T> x, int dim);
+  Tensor sum(Tensor x, int dim);
 
   /**
    * returns the mean of all elements of this.
    *
    * @return
    */
-  T mean();
+  double mean();
 
   /**
    * performs the mean operation over the dimension dim.
@@ -140,14 +140,14 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  Tensor<T> mean(int dim);
+  Tensor mean(int dim);
 
   /**
    * returns the single biggest element of x
    *
    * @return
    */
-  T max();
+  double max();
 
   /**
    * performs the max operation over the dimension n
@@ -155,7 +155,7 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  TensorPair<T, T> max(int dim);
+  TensorPair max(int dim);
 
   /**
    * performs the max operation over the dimension n
@@ -165,14 +165,14 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  TensorPair<T, T> max(Tensor<T> values, Tensor<T> indices, int dim);
+  TensorPair max(Tensor values, Tensor indices, int dim);
 
   /**
    * returns the single minimum element of x
    *
    * @return
    */
-  T min();
+  double min();
 
   /**
    * performs the min operation over the dimension n
@@ -180,7 +180,7 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  TensorPair<T, T> min(int dim);
+  TensorPair min(int dim);
 
   /**
    * performs the min operation over the dimension n
@@ -190,7 +190,7 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  TensorPair<T, T> min(Tensor<T> values, Tensor<T> indices, int dim);
+  TensorPair min(Tensor values, Tensor indices, int dim);
 
   /**
    * Writes all values from tensor src into this tensor at the specified indices
@@ -200,7 +200,7 @@ public interface TensorMath<T> {
    * @param src
    * @return this
    */
-  Tensor<T> scatter(int dim, Tensor<T> index, Tensor<T> src);
+  Tensor scatter(int dim, Tensor index, Tensor src);
 
   /**
    * change this tensor with values from the original tensor by gathering a number of values
@@ -211,7 +211,7 @@ public interface TensorMath<T> {
    * @param src
    * @return this
    */
-  Tensor<T> gather(int dim, Tensor<T> index, Tensor<T> src);
+  Tensor gather(int dim, Tensor index, Tensor src);
 
   /**
    * This function computes 2 dimensional convolution of a single image
@@ -224,7 +224,7 @@ public interface TensorMath<T> {
    * @param vf     full ('F') or valid ('V') convolution.
    * @return
    */
-  Tensor<T> conv2(Tensor<T> kernel, char vf);
+  Tensor conv2(Tensor kernel, char vf);
 
   /**
    * This function operates with same options and input/output configurations as conv2,
@@ -234,28 +234,28 @@ public interface TensorMath<T> {
    * @param vf     full ('F') or valid ('V') convolution.
    * @return
    */
-  Tensor<T> xcorr2(Tensor<T> kernel, char vf);
+  Tensor xcorr2(Tensor kernel, char vf);
 
   /**
    * replaces all elements in-place with the square root of the elements of this.
    *
    * @return
    */
-  Tensor<T> sqrt();
+  Tensor sqrt();
 
   /**
    * replaces all elements in-place with the tanh root of the elements of this.
    *
    * @return
    */
-  Tensor<T> tanh();
+  Tensor tanh();
 
   /**
    * replaces all elements in-place with the absolute values of the elements of this.
    *
    * @return
    */
-  Tensor<T> abs();
+  Tensor abs();
 
   /**
    * x.add(value,y) multiply-accumulates values of y into x.
@@ -264,7 +264,7 @@ public interface TensorMath<T> {
    * @param y     other tensor
    * @return current tensor
    */
-  Tensor<T> add(T value, Tensor<T> y);
+  Tensor add(double value, Tensor y);
 
   /**
    * accumulates all elements of y into this
@@ -272,7 +272,7 @@ public interface TensorMath<T> {
    * @param y other tensor
    * @return current tensor
    */
-  Tensor<T> add(Tensor<T> y);
+  Tensor add(Tensor y);
   // Puts the result of x + value * y in current tensor
 
   /**
@@ -283,7 +283,7 @@ public interface TensorMath<T> {
    * @param y
    * @return
    */
-  Tensor<T> add(Tensor<T> x, T value, Tensor<T> y);
+  Tensor add(Tensor x, double value, Tensor y);
 
   /**
    * x.add(value) : add value to all elements of x in place.
@@ -291,9 +291,9 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> add(T value);
+  Tensor add(double value);
 
-  Tensor<T> add(Tensor<T> x, Tensor<T> y);
+  Tensor add(Tensor x, Tensor y);
 
   /**
    * Performs the dot product. The number of elements must match: both Tensors are seen as a 1D
@@ -302,7 +302,7 @@ public interface TensorMath<T> {
    * @param y
    * @return
    */
-  T dot(Tensor<T> y);
+  double dot(Tensor y);
 
 
   /**
@@ -312,7 +312,7 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> cmax(T value);
+  Tensor cmax(double value);
 
   /**
    * Performs the p-norm distance calculation between two tensors
@@ -321,7 +321,7 @@ public interface TensorMath<T> {
    * @param norm the norm of distance
    * @return
    */
-  T dist(Tensor<T> y, int norm);
+  double dist(Tensor y, int norm);
 
   /**
    * Performs the element-wise multiplication of tensor1 by tensor2, multiply the result by the
@@ -332,9 +332,9 @@ public interface TensorMath<T> {
    * @param tensor1
    * @param tensor2
    */
-  Tensor<T> addcmul(T value, Tensor<T> tensor1, Tensor<T> tensor2);
+  Tensor addcmul(double value, Tensor tensor1, Tensor tensor2);
 
-  Tensor<T> addcmul(Tensor<T> tensor1, Tensor<T> tensor2);
+  Tensor addcmul(Tensor tensor1, Tensor tensor2);
 
   /**
    * Performs the element-wise division of tensor1 by tensor2, multiply the result by the scalar
@@ -346,12 +346,12 @@ public interface TensorMath<T> {
    * @param tensor2
    * @return
    */
-  Tensor<T> addcdiv(T value, Tensor<T> tensor1, Tensor<T> tensor2);
+  Tensor addcdiv(double value, Tensor tensor1, Tensor tensor2);
 
-  Tensor<T> sub(T value, Tensor<T> y);
+  Tensor sub(double value, Tensor y);
 
   // Puts the result of x - value * y in current tensor
-  Tensor<T> sub(Tensor<T> x, T value, Tensor<T> y);
+  Tensor sub(Tensor x, double value, Tensor y);
 
   /**
    * subtracts all elements of y from this
@@ -359,11 +359,11 @@ public interface TensorMath<T> {
    * @param y other tensor
    * @return current tensor
    */
-  Tensor<T> sub(Tensor<T> y);
+  Tensor sub(Tensor y);
 
-  Tensor<T> sub(Tensor<T> x, Tensor<T> y);
+  Tensor sub(Tensor x, Tensor y);
 
-  Tensor<T> sub(T value);
+  Tensor sub(double value);
 
   /**
    * Element-wise multiply
@@ -373,7 +373,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cmul(Tensor<T> y);
+  Tensor cmul(Tensor y);
 
   /**
    * Element-wise multiply
@@ -383,7 +383,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cmul(Tensor<T> x, Tensor<T> y);
+  Tensor cmul(Tensor x, Tensor y);
 
   /**
    * Element-wise divide
@@ -393,7 +393,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cdiv(Tensor<T> y);
+  Tensor cdiv(Tensor y);
 
   /**
    * Element-wise divide
@@ -403,7 +403,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cdiv(Tensor<T> x, Tensor<T> y);
+  Tensor cdiv(Tensor x, Tensor y);
 
   /**
    * multiply all elements of this with value in-place.
@@ -411,7 +411,7 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> mul(T value);
+  Tensor mul(double value);
 
   /**
    * divide all elements of this with value in-place.
@@ -419,7 +419,7 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> div(T value);
+  Tensor div(double value);
 
   /**
    * Element-wise divide
@@ -429,7 +429,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> div(Tensor<T> y);
+  Tensor div(Tensor y);
 
   /**
    * put the result of x * value in current tensor
@@ -437,7 +437,7 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> mul(Tensor<T> x, T value);
+  Tensor mul(Tensor x, double value);
 
   /**
    * Performs a matrix-matrix multiplication between mat1 (2D tensor) and mat2 (2D tensor).
@@ -454,32 +454,32 @@ public interface TensorMath<T> {
    * @param mat1
    * @param mat2
    */
-  Tensor<T> addmm(T v1, Tensor<T> m, T v2, Tensor<T> mat1, Tensor<T> mat2);
+  Tensor addmm(double v1, Tensor m, double v2, Tensor mat1, Tensor mat2);
 
   /**
    * res = m + (mat1*mat2)
    */
-  Tensor<T> addmm(Tensor<T> m, Tensor<T> mat1, Tensor<T> mat2);
+  Tensor addmm(Tensor m, Tensor mat1, Tensor mat2);
 
   /**
    * res = res + mat1 * mat2
    */
-  Tensor<T> addmm(Tensor<T> mat1, Tensor<T> mat2);
+  Tensor addmm(Tensor mat1, Tensor mat2);
 
   /**
    * res = res + v2 * mat1 * mat2
    */
-  Tensor<T> addmm(T v2, Tensor<T> mat1, Tensor<T> mat2);
+  Tensor addmm(double v2, Tensor mat1, Tensor mat2);
 
   /**
    * res = v1 * res + v2 * mat1*mat2
    */
-  Tensor<T> addmm(T v1, T v2, Tensor<T> mat1, Tensor<T> mat2);
+  Tensor addmm(double v1, double v2, Tensor mat1, Tensor mat2);
 
   /**
    * res = mat1*mat2
    */
-  Tensor<T> mm(Tensor<T> mat1, Tensor<T> mat2);
+  Tensor mm(Tensor mat1, Tensor mat2);
 
   /**
    * Performs the outer-product between vec1 (1D tensor) and vec2 (1D tensor).
@@ -491,11 +491,11 @@ public interface TensorMath<T> {
    * @param t2
    * @return
    */
-  Tensor<T> addr(Tensor<T> t1, Tensor<T> t2);
+  Tensor addr(Tensor t1, Tensor t2);
 
-  Tensor<T> addr(T v1, Tensor<T> t1, Tensor<T> t2);
+  Tensor addr(double v1, Tensor t1, Tensor t2);
 
-  Tensor<T> addr(T v1, Tensor<T> t1, T v2, Tensor<T> t2);
+  Tensor addr(double v1, Tensor t1, double v2, Tensor t2);
 
   /**
    * Performs the outer-product between vec1 (1D Tensor) and vec2 (1D Tensor).
@@ -509,7 +509,7 @@ public interface TensorMath<T> {
    * @param t3
    * @return
    */
-  Tensor<T> addr(T v1, Tensor<T> t1, T v2, Tensor<T> t2, Tensor<T> t3);
+  Tensor addr(double v1, Tensor t1, double v2, Tensor t2, Tensor t3);
 
   /**
    * return pseudo-random numbers, require 0<=args.length<=2
@@ -519,7 +519,7 @@ public interface TensorMath<T> {
    *
    * @param args
    */
-  T uniform(T... args);
+  double uniform(double... args);
 
   /**
    * Performs a matrix-vector multiplication between mat (2D Tensor) and vec2 (1D Tensor) and add
@@ -531,22 +531,22 @@ public interface TensorMath<T> {
    * Sizes must respect the matrix-multiplication operation: if mat is a n × m matrix,
    * vec2 must be vector of size m and vec1 must be a vector of size n.
    */
-  Tensor<T> addmv(T beta, Tensor<T> vec1, T alpha, Tensor<T> mat, Tensor<T> vec2);
+  Tensor addmv(double beta, Tensor vec1, double alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = beta * res + alpha * (mat * vec2)
    */
-  Tensor<T> addmv(T beta, T alpha, Tensor<T> mat, Tensor<T> vec2);
+  Tensor addmv(double beta, double alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = res + alpha * (mat * vec2)
    */
-  Tensor<T> addmv(T alpha, Tensor<T> mat, Tensor<T> vec2);
+  Tensor addmv(double alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = res + (mat * vec2)
    */
-  Tensor<T> mv(Tensor<T> mat, Tensor<T> vec2);
+  Tensor mv(Tensor mat, Tensor vec2);
 
   /**
    * Perform a batch matrix matrix multiplication of matrices and stored in batch1 and batch2
@@ -557,22 +557,22 @@ public interface TensorMath<T> {
    * In other words,
    * res_i = (beta * M_i) + (alpha * batch1_i * batch2_i)
    */
-  Tensor<T> baddbmm(T beta, Tensor<T> m, T alpha, Tensor<T> batch1, Tensor<T> batch2);
+  Tensor baddbmm(double beta, Tensor m, double alpha, Tensor batch1, Tensor batch2);
 
   /**
    * res_i = (beta * res_i) + (alpha * batch1_i * batch2_i)
    */
-  Tensor<T> baddbmm(T beta, T alpha, Tensor<T> batch1, Tensor<T> batch2);
+  Tensor baddbmm(double beta, double alpha, Tensor batch1, Tensor batch2);
 
   /**
    * res_i = res_i + (alpha * batch1_i * batch2_i)
    */
-  Tensor<T> baddbmm(T alpha, Tensor<T> batch1, Tensor<T> batch2);
+  Tensor baddbmm(double alpha, Tensor batch1, Tensor batch2);
 
   /**
    * res_i = res_i + batch1_i * batch2_i
    */
-  Tensor<T> bmm(Tensor<T> batch1, Tensor<T> batch2);
+  Tensor bmm(Tensor batch1, Tensor batch2);
 
   /**
    * Replaces all elements in-place with the elements of x to the power of n
@@ -581,16 +581,16 @@ public interface TensorMath<T> {
    * @param n
    * @return current tensor reference
    */
-  Tensor<T> pow(Tensor<T> y, T n);
+  Tensor pow(Tensor y, double n);
 
-  Tensor<T> pow(T n);
+  Tensor pow(double n);
 
   /**
    * Replaces all elements in-place with the elements of x squared
    *
    * @return current tensor reference
    */
-  Tensor<T> square();
+  Tensor square();
 
   /**
    * Populate the given tensor with the floor result of elements
@@ -598,42 +598,42 @@ public interface TensorMath<T> {
    * @param y
    * @return
    */
-  Tensor<T> floor(Tensor<T> y);
+  Tensor floor(Tensor y);
 
   /**
    * Replaces all elements in-place with the floor result of elements
    *
    * @return
    */
-  Tensor<T> floor();
+  Tensor floor();
 
   /**
    * Replaces all elements in-place with the ceil result of elements
    *
    * @return
    */
-  Tensor<T> ceil();
+  Tensor ceil();
 
   /**
    * Computes the reciprocal of this tensor element-wise and update the content inplace
    *
    * @return
    */
-  Tensor<T> inv();
+  Tensor inv();
 
   /**
    * Computes the reciprocal of this tensor element-wise and update the content inplace
    *
    * @return
    */
-  Tensor<T> erf();
+  Tensor erf();
 
   /**
    * Computes the reciprocal of this tensor element-wise and update the content inplace
    *
    * @return
    */
-  Tensor<T> erfc();
+  Tensor erfc();
 
   /**
    * Computes the log of the absolute value of `Gamma(x)` element-wise,
@@ -641,7 +641,7 @@ public interface TensorMath<T> {
    *
    * @return
    */
-  Tensor<T> logGamma();
+  Tensor logGamma();
 
   /**
    * Computes Psi, the derivative of Lgamma (the log of the absolute value of
@@ -649,7 +649,7 @@ public interface TensorMath<T> {
    *
    * @return
    */
-  Tensor<T> digamma();
+  Tensor digamma();
 
   /**
    * Get the top k smallest values and their indices.
@@ -663,8 +663,8 @@ public interface TensorMath<T> {
    * @param sortedResult default value true
    * @return
    */
-  TensorPair<T, T> topk(int k, int dim, boolean increase, Tensor<T> result,
-                        Tensor<T> indices, boolean sortedResult);
+  TensorPair topk(int k, int dim, boolean increase, Tensor result,
+                        Tensor indices, boolean sortedResult);
 
   /**
    * Replaces all elements in-place with the elements of lnx
@@ -672,23 +672,23 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> log(Tensor<T> y);
+  Tensor log(Tensor y);
 
-  Tensor<T> exp(Tensor<T> y);
+  Tensor exp(Tensor y);
 
-  Tensor<T> sqrt(Tensor<T> y);
+  Tensor sqrt(Tensor y);
 
-  Tensor<T> tanh(Tensor<T> y);
+  Tensor tanh(Tensor y);
 
-  Tensor<T> log1p(Tensor<T> y);
+  Tensor log1p(Tensor y);
 
-  Tensor<T> log();
+  Tensor log();
 
-  Tensor<T> exp();
+  Tensor exp();
 
-  Tensor<T> log1p();
+  Tensor log1p();
 
-  Tensor<T> abs(Tensor<T> x);
+  Tensor abs(Tensor x);
 
   /**
    * returns the p-norms of the Tensor x computed over the dimension dim.
@@ -698,7 +698,7 @@ public interface TensorMath<T> {
    * @param dim
    * @return
    */
-  Tensor<T> norm(Tensor<T> y, int value, int dim);
+  Tensor norm(Tensor y, int value, int dim);
 
   /**
    * Implements > operator comparing each element in x with y
@@ -707,7 +707,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> gt(Tensor<T> x, Tensor<T> y);
+  Tensor gt(Tensor x, Tensor y);
 
   /**
    * Implements < operator comparing each element in x with y
@@ -716,7 +716,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> lt(Tensor<T> x, Tensor<T> y);
+  Tensor lt(Tensor x, Tensor y);
 
   /**
    * Implements <= operator comparing each element in x with y
@@ -725,7 +725,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> le(Tensor<T> x, Tensor<T> y);
+  Tensor le(Tensor x, Tensor y);
 
   /**
    * Implements == operator comparing each element in x with y
@@ -733,7 +733,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> eq(Tensor<T> x, T y);
+  Tensor eq(Tensor x, double y);
 
   /**
    * Fills the masked elements of itself with value val
@@ -742,7 +742,7 @@ public interface TensorMath<T> {
    * @param e
    * @return current tensor reference
    */
-  Tensor<T> maskedFill(Tensor<T> mask, T e);
+  Tensor maskedFill(Tensor mask, double e);
 
   /**
    * Copies the elements of tensor into mask locations of itself.
@@ -751,7 +751,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> maskedCopy(Tensor<T> mask, Tensor<T> y);
+  Tensor maskedCopy(Tensor mask, Tensor y);
 
   /**
    * Returns a new Tensor which contains all elements aligned to a 1 in the corresponding mask.
@@ -760,7 +760,7 @@ public interface TensorMath<T> {
    * @param y
    * @return current tensor reference
    */
-  Tensor<T> maskedSelect(Tensor<T> mask, Tensor<T> y);
+  Tensor maskedSelect(Tensor mask, Tensor y);
 
   /**
    * returns the sum of the n-norms on the Tensor x
@@ -768,14 +768,14 @@ public interface TensorMath<T> {
    * @param value the n-norms
    * @return
    */
-  T norm(int value);
+  double norm(int value);
 
   /**
    * returns a new Tensor with the sign (+/- 1 or 0) of the elements of x.
    *
    * @return
    */
-  Tensor<T> sign();
+  Tensor sign();
 
   /**
    * Implements >= operator comparing each element in x with value
@@ -784,7 +784,7 @@ public interface TensorMath<T> {
    * @param value
    * @return
    */
-  Tensor<T> ge(Tensor<T> x, double value);
+  Tensor ge(Tensor x, double value);
 
   /**
    * Accumulate the elements of tensor into the original tensor by adding to the indices
@@ -796,7 +796,7 @@ public interface TensorMath<T> {
    * @param y
    * @return
    */
-  Tensor<T> indexAdd(int dim, Tensor<T> index, Tensor<T> y);
+  Tensor indexAdd(int dim, Tensor index, Tensor y);
 
   /**
    * Accumulate the elements of tensor into the original tensor by adding to the indices
@@ -808,7 +808,7 @@ public interface TensorMath<T> {
    * @param y
    * @return
    */
-  Tensor<T> index(int dim, Tensor<T> index, Tensor<T> y);
+  Tensor index(int dim, Tensor index, Tensor y);
 
   /**
    * stores the element-wise maximum of x and y in x.
@@ -817,7 +817,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cmax(Tensor<T> y);
+  Tensor cmax(Tensor y);
 
   /**
    * stores the element-wise maximum of x and y in x.
@@ -826,7 +826,7 @@ public interface TensorMath<T> {
    * @param y tensor
    * @return current tensor
    */
-  Tensor<T> cmin(Tensor<T> y);
+  Tensor cmin(Tensor y);
 
   /**
    * stores the element-wise maximum of x and y in z.
@@ -835,7 +835,7 @@ public interface TensorMath<T> {
    * @param x tensor
    * @param y tensor
    */
-  Tensor<T> cmax(Tensor<T> x, Tensor<T> y);
+  Tensor cmax(Tensor x, Tensor y);
 
   /**
    * stores the element-wise maximum of x and y in z.
@@ -844,7 +844,7 @@ public interface TensorMath<T> {
    * @param x tensor
    * @param y tensor
    */
-  Tensor<T> cmin(Tensor<T> x, Tensor<T> y);
+  Tensor cmin(Tensor x, Tensor y);
 
   /**
    * resize this tensor size to floor((xmax - xmin) / step) + 1 and set values from
@@ -855,7 +855,7 @@ public interface TensorMath<T> {
    * @param step default 1
    * @return this tensor
    */
-  Tensor<T> range(double xmin, double xmax, int step);
+  Tensor range(double xmin, double xmax, int step);
 
   /**
    * Computes numerical negative value element-wise. y = -x
@@ -863,7 +863,7 @@ public interface TensorMath<T> {
    * @param x
    * @return this tensor
    */
-  Tensor<T> negative(Tensor<T> x);
+  Tensor negative(Tensor x);
 
   //TODO: implement for reduce
 // /**
@@ -873,9 +873,9 @@ public interface TensorMath<T> {
 //  * @param result
 //  * @param reducer
 //  */
-// Tensor<T> reduce(int dim,Tensor<T> result, reducer: (T, T) => T);
-  T sumSquare();
+// Tensor reduce(int dim,Tensor result, reducer: (double, double) => double);
+  double sumSquare();
 
-  Tensor<T> clamp(double min, double max);
+  Tensor clamp(double min, double max);
 }
 

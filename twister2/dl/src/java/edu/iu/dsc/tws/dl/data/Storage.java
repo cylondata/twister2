@@ -17,7 +17,7 @@ import java.io.Serializable;
  * Storage defines a simple storage interface that controls the underlying storage for
  * any tensor object.
  */
-public interface Storage<T> extends Serializable, Iterable<T> {
+public interface Storage extends Serializable, Iterable {
 
   /**
    * Returns the number of elements in the storage. The original method name in torch is size,
@@ -28,13 +28,13 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    */
   int length();
 
-  /**
-   * Returns the element at position index in the storage. Valid range of index is 0 to length() -1
-   *
-   * @param index
-   * @return
-   */
-  T apply(int index);
+//  /**
+//   * Returns the element at position index in the storage. Valid range of index is 0 to length() -1
+//   *
+//   * @param index
+//   * @return
+//   */
+//  T apply(int index);
 
   /**
    * Set the element at position index in the storage. Valid range of index is 1 to length()
@@ -42,7 +42,15 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    * @param index
    * @param value
    */
-  void update(int index, T value);
+  void update(int index, double value);
+
+  /**
+   * Set the element at position index in the storage. Valid range of index is 1 to length()
+   *
+   * @param index
+   * @param value
+   */
+  void update(int index, float value);
 
   /**
    * Copy another storage. The types of the two storages might be different: in that case a
@@ -52,9 +60,9 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    * @param source
    * @return
    */
-  Storage<T> copy(Storage<T> source, int offset, int sourceOffset, int length);
+  Storage copy(Storage source, int offset, int sourceOffset, int length);
 
-  default Storage<T> copy(Storage<T> source) {
+  default Storage copy(Storage source) {
     return copy(source, 0, 0, length());
   }
 
@@ -66,7 +74,17 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    * @param length length of fill part
    * @return
    */
-  Storage<T> fill(T value, int offset, int length);
+  Storage fill(double value, int offset, int length);
+
+  /**
+   * Fill the Storage with the given value. This method returns itself.
+   *
+   * @param value
+   * @param offset offset start from 1
+   * @param length length of fill part
+   * @return
+   */
+  Storage fill(float value, int offset, int length);
 
   /**
    * Resize the storage to the provided size. The new contents are undetermined.
@@ -75,14 +93,21 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    * @param size
    * @return
    */
-  Storage<T> resize(int size);
+  Storage resize(int size);
 
   /**
    * Convert the storage to an array
    *
    * @return
    */
-  T[] array();
+  double[] toDoubleArray();
+
+  /**
+   * Convert the storage to an array
+   *
+   * @return
+   */
+  double[] toFloatArray();
 
   /**
    * Get the element type in the storage
@@ -97,6 +122,6 @@ public interface Storage<T> extends Serializable, Iterable<T> {
    * @param other
    * @return
    */
-  Storage<T> set(Storage<T> other);
+  Storage set(Storage other);
 }
 

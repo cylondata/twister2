@@ -15,9 +15,8 @@ import java.io.Serializable;
 
 /**
  * Tensor class
- * @param <T> type of tensor.
  */
-public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
+public interface Tensor extends Activity, Serializable, TensorMath {
 
   /**
    * Check if empty
@@ -77,7 +76,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim dimension, count from 1
    * @return jump
    */
-  int[] stride(int dim);
+  int stride(int dim);
 
   /**
    * Fill with a given value. It will change the value of the current tensor and return itself
@@ -85,24 +84,24 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param v value to fill the tensor
    * @return current tensor
    */
-  Tensor<T> fill(T v);
+  Tensor fill(double v);
 
   /**
    * Fill with a given value. It will change the value of the current tensor and return itself
    * <p>
-   * Note the value should be an instance of T
+   * Note the value should be an instance of double
    *
    * @param v value to fill the tensor
    * @return current tensor
    */
-  Tensor<T> forceFill(T v);
+  Tensor forceFill(double v);
 
   /**
    * Fill with zero. It will change the value of the current tensor and return itself
    *
    * @return current tensor
    */
-  Tensor<T> zero();
+  Tensor zero();
 
   /**
    * Fill with random value(normal gaussian distribution).
@@ -110,7 +109,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return current tensor
    */
-  Tensor<T> randn();
+  Tensor randn();
 
   /**
    * Fill with random value(normal gaussian distribution with the specified mean
@@ -119,7 +118,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return current tensor
    */
-  Tensor<T> randn(Double mean, Double stdv);
+  Tensor randn(Double mean, Double stdv);
 
   /**
    * Fill with random value(uniform distribution).
@@ -127,7 +126,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return current tensor
    */
-  Tensor<T> rand();
+  Tensor rand();
 
   /**
    * Fill with random value(uniform distribution between [lowerBound, upperBound])
@@ -135,14 +134,14 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return current tensor
    */
-  Tensor<T> rand(Double lowerBound, Double upperBound);
+  Tensor rand(Double lowerBound, Double upperBound);
 
   /**
    * Fill with random value(bernoulli distribution).
    * It will change the value of the current tensor and return itself
    * @return current tensor
    */
-  Tensor<T> bernoulli(double p);
+  Tensor bernoulli(double p);
 
   /**
    * Create a new tensor which exchanges the given dimensions of the current tensor
@@ -151,14 +150,14 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim2 dimension to be exchanged, count from one
    * @return new tensor
    */
-  Tensor<T> transpose(int dim1, int dim2);
+  Tensor transpose(int dim1, int dim2);
 
   /**
    * Shortcut of transpose(1, 2) for 2D tensor
    *
    * @see Tensor#transpose(int, int)
    */
-  Tensor<T> t();
+  Tensor t();
 
   /**
    * Query tensor on a given index. Tensor should not be empty
@@ -166,7 +165,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param index count from 1
    * @return
    */
-  Tensor<T> apply(int index);
+  Tensor apply(int index);
 
   /**
    * Query the value on a given index. Tensor should not be empty
@@ -174,13 +173,13 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * value count from 1
    * @return the value on the given index
    */
-  T apply(int[] indexes);
+  double apply(int[] indexes);
 
   /**
    * Get value
    * @return the value of a scalar. Requires the tensor to be a scalar.
    */
-  T value();
+  double value();
 
   /**
    * Query the value on a given position. The number of parameters
@@ -190,15 +189,15 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param d1 the given position
    * @return the value on a given position
    */
-  T valueAt(int d1);
+  double valueAt(int d1);
 
-  T valueAt(int d1, int d2);
+  double valueAt(int d1, int d2);
 
-  T valueAt(int d1, int d2, int d3);
+  double valueAt(int d1, int d2, int d3);
 
-  T valueAt(int d1, int d2, int d3, int d4);
+  double valueAt(int d1, int d2, int d3, int d4);
 
-  T valueAt(int d1, int d2, int d3, int d4, int d5);
+  double valueAt(int d1, int d2, int d3, int d4, int d5);
 
   /**
    * Subset the tensor by apply the elements of the given table to the corresponding dimension
@@ -212,7 +211,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param t The table length should be less than or equal to the tensor dimensions
    * @return
    */
-  Tensor<T> apply(Table t);
+  Tensor apply(Table t);
 
   /**
    * For tensor(i) = value. If tensor(i) is another tensor, it will fill the selected subset by
@@ -221,7 +220,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param index index
    * @param value value to write
    */
-  void update(int index, T value);
+  void update(int index, double value);
 
   /**
    * Copy the give tensor value to the select subset of the current tensor by the given index.
@@ -230,7 +229,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param index index
    * @param src   tensor to write
    */
-  void update(int index, Tensor<T> src);
+  void update(int index, Tensor src);
 
   /**
    * Write the value to the positions indexed by the given index array
@@ -238,7 +237,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param indexes index array. It should has same length with the tensor dimension
    * @param value   value to write
    */
-  void update(int[] indexes, T value);
+  void update(int[] indexes, double value);
 
 
   /**
@@ -247,7 +246,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param value the written value
    * @return
    */
-  Tensor<T> setValue(T value);
+  Tensor setValue(double value);
 
   /**
    * Write the value on a given position. The number of parameters
@@ -257,15 +256,15 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param value the written value
    * @return
    */
-  Tensor<T> setValue(int d1, T value);
+  Tensor setValue(int d1, double value);
 
-  Tensor<T> setValue(int d1, int d2, T value);
+  Tensor setValue(int d1, int d2, double value);
 
-  Tensor<T> setValue(int d1, int d2, int d3, T value);
+  Tensor setValue(int d1, int d2, int d3, double value);
 
-  Tensor<T> setValue(int d1, int d2, int d3, int d4, T value);
+  Tensor setValue(int d1, int d2, int d3, int d4, double value);
 
-  Tensor<T> setValue(int d1, int d2, int d3, int d4, int d5, T value);
+  Tensor setValue(int d1, int d2, int d3, int d4, int d5, double value);
 
   /**
    * Fill the select subset of the current tensor with the given value.
@@ -278,7 +277,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param t     subset table
    * @param value value to write
    */
-  void update(Table t, T value);
+  void update(Table t, double value);
 
   /**
    * Copy the given tensor values to the selected subset of the current tensor
@@ -291,7 +290,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param t   subset table
    * @param src tensor to copy
    */
-  void update(Table t, Tensor<T> src);
+  void update(Table t, Tensor src);
 
   /**
    * Check if the tensor is contiguous on the storage
@@ -306,7 +305,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @return the current tensor if it's contiguous; or a new contiguous tensor with separated
    * storage
    */
-  Tensor<T> contiguous();
+  Tensor contiguous();
 
   /**
    * Check if the size is same with the give tensor
@@ -314,14 +313,14 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param other tensor to be compared
    * @return true if they have same size
    */
-  boolean isSameSizeAs(Tensor<?> other);
+  boolean isSameSizeAs(Tensor other);
 
   /**
    * return a new empty tensor of the same type
    *
    * @return new tensor
    */
-  Tensor<T> emptyInstance();
+  Tensor emptyInstance();
 
   /**
    * Resize the current tensor to the same size of the given tensor. It will still use the same
@@ -331,7 +330,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param src target tensor
    * @return current tensor
    */
-  Tensor<T> resizeAs(Tensor<?> src);
+  Tensor resizeAs(Tensor src);
 
   /**
    * Resize the current tensor to the give shape
@@ -340,17 +339,19 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param strides Array describe the jumps
    * @return
    */
-  Tensor<T> resize(int sizes, int[] strides);
+  Tensor resize(int[] sizes, int[] strides);
 
-  Tensor<T> resize(int size1);
+  Tensor resize(int[] sizes);
 
-  Tensor<T> resize(int size1, int size2);
+  Tensor resize(int size1);
 
-  Tensor<T> resize(int size1, int size2, int size3);
+  Tensor resize(int size1, int size2);
 
-  Tensor<T> resize(int size1, int size2, int size3, int size4);
+  Tensor resize(int size1, int size2, int size3);
 
-  Tensor<T> resize(int size1, int size2, int size3, int size4, int size5);
+  Tensor resize(int size1, int size2, int size3, int size4);
+
+  Tensor resize(int size1, int size2, int size3, int size4, int size5);
 
   //  def repeatTensor(result: Tensor, tensor: Tensor, int size*)
 
@@ -374,14 +375,39 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param index
    * @return
    */
-  Tensor<T> select(int dim, int index);
+  Tensor select(int dim, int index);
+
+  Tensor set(Tensor other);
+
+  /**
+   * The Tensor is now going to "view" the given storage, starting at position storageOffset (>=1)
+   * with the given dimension sizes and the optional given strides. As the result, any
+   * modification in the elements of the Storage will have an impact on the elements of the Tensor,
+   * and vice-versa. This is an efficient method, as there is no memory copy!
+   *
+   * If only storage is provided, the whole storage will be viewed as a 1D Tensor.
+   *
+   * @param storage
+   * @param storageOffset default 1
+   * @param sizes
+   * @param strides
+   * @return current tensor
+   */
+  Tensor set(Storage storage,int storageOffset,int[] sizes,int[] strides);
+
+  /**
+   * Shrunk the size of the storage to 0, and also the tensor size
+   *
+   * @return
+   */
+  Tensor set();
 
   /**
    * Get the storage
    *
    * @return storage
    */
-  Storage<T> storage();
+  Storage storage();
 
   /**
    * tensor offset on the storage
@@ -407,7 +433,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param size
    * @return
    */
-  Tensor<T> narrow(int dim, int index, int size);
+  Tensor narrow(int dim, int index, int size);
 
   /**
    * Copy the value of the given tensor to the current. They should have same size. It will use
@@ -416,28 +442,28 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param other source tensor
    * @return current tensor
    */
-  Tensor<T> copy(Tensor<T> other);
+  Tensor copy(Tensor other);
 
   /**
    * Removes all singleton dimensions of the tensor
    *
    * @return current tensor
    */
-  Tensor<T> squeeze();
+  Tensor squeeze();
 
   /**
    * Removes given dimensions of the tensor if it's singleton
    *
    * @return current tensor
    */
-  Tensor<T> squeeze(int dim);
+  Tensor squeeze(int dim);
 
   /**
    * Create a new tensor that removes all singleton dimensions of the tensor
    *
    * @return create a new tensor
    */
-  Tensor<T> squeezeNewTensor();
+  Tensor squeezeNewTensor();
 
   /**
    * Return a new tensor with specified sizes. The input tensor must be contiguous, and the
@@ -447,7 +473,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @return new tensor
    */
 
-  Tensor<T> view(int[] sizes);
+  Tensor view(int[] sizes);
 
   /**
    * Returns a tensor which contains all slices of size @param size
@@ -457,7 +483,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param step Step between two slices
    * @return new tensor
    */
-  Tensor<T> unfold(int dim, int size, int step);
+  Tensor unfold(int dim, int size, int step);
 
   /**
    * Repeating a tensor allocates new memory, unless result is provided, in which case its memory
@@ -466,7 +492,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param sizes
    * @return
    */
-  Tensor<T> repeatTensor(int[] sizes);
+  Tensor repeatTensor(int[] sizes);
 
   /**
    * This is equivalent to this.expand(template.size())
@@ -474,7 +500,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param template the given tensor
    * @return
    */
-  Tensor<T> expandAs(Tensor<T> template);
+  Tensor expandAs(Tensor template);
 
   /**
    * Expanding a tensor allocates new memory, tensor where singleton dimensions can be expanded
@@ -485,7 +511,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param sizes the size that tensor will expend to
    * @return
    */
-  Tensor<T> expand(int[] sizes);
+  Tensor expand(int[] sizes);
 
   /**
    * Splits current tensor along dimension dim into a result table of Tensors of size size
@@ -497,7 +523,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim
    * @return
    */
-  Tensor<T>[] split(int size, int dim);
+  Tensor[] split(int size, int dim);
 
   /**
    * spilt one tensor into multi tensor along the `dim` dimension
@@ -505,7 +531,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim the specific dimension
    * @return
    */
-  Tensor<T>[] split(int dim);
+  Tensor[] split(int dim);
 
   /**
    * Compare and print differences between two tensors
@@ -514,7 +540,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param count
    * @return true if there's difference, vice versa
    */
-  boolean diff(Tensor<T> other, int count, boolean reverse);
+  boolean diff(Tensor other, int count, boolean reverse);
 
   /**
    * view this.tensor and add a Singleton Dimension to `dim` dimension
@@ -523,7 +549,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim the specific dimension, default is 1
    * @return this
    */
-  Tensor<T> addSingletonDimension(Tensor<T> t, int dim);
+  Tensor addSingletonDimension(Tensor t, int dim);
 
   /**
    * view this.tensor and add multiple Dimensions to `dim` dimension
@@ -532,7 +558,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param dim the specific dimension array, default is [1]
    * @return this
    */
-  Tensor<T> addMultiDimension(Tensor<T> t, int[] dim);
+  Tensor addMultiDimension(Tensor t, int[] dim);
 
   /**
    * create a new tensor without any change of the tensor
@@ -540,7 +566,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param sizes the size of the new Tensor
    * @return
    */
-  Tensor<T> reshape(int sizes);
+  Tensor reshape(int[] sizes);
 
   /**
    * Save the tensor to given path
@@ -549,7 +575,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    * @param overWrite
    * @return
    */
-  Tensor<T> save(String path, boolean overWrite);
+  Tensor save(String path, boolean overWrite);
 
 
   /**
@@ -576,7 +602,7 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return
    */
-  TensorNumeric<T> getTensorNumeric();
+  TensorNumeric getTensorNumeric();
 
 //  /**
 //   * Return tensor type
@@ -589,8 +615,16 @@ public interface Tensor<T> extends Activity, Serializable, TensorMath<T> {
    *
    * @return
    */
-  T[] toArray();
+  double[] toArray();
 
-  //private QuantizedTensor<T> toQuantizedTensor:
+  /**
+   * Get a new tensor with same value and different storage
+   *
+   * @return new tensor
+   */
+  default Tensor clone(){
+    return this;
+  }
+  //private QuantizedTensor toQuantizedTensor:
 }
 

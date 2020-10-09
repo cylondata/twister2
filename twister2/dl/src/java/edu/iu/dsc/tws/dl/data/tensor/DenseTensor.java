@@ -12,33 +12,81 @@
 package edu.iu.dsc.tws.dl.data.tensor;
 
 import edu.iu.dsc.tws.dl.data.*;
-import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.utils.RandomGenerator;
+import edu.iu.dsc.tws.dl.utils.Util;
 
-public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
+import java.util.Arrays;
 
-  private ArrayStorage<T> storage;
-  private int storageOffset;
-  private int[] size;
-  private int[] stride;
-  private int nDimension;
+public class DenseTensor implements Tensor, TensorMath {
 
-  public DenseTensor(ArrayStorage<T> storage, int storageOffset, int[] size, int[] stride, int nDimension) {
-    this.storage = storage;
-    this.storageOffset = storageOffset;
-    this.size = size;
-    this.stride = stride;
-    this.nDimension = nDimension;
+  private ArrayDoubleStorage storageInternal;
+  private int storageOffsetInternal;
+  private int[] sizeInternal;
+  private int[] strideInternal;
+  private int nDimensionInternal;
+
+  public DenseTensor(){
+    this(null, 0, null, null, 0);
   }
 
-  public DenseTensor(ArrayStorage<T> storage, int storageOffset, int[] size, int[] stride) {
-    this.storage = storage;
-    this.storageOffset = storageOffset;
-    this.size = size;
-    this.stride = stride;
+  public DenseTensor(int dim1){
+    this(new ArrayDoubleStorage(dim1), 0, new int[]{dim1}, new int[]{1}, 1);
+  }
+
+  public DenseTensor(int dim1, int dim2){
+    this(new ArrayDoubleStorage(dim1 * dim2), 0, new int[]{dim1, dim2}, new int[]{dim2, 1}, 2);
+  }
+
+  public DenseTensor(int dim1, int dim2, int dim3){
+    this(new ArrayDoubleStorage(dim1), 0, new int[]{dim1, dim2, dim3}, new int[]{dim3 * dim2, dim3, 1}, 3);
+  }
+
+  private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size, int[] stride, int nDimension) {
+    this.storageInternal = storage;
+    this.storageOffsetInternal = storageOffset;
+    this.sizeInternal = size;
+    this.strideInternal = stride;
+    this.nDimensionInternal = nDimension;
+  }
+
+  private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size, int[] stride) {
+    this.storageInternal = storage;
+    this.storageOffsetInternal = storageOffset;
+    this.sizeInternal = size;
+    this.strideInternal = stride;
+  }
+
+  public DenseTensor(ArrayDoubleStorage newStorage, int storageOffset, int[] size) {
+    this(newStorage, 0, null, null, 0);
+    if(newStorage != null){
+      int tempstorageOffset = storageOffset - 1;
+      int[] tempSize = (size == null) ? new int[newStorage.length()] : size;
+      int[] tempStride = (size == null) ? null : strideInternal;
+      initWithStorage(newStorage, tempstorageOffset, tempSize, tempStride);
+    }
+  }
+  private void initWithStorage(ArrayDoubleStorage newStorage, int newStorageOffset, int[] newSize, int[] newStride){
+    if (newSize != null && newStride != null) {
+      if(newSize.length == newStride.length){
+        throw new IllegalArgumentException("inconsistent size");
+      }
+    }
+    this.storageInternal = newStorage;
+    this.storageOffsetInternal = newStorageOffset;
+
+    if(newSize != null){
+      this.nDimensionInternal = newSize.length;
+    }else if(newStride != null){
+      this.nDimensionInternal = newStride.length;
+    }else{
+      this.nDimensionInternal = 0;
+    }
+    rawResize(this, nDimensionInternal, newSize, newStride);
   }
 
   @Override
-  public <D> Tensor toTensor(TensorNumeric<D> ev) {
+  public Tensor toTensor(TensorNumeric ev) {
     return null;
   }
 
@@ -59,236 +107,433 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
 
   @Override
   public int nDimension() {
-    return this.nDimension;
+    return this.nDimensionInternal;
   }
 
   @Override
   public int dim() {
-    return this.nDimension;
+    return this.nDimensionInternal;
   }
 
   @Override
   public int[] size() {
-    return new int[0];
+    if(sizeInternal == null){
+      return null;
+    }else{
+      return Arrays.copyOfRange(sizeInternal, 0, nDimensionInternal);
+    }
   }
 
   @Override
   public int size(int dim) {
-    return 0;
+    return sizeInternal[dim - 1];
   }
 
   @Override
   public int[] stride() {
-    return new int[0];
+    if(strideInternal == null){
+      return null;
+    }else{
+      return Arrays.copyOfRange(strideInternal, 0, nDimensionInternal);
+    }
   }
 
   @Override
-  public int[] stride(int dim) {
-    return new int[0];
+  public int stride(int dim) {
+    return strideInternal[dim - 1];
   }
 
   @Override
-  public Tensor<T> fill(T v) {
-    return null;
+  public Tensor fill(double v) {
+    if (this.storage() == null) return this;
+
+    if (this.isContiguous()) {
+      this.storage().fill(v, this.storageOffset(), this.nElement());
+    } else {
+      throw new UnsupportedOperationException("non contiguous not supported");
+    }
+    return this;
   }
 
   @Override
-  public Tensor<T> forceFill(T v) {
-    return null;
+  public Tensor forceFill(double v) {
+    return this.fill(v);
   }
 
   @Override
-  public Tensor<T> zero() {
-    return null;
+  public Tensor zero() {
+    return this.fill(0.0);
   }
 
   @Override
-  public Tensor<T> randn() {
-    return null;
+  public Tensor randn() {
+    return this.randn(0.0, 1.0) ;
   }
 
   @Override
-  public Tensor<T> randn(Double mean, Double stdv) {
-    return null;
+  public Tensor randn(Double mean, Double stdv) {
+    if (this.isContiguous()) {
+      int i = 0;
+      int total = this.nElement();
+      double[] data = this.storage().toDoubleArray();
+      int offset = this.storageOffset() - 1;
+      while (i < total) {
+        data[offset + i] = RandomGenerator.RNG().normal(mean, stdv);
+        i += 1;
+      }
+    } else {
+      throw new UnsupportedOperationException("non contiguous not supported");
+    }
+    return this;
   }
 
   @Override
-  public Tensor<T> rand() {
-    return null;
+  public Tensor rand() {
+    return this.rand(0.0,1.0);
   }
 
   @Override
-  public Tensor<T> rand(Double lowerBound, Double upperBound) {
-    return null;
+  public Tensor rand(Double lowerBound, Double upperBound) {
+    if (this.isContiguous()) {
+      int i = 0;
+      int total = this.nElement();
+      double[] data = this.storage().toDoubleArray();
+      int offset = this.storageOffset() - 1;
+      while (i < total) {
+        data[offset + i] = RandomGenerator.RNG().uniform(lowerBound, upperBound);
+        i += 1;
+      }
+    } else {
+      throw new UnsupportedOperationException("non contiguous not supported");
+    }
+    return this;
   }
 
   @Override
-  public Tensor<T> bernoulli(double p) {
-    return null;
+  public Tensor bernoulli(double p) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public Tensor<T> transpose(int dim1, int dim2) {
-    return null;
+  public Tensor transpose(int dim1, int dim2) {
+    DenseTensor result = newWithTensor(this);
+    transpose(result, null, dim1 - 1, dim2 -1);
+    return result;
+  }
+
+  private void transpose(DenseTensor self, DenseTensor source, int dimension1, int dimension2) {
+    DenseTensor src = source;
+    if (src == null) src = self;
+    Util.require(dimension1 >= 0 && dimension1 < src.nDimension(), "out of range");
+    Util.require(dimension2 >= 0 && dimension2 < src.nDimension(), "out of range");
+
+    set(self, src);
+    if (dimension1 == dimension2) {
+      return;
+    }
+    int z = self.strideInternal[dimension1];
+    self.strideInternal[dimension1] = self.strideInternal[dimension2];
+    self.strideInternal[dimension2] = z;
+    z = self.sizeInternal[dimension1];
+    self.sizeInternal[dimension1] = self.sizeInternal[dimension2];
+    self.sizeInternal[dimension2] = z;
+  }
+
+  private DenseTensor set(DenseTensor self, DenseTensor other) {
+    if (self != other) {
+      return rawSet(self, other.storage(), other.storageOffset(),
+          other.nDimension(), other.size(), other.stride());
+    } else {
+      return self;
+    }
+  }
+
+  private DenseTensor newWithTensor(DenseTensor old){
+    DenseTensor newTensor = new DenseTensor();
+    return newTensor.rawSet(newTensor, old.storage(), old.storageOffset(), old.nDimension(), old.size(),
+        old.stride());
+  }
+  @Override
+  public Tensor t() {
+    Util.require(this.nDimension() == 2, "t() is only for 2D tensor");
+    return transpose(1, 2);
   }
 
   @Override
-  public Tensor<T> t() {
-    return null;
+  public Tensor apply(int index) {
+    Util.require(this.nDimension() > 0, "empty or scalar tensor");
+    int _index = index - 1;
+    if (_index < 0) _index = this.sizeInternal[0] + _index + 1;
+    Util.require(_index >= 0 && _index < this.sizeInternal[0],
+        "out of range, ${_index}: 0 to ${this._size(0)}");
+
+    DenseTensor result = newWithTensor(this);
+    select(result, null, 0, _index);
+    return result;
   }
 
   @Override
-  public Tensor<T> apply(int index) {
-    return null;
+  public double apply(int[] indexes) {
+    Util.require(indexes.length == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    int d = 0;
+    while (d < indexes.length) {
+      offset += getOffset(indexes[d] - 1, d + 1);
+      d += 1;
+    }
+    return this.storageInternal.get(offset);
+  }
+
+  private int getOffset(int z, int dim) {
+    int _z = z;
+    if (_z < 0) {
+      _z = this.size(dim) + _z + 1;
+    }
+    Util.require(_z >= 0 && _z < this.size(dim), "index out of bound");
+    return _z * this.stride(dim);
   }
 
   @Override
-  public T apply(int[] indexes) {
-    return null;
+  public double value() {
+    Util.require(1 == this.nElement(), "invalid size: 1 == ${this.nElement()}");
+    int offset = this.storageOffsetInternal;
+    return this.storageInternal.get(offset);
   }
 
   @Override
-  public T value() {
-    return null;
+  public double valueAt(int d1) {
+    Util.require(1 == this.nDimension(), "invalid size: 1 == ${this.nDimension}");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    return this.storageInternal.get(offset);
   }
 
   @Override
-  public T valueAt(int d1) {
-    return null;
+  public double valueAt(int d1, int d2) {
+    Util.require(2 == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    offset += getOffset(d2 - 1, 2);
+    return this.storageInternal.get(offset);
   }
 
   @Override
-  public T valueAt(int d1, int d2) {
-    return null;
+  public double valueAt(int d1, int d2, int d3) {
+    Util.require(3 == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    offset += getOffset(d2 - 1, 2);
+    offset += getOffset(d3 - 1, 3);
+    return this.storageInternal.get(offset);
   }
 
   @Override
-  public T valueAt(int d1, int d2, int d3) {
-    return null;
+  public double valueAt(int d1, int d2, int d3, int d4) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public T valueAt(int d1, int d2, int d3, int d4) {
-    return null;
+  public double valueAt(int d1, int d2, int d3, int d4, int d5) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public T valueAt(int d1, int d2, int d3, int d4, int d5) {
-    return null;
+  public Tensor apply(Table t) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public Tensor<T> apply(Table t) {
-    return null;
+  public void update(int index, double value) {
+    Util.require(this.nDimension() > 0, "empty tensor");
+    int _index = index - 1;
+    if (_index < 0) _index = this.sizeInternal[0] + _index + 1;
+    Util.require(_index >= 0 && _index < this.sizeInternal[0], "out of range");
+    if (this.nDimension() == 1) {
+      this.storageInternal.update(this.storageOffsetInternal + _index * this.strideInternal[0], value);
+    } else {
+      DenseTensor tensor = newWithTensor(this);
+      narrow(tensor, null, 0, _index, 1);
+      tensor.fill(value);
+    }
   }
 
   @Override
-  public void update(int index, T value) {
-
+  public void update(int index, Tensor src) {
+    Util.require(this.nDimension() > 0, "empty or scalar tensor");
+    int _index = index - 1;
+    if (_index < 0) _index = this.sizeInternal[0] + _index + 1;
+    Util.require(_index >= 0 && _index < this.sizeInternal[0], "out of range");
+    DenseTensor tensor = newWithTensor(this);
+    narrow(tensor, null, 0, _index, 1);
+    tensor.copy(src);
   }
 
   @Override
-  public void update(int index, Tensor<T> src) {
-
+  public void update(int[] indexes, double value) {
+    Util.require(indexes.length == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    int d = 0;
+    while (d < indexes.length) {
+      offset += getOffset(indexes[d] - 1, d + 1);
+      d += 1;
+    }
+    this.storageInternal.update(offset, value);
   }
 
   @Override
-  public void update(int[] indexes, T value) {
-
+  public Tensor setValue(double value) {
+    Util.require(0 == this.nDimension(), "invalid size, you can only call this on a scalar");
+    int offset = this.storageOffsetInternal;
+    this.storageInternal.update(offset, value);
+    return this;
   }
 
   @Override
-  public Tensor<T> setValue(T value) {
-    return null;
+  public Tensor setValue(int d1, double value) {
+    Util.require(1 == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    this.storageInternal.update(offset, value);
+    return this;
   }
 
   @Override
-  public Tensor<T> setValue(int d1, T value) {
-    return null;
+  public Tensor setValue(int d1, int d2, double value) {
+    Util.require(2 == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    offset += getOffset(d2 - 1, 2);
+    this.storageInternal.update(offset, value);
+    return this;
   }
 
   @Override
-  public Tensor<T> setValue(int d1, int d2, T value) {
-    return null;
+  public Tensor setValue(int d1, int d2, int d3, double value) {
+    Util.require(3 == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    offset += getOffset(d1 - 1, 1);
+    offset += getOffset(d2 - 1, 2);
+    offset += getOffset(d3 - 1, 3);
+    this.storageInternal.update(offset, value);
+    return this;
   }
 
   @Override
-  public Tensor<T> setValue(int d1, int d2, int d3, T value) {
-    return null;
+  public Tensor setValue(int d1, int d2, int d3, int d4, double value) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public Tensor<T> setValue(int d1, int d2, int d3, int d4, T value) {
-    return null;
+  public Tensor setValue(int d1, int d2, int d3, int d4, int d5, double value) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public Tensor<T> setValue(int d1, int d2, int d3, int d4, int d5, T value) {
-    return null;
+  public void update(Table t, double value) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public void update(Table t, T value) {
-
-  }
-
-  @Override
-  public void update(Table t, Tensor<T> src) {
-
+  public void update(Table t, Tensor src) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public boolean isContiguous() {
+    int s = 1;
+    int d = this.nDimension() - 1;
+    while (d >= 0) {
+      if (this.sizeInternal[d] != 1) {
+        if (s != this.strideInternal[d]) {
+          return false;
+        } else {
+          s = s * this.sizeInternal[d];
+        }
+      }
+      d -= 1;
+    }
+    return true;
+  }
+
+  @Override
+  public Tensor contiguous() {
+    if (!this.isContiguous()) {
+      return this.clone();
+    } else {
+      return this;
+    }
+  }
+
+
+  @Override
+  public Tensor clone(){
+    DenseTensor tensor = new DenseTensor();
+    resizeAs(tensor, this);
+    copy(tensor, this);
+    return tensor;
+  }
+
+  @Override
+  public boolean isSameSizeAs(Tensor other) {
     return false;
   }
 
   @Override
-  public Tensor<T> contiguous() {
+  public Tensor emptyInstance() {
     return null;
   }
 
   @Override
-  public boolean isSameSizeAs(Tensor<?> other) {
-    return false;
+  public Tensor resizeAs(Tensor src) {
+    resizeAs(this, src);
+    return this;
   }
 
   @Override
-  public Tensor<T> emptyInstance() {
+  public Tensor resize(int[] sizes, int[] strides) {
+    return resize(this, sizes, strides);
+  }
+
+  @Override
+  public Tensor resize(int[] sizes) {
+    return resize(this, sizes, null);
+  }
+
+  @Override
+  public Tensor resize(int size1) {
+    if (this.nDimensionInternal != 1 || this.size(1) != size1) {
+      return resize(this, new int[]{size1}, null);
+    } else {
+      return this;
+    }
+  }
+
+  @Override
+  public Tensor resize(int size1, int size2) {
+    if (this.nDimensionInternal != 2 || this.size(1) != size1 || this.size(2) != size2) {
+      return resize(this, new int[]{size1, size2}, null);
+    } else {
+      return this;
+    }
+  }
+
+  @Override
+  public Tensor resize(int size1, int size2, int size3) {
+    if (this.nDimensionInternal != 3 || this.size(1) != size1 || this.size(2) != size2 ||
+        this.size(3) != size3) {
+      return resize(this, new int[]{size1, size2, size3}, null);
+    } else {
+      return this;
+    }
+  }
+
+  @Override
+  public Tensor resize(int size1, int size2, int size3, int size4) {
     return null;
   }
 
   @Override
-  public Tensor<T> resizeAs(Tensor<?> src) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int sizes, int[] strides) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int size1) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int size1, int size2) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int size1, int size2, int size3) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int size1, int size2, int size3, int size4) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> resize(int size1, int size2, int size3, int size4, int size5) {
+  public Tensor resize(int size1, int size2, int size3, int size4, int size5) {
     return null;
   }
 
@@ -299,8 +544,8 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
     } else {
       int n = 1;
       int d = 0;
-      while (d < this.nDimension) {
-        n = n * this.size[d];
+      while (d < this.nDimensionInternal) {
+        n = n * this.sizeInternal[d];
         d += 1;
       }
      return n;
@@ -308,712 +553,1001 @@ public class DenseTensor<T> implements Tensor<T>, TensorMath<T> {
   }
 
   @Override
-  public Tensor<T> select(int dim, int index) {
-    return null;
+  public Tensor select(int dim, int index) {
+    int _dimension = dim - 1;
+    int _sliceIndex = index - 1;
+
+    Util.require(this.nDimension() > 0, "empty or scalar tensor cannot be selected");
+    DenseTensor result = newWithTensor(this);
+    select(result, null, _dimension, _sliceIndex);
+    return result;
+  }
+
+  private void select(DenseTensor self, DenseTensor source, int dimension, int sliceIndex) {
+    DenseTensor src = source;
+    if (src == null) src = source;
+    Util.require(src.nDimension() > 0, "cannot select on a scalar");
+    Util.require(dimension >= 0 && dimension < src.nDimension(), "out of range");
+    Util.require(sliceIndex >= 0 && sliceIndex < src.size(dimension + 1),
+        "{_sliceIndex} out of range 0 to ${src.size(_dimension + 1) - 1}");
+
+    set(self, src);
+    narrow(self, null, dimension, sliceIndex, 1);
+
+    int d = dimension;
+    while (d < self.nDimension() - 1) {
+      self.sizeInternal[d] = self.sizeInternal[d + 1];
+      self.strideInternal[d] = self.strideInternal[d + 1];
+      d += 1;
+    }
+
+    self.nDimensionInternal = self.nDimension() - 1;
+  }
+
+  private void narrow(DenseTensor self, DenseTensor source, int dimension, int firstIndex, int size) {
+    DenseTensor src = source;
+    if (src == null) {
+      src = self;
+    }
+
+    Util.require(dimension >= 0 && dimension < src.nDimension(), "dimension out of range");
+    Util.require(firstIndex >= 0 && firstIndex < src.size(dimension + 1),
+        "firstIndex(${_firstIndex}) out of range [0, ${src.size(_dimension + 1)})");
+    Util.require(size > 0 && firstIndex + size <= src.size(dimension + 1),
+        "size out of range $size (0, ${src.size(_dimension + 1)} - ${_firstIndex}]");
+
+    set(self, src);
+
+    if (firstIndex > 0) {
+      self.storageOffsetInternal = self.storageOffsetInternal + firstIndex * self.strideInternal[dimension];
+    }
+    self.sizeInternal[dimension] = size;
   }
 
   @Override
-  public Storage<T> storage() {
-    return null;
+  public Tensor set(Tensor other) {
+    this.storageInternal = (ArrayDoubleStorage) other.storage();
+    this.storageOffsetInternal = other.storageOffset();
+    return rawResize(this, other.nDimension(), other.size(), other.stride());
+  }
+
+  @Override
+  public Tensor set(Storage storage, int storageOffset, int[] sizes, int[] strides) {
+    if (sizes != null && strides != null) {
+      Util.require(sizes.length == strides.length, "Invalid Size");
+    }
+    this.storageInternal = (ArrayDoubleStorage) storage;
+    this.storageOffsetInternal = storageOffset;
+    if(sizes == null){
+      return rawResize(this, 0, sizes, strides);
+    }else{
+      return rawResize(this, sizes.length, sizes, strides);
+    }
+  }
+
+  @Override
+  public Tensor set() {
+    if (this.storageInternal != null) {
+      this.storageInternal.resize(0);
+    }
+    this.nDimensionInternal = 0;
+    this.sizeInternal = new int[0];
+    return this;
+  }
+
+  @Override
+  public ArrayDoubleStorage storage() {
+    return storageInternal;
   }
 
   @Override
   public int storageOffset() {
-    return 0;
+    return this.storageOffsetInternal;
   }
 
   @Override
-  public Tensor<T> narrow(int dim, int index, int size) {
-    return null;
+  public Tensor narrow(int dim, int index, int size) {
+    DenseTensor result = newWithTensor(this);
+    narrow(result, null, dim - 1, index - 1, size);
+    return result;
   }
 
   @Override
-  public Tensor<T> copy(Tensor<T> other) {
-    return null;
+  public Tensor copy(Tensor other) {
+    copy(this, other);
+    return this;
+  }
+
+  private void copy(DenseTensor self, Tensor src) {
+    Util.require(self.nElement() == src.nElement(), "self element"
+        + " number(${self.nElement()}) is not"
+        + " equal to source element number(${src.nElement()})");
+
+    if (self.isEmpty()) {
+      return;
+    }
+    if (self.isContiguous() && src.isContiguous() && sameStride(self.stride(), src.stride())) {
+      System.arraycopy(src.storage().toDoubleArray(), src.storageOffset() - 1, self.storage().toDoubleArray(),
+          self.storageOffset() - 1, self.nElement());
+      return;
+    }else{
+      throw new UnsupportedOperationException("non Contiguous not supported");
+    }
+  }
+
+  private boolean sameStride(int[] l, int[] r) {
+    if (l.length != r.length){
+      return false;
+    }
+
+    int i = 0;
+    while (i < l.length) {
+      if (l[i] != r[i]) {
+        return false;
+      }
+      i += 1;
+    }
+    return true;
   }
 
   @Override
-  public Tensor<T> squeeze() {
+  public Tensor squeeze() {
     int ndim = 0;
     int d = 0;
-    while (d < this.nDimension) {
-      if (this.size[d] != 1) {
+    while (d < this.nDimensionInternal) {
+      if (this.sizeInternal[d] != 1) {
         if (d != ndim) {
-          this.size[ndim] = this.size[d];
-          this.stride[ndim] = this.stride[d];
+          this.sizeInternal[ndim] = this.sizeInternal[d];
+          this.strideInternal[ndim] = this.strideInternal[d];
         }
         ndim += 1;
       }
       d += 1;
     }
 
-    if (ndim == 0 && this.nDimension > 0) {
-      this.size[0] = 1;
-      this.stride[0] = 1;
+    if (ndim == 0 && this.nDimensionInternal > 0) {
+      this.sizeInternal[0] = 1;
+      this.strideInternal[0] = 1;
       ndim = 1;
     }
 
-    this.nDimension = ndim;
+    this.nDimensionInternal = ndim;
     return  this;
   }
 
   @Override
-  public Tensor<T> squeeze(int dim) {
-    if(dim >= 0 && dim < this.nDimension){
+  public Tensor squeeze(int dim) {
+    if(dim >= 0 && dim < this.nDimensionInternal){
      throw new IllegalArgumentException("dimension out of range");
     }
-    if (this.size(dim) == 1 && this.nDimension > 1) {
+    if (this.size(dim) == 1 && this.nDimensionInternal > 1) {
       int d = dim;
-      while (d < this.nDimension - 1) {
-        this.size[d] = this.size[d + 1];
-        this.stride[d] = this.stride[d + 1];
+      while (d < this.nDimensionInternal - 1) {
+        this.sizeInternal[d] = this.sizeInternal[d + 1];
+        this.strideInternal[d] = this.strideInternal[d + 1];
         d += 1;
       }
 
-      this.nDimension -= 1;
+      this.nDimensionInternal -= 1;
     }
     return this;
   }
 
   @Override
-  public Tensor<T> squeezeNewTensor() {
-    DenseTensor<T> result = new DenseTensor(this.storage, this.storageOffset(), this.size, this.stride);
+  public Tensor squeezeNewTensor() {
+    DenseTensor result = new DenseTensor(this.storageInternal, this.storageOffset(), this.sizeInternal, this.strideInternal);
     return result.squeeze();
   }
 
   @Override
-  public Tensor<T> view(int[] sizes) {
+  public Tensor view(int[] sizes) {
+    if(!this.isContiguous()){
+      throw new IllegalStateException("current tensor is not contiguous");
+    }
+    if(TensorNumeric.product(sizes) != this.nElement()){
+      throw new IllegalStateException("invalid size eElement");
+    }
+    return new DenseTensor(this.storageInternal, this.storageOffset(), sizes.clone());
+  }
+
+  @Override
+  public Tensor unfold(int dim, int size, int step) {
+    Util.require(this.nDimensionInternal > 0, "cannot unfold an empty tensor");
+    Util.require(dim > 0 && dim <= this.nDimensionInternal, "out of range");
+    Util.require(size <= this.size(dim), "out of range");
+    Util.require(step > 0, "invalid step");
+
+    int[] newSize = new int[this.nDimensionInternal + 1];
+    int[] newStride = new int[this.nDimensionInternal + 1];
+
+    newSize[this.nDimensionInternal] = size;
+    newStride[this.nDimensionInternal] = this.stride(dim);
+
+    int d = 0;
+    while (d < this.nDimensionInternal) {
+      if (d + 1 == dim) {
+        newSize[d] = (this.size(d + 1) - size) / step + 1;
+        newStride[d] = step * this.stride(d + 1);
+      } else {
+        newSize[d] = this.size(d + 1);
+        newStride[d] = this.stride(d + 1);
+      }
+      d = d + 1;
+    }
+
+    return new DenseTensor(this.storageInternal, this.storageOffsetInternal, newSize, newStride, this.dim() + 1);
+  }
+
+  @Override
+  public Tensor repeatTensor(int[] sizes) {
     return null;
   }
 
   @Override
-  public Tensor<T> unfold(int dim, int size, int step) {
-    return null;
+  public Tensor expandAs(Tensor template) {
+    return this.expand(template.size());
   }
 
   @Override
-  public Tensor<T> repeatTensor(int[] sizes) {
-    return null;
+  public Tensor expand(int[] sizes) {
+    Util.require(sizes.length == this.dim(),
+        "the number of dimensions provided must equal ${this.dim()}");
+    int tensorDim = this.dim();
+    int[] tensorStride = this.stride();
+    int[] tensorSize = this.size();
+
+    int i = 0;
+    while (i < tensorDim) {
+      if (tensorSize[i] == 1) {
+        tensorSize[i] = sizes[i];
+        tensorStride[i] = 0;
+      } else if (tensorSize[i] != sizes[i]) {
+        throw new UnsupportedOperationException(
+            "incorrect size: only supporting singleton expansion (size=1)");
+      }
+      i += 1;
+    }
+
+    return set(this.storage(), this.storageOffset(), tensorSize, tensorStride);
   }
 
   @Override
-  public Tensor<T> expandAs(Tensor<T> template) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T> expand(int[] sizes) {
-    return null;
-  }
-
-  @Override
-  public Tensor<T>[] split(int size, int dim) {
+  public Tensor[] split(int size, int dim) {
     return new Tensor[0];
   }
 
   @Override
-  public Tensor<T>[] split(int dim) {
+  public Tensor[] split(int dim) {
     return new Tensor[0];
   }
 
   @Override
-  public boolean diff(Tensor<T> other, int count, boolean reverse) {
+  public boolean diff(Tensor other, int count, boolean reverse) {
     return false;
   }
 
   @Override
-  public Tensor<T> addSingletonDimension(Tensor<T> t, int dim) {
+  public Tensor addSingletonDimension(Tensor t, int dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> addMultiDimension(Tensor<T> t, int[] dim) {
+  public Tensor addMultiDimension(Tensor t, int[] dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> reshape(int sizes) {
-    return null;
+  public Tensor reshape(int[] sizes) {
+    Util.require(TensorNumeric.product(sizes) == this.nElement(),
+        "DenseTensor: nElement of this tensor is not equal to nElement specified by sizes");
+    DenseTensor result = new DenseTensor();
+    result.resize(sizes);
+    result.copy(this);
+    return result;
   }
 
   @Override
-  public Tensor<T> save(String path, boolean overWrite) {
-    return null;
+  public Tensor save(String path, boolean overWrite) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public TensorNumeric<T> getTensorNumeric() {
+  public TensorNumeric getTensorNumeric() {
     return null;
   }
 
   @Override
-  public T[] toArray() {
-    return null;
+  public double[] toArray() {
+    Util.require(this.dim() == 1, "toArray only support 1D tensor");
+    int n = this.nElement();
+    double[] array = new double[n];
+        int i = 0;
+    while(i < n) {
+      array[i] = this.valueAt(i + 1);
+      i += 1;
+    }
+
+    return array;
   }
 
   @Override
-  public Tensor<T> addCopy(T s) {
+  public Tensor addCopy(double s) {
     return null;
   }
 
   @Override
-  public Tensor<T> addCopy(Tensor<T> t) {
+  public Tensor addCopy(Tensor t) {
     return null;
   }
 
   @Override
-  public Tensor<T> subCopy(T s) {
+  public Tensor subCopy(double s) {
     return null;
   }
 
   @Override
-  public Tensor<T> subCopy(Tensor<T> t) {
+  public Tensor subCopy(Tensor t) {
     return null;
   }
 
   @Override
-  public Tensor<T> divCopy(T s) {
+  public Tensor divCopy(double s) {
     return null;
   }
 
   @Override
-  public Tensor<T> divCopy(Tensor<T> t) {
+  public Tensor divCopy(Tensor t) {
     return null;
   }
 
   @Override
-  public Tensor<T> mulCopy(T s) {
+  public Tensor mulCopy(double s) {
     return null;
   }
 
   @Override
-  public Tensor<T> mulCopy(Tensor<T> t) {
+  public Tensor mulCopy(Tensor t) {
     return null;
   }
 
   @Override
-  public T sum() {
+  public double sum() {
     return null;
   }
 
   @Override
-  public T prod() {
+  public double prod() {
     return null;
   }
 
   @Override
-  public Tensor<T> prod(Tensor<T> x, int dim) {
+  public Tensor prod(Tensor x, int dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> sum(int dim) {
+  public Tensor sum(int dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> sum(Tensor<T> x, int dim) {
+  public Tensor sum(Tensor x, int dim) {
     return null;
   }
 
   @Override
-  public T mean() {
+  public double mean() {
     return null;
   }
 
   @Override
-  public Tensor<T> mean(int dim) {
+  public Tensor mean(int dim) {
     return null;
   }
 
   @Override
-  public T max() {
+  public double max() {
     return null;
   }
 
   @Override
-  public TensorPair<T, T> max(int dim) {
+  public TensorPair<double, double> max(int dim) {
     return null;
   }
 
   @Override
-  public TensorPair<T, T> max(Tensor<T> values, Tensor<T> indices, int dim) {
+  public TensorPair<double, double> max(Tensor values, Tensor indices, int dim) {
     return null;
   }
 
   @Override
-  public T min() {
+  public double min() {
     return null;
   }
 
   @Override
-  public TensorPair<T, T> min(int dim) {
+  public TensorPair<double, double> min(int dim) {
     return null;
   }
 
   @Override
-  public TensorPair<T, T> min(Tensor<T> values, Tensor<T> indices, int dim) {
+  public TensorPair<double, double> min(Tensor values, Tensor indices, int dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> scatter(int dim, Tensor<T> index, Tensor<T> src) {
+  public Tensor scatter(int dim, Tensor index, Tensor src) {
     return null;
   }
 
   @Override
-  public Tensor<T> gather(int dim, Tensor<T> index, Tensor<T> src) {
+  public Tensor gather(int dim, Tensor index, Tensor src) {
     return null;
   }
 
   @Override
-  public Tensor<T> conv2(Tensor<T> kernel, char vf) {
+  public Tensor conv2(Tensor kernel, char vf) {
     return null;
   }
 
   @Override
-  public Tensor<T> xcorr2(Tensor<T> kernel, char vf) {
+  public Tensor xcorr2(Tensor kernel, char vf) {
     return null;
   }
 
   @Override
-  public Tensor<T> sqrt() {
+  public Tensor sqrt() {
     return null;
   }
 
   @Override
-  public Tensor<T> tanh() {
+  public Tensor tanh() {
     return null;
   }
 
   @Override
-  public Tensor<T> abs() {
+  public Tensor abs() {
     return null;
   }
 
   @Override
-  public Tensor<T> add(T value, Tensor<T> y) {
+  public Tensor add(double value, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> add(Tensor<T> y) {
+  public Tensor add(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> add(Tensor<T> x, T value, Tensor<T> y) {
+  public Tensor add(Tensor x, double value, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> add(T value) {
+  public Tensor add(double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> add(Tensor<T> x, Tensor<T> y) {
+  public Tensor add(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public T dot(Tensor<T> y) {
+  public double dot(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmax(T value) {
+  public Tensor cmax(double value) {
     return null;
   }
 
   @Override
-  public T dist(Tensor<T> y, int norm) {
+  public double dist(Tensor y, int norm) {
     return null;
   }
 
   @Override
-  public Tensor<T> addcmul(T value, Tensor<T> tensor1, Tensor<T> tensor2) {
+  public Tensor addcmul(double value, Tensor tensor1, Tensor tensor2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addcmul(Tensor<T> tensor1, Tensor<T> tensor2) {
+  public Tensor addcmul(Tensor tensor1, Tensor tensor2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addcdiv(T value, Tensor<T> tensor1, Tensor<T> tensor2) {
+  public Tensor addcdiv(double value, Tensor tensor1, Tensor tensor2) {
     return null;
   }
 
   @Override
-  public Tensor<T> sub(T value, Tensor<T> y) {
+  public Tensor sub(double value, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> sub(Tensor<T> x, T value, Tensor<T> y) {
+  public Tensor sub(Tensor x, double value, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> sub(Tensor<T> y) {
+  public Tensor sub(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> sub(Tensor<T> x, Tensor<T> y) {
+  public Tensor sub(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> sub(T value) {
+  public Tensor sub(double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmul(Tensor<T> y) {
+  public Tensor cmul(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmul(Tensor<T> x, Tensor<T> y) {
+  public Tensor cmul(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cdiv(Tensor<T> y) {
+  public Tensor cdiv(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cdiv(Tensor<T> x, Tensor<T> y) {
+  public Tensor cdiv(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> mul(T value) {
+  public Tensor mul(double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> div(T value) {
+  public Tensor div(double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> div(Tensor<T> y) {
+  public Tensor div(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> mul(Tensor<T> x, T value) {
+  public Tensor mul(Tensor x, double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmm(T v1, Tensor<T> m, T v2, Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor addmm(double v1, Tensor m, double v2, Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmm(Tensor<T> m, Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor addmm(Tensor m, Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmm(Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor addmm(Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmm(T v2, Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor addmm(double v2, Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmm(T v1, T v2, Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor addmm(double v1, double v2, Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> mm(Tensor<T> mat1, Tensor<T> mat2) {
+  public Tensor mm(Tensor mat1, Tensor mat2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addr(Tensor<T> t1, Tensor<T> t2) {
+  public Tensor addr(Tensor t1, Tensor t2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addr(T v1, Tensor<T> t1, Tensor<T> t2) {
+  public Tensor addr(double v1, Tensor t1, Tensor t2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addr(T v1, Tensor<T> t1, T v2, Tensor<T> t2) {
+  public Tensor addr(double v1, Tensor t1, double v2, Tensor t2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addr(T v1, Tensor<T> t1, T v2, Tensor<T> t2, Tensor<T> t3) {
+  public Tensor addr(double v1, Tensor t1, double v2, Tensor t2, Tensor t3) {
     return null;
   }
 
   @Override
-  public T uniform(T... args) {
+  public double uniform(double... args) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmv(T beta, Tensor<T> vec1, T alpha, Tensor<T> mat, Tensor<T> vec2) {
+  public Tensor addmv(double beta, Tensor vec1, double alpha, Tensor mat, Tensor vec2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmv(T beta, T alpha, Tensor<T> mat, Tensor<T> vec2) {
+  public Tensor addmv(double beta, double alpha, Tensor mat, Tensor vec2) {
     return null;
   }
 
   @Override
-  public Tensor<T> addmv(T alpha, Tensor<T> mat, Tensor<T> vec2) {
+  public Tensor addmv(double alpha, Tensor mat, Tensor vec2) {
     return null;
   }
 
   @Override
-  public Tensor<T> mv(Tensor<T> mat, Tensor<T> vec2) {
+  public Tensor mv(Tensor mat, Tensor vec2) {
     return null;
   }
 
   @Override
-  public Tensor<T> baddbmm(T beta, Tensor<T> m, T alpha, Tensor<T> batch1, Tensor<T> batch2) {
+  public Tensor baddbmm(double beta, Tensor m, double alpha, Tensor batch1, Tensor batch2) {
     return null;
   }
 
   @Override
-  public Tensor<T> baddbmm(T beta, T alpha, Tensor<T> batch1, Tensor<T> batch2) {
+  public Tensor baddbmm(double beta, double alpha, Tensor batch1, Tensor batch2) {
     return null;
   }
 
   @Override
-  public Tensor<T> baddbmm(T alpha, Tensor<T> batch1, Tensor<T> batch2) {
+  public Tensor baddbmm(double alpha, Tensor batch1, Tensor batch2) {
     return null;
   }
 
   @Override
-  public Tensor<T> bmm(Tensor<T> batch1, Tensor<T> batch2) {
+  public Tensor bmm(Tensor batch1, Tensor batch2) {
     return null;
   }
 
   @Override
-  public Tensor<T> pow(Tensor<T> y, T n) {
+  public Tensor pow(Tensor y, double n) {
     return null;
   }
 
   @Override
-  public Tensor<T> pow(T n) {
+  public Tensor pow(double n) {
     return null;
   }
 
   @Override
-  public Tensor<T> square() {
+  public Tensor square() {
     return null;
   }
 
   @Override
-  public Tensor<T> floor(Tensor<T> y) {
+  public Tensor floor(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> floor() {
+  public Tensor floor() {
     return null;
   }
 
   @Override
-  public Tensor<T> ceil() {
+  public Tensor ceil() {
     return null;
   }
 
   @Override
-  public Tensor<T> inv() {
+  public Tensor inv() {
     return null;
   }
 
   @Override
-  public Tensor<T> erf() {
+  public Tensor erf() {
     return null;
   }
 
   @Override
-  public Tensor<T> erfc() {
+  public Tensor erfc() {
     return null;
   }
 
   @Override
-  public Tensor<T> logGamma() {
+  public Tensor logGamma() {
     return null;
   }
 
   @Override
-  public Tensor<T> digamma() {
+  public Tensor digamma() {
     return null;
   }
 
   @Override
-  public TensorPair<T, T> topk(int k, int dim, boolean increase,
-                               Tensor<T> result, Tensor<T> indices, boolean sortedResult) {
+  public TensorPair<double, double> topk(int k, int dim, boolean increase,
+                               Tensor result, Tensor indices, boolean sortedResult) {
     return null;
   }
 
   @Override
-  public Tensor<T> log(Tensor<T> y) {
+  public Tensor log(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> exp(Tensor<T> y) {
+  public Tensor exp(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> sqrt(Tensor<T> y) {
+  public Tensor sqrt(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> tanh(Tensor<T> y) {
+  public Tensor tanh(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> log1p(Tensor<T> y) {
+  public Tensor log1p(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> log() {
+  public Tensor log() {
     return null;
   }
 
   @Override
-  public Tensor<T> exp() {
+  public Tensor exp() {
     return null;
   }
 
   @Override
-  public Tensor<T> log1p() {
+  public Tensor log1p() {
     return null;
   }
 
   @Override
-  public Tensor<T> abs(Tensor<T> x) {
+  public Tensor abs(Tensor x) {
     return null;
   }
 
   @Override
-  public Tensor<T> norm(Tensor<T> y, int value, int dim) {
+  public Tensor norm(Tensor y, int value, int dim) {
     return null;
   }
 
   @Override
-  public Tensor<T> gt(Tensor<T> x, Tensor<T> y) {
+  public Tensor gt(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> lt(Tensor<T> x, Tensor<T> y) {
+  public Tensor lt(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> le(Tensor<T> x, Tensor<T> y) {
+  public Tensor le(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> eq(Tensor<T> x, T y) {
+  public Tensor eq(Tensor x, double y) {
     return null;
   }
 
   @Override
-  public Tensor<T> maskedFill(Tensor<T> mask, T e) {
+  public Tensor maskedFill(Tensor mask, double e) {
     return null;
   }
 
   @Override
-  public Tensor<T> maskedCopy(Tensor<T> mask, Tensor<T> y) {
+  public Tensor maskedCopy(Tensor mask, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> maskedSelect(Tensor<T> mask, Tensor<T> y) {
+  public Tensor maskedSelect(Tensor mask, Tensor y) {
     return null;
   }
 
   @Override
-  public T norm(int value) {
+  public double norm(int value) {
     return null;
   }
 
   @Override
-  public Tensor<T> sign() {
+  public Tensor sign() {
     return null;
   }
 
   @Override
-  public Tensor<T> ge(Tensor<T> x, double value) {
+  public Tensor ge(Tensor x, double value) {
     return null;
   }
 
   @Override
-  public Tensor<T> indexAdd(int dim, Tensor<T> index, Tensor<T> y) {
+  public Tensor indexAdd(int dim, Tensor index, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> index(int dim, Tensor<T> index, Tensor<T> y) {
+  public Tensor index(int dim, Tensor index, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmax(Tensor<T> y) {
+  public Tensor cmax(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmin(Tensor<T> y) {
+  public Tensor cmin(Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmax(Tensor<T> x, Tensor<T> y) {
+  public Tensor cmax(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> cmin(Tensor<T> x, Tensor<T> y) {
+  public Tensor cmin(Tensor x, Tensor y) {
     return null;
   }
 
   @Override
-  public Tensor<T> range(double xmin, double xmax, int step) {
+  public Tensor range(double xmin, double xmax, int step) {
     return null;
   }
 
   @Override
-  public Tensor<T> negative(Tensor<T> x) {
+  public Tensor negative(Tensor x) {
     return null;
   }
 
   @Override
-  public T sumSquare() {
+  public double sumSquare() {
     return null;
   }
 
   @Override
-  public Tensor<T> clamp(double min, double max) {
+  public Tensor clamp(double min, double max) {
     return null;
+  }
+
+  private void resizeAs(DenseTensor self, Tensor src) {
+    if (!isSameSizeAs(self, src)) rawResize(self, src.nDimension(), src.size(), null)
+  }
+
+  private Tensor resize(DenseTensor self,int[] sizes,int[] strides) {
+    if(sizes == null){
+     throw new IllegalStateException("Sizes cannot be null");
+    }
+    if (strides != null) {
+      if(sizes.length == strides.length){
+        throw new IllegalStateException("invalid stride");
+      }
+    }
+    return rawResize(self, sizes.length, sizes, strides);
+  }
+
+  private boolean isSameSizeAs(DenseTensor self,Tensor src) {
+    if (self.nDimensionInternal != src.nDimension()) {
+      return false;
+    }
+
+    if (self.isEmpty() != src.isEmpty()) {
+      return false;
+    }
+
+    int d = 0;
+    while (d < self.nDimensionInternal) {
+      if (self.size(d + 1) != src.size(d + 1)) {
+        return false;
+      }
+      d += 1;
+    }
+    return true;
+  }
+
+  private DenseTensor rawSet(DenseTensor self, ArrayDoubleStorage newStorage, int newStorageOffset, int nDim,
+                             int[] newSize, int[] newStride){
+    Util.require(newStorageOffset >= 0, "Tensor: invalid storage offset");
+    self.storageInternal = newStorage;
+    self.storageOffsetInternal = newStorageOffset;
+    return rawResize(self, nDim, newSize, newStride);
+  }
+  private DenseTensor rawResize(DenseTensor self, int nDim, int[] newSize, int[] newStride) {
+    // resize as a scalar
+    if (nDim == 0 && newSize.length == 0) {
+      self.sizeInternal = new int[0];
+      self.strideInternal = new int[0];
+      self.nDimensionInternal = nDim;
+      int totalSize = 1;
+      if (self.storageInternal == null ) {
+        self.storageInternal = new ArrayDoubleStorage(new double[totalSize + self.storageOffsetInternal]);
+      } else if (totalSize + self.storageOffsetInternal > self.storageInternal.length()) {
+        self.storageInternal.resize(totalSize + self.storageOffsetInternal);
+      }
+      return self;
+    }
+
+    boolean hasCorrectSize = true;
+    int nDim_ = 0;
+    int d = 0;
+    while (d < nDim) {
+      nDim_ = nDim_ + 1;
+      if (self.nDimensionInternal > d && newSize[d] != self.sizeInternal[d]) {
+        hasCorrectSize = false;
+      }
+      if (self.nDimensionInternal > d && newStride != null && newStride[d] >= 0 &&
+          newStride[d] != self.strideInternal[d]) {
+        hasCorrectSize = false;
+      }
+      d += 1;
+    }
+
+    if (nDim_ != self.nDimensionInternal) hasCorrectSize = false;
+
+    if (hasCorrectSize) return self;
+
+    if (nDim_ > 0) {
+      if (nDim_ != self.nDimensionInternal) {
+        self.sizeInternal = new int[nDim];
+            self.strideInternal = new int[nDim];
+            self.nDimensionInternal = nDim;
+      }
+
+      int totalSize = 1;
+      d = self.nDimensionInternal - 1;
+      while (d >= 0) {
+        self.sizeInternal[d] = newSize[d];
+        if (newStride != null && newStride[d] >= 0) {
+          self.strideInternal[d] = newStride[d];
+        } else {
+          if (d == self.nDimensionInternal - 1) {
+            self.strideInternal[d] = 1;
+          } else {
+            self.strideInternal[d] = self.sizeInternal[d + 1] * self.strideInternal[d + 1];
+          }
+        }
+        totalSize = totalSize + (self.sizeInternal[d] - 1) * self.strideInternal[d];
+
+        d -= 1;
+      }
+      if (totalSize + self.storageOffsetInternal > 0) {
+        if (self.storageInternal == null ) {
+          self.storageInternal = new ArrayDoubleStorage(new double[totalSize + self.storageOffsetInternal]);
+        } else if (totalSize + self.storageOffsetInternal > self.storageInternal.length()) {
+          self.storageInternal.resize(totalSize + self.storageOffsetInternal);
+        }
+      }
+    } else {
+      self.nDimensionInternal = 0;
+    }
+
+    return self;
   }
+
 }
