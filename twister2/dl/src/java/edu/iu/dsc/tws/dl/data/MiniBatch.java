@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.dl.data;
 import java.io.Serializable;
 import java.util.List;
 
-public interface MiniBatch<T> extends Serializable {
+public interface MiniBatch extends Serializable {
   /**
    * Get the number of samples in this MiniBatch
    *
@@ -29,7 +29,7 @@ public interface MiniBatch<T> extends Serializable {
    * @param length length
    * @return A smaller MiniBatch
    */
-  MiniBatch<T> slice(int offset, int length);
+  MiniBatch slice(int offset, int length);
 
   /**
    * Get input in this MiniBatch.
@@ -51,5 +51,5 @@ public interface MiniBatch<T> extends Serializable {
    * @param samples a set of Sample
    * @return self
    */
-  MiniBatch<T> set(List<Sample<T>> samples);
+  MiniBatch set(List<Sample> samples);
 }

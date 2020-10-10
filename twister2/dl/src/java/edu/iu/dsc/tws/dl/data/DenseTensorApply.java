@@ -16,21 +16,26 @@ import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.Util;
 
-public class DenseTensorApply {
-  public static void apply1(DenseTensor tensor, TensorFunc2 func){
-    if(tensor.isEmpty()){
+@SuppressWarnings("LocalVariableName")
+public final class DenseTensorApply {
+
+  private DenseTensorApply() {
+  }
+
+  public static void apply1(DenseTensor tensor, TensorFunc2 func) {
+    if (tensor.isEmpty()) {
       return;
     }
 
     double[] data = tensor.storage().toDoubleArray();
     int index = tensor.storageOffset() - 1;
 
-    if(tensor.isScalar()){
+    if (tensor.isScalar()) {
       func.apply(data, index);
       return;
     }
 
-    int stride = getStride(this);
+    int stride = getStride(tensor);
     int[] meta = getLargestContiguousSize(tensor);
     int[] counter = getCounter(meta[1]);
     // store if finished and new offset
@@ -60,7 +65,7 @@ public class DenseTensorApply {
    * @param tensor2 the tensor
    * @param func    (tensor1Data, tensor1Offset, tensor2Data, tensor2Offset)
    */
-  public static void apply2(DenseTensor tensor1, Tensor tensor2, TensorFunc4 func){
+  public static void apply2(DenseTensor tensor1, Tensor tensor2, TensorFunc4 func) {
     Util.require(tensor1.nElement() == tensor2.nElement(),
         "inconsistent tensor size: ${tensor1.nElement()} == ${tensor2.nElement()}");
 
@@ -84,8 +89,8 @@ public class DenseTensorApply {
     int tensor2Offset = tensor2.storageOffset() - 1;
 
     boolean adjacent = false;
-    if (tensor1.nDimension() == 1 && tensor2.nDimension() == 1 && tensor1.stride(1) == 1 &&
-        tensor2.stride(1) == 1) {
+    if (tensor1.nDimension() == 1 && tensor2.nDimension() == 1 && tensor1.stride(1) == 1
+        && tensor2.stride(1) == 1) {
       adjacent = true;
     }
     if (tensor1.nDimension() == 2 && tensor2.nDimension() == 2) {
@@ -144,7 +149,8 @@ public class DenseTensorApply {
     }
   }
 
-  private static void updateCounter(Tensor tensor, int[] counter, int offset, int dim, int[] counterMeta) {
+  private static void updateCounter(Tensor tensor, int[] counter, int offset, int dim,
+                                    int[] counterMeta) {
     if (dim == 0) {
       return;
     }

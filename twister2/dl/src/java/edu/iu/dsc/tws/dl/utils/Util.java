@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.dl.utils;
 
 public class Util {
 
-  public static void require(boolean satisfied, String message){
-    if(!satisfied){
+  public static void require(boolean satisfied, String message) {
+    if (!satisfied) {
       throw new IllegalStateException(message);
     }
   }
 
-  public static void require(boolean satisfied){
-    if(!satisfied){
+  public static void require(boolean satisfied) {
+    if (!satisfied) {
       throw new IllegalStateException("Requirement not met");
     }
   }

@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.dl.data.Tensor;
  *
  * @tparam T Numeric type
  */
-public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
+public class ArrayTensorMiniBatch implements MiniBatch {
   //TODO: add padding support
 //  featurePaddingParam feature padding strategy, see
 //                             [[com.intel.analytics.bigdl.dataset.PaddingParam]] for details.
@@ -38,12 +38,12 @@ public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
   /**
    * a set of input tensor
    */
-  private Tensor<T>[] inputData;
+  private Tensor[] inputData;
 
   /**
    * a set of target tensor
    */
-  private Tensor<T>[] targetData;
+  private Tensor[] targetData;
 
   private Activity input;
 
@@ -59,7 +59,7 @@ public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
     initInput();
   }
 
-  public ArrayTensorMiniBatch(Tensor<T>[] input, Tensor<T>[] target) {
+  public ArrayTensorMiniBatch(Tensor[] input, Tensor[] target) {
     this.inputData = input;
     this.targetData = target;
     initInput();
@@ -75,9 +75,9 @@ public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
   }
 
   @Override
-  public MiniBatch<T> slice(int offset, int length) {
-    Tensor<T>[] inputs = new Tensor[inputData.length];
-    Tensor<T>[] targets = new Tensor[targetData.length];
+  public MiniBatch slice(int offset, int length) {
+    Tensor[] inputs = new Tensor[inputData.length];
+    Tensor[] targets = new Tensor[targetData.length];
     int b = 0;
     while (b < inputData.length) {
       inputs[b] = inputData[b].narrow(1, offset, length);
@@ -88,7 +88,7 @@ public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
       targets[b] = targetData[b].narrow(1, offset, length);
       b += 1;
     }
-    return new ArrayTensorMiniBatch<T>(inputs, targets);
+    return new ArrayTensorMiniBatch(inputs, targets);
   }
 
   @Override
@@ -102,7 +102,7 @@ public class ArrayTensorMiniBatch<T> implements MiniBatch<T> {
   }
 
   @Override
-  public MiniBatch<T> set(List<Sample<T>> samples) {
+  public MiniBatch set(List<Sample> samples) {
     throw new UnsupportedOperationException("Operation not supported");
   }
 

@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.dl.utils.Util;
 
 import java.util.Arrays;
 
+@SuppressWarnings({"ChainingConstructorIgnoresParameter", "NeedBraces", "LocalVariableName"})
 public class DenseTensor implements Tensor, TensorMath {
 
   private ArrayDoubleStorage storageInternal;
@@ -28,20 +29,22 @@ public class DenseTensor implements Tensor, TensorMath {
   private int[] strideInternal;
   private int nDimensionInternal;
 
-  public DenseTensor(){
+  public DenseTensor() {
     this(null, 0, null, null, 0);
   }
 
-  public DenseTensor(int dim1){
+  public DenseTensor(int dim1) {
     this(new ArrayDoubleStorage(dim1), 0, new int[]{dim1}, new int[]{1}, 1);
   }
 
-  public DenseTensor(int dim1, int dim2){
-    this(new ArrayDoubleStorage(dim1 * dim2), 0, new int[]{dim1, dim2}, new int[]{dim2, 1}, 2);
+  public DenseTensor(int dim1, int dim2) {
+    this(new ArrayDoubleStorage(dim1 * dim2), 0, new int[]{dim1, dim2},
+        new int[]{dim2, 1}, 2);
   }
 
-  public DenseTensor(int dim1, int dim2, int dim3){
-    this(new ArrayDoubleStorage(dim1), 0, new int[]{dim1, dim2, dim3}, new int[]{dim3 * dim2, dim3, 1}, 3);
+  public DenseTensor(int dim1, int dim2, int dim3) {
+    this(new ArrayDoubleStorage(dim1), 0, new int[]{dim1, dim2, dim3},
+        new int[]{dim3 * dim2, dim3, 1}, 3);
   }
 
   public DenseTensor(ArrayDoubleStorage storage) {
@@ -49,7 +52,8 @@ public class DenseTensor implements Tensor, TensorMath {
     initWithStorage(storage, 0, new int[storage.length()], new int[1]);
   }
 
-  private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size, int[] stride, int nDimension) {
+  private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size,
+                      int[] stride, int nDimension) {
     this.storageInternal = storage;
     this.storageOffsetInternal = storageOffset;
     this.sizeInternal = size;
@@ -66,7 +70,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   public DenseTensor(ArrayDoubleStorage newStorage, int storageOffset, int[] size) {
     this(newStorage, 0, null, null, 0);
-    if(newStorage != null){
+    if (newStorage != null) {
       int tempstorageOffset = storageOffset - 1;
       int[] tempSize = (size == null) ? new int[newStorage.length()] : size;
       int[] tempStride = (size == null) ? null : strideInternal;
@@ -81,7 +85,7 @@ public class DenseTensor implements Tensor, TensorMath {
     int d = other.nDimension();
     // Check dimensions
     boolean broadcasting = false;
-    while(d > 0) {
+    while (d > 0) {
       if (broadcasting) {
         if (other.size(d) != 1) return false;
       } else if (tensor.size(delta + d) != other.size(d)) {
@@ -94,20 +98,21 @@ public class DenseTensor implements Tensor, TensorMath {
     return true;
   }
 
-  private void initWithStorage(ArrayDoubleStorage newStorage, int newStorageOffset, int[] newSize, int[] newStride){
+  private void initWithStorage(ArrayDoubleStorage newStorage, int newStorageOffset,
+                               int[] newSize, int[] newStride) {
     if (newSize != null && newStride != null) {
-      if(newSize.length == newStride.length){
+      if (newSize.length == newStride.length) {
         throw new IllegalArgumentException("inconsistent size");
       }
     }
     this.storageInternal = newStorage;
     this.storageOffsetInternal = newStorageOffset;
 
-    if(newSize != null){
+    if (newSize != null) {
       this.nDimensionInternal = newSize.length;
-    }else if(newStride != null){
+    } else if (newStride != null) {
       this.nDimensionInternal = newStride.length;
-    }else{
+    } else {
       this.nDimensionInternal = 0;
     }
     rawResize(this, nDimensionInternal, newSize, newStride);
@@ -145,9 +150,9 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public int[] size() {
-    if(sizeInternal == null){
+    if (sizeInternal == null) {
       return null;
-    }else{
+    } else {
       return Arrays.copyOfRange(sizeInternal, 0, nDimensionInternal);
     }
   }
@@ -159,9 +164,9 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public int[] stride() {
-    if(strideInternal == null){
+    if (strideInternal == null) {
       return null;
-    }else{
+    } else {
       return Arrays.copyOfRange(strideInternal, 0, nDimensionInternal);
     }
   }
@@ -195,7 +200,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor randn() {
-    return this.randn(0.0, 1.0) ;
+    return this.randn(0.0, 1.0);
   }
 
   @Override
@@ -217,7 +222,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor rand() {
-    return this.rand(0.0,1.0);
+    return this.rand(0.0, 1.0);
   }
 
   @Override
@@ -245,7 +250,7 @@ public class DenseTensor implements Tensor, TensorMath {
   @Override
   public Tensor transpose(int dim1, int dim2) {
     DenseTensor result = newWithTensor(this);
-    transpose(result, null, dim1 - 1, dim2 -1);
+    transpose(result, null, dim1 - 1, dim2 - 1);
     return result;
   }
 
@@ -276,11 +281,12 @@ public class DenseTensor implements Tensor, TensorMath {
     }
   }
 
-  private DenseTensor newWithTensor(DenseTensor old){
+  private DenseTensor newWithTensor(DenseTensor old) {
     DenseTensor newTensor = new DenseTensor();
-    return newTensor.rawSet(newTensor, old.storage(), old.storageOffset(), old.nDimension(), old.size(),
-        old.stride());
+    return newTensor.rawSet(newTensor, old.storage(), old.storageOffset(), old.nDimension(),
+        old.size(), old.stride());
   }
+
   @Override
   public Tensor t() {
     Util.require(this.nDimension() == 2, "t() is only for 2D tensor");
@@ -377,7 +383,8 @@ public class DenseTensor implements Tensor, TensorMath {
     if (_index < 0) _index = this.sizeInternal[0] + _index + 1;
     Util.require(_index >= 0 && _index < this.sizeInternal[0], "out of range");
     if (this.nDimension() == 1) {
-      this.storageInternal.update(this.storageOffsetInternal + _index * this.strideInternal[0], value);
+      this.storageInternal.update(this.storageOffsetInternal + _index * this.strideInternal[0],
+          value);
     } else {
       DenseTensor tensor = newWithTensor(this);
       narrow(tensor, null, 0, _index, 1);
@@ -494,7 +501,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
 
   @Override
-  public Tensor clone(){
+  public Tensor clone() {
     DenseTensor tensor = new DenseTensor();
     resizeAs(tensor, this);
     copy(tensor, this);
@@ -576,7 +583,7 @@ public class DenseTensor implements Tensor, TensorMath {
         n = n * this.sizeInternal[d];
         d += 1;
       }
-     return n;
+      return n;
     }
   }
 
@@ -627,7 +634,8 @@ public class DenseTensor implements Tensor, TensorMath {
     set(self, src);
 
     if (firstIndex > 0) {
-      self.storageOffsetInternal = self.storageOffsetInternal + firstIndex * self.strideInternal[dimension];
+      self.storageOffsetInternal = self.storageOffsetInternal
+          + firstIndex * self.strideInternal[dimension];
     }
     self.sizeInternal[dimension] = size;
   }
@@ -646,9 +654,9 @@ public class DenseTensor implements Tensor, TensorMath {
     }
     this.storageInternal = (ArrayDoubleStorage) storage;
     this.storageOffsetInternal = storageOffset;
-    if(sizes == null){
+    if (sizes == null) {
       return rawResize(this, 0, sizes, strides);
-    }else{
+    } else {
       return rawResize(this, sizes.length, sizes, strides);
     }
   }
@@ -695,16 +703,16 @@ public class DenseTensor implements Tensor, TensorMath {
       return;
     }
     if (self.isContiguous() && src.isContiguous() && sameStride(self.stride(), src.stride())) {
-      System.arraycopy(src.storage().toDoubleArray(), src.storageOffset() - 1, self.storage().toDoubleArray(),
-          self.storageOffset() - 1, self.nElement());
+      System.arraycopy(src.storage().toDoubleArray(), src.storageOffset() - 1,
+          self.storage().toDoubleArray(), self.storageOffset() - 1, self.nElement());
       return;
-    }else{
+    } else {
       throw new UnsupportedOperationException("non Contiguous not supported");
     }
   }
 
   private boolean sameStride(int[] l, int[] r) {
-    if (l.length != r.length){
+    if (l.length != r.length) {
       return false;
     }
 
@@ -740,13 +748,13 @@ public class DenseTensor implements Tensor, TensorMath {
     }
 
     this.nDimensionInternal = ndim;
-    return  this;
+    return this;
   }
 
   @Override
   public Tensor squeeze(int dim) {
-    if(dim >= 0 && dim < this.nDimensionInternal){
-     throw new IllegalArgumentException("dimension out of range");
+    if (dim >= 0 && dim < this.nDimensionInternal) {
+      throw new IllegalArgumentException("dimension out of range");
     }
     if (this.size(dim) == 1 && this.nDimensionInternal > 1) {
       int d = dim;
@@ -769,10 +777,10 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor view(int[] sizes) {
-    if(!this.isContiguous()){
+    if (!this.isContiguous()) {
       throw new IllegalStateException("current tensor is not contiguous");
     }
-    if(TensorNumeric.product(sizes) != this.nElement()){
+    if (TensorNumeric.product(sizes) != this.nElement()) {
       throw new IllegalStateException("invalid size eElement");
     }
     return new DenseTensor(this.storageInternal, this.storageOffset(), sizes.clone());
@@ -803,7 +811,8 @@ public class DenseTensor implements Tensor, TensorMath {
       d = d + 1;
     }
 
-    return new DenseTensor(this.storageInternal, this.storageOffsetInternal, newSize, newStride, this.dim() + 1);
+    return new DenseTensor(this.storageInternal, this.storageOffsetInternal, newSize,
+        newStride, this.dim() + 1);
   }
 
   @Override
@@ -889,8 +898,8 @@ public class DenseTensor implements Tensor, TensorMath {
     Util.require(this.dim() == 1, "toArray only support 1D tensor");
     int n = this.nElement();
     double[] array = new double[n];
-        int i = 0;
-    while(i < n) {
+    int i = 0;
+    while (i < n) {
       array[i] = this.valueAt(i + 1);
       i += 1;
     }
@@ -922,7 +931,8 @@ public class DenseTensor implements Tensor, TensorMath {
           result.storage().toDoubleArray(), result.storageOffset() - 1, 1);
       return result;
     } else {
-      TensorFunc4 addFunc = (data1, offset1, data2, offset2) ->  data1[offset1] = data1[offset1] + data2[offset2];
+      TensorFunc4 addFunc = (data1, offset1, data2, offset2)
+          -> data1[offset1] = data1[offset1] + data2[offset2];
       DenseTensorApply.apply2(result, t, addFunc);
       return result;
     }
@@ -945,7 +955,8 @@ public class DenseTensor implements Tensor, TensorMath {
     result.resizeAs(this);
     result.copy(this);
 
-    TensorFunc4 subFunc = (data1, offset1, data2, offset2) ->  data1[offset1] = data1[offset1] - data2[offset2];
+    TensorFunc4 subFunc = (data1, offset1, data2, offset2)
+        -> data1[offset1] = data1[offset1] - data2[offset2];
     DenseTensorApply.apply2(result, t, subFunc);
     return result;
   }
@@ -965,7 +976,7 @@ public class DenseTensor implements Tensor, TensorMath {
     DenseTensor result = new DenseTensor();
     result.resizeAs(this);
     result.copy(this);
-    TensorFunc2 func = (data, index) -> data[index] = data[index]/s;
+    TensorFunc2 func = (data, index) -> data[index] = data[index] / s;
 
     DenseTensorApply.apply1(result, func);
     return result;
@@ -977,7 +988,8 @@ public class DenseTensor implements Tensor, TensorMath {
     result.resizeAs(this);
     result.copy(this);
 
-    TensorFunc4 func = (data1, offset1, data2, offset2) ->  data1[offset1] = data1[offset1]/data2[offset2];
+    TensorFunc4 func = (data1, offset1, data2, offset2)
+        -> data1[offset1] = data1[offset1] / data2[offset2];
     DenseTensorApply.apply2(result, t, func);
     return result;
   }
@@ -995,44 +1007,27 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor mulCopy(Tensor t) {
-    if (this.nDimension() == 1 && t.nDimension() == 1) {
-      Util.require(this.size(1) == t.size(1), "vector size not match");
-
-      double result = TensorNumeric.dot(this.nElement(), this.storage().toDoubleArray(), this.storageOffset() - 1,
-          this.stride(1), t.storage().toDoubleArray(), t.storageOffset() - 1, t.stride(1));
-      new DenseTensor(new ArrayDoubleStorage(new double[]{result}));
-    } else if (this.nDimension() == 2 && t.nDimension() == 1) {
-      DenseTensor result = new DenseTensor(this.size(1));
-      DenseTensorBLAS.gemv(1.0, this, t, 0.0, result);
-      return result;
-    } else if (this.nDimension() == 2 && t.nDimension() == 2) {
-      Tensor result = new DenseTensor(t.size(2), this.size(1)).t();
-      addmm(result, 0.0, result, 1.0, this, t);
-      return result;
-    } else {
-      throw new UnsupportedOperationException("multiplication between ${self.nDimension()}D and " +
-          "${t.nDimension()}D not yet supported");
-    }
+    return DenseTensorMath.mul(this, t);
   }
 
   @Override
   public double sum() {
-    return null;
+    return DenseTensorMath.sumAll(this);
   }
 
   @Override
   public double prod() {
-    return null;
+    return DenseTensorMath.prodAll(this);
   }
 
   @Override
   public Tensor prod(Tensor x, int dim) {
-    return null;
+    return DenseTensorMath.prod(this, x, dim - 1);
   }
 
   @Override
   public Tensor sum(int dim) {
-    return null;
+    return DenseTensorMath.sum(null, this, dim - 1);
   }
 
   @Override
@@ -1042,42 +1037,42 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double mean() {
-    return null;
+    return DenseTensorMath.meanAll(this);
   }
 
   @Override
   public Tensor mean(int dim) {
-    return null;
+    return DenseTensorMath.mean(this, dim - 1);
   }
 
   @Override
   public double max() {
-    return null;
+    return DenseTensorMath.maxAll(this);
   }
 
   @Override
-  public TensorPair<double, double> max(int dim) {
-    return null;
+  public TensorPair max(int dim) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public TensorPair<double, double> max(Tensor values, Tensor indices, int dim) {
-    return null;
+  public TensorPair max(Tensor values, Tensor indices, int dim) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public double min() {
-    return null;
+    return DenseTensorMath.minAll(this);
   }
 
   @Override
-  public TensorPair<double, double> min(int dim) {
-    return null;
+  public TensorPair min(int dim) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
-  public TensorPair<double, double> min(Tensor values, Tensor indices, int dim) {
-    return null;
+  public TensorPair min(Tensor values, Tensor indices, int dim) {
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
@@ -1102,12 +1097,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor sqrt() {
-    return null;
+    return DenseTensorMath.sqrt(this, this);
   }
 
   @Override
   public Tensor tanh() {
-    return null;
+    return DenseTensorMath.tanh(this, this);
   }
 
   @Override
@@ -1117,32 +1112,32 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor add(double value, Tensor y) {
-    return null;
+    return DenseTensorMath.cadd(this, this, value, y);
   }
 
   @Override
   public Tensor add(Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public Tensor add(Tensor x, double value, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public Tensor add(double value) {
-    return null;
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public Tensor add(Tensor x, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("operation not supported");
   }
 
   @Override
   public double dot(Tensor y) {
-    return null;
+    return 0.0;
   }
 
   @Override
@@ -1152,7 +1147,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double dist(Tensor y, int norm) {
-    return null;
+    return 0.0;
   }
 
   @Override
@@ -1172,12 +1167,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor sub(double value, Tensor y) {
-    return null;
+    return DenseTensorMath.csub(this, this, TensorNumeric.negative(value), y);
   }
 
   @Override
   public Tensor sub(Tensor x, double value, Tensor y) {
-    return null;
+    return DenseTensorMath.csub(this, x, value, y);
   }
 
   @Override
@@ -1197,22 +1192,22 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor cmul(Tensor y) {
-    return null;
+    return DenseTensorMath.cmul(this, this, (DenseTensor) y);
   }
 
   @Override
   public Tensor cmul(Tensor x, Tensor y) {
-    return null;
+    return DenseTensorMath.cmul(this, (DenseTensor) x, (DenseTensor) y);
   }
 
   @Override
   public Tensor cdiv(Tensor y) {
-    return null;
+    return DenseTensorMath.cdiv(this, this, y);
   }
 
   @Override
   public Tensor cdiv(Tensor x, Tensor y) {
-    return null;
+    return DenseTensorMath.cdiv(this, x, y);
   }
 
   @Override
@@ -1287,7 +1282,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double uniform(double... args) {
-    return null;
+    return 0.0;
   }
 
   @Override
@@ -1332,17 +1327,17 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor pow(Tensor y, double n) {
-    return null;
+    return DenseTensorMath.pow(this, y, n);
   }
 
   @Override
   public Tensor pow(double n) {
-    return null;
+    return DenseTensorMath.pow(this, this, n);
   }
 
   @Override
   public Tensor square() {
-    return null;
+    return pow(2.0);
   }
 
   @Override
@@ -1386,49 +1381,49 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   @Override
-  public TensorPair<double, double> topk(int k, int dim, boolean increase,
-                               Tensor result, Tensor indices, boolean sortedResult) {
+  public TensorPair topk(int k, int dim, boolean increase,
+                         Tensor result, Tensor indices, boolean sortedResult) {
     return null;
   }
 
   @Override
   public Tensor log(Tensor y) {
-    return null;
+    return DenseTensorMath.log(this, y);
   }
 
   @Override
   public Tensor exp(Tensor y) {
-    return null;
+    return DenseTensorMath.exp(this, y);
   }
 
   @Override
   public Tensor sqrt(Tensor y) {
-    return null;
+    return DenseTensorMath.sqrt(this, y);
   }
 
   @Override
   public Tensor tanh(Tensor y) {
-    return null;
+    return DenseTensorMath.tanh(this, y);
   }
 
   @Override
   public Tensor log1p(Tensor y) {
-    return null;
+    return DenseTensorMath.log1p(this, y);
   }
 
   @Override
   public Tensor log() {
-    return null;
+    return DenseTensorMath.log(this, this);
   }
 
   @Override
   public Tensor exp() {
-    return null;
+    return DenseTensorMath.exp(this, this);
   }
 
   @Override
   public Tensor log1p() {
-    return null;
+    return DenseTensorMath.log1p(this, this);
   }
 
   @Override
@@ -1478,7 +1473,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double norm(int value) {
-    return null;
+    return 0.0;
   }
 
   @Override
@@ -1503,22 +1498,22 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor cmax(Tensor y) {
-    return null;
+    return DenseTensorMath.cmax(this, this, y);
   }
 
   @Override
   public Tensor cmin(Tensor y) {
-    return null;
+    return DenseTensorMath.cmin(this, this, y);
   }
 
   @Override
   public Tensor cmax(Tensor x, Tensor y) {
-    return null;
+    return DenseTensorMath.cmax(this, x, y);
   }
 
   @Override
   public Tensor cmin(Tensor x, Tensor y) {
-    return null;
+    return DenseTensorMath.cmin(this, x, y);
   }
 
   @Override
@@ -1533,7 +1528,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double sumSquare() {
-    return null;
+    return 0.0;
   }
 
   @Override
@@ -1542,22 +1537,22 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   private void resizeAs(DenseTensor self, Tensor src) {
-    if (!isSameSizeAs(self, src)) rawResize(self, src.nDimension(), src.size(), null)
+    if (!isSameSizeAs(self, src)) rawResize(self, src.nDimension(), src.size(), null);
   }
 
-  private Tensor resize(DenseTensor self,int[] sizes,int[] strides) {
-    if(sizes == null){
-     throw new IllegalStateException("Sizes cannot be null");
+  private Tensor resize(DenseTensor self, int[] sizes, int[] strides) {
+    if (sizes == null) {
+      throw new IllegalStateException("Sizes cannot be null");
     }
     if (strides != null) {
-      if(sizes.length == strides.length){
+      if (sizes.length == strides.length) {
         throw new IllegalStateException("invalid stride");
       }
     }
     return rawResize(self, sizes.length, sizes, strides);
   }
 
-  private boolean isSameSizeAs(DenseTensor self,Tensor src) {
+  private boolean isSameSizeAs(DenseTensor self, Tensor src) {
     if (self.nDimensionInternal != src.nDimension()) {
       return false;
     }
@@ -1576,13 +1571,14 @@ public class DenseTensor implements Tensor, TensorMath {
     return true;
   }
 
-  private DenseTensor rawSet(DenseTensor self, ArrayDoubleStorage newStorage, int newStorageOffset, int nDim,
-                             int[] newSize, int[] newStride){
+  private DenseTensor rawSet(DenseTensor self, ArrayDoubleStorage newStorage, int newStorageOffset,
+                             int nDim, int[] newSize, int[] newStride) {
     Util.require(newStorageOffset >= 0, "Tensor: invalid storage offset");
     self.storageInternal = newStorage;
     self.storageOffsetInternal = newStorageOffset;
     return rawResize(self, nDim, newSize, newStride);
   }
+
   private DenseTensor rawResize(DenseTensor self, int nDim, int[] newSize, int[] newStride) {
     // resize as a scalar
     if (nDim == 0 && newSize.length == 0) {
@@ -1590,8 +1586,9 @@ public class DenseTensor implements Tensor, TensorMath {
       self.strideInternal = new int[0];
       self.nDimensionInternal = nDim;
       int totalSize = 1;
-      if (self.storageInternal == null ) {
-        self.storageInternal = new ArrayDoubleStorage(new double[totalSize + self.storageOffsetInternal]);
+      if (self.storageInternal == null) {
+        self.storageInternal = new ArrayDoubleStorage(new double[totalSize
+            + self.storageOffsetInternal]);
       } else if (totalSize + self.storageOffsetInternal > self.storageInternal.length()) {
         self.storageInternal.resize(totalSize + self.storageOffsetInternal);
       }
@@ -1620,8 +1617,8 @@ public class DenseTensor implements Tensor, TensorMath {
     if (nDim_ > 0) {
       if (nDim_ != self.nDimensionInternal) {
         self.sizeInternal = new int[nDim];
-            self.strideInternal = new int[nDim];
-            self.nDimensionInternal = nDim;
+        self.strideInternal = new int[nDim];
+        self.nDimensionInternal = nDim;
       }
 
       int totalSize = 1;
@@ -1642,8 +1639,9 @@ public class DenseTensor implements Tensor, TensorMath {
         d -= 1;
       }
       if (totalSize + self.storageOffsetInternal > 0) {
-        if (self.storageInternal == null ) {
-          self.storageInternal = new ArrayDoubleStorage(new double[totalSize + self.storageOffsetInternal]);
+        if (self.storageInternal == null) {
+          self.storageInternal = new ArrayDoubleStorage(new double[totalSize
+              + self.storageOffsetInternal]);
         } else if (totalSize + self.storageOffsetInternal > self.storageInternal.length()) {
           self.storageInternal.resize(totalSize + self.storageOffsetInternal);
         }
@@ -1659,11 +1657,11 @@ public class DenseTensor implements Tensor, TensorMath {
     int[] targetSize = DenseTensor.expandSize(this, x);
     int[] expandStrides = new int[targetSize.length];
 
-        int[] expandStridesX = new int[targetSize.length];
-        int i = targetSize.length - 1;
+    int[] expandStridesX = new int[targetSize.length];
+    int i = targetSize.length - 1;
     int delta2 = targetSize.length - x.nDimension();
-    while(i >= delta2) {
-      if (x.size(i + 1- delta2) != 1) expandStridesX[i] = x.stride(i + 1- delta2);
+    while (i >= delta2) {
+      if (x.size(i + 1 - delta2) != 1) expandStridesX[i] = x.stride(i + 1 - delta2);
       i -= 1;
     }
     DenseTensor expandX = new DenseTensor(
@@ -1703,7 +1701,7 @@ public class DenseTensor implements Tensor, TensorMath {
     while (i >= delta) {
       Util.require(longTensor.size(i + 1) == shortTensor.size(i + 1 - delta) ||
           longTensor.size(i + 1) == 1 ||
-          shortTensor.size(i + 1 - delta) == 1, errorMsg)
+          shortTensor.size(i + 1 - delta) == 1, errorMsg);
       size[i] = Math.max(longTensor.size(i + 1), shortTensor.size(i + 1 - delta));
       i -= 1;
     }

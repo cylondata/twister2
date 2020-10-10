@@ -13,28 +13,28 @@ package edu.iu.dsc.tws.dl.data.sample;
 
 import edu.iu.dsc.tws.dl.data.Tensor;
 
-public class TensorSample<T> implements edu.iu.dsc.tws.dl.data.Sample<T> {
-  private Tensor<T>[] featureTensors;
-  private Tensor<T>[] labelTensors;
+public class TensorSample implements edu.iu.dsc.tws.dl.data.Sample {
+  private Tensor[] featureTensors;
+  private Tensor[] labelTensors;
   private int[][] featureSize;
   private int[][] labelSize;
 
-  public TensorSample(Tensor<T> feature) {
+  public TensorSample(Tensor feature) {
     this.featureTensors = new Tensor[]{feature};
     this.labelTensors = new Tensor[]{};
   }
 
-  public TensorSample(Tensor<T> feature, Tensor<T> label) {
+  public TensorSample(Tensor feature, Tensor label) {
     this.featureTensors = new Tensor[]{feature};
     this.labelTensors = new Tensor[]{label};
   }
 
-  public TensorSample(Tensor<T>[] features) {
+  public TensorSample(Tensor[] features) {
     this.featureTensors = features;
     this.labelTensors = new Tensor[]{};
   }
 
-  public TensorSample(Tensor<T>[] features, Tensor<T>[] labels) {
+  public TensorSample(Tensor[] features, Tensor[] labels) {
     this.featureTensors = features;
     this.labelTensors = labels;
   }
@@ -60,22 +60,22 @@ public class TensorSample<T> implements edu.iu.dsc.tws.dl.data.Sample<T> {
   }
 
   @Override
-  public Tensor<T> feature() {
+  public Tensor feature() {
     return labelTensors[0];
   }
 
   @Override
-  public Tensor<T> feature(int index) {
+  public Tensor feature(int index) {
     return labelTensors[index];
   }
 
   @Override
-  public Tensor<T> label() {
+  public Tensor label() {
     return labelTensors[0];
   }
 
   @Override
-  public Tensor<T> label(int index) {
+  public Tensor label(int index) {
     return labelTensors[index];
   }
 
@@ -90,7 +90,7 @@ public class TensorSample<T> implements edu.iu.dsc.tws.dl.data.Sample<T> {
   }
 
   @Override
-  public T[] getData() {
+  public double[] getData() {
     throw new UnsupportedOperationException("Operation not supported");
   }
 

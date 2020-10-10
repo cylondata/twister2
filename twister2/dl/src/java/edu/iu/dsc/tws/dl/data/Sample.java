@@ -18,7 +18,7 @@ import java.io.Serializable;
  *
  * @tparam T numeric type
  */
-public interface Sample<T> extends Serializable {
+public interface Sample extends Serializable {
 
   /**
    * First dimension length of index-th feature.
@@ -64,14 +64,14 @@ public interface Sample<T> extends Serializable {
    *
    * @return feature tensor
    */
-  Tensor<T> feature();
+  Tensor feature();
 
   /**
    * Get feature tensor for given index
    *
    * @param index index of specific sample
    */
-  Tensor<T> feature(int index);
+  Tensor feature(int index);
 
   /**
    * Get label tensor, for one label Sample only.
@@ -80,14 +80,14 @@ public interface Sample<T> extends Serializable {
    *
    * @return label tensor
    */
-  Tensor<T> label();
+  Tensor label();
 
   /**
    * Get label tensor for given index
    *
    * @param index index of specific sample
    */
-  Tensor<T> label(int index);
+  Tensor label(int index);
 
   /**
    * Get feature sizes
@@ -109,5 +109,5 @@ public interface Sample<T> extends Serializable {
    *
    * @return data
    */
-  T[] getData();
+  double[] getData();
 }

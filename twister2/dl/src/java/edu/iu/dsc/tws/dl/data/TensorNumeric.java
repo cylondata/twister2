@@ -122,7 +122,8 @@ public class TensorNumeric implements Serializable {
   }
 
   public static void gemv(char trans, int m, int n, double alpha, double[] a, int aoffset, int lda,
-                          double[] x, int xOffset, int incx, double beta, double[] y, int yOffset, int incy) {
+                          double[] x, int xOffset, int incx, double beta, double[] y, int yOffset,
+                          int incy) {
     checkMKL();
 
     MKL.vdgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
@@ -137,7 +138,7 @@ public class TensorNumeric implements Serializable {
   }
 
   public static double dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
-                         int incy) {
+                           int incy) {
     checkMKL();
     return MKL.vddot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
@@ -237,17 +238,20 @@ public class TensorNumeric implements Serializable {
     }
   }
 
-  public static void vAdd(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vAdd(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y,
+                          int yOffset) {
     MKL.vdAdd(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  public static void vSub(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vSub(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y,
+                          int yOffset) {
     MKL.vdSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  public static void vMul(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vMul(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y,
+                          int yOffset) {
     if (checkMKL()) {
       MKL.vdMul(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -259,7 +263,8 @@ public class TensorNumeric implements Serializable {
     }
   }
 
-  public static void vDiv(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y, int yOffset) {
+  public static void vDiv(int n, double[] a, int aOffset, double[] b, int bOffset, double[] y,
+                          int yOffset) {
     if (checkMKL()) {
       MKL.vdDiv(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -488,7 +493,8 @@ public class TensorNumeric implements Serializable {
   }
 
   public static void gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,
-                          float[] x, int xOffset, int incx, float beta, float[] y, int yOffset, int incy) {
+                          float[] x, int xOffset, int incx, float beta, float[] y, int yOffset,
+                          int incy) {
     checkMKL();
 
     MKL.vsgemv(trans, m, n, alpha, a, aoffset, lda, x, xOffset,
@@ -606,12 +612,14 @@ public class TensorNumeric implements Serializable {
 
   }
 
-  public static void vSub(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vSub(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y,
+                          int yOffset) {
     MKL.vsSub(n, a, aOffset, b, bOffset, y, yOffset);
 
   }
 
-  public static void vMul(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vMul(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y,
+                          int yOffset) {
     if (checkMKL()) {
       MKL.vsMul(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
@@ -623,7 +631,8 @@ public class TensorNumeric implements Serializable {
     }
   }
 
-  public static void vDiv(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vDiv(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y,
+                          int yOffset) {
     if (checkMKL()) {
       MKL.vsDiv(n, a, aOffset, b, bOffset, y, yOffset);
     } else {
