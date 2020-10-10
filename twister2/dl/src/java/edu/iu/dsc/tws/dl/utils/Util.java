@@ -19,4 +19,10 @@ public class Util {
     }
   }
 
+  public static void require(boolean satisfied){
+    if(!satisfied){
+      throw new IllegalStateException("Requirement not met");
+    }
+  }
+
 }

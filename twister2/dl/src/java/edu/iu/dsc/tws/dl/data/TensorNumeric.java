@@ -136,10 +136,10 @@ public class TensorNumeric implements Serializable {
     MKL.vdaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  public static void dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
+  public static double dot(int n, double[] dx, int dxOffset, int incx, double[] dy, int dyOffset,
                          int incy) {
     checkMKL();
-    MKL.vddot(n, dx, dxOffset, incx, dy, dyOffset, incy);
+    return MKL.vddot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
   public static void ger(int m, int n, double alpha, double[] x, int xOffset, int incx, double[] y,

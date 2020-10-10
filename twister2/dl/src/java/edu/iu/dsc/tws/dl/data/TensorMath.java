@@ -62,6 +62,8 @@ public interface TensorMath {
    */
   Tensor subCopy(Tensor t);
 
+  Tensor negative();
+
   /**
    * divide all elements of this with value not in place.
    * It will allocate new memory.
