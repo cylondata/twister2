@@ -385,6 +385,16 @@ public final class DenseTensorMath {
     return min[0];
   }
 
+  /**
+   * addmm
+   * @param r
+   * @param beta
+   * @param t
+   * @param alpha
+   * @param m1
+   * @param m2
+   * @return
+   */
   public static Tensor addmm(Tensor r, double beta, Tensor t,
                              double alpha, Tensor m1, Tensor m2) {
     Util.require(m1.dim() == 2 && m2.dim() == 2,
@@ -550,9 +560,9 @@ public final class DenseTensorMath {
     if (mat.stride(1) == 1) {
       int lda = (mat.size(2) == 1) ? mat.size(1) : mat.stride(2);
       TensorNumeric.gemv('N', mat.size(1), mat.size(2), alpha,
-          mat.storage().toDoubleArray(), mat.storageOffset() - 1, lda, vec.storage().toDoubleArray(),
-          vec.storageOffset() - 1, vec.stride(1), beta, r.storage().toDoubleArray(),
-          r.storageOffset() - 1, r.stride(1));
+          mat.storage().toDoubleArray(), mat.storageOffset() - 1, lda,
+          vec.storage().toDoubleArray(), vec.storageOffset() - 1, vec.stride(1),
+          beta, r.storage().toDoubleArray(), r.storageOffset() - 1, r.stride(1));
     } else if (mat.stride(2) == 1) {
       TensorNumeric.gemv('T', mat.size(2), mat.size(1), alpha, mat.storage().toDoubleArray(),
           mat.storageOffset() - 1, mat.stride(1), vec.storage().toDoubleArray(),

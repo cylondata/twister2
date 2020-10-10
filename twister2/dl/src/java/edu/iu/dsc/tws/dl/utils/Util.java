@@ -11,9 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
-public class Util {
+public final class Util {
+
+  private Util() {
+  }
 
   public static void require(boolean satisfied, String message) {
+
+
     if (!satisfied) {
       throw new IllegalStateException(message);
     }

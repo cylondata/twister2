@@ -24,8 +24,8 @@
 package edu.iu.dsc.tws.dl.data.function;
 
 /**
- *
+ * Lambda function
  */
 public interface TensorFunc4 {
-  public void apply(double[] v1, int v2, double[] v3, int v4);
+  void apply(double[] v1, int v2, double[] v3, int v4);
 }

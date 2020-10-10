@@ -11,16 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.tensor;
 
-import edu.iu.dsc.tws.dl.data.*;
+import java.util.Arrays;
+
+import edu.iu.dsc.tws.dl.data.DenseTensorApply;
+import edu.iu.dsc.tws.dl.data.DenseTensorMath;
+import edu.iu.dsc.tws.dl.data.Storage;
+import edu.iu.dsc.tws.dl.data.Table;
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.data.TensorMath;
+import edu.iu.dsc.tws.dl.data.TensorNumeric;
+import edu.iu.dsc.tws.dl.data.TensorPair;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 import edu.iu.dsc.tws.dl.utils.Util;
 
-import java.util.Arrays;
-
-@SuppressWarnings({"ChainingConstructorIgnoresParameter", "NeedBraces", "LocalVariableName"})
+@SuppressWarnings({"ChainingConstructorIgnoresParameter", "NeedBraces",
+    "LocalVariableName", "NoClone", "SuperClone"})
 public class DenseTensor implements Tensor, TensorMath {
 
   private ArrayDoubleStorage storageInternal;
@@ -554,8 +562,8 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor resize(int size1, int size2, int size3) {
-    if (this.nDimensionInternal != 3 || this.size(1) != size1 || this.size(2) != size2 ||
-        this.size(3) != size3) {
+    if (this.nDimensionInternal != 3 || this.size(1) != size1 || this.size(2) != size2
+        || this.size(3) != size3) {
       return resize(this, new int[]{size1, size2, size3}, null);
     } else {
       return this;
@@ -619,7 +627,8 @@ public class DenseTensor implements Tensor, TensorMath {
     self.nDimensionInternal = self.nDimension() - 1;
   }
 
-  private void narrow(DenseTensor self, DenseTensor source, int dimension, int firstIndex, int size) {
+  private void narrow(DenseTensor self, DenseTensor source, int dimension,
+                      int firstIndex, int size) {
     DenseTensor src = source;
     if (src == null) {
       src = self;
@@ -771,7 +780,8 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor squeezeNewTensor() {
-    DenseTensor result = new DenseTensor(this.storageInternal, this.storageOffset(), this.sizeInternal, this.strideInternal);
+    DenseTensor result = new DenseTensor(this.storageInternal, this.storageOffset(),
+        this.sizeInternal, this.strideInternal);
     return result.squeeze();
   }
 
@@ -1603,8 +1613,8 @@ public class DenseTensor implements Tensor, TensorMath {
       if (self.nDimensionInternal > d && newSize[d] != self.sizeInternal[d]) {
         hasCorrectSize = false;
       }
-      if (self.nDimensionInternal > d && newStride != null && newStride[d] >= 0 &&
-          newStride[d] != self.strideInternal[d]) {
+      if (self.nDimensionInternal > d && newStride != null && newStride[d] >= 0
+          && newStride[d] != self.strideInternal[d]) {
         hasCorrectSize = false;
       }
       d += 1;
@@ -1690,8 +1700,8 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   private static int[] expandSize(DenseTensor tensor, DenseTensor other) {
-    String errorMsg = "tensor size not match ${tensor.size.mkString()} " +
-        "${other.size.mkString()}";
+    String errorMsg = "tensor size not match ${tensor.size.mkString()} "
+        + "${other.size.mkString()}";
     DenseTensor longTensor = (tensor.dim() > other.dim()) ? tensor : other;
     DenseTensor shortTensor = (tensor.dim() > other.dim()) ? other : tensor;
     int ndim = longTensor.nDimension();
@@ -1699,9 +1709,8 @@ public class DenseTensor implements Tensor, TensorMath {
     int[] size = new int[ndim];
     int i = ndim - 1;
     while (i >= delta) {
-      Util.require(longTensor.size(i + 1) == shortTensor.size(i + 1 - delta) ||
-          longTensor.size(i + 1) == 1 ||
-          shortTensor.size(i + 1 - delta) == 1, errorMsg);
+      Util.require(longTensor.size(i + 1) == shortTensor.size(i + 1 - delta)
+          || longTensor.size(i + 1) == 1 || shortTensor.size(i + 1 - delta) == 1, errorMsg);
       size[i] = Math.max(longTensor.size(i + 1), shortTensor.size(i + 1 - delta));
       i -= 1;
     }

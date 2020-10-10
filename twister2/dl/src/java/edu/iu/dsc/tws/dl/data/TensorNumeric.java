@@ -18,7 +18,11 @@ import com.intel.analytics.bigdl.mkl.MKL;
 
 import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 
-public class TensorNumeric implements Serializable {
+public final class TensorNumeric implements Serializable {
+
+  private TensorNumeric() {
+  }
+
   //T one: T = fromType<int>(1)
 
   //T zero: T = fromType[Int](0)
@@ -607,7 +611,8 @@ public class TensorNumeric implements Serializable {
     }
   }
 
-  public static void vAdd(int n, float[] a, int aOffset, float[] b, int bOffset, float[] y, int yOffset) {
+  public static void vAdd(int n, float[] a, int aOffset, float[] b, int bOffset,
+                          float[] y, int yOffset) {
     MKL.vsAdd(n, a, aOffset, b, bOffset, y, yOffset);
 
   }

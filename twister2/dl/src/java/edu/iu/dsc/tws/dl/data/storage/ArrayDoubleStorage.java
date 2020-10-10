@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.storage;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.dl.data.Storage;
@@ -23,7 +22,7 @@ public class ArrayDoubleStorage implements Storage {
     this.values = values;
   }
 
-  public ArrayDoubleStorage(int size){
+  public ArrayDoubleStorage(int size) {
     this.values = new double[size];
   }
 
@@ -84,7 +83,7 @@ public class ArrayDoubleStorage implements Storage {
     return null;
   }
 
-  public double get(int index){
+  public double get(int index) {
     return values[index];
   }
 }

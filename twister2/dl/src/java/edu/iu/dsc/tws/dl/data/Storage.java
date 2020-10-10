@@ -29,7 +29,8 @@ public interface Storage extends Serializable, Iterable {
   int length();
 
 //  /**
-//   * Returns the element at position index in the storage. Valid range of index is 0 to length() -1
+//   * Returns the element at position index in the storage.
+//   Valid range of index is 0 to length() -1.
 //   *
 //   * @param index
 //   * @return

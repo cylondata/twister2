@@ -16,10 +16,12 @@ import java.io.Serializable;
 /**
  * Tensor class
  */
+@SuppressWarnings("NoClone")
 public interface Tensor extends Activity, Serializable, TensorMath {
 
   /**
    * Check if empty
+   *
    * @return whether this tensor is an empty tensor. Note that nDimension == 0 is not
    * sufficient to determine a tensor is empty, because a scalar tensor's nDimension
    * is also 0.
@@ -28,12 +30,14 @@ public interface Tensor extends Activity, Serializable, TensorMath {
 
   /**
    * check if scalar
+   *
    * @return whether this tensor is a scalar
    */
   boolean isScalar();
 
   /**
    * Dimension number of the tensor. For empty tensor, its dimension number is 0
+   *
    * @return dimension number
    */
   int nDimension();
@@ -139,6 +143,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
   /**
    * Fill with random value(bernoulli distribution).
    * It will change the value of the current tensor and return itself
+   *
    * @return current tensor
    */
   Tensor bernoulli(double p);
@@ -169,14 +174,16 @@ public interface Tensor extends Activity, Serializable, TensorMath {
 
   /**
    * Query the value on a given index. Tensor should not be empty
+   *
    * @param indexes the indexes length should be same as the tensor dimension length and each
-   * value count from 1
+   *                value count from 1
    * @return the value on the given index
    */
   double apply(int[] indexes);
 
   /**
    * Get value
+   *
    * @return the value of a scalar. Requires the tensor to be a scalar.
    */
   double value();
@@ -252,7 +259,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * Write the value on a given position. The number of parameters
    * should be equal to the dimension number of the tensor.
    *
-   * @param d1 the given position
+   * @param d1    the given position
    * @param value the written value
    * @return
    */
@@ -384,7 +391,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * with the given dimension sizes and the optional given strides. As the result, any
    * modification in the elements of the Storage will have an impact on the elements of the Tensor,
    * and vice-versa. This is an efficient method, as there is no memory copy!
-   *
+   * <p>
    * If only storage is provided, the whole storage will be viewed as a 1D Tensor.
    *
    * @param storage
@@ -393,7 +400,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @param strides
    * @return current tensor
    */
-  Tensor set(Storage storage,int storageOffset,int[] sizes,int[] strides);
+  Tensor set(Storage storage, int storageOffset, int[] sizes, int[] strides);
 
   /**
    * Shrunk the size of the storage to 0, and also the tensor size
@@ -479,7 +486,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * Returns a tensor which contains all slices of size @param size
    * in the dimension. Step between two slices is given by @param step.
    *
-   * @param dim dimension
+   * @param dim  dimension
    * @param step Step between two slices
    * @return new tensor
    */
@@ -622,9 +629,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    *
    * @return new tensor
    */
-  default Tensor clone(){
+  default Tensor clone() {
     return this;
   }
-  //private QuantizedTensor toQuantizedTensor:
 }
 
