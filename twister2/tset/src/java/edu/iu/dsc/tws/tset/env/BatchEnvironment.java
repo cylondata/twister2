@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.dl.data.Sample;
+import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -98,6 +100,10 @@ public class BatchEnvironment extends TSetEnvironment {
         parallelism);
   }
 
+  public SourceTSet<Sample> createDlSampleSource(String filePath, int dataSize, int parallelism){
+    return createSource(new DLBasicSourceFunction(filePath, dataSize, parallelism), parallelism);
+  }
+
   @Override
   public BaseTSet<Integer> createArrowSource(String filePath, int parallelism) {
     return null;
@@ -128,6 +134,7 @@ public class BatchEnvironment extends TSetEnvironment {
 
     return sourceT;
   }
+
 
   public RowSourceTSet createRowSource(String name, SourceFunc<Row> source,
                                        int parallelism) {

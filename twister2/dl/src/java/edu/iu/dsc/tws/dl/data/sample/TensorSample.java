@@ -11,9 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.sample;
 
+import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.Tensor;
 
-public class TensorSample implements edu.iu.dsc.tws.dl.data.Sample {
+public class TensorSample implements Sample {
   private Tensor[] featureTensors;
   private Tensor[] labelTensors;
   private int[][] featureSize;
