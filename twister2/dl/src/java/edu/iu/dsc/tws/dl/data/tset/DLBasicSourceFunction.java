@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.data.api.formatters.LocalCSVInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalCompleteCSVInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.CSVInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -75,7 +74,7 @@ public class DLBasicSourceFunction extends BaseSourceFunc<Sample> {
       String[] entries = pattern.split(dataSplit.nextRecord(null));
       double[] data =  Arrays.stream(entries).mapToDouble(Double::parseDouble)
           .toArray();
-      return new TensorSample(new DenseTensor(data.length));
+      return new TensorSample(new DenseTensor(data));
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split", e);
     }

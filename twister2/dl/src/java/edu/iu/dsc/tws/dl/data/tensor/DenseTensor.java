@@ -60,6 +60,10 @@ public class DenseTensor implements Tensor, TensorMath {
     initWithStorage(storage, 0, new int[storage.length()], new int[1]);
   }
 
+  public DenseTensor(double[] values){
+    this(new ArrayDoubleStorage(values));
+  }
+
   private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size,
                       int[] stride, int nDimension) {
     this.storageInternal = storage;
@@ -1222,7 +1226,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor mul(double value) {
-    return null;
+    return DenseTensorMath.mul(this, null, value);
   }
 
   @Override
