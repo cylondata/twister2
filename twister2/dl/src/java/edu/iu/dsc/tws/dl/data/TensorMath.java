@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data;
 
+import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
+
 /**
  * It provides multiple math operation functions for manipulating Tensor objects.
  * All functions support both allocating a new Tensor to return the result

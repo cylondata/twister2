@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorMath;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
-import edu.iu.dsc.tws.dl.data.TensorPair;
+import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;

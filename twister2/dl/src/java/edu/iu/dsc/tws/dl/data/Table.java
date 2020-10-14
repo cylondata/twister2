@@ -64,11 +64,19 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
+  public void put(Object key, Object value){
+    state.put(key, value);
+  }
+
   public Set keySet() {
     return this.state.keySet();
   }
 
   public <T> T get(int key) {
+    return (T) state.get(key);
+  }
+
+  public <T> T get(Object key) {
     return (T) state.get(key);
   }
 
@@ -201,6 +209,13 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
+  public Table delete(Object key){
+    if (state.containsKey(key)) {
+      state.remove(key);
+    }
+    return this;
+  }
+
   public int length() {
     return state.size();
   }
@@ -247,4 +262,9 @@ public class Table implements Activity, Serializable {
     //TODO: needs impl
     throw new IllegalStateException("Not implemented yet");
   }
+
+  public <T> T getOrDefault(Object key, T defaultValue) {
+    return (T)state.getOrDefault(key, defaultValue);
+  }
+
 }

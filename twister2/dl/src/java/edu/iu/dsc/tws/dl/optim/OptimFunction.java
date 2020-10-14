@@ -9,26 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.data;
+package edu.iu.dsc.tws.dl.optim;
 
-/**
- * Holds a pair of Tensors
- */
-public class TensorPair {
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 
-  private Tensor t0;
-  private Tensor t1;
-
-  public TensorPair(Tensor t0, Tensor t1) {
-    this.t0 = t0;
-    this.t1 = t1;
-  }
-
-  public Tensor getValue0() {
-    return t0;
-  }
-
-  public Tensor getValue1() {
-    return t1;
-  }
+public interface OptimFunction {
+  DoubleTensorPair apply(Tensor t);
 }
