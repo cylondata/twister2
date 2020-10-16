@@ -9,33 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.utils;
+package edu.iu.dsc.tws.dl.graph;
 
-public final class Util {
+import edu.iu.dsc.tws.dl.module.AbstractModule;
 
-  private Util() {
-  }
+public class ModuleNode extends Node<AbstractModule> {
 
-  public static void require(boolean satisfied, String message) {
-
-
-    if (!satisfied) {
-      throw new IllegalStateException(message);
-    }
-  }
-
-  public static void require(boolean satisfied) {
-    if (!satisfied) {
-      throw new IllegalStateException("Requirement not met");
-    }
-  }
-
-  public static int getHashCode(Object o){
-    if(o == null){
-      return 0;
-    }else{
-      return o.hashCode();
-    }
+  /**
+   * Node for graph container. The module should have a tensor/table input while a tensor output
+   * @tparam T
+   */
+  public ModuleNode(AbstractModule value) {
+    super(value);
   }
 
 }

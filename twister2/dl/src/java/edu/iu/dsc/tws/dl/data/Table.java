@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  * This is a half baked version of the Table in BigDL framework
@@ -64,6 +65,10 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
+  public void forEach(BiConsumer func){
+    state.forEach(func);
+  }
+
   public void put(Object key, Object value){
     state.put(key, value);
   }
@@ -85,6 +90,10 @@ public class Table implements Activity, Serializable {
   }
 
   public boolean contains(int key) {
+    return state.containsKey(key);
+  }
+
+  public boolean contains(Object key) {
     return state.containsKey(key);
   }
 

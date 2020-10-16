@@ -64,6 +64,22 @@ public class DenseTensor implements Tensor, TensorMath {
     this(new ArrayDoubleStorage(values));
   }
 
+  public DenseTensor(int[] sizes){
+    this(new ArrayDoubleStorage(new double[TensorNumeric.product(sizes)]), 0, sizes.clone(), sizeToStride(sizes), sizes.length);
+  }
+
+  private static int[] sizeToStride(int[] sizes) {
+    int[] strides = new int[sizes.length];
+        int jump = 1;
+    int i = strides.length - 1;
+    while (i >= 0) {
+      strides[i] = jump;
+      jump = jump * sizes[i];
+      i -= 1;
+    }
+    return strides;
+  }
+
   private DenseTensor(ArrayDoubleStorage storage, int storageOffset, int[] size,
                       int[] stride, int nDimension) {
     this.storageInternal = storage;

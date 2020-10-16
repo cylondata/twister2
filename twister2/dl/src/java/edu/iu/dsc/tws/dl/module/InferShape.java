@@ -99,7 +99,7 @@ public abstract class InferShape {
 //    }
   }
 
-  private void validateInput(List<AbstractModule> modules){
+  protected void validateInput(List<AbstractModule> modules){
     if (this.isKerasStyle()) {
       Util.require(modules != null && !modules.isEmpty(), "Empty input is not allowed");
     }
