@@ -225,14 +225,14 @@ public class Node<K> implements Serializable {
     return this;
   }
 
-//  /**
-//   * Use current node as source to build a direct graph
-//   * @param reverse
-//   * @return
-//   */
-//  def graph(reverse : Boolean = false) : DirectedGraph[T] = {
-//    new DirectedGraph[T](this, reverse)
-//  }
+  /**
+   * Use current node as source to build a direct graph
+   * @param reverse
+   * @return
+   */
+  DirectedGraph<K> graph(boolean reverse){
+    return new DirectedGraph<K>(this, reverse);
+  }
 
   @Override
   public String toString() {

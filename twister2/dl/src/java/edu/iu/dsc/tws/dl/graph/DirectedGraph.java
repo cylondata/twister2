@@ -31,6 +31,14 @@ public class DirectedGraph<K> implements Serializable {
     this.reverse = reverse;
   }
 
+  public Node<K> getSource() {
+    return source;
+  }
+
+  public void setSource(Node<K> source) {
+    this.source = source;
+  }
+
   /**
    * How many nodes in the graph
    * @return
@@ -57,7 +65,7 @@ public class DirectedGraph<K> implements Serializable {
    * Topology sort.
    * @return A sequence of sorted graph nodes
    */
-  Node<K>[] topologySort(){
+  List<Node<K>> topologySort(){
     // Build indegree list, LinkedHashMap can preserve the order of the keys, so it's good to
     // write unittest.
     LinkedHashMap<Node<K>, Integer> inDegrees = new LinkedHashMap<Node<K>, Integer>();
@@ -86,7 +94,7 @@ public class DirectedGraph<K> implements Serializable {
       inDegrees.remove(n);
       });
     }
-    return (Node<K>[]) result.toArray();
+    return result;
   }
 
   // scalastyle:off methodName
@@ -99,6 +107,12 @@ public class DirectedGraph<K> implements Serializable {
     return new DFS<K>(source, reverse);
   }
 
+  public List<Node<K>> DFSList(){
+    List<Node<K>> dfs = new ArrayList<Node<K>>();
+    DFS().forEachRemaining(dfs::add);
+    return dfs;
+  }
+
   /**
    * Breadth first search on the graph. Note that this is a directed BFS. Although eachs node
    * contains both previous and next nodes, only one direction is used.
@@ -107,6 +121,13 @@ public class DirectedGraph<K> implements Serializable {
   public Iterator<Node<K>> BFS(){
     return new BFS<K>(source, reverse);
   }
+
+  public List<Node<K>> BFSList(){
+    List<Node<K>> bfs = new ArrayList<Node<K>>();
+    DFS().forEachRemaining(bfs::add);
+    return bfs;
+  }
+
   // scalastyle:on methodName
 
   /**

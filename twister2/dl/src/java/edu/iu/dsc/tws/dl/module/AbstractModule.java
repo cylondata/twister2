@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.graph.Edge;
-import edu.iu.dsc.tws.dl.graph.ModuleNode;
+import edu.iu.dsc.tws.dl.graph.Node;
 import edu.iu.dsc.tws.dl.optim.OptimMethod;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ModuleNodeIntPair;
@@ -38,12 +38,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   /**
    * The cached output. So we don't compute it again when need it
    */
-  DenseTensor output = new DenseTensor();
+  public Activity output = new DenseTensor();
 
   /**
    * The cached gradient of activities. So we don't compute it again when need it
    */
-  DenseTensor gradInput = new DenseTensor();
+  public Activity gradInput = new DenseTensor();
 
   protected List<Integer> inputsFormats = null;
   protected List<Integer> outputsFormats = null;
@@ -797,14 +797,14 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //    return this;
   }
 
-  protected ModuleNode processInputs(List<ModuleNode> nodes){
-    ModuleNode curNode = new ModuleNode(this);
+  protected Node<AbstractModule> processInputs(List<Node<AbstractModule>> nodes){
+    Node<AbstractModule> curNode = new Node<AbstractModule>(this);
     nodes.stream().forEach(node -> node.add(curNode, new Edge()));
     return curNode;
   }
 
-  protected ModuleNode processInputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
-    ModuleNode curNode = new ModuleNode(this);
+  protected Node<AbstractModule> processInputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
+    Node<AbstractModule> curNode = new Node<AbstractModule>(this);
     first.getValue0().add(curNode, new Edge(first.getValue1()));
     Arrays.stream(nodesWithIndex).sequential()
         .forEach(nodeWithIndex
@@ -817,7 +817,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param nodes upstream module nodes
    * @return node containing current module
    */
-  public ModuleNode inputs(ModuleNode ...nodes){
+  public Node<AbstractModule> inputs(Node<AbstractModule> ...nodes){
     validateInput(Arrays.stream(nodes)
         .map(moduleNode -> moduleNode.getElement()).collect(Collectors.toList()));
     return processInputs(Arrays.asList(nodes));
@@ -828,7 +828,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param nodes upstream module nodes in an array
    * @return node containing current module
    */
-  public ModuleNode inputsArr(ModuleNode[] nodes){
+  public Node<AbstractModule> inputsArr(Node<AbstractModule>[] nodes){
     validateInput(Arrays.stream(nodes)
         .map(moduleNode -> moduleNode.getElement()).collect(Collectors.toList()));
     return processInputs(Arrays.asList(nodes));
@@ -840,7 +840,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param nodesWithIndex upstream module nodes and the output tensor index. The start index is 1.
    * @return node containing current module
    */
-  public ModuleNode inputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
+  public Node<AbstractModule> inputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
     validateInput(Arrays.asList(first.getValue0().getElement()));
     validateInput(Arrays.stream(nodesWithIndex)
         .map(pair -> pair.getValue0().getElement()).collect(Collectors.toList()));
@@ -852,7 +852,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param startNodes
    * @return
    */
-  public Graph toGraph(ModuleNode ...startNodes) = {
+  public Graph toGraph(Node<AbstractModule> ...startNodes) = {
     val starts = if (startNodes.isEmpty) Array(Input[T]()) else startNodes.toArray
     val endNodes = this.getEndNodes(starts)
     var graph = Graph(starts, endNodes)
@@ -1142,8 +1142,8 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param startNodes: current start nodes
    * @return current end nodes
    */
-  private ModuleNode[] getEndNodes(ModuleNode[] startNodes){
-    ModuleNode[] endNodes = new ModuleNode[]{this.processInputs(Arrays.asList(startNodes))};
+  protected Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes){
+    Node<AbstractModule>[] endNodes = new Node[]{this.processInputs(Arrays.asList(startNodes))};
     return endNodes;
   }
 
@@ -1160,7 +1160,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * Check if some module is duplicated in the model. For a layer it cannot be duplicated.
    * Container should override this method
    */
-  private void checkDuplicate(HashSet<Integer> record){
+  protected void checkDuplicate(HashSet<Integer> record){
     String errMsg = "Some module is duplicate in the current model: ";
     int curId = System.identityHashCode(this);
     Util.require(this.skipDuplicateCheck() || !record.contains(curId), errMsg + this.getName());

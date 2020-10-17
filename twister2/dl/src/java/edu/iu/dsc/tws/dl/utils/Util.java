@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
+import edu.iu.dsc.tws.dl.data.Table;
+
 public final class Util {
 
   private Util() {
@@ -38,4 +40,9 @@ public final class Util {
     }
   }
 
+  public <K> K allocate(){
+    if(K instanceof Table){
+
+    }
+  }
 }

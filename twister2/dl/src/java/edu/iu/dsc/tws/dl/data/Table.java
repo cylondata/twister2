@@ -37,7 +37,7 @@ public class Table implements Activity, Serializable {
   }
 
   @Override
-  public Tensor toTensor(TensorNumeric ev) {
+  public Tensor toTensor() {
     return null;
   }
 

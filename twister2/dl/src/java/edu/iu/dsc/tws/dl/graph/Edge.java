@@ -26,6 +26,14 @@ public class Edge implements Serializable {
     this.fromIndex = fromIndex;
   }
 
+  public Integer getFromIndex() {
+    return fromIndex;
+  }
+
+  public void setFromIndex(Integer fromIndex) {
+    this.fromIndex = fromIndex;
+  }
+
   /**
    * Create a new Instance of this Edge
    * @return a new Instance of this Edge

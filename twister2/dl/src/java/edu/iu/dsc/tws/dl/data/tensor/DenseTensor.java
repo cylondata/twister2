@@ -147,8 +147,8 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   @Override
-  public Tensor toTensor(TensorNumeric ev) {
-    return null;
+  public Tensor toTensor() {
+    return this;
   }
 
   @Override

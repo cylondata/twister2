@@ -15,8 +15,14 @@ import java.io.Serializable;
 
 public class EmptyGradInput implements Activity, Serializable {
 
+  private String moduleName;
+
+  public EmptyGradInput(String name) {
+    this.moduleName = name;
+  }
+
   @Override
-  public Tensor toTensor(TensorNumeric ev) {
+  public Tensor toTensor() {
     throw new UnsupportedOperationException("The gradInput of $moduleName is"
         + " empty. You should not use it anywhere");
   }

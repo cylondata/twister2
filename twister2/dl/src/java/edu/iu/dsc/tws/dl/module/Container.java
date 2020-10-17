@@ -28,7 +28,7 @@ public abstract  class Container extends AbstractModule {
 
 
   protected String line = "\n";
-  private List<AbstractModule> modules = new ArrayList<AbstractModule>();
+  protected List<AbstractModule> modules = new ArrayList<AbstractModule>();
 
   @Override
   public final AbstractModule training() {
