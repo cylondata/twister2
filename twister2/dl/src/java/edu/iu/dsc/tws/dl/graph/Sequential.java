@@ -16,6 +16,9 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.DynamicContainer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Sequential extends DynamicContainer {
 
   @Override
@@ -48,12 +51,35 @@ public class Sequential extends DynamicContainer {
 
   @Override
   public void accGradParameters(DenseTensor input, DenseTensor gradOutput) {
-    super.accGradParameters(input, gradOutput);
+    int i = modules.size() - 1;
+    AbstractModule currentModule = modules.get(i);
+    DenseTensor currentGradOutput = gradOutput;
+    while (i > 0) {
+      AbstractModule previousModule = modules.get(i - 1);
+      currentModule.accGradParameters((DenseTensor) previousModule.output, currentGradOutput);
+      currentGradOutput = (DenseTensor) currentModule.gradInput;
+      currentModule = previousModule;
+      i -= 1;
+    }
+
+    currentModule.accGradParameters(input, currentGradOutput);
   }
 
   @Override
-  public DenseTensor backward(DenseTensor input, DenseTensor gradOutput) {
-    return super.backward(input, gradOutput);
+  public DenseTensor backward(DenseTensor input, DenseTensor nextError) {
+    long before = System.nanoTime();
+    int i = modules.size() - 1;
+    DenseTensor error = nextError;
+    while (i > 0) {
+      Activity inputLocal = modules.get(i - 1).output;
+      error = modules.get(i).backward(input, error);
+      i -= 1;
+    }
+    error = modules.get(0).backward(input, error);
+
+    this.gradInput = error;
+    backwardTime += System.nanoTime() - before;
+    return (DenseTensor) gradInput;
   }
 
   @Override
@@ -65,19 +91,19 @@ public class Sequential extends DynamicContainer {
     if (!(obj instanceof Sequential)) {
       return false;
     }
-    int other = obj.asInstanceOf[Sequential[T]]
-    if (this.eq(other)) {
+    Sequential other = (Sequential)obj;
+    if (this == other) {
       return true;
     }
 
-    if (this.modules.length != other.modules.length) {
+    if (this.modules.size() != other.modules.size()) {
       return false;
     }
 
-    val moduleLength = modules.length;
-    var i = 0;
+    int moduleLength = modules.size();
+    int i = 0;
     while (i < moduleLength) {
-      if (modules(i) != other.modules(i)) {
+      if (modules.get(i) != other.modules.get(i)) {
         return false;
       }
       i += 1;
@@ -102,11 +128,42 @@ public class Sequential extends DynamicContainer {
 
   @Override
   public String toString() {
-    return "Sequential{}";
+    String tab = "  ";
+    StringBuilder message = new StringBuilder()
+        .append(getPrintName() + line + tab)
+        .append("[input -> ");
+
+    List<String> temp = new ArrayList<>();
+    for (int i = 0; i < modules.size(); i++) {
+       if(modules.get(i) instanceof AbstractModule) {
+         temp.add("(" + (i+1) + ")");
+       }
+    }
+
+    message.append(String.join(" -> ", temp))
+        .append("-> output]" + line + tab);
+
+    temp = new ArrayList<>();
+    for (int i = 0; i < modules.size(); i++) {
+      if(modules.get(i) instanceof AbstractModule) {
+        temp.add("(" + (i+1) + "):" + modules.get(i).setLine(line + tab));
+      }
+    }
+
+    message.append(String.join(line + tab, temp))
+        .append(line + "}");
+
+    return message.toString();
   }
 
   @Override
-  protected Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes) {
-    return super.getEndNodes(startNodes);
+  public Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes) {
+    Node<AbstractModule>[] startnodes = startNodes;
+    Node<AbstractModule>[] curNodes = null;
+    for (int i = 0; i < modules.size(); i++) {
+      curNodes = modules.get(i).getEndNodes(startnodes);
+      startnodes = curNodes;
+    }
+    return curNodes;
   }
 }

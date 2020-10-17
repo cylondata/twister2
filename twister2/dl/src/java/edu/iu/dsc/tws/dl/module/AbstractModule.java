@@ -1142,7 +1142,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param startNodes: current start nodes
    * @return current end nodes
    */
-  protected Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes){
+  public Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes){
     Node<AbstractModule>[] endNodes = new Node[]{this.processInputs(Arrays.asList(startNodes))};
     return endNodes;
   }
