@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.dl.module;
 
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
+import edu.iu.dsc.tws.dl.utils.Shape;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
@@ -35,88 +36,124 @@ public class Threshold extends TensorModule {
 
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
-//    require(input.isContiguous())
-//    validateParameters()
-//
-//    val taskSize = input.nElement() / Engine.model.getPoolSize
-//    var extraTaskSize = input.nElement() % Engine.model.getPoolSize
-//    var allocated = 0
-//    val tasks = new ArrayBuffer[(Int, Int)]()
-//    while (allocated < input.nElement()) {
-//      val end = math.min(input.nElement(), if (extraTaskSize > 0) {
-//        extraTaskSize -= 1
-//        allocated + taskSize + 1
-//      } else {
-//        allocated + taskSize
-//      })
-//      tasks += ((allocated, end))
-//      allocated = end
-//    }
-//
-//    val taskArray = tasks.toArray
-//    val results = new Array[Future[Unit]](taskArray.length)
-//
-//    if (inPlace) {
-//      output = input
-//      val inputDouble = input.asInstanceOf[Tensor[Double]]
-//      val inputData = inputDouble.storage().array()
-//      val inputOffset = inputDouble.storageOffset() - 1
-//
-//      var t = 0
-//      while (t < taskArray.length) {
-//        val _t = t
-//        results(_t) = Engine.model.invoke(() => {
-//            var i = taskArray(_t)._1
-//        while (i < taskArray(_t)._2) {
-//          inputData(inputOffset + i) =
-//          if (inputData(inputOffset + i) <= threshold) {
-//            value
-//          } else {
-//            inputData(inputOffset + i)
-//          }
-//          i += 1
-//        }
-//            })
-//        t += 1
+    Util.require(input.isContiguous());
+    validateParameters();
+
+    if (inPlace) {
+      output = input;
+      double[] inputData = input.storage().toDoubleArray();
+      int inputOffset = input.storageOffset() - 1;
+      int taskSize = input.nElement();
+
+      for (int i = 0; i < taskSize; i++) {
+       if(inputData[inputOffset + i] <= this.threshold){
+         inputData[inputOffset + i] = this.value;
+       }
+      }
+      return input;
+    } else {
+      ((DenseTensor) output).resizeAs(input);
+
+      double[] inputData = input.storage().toDoubleArray();
+      double[] outputData = ((DenseTensor) output).storage().toDoubleArray();
+      int inputOffset = input.storageOffset() - 1;
+      int outputOffset = ((DenseTensor) output).storageOffset() - 1;
+      int taskSize = input.nElement();
+
+      for (int i = 0; i < taskSize; i++) {
+        if (inputData[inputOffset + i] <= this.threshold) {
+          outputData[outputOffset + i] = this.value;
+        } else {
+          outputData[outputOffset + i] = inputData[inputOffset + i];
+        }
+      }
+      return (DenseTensor) output;
+    }
+  }
+
+  private DenseTensor updateGradInputNoContinuous(DenseTensor input,DenseTensor gradOutput){
+    validateParameters();
+    throw new UnsupportedOperationException("updateGradInputNoContinuous not supported");
+//    if (inPlace) {;
+//      gradInput = gradOutput;
+//      ev.getType() match {
+//        case DoubleType =>
+//          gradInput.map(input, (g, i) =>
+//          if (i <= threshold) 0 else g)
+//        case FloatType =>
+//          gradInput.map(input, (g, i) =>
+//          if (i <= threshold) 0 else g)
+//        case _ =>
+//          throw new UnsupportedOperationException("Only Float/Double supported");
 //      }
-//      input
 //    }
 //    else {
-//      output.asInstanceOf[Tensor[Double]].resizeAs(input.asInstanceOf[Tensor[Double]])
-//
-//      val inputDouble = input.asInstanceOf[Tensor[Double]]
-//      val inputData = inputDouble.storage().array()
-//      val inputOffset = inputDouble.storageOffset() - 1
-//      val outputDouble = output.asInstanceOf[Tensor[Double]]
-//      val outputData = outputDouble.storage().array()
-//      val outputOffset = outputDouble.storageOffset() - 1
-//
-//      var t = 0
-//      while (t < taskArray.length) {
-//        val _t = t
-//        results(_t) = Engine.model.invoke(() => {
-//            var i = taskArray(_t)._1
-//        while (i < taskArray(_t)._2) {
-//          outputData(outputOffset + i) =
-//          if (inputData(inputOffset + i) > threshold) {
-//            inputData(inputOffset + i)
-//          } else {
-//            value
-//          }
-//          i += 1
-//        }
-//            })
-//        t += 1
+//      gradInput.resizeAs(gradOutput);
+//      gradInput.copy(gradOutput);
+//      ev.getType() match {
+//        case DoubleType =>
+//          gradInput.map(input, (g, i) =>
+//          if (i > threshold) g else 0)
+//        case FloatType =>
+//          gradInput.map(input, (g, i) =>
+//          if (i > threshold) g else 0)
+//        case _ => throw new UnsupportedOperationException("Only Float/Double supported");
 //      }
 //    }
-//    Engine.model.sync(results)
-//    output
-
+//    return gradInput;
   }
 
   @Override
   public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
-    return null;
+    validateParameters();
+
+    int i = 1;
+    while (i <= input.nDimension()) {
+      if (input.stride(i) != gradOutput.stride(i)) {
+        return updateGradInputNoContinuous(input, gradOutput);
+      }
+      i += 1;
+    }
+
+    if (inPlace) {
+      gradInput = gradOutput;
+      double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+      int taskSize = gradOutput.nElement();
+      double[] inputData = input.storage().toDoubleArray();
+      int inputOffset = input.storageOffset() - 1;
+
+      for (int j = 0; j < taskSize; j++) {
+        if (inputData[inputOffset + j] <= this.threshold) {
+          gradInputData[gradInputOffset + j] = 0.0;
+        }
+      }
+    }
+    else {
+      ((DenseTensor) gradInput).resizeAs(gradOutput);
+      ((DenseTensor) output).copy(gradOutput);
+      double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+      int taskSize = gradOutput.nElement();
+
+      double[] inputData = input.storage().toDoubleArray();
+      int inputOffset = input.storageOffset() - 1;
+
+      for (int j = 0; j < taskSize; j++) {
+        if (inputData[inputOffset + j] <= this.threshold) {
+          gradInputData[gradInputOffset + j] = 0.0;
+        } else {
+          gradInputData[gradInputOffset + j] = inputData[inputOffset + j];
+        }
+      }
+      }
+
+    return (DenseTensor) gradInput;
+  }
+
+  @Override
+  public Shape computeOutputShape(Shape inputShape) {
+    return inputShape;
   }
 
   @Override
@@ -136,6 +173,38 @@ public class Threshold extends TensorModule {
     }
   }
 
+  @Override
+  public AbstractModule clearState() {
+    if (!inPlace) {
+      super.clearState();
+    }
+    return this;
+  }
 
+  @Override
+  public String toString() {
+    return this.getPrintName() + "(" + this.threshold + ", " + this.value + ")";
+  }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    Threshold threshold1 = (Threshold) o;
+    return Double.compare(threshold1.threshold, threshold) == 0 &&
+        Double.compare(threshold1.value, value) == 0 &&
+        inPlace == threshold1.inPlace;
+  }
+
+  @Override
+  public int hashCode() {
+    int seed = 37;
+    int hash = super.hashCode();
+    hash = hash * seed + (int)threshold;
+    hash = hash * seed + (int)value;
+    hash = hash * seed + ((Boolean)inPlace).hashCode();
+
+    return hash;
+  }
 }
