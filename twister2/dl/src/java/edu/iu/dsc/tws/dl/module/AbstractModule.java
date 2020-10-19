@@ -368,7 +368,9 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    *
    * @return an array of tensor
    */
-  public abstract Tensor[] getExtraParameter();
+  public Tensor[] getExtraParameter(){
+    return null;
+  };
 
   /**
    * Set extra parameter to this module.
@@ -1022,7 +1024,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    *
    * @return
    */
-  final private TensorPair getParameters(){
+  final public TensorPair getParameters(){
     TensorArrayPair weightAndGradParameters = this.parameters();
 
     // maybe null if not weights in this module.

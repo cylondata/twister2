@@ -80,7 +80,7 @@ public abstract class InferShape {
   /**
    * We suppose the first dim is batch
    */
-  private Shape computeOutputShape(Shape inputShape){
+  public Shape computeOutputShape(Shape inputShape){
     throw new RuntimeException("Haven't been implemented yet. Do not use it with Keras Layer");
   }
 

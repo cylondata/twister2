@@ -26,7 +26,7 @@ public abstract class DynamicContainer extends Container {
    * @param module module to be add
    * @return this container
    */
-  DynamicContainer add(AbstractModule module) {
+  public DynamicContainer add(AbstractModule module) {
     Util.require(!(module instanceof Operation),
     "Add operations to dynamic container is not allowed, as operations don't have backward. "
         + "Operation can only be used in Graph");
