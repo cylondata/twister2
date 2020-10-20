@@ -33,7 +33,7 @@ public class TensorArrayPair {
   private Tensor[] t0;
   private Tensor[] t1;
 
-  public TensorArrayPair(Tensor[] t0, Tensor t1[]) {
+  public TensorArrayPair(Tensor[] t0, Tensor[] t1) {
     this.t0 = t0;
     this.t1 = t1;
   }

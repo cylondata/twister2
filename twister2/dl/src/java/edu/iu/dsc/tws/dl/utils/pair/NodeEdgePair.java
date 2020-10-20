@@ -23,10 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.util.Objects;
+
 import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Node;
-
-import java.util.Objects;
 
 public class NodeEdgePair<K> {
   private Node<K> t0;
@@ -47,11 +47,15 @@ public class NodeEdgePair<K> {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     NodeEdgePair<?> that = (NodeEdgePair<?>) o;
-    return Objects.equals(t0, that.t0) &&
-        Objects.equals(t1, that.t1);
+    return Objects.equals(t0, that.t0)
+        && Objects.equals(t1, that.t1);
   }
 
   @Override

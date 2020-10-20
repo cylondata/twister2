@@ -11,15 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorDoubleArrayPair;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
+@SuppressWarnings("ConstantName")
 public interface OptimMethod extends Serializable {
 
   // a table describing the state of the optimizer; after each call the state is modified
@@ -48,14 +46,12 @@ public interface OptimMethod extends Serializable {
    * optimize() is only called on the executor side, the driver's hyper parameter is unchanged.
    * So this method is using to update hyper parameter on the driver side.
    *
-   * @return A string.
    */
   void updateHyperParameter();
 
 
   /**
    * Get hyper parameter from config table.
-   *
    */
   String getHyperParameter();
 
@@ -83,7 +79,7 @@ public interface OptimMethod extends Serializable {
    * @param overWrite whether to overwrite
    * @return
    */
-  default OptimMethod save(String path,boolean overWrite){
+  default OptimMethod save(String path, boolean overWrite) {
     //TODO: complete save
     this.clearHistory();
     //File.save(this, path, overWrite);
@@ -92,12 +88,13 @@ public interface OptimMethod extends Serializable {
 
   /**
    * load optimMethod parameters from Table
+   *
    * @param config
    * @return
    */
   OptimMethod loadFromTable(Table config);
 
-  default void initState(){
+  default void initState() {
     state.put("epoch", 1);
     state.put("neval", 1);
   }

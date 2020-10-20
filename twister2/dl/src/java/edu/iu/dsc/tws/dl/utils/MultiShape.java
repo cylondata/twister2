@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
-public class MultiShape implements Shape{
+import java.util.Arrays;
+
+public class MultiShape implements Shape {
 
   private Shape[] values;
 
@@ -35,16 +37,12 @@ public class MultiShape implements Shape{
   public int hashCode() {
     int prime = 31;
     int result = 1;
-    result = prime * values.hashCode();
+    result = prime * Arrays.hashCode(values);
     return result;
   }
 
   @Override
   public boolean equals(Object o) {
-    if(o instanceof MultiShape && this.hashCode() == o.hashCode()){
-      return true;
-    }else{
-      return false;
-    }
+    return o instanceof MultiShape && this.hashCode() == o.hashCode();
   }
 }

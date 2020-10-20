@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.dl.module;
 
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
 import edu.iu.dsc.tws.dl.optim.InitializationMethod;
@@ -21,7 +20,6 @@ import edu.iu.dsc.tws.dl.optim.initialization.RandomUniform;
 import edu.iu.dsc.tws.dl.optim.initialization.Zeros;
 import edu.iu.dsc.tws.dl.utils.ErrorConstants;
 import edu.iu.dsc.tws.dl.utils.Util;
-import edu.iu.dsc.tws.dl.utils.VariableFormat;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 import edu.iu.dsc.tws.dl.utils.varformat.OUT_IN;
 
@@ -33,31 +31,26 @@ import edu.iu.dsc.tws.dl.utils.varformat.OUT_IN;
  * an input sample of given batch (the number of rows means the batch size and
  * the number of columns should be equal to the `inputSize`).
  */
+@SuppressWarnings("NeedBraces")
 public class Linear extends TensorModule {
 
+  protected InitializationMethod weightInitMethod = new Zeros();
+  protected InitializationMethod biasInitMethod = new Zeros();
   //the size the each input sample
   private int inputSize;
-
   //the size of the module ((DenseTensor output) of each sample
   private int outputSize;
-
   //instance of [[Regularizer]]
   // (eg. L1 or L2 regularization), applied to the input weights matrices.
   private Regularizer wRegularizer;
-
   //instance of [[Regularizer]]
   //applied to the bias.
   private Regularizer bRegularizer;
-
   private boolean withBias = true;
   private Tensor initWeight;
   private Tensor initBias;
   private Tensor initGradWeight;
   private Tensor initGradBias;
-
-  protected InitializationMethod weightInitMethod = new Zeros();
-  protected InitializationMethod biasInitMethod = new Zeros();
-
   private Tensor weight;
   private Tensor bias;
   private Tensor addBuffer;
@@ -66,12 +59,12 @@ public class Linear extends TensorModule {
 
 
   public Linear(int inputSize, int outputSize) {
-   this(inputSize, outputSize, null, null);
+    this(inputSize, outputSize, null, null);
   }
 
   public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer) {
     this(inputSize, outputSize, wRegularizer, bRegularizer, true, null,
-        null,null,null);
+        null, null, null);
   }
 
   public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer,
@@ -94,11 +87,11 @@ public class Linear extends TensorModule {
   private void init() {
     weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize, inputSize);
 
-    if (initBias != null){
+    if (initBias != null) {
       bias = initBias;
-    } else if (withBias){
+    } else if (withBias) {
       bias = new DenseTensor(outputSize);
-    }else{
+    } else {
       bias = null;
     }
     addBuffer = new DenseTensor();
@@ -107,9 +100,9 @@ public class Linear extends TensorModule {
 
     if (initGradBias != null) {
       gradBias = initGradBias;
-    } else if (withBias){
+    } else if (withBias) {
       gradBias = new DenseTensor();
-    }else{
+    } else {
       bias = null;
     }
 
@@ -122,51 +115,55 @@ public class Linear extends TensorModule {
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
     Util.require(input.dim() == 1 || input.dim() == 2,
-        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch +
-            "input dim ${input.dim()}");
+        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch
+            + "input dim ${input.dim()}");
 
     if (input.dim() == 1) {
-      ((DenseTensor)output).resize(new int[]{outputSize});
-      if (withBias) ((DenseTensor)output).copy(bias) else ((DenseTensor)output).zero();
-      ((DenseTensor)output).addmv(1, weight, input);
-    }
-    else if (input.dim() == 2) {
+      ((DenseTensor) output).resize(new int[]{outputSize});
+      if (withBias) {
+        ((DenseTensor) output).copy(bias);
+      } else {
+        ((DenseTensor) output).zero();
+      }
+
+      ((DenseTensor) output).addmv(1, weight, input);
+    } else if (input.dim() == 2) {
       int nFrame = input.size(1);
-      int nElement = ((DenseTensor)output).nElement();
+      int nElement = ((DenseTensor) output).nElement();
       int[] t = new int[]{nFrame, weight.size(1)};
-      ((DenseTensor)output).resize(t);
-      if (((DenseTensor)output).nElement() != nElement) {
-        ((DenseTensor)output).zero();
+      ((DenseTensor) output).resize(t);
+      if (((DenseTensor) output).nElement() != nElement) {
+        ((DenseTensor) output).zero();
       }
 
       if (addBuffer.nElement() != nFrame) {
         addBuffer.resize(new int[]{nFrame}).fill(1.0);
       }
 
-      ((DenseTensor)output).addmm(0.0, ((DenseTensor)output), 1.0, input, weight.t());
-      if (withBias) ((DenseTensor)output).addr(1.0, addBuffer, bias);
+      ((DenseTensor) output).addmm(0.0, (DenseTensor) output, 1.0, input, weight.t());
+      if (withBias) ((DenseTensor) output).addr(1.0, addBuffer, bias);
     }
-    return (DenseTensor)output;
+    return (DenseTensor) output;
   }
 
   @Override
   public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
     Util.require(input.dim() == 1 || input.dim() == 2,
-        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch +
-            "input dim ${input.dim()}");
+        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch
+            + "input dim ${input.dim()}");
 
-    int nElement = ((DenseTensor)gradInput).nElement();
-    ((DenseTensor)gradInput).resizeAs(input);
-    if (nElement != ((DenseTensor)gradInput).nElement()) {
-      ((DenseTensor)gradInput).zero();
+    int nElement = ((DenseTensor) gradInput).nElement();
+    ((DenseTensor) gradInput).resizeAs(input);
+    if (nElement != ((DenseTensor) gradInput).nElement()) {
+      ((DenseTensor) gradInput).zero();
     }
 
     if (input.dim() == 1) {
-      ((DenseTensor)gradInput).addmv(0.0, 1.0, weight.t(), gradOutput);
+      ((DenseTensor) gradInput).addmv(0.0, 1.0, weight.t(), gradOutput);
     } else if (input.dim() == 2) {
-      ((DenseTensor)gradInput).addmm(0.0, 1.0, gradOutput, weight);
+      ((DenseTensor) gradInput).addmm(0.0, 1.0, gradOutput, weight);
     }
-    return (DenseTensor)gradInput;
+    return (DenseTensor) gradInput;
   }
 
   @Override
@@ -174,15 +171,16 @@ public class Linear extends TensorModule {
     if (null == bias) {
       return new TensorArrayPair(new Tensor[]{this.weight}, new Tensor[]{this.gradWeight});
     } else {
-      return new TensorArrayPair(new Tensor[]{this.weight, this.bias}, new Tensor[]{this.gradWeight, this.gradBias});
+      return new TensorArrayPair(new Tensor[]{this.weight, this.bias},
+          new Tensor[]{this.gradWeight, this.gradBias});
     }
   }
 
   @Override
   public void accGradParameters(DenseTensor input, DenseTensor gradOutput) {
     Util.require(input.dim() == 1 || input.dim() == 2,
-        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch +
-            "input dim ${input.dim()}");
+        "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch
+            + "input dim ${input.dim()}");
 
     gradWeight.resize(outputSize, inputSize);
     if (withBias) {
@@ -195,10 +193,9 @@ public class Linear extends TensorModule {
       }
 
       if (withBias && scaleB != 0) {
-        gradBias.add(scaleB), gradOutput);
+        gradBias.add(scaleB, gradOutput);
       }
-    }
-    else if (input.dim() == 2) {
+    } else if (input.dim() == 2) {
       if (scaleW != 0) {
         gradWeight.addmm(scaleW, gradOutput.t(), input);
       }

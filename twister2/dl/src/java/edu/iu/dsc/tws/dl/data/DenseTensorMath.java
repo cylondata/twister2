@@ -387,6 +387,7 @@ public final class DenseTensorMath {
 
   /**
    * addmm
+   *
    * @param r
    * @param beta
    * @param t

@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 /**
  * [[TensorCriterion]] is an abstract sub-class of [[AbstractCriterion]], whose
  * input and output type both are [[Tensor]].
- *
- * */
+ */
 public abstract class TensorCriterion extends AbstractCriterion<Tensor, Tensor> {
 }

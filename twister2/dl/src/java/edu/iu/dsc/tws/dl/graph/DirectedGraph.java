@@ -11,12 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.graph;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import edu.iu.dsc.tws.dl.utils.Util;
 
-import java.io.Serializable;
-import java.util.*;
-
-import static edu.iu.dsc.tws.dl.utils.Util.require;
 
 public class DirectedGraph<K> implements Serializable {
 
@@ -41,12 +44,13 @@ public class DirectedGraph<K> implements Serializable {
 
   /**
    * How many nodes in the graph
+   *
    * @return
    */
-  int size(){
+  int size() {
     int i = 0;
     Iterator it = BFS();
-    while(it.hasNext()) {
+    while (it.hasNext()) {
       i++;
       it.next();
     }
@@ -55,17 +59,20 @@ public class DirectedGraph<K> implements Serializable {
 
   /**
    * How many edges in the graph
+   *
    * @return
    */
-  int edges(){
+  int edges() {
     //: Int = BFS.map(_.nextNodes.length).reduce(_ + _)
     return 0;
   }
+
   /**
    * Topology sort.
+   *
    * @return A sequence of sorted graph nodes
    */
-  List<Node<K>> topologySort(){
+  List<Node<K>> topologySort() {
     // Build indegree list, LinkedHashMap can preserve the order of the keys, so it's good to
     // write unittest.
     LinkedHashMap<Node<K>, Integer> inDegrees = new LinkedHashMap<Node<K>, Integer>();
@@ -74,15 +81,15 @@ public class DirectedGraph<K> implements Serializable {
       List<Node<K>> nextNodes = (!reverse) ? n.nextNodes() : n.prevNodes();
       nextNodes.forEach(m -> {
         inDegrees.put(m, inDegrees.getOrDefault(m, 0) + 1);
-    });
+      });
     });
 
     List<Node<K>> result = new ArrayList<>();
-    while(!inDegrees.isEmpty()) {
+    while (!inDegrees.isEmpty()) {
       // toArray is not lazy eval, which is not affected by inDegrees - 1 operations below
       List<Node<K>> startNodes = new ArrayList<>();
       for (Node<K> key : inDegrees.keySet()) {
-        if(inDegrees.get(key) == 0){
+        if (inDegrees.get(key) == 0) {
           startNodes.add(key);
         }
       }
@@ -90,24 +97,26 @@ public class DirectedGraph<K> implements Serializable {
       result.addAll(startNodes);
       startNodes.forEach(n -> {
         List<Node<K>> nextNodes = (!reverse) ? n.nextNodes() : n.prevNodes();
-      nextNodes.forEach(nextNode -> inDegrees.put(nextNode, inDegrees.get(nextNode) - 1));
-      inDegrees.remove(n);
+        nextNodes.forEach(nextNode -> inDegrees.put(nextNode, inDegrees.get(nextNode) - 1));
+        inDegrees.remove(n);
       });
     }
     return result;
   }
 
   // scalastyle:off methodName
+
   /**
    * Depth first search on the graph. Note that this is a directed DFS. Although eachs node
    * contains both previous and next nodes, only one direction is used.
+   *
    * @return An iterator to go through nodes in the graph in a DFS order
    */
-  public Iterator<Node<K>> DFS(){
+  public Iterator<Node<K>> DFS() {
     return new DFS<K>(source, reverse);
   }
 
-  public List<Node<K>> DFSList(){
+  public List<Node<K>> DFSList() {
     List<Node<K>> dfs = new ArrayList<Node<K>>();
     DFS().forEachRemaining(dfs::add);
     return dfs;
@@ -116,13 +125,14 @@ public class DirectedGraph<K> implements Serializable {
   /**
    * Breadth first search on the graph. Note that this is a directed BFS. Although eachs node
    * contains both previous and next nodes, only one direction is used.
+   *
    * @return An iterator to go through nodes in the graph in a BFS order
    */
-  public Iterator<Node<K>> BFS(){
+  public Iterator<Node<K>> BFS() {
     return new BFS<K>(source, reverse);
   }
 
-  public List<Node<K>> BFSList(){
+  public List<Node<K>> BFSList() {
     List<Node<K>> bfs = new ArrayList<Node<K>>();
     DFS().forEachRemaining(bfs::add);
     return bfs;
@@ -132,14 +142,15 @@ public class DirectedGraph<K> implements Serializable {
 
   /**
    * Clone the graph structure, will not clone the node element
+   *
    * @param reverseEdge if reverse the edge in the nodes
    * @return
    */
-  DirectedGraph<K> cloneGraph(boolean reverseEdge){
+  DirectedGraph<K> cloneGraph(boolean reverseEdge) {
     HashMap<Node<K>, Node<K>> oldToNew = new HashMap<>();
     List<Node<K>> bfs = new ArrayList<Node<K>>();
     BFS().forEachRemaining(bfs::add);
-    
+
     bfs.forEach(kNode -> {
       oldToNew.put(kNode, new Node(kNode.getElement()));
     });
@@ -147,27 +158,28 @@ public class DirectedGraph<K> implements Serializable {
     // As we go through all node in bfs from source, the prevNodes order can be preserved.
     // For each node, we iterate and add their nextNodes, the nextNodes order can also be preserved.
     bfs.forEach(node -> {
-    if (reverseEdge) {
-      node.nextNodesAndEdges().forEach(nextNodeAndEdge -> {
-      // Some next nodes may be not included in the graph
-      if (oldToNew.containsKey(nextNodeAndEdge.getValue0())) {
-        oldToNew.get(node).addPrevious(
-            oldToNew.get(nextNodeAndEdge.getValue0()), nextNodeAndEdge.getValue1());
-      }
+      if (reverseEdge) {
+        node.nextNodesAndEdges().forEach(nextNodeAndEdge -> {
+          // Some next nodes may be not included in the graph
+          if (oldToNew.containsKey(nextNodeAndEdge.getValue0())) {
+            oldToNew.get(node).addPrevious(
+                oldToNew.get(nextNodeAndEdge.getValue0()), nextNodeAndEdge.getValue1());
+          }
         });
-      node.prevNodesAndEdges().forEach(prevNodeAndEdge -> {
-      if (oldToNew.containsKey(prevNodeAndEdge.getValue0())) {
-        oldToNew.get(node).addNexts(
-            oldToNew.get(prevNodeAndEdge.getValue0()), prevNodeAndEdge.getValue1());
-      }
+        node.prevNodesAndEdges().forEach(prevNodeAndEdge -> {
+          if (oldToNew.containsKey(prevNodeAndEdge.getValue0())) {
+            oldToNew.get(node).addNexts(
+                oldToNew.get(prevNodeAndEdge.getValue0()), prevNodeAndEdge.getValue1());
+          }
         });
-    } else {
-      node.nextNodesAndEdges().forEach(nextNodeAndEdge -> {
-      if (oldToNew.containsKey(nextNodeAndEdge.getValue0())) {
-        oldToNew.get(node).add(oldToNew.get(nextNodeAndEdge.getValue0()), nextNodeAndEdge.getValue1());
-      }
+      } else {
+        node.nextNodesAndEdges().forEach(nextNodeAndEdge -> {
+          if (oldToNew.containsKey(nextNodeAndEdge.getValue0())) {
+            oldToNew.get(node).add(oldToNew.get(nextNodeAndEdge.getValue0()),
+                nextNodeAndEdge.getValue1());
+          }
         });
-    }
+      }
     });
 
     if (reverseEdge) {

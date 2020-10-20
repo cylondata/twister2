@@ -11,18 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import edu.iu.dsc.tws.dl.data.Activity;
-import edu.iu.dsc.tws.dl.data.Table;
-import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.graph.Edge;
-import edu.iu.dsc.tws.dl.graph.Node;
-import edu.iu.dsc.tws.dl.optim.OptimMethod;
-import edu.iu.dsc.tws.dl.utils.Util;
-import edu.iu.dsc.tws.dl.utils.pair.ModuleNodeIntPair;
-import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
-import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,11 +18,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Sample;
+import edu.iu.dsc.tws.dl.data.Table;
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
+import edu.iu.dsc.tws.dl.graph.Edge;
+import edu.iu.dsc.tws.dl.graph.Graph;
+import edu.iu.dsc.tws.dl.graph.Node;
+import edu.iu.dsc.tws.dl.optim.OptimMethod;
+import edu.iu.dsc.tws.dl.utils.Util;
+import edu.iu.dsc.tws.dl.utils.pair.ModuleNodeIntPair;
+import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
+
+@SuppressWarnings({"MemberName", "HiddenField"})
 public abstract class AbstractModule extends InferShape implements Module, Serializable {
 
   // ================================= Public APIs =============================================
-
-
   /**
    * The cached output. So we don't compute it again when need it
    */
@@ -47,23 +49,48 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   protected List<Integer> inputsFormats = null;
   protected List<Integer> outputsFormats = null;
+  /**
+   * The scale of gradient weight and gradient bias
+   * before gradParameters being accumulated.
+   */
+  protected double scaleW = 1.0;
+  protected double scaleB = 1.0;
+  protected long forwardTime = 0L;
+  protected long backwardTime = 0L;
+  /**
+   * Module status. It is useful for modules like dropout/batch normalization
+   */
+  protected boolean train = true;
+  protected String line = "\n";
+  private String namePostfix = Integer.toHexString(java.util.UUID.randomUUID().hashCode());
+  private String getNamePostfix = namePostfix;
+  /**
+   * The name of the module
+   */
+  private String name = null;
+  private int id = 0;
+  private double scaleWCache = scaleW;
+  private double scaleBCache = scaleB;
+  private OptimMethod _optimMethod = null;
 
   /**
    * set input formats for graph
+   *
    * @param formats
    * @return
    */
-  public AbstractModule setInputFormats(List<Integer> formats){
+  public AbstractModule setInputFormats(List<Integer> formats) {
     inputsFormats = formats;
     return this;
   }
 
   /**
    * set output formats for graph
+   *
    * @param formats
    * @return
    */
-  public AbstractModule setOutputFormats(List<Integer> formats){
+  public AbstractModule setOutputFormats(List<Integer> formats) {
     outputsFormats = formats;
     return this;
   }
@@ -71,15 +98,8 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   /**
    * Get the scale of gradientWeight
    */
-  public final double getScaleW(){
+  public final double getScaleW() {
     return scaleW;
-  }
-
-  /**
-   * Get the scale of gradientBias
-   */
-  public final double getScaleB(){
-    return scaleB;
   }
 
   /**
@@ -94,37 +114,58 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   }
 
   /**
+   * Get the scale of gradientBias
+   */
+  public final double getScaleB() {
+    return scaleB;
+  }
+
+  /**
    * Set the scale of gradientBias
    *
    * @param b the value of the scale of gradientBias
    * @return this
    */
   public AbstractModule setScaleB(double b) {
-   scaleB = b;
-   return this;
- }
+    scaleB = b;
+    return this;
+  }
 
   /**
    * Clear cached activities to save storage space or network bandwidth. Note that we use
    * Tensor.set to keep some information like tensor share
-   *
+   * <p>
    * The subclass should override this method if it allocate some extra resource, and call the
    * super.clearState in the override method
    *
    * @return
    */
   public AbstractModule clearState() {
-   output.set();
-   gradInput.set();
-   return this;
- }
+    ((DenseTensor) output).set();
+    ((DenseTensor) gradInput).set();
+    return this;
+  }
 
   /**
    * Whether user set a name to the module before
+   *
    * @return
    */
-  public final boolean hasName(){
+  public final boolean hasName() {
     return name != null;
+  }
+
+  /**
+   * Get the module name, default name is className@namePostfix
+   *
+   * @return
+   */
+  public final String getName() {
+    if (this.name == null) {
+      return "${this.getClass.getSimpleName}${namePostfix}";
+    } else {
+      return this.name;
+    }
   }
 
   /**
@@ -138,38 +179,27 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     return this;
   }
 
-  /**
-   * Get the module name, default name is className@namePostfix
-   *
-   * @return
-   */
-  public final String getName(){
-    if (this.name == null) {
-      return "${this.getClass.getSimpleName}${namePostfix}";
-    } else {
-      return this.name;
-    }
-  }
-
   @Override
-  public String toString(){
+  public String toString() {
     return getPrintName();
   }
 
   /**
    * Get the forward/backward cost time for the module or its submodules
+   *
    * @return
    */
-  public Object[] getTimes(){
+  public Object[] getTimes() {
     return new Object[]{this, forwardTime, backwardTime};
   }
 
   /**
    * Get the forward/backward cost time for the module or its submodules
    * and group by module type.
+   *
    * @return (module type name, forward time, backward time)
    */
-  public final Object[] getTimesGroupByModuleType(){
+  public final Object[] getTimesGroupByModuleType() {
     throw new UnsupportedOperationException("Operation not supported");
     //    Array[(String, Long, Long)] = {
 //      this.getTimes().map(v => (v._1.getClass().getName(), v._2, v._3)).groupBy(_._1)
@@ -178,14 +208,14 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //      .toArray
 //          .sortWith((a, b) => (a._2 + a._3) > (b._2 + b._3))
 
-    }
-
+  }
 
   /**
    * Reset the forward/backward record time for the module or its submodules
+   *
    * @return
    */
-  public void resetTimes(){
+  public void resetTimes() {
     forwardTime = 0;
     backwardTime = 0;
   }
@@ -200,30 +230,30 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @return current graph model
    */
   public AbstractModule freeze(String[] names) {
-   if (names == null || names.length == 0) {
-     // in case when freeze is called many times
-     if (scaleW != 0) {
-       scaleWCache = scaleW;
-       scaleW = 0;
-     }
-     if (scaleB != 0) {
-       scaleBCache = scaleB;
-       scaleB = 0;
-     }
-   } else {
-     boolean found = false;
-     for (String name : names) {
-       if(name == this.name){
-         this.freeze(null);
-         found = true;
-       }
-     }
-     if(!found){
-       throw new IllegalStateException("cannot match module named $name");
-     }
-   }
-   return this;
- }
+    if (names == null || names.length == 0) {
+      // in case when freeze is called many times
+      if (scaleW != 0) {
+        scaleWCache = scaleW;
+        scaleW = 0;
+      }
+      if (scaleB != 0) {
+        scaleBCache = scaleB;
+        scaleB = 0;
+      }
+    } else {
+      boolean found = false;
+      for (String name : names) {
+        if (name == this.name) {
+          this.freeze(null);
+          found = true;
+        }
+      }
+      if (!found) {
+        throw new IllegalStateException("cannot match module named $name");
+      }
+    }
+    return this;
+  }
 
   /**
    * "unfreeze" module, i.e. make the module parameters(weight/bias, if exists)
@@ -233,23 +263,23 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param names array of module names to unFreeze
    */
   public AbstractModule unFreeze(String[] names) {
-   if (names == null || names.length == 0) {
-     scaleW = scaleWCache;
-     scaleB = scaleBCache;
-   } else {
-     boolean found = false;
-     for (String name : names) {
-       if(name == this.name){
-         this.unFreeze(null);
-         found = true;
-       }
-     }
-     if(!found){
-       throw new IllegalStateException("cannot match module named $name");
-     }
-   }
-   return this;
- }
+    if (names == null || names.length == 0) {
+      scaleW = scaleWCache;
+      scaleB = scaleBCache;
+    } else {
+      boolean found = false;
+      for (String name : names) {
+        if (name == this.name) {
+          this.unFreeze(null);
+          found = true;
+        }
+      }
+      if (!found) {
+        throw new IllegalStateException("cannot match module named $name");
+      }
+    }
+    return this;
+  }
 
   /**
    * Takes an input object, and computes the corresponding output of the module. After a forward,
@@ -258,12 +288,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input input data
    * @return output data
    */
-  public final DenseTensor forward(DenseTensor input){
+  public final DenseTensor forward(DenseTensor input) {
     long before = System.nanoTime();
     try {
       updateParameter();
       updateOutput(input);
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new IllegalStateException("Layer exception");
 //      case l: LayerException =>
 //        l.layerMsg = this.toString() + "/" + l.layerMsg
@@ -273,7 +303,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
     forwardTime += System.nanoTime() - before;
 
-    return output;
+    return (DenseTensor) output;
   }
 
   /**
@@ -282,26 +312,26 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * input. This is necessary for optimization reasons. If you do not respect this rule, backward()
    * will compute incorrect gradients.
    *
-   * @param input input data
+   * @param input      input data
    * @param gradOutput gradient of next layer
    * @return gradient corresponding to input data
    */
-  public DenseTensor backward(DenseTensor input      , DenseTensor gradOutput){
+  public DenseTensor backward(DenseTensor input, DenseTensor gradOutput) {
     long before = System.nanoTime();
     updateGradInput(input, gradOutput);
     accGradParameters(input, gradOutput);
     backwardTime += System.nanoTime() - before;
     asyncGradient();
-    return gradInput;
+    return (DenseTensor) gradInput;
   }
 
-  private void asyncGradient(){
-    if (this.getParameterSynchronizer() != null) {
-      if (this.parameters() != null) {
-        //TODO: param Sync
-        //this.getParameterSynchronizer().put(this.getName());
-      }
-    }
+  private void asyncGradient() {
+//    if (this.getParameterSynchronizer() != null) {
+//      if (this.parameters() != null) {
+//        //TODO: param Sync
+//        //this.getParameterSynchronizer().put(this.getName());
+//      }
+//    }
   }
 
   /**
@@ -311,7 +341,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input
    * @return
    */
-  public abstract DenseTensor updateOutput(DenseTensor input  );
+  public abstract DenseTensor updateOutput(DenseTensor input);
 
   /**
    * Computing the gradient of the module with respect to its own input. This is returned in
@@ -321,8 +351,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param gradOutput
    * @return
    */
-  public abstract DenseTensor updateGradInput(DenseTensor input      , DenseTensor gradOutput);
-
+  public abstract DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput);
 
   /**
    * Computing the gradient of the module with respect to its own parameters. Many modules do not
@@ -333,15 +362,15 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input
    * @param gradOutput
    */
-  public void accGradParameters(DenseTensor input      , DenseTensor gradOutput){
+  public void accGradParameters(DenseTensor input, DenseTensor gradOutput) {
 
-  };
+  }
 
   /**
    * If the module has parameters, this will zero the accumulation of the gradients with respect
    * to these parameters. Otherwise, it does nothing.
    */
-  public void zeroGradParameters(){
+  public void zeroGradParameters() {
     if (parameters() != null) {
       for (int i = 0; i < parameters().getValue1().length; i++) {
         Tensor weight = parameters().getValue0()[i];
@@ -363,228 +392,13 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * Get extra parameter in this module.
    * Extra parameter means the trainable parameters beside weight and bias. Such as runningMean
    * and runningVar in BatchNormalization.
-   *
+   * <p>
    * The subclass should override this method if it has some parameters besides weight and bias.
    *
    * @return an array of tensor
    */
-  public Tensor[] getExtraParameter(){
+  public Tensor[] getExtraParameter() {
     return null;
-  };
-
-  /**
-   * Set extra parameter to this module.
-   * Extra parameter means the trainable parameters beside weight and bias. Such as runningMean
-   * and runningVar in BatchNormalization.
-   *
-   * @return this
-   */
-  public AbstractModule setExtraParameter(Tensor[] extraParam){
-    Tensor[] currentExtraParam = this.getExtraParameter();
-    if (extraParam != null && currentExtraParam != null) {
-      Util.require(extraParam.length == currentExtraParam.length,
-          "state's length doesn't match, excepted:"
-              + "${currentExtraParam.length}, but got  ${extraParam.length}");
-      int i = 0;
-      while (i < extraParam.length) {
-        currentExtraParam[i].copy(extraParam[i]);
-        i += 1;
-      }
-      return this;
-    }else if (extraParam == null && currentExtraParam == null) {
-      return this;
-    }else {
-      throw new IllegalArgumentException("module's extraParameter is $currentExtraParam" +
-          ", while setting param is ${extraParam}");
-    }
-  }
-
-  /**
-   * This function returns a table contains ModuleName, the parameter names and parameter value
-   * in this module.
-   *
-   * The result table is a structure of Table(ModuleName -> Table(ParameterName -> ParameterValue)),
-   * and the type is Table[String, Table[String, Tensor[T]]].
-   *
-   * For example, get the weight of a module named conv1:
-   *   table[Table]("conv1")[Tensor[T]]("weight").
-   *
-   * The names of the parameters follow such convention:
-   *
-   * 1. If there's one parameter, the parameter is named as "weight", the gradient is named as
-   * "gradWeight"
-   *
-   * 2. If there're two parameters, the first parameter is named as "weight", the first gradient is
-   * named as "gradWeight"; the second parameter is named as "bias", the seconcd gradient is
-   * named as "gradBias"
-   *
-   * 3. If there're more parameters, the weight is named as "weight" with a seq number as suffix,
-   * the gradient is named as "gradient" with a seq number as suffix
-   *
-   * Custom modules should override this function the default impl if the convention doesn't meet
-   * the requirement.
-   *
-   * @return Table
-   */
-  public Table getParametersTable() {
-    TensorArrayPair params = parameters();
-    if (params == null){
-      return null;
-    }
-    Tensor[] weights = params.getValue0();
-    Tensor[] gradients = params.getValue1();
-    Util.require(gradients.length == weights.length, "weight number is not equal to grad number");
-
-    Table result = new Table();
-    if (weights.length == 1) {
-      Table temp = new Table();
-      temp.put("weight", weights[0]);
-      temp.put("gradWeight", gradients[0]);
-      result.put(getName(),temp);
-    } else if (weights.length == 2) {
-      Table temp = new Table();
-      temp.put("weight", weights[0]);
-      temp.put("bias", weights[1]);
-      temp.put("gradWeight", gradients[0]);
-      temp.put("gradBias", gradients[1]);
-      result.put(getName(),temp);
-    } else {
-      Table temp = new Table();
-      for (int i = 0; i < weights.length; i++) {
-        temp.put("weight" + i, weights[i]);
-        temp.put("gradient" + i, gradients[i]);
-      }
-      result.put(getName(),temp);
-    }
-    return result;
-  }
-
-  /**
-   * Set the module to training mode
-   * @return
-   */
-  public AbstractModule training() {
-   train = true;
-   return this;
- }
-
-  /**
-   * Set the module to evaluate mode
-   * @return
-   */
-  public AbstractModule evaluate() {
-   train = false;
-   return this;
- }
-
-  /**
-   * Check if the model is in training mode
-   * @return
-   */
-  final boolean isTraining(){
-    return this.train;
-  }
-
-  /**
-   * Reset module parameters, which is re-initialize the parameter with given initMethod
-   */
-  public abstract void reset();
-
-  /**
-   * Set the line separator when print the module
-   * @param line
-   * @return
-   */
-  public final AbstractModule setLine(String line) {
-    this.line = line;
-    return this;
-  }
-
-  /**
-   * Clone the model
-   * @return
-   */
-  public final void cloneModule(){
-    throw new UnsupportedOperationException("Operation not supported");
-    //SerializationUtils.clone(this);
-  }
-
-  /**
-   * Clone the module, deep or shallow copy
-   * @param deepCopy
-   * @return
-   */
-  public final AbstractModule clone(boolean deepCopy){
-    throw new UnsupportedOperationException("Operation not supported");
-
-//    val moduleData = ModuleData[T](this.asInstanceOf[AbstractModule[Activity, Activity, T]], Seq[String](), Seq[String]())
-//    val storages = new mutable.HashMap[Int, Any]()
-//    val context = SerializeContext(moduleData, storages, ProtoStorageType, false)
-//    val serializedModule = ModuleSerializer.serialize[T](context).bigDLModule
-//    ModulePersister.setTensorStorage(serializedModule, storages)
-//
-//    storages.clear()
-//
-//    val deserializeContext = DeserializeContext(serializedModule.build,
-//        storages, ProtoStorageType, false)
-//    ModuleLoader.initTensorStorage[T](deserializeContext)
-//        val copy = ModuleSerializer.load[T](deserializeContext).module
-//        .asInstanceOf[AbstractModule[DenseTensor
-//      , DenseTensor, T]]
-//    setWeightAndBias(copy, deepCopy)
-//    copy
-  }
-
-  @Override
-  public int hashCode() {
-   List state = new ArrayList();
-   state.add(this.output);
-   state.add(this.gradInput);
-   state.add(this.getClass());
-   state.add(this.name);
-   return state.stream().mapToInt(o -> (o == null) ? 0 : o.hashCode()).reduce(0,(a, b) ->   31 * a + b);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if(other instanceof AbstractModule
-    && output == ((AbstractModule) other).output
-    && gradInput == ((AbstractModule) other).gradInput
-    && name == ((AbstractModule) other).getName()){
-      return true;
-    }else{
-      return false;
-    }
-  }
-
-  /**
-   * Save this module to path with protobuf format
-   * @param path path to save module, local file system, HDFS and Amazon S3 is supported.
-   *             HDFS path should be like "hdfs://[host]:[port]/xxx"
-   *             Amazon S3 path should be like "s3a://bucket/xxx"
-   * @param weightPath where to store weight default null
-   * @param overWrite if overwrite default false
-   * @return self
-   */
-  public final AbstractModule saveModule(String path, String weightPath,
-                       boolean overWrite) {
-    this.clearState();
-    //ModulePersister.saveToFile(path, weightPath, this, overWrite);
-    return this;
-  }
-
-  /**
-   * Save this module definition to path.
-   * @param path path to save module, local file system, HDFS and Amazon S3 is supported.
-   *             HDFS path should be like "hdfs://[host]:[port]/xxx"
-   *             Amazon S3 path should be like "s3a://bucket/xxx"
-   * @param overWrite if overwrite
-   * @return self
-   */
-  public final AbstractModule saveDefinition(String path, boolean overWrite) {
-    this.clearState();
-    //ModulePersister.saveModelDefinitionToFile(path, this, overWrite)
-    return this;
   }
 
 //  /**
@@ -651,64 +465,377 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //  }
 
   /**
-   * module predict, return the probability distribution
-   * @param dataset dataset for prediction
-   * @param batchSize total batchSize for all partitions.
-   *                  if -1, default is 4 * partitionNumber of datatset
-   * @param shareBuffer whether to share same memory for each batch predict results
+   * Set extra parameter to this module.
+   * Extra parameter means the trainable parameters beside weight and bias. Such as runningMean
+   * and runningVar in BatchNormalization.
+   *
+   * @return this
    */
-  public final def predict(dataset: RDD[Sample[T]],
-                    batchSize: Int = -1,
-                    shareBuffer: Boolean = false): RDD[Activity] = {
-    Predictor(this).predict(dataset, batchSize, shareBuffer)
+  public AbstractModule setExtraParameter(Tensor[] extraParam) {
+    Tensor[] currentExtraParam = this.getExtraParameter();
+    if (extraParam != null && currentExtraParam != null) {
+      Util.require(extraParam.length == currentExtraParam.length,
+          "state's length doesn't match, excepted:"
+              + "${currentExtraParam.length}, but got  ${extraParam.length}");
+      int i = 0;
+      while (i < extraParam.length) {
+        currentExtraParam[i].copy(extraParam[i]);
+        i += 1;
+      }
+      return this;
+    } else if (extraParam == null && currentExtraParam == null) {
+      return this;
+    } else {
+      throw new IllegalArgumentException("module's extraParameter is $currentExtraParam"
+          + ", while setting param is ${extraParam}");
+    }
   }
 
   /**
+   * This function returns a table contains ModuleName, the parameter names and parameter value
+   * in this module.
+   * <p>
+   * The result table is a structure of Table(ModuleName -> Table(ParameterName -> ParameterValue)),
+   * and the type is Table[String, Table[String, Tensor[T]]].
+   * <p>
+   * For example, get the weight of a module named conv1:
+   * table[Table]("conv1")[Tensor[T]]("weight").
+   * <p>
+   * The names of the parameters follow such convention:
+   * <p>
+   * 1. If there's one parameter, the parameter is named as "weight", the gradient is named as
+   * "gradWeight"
+   * <p>
+   * 2. If there're two parameters, the first parameter is named as "weight", the first gradient is
+   * named as "gradWeight"; the second parameter is named as "bias", the seconcd gradient is
+   * named as "gradBias"
+   * <p>
+   * 3. If there're more parameters, the weight is named as "weight" with a seq number as suffix,
+   * the gradient is named as "gradient" with a seq number as suffix
+   * <p>
+   * Custom modules should override this function the default impl if the convention doesn't meet
+   * the requirement.
+   *
+   * @return Table
+   */
+  public Table getParametersTable() {
+    TensorArrayPair params = parameters();
+    if (params == null) {
+      return null;
+    }
+    Tensor[] weights = params.getValue0();
+    Tensor[] gradients = params.getValue1();
+    Util.require(gradients.length == weights.length,
+        "weight number is not equal to grad number");
+
+    Table result = new Table();
+    if (weights.length == 1) {
+      Table temp = new Table();
+      temp.put("weight", weights[0]);
+      temp.put("gradWeight", gradients[0]);
+      result.put(getName(), temp);
+    } else if (weights.length == 2) {
+      Table temp = new Table();
+      temp.put("weight", weights[0]);
+      temp.put("bias", weights[1]);
+      temp.put("gradWeight", gradients[0]);
+      temp.put("gradBias", gradients[1]);
+      result.put(getName(), temp);
+    } else {
+      Table temp = new Table();
+      for (int i = 0; i < weights.length; i++) {
+        temp.put("weight" + i, weights[i]);
+        temp.put("gradient" + i, gradients[i]);
+      }
+      result.put(getName(), temp);
+    }
+    return result;
+  }
+
+//  /**
+//   * model predict images, return imageFrame with predicted tensor,
+//   * if you want to call predictImage multiple times,
+//   * it is recommended to use Predictor for DistributedImageFrame
+//   * or LocalPredictor for LocalImageFrame
+//   * @param imageFrame imageFrame that contains images
+//   * @param outputLayer if outputLayer is not null, the output of layer that matches
+//   *                      outputLayer will be used as predicted output
+//   * @param shareBuffer whether to share same memory for each batch predict results
+//   * @param batchPerPartition batch size per partition, default is 4
+//   * @param predictKey key to store predicted result
+//   * @param featurePaddingParam featurePaddingParam if the inputs have variant size
+//   * @return
+//   */
+//  public final def predictImage(imageFrame: ImageFrame,
+//                         outputLayer: String = null,
+//                         shareBuffer: Boolean = false,
+//                         batchPerPartition: Int = 4,
+//                         predictKey: String = ImageFeature.predict,
+//                         featurePaddingParam: Option[PaddingParam[T]] = None): ImageFrame = {
+//    imageFrame match {
+//      case distributedImageFrame: DistributedImageFrame =>
+//        Predictor(this, featurePaddingParam, batchPerPartition)
+//            .predictImage(distributedImageFrame, outputLayer, shareBuffer, predictKey)
+//      case localImageFrame: LocalImageFrame =>
+//        val predictor = LocalPredictor(this, featurePaddingParam, batchPerPartition)
+//        val imageFrame = predictor.predictImage(localImageFrame, outputLayer, shareBuffer,
+//            predictKey)
+//        predictor.shutdown()
+//        imageFrame
+//    }
+//  }
+
+  /**
+   * Set the module to training mode
+   *
+   * @return
+   */
+  public AbstractModule training() {
+    train = true;
+    return this;
+  }
+
+  /**
+   * Set the module to evaluate mode
+   *
+   * @return
+   */
+  public AbstractModule evaluate() {
+    train = false;
+    return this;
+  }
+
+  /**
+   * Check if the model is in training mode
+   *
+   * @return
+   */
+  final boolean isTraining() {
+    return this.train;
+  }
+
+  /**
+   * Reset module parameters, which is re-initialize the parameter with given initMethod
+   */
+  public abstract void reset();
+
+  /**
+   * Set the line separator when print the module
+   *
+   * @param line
+   * @return
+   */
+  public final AbstractModule setLine(String line) {
+    this.line = line;
+    return this;
+  }
+
+  /**
+   * Clone the model
+   *
+   * @return
+   */
+  public final void cloneModule() {
+    throw new UnsupportedOperationException("Operation not supported");
+    //SerializationUtils.clone(this);
+  }
+
+  /**
+   * Clone the module, deep or shallow copy
+   *
+   * @param deepCopy
+   * @return
+   */
+  public final AbstractModule clone(boolean deepCopy) {
+    throw new UnsupportedOperationException("Operation not supported");
+
+//    val moduleData = ModuleData[T](this, Seq[String](), Seq[String]())
+//    val storages = new mutable.HashMap[Int, Any]()
+//    val context = SerializeContext(moduleData, storages, ProtoStorageType, false)
+//    val serializedModule = ModuleSerializer.serialize[T](context).bigDLModule
+//    ModulePersister.setTensorStorage(serializedModule, storages)
+//
+//    storages.clear()
+//
+//    val deserializeContext = DeserializeContext(serializedModule.build,
+//        storages, ProtoStorageType, false)
+//    ModuleLoader.initTensorStorage[T](deserializeContext)
+//        val copy = ModuleSerializer.load[T](deserializeContext).module
+//        .asInstanceOf[AbstractModule[DenseTensor
+//      , DenseTensor, T]]
+//    setWeightAndBias(copy, deepCopy)
+//    copy
+  }
+
+  @Override
+  public int hashCode() {
+    List state = new ArrayList();
+    state.add(this.output);
+    state.add(this.gradInput);
+    state.add(this.getClass());
+    state.add(this.name);
+    return state.stream().mapToInt(o ->
+        (o == null) ? 0 : o.hashCode()).reduce(0, (a, b) -> 31 * a + b);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return other instanceof AbstractModule
+        && output == ((AbstractModule) other).output
+        && gradInput == ((AbstractModule) other).gradInput
+        && name == ((AbstractModule) other).getName();
+  }
+
+  /**
+   * Save this module to path with protobuf format
+   *
+   * @param path       path to save module, local file system, HDFS and Amazon S3 is supported.
+   *                   HDFS path should be like "hdfs://[host]:[port]/xxx"
+   *                   Amazon S3 path should be like "s3a://bucket/xxx"
+   * @param weightPath where to store weight default null
+   * @param overWrite  if overwrite default false
+   * @return self
+   */
+  public final AbstractModule saveModule(String path, String weightPath,
+                                         boolean overWrite) {
+    this.clearState();
+    //ModulePersister.saveToFile(path, weightPath, this, overWrite);
+    return this;
+  }
+
+  /**
+   * Save this module definition to path.
+   *
+   * @param path      path to save module, local file system, HDFS and Amazon S3 is supported.
+   *                  HDFS path should be like "hdfs://[host]:[port]/xxx"
+   *                  Amazon S3 path should be like "s3a://bucket/xxx"
+   * @param overWrite if overwrite
+   * @return self
+   */
+  public final AbstractModule saveDefinition(String path, boolean overWrite) {
+    this.clearState();
+    //ModulePersister.saveModelDefinitionToFile(path, this, overWrite)
+    return this;
+  }
+
+  /**
+   * module predict, return the probability distribution
+   *
+   * @param dataset     dataset for prediction
+   * @param batchSize   total batchSize for all partitions.
+   *                    if -1, default is 4 * partitionNumber of datatset
+   * @param shareBuffer whether to share same memory for each batch predict results
+   */
+  public final TSet<Activity> predict(TSet<Sample> dataset, int batchSize, boolean shareBuffer) {
+    //Predictor(this).predict(dataset, batchSize, shareBuffer)
+    throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
+  }
+
+//  /**
+//   * use ValidationMethod to evaluate module on the given rdd dataset
+//   * @param dataset dataset for test
+//   * @param vMethods validation methods
+//   * @param batchSize total batchsize of all partitions,
+//   *                  optional param and default 4 * partitionNum of dataset
+//   * @return
+//   */
+//  public final def evaluate(TSet<Sample> dataset, vMethods: Array[_ <:ValidationMethod[T]],
+//      batchSize: Option[Int] = None
+//  ): Array[(ValidationResult, ValidationMethod[T])] = {
+//    Evaluator(this).test(dataset, vMethods.map(v => v), batchSize)
+//  }
+//
+//
+//  /**
+//   * use ValidationMethod to evaluate module on the given rdd dataset
+//   * @param dataset
+//   * @param vMethods
+//   * @return
+//   */
+//  public final def evaluate(
+//      dataset: RDD[MiniBatch[T]],
+//      vMethods: Array[_ <:ValidationMethod[T]]
+//  ): Array[(ValidationResult, ValidationMethod[T])] = {
+//    Evaluator(this).testMiniBatch(dataset, vMethods.map(v => v))
+//  }
+
+//  /**
+//   * use ValidationMethod to evaluate module on the given ImageFrame
+//   *  @param imageFrame ImageFrame for valudation
+//   *  @param vMethods validation methods
+//   *  @param batchSize total batch size of all partitions
+//   *  @return
+//   */
+//
+//  public final def evaluateImage(imageFrame: ImageFrame,
+//                          vMethods: Array[_ <:ValidationMethod[T]],
+//                          batchSize: Option[Int] = None
+//  ): Array[(ValidationResult, ValidationMethod[T])] = {
+//    require(imageFrame.isDistributed(), "ImageFrame must be distributed")
+//    val rdd = imageFrame.toDistributed().rdd.map(imageFeature => {
+//    if (imageFeature.isValid) {
+//      require(imageFeature.contains(ImageFeature.sample), "ImageFeature must have sample")
+//      imageFeature[Sample[T]](ImageFeature.sample)
+//    } else {
+//      null
+//    }
+//    }).filter(_ != null)
+//    evaluate(rdd, vMethods, batchSize)
+//  }
+//
+//  /**
+//   * use ValidationMethod to evaluate module on the given local dataset
+//   * @param dataSet
+//   * @param vMethods
+//   * @return
+//   */
+//  public final def evaluate(
+//      dataSet: LocalDataSet[MiniBatch[T]],
+//      vMethods: Array[_ <:ValidationMethod[T]]
+//  ): Array[(ValidationResult, ValidationMethod[T])] = {
+//    Validator(this, dataSet).test(vMethods.map(v => v))
+//  }
+
+//  /**
+//   * Quantize this module, which reduces the precision of the parameter. Get a higher speed with a
+//   * little accuracy cost.
+//   * @return
+//   */
+//  final def quantize(): Module[T] = {
+//    ConversionUtils.convert[T](this, true)
+//  }
+
+  // ================================= Internal APIs ===========================================
+
+  /**
    * module predict, return the predict label
-   * @param dataset dataset for prediction
+   *
+   * @param dataset   dataset for prediction
    * @param batchSize total batchSize for all partitions.
    *                  if -1, default is 4 * partitionNumber of dataset
    */
 
-  public final def predictClass(dataset: RDD[Sample[T]], batchSize: Int = -1): RDD[Int] = {
-    Predictor(this).predictClass(dataset, batchSize)
+  public final TSet<Integer> predictClass(TSet<Sample> dataset, int batchSize) {
+    //Predictor(this).predictClass(dataset, batchSize)
+    throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
   }
 
   /**
-   * model predict images, return imageFrame with predicted tensor,
-   * if you want to call predictImage multiple times,
-   * it is recommended to use Predictor for DistributedImageFrame
-   * or LocalPredictor for LocalImageFrame
-   * @param imageFrame imageFrame that contains images
-   * @param outputLayer if outputLayer is not null, the output of layer that matches
-   *                      outputLayer will be used as predicted output
-   * @param shareBuffer whether to share same memory for each batch predict results
-   * @param batchPerPartition batch size per partition, default is 4
-   * @param predictKey key to store predicted result
-   * @param featurePaddingParam featurePaddingParam if the inputs have variant size
-   * @return
+   * Get weight and bias for the module
+   *
+   * @return array of weights and bias
    */
-  public final def predictImage(imageFrame: ImageFrame,
-                         outputLayer: String = null,
-                         shareBuffer: Boolean = false,
-                         batchPerPartition: Int = 4,
-                         predictKey: String = ImageFeature.predict,
-                         featurePaddingParam: Option[PaddingParam[T]] = None): ImageFrame = {
-    imageFrame match {
-      case distributedImageFrame: DistributedImageFrame =>
-        Predictor(this, featurePaddingParam, batchPerPartition)
-            .predictImage(distributedImageFrame, outputLayer, shareBuffer, predictKey)
-      case localImageFrame: LocalImageFrame =>
-        val predictor = LocalPredictor(this, featurePaddingParam, batchPerPartition)
-        val imageFrame = predictor.predictImage(localImageFrame, outputLayer, shareBuffer,
-            predictKey)
-        predictor.shutdown()
-        imageFrame
+  public final Tensor[] getWeightsBias() {
+    if (parameters() != null) {
+      return parameters().getValue0();
+    } else {
+      return null;
     }
   }
 
   /**
    * Set weight and bias for the module
+   *
    * @param newWeights array of weights and bias
    * @return
    */
@@ -716,9 +843,9 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     Util.require(parameters() != null, "this layer does not have weight/bias");
     Util.require(parameters().getValue0().length == newWeights.length,
         "the number of input weight/bias is not consistant with "
-            +            "number of weight/bias of this layer, "
-            +            "number of input ${parameters()._1.length},"
-            +            " number of output ${newWeights.length}");
+            + "number of weight/bias of this layer, "
+            + "number of input ${parameters()._1.length},"
+            + " number of output ${newWeights.length}");
 
     Tensor[] weights = parameters().getValue0();
 
@@ -734,24 +861,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   }
 
   /**
-   * Get weight and bias for the module
-   * @return array of weights and bias
-   *
-   */
-  public final Tensor[] getWeightsBias(){
-    if (parameters() != null) {
-      return parameters().getValue0();
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * save weights and bias to file
-   * @param path file to save
+   *
+   * @param path      file to save
    * @param overWrite whether to overwrite or not
    */
-  public final void saveWeights(String path,boolean overWrite) {
+  public final void saveWeights(String path, boolean overWrite) {
     throw new UnsupportedOperationException("Operation not supported");
 //    val parameterTable = getParametersTable()
 //    val weightsBiasTable = T()
@@ -772,12 +887,13 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * load pretrained weights and bias to current module
+   *
    * @param weightPath file to store weights and bias
-   * @param matchAll whether to match all layers' weights and bias,
-   *                 if not, only load existing pretrained weights and bias
+   * @param matchAll   whether to match all layers' weights and bias,
+   *                   if not, only load existing pretrained weights and bias
    * @return current module
    */
-  public final AbstractModule loadWeights(String weightPath,boolean matchAll) {
+  public final AbstractModule loadWeights(String weightPath, boolean matchAll) {
     throw new UnsupportedOperationException("Operation not supported");
 //    val srcParameter = File.load[Table] (weightPath)
 //        val targetParameter = getParametersTable()
@@ -785,13 +901,20 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //    return this;
   }
 
+//  private[nn] final def allocateAs(dest: Activity): Activity = dest match {
+//    case tensor: Tensor[T] => Tensor[T]()
+//    case table: Table => T()
+//    case _ => throw new IllegalArgumentException("Activity only support tensor and table now")
+//  }
+
   /**
    * copy weights from another model, mapping by layer name
+   *
    * @param srcModel model to copy from
    * @param matchAll whether to match all layers' weights and bias,
    * @return current module
    */
-  public final AbstractModule loadModelWeights(Module srcModel,boolean matchAll) {
+  public final AbstractModule loadModelWeights(Module srcModel, boolean matchAll) {
     throw new UnsupportedOperationException("Operation not supported");
     //    val srcParameter = srcModel.getParametersTable()
 //    val targetParameter = getParametersTable()
@@ -799,13 +922,14 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //    return this;
   }
 
-  protected Node<AbstractModule> processInputs(List<Node<AbstractModule>> nodes){
+  protected Node<AbstractModule> processInputs(List<Node<AbstractModule>> nodes) {
     Node<AbstractModule> curNode = new Node<AbstractModule>(this);
     nodes.stream().forEach(node -> node.add(curNode, new Edge()));
     return curNode;
   }
 
-  protected Node<AbstractModule> processInputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
+  protected Node<AbstractModule> processInputs(ModuleNodeIntPair first,
+                                               ModuleNodeIntPair... nodesWithIndex) {
     Node<AbstractModule> curNode = new Node<AbstractModule>(this);
     first.getValue0().add(curNode, new Edge(first.getValue1()));
     Arrays.stream(nodesWithIndex).sequential()
@@ -816,10 +940,11 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * Build graph: some other modules point to current module
+   *
    * @param nodes upstream module nodes
    * @return node containing current module
    */
-  public Node<AbstractModule> inputs(Node<AbstractModule> ...nodes){
+  public Node<AbstractModule> inputs(Node<AbstractModule>... nodes) {
     validateInput(Arrays.stream(nodes)
         .map(moduleNode -> moduleNode.getElement()).collect(Collectors.toList()));
     return processInputs(Arrays.asList(nodes));
@@ -827,10 +952,11 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * Build graph: some other modules point to current module
+   *
    * @param nodes upstream module nodes in an array
    * @return node containing current module
    */
-  public Node<AbstractModule> inputsArr(Node<AbstractModule>[] nodes){
+  public Node<AbstractModule> inputsArr(Node<AbstractModule>[] nodes) {
     validateInput(Arrays.stream(nodes)
         .map(moduleNode -> moduleNode.getElement()).collect(Collectors.toList()));
     return processInputs(Arrays.asList(nodes));
@@ -838,11 +964,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * Build graph: some other modules point to current module
-   * @param first distinguish from another inputs when input parameter list is empty
+   *
+   * @param first          distinguish from another inputs when input parameter list is empty
    * @param nodesWithIndex upstream module nodes and the output tensor index. The start index is 1.
    * @return node containing current module
    */
-  public Node<AbstractModule> inputs(ModuleNodeIntPair first,ModuleNodeIntPair ...nodesWithIndex){
+  public Node<AbstractModule> inputs(ModuleNodeIntPair first, ModuleNodeIntPair... nodesWithIndex) {
     validateInput(Arrays.asList(first.getValue0().getElement()));
     validateInput(Arrays.stream(nodesWithIndex)
         .map(pair -> pair.getValue0().getElement()).collect(Collectors.toList()));
@@ -851,29 +978,39 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * Generate graph module with start nodes
+   *
    * @param startNodes
    * @return
    */
-  public Graph toGraph(Node<AbstractModule> ...startNodes) = {
-    val starts = if (startNodes.isEmpty) Array(Input[T]()) else startNodes.toArray
-    val endNodes = this.getEndNodes(starts)
-    var graph = Graph(starts, endNodes)
-    if (graph.isInstanceOf[StaticGraph[T]]) {
-      // Merge nested graphs inside to make the whole graph non-nested
-      graph = graph.asInstanceOf[StaticGraph[T]].toSingleGraph()
+  public Graph toGraph(Node<AbstractModule>... startNodes) {
+    Node<AbstractModule>[] starts;
+
+    if (startNodes == null || startNodes.length == 0) {
+      starts = new Node[]{new Node<AbstractModule>(new Input())};
+    } else {
+      starts = (Node<AbstractModule>[]) Arrays.stream(startNodes).toArray();
     }
-    if (inputsFormats != null) {
-      graph.setInputFormats(inputsFormats)
-    }
-    if (outputsFormats != null) {
-      graph.setOutputFormats(outputsFormats)
-    }
-    graph
+    throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
+
+//    Node<AbstractModule>[] endNodes = this.getEndNodes(starts);
+//    int graph = new Graph(starts, endNodes);
+//    if (graph.isInstanceOf[StaticGraph[T]]) {
+//      // Merge nested graphs inside to make the whole graph non-nested
+//      graph = graph.asInstanceOf[StaticGraph[T]].toSingleGraph()
+//    }
+//    if (inputsFormats != null) {
+//      graph.setInputFormats(inputsFormats)
+//    }
+//    if (outputsFormats != null) {
+//      graph.setOutputFormats(outputsFormats)
+//    }
+//    graph
   }
 
   /**
    * Find a module with given name. If there is no module with given name, it will return None. If
    * there are multiple modules with the given name, an exception will be thrown.
+   *
    * @param name
    * @return
    */
@@ -885,146 +1022,40 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
   }
 
-  /**
-   * use ValidationMethod to evaluate module on the given rdd dataset
-   * @param dataset dataset for test
-   * @param vMethods validation methods
-   * @param batchSize total batchsize of all partitions,
-   *                  optional param and default 4 * partitionNum of dataset
-   * @return
-   */
-  public final def evaluate(
-      dataset: RDD[Sample[T]],
-      vMethods: Array[_ <:ValidationMethod[T]],
-      batchSize: Option[Int] = None
-  ): Array[(ValidationResult, ValidationMethod[T])] = {
-    Evaluator(this).test(dataset, vMethods.map(v => v), batchSize)
-  }
-
-
-  /**
-   * use ValidationMethod to evaluate module on the given rdd dataset
-   * @param dataset
-   * @param vMethods
-   * @return
-   */
-  public final def evaluate(
-      dataset: RDD[MiniBatch[T]],
-      vMethods: Array[_ <:ValidationMethod[T]]
-  ): Array[(ValidationResult, ValidationMethod[T])] = {
-    Evaluator(this).testMiniBatch(dataset, vMethods.map(v => v))
-  }
-
-  /**
-   * use ValidationMethod to evaluate module on the given ImageFrame
-   *  @param imageFrame ImageFrame for valudation
-   *  @param vMethods validation methods
-   *  @param batchSize total batch size of all partitions
-   *  @return
-   */
-
-  public final def evaluateImage(imageFrame: ImageFrame,
-                          vMethods: Array[_ <:ValidationMethod[T]],
-                          batchSize: Option[Int] = None
-  ): Array[(ValidationResult, ValidationMethod[T])] = {
-    require(imageFrame.isDistributed(), "ImageFrame must be distributed")
-    val rdd = imageFrame.toDistributed().rdd.map(imageFeature => {
-    if (imageFeature.isValid) {
-      require(imageFeature.contains(ImageFeature.sample), "ImageFeature must have sample")
-      imageFeature[Sample[T]](ImageFeature.sample)
-    } else {
-      null
-    }
-    }).filter(_ != null)
-    evaluate(rdd, vMethods, batchSize)
-  }
-
-  /**
-   * use ValidationMethod to evaluate module on the given local dataset
-   * @param dataSet
-   * @param vMethods
-   * @return
-   */
-  public final def evaluate(
-      dataSet: LocalDataSet[MiniBatch[T]],
-      vMethods: Array[_ <:ValidationMethod[T]]
-  ): Array[(ValidationResult, ValidationMethod[T])] = {
-    Validator(this, dataSet).test(vMethods.map(v => v))
-  }
-
-//  /**
-//   * Quantize this module, which reduces the precision of the parameter. Get a higher speed with a
-//   * little accuracy cost.
-//   * @return
-//   */
-//  final def quantize(): Module[T] = {
-//    ConversionUtils.convert[T](this, true)
-//  }
-
-  // ================================= Internal APIs ===========================================
-
-  private String namePostfix = Integer.toHexString(java.util.UUID.randomUUID().hashCode());
-
-  final private String getNamePostfix= namePostfix;
-
-  final private void setNamePostfix(String namePostfix){
+  private void setNamePostfix(String namePostfix) {
     this.namePostfix = namePostfix;
   }
 
-  /**
-   * The scale of gradient weight and gradient bias
-   * before gradParameters being accumulated.
-   */
-  protected double scaleW = 1.0;
-  protected double scaleB = 1.0;
+  private int getId() {
+    return this.id;
+  }
 
-//  private[nn] final def allocateAs(dest: Activity): Activity = dest match {
-//    case tensor: Tensor[T] => Tensor[T]()
-//    case table: Table => T()
-//    case _ => throw new IllegalArgumentException("Activity only support tensor and table now")
-//  }
-
-  /**
-   * The name of the module
-   */
-  private String name = null;
-
-  private int id = 0;
-
-  private void setId(int id){
+  private void setId(int id) {
     this.id = id;
   }
 
-  private int getId(){
-   return this.id;
-  }
-
-  protected final String getPrintName(){
+  protected final String getPrintName() {
     String postfix = (name == null) ? namePostfix : name;
-    return  this.getClass().getSimpleName() + "[" + postfix + "]";
+    return this.getClass().getSimpleName() + "[" + postfix + "]";
 
   }
 
-  protected long forwardTime = 0L;
 
-  protected long backwardTime = 0L;
-
-  private double scaleWCache = scaleW;
-  private double scaleBCache = scaleB;
+  //private val engineType: EngineType = Engine.getEngineType()
 
   /**
    * This function returns two tensors. One for the flattened trainable parameters flatParameters
    * and another for the gradients of the energy wrt to the trainable parameters flatGradParameters.
-   *
+   * <p>
    * Custom modules should not override this function. They should instead override parameters(...)
    * which is, in turn, called by the present function.
-   *
+   * <p>
    * This function will go over all the weights and gradWeights and make them view into a single
    * tensor (one for weights and one for gradWeights).
    *
    * @return
    */
-  final public TensorPair getParameters(){
+  public final TensorPair getParameters() {
     TensorArrayPair weightAndGradParameters = this.parameters();
 
     // maybe null if not weights in this module.
@@ -1045,17 +1076,6 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   }
 
   /**
-   * Module status. It is useful for modules like dropout/batch normalization
-   */
-  protected boolean train = true;
-
-
-  protected String line = "\n";
-
-
-  //private val engineType: EngineType = Engine.getEngineType()
-
-  /**
    * get execution engine type
    */
 //  private def checkEngineType() {
@@ -1064,29 +1084,30 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //    }
 //    return this;
 //  }
-
-  final private void setWeightAndBias(AbstractModule copy,boolean deepCopy){
+  private void setWeightAndBias(AbstractModule copy, boolean deepCopy) {
     Table parameterTable = this.getParametersTable();
     Table copiedModuleParamTable = copy.getParametersTable();
     if (parameterTable != null) {
       Util.require(copiedModuleParamTable != null, "cloned module should have params");
       parameterTable.forEach((nameKey, params) -> {
-        if(nameKey instanceof String && params instanceof Table){
-          Util.require(copiedModuleParamTable.get(nameKey) != null, "cloned module should have for $name");
-          setLayerWeightAndBias((Table)params, copiedModuleParamTable.<Table>get(nameKey), deepCopy);
-        }else{
+        if (nameKey instanceof String && params instanceof Table) {
+          Util.require(copiedModuleParamTable.get(nameKey) != null,
+              "cloned module should have for $name");
+          setLayerWeightAndBias((Table) params,
+              copiedModuleParamTable.<Table>get(nameKey), deepCopy);
+        } else {
           throw new UnsupportedOperationException("unsupported $name and $params");
         }
       });
     }
   }
 
-  final private void setLayerWeightAndBias(Table params,Table copyParams,boolean deepCopy){
-    params.forEach((param1, param2) -> copyParam(params, copyParams, deepCopy, (String)param1));
+  private void setLayerWeightAndBias(Table params, Table copyParams, boolean deepCopy) {
+    params.forEach((param1, param2) -> copyParam(params, copyParams, deepCopy, (String) param1));
   }
 
-  final private void copyParam(Table params,Table copyParams,
-                              boolean deepCopy,String paraName){
+  private void copyParam(Table params, Table copyParams,
+                               boolean deepCopy, String paraName) {
     if (params.contains(paraName)) {
       // this is for quantization tensors where the weight might be an array
       if (params.get(paraName) instanceof Tensor[]) {
@@ -1094,7 +1115,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
         Tensor[] origins = params.<Tensor[]>get(paraName);
         int i = 0;
         while (i < copies.length) {
-          copyTensor(origins[i], copies[i], deepCopy;
+          copyTensor(origins[i], copies[i], deepCopy);
           i += 1;
         }
       } else {
@@ -1104,7 +1125,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
   }
 
-  final private void copyTensor(Tensor t1,Tensor t2,boolean deepCopy){
+  private void copyTensor(Tensor t1, Tensor t2, boolean deepCopy) {
 //    if (t2.isInstanceOf[QuantizedTensor[_]]) {
 //      t2.asInstanceOf[QuantizedTensor[_]].release()
 //    }
@@ -1115,38 +1136,29 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
   }
 
-  final private void copyWeights(Table target,Table src,boolean matchAll){
+  private void copyWeights(Table target, Table src, boolean matchAll) {
     target.forEach((nameKey, targetParams) -> {
-      if(nameKey instanceof String && targetParams instanceof Table){
-        if(src.contains(nameKey)){
+      if (nameKey instanceof String && targetParams instanceof Table) {
+        if (src.contains(nameKey)) {
           Table srcParams = src.<Table>get(nameKey);
           if (srcParams.contains("weight")) {
             Tensor w = srcParams.<Tensor>get("weight");
-            ((Table)targetParams).<Tensor>get("weight").resizeAs(w).copy(w);
+            ((Table) targetParams).<Tensor>get("weight").resizeAs(w).copy(w);
           }
           if (srcParams.contains("bias")) {
             Tensor b = srcParams.<Tensor>get("bias");
-            ((Table)targetParams).<Tensor>get("bias").resizeAs(b).copy(b);
+            ((Table) targetParams).<Tensor>get("bias").resizeAs(b).copy(b);
           }
-        }else {
-          if(matchAll){
-            throw new IllegalStateException("module" + nameKey + " cannot find corresponding weight bias");
+        } else {
+          if (matchAll) {
+            throw new IllegalStateException("module"
+                + nameKey + " cannot find corresponding weight bias");
           }
         }
-      }else{
+      } else {
         throw new UnsupportedOperationException("unsupported $name and $targetParams");
       }
     });
-  }
-
-  /**
-   * Generate end nodes of current module with start nodes
-   * @param startNodes: current start nodes
-   * @return current end nodes
-   */
-  public Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes){
-    Node<AbstractModule>[] endNodes = new Node[]{this.processInputs(Arrays.asList(startNodes))};
-    return endNodes;
   }
 
 //  /**
@@ -1159,10 +1171,21 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //  }
 
   /**
+   * Generate end nodes of current module with start nodes
+   *
+   * @param startNodes current start nodes
+   * @return current end nodes
+   */
+  public Node<AbstractModule>[] getEndNodes(Node<AbstractModule>[] startNodes) {
+    Node<AbstractModule>[] endNodes = new Node[]{this.processInputs(Arrays.asList(startNodes))};
+    return endNodes;
+  }
+
+  /**
    * Check if some module is duplicated in the model. For a layer it cannot be duplicated.
    * Container should override this method
    */
-  protected void checkDuplicate(HashSet<Integer> record){
+  protected void checkDuplicate(HashSet<Integer> record) {
     String errMsg = "Some module is duplicate in the current model: ";
     int curId = System.identityHashCode(this);
     Util.require(this.skipDuplicateCheck() || !record.contains(curId), errMsg + this.getName());
@@ -1171,76 +1194,76 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * Sometimes, some layer need skip the duplicate check process, e.g. Keras-like input layer
+   *
    * @return
    */
-  protected boolean skipDuplicateCheck(){
+  protected boolean skipDuplicateCheck() {
     return false;
   }
+
+//  /**
+//   * parameter synchronizer for gradient synchronization
+//   */
+//  private var _parameterSynchronizer: DistriParameterSynchronizer[T] = null
+//
+//  /**
+//   * set parameter synchronizer
+//   * @param parameterSynchronizer parameter synchronizer
+//   */
+//  private def setParameterSynchronizer(parameterSynchronizer:
+//      DistriParameterSynchronizer[T]): Unit = {
+//    _parameterSynchronizer = parameterSynchronizer
+//  }
+//
+//
+//  /**
+//   * get parameter synchronizer
+//   * @return parameter synchronizer
+//   */
+//  private def getParameterSynchronizer():
+//  DistriParameterSynchronizer[T] = _parameterSynchronizer
 
   /**
    * if the model contains native resources such as aligned memory, we should release it by manual.
    * JVM GC can't release them reliably.
    */
- public void release(){
+  public void release() {
 
- }
-
-  /**
-   * parameter synchronizer for gradient synchronization
-   */
-  private var _parameterSynchronizer: DistriParameterSynchronizer[T] = null
-
-  /**
-   * set parameter synchronizer
-   * @param parameterSynchronizer parameter synchronizer
-   */
-  private def setParameterSynchronizer(parameterSynchronizer:
-      DistriParameterSynchronizer[T]): Unit = {
-    _parameterSynchronizer = parameterSynchronizer
-  }
-
-
-  /**
-   * get parameter synchronizer
-   * @return parameter synchronizer
-   */
-  private def getParameterSynchronizer():
-  DistriParameterSynchronizer[T] = _parameterSynchronizer
-
-
-  private OptimMethod _optimMethod = null;
-
-  /**
-   * set optim method
-   */
-
-  private void setOptimMethod(OptimMethod optimMethod){
-    _optimMethod = optimMethod;
   }
 
   /**
    * get optim method for layer
    */
 
-  private OptimMethod getOptimMethod(){
+  private OptimMethod getOptimMethod() {
     return this._optimMethod;
   }
 
-  private void updateParameter(){
-    if (this.getParameterSynchronizer() != null && this.isTraining()) {
-      if (this.parameters() != null) {
-        long before = System.nanoTime();
-        val (weights, grads) = this.getParameterSynchronizer().get(this.getName());
-        val syncEndTime = System.nanoTime()
-        if (grads != null) {
-          val optimMethod = this.getOptimMethod
-          require(optimMethod != null, s"optim method for ${this.getName} cannot be null")
-          optimMethod.optimize(_ => (ev.fromType(0.0f), grads),
-          weights)
-          this.zeroGradParameters
-        }
-      }
-    }
+  /**
+   * set optim method
+   */
+
+  private void setOptimMethod(OptimMethod optimMethod) {
+    _optimMethod = optimMethod;
+  }
+
+  private void updateParameter() {
+//    if (this.getParameterSynchronizer() != null && this.isTraining()) {
+//      throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
+
+    //      if (this.parameters() != null) {
+//        long before = System.nanoTime();
+//        val (weights, grads) = this.getParameterSynchronizer().get(this.getName());
+//        val syncEndTime = System.nanoTime()
+//        if (grads != null) {
+//          val optimMethod = this.getOptimMethod
+//          require(optimMethod != null, s"optim method for ${this.getName} cannot be null")
+//          optimMethod.optimize(_ => (ev.fromType(0.0f), grads),
+//          weights)
+//          this.zeroGradParameters
+//        }
+//      }
+//    }
   }
 }
 

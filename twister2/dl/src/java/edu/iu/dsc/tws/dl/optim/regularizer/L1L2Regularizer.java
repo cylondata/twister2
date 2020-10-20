@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.dl.optim.Regularizer;
 /**
  * Apply both L1 and L2 regularization
  */
+@SuppressWarnings("NeedBraces")
 public class L1L2Regularizer extends Regularizer {
 
   //l1 regularization rate
@@ -26,7 +27,7 @@ public class L1L2Regularizer extends Regularizer {
   //l2 regularization rate
   private double l2;
 
-  transient private Tensor l1SignBuffer = null;
+  private transient Tensor l1SignBuffer = null;
 
   public L1L2Regularizer(double l1, double l2) {
     this.l1 = l1;
@@ -45,11 +46,11 @@ public class L1L2Regularizer extends Regularizer {
    * Accumulates the gradient of the l1, l2 regularization of `parameter`
    * to `gradParameter`
    *
-   * @param l1Alpha l1 regularization rate
-   * @param l2Alpha l2 regularization rate
-   * @param parameter the parameter that is regularized
+   * @param l1Alpha       l1 regularization rate
+   * @param l2Alpha       l2 regularization rate
+   * @param parameter     the parameter that is regularized
    * @param gradParameter the gradient of the parameter
-   * @param scale scale of gradParameters
+   * @param scale         scale of gradParameters
    */
   private void accL1L2Regularization(
       double l1Alpha,
@@ -57,7 +58,7 @@ public class L1L2Regularizer extends Regularizer {
       Tensor parameter,
       Tensor gradParameter,
       double scale
-  ){
+  ) {
     accL1Regularization(l1Alpha, parameter, gradParameter, scale);
     accL2Regularization(l2Alpha, parameter, gradParameter, scale);
   }
@@ -66,20 +67,20 @@ public class L1L2Regularizer extends Regularizer {
    * Accumulates the gradient of the l1 regularization of `parameter`
    * to `gradParameter`
    *
-   * @param alpha l1 regularization rate
-   * @param parameter the parameter that is regularized
+   * @param alpha         l1 regularization rate
+   * @param parameter     the parameter that is regularized
    * @param gradParameter the gradient of the parameter
-   * @param scale scale of gradParameters
+   * @param scale         scale of gradParameters
    */
   private void accL1Regularization(
       double alpha,
       Tensor parameter,
       Tensor gradParameter,
       double scale
-  ){
+  ) {
     if (alpha != 0 && scale != 0) {
       if (null == l1SignBuffer) l1SignBuffer = new DenseTensor();
-      gradParameter.add(alpha*scale,
+      gradParameter.add(alpha * scale,
           l1SignBuffer.resizeAs(parameter).copy(parameter).sign());
     }
   }
@@ -89,17 +90,17 @@ public class L1L2Regularizer extends Regularizer {
    * Accumulates the gradient of the l2 regularization of `parameter`
    * to `gradParameter`
    *
-   * @param alpha l2 regularization rate
-   * @param parameter the parameter that is regularized
+   * @param alpha         l2 regularization rate
+   * @param parameter     the parameter that is regularized
    * @param gradParameter the gradient of the parameter
-   * @param scale scale of gradParameters
+   * @param scale         scale of gradParameters
    */
   private void accL2Regularization(
       double alpha,
       Tensor parameter,
       Tensor gradParameter,
       double scale
-  ){
-    if (alpha != 0 && scale != 0) gradParameter.add(alpha* scale, parameter);
+  ) {
+    if (alpha != 0 && scale != 0) gradParameter.add(alpha * scale, parameter);
   }
 }

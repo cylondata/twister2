@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.tset;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -23,10 +27,6 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.sample.TensorSample;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.regex.Pattern;
 
 public class DLBasicSourceFunction extends BaseSourceFunc<Sample> {
 
@@ -72,7 +72,7 @@ public class DLBasicSourceFunction extends BaseSourceFunc<Sample> {
   public Sample next() {
     try {
       String[] entries = pattern.split(dataSplit.nextRecord(null));
-      double[] data =  Arrays.stream(entries).mapToDouble(Double::parseDouble)
+      double[] data = Arrays.stream(entries).mapToDouble(Double::parseDouble)
           .toArray();
       return new TensorSample(new DenseTensor(data));
     } catch (IOException e) {

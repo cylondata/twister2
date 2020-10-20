@@ -20,12 +20,12 @@ import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorMath;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
-import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 import edu.iu.dsc.tws.dl.utils.Util;
+import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
 @SuppressWarnings({"ChainingConstructorIgnoresParameter", "NeedBraces",
     "LocalVariableName", "NoClone", "SuperClone"})
@@ -60,17 +60,18 @@ public class DenseTensor implements Tensor, TensorMath {
     initWithStorage(storage, 0, new int[storage.length()], new int[1]);
   }
 
-  public DenseTensor(double[] values){
+  public DenseTensor(double[] values) {
     this(new ArrayDoubleStorage(values));
   }
 
-  public DenseTensor(int[] sizes){
-    this(new ArrayDoubleStorage(new double[TensorNumeric.product(sizes)]), 0, sizes.clone(), sizeToStride(sizes), sizes.length);
+  public DenseTensor(int[] sizes) {
+    this(new ArrayDoubleStorage(new double[TensorNumeric.product(sizes)]),
+        0, sizes.clone(), sizeToStride(sizes), sizes.length);
   }
 
   private static int[] sizeToStride(int[] sizes) {
     int[] strides = new int[sizes.length];
-        int jump = 1;
+    int jump = 1;
     int i = strides.length - 1;
     while (i >= 0) {
       strides[i] = jump;

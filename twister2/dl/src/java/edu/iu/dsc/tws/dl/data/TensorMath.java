@@ -668,7 +668,7 @@ public interface TensorMath {
    * @return
    */
   TensorPair topk(int k, int dim, boolean increase, Tensor result,
-                        Tensor indices, boolean sortedResult);
+                  Tensor indices, boolean sortedResult);
 
   /**
    * Replaces all elements in-place with the elements of lnx

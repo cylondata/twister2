@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.dl.graph;
 
 import java.io.Serializable;
+
 /**
  * An edge in the graph
  */
@@ -36,12 +37,13 @@ public class Edge implements Serializable {
 
   /**
    * Create a new Instance of this Edge
+   *
    * @return a new Instance of this Edge
    */
-  public Edge newInstance(){
-    if(fromIndex == null){
+  public Edge newInstance() {
+    if (fromIndex == null) {
       return new Edge(fromIndex);
-    }else{
+    } else {
       return new Edge(null);
     }
   }

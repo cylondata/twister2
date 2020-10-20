@@ -65,11 +65,11 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
-  public void forEach(BiConsumer func){
+  public void forEach(BiConsumer func) {
     state.forEach(func);
   }
 
-  public void put(Object key, Object value){
+  public void put(Object key, Object value) {
     state.put(key, value);
   }
 
@@ -218,7 +218,7 @@ public class Table implements Activity, Serializable {
     return this;
   }
 
-  public Table delete(Object key){
+  public Table delete(Object key) {
     if (state.containsKey(key)) {
       state.remove(key);
     }
@@ -273,7 +273,7 @@ public class Table implements Activity, Serializable {
   }
 
   public <T> T getOrDefault(Object key, T defaultValue) {
-    return (T)state.getOrDefault(key, defaultValue);
+    return (T) state.getOrDefault(key, defaultValue);
   }
 
 }

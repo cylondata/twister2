@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.dl.utils.Shape;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
+@SuppressWarnings("NeedBraces")
 public class Threshold extends TensorModule {
 
   private double threshold = 1e-6;
@@ -46,9 +47,9 @@ public class Threshold extends TensorModule {
       int taskSize = input.nElement();
 
       for (int i = 0; i < taskSize; i++) {
-       if(inputData[inputOffset + i] <= this.threshold){
-         inputData[inputOffset + i] = this.value;
-       }
+        if (inputData[inputOffset + i] <= this.threshold) {
+          inputData[inputOffset + i] = this.value;
+        }
       }
       return input;
     } else {
@@ -71,7 +72,7 @@ public class Threshold extends TensorModule {
     }
   }
 
-  private DenseTensor updateGradInputNoContinuous(DenseTensor input,DenseTensor gradOutput){
+  private DenseTensor updateGradInputNoContinuous(DenseTensor input, DenseTensor gradOutput) {
     validateParameters();
     throw new UnsupportedOperationException("updateGradInputNoContinuous not supported");
 //    if (inPlace) {;
@@ -128,8 +129,7 @@ public class Threshold extends TensorModule {
           gradInputData[gradInputOffset + j] = 0.0;
         }
       }
-    }
-    else {
+    } else {
       ((DenseTensor) gradInput).resizeAs(gradOutput);
       ((DenseTensor) output).copy(gradOutput);
       double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
@@ -146,7 +146,7 @@ public class Threshold extends TensorModule {
           gradInputData[gradInputOffset + j] = inputData[inputOffset + j];
         }
       }
-      }
+    }
 
     return (DenseTensor) gradInput;
   }
@@ -166,10 +166,10 @@ public class Threshold extends TensorModule {
 
   }
 
-  public void validateParameters(){
+  public void validateParameters() {
     if (inPlace) {
-      Util.require(value <= threshold, "in-place processing requires value (" +
-          value + "') not exceed threshold (" + threshold + ")");
+      Util.require(value <= threshold, "in-place processing requires value ("
+          + value + "') not exceed threshold (" + threshold + ")");
     }
   }
 
@@ -192,18 +192,18 @@ public class Threshold extends TensorModule {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     Threshold threshold1 = (Threshold) o;
-    return Double.compare(threshold1.threshold, threshold) == 0 &&
-        Double.compare(threshold1.value, value) == 0 &&
-        inPlace == threshold1.inPlace;
+    return Double.compare(threshold1.threshold, threshold) == 0
+        && Double.compare(threshold1.value, value) == 0
+        && inPlace == threshold1.inPlace;
   }
 
   @Override
   public int hashCode() {
     int seed = 37;
     int hash = super.hashCode();
-    hash = hash * seed + (int)threshold;
-    hash = hash * seed + (int)value;
-    hash = hash * seed + ((Boolean)inPlace).hashCode();
+    hash = hash * seed + (int) threshold;
+    hash = hash * seed + (int) value;
+    hash = hash * seed + ((Boolean) inPlace).hashCode();
 
     return hash;
   }

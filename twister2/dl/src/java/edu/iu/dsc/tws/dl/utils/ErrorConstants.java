@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
+@SuppressWarnings("ConstantName")
 public final class ErrorConstants {
   private ErrorConstants() {
   }
 
   public static final String constrainInputAsVectorOrBatch =
-          " The input to the layer needs to be a vector(or a mini-batch of vectors); \n" +
-          " please use the Reshape module to convert multi-dimensional input into vectors " +
-          "if appropriate";
+      "The input to the layer needs to be a vector(or a mini-batch of vectors); \n"
+          + " please use the Reshape module to convert multi-dimensional input into vectors "
+          + "if appropriate";
 }

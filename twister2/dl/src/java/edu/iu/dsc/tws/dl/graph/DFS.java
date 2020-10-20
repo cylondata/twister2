@@ -11,9 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.graph;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Stack;
+
 import edu.iu.dsc.tws.dl.utils.Util;
 
-import java.util.*;
 
 public class DFS<K> implements Iterator<Node<K>> {
 
@@ -39,11 +44,11 @@ public class DFS<K> implements Iterator<Node<K>> {
     List<Node<K>> nextNodes = (!reverse) ? node.nextNodes() : node.prevNodes();
     // to preserve order
     LinkedHashSet<Node<K>> nodesSet = new LinkedHashSet();
-    nextNodes.addAll(nextNodes);
+    nodesSet.addAll(nextNodes);
 
     for (Node<K> kNode : nodesSet) {
-      if(!visited.contains(kNode)){
-        if(!stack.contains(kNode)){
+      if (!visited.contains(kNode)) {
+        if (!stack.contains(kNode)) {
           stack.push(kNode);
         }
       }

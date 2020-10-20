@@ -18,20 +18,20 @@ public abstract class Initializable {
   protected InitializationMethod weightInitMethod = new Zeros();
   protected InitializationMethod biasInitMethod = new Zeros();
 
-  public Initializable setInitMethod(InitializationMethod weightInitMethod,
-                              InitializationMethod biasInitMethod{
+  public Initializable setInitMethod(InitializationMethod weightMethod,
+                                     InitializationMethod biasMethod) {
     if (weightInitMethod != null) {
-      this.weightInitMethod = weightInitMethod;
+      this.weightInitMethod = weightMethod;
     }
 
     if (biasInitMethod != null) {
-      this.biasInitMethod = biasInitMethod;
+      this.biasInitMethod = biasMethod;
     }
     reset();
     return this;
   }
 
-  public Initializable setInitMethod(InitializationMethod[] initMethod){
+  public Initializable setInitMethod(InitializationMethod[] initMethod) {
     throw new UnsupportedOperationException("setInitMethod with a array of InitializationMethod"
         + " does not support for ${this.toString}");
   }

@@ -30,7 +30,9 @@ public class MSECriterion extends TensorCriterion {
     gradInput.resizeAs(input).copy(input);
     gradInput.sub(target);
     output = gradInput.dot(gradInput);
-    if (sizeAverage) output = TensorNumeric.divide(output, (input.nElement()));
+    if (sizeAverage) {
+      output = TensorNumeric.divide(output, input.nElement());
+    }
     return output;
   }
 
@@ -38,7 +40,7 @@ public class MSECriterion extends TensorCriterion {
   Tensor updateGradInput(Tensor input, Tensor target) {
     double norm = 2.0;
     if (sizeAverage) {
-      norm = (2.0 / input.nElement());
+      norm = 2.0 / input.nElement();
     }
     gradInput.mul(norm);
     return gradInput;

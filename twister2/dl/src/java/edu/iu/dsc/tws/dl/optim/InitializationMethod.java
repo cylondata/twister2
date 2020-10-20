@@ -18,10 +18,10 @@ public interface InitializationMethod {
   /**
    * Initialize the given weight and bias.
    *
-   * @param variable    the weight to initialize
-   * @param dataFormat       the data format of weight indicating the dimension order of
-   *                  the weight. "output_first" means output is in the lower dimension
-   *                  "input_first" means input is in the lower dimension.
+   * @param variable   the weight to initialize
+   * @param dataFormat the data format of weight indicating the dimension order of
+   *                   the weight. "output_first" means output is in the lower dimension
+   *                   "input_first" means input is in the lower dimension.
    */
-  public void init(Tensor variable, VariableFormat dataFormat);
+  void init(Tensor variable, VariableFormat dataFormat);
 }

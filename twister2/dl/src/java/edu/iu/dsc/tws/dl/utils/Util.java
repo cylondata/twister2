@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
-import edu.iu.dsc.tws.dl.data.Table;
-
 public final class Util {
 
   private Util() {
@@ -32,17 +30,11 @@ public final class Util {
     }
   }
 
-  public static int getHashCode(Object o){
-    if(o == null){
+  public static int getHashCode(Object o) {
+    if (o == null) {
       return 0;
-    }else{
+    } else {
       return o.hashCode();
-    }
-  }
-
-  public <K> K allocate(){
-    if(K instanceof Table){
-
     }
   }
 }

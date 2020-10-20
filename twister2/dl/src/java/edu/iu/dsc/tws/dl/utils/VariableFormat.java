@@ -12,10 +12,11 @@
 package edu.iu.dsc.tws.dl.utils;
 
 public interface VariableFormat {
-  default int getFanIn(int[] shape){
+  default int getFanIn(int[] shape) {
     throw new UnsupportedOperationException("FanIn is not defined in this format");
   }
-  default int getFanOut(int[] shape){
+
+  default int getFanOut(int[] shape) {
     throw new UnsupportedOperationException("FanOut is not defined in this format");
   }
 }

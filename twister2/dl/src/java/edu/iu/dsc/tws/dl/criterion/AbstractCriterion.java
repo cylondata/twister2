@@ -17,16 +17,17 @@ import edu.iu.dsc.tws.dl.data.Activity;
  * [[AbstractCriterion]] is an abstract class the concrete criterion should extend.
  * `Criterion`s are helpful to train a neural network. Given an input and a target,
  * they compute the gradient according to a loss function.
- *
+ * <p>
  * It provides some important method such as `forward`, `backward`, `updateOutput`,
  * `updateGradInput` frequently used as a criteria. Some of them need to be override
  * in a concrete criterion class.
  *
  * @tparam A represents the input type of the criterion, which an be abstract type [[Activity]],
- *           or concrete type [[Tensor]] or [[Table]]
+ * or concrete type [[Tensor]] or [[Table]]
  * @tparam B represents the output type of the criterion
  */
-public abstract class AbstractCriterion<I extends Activity, O extends Activity> implements Criterion {
+public abstract class AbstractCriterion<I extends Activity, O extends Activity>
+    implements Criterion {
   protected I gradInput;
   protected double output;
 
@@ -50,22 +51,22 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity> 
    * Takes an input object, and computes the corresponding loss of the criterion,
    * compared with `target`.
    *
-   * @param input input data
+   * @param input  input data
    * @param target target
    * @return the loss of criterion
    */
-  double forward(I input,O target){
+  double forward(I input, O target) {
     return updateOutput(input, target);
   }
 
   /**
    * Performs a back-propagation step through the criterion, with respect to the given input.
    *
-   * @param input input data
+   * @param input  input data
    * @param target target
    * @return gradient corresponding to input data
    */
-  I backward(I input,O target){
+  I backward(I input, O target) {
     return updateGradInput(input, target);
   }
 
@@ -73,11 +74,11 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity> 
    * Computes the loss using input and objective function. This function
    * returns the result which is stored in the output field.
    *
-   * @param input input of the criterion
+   * @param input  input of the criterion
    * @param target target or labels
    * @return the loss of the criterion
    */
-  double updateOutput(I input,O target){
+  double updateOutput(I input, O target) {
     return this.output;
   }
 
@@ -85,7 +86,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity> 
    * Computing the gradient of the criterion with respect to its own input. This is returned in
    * gradInput. Also, the gradInput state variable is updated accordingly.
    *
-   * @param input input data
+   * @param input  input data
    * @param target target data / labels
    * @return gradient of input
    */
@@ -93,6 +94,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity> 
 
   /**
    * Deep copy this criterion
+   *
    * @return a deep copied criterion
    */
   AbstractCriterion<I, O> cloneCriterion() {
@@ -107,11 +109,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity> 
 
   @Override
   public boolean equals(Object other) {
-    if(other instanceof AbstractCriterion && other.getClass() == this.getClass()
-    && this.output == ((AbstractCriterion<?, ?>) other).getOutput()){
-      return true;
-    }else{
-      return false;
-    }
+    return other instanceof AbstractCriterion && other.getClass() == this.getClass()
+        && this.output == ((AbstractCriterion<?, ?>) other).getOutput();
   }
 }

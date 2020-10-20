@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
+import java.util.Arrays;
+
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
@@ -20,24 +22,11 @@ import edu.iu.dsc.tws.dl.utils.SingleShape;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * The `forward(input)` reshape the input tensor into a
  * `size(0) * size(1) * ...` tensor, taking the elements row-wise.
- *
- * @param
- * @param batchMode It is a optional argument. If it is set to `Some(true)`,
- *                  the first dimension of input is considered as batch dimension,
- *                  and thus keep this dimension size fixed. This is necessary
- *                  when dealing with batch sizes of one. When set to `Some(false)`,
- *                  it forces the entire input (including the first dimension) to be reshaped
- *                  to the input size. Default is `None`, which means the module considers
- *                  inputs with more elements than the product of provided sizes (size(0) *
- *                  size(1) * ..) to be batches, otherwise in no batch mode.
- *
  */
+@SuppressWarnings("NeedBraces")
 public class Reshape extends TensorModule {
 
   // size the reshape size
@@ -76,19 +65,19 @@ public class Reshape extends TensorModule {
 
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
-    if ((batchMode != null && !batchMode) ||
-        (input.nElement() == nElement && batchMode == null && input.size(1) != 1)) {
-      Util.require(input.nElement() == nElement, "element number must match Reshape size. "
-          + "But In ${this.getName()} : element number is: ${ input.nElement() } , "
-          + "reshape size is: ${nElement}");
+    if ((batchMode != null && !batchMode)
+        || (input.nElement() == nElement && batchMode == null && input.size(1) != 1)) {
+      Util.require(input.nElement() == nElement,
+          "element number must match Reshape size. "
+              + "But In ${this.getName()} : element number is: ${ input.nElement() } , "
+              + "reshape size is: ${nElement}");
       if (input.isContiguous()) {
-        output =  input.view(size);
+        output = input.view(size);
       } else {
         output = input.contiguous().view(size);
         this.inPlace = false;
       }
-    }
-    else {
+    } else {
       Util.require(input.nElement() == nElement * input.size(1),
           "element number must match Reshape size. "
               + "But In ${this.getName()} : element number is: ${ input.nElement() } , "
@@ -135,8 +124,7 @@ public class Reshape extends TensorModule {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     Reshape reshape = (Reshape) o;
-    return nElement == reshape.nElement &&
-        Arrays.equals(batchSize, reshape.batchSize);
+    return nElement == reshape.nElement && Arrays.equals(batchSize, reshape.batchSize);
   }
 
   @Override
@@ -164,17 +152,15 @@ public class Reshape extends TensorModule {
 
   @Override
   public String toString() {
-    return getPrintName() +
-        "size=" + Arrays.toString(size) +
-        '}';
+    return getPrintName() + "size=" + Arrays.toString(size) + '}';
   }
 
   @Override
   public Shape computeOutputShape(Shape inputShape) {
     int[] input = inputShape.toSingle();
     int[] output;
-    if ((batchMode != null && !batchMode) ||
-        (TensorNumeric.product(input) == nElement && batchMode == null && input[0] != 1)) {
+    if ((batchMode != null && !batchMode)
+        || (TensorNumeric.product(input) == nElement && batchMode == null && input[0] != 1)) {
       output = size;
     } else {
       output = batchSize.clone();

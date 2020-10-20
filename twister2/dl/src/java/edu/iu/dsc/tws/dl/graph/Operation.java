@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.dl.graph;
 import edu.iu.dsc.tws.dl.data.EmptyGradInput;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
-import sun.invoke.empty.Empty;
 
 public abstract class Operation extends AbstractModule {
 

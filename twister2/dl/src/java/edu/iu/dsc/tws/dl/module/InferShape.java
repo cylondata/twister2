@@ -11,11 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
+import java.util.List;
+
 import edu.iu.dsc.tws.dl.utils.Shape;
 import edu.iu.dsc.tws.dl.utils.Util;
 
-import java.util.List;
-
+@SuppressWarnings("MemberName")
 public abstract class InferShape {
   private Shape _inputShapeValue = null;
 
@@ -26,11 +27,11 @@ public abstract class InferShape {
   private Shape outputShapeValue = _outputShapeValue;
 
   // scalastyle:off
-  private void inputShapeValue_(Shape value){
+  private void inputShapeValue_(Shape value) {
     _inputShapeValue = value;
   }
 
-  private void outputShapeValue_(Shape value){
+  private void outputShapeValue_(Shape value) {
     _outputShapeValue = value;
   }
   // scalastyle:on
@@ -38,20 +39,20 @@ public abstract class InferShape {
   /**
    * Return the inputShape for the current Layer and the first dim is batch.
    */
-  final Shape getInputShape(){
+  final Shape getInputShape() {
     Util.require(this.isKerasStyle(),
         "Torch style definition doesn't support getInputShape for now.");
     return _inputShapeValue;
   }
 
-  private boolean isKerasStyle(){
-   return false;
+  private boolean isKerasStyle() {
+    return false;
   }
 
   /**
    * Return the outputShape for the current Layer and the first dim is batch.
    */
-  final Shape getOutputShape(){
+  final Shape getOutputShape() {
     Util.require(this.isKerasStyle(),
         "Torch style definition doesn't support getOutputShape for now.");
     Util.require(this.isBuilt(), "This module hasn't been built.");
@@ -62,25 +63,25 @@ public abstract class InferShape {
    * Execute building logic and return the outputShape for the given inputShape.
    * NB: the first dim of inputShape is batch
    */
-  private Shape build(Shape inputShape){
+  private Shape build(Shape inputShape) {
     Shape outputShape = computeOutputShape(inputShape);
     this.outputShapeValue = outputShape;
     this.inputShapeValue = inputShape;
     return outputShape;
   }
 
-  private boolean isBuilt(){
+  private boolean isBuilt() {
     return outputShapeValue != null;
   }
 
-  private boolean allowRebuilt(){
+  private boolean allowRebuilt() {
     return false;
   }
 
   /**
    * We suppose the first dim is batch
    */
-  public Shape computeOutputShape(Shape inputShape){
+  public Shape computeOutputShape(Shape inputShape) {
     throw new RuntimeException("Haven't been implemented yet. Do not use it with Keras Layer");
   }
 
@@ -99,7 +100,7 @@ public abstract class InferShape {
 //    }
   }
 
-  protected void validateInput(List<AbstractModule> modules){
+  protected void validateInput(List<AbstractModule> modules) {
     if (this.isKerasStyle()) {
       Util.require(modules != null && !modules.isEmpty(), "Empty input is not allowed");
     }

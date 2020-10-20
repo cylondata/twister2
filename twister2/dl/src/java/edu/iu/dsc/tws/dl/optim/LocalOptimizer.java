@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.Criterion;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 
-public class LocalOptimizer<T> extends Optimizer<T>{
+public class LocalOptimizer<T> extends Optimizer<T> {
 
 
   public LocalOptimizer(AbstractModule model, BatchTSet<T> dataset, Criterion criterion) {

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import edu.iu.dsc.tws.dl.data.Storage;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
@@ -19,7 +18,10 @@ import edu.iu.dsc.tws.dl.utils.Util;
 
 public final class ModuleUtil {
 
-  public static Tensor flatten(Tensor[] parameters){
+  private ModuleUtil() {
+  }
+
+  public static Tensor flatten(Tensor[] parameters) {
     Tensor compactedTensor = isCompact(parameters);
     if (compactedTensor != null) {
       return compactedTensor;
@@ -48,11 +50,11 @@ public final class ModuleUtil {
     return result;
   }
 
-  private static Tensor isCompact(Tensor[] parameters){
+  private static Tensor isCompact(Tensor[] parameters) {
     Util.require(parameters.length > 0,
         "The length of paramters should >= 0"
-            +            "parameter length"
-            +            " ${parameters.length}");
+            + "parameter length"
+            + " ${parameters.length}");
 
     int i = 1;
     ArrayDoubleStorage storage = (ArrayDoubleStorage) parameters[0].storage();

@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import edu.iu.dsc.tws.dl.data.Table;
-import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract  class Container extends AbstractModule {
+import edu.iu.dsc.tws.dl.data.Table;
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
+
+@SuppressWarnings("NeedBraces")
+public abstract class Container extends AbstractModule {
 
   /**
    * Module status. It is useful for modules like dropout/batch normalization
@@ -90,7 +91,7 @@ public abstract  class Container extends AbstractModule {
         }
       }
     });
-    return new TensorArrayPair((Tensor[])weights.toArray(), (Tensor[])gradWeights.toArray());
+    return new TensorArrayPair((Tensor[]) weights.toArray(), (Tensor[]) gradWeights.toArray());
   }
 
   @Override
@@ -103,16 +104,16 @@ public abstract  class Container extends AbstractModule {
     return super.getParametersTable();
   }
 
-  public List<AbstractModule> findModules(String moduleType){
+  public List<AbstractModule> findModules(String moduleType) {
     List<AbstractModule> nodes = new ArrayList<>();
     if (getName(this) == moduleType) {
       nodes.add(this);
     }
     for (AbstractModule module : modules) {
-      if(module instanceof Container){
+      if (module instanceof Container) {
         nodes.addAll(((Container) module).findModules(moduleType));
-      }else{
-        if(getName(module) == moduleType){
+      } else {
+        if (getName(module) == moduleType) {
           nodes.add(module);
         }
       }
@@ -120,7 +121,7 @@ public abstract  class Container extends AbstractModule {
     return nodes;
   }
 
-  private String getName(AbstractModule module){
+  private String getName(AbstractModule module) {
     String[] x = module.getClass().getName().split("\\.");
     return x[x.length - 1];
   }
@@ -158,12 +159,12 @@ public abstract  class Container extends AbstractModule {
     } else {
       boolean found = false;
       for (String name : names) {
-        if(apply(name) != null){
+        if (apply(name) != null) {
           apply(name).freeze(null);
           found = true;
         }
       }
-      if(!found){
+      if (!found) {
         throw new IllegalStateException("cannot match module named $name");
       }
     }
@@ -177,30 +178,31 @@ public abstract  class Container extends AbstractModule {
     } else {
       boolean found = false;
       for (String name : names) {
-        if(apply(name) != null){
+        if (apply(name) != null) {
           apply(name).unFreeze(null);
           found = true;
         }
       }
-      if(!found){
+      if (!found) {
         throw new IllegalStateException("cannot match module named $name");
       }
     }
-    return this;  }
+    return this;
+  }
 
-    @Override
-    public AbstractModule apply(String name) {
+  @Override
+  public AbstractModule apply(String name) {
     if (this.getName() == name) {
       return this;
     } else {
       boolean found = false;
       AbstractModule find = null;
       for (AbstractModule module : modules) {
-        if(module.apply(name) != null){
-          if(!found){
+        if (module.apply(name) != null) {
+          if (!found) {
             found = true;
             find = module.apply(name);
-          }else{
+          } else {
             throw new IllegalStateException("find multiple modules with same name");
           }
         }

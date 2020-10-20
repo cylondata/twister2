@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
-public class SingleShape implements Shape{
+import java.util.Arrays;
+
+public class SingleShape implements Shape {
 
   private int[] values;
 
@@ -36,16 +38,12 @@ public class SingleShape implements Shape{
   public int hashCode() {
     int prime = 31;
     int result = 1;
-    result = prime * values.hashCode();
+    result = prime * Arrays.hashCode(values);
     return result;
   }
 
   @Override
   public boolean equals(Object o) {
-    if(o instanceof SingleShape && this.hashCode() == o.hashCode()){
-      return true;
-    }else{
-      return false;
-    }
+    return o instanceof SingleShape && this.hashCode() == o.hashCode();
   }
 }

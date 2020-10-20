@@ -15,35 +15,35 @@ public interface Shape {
   /**
    * Use this method if its only a single Shape
    */
-  default int[] toSingle(){
+  default int[] toSingle() {
     throw new RuntimeException("Invalid operation");
   }
 
   /**
    * Use this method if the current Shape consist of multiple value
    */
-  default Shape[] toMulti(){
+  default Shape[] toMulti() {
     throw new RuntimeException("Invalid operation");
   }
 
   /**
    * Update the given dim and return a new copy
    */
-  default Shape copyAndUpdate(int dim,int v){
+  default Shape copyAndUpdate(int dim, int v) {
     throw new RuntimeException("Invalid operation");
   }
 
   /**
    * Update the given dim and return a new copy
    */
-  default Shape copyAndUpdate(int dim,Shape v) {
+  default Shape copyAndUpdate(int dim, Shape v) {
     throw new RuntimeException("Invalid operation");
   }
 
 
-  default int getDim(int dim, int length){
+  default int getDim(int dim, int length) {
     int rdim = (dim < 0) ? length + dim : dim;
-    Util.require(rdim < length && rdim >=0, "out of range");
+    Util.require(rdim < length && rdim >= 0, "out of range");
     return rdim;
   }
 }

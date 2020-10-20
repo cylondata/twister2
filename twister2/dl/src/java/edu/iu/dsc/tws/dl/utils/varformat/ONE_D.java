@@ -13,7 +13,8 @@ package edu.iu.dsc.tws.dl.utils.varformat;
 
 import edu.iu.dsc.tws.dl.utils.VariableFormat;
 
-public class ONE_D implements VariableFormat{
+@SuppressWarnings("TypeName")
+public class ONE_D implements VariableFormat {
   @Override
   public int getFanIn(int[] shape) {
     return shape[0];

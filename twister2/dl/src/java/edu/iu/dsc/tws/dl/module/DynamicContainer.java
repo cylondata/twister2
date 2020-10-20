@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import edu.iu.dsc.tws.dl.graph.Operation;
-import edu.iu.dsc.tws.dl.utils.Util;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
+import edu.iu.dsc.tws.dl.graph.Operation;
+import edu.iu.dsc.tws.dl.utils.Util;
 
 public abstract class DynamicContainer extends Container {
 
@@ -28,8 +28,8 @@ public abstract class DynamicContainer extends Container {
    */
   public DynamicContainer add(AbstractModule module) {
     Util.require(!(module instanceof Operation),
-    "Add operations to dynamic container is not allowed, as operations don't have backward. "
-        + "Operation can only be used in Graph");
+        "Add operations to dynamic container is not allowed, as operations don't have backward. "
+            + "Operation can only be used in Graph");
     List<AbstractModule> moduleList = new ArrayList<>();
     moduleList.add(module);
     validateInput(moduleList);

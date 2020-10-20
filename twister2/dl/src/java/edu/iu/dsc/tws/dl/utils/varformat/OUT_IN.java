@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.dl.utils.varformat;
 
 import edu.iu.dsc.tws.dl.utils.VariableFormat;
 
+@SuppressWarnings("TypeName")
 public class OUT_IN implements VariableFormat {
 
   @Override

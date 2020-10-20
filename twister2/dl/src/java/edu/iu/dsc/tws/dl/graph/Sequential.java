@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.graph;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.DynamicContainer;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Sequential extends DynamicContainer {
 
@@ -91,7 +91,7 @@ public class Sequential extends DynamicContainer {
     if (!(obj instanceof Sequential)) {
       return false;
     }
-    Sequential other = (Sequential)obj;
+    Sequential other = (Sequential) obj;
     if (this == other) {
       return true;
     }
@@ -135,9 +135,9 @@ public class Sequential extends DynamicContainer {
 
     List<String> temp = new ArrayList<>();
     for (int i = 0; i < modules.size(); i++) {
-       if(modules.get(i) instanceof AbstractModule) {
-         temp.add("(" + (i+1) + ")");
-       }
+      if (modules.get(i) instanceof AbstractModule) {
+        temp.add("(" + (i + 1) + ")");
+      }
     }
 
     message.append(String.join(" -> ", temp))
@@ -145,8 +145,8 @@ public class Sequential extends DynamicContainer {
 
     temp = new ArrayList<>();
     for (int i = 0; i < modules.size(); i++) {
-      if(modules.get(i) instanceof AbstractModule) {
-        temp.add("(" + (i+1) + "):" + modules.get(i).setLine(line + tab));
+      if (modules.get(i) instanceof AbstractModule) {
+        temp.add("(" + (i + 1) + "):" + modules.get(i).setLine(line + tab));
       }
     }
 

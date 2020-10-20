@@ -11,6 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.graph;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.EmptyGradInput;
 import edu.iu.dsc.tws.dl.data.Table;
@@ -19,13 +26,8 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.Container;
 import edu.iu.dsc.tws.dl.module.Identity;
-import edu.iu.dsc.tws.dl.module.Module;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A graph container. The modules in the container are connected as a directed Graph. Each module
@@ -52,22 +54,18 @@ import java.util.stream.Stream;
  * will be excluded in the computation.
  */
 public abstract class Graph extends Container {
+  protected Node<AbstractModule> dummyOutput;
+  protected DirectedGraph<AbstractModule> forwardGraph;
+  protected List<Node<AbstractModule>> forwardNodes;
+  protected Node<AbstractModule> dummyOutputGrad;
+  protected DirectedGraph<AbstractModule> backwardGraph;
+  protected List<Node<AbstractModule>> backwardNodes;
   // For constructor
   private List<Node<AbstractModule>> inputs;
   private List<Node<AbstractModule>> outputs;
   //an Array of tensor containing all the weights and biases of this graph,
   //used when different nodes of this graph may share the same weight or bias.
   private TensorArrayPair variables;
-
-
-  protected Node<AbstractModule> dummyOutput;
-  protected DirectedGraph<AbstractModule> forwardGraph;
-  protected List<Node<AbstractModule>> forwardNodes;
-
-
-  protected Node<AbstractModule> dummyOutputGrad;
-  protected DirectedGraph<AbstractModule> backwardGraph;
-  protected List<Node<AbstractModule>> backwardNodes;
   // If the graph will generate gradInput for the input
   private Boolean[] isGradInputAvailable;
 
@@ -140,7 +138,8 @@ public abstract class Graph extends Container {
     }
   }
 
-//    private void calcSumTimesOfAllNodes( timesOfAllNodes: Array[(AbstractModule[_ <: Activity, _ <: Activity, T], Long, Long)])
+//    private void calcSumTimesOfAllNodes( timesOfAllNodes:
+//    Array[(AbstractModule[_ <: Activity, _ <: Activity, T], Long, Long)])
 //  : (Long, Long) = {
 //    int sumForward = 0L
 //    int sumBackward = 0L
@@ -155,7 +154,8 @@ public abstract class Graph extends Container {
 //    Array[(AbstractModule[_ <: Activity, _ <: Activity, T], Long, Long)] = {
 //    Tensor timesOfAllNodes = this.modules.flatMap(_.getTimes()).toArray
 //    Tensor (sumForward, sumBackward) = calcSumTimesOfAllNodes(timesOfAllNodes)
-//    timesOfAllNodes ++ Array((this, this.forwardTime - sumForward, this.backwardTime - sumBackward))
+//    timesOfAllNodes ++ Array((this,
+//    this.forwardTime - sumForward, this.backwardTime - sumBackward))
 //  }
 
   @Override
@@ -179,7 +179,8 @@ public abstract class Graph extends Container {
    * @return
    */
   public Node<AbstractModule> node(String name) {
-    List<Node<AbstractModule>> matchNodes = forwardNodes.stream().filter(node -> node.getElement().getName() == name).collect(Collectors.toList());
+    List<Node<AbstractModule>> matchNodes = forwardNodes.stream()
+        .filter(node -> node.getElement().getName() == name).collect(Collectors.toList());
     if (matchNodes.size() == 0) {
       throw new IllegalStateException("Can not find node with name $name");
     } else {
@@ -202,18 +203,22 @@ public abstract class Graph extends Container {
 //    buffer;
 //    }
 
-    Util.require(forwardNodes.stream().map(node -> node.getElement().getName()).distinct().count()
+    Util.require(forwardNodes.stream()
+            .map(node -> node.getElement().getName()).distinct().count()
             == forwardNodes.size(),
-        "the name of node in the graph should be unique, but find duplicated name " +
-            "${duplicatedNames(forwardNodes.map(_.element.getName())).mkString()}");
+        "the name of node in the graph should be unique, but find duplicated name "
+            + "${duplicatedNames(forwardNodes.map(_.element.getName())).mkString()}");
 
-    List<Node<AbstractModule>> roots = forwardNodes.stream().filter(node -> node.prevNodes().size() == 0)
+    List<Node<AbstractModule>> roots = forwardNodes.stream()
+        .filter(node -> node.prevNodes().size() == 0)
         .filter(x -> !(x.getElement() instanceof WithoutInput)).collect(Collectors.toList());
     //.filter(y -> y.getElement() instanceof ControlDependency);
 
-    List<Node<AbstractModule>> realInputs = inputs.stream().filter(x -> !(x instanceof WithoutInput)).collect(Collectors.toList());
-    Util.require(roots.size() == realInputs.size(), "There're ${realInputs.length} inputs, " +
-        "but graph has ${roots.size} roots");
+    List<Node<AbstractModule>> realInputs = inputs.stream()
+        .filter(x -> !(x instanceof WithoutInput)).collect(Collectors.toList());
+    Util.require(roots.size() == realInputs.size(),
+        "There're ${realInputs.length} inputs, "
+            + "but graph has ${roots.size} roots");
 
     realInputs.forEach(n ->
         Util.require(roots.contains(n), "inputs and graph roots are not match"));
@@ -232,11 +237,14 @@ public abstract class Graph extends Container {
         .filter(x -> !(x == dummyOutputGrad)).collect(Collectors.toList());
     //.filter(y -> !(y.getElement() in_.element.isInstanceOf[ControlDependency[_]]).toArray
 
-    List<String> inputNames = inputs.stream().map(x -> x.getElement().getName()).collect(Collectors.toList());
+    List<String> inputNames = inputs.stream()
+        .map(x -> x.getElement().getName()).collect(Collectors.toList());
     Node<AbstractModule> dummyBackwardEnd = new Identity().inputs();
     Stream<Node<AbstractModule>> backwardTargets = backwardNodes.stream()
-        .filter(n -> (n.getElement().parameters() != null && n.getElement().parameters().getValue0().length != 0)
+        .filter(n -> (n.getElement().parameters() != null
+            && n.getElement().parameters().getValue0().length != 0)
             || inputNames.contains(n.getElement().getName()));
+
     backwardTargets.forEach(y -> y.pointTo(dummyBackwardEnd));
     backwardGraph = dummyBackwardEnd.graph(true);
 
@@ -342,10 +350,12 @@ public abstract class Graph extends Container {
           .map(n -> {
             if (n.getValue1().getFromIndex() != null) {
               if (n.getValue0().getElement().output == null
-                  || (n.getValue1().getFromIndex() == 1 && n.getValue0().getElement().output.isTensor())) {
+                  || (n.getValue1().getFromIndex() == 1
+                  && n.getValue0().getElement().output.isTensor())) {
                 return n.getValue0().getElement().output;
               } else {
-                return n.getValue0().getElement().output.toTable().get(n.getValue1().getFromIndex());
+                return n.getValue0().getElement()
+                    .output.toTable().get(n.getValue1().getFromIndex());
               }
             } else {
               return n.getValue0().getElement().output;
@@ -368,7 +378,8 @@ public abstract class Graph extends Container {
         //.filterNot(n -> n._1.element.isInstanceOf[ControlDependency])
         .forEach(n -> {
           Activity otherActivity;
-          if (n.getValue0().getElement().gradInput.isTensor() || n.getValue0().nextEdges().size() == 1) {
+          if (n.getValue0().getElement().gradInput.isTensor()
+              || n.getValue0().nextEdges().size() == 1) {
             otherActivity = n.getValue0().getElement().gradInput;
           } else {
             int index = n.getValue0().nextEdges().indexOf(n.getValue1()) + 1;
@@ -382,8 +393,10 @@ public abstract class Graph extends Container {
               if (curNode.getElement().output.isTable() && curGradOutput[0] == null) {
                 curGradOutput[0] = new Table();
               }
-              Activity curActivity = curGradOutput[0].toTable().getOrElse(n.getValue1().getFromIndex(), null);
-              curGradOutput[0].toTable().update(n.getValue1().getFromIndex(), accActivity(curActivity, otherActivity));
+              Activity curActivity = curGradOutput[0].toTable()
+                  .getOrElse(n.getValue1().getFromIndex(), null);
+              curGradOutput[0].toTable()
+                  .update(n.getValue1().getFromIndex(), accActivity(curActivity, otherActivity));
             }
           } else {
             curGradOutput[0] = accActivity(curGradOutput[0], otherActivity);
@@ -391,7 +404,8 @@ public abstract class Graph extends Container {
         });
 
     if (curNode.getElement().output.isTable()) {
-      addZeroTensorToMissingGradOutput(curNode.getElement().output.toTable(), curGradOutput[0].toTable());
+      addZeroTensorToMissingGradOutput(curNode.getElement().output.toTable(),
+          curGradOutput[0].toTable());
     }
 
     return curGradOutput[0];
@@ -436,7 +450,8 @@ public abstract class Graph extends Container {
    * @return
    */
   public Node<AbstractModule>[] getForwardExecutions() {
-    return (Node<AbstractModule>[]) forwardNodes.stream().filter(x -> !(x == dummyOutput)).toArray();
+    return (Node<AbstractModule>[]) forwardNodes.stream()
+        .filter(x -> !(x == dummyOutput)).toArray();
   }
 
   /**
@@ -500,7 +515,8 @@ public abstract class Graph extends Container {
 //    forwardNodes.filter(n => !n.eq(dummyOutput))
 //  }
 //  nodes.map(m => {
-//      Tensor nodeDef = Tensorflow.bigdlModule(m.element, m.prevNodes.map(_.element.getName()).asJava)
+//      Tensor nodeDef = Tensorflow.bigdlModule(m.element,
+//      m.prevNodes.map(_.element.getName()).asJava)
 //      graphBuilder.addNode(nodeDef)
 //  })
 //

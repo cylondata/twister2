@@ -13,35 +13,31 @@ package edu.iu.dsc.tws.dl.optim;
 
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorDoubleArrayPair;
 
-public class Adam implements OptimMethod{
+@SuppressWarnings({"LocalVariableName", "HiddenField", "NeedBraces"})
+public class Adam implements OptimMethod {
+  private transient Tensor buffer;
   private double learningRate = 1e-3;
   private double learningRateDecay = 0.0;
   private double beta1 = 0.9;
   private double beta2 = 0.999;
-  private double Epsilon = 1e-8;
-
-  transient Tensor buffer;
+  private double epsilon = 1e-8;
 
   public Adam() {
     initState();
   }
 
-  public Adam(double learningRate, double learningRateDecay, double beta1, double beta2, double epsilon) {
+  public Adam(double learningRate, double learningRateDecay, double beta1,
+              double beta2, double epsilon) {
     initState();
     this.learningRate = learningRate;
     this.learningRateDecay = learningRateDecay;
     this.beta1 = beta1;
     this.beta2 = beta2;
-    Epsilon = epsilon;
-  }
-
-  public void setLearningRate(double learningRate) {
-    this.learningRate = learningRate;
+    this.epsilon = epsilon;
   }
 
   public double getLearningRateDecay() {
@@ -69,11 +65,11 @@ public class Adam implements OptimMethod{
   }
 
   public double getEpsilon() {
-    return Epsilon;
+    return epsilon;
   }
 
   public void setEpsilon(double epsilon) {
-    Epsilon = epsilon;
+    this.epsilon = epsilon;
   }
 
   /**
@@ -91,23 +87,26 @@ public class Adam implements OptimMethod{
     double lrd = this.learningRateDecay;
     double beta1 = this.beta1;
     double beta2 = this.beta2;
-    double eps = this.Epsilon;
+    double eps = this.epsilon;
 
     DoubleTensorPair eval = feval.apply(parameter);
 
     int timestep = state.<Integer>getOrDefault("evalCounter", 0);
 
-    Tensor _s, _r, _denom;
-    if(state.<Tensor>get("s") != null){
+    Tensor _s;
+    Tensor _r;
+    Tensor _denom;
+
+    if (state.<Tensor>get("s") != null) {
       _s = state.<Tensor>get("s");
       _r = state.<Tensor>get("r");
       _denom = state.<Tensor>get("denom").resizeAs(eval.getValue1());
-    }else{
+    } else {
       _s = new DenseTensor().resizeAs(eval.getValue1()).zero();
       _r = new DenseTensor().resizeAs(eval.getValue1()).zero();
       _denom = new DenseTensor().resizeAs(eval.getValue1()).zero();
     }
-     double clr = lr / (1 + timestep*lrd);
+    double clr = lr / (1 + timestep * lrd);
 
     timestep = timestep + 1;
 
@@ -115,10 +114,10 @@ public class Adam implements OptimMethod{
      * m_t = beta_1 * m_t-1 + (1 - beta_1) * g_t
      * v_t = beta_2 * v_t-1 + (1 - beta_2) * g_t * g_t
      */
-    _s.mul(beta1).add(1-beta1, eval.getValue1());
+    _s.mul(beta1).add(1 - beta1, eval.getValue1());
     // buffer = eval.getValue1() * eval.getValue1()
     buffer.resizeAs(eval.getValue1()).cmul(eval.getValue1(), eval.getValue1());
-    _r.mul(beta2).add(1-beta2, buffer);
+    _r.mul(beta2).add(1 - beta2, buffer);
     _denom.sqrt(_r);
 
     // used as MKL.axpy: 1 * a + y = y, and fill buffer with one
@@ -131,14 +130,13 @@ public class Adam implements OptimMethod{
     double stepSize = clr * Math.sqrt(biasCorrection2) / biasCorrection1;
     parameter.addcdiv(-stepSize, _s, _denom);
 
-    state.put("evalCounter",  timestep); // A tmp tensor to hold the sqrt(v) + epsilon
-    state.put("s",_s); // 1st moment variables
-    state.put("r",_r); // 2nd moment variables
+    state.put("evalCounter", timestep); // A tmp tensor to hold the sqrt(v) + epsilon
+    state.put("s", _s); // 1st moment variables
+    state.put("r", _r); // 2nd moment variables
     state.put("denom", _denom); // 3nd moment variables
 
     return new TensorDoubleArrayPair(parameter, new double[]{eval.getValue0()});
   }
-
 
   @Override
   public void clearHistory() {
@@ -159,6 +157,10 @@ public class Adam implements OptimMethod{
   @Override
   public double getLearningRate() {
     return this.learningRate;
+  }
+
+  public void setLearningRate(double learningRate) {
+    this.learningRate = learningRate;
   }
 
   @Override

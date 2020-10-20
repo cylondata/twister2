@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.dl.data.Sample;
-import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -29,6 +27,8 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.common.table.Row;
+import edu.iu.dsc.tws.dl.data.Sample;
+import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
@@ -100,7 +100,7 @@ public class BatchEnvironment extends TSetEnvironment {
         parallelism);
   }
 
-  public SourceTSet<Sample> createDlSampleSource(String filePath, int dataSize, int parallelism){
+  public SourceTSet<Sample> createDlSampleSource(String filePath, int dataSize, int parallelism) {
     return createSource(new DLBasicSourceFunction(filePath, dataSize, parallelism), parallelism);
   }
 

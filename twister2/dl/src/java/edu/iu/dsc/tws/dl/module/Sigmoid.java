@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
@@ -26,10 +25,10 @@ public class Sigmoid extends TensorModule {
 
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
-    ((DenseTensor)output).resizeAs(input).fill(1.0);
+    ((DenseTensor) output).resizeAs(input).fill(1.0);
     buffer.resizeAs(input).copy(input).mul(-1.0);
     buffer.exp().add(1.0);
-    ((DenseTensor)output).cdiv(buffer);
+    ((DenseTensor) output).cdiv(buffer);
 
     return (DenseTensor) output;
   }
@@ -40,10 +39,10 @@ public class Sigmoid extends TensorModule {
   }
 
   private DenseTensor updateGradInputInternal(Tensor output, DenseTensor gradOutput) {
-    ((DenseTensor)gradInput).resizeAs(gradOutput).copy(gradOutput);
+    ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
     buffer.resizeAs(gradOutput);
     buffer.fill(1.0).sub(output);
-    ((DenseTensor)gradInput).cmul(output).cmul(buffer);
+    ((DenseTensor) gradInput).cmul(output).cmul(buffer);
     return (DenseTensor) gradInput;
   }
 

@@ -17,6 +17,7 @@ public class ModuleNode extends Node<AbstractModule> {
 
   /**
    * Node for graph container. The module should have a tensor/table input while a tensor output
+   *
    * @tparam T
    */
   public ModuleNode(AbstractModule value) {
