@@ -57,7 +57,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   public DenseTensor(ArrayDoubleStorage storage) {
     this.storageInternal = storage;
-    initWithStorage(storage, 0, new int[storage.length()], new int[1]);
+    initWithStorage(storage, 0, new int[]{storage.length()}, new int[]{1});
+  }
+
+  public DenseTensor(ArrayDoubleStorage storage, int[] sizes, int[] stride) {
+    this.storageInternal = storage;
+    initWithStorage(storage, 0, sizes, stride);
   }
 
   public DenseTensor(double[] values) {
@@ -130,7 +135,7 @@ public class DenseTensor implements Tensor, TensorMath {
   private void initWithStorage(ArrayDoubleStorage newStorage, int newStorageOffset,
                                int[] newSize, int[] newStride) {
     if (newSize != null && newStride != null) {
-      if (newSize.length == newStride.length) {
+      if (newSize.length != newStride.length) {
         throw new IllegalArgumentException("inconsistent size");
       }
     }
@@ -673,7 +678,7 @@ public class DenseTensor implements Tensor, TensorMath {
   @Override
   public Tensor set(Tensor other) {
     this.storageInternal = (ArrayDoubleStorage) other.storage();
-    this.storageOffsetInternal = other.storageOffset();
+    this.storageOffsetInternal = other.storageOffset() - 1;
     return rawResize(this, other.nDimension(), other.size(), other.stride());
   }
 
@@ -683,7 +688,7 @@ public class DenseTensor implements Tensor, TensorMath {
       Util.require(sizes.length == strides.length, "Invalid Size");
     }
     this.storageInternal = (ArrayDoubleStorage) storage;
-    this.storageOffsetInternal = storageOffset;
+    this.storageOffsetInternal = storageOffset - 1;
     if (sizes == null) {
       return rawResize(this, 0, sizes, strides);
     } else {
@@ -1615,7 +1620,6 @@ public class DenseTensor implements Tensor, TensorMath {
     if (nDim == 0 && newSize.length == 0) {
       self.sizeInternal = new int[0];
       self.strideInternal = new int[0];
-      self.nDimensionInternal = nDim;
       int totalSize = 1;
       if (self.storageInternal == null) {
         self.storageInternal = new ArrayDoubleStorage(new double[totalSize
@@ -1631,11 +1635,13 @@ public class DenseTensor implements Tensor, TensorMath {
     int d = 0;
     while (d < nDim) {
       nDim_ = nDim_ + 1;
-      if (self.nDimensionInternal > d && newSize[d] != self.sizeInternal[d]) {
+      if (self.sizeInternal == null
+          || (self.nDimensionInternal > d && newSize[d] != self.sizeInternal[d])) {
         hasCorrectSize = false;
       }
-      if (self.nDimensionInternal > d && newStride != null && newStride[d] >= 0
-          && newStride[d] != self.strideInternal[d]) {
+      if (self.strideInternal == null
+          || (self.nDimensionInternal > d && newStride != null && newStride[d] >= 0
+          && newStride[d] != self.strideInternal[d])) {
         hasCorrectSize = false;
       }
       d += 1;
@@ -1646,7 +1652,7 @@ public class DenseTensor implements Tensor, TensorMath {
     if (hasCorrectSize) return self;
 
     if (nDim_ > 0) {
-      if (nDim_ != self.nDimensionInternal) {
+      if (!hasCorrectSize) {
         self.sizeInternal = new int[nDim];
         self.strideInternal = new int[nDim];
         self.nDimensionInternal = nDim;

@@ -65,6 +65,12 @@ public class ArrayTensorMiniBatch implements MiniBatch {
     initInput();
   }
 
+  public ArrayTensorMiniBatch(Tensor input, Tensor target) {
+    this.inputData = new Tensor[]{input};
+    this.targetData = new Tensor[]{target};
+    initInput();
+  }
+
   @Override
   public int size() {
     if (inputData[0].nElement() == 0) {

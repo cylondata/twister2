@@ -24,8 +24,8 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
   @Override
   public AbstractModule optimize() {
-
-
+    System.out.println("#################### Worker");
+    this.getDataset().direct().forEach(data -> System.out.println(data.toString()));
     return null;
   }
 }

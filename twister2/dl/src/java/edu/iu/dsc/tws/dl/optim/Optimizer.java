@@ -42,6 +42,46 @@ public abstract class Optimizer<T> {
     this.optimMethods.put(model.getName(), null); //TODO new SGD();
   }
 
+  public AbstractModule getModel() {
+    return model;
+  }
+
+  public void setModel(AbstractModule model) {
+    this.model = model;
+  }
+
+  public BatchTSet<T> getDataset() {
+    return dataset;
+  }
+
+  public void setDataset(BatchTSet<T> dataset) {
+    this.dataset = dataset;
+  }
+
+  public Criterion getCriterion() {
+    return criterion;
+  }
+
+  public void setCriterion(Criterion criterion) {
+    this.criterion = criterion;
+  }
+
+  public Table getState() {
+    return state;
+  }
+
+  public void setState(Table state) {
+    this.state = state;
+  }
+
+  public Map<String, OptimMethod> getOptimMethods() {
+    return optimMethods;
+  }
+
+  public void setOptimMethods(Map<String, OptimMethod> optimMethods) {
+    this.optimMethods = optimMethods;
+  }
+
   /**
    * Trigger the optimization process
    *
