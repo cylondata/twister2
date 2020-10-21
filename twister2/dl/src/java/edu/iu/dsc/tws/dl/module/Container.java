@@ -91,7 +91,7 @@ public abstract class Container extends AbstractModule {
         }
       }
     });
-    return new TensorArrayPair((Tensor[]) weights.toArray(), (Tensor[]) gradWeights.toArray());
+    return new TensorArrayPair(weights.toArray(new Tensor[0]), gradWeights.toArray(new Tensor[0]));
   }
 
   @Override

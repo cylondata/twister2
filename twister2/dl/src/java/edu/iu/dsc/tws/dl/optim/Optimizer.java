@@ -51,7 +51,7 @@ public abstract class Optimizer<T> {
   }
 
   public BatchTSet<T> getDataset() {
-    return dataset;
+    return (BatchTSet<T>) dataset;
   }
 
   public void setDataset(BatchTSet<T> dataset) {

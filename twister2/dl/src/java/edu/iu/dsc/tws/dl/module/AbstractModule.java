@@ -988,7 +988,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     if (startNodes == null || startNodes.length == 0) {
       starts = new Node[]{new Node<AbstractModule>(new Input())};
     } else {
-      starts = (Node<AbstractModule>[]) Arrays.stream(startNodes).toArray();
+      starts = startNodes;
     }
     throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
 

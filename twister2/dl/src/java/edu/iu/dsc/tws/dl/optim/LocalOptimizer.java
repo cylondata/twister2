@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.dl.optim;
 
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.Criterion;
+import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
+import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 
 public class LocalOptimizer<T> extends Optimizer<T> {
@@ -24,8 +27,17 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
   @Override
   public AbstractModule optimize() {
-    System.out.println("#################### Worker");
-    this.getDataset().direct().forEach(data -> System.out.println(data.toString()));
+    AbstractModule modal = this.getModel();
+    Criterion criterion = this.getCriterion();
+
+    this.getDataset().direct().forEach(data -> {
+      ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;
+      modal.zeroGradParameters();
+      modal.training();
+      Activity input = miniBatch.getInput();
+      DenseTensor output = modal.forward((DenseTensor) input);
+      System.out.println(output.toString());
+    });
     return null;
   }
 }

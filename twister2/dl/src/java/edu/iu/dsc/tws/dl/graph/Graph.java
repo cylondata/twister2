@@ -451,7 +451,7 @@ public abstract class Graph extends Container {
    */
   public Node<AbstractModule>[] getForwardExecutions() {
     return (Node<AbstractModule>[]) forwardNodes.stream()
-        .filter(x -> !(x == dummyOutput)).toArray();
+        .filter(x -> !(x == dummyOutput)).toArray(Node[]::new);
   }
 
   /**
@@ -467,7 +467,7 @@ public abstract class Graph extends Container {
         .filter(x -> x != dummyOutput).collect(Collectors.toList());
     Collections.reverse(results);
     // .filterNot(_.element.isInstanceOf[ControlDependency]).reverse
-    return (Node<AbstractModule>[]) results.toArray();
+    return (Node<AbstractModule>[]) results.toArray(new Node[0]);
   }
 
   protected Activity accActivity(Activity activity, Activity other) {

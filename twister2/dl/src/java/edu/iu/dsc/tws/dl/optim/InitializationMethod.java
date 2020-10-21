@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.utils.VariableFormat;
 
-public interface InitializationMethod {
+public interface InitializationMethod extends Serializable {
   /**
    * Initialize the given weight and bias.
    *
