@@ -113,6 +113,7 @@ def twister2_core_tset_files():
 def twister2_core_dl_files():
     return [
         "//twister2/dl/src/java:twister2dl-java",
+        "@com_intel_analytics_bigdl_core_dist_all//jar",
     ]
 
 def twister2_storm_files():

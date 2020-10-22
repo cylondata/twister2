@@ -52,10 +52,10 @@ public class AutoEncoder implements Twister2Worker, Serializable {
 
     //Define model
     Sequential model = new Sequential();
-    model.add(new Reshape(new int[]{784}));
-    model.add(new Linear(784, 32));
+    model.add(new Reshape(new int[]{12}));
+    model.add(new Linear(12, 3));
     model.add(new ReLU(false));
-    model.add(new Linear(32, 784));
+    model.add(new Linear(3, 12));
     model.add(new Sigmoid());
     //criterion
     Criterion criterion = new MSECriterion();
