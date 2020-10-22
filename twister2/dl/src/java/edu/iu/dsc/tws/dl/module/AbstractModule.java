@@ -294,7 +294,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
       updateParameter();
       updateOutput(input);
     } catch (Exception e) {
-      throw new IllegalStateException("Layer exception");
+      throw new IllegalStateException("Layer exception :" + e.getMessage());
 //      case l: LayerException =>
 //        l.layerMsg = this.toString() + "/" + l.layerMsg
 //        throw l
@@ -325,7 +325,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     return (DenseTensor) gradInput;
   }
 
-  private void asyncGradient() {
+  protected void asyncGradient() {
 //    if (this.getParameterSynchronizer() != null) {
 //      if (this.parameters() != null) {
 //        //TODO: param Sync
@@ -1247,7 +1247,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     _optimMethod = optimMethod;
   }
 
-  private void updateParameter() {
+  protected void updateParameter() {
 //    if (this.getParameterSynchronizer() != null && this.isTraining()) {
 //      throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
 

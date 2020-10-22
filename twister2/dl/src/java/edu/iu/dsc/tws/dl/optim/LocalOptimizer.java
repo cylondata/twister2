@@ -29,6 +29,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
   public AbstractModule optimize() {
     AbstractModule modal = this.getModel();
     Criterion criterion = this.getCriterion();
+    this.getModel().getParameters();
 
     this.getDataset().direct().forEach(data -> {
       ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;

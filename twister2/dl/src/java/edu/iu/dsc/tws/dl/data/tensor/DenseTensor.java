@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.dl.data.tensor;
 
 import java.util.Arrays;
 
+import com.intel.analytics.bigdl.mkl.MKL;
+
 import edu.iu.dsc.tws.dl.data.DenseTensorApply;
 import edu.iu.dsc.tws.dl.data.DenseTensorMath;
 import edu.iu.dsc.tws.dl.data.Storage;
@@ -1152,23 +1154,70 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   @Override
-  public Tensor add(Tensor y) {
-    throw new UnsupportedOperationException("operation not supported");
+  public Tensor add(Tensor x) {
+    Util.require(x instanceof DenseTensor, "Only support dense tensor in this operation");
+    if (this.nElement() == x.nElement()) {
+      if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
+        TensorNumeric.vAdd(this.nElement(), this.storage().toDoubleArray(),
+            this.storageOffset() - 1,
+            x.storage().toDoubleArray(), x.storageOffset() - 1,
+            this.storage().toDoubleArray(), this.storageOffset() - 1);
+      } else {
+        TensorFunc4 subFunc = (data1, offset1, data2, offset2)
+            -> data1[offset1] = TensorNumeric.plus(data1[offset1], data2[offset2]);
+        DenseTensorApply.apply2(this, x, subFunc);
+      }
+    } else if (DenseTensor.canFastBroadcast(this, (DenseTensor) x)) {
+      // recursive add
+      int i = 0;
+      while (i < this.size(1)) {
+        this.select(1, i + 1).add(x);
+        i += 1;
+      }
+    } else {
+      return this.add(expandTensor((DenseTensor) x));
+    }
+    return this;
   }
 
   @Override
   public Tensor add(Tensor x, double value, Tensor y) {
-    throw new UnsupportedOperationException("operation not supported");
+    return DenseTensorMath.cadd(this, x, value, y);
   }
 
   @Override
   public Tensor add(double value) {
-    throw new UnsupportedOperationException("operation not supported");
+    if (this.isContiguous()) {
+      TensorNumeric.add(this.nElement(), this.storage().toDoubleArray(),
+          this.storageOffset() - 1, value, 1);
+      return this;
+    } else {
+      TensorFunc2 addFunc = (data, index) -> data[index] = data[index] + value;
+      DenseTensorApply.apply1(this, addFunc);
+      return this;
+    }
   }
+
 
   @Override
   public Tensor add(Tensor x, Tensor y) {
-    throw new UnsupportedOperationException("operation not supported");
+    throw new UnsupportedOperationException("Operation not supported");
+//    Util.require(this.nElement() == x.nElement() && this.nElement() == y.nElement());
+//    if (MKL.isMKLLoaded && this.isContiguous() && x.isContiguous() && y.isContiguous()) {
+//      TensorNumeric.vAdd(this.nElement(), y.storage().toDoubleArray(), y.storageOffset() - 1,
+//          x.storage().toDoubleArray(), x.storageOffset() - 1,
+//          this.storage().toDoubleArray(), this.storageOffset() - 1);
+//    } else {
+//      TensorFunc6 func = (data, offset, data1, offset1, data2, offset2) -> data[o]
+//      val func = new TensorFunc6[T] {
+//        override def apply(data: Array[T], offset: Int, data1: Array[T],
+//            offset1: Int, data2: Array[T], offset2: Int): Unit = {
+//            data(offset1) = ev.plus(data1(offset1), data2(offset2))
+//        }
+//      }
+//      DenseTensorApply.apply3[T](this, x, y, func)
+//    }
+//    this
   }
 
   @Override

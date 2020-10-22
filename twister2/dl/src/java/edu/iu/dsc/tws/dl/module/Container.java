@@ -226,6 +226,11 @@ public abstract class Container extends AbstractModule {
 //    modules.foreach(_.release())
 //  }
 //
-//  override private[bigdl] def updateParameter(): Unit = {}
-//  override private[bigdl] def asyncGradient(): Unit = {}
+  @Override
+  protected void asyncGradient() {
+  }
+
+  @Override
+  protected void updateParameter() {
+  }
 }
