@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
@@ -44,5 +46,13 @@ public class LocalOptimizer<T> extends Optimizer<T> {
       System.out.println(output.toString());
     });
     return null;
+  }
+
+  private class TrainMap extends BaseMapFunc<T, double[]> {
+
+    @Override
+    public double[] map(T input) {
+      return new double[0];
+    }
   }
 }

@@ -1222,7 +1222,19 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public double dot(Tensor y) {
-    return 0.0;
+    Util.require(this.nElement() == y.nElement());
+    if (MKL.isMKLLoaded() && this.isContiguous() && y.isContiguous()) {
+      return TensorNumeric.dot(this.nElement(), this.storage().toDoubleArray(),
+          this.storageOffset() - 1, 1,
+          y.storage().toDoubleArray(), y.storageOffset() - 1, 1);
+    } else {
+      double[] sum = new double[1];
+      TensorFunc4 func = (data1, offset1, data2, offset2)
+          -> sum[0] = sum[0] + (data1[offset1] * data2[offset2]);
+      DenseTensorApply.apply2(this, y, func);
+
+      return sum[0];
+    }
   }
 
   @Override
