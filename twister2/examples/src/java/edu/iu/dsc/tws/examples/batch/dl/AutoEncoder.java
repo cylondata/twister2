@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.dl.criterion.Criterion;
+import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.criterion.MSECriterion;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.graph.Sequential;
@@ -58,13 +58,12 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     model.add(new Linear(3, 12));
     model.add(new Sigmoid());
     //criterion
-    Criterion criterion = new MSECriterion();
+    AbstractCriterion criterion = new MSECriterion();
 
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new LocalOptimizer<MiniBatch>(model, source, criterion);
 
     optimizer.optimize();
-
   }
 
   public static void main(String[] args) {

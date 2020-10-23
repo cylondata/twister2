@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
 import edu.iu.dsc.tws.dl.optim.InitializationMethod;
 import edu.iu.dsc.tws.dl.optim.Regularizer;
-import edu.iu.dsc.tws.dl.optim.initialization.RandomUniform;
 import edu.iu.dsc.tws.dl.optim.initialization.Zeros;
 import edu.iu.dsc.tws.dl.utils.ErrorConstants;
 import edu.iu.dsc.tws.dl.utils.Util;
@@ -107,8 +106,8 @@ public class Linear extends TensorModule {
     }
 
     double stdv = 1.0 / Math.sqrt(weight.size(2));
-    weightInitMethod = new RandomUniform(-stdv, stdv);
-    biasInitMethod = new RandomUniform(-stdv, stdv);
+    //weightInitMethod = new RandomUniform(-stdv, stdv);
+    //biasInitMethod = new RandomUniform(-stdv, stdv);
     reset();
   }
 

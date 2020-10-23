@@ -161,7 +161,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Table toTable() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -187,7 +187,7 @@ public class DenseTensor implements Tensor, TensorMath {
   @Override
   public int[] size() {
     if (sizeInternal == null) {
-      return null;
+      throw new UnsupportedOperationException("Operation not supported");
     } else {
       return Arrays.copyOfRange(sizeInternal, 0, nDimensionInternal);
     }
@@ -201,7 +201,7 @@ public class DenseTensor implements Tensor, TensorMath {
   @Override
   public int[] stride() {
     if (strideInternal == null) {
-      return null;
+      throw new UnsupportedOperationException("Operation not supported");
     } else {
       return Arrays.copyOfRange(strideInternal, 0, nDimensionInternal);
     }
@@ -551,7 +551,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor emptyInstance() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -600,12 +600,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor resize(int size1, int size2, int size3, int size4) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor resize(int size1, int size2, int size3, int size4, int size5) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -855,7 +855,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor repeatTensor(int[] sizes) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -903,12 +903,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addSingletonDimension(Tensor t, int dim) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor addMultiDimension(Tensor t, int[] dim) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -928,7 +928,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public TensorNumeric getTensorNumeric() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1070,7 +1070,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor sum(Tensor x, int dim) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1115,22 +1115,22 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor scatter(int dim, Tensor index, Tensor src) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor gather(int dim, Tensor index, Tensor src) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor conv2(Tensor kernel, char vf) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor xcorr2(Tensor kernel, char vf) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1145,7 +1145,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor abs() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1227,7 +1227,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor cmax(double value) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1237,17 +1237,17 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addcmul(double value, Tensor tensor1, Tensor tensor2) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor addcmul(Tensor tensor1, Tensor tensor2) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor addcdiv(double value, Tensor tensor1, Tensor tensor2) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1261,18 +1261,66 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   @Override
-  public Tensor sub(Tensor y) {
-    return null;
+  public Tensor sub(Tensor x) {
+    Util.require(x instanceof DenseTensor, "Only dense tensor is supported in this operation");
+    if (this.nElement() == x.nElement()) {
+      if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
+        TensorNumeric.vSub(this.nElement(), this.storage().toDoubleArray(),
+            this.storageOffset() - 1, x.storage().toDoubleArray(), x.storageOffset() - 1,
+            this.storage().toDoubleArray(), this.storageOffset() - 1);
+      } else {
+        TensorFunc4 subFunc = (data1, offset1, data2, offset2)
+            -> data1[offset1] = TensorNumeric.minus(data1[offset1], data2[offset2]);
+        DenseTensorApply.apply2(this, x, subFunc);
+      }
+    } else if (DenseTensor.canFastBroadcast(this, (DenseTensor) x)) {
+      // recursive add
+      int i = 0;
+      while (i < this.size(1)) {
+        this.select(1, i + 1).sub(x);
+        i += 1;
+      }
+    } else {
+      this.sub(expandTensor((DenseTensor) x));
+    }
+
+    return this;
   }
 
   @Override
   public Tensor sub(Tensor x, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
+//    Util.require(this.nElement() == x.nElement() && this.nElement() == y.nElement());
+//    if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous() && y.isContiguous()) {
+//      TensorNumeric.vSub(this.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
+//          y.storage().toDoubleArray(), y.storageOffset() - 1,
+//          this.storage().toDoubleArray(), this.storageOffset() - 1);
+//    } else {
+//      TensorFunc4 subFunc = (data1, offset1, data2, offset2)
+//          -> data1[offset1] = TensorNumeric.minus(data1[offset1], data2[offset2]);
+//      DenseTensorApply.apply2(this, x, subFunc);
+//      val func = new TensorFunc6[T] {
+//        override def apply (data: Array[T], offset: Int, data1: Array[T],
+//            offset1: Int, data2: Array[T], offset2: Int): Unit = {
+//            data(offset) = ev.minus(data1(offset1), data2(offset2))
+//        }
+//      }
+//      DenseTensorApply.apply3[T](this, x, y, func)
+//    }
+//    this
   }
 
   @Override
   public Tensor sub(double value) {
-    return null;
+    if (this.isContiguous()) {
+      TensorNumeric.sub(this.nElement(), this.storage().toDoubleArray(),
+          this.storageOffset() - 1, value, 1);
+      return this;
+    } else {
+      TensorFunc2 addFunc = (data, index) -> data[index] = data[index] - value;
+      DenseTensorApply.apply1(this, addFunc);
+      return this;
+    }
   }
 
   @Override
@@ -1302,67 +1350,67 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor div(double value) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor div(Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor mul(Tensor x, double value) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor addmm(double v1, Tensor m, double v2, Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, v1, m, v2, mat1, mat2);
   }
 
   @Override
   public Tensor addmm(Tensor m, Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, 1.0, m, 1.0, mat1, mat2);
   }
 
   @Override
   public Tensor addmm(Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, 1.0, this, 1.0, mat1, mat2);
   }
 
   @Override
   public Tensor addmm(double v2, Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, 1.0, this, v2, mat1, mat2);
   }
 
   @Override
   public Tensor addmm(double v1, double v2, Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, v1, this, v2, mat1, mat2);
   }
 
   @Override
   public Tensor mm(Tensor mat1, Tensor mat2) {
-    return null;
+    return DenseTensorMath.addmm(this, 0.0, this, 1.0, mat1, mat2);
   }
 
   @Override
   public Tensor addr(Tensor t1, Tensor t2) {
-    return null;
+    return DenseTensorMath.addr(this, 1.0, this, 1.0, t1, t2);
   }
 
   @Override
   public Tensor addr(double v1, Tensor t1, Tensor t2) {
-    return null;
+    return DenseTensorMath.addr(this, 1.0, this, v1, t1, t2);
   }
 
   @Override
   public Tensor addr(double v1, Tensor t1, double v2, Tensor t2) {
-    return null;
+    return DenseTensorMath.addr(this, v1, this, v2, t1, t2);
   }
 
   @Override
   public Tensor addr(double v1, Tensor t1, double v2, Tensor t2, Tensor t3) {
-    return null;
+    return DenseTensorMath.addr(this, v1, t1, v2, t2, t3);
   }
 
   @Override
@@ -1372,42 +1420,42 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addmv(double beta, Tensor vec1, double alpha, Tensor mat, Tensor vec2) {
-    return null;
+    return DenseTensorMath.addmv(this, beta, vec1, alpha, mat, vec2);
   }
 
   @Override
   public Tensor addmv(double beta, double alpha, Tensor mat, Tensor vec2) {
-    return null;
+    return DenseTensorMath.addmv(this, beta, this, alpha, mat, vec2);
   }
 
   @Override
   public Tensor addmv(double alpha, Tensor mat, Tensor vec2) {
-    return null;
+    return DenseTensorMath.addmv(this, 1.0, this, alpha, mat, vec2);
   }
 
   @Override
   public Tensor mv(Tensor mat, Tensor vec2) {
-    return null;
+    return DenseTensorMath.addmv(this, 1.0, this, 1.0, mat, vec2);
   }
 
   @Override
   public Tensor baddbmm(double beta, Tensor m, double alpha, Tensor batch1, Tensor batch2) {
-    return null;
+    return DenseTensorMath.baddbmm(this, beta, m, alpha, batch1, batch2);
   }
 
   @Override
   public Tensor baddbmm(double beta, double alpha, Tensor batch1, Tensor batch2) {
-    return null;
+    return DenseTensorMath.baddbmm(this, beta, this, alpha, batch1, batch2);
   }
 
   @Override
   public Tensor baddbmm(double alpha, Tensor batch1, Tensor batch2) {
-    return null;
+    return DenseTensorMath.baddbmm(this, 1.0, this, alpha, batch1, batch2);
   }
 
   @Override
   public Tensor bmm(Tensor batch1, Tensor batch2) {
-    return null;
+    return DenseTensorMath.baddbmm(this, 1.0, this, 1.0, batch1, batch2);
   }
 
   @Override
@@ -1427,48 +1475,48 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor floor(Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor floor() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor ceil() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor inv() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor erf() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor erfc() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor logGamma() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor digamma() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public TensorPair topk(int k, int dim, boolean increase,
                          Tensor result, Tensor indices, boolean sortedResult) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1513,47 +1561,47 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor abs(Tensor x) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor norm(Tensor y, int value, int dim) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor gt(Tensor x, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor lt(Tensor x, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor le(Tensor x, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor eq(Tensor x, double y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor maskedFill(Tensor mask, double e) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor maskedCopy(Tensor mask, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor maskedSelect(Tensor mask, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1563,22 +1611,22 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor sign() {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor ge(Tensor x, double value) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor indexAdd(int dim, Tensor index, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor index(int dim, Tensor index, Tensor y) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1603,12 +1651,12 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor range(double xmin, double xmax, int step) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
   public Tensor negative(Tensor x) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override
@@ -1618,7 +1666,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor clamp(double min, double max) {
-    return null;
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   private void resizeAs(DenseTensor self, Tensor src) {

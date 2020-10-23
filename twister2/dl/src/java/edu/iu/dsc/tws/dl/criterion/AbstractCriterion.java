@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.dl.criterion;
 
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 
 /**
  * [[AbstractCriterion]] is an abstract class the concrete criterion should extend.
@@ -30,6 +31,11 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     implements Criterion {
   protected I gradInput;
   protected double output;
+
+  public AbstractCriterion() {
+    gradInput = (I) new DenseTensor();
+    output = 0.0;
+  }
 
   public Activity getGradInput() {
     return gradInput;
@@ -55,7 +61,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
    * @param target target
    * @return the loss of criterion
    */
-  double forward(I input, O target) {
+  public double forward(I input, O target) {
     return updateOutput(input, target);
   }
 
@@ -66,7 +72,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
    * @param target target
    * @return gradient corresponding to input data
    */
-  I backward(I input, O target) {
+  public I backward(I input, O target) {
     return updateGradInput(input, target);
   }
 
@@ -78,7 +84,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
    * @param target target or labels
    * @return the loss of the criterion
    */
-  double updateOutput(I input, O target) {
+  public double updateOutput(I input, O target) {
     return this.output;
   }
 
@@ -90,7 +96,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
    * @param target target data / labels
    * @return gradient of input
    */
-  abstract I updateGradInput(I input, O target);
+  public abstract I updateGradInput(I input, O target);
 
   /**
    * Deep copy this criterion

@@ -11,5 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.criterion;
 
-public interface Criterion {
+import java.io.Serializable;
+
+public interface Criterion extends Serializable {
 }

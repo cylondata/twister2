@@ -94,7 +94,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
       int[] sizes = new int[]{i, rowSize};
       batch = new DenseTensor();
       batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
-      return new ArrayTensorMiniBatch(batch, null);
+      return new ArrayTensorMiniBatch(batch, batch);
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split", e);
     }

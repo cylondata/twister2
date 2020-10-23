@@ -26,7 +26,7 @@ public class MSECriterion extends TensorCriterion {
   }
 
   @Override
-  double updateOutput(Tensor input, Tensor target) {
+  public double updateOutput(Tensor input, Tensor target) {
     gradInput.resizeAs(input).copy(input);
     gradInput.sub(target);
     output = gradInput.dot(gradInput);
@@ -37,7 +37,7 @@ public class MSECriterion extends TensorCriterion {
   }
 
   @Override
-  Tensor updateGradInput(Tensor input, Tensor target) {
+  public Tensor updateGradInput(Tensor input, Tensor target) {
     double norm = 2.0;
     if (sizeAverage) {
       norm = 2.0 / input.nElement();

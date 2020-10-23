@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.dl.optim;
 
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.dl.criterion.Criterion;
+import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
@@ -21,14 +21,14 @@ import edu.iu.dsc.tws.dl.module.AbstractModule;
 public class LocalOptimizer<T> extends Optimizer<T> {
 
 
-  public LocalOptimizer(AbstractModule model, BatchTSet<T> dataset, Criterion criterion) {
+  public LocalOptimizer(AbstractModule model, BatchTSet<T> dataset, AbstractCriterion criterion) {
     super(model, dataset, criterion);
   }
 
   @Override
   public AbstractModule optimize() {
     AbstractModule modal = this.getModel();
-    Criterion criterion = this.getCriterion();
+    AbstractCriterion criterion = this.getCriterion();
     this.getModel().getParameters();
 
     this.getDataset().direct().forEach(data -> {
@@ -36,7 +36,11 @@ public class LocalOptimizer<T> extends Optimizer<T> {
       modal.zeroGradParameters();
       modal.training();
       Activity input = miniBatch.getInput();
+      Activity target = miniBatch.getTarget();
       DenseTensor output = modal.forward((DenseTensor) input);
+      double loss = criterion.forward(output, target);
+      Activity errors = criterion.backward(output, target);
+      modal.backward((DenseTensor) input, (DenseTensor) errors);
       System.out.println(output.toString());
     });
     return null;

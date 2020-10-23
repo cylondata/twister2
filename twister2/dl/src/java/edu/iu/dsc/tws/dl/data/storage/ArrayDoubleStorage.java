@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.storage;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.dl.data.Storage;
@@ -49,12 +50,14 @@ public class ArrayDoubleStorage implements Storage {
 
   @Override
   public Storage fill(double value, int offset, int length) {
-    return null;
+    Arrays.fill(values, offset - 1, offset - 1 + length, value);
+    return this;
   }
 
   @Override
   public Storage fill(float value, int offset, int length) {
-    throw new UnsupportedOperationException("float operations not supported in ArrayDoubleStorage");
+    Arrays.fill(values, offset - 1, offset - 1 + length, value);
+    return this;
   }
 
   @Override
@@ -75,12 +78,12 @@ public class ArrayDoubleStorage implements Storage {
 
   @Override
   public Storage set(Storage other) {
-    return null;
+    throw new UnsupportedOperationException("operations not supported in ArrayDoubleStorage");
   }
 
   @Override
   public Iterator iterator() {
-    return null;
+    throw new UnsupportedOperationException("operations not supported in ArrayDoubleStorage");
   }
 
   public double get(int index) {

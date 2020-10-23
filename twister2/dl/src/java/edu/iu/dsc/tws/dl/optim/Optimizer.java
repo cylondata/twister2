@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.dl.criterion.Criterion;
+import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 
@@ -28,12 +28,13 @@ import edu.iu.dsc.tws.dl.module.AbstractModule;
 public abstract class Optimizer<T> {
   private AbstractModule model;
   private BatchTSet<T> dataset;
-  private Criterion criterion;
+  private AbstractCriterion criterion;
 
   private Table state;
   private Map<String, OptimMethod> optimMethods;
 
-  public Optimizer(AbstractModule dlmodel, BatchTSet<T> batchTSet, Criterion errorCriterion) {
+  public Optimizer(AbstractModule dlmodel, BatchTSet<T> batchTSet,
+                   AbstractCriterion errorCriterion) {
     this.model = dlmodel;
     this.dataset = batchTSet;
     this.criterion = errorCriterion;
@@ -58,11 +59,11 @@ public abstract class Optimizer<T> {
     this.dataset = dataset;
   }
 
-  public Criterion getCriterion() {
+  public AbstractCriterion getCriterion() {
     return criterion;
   }
 
-  public void setCriterion(Criterion criterion) {
+  public void setCriterion(AbstractCriterion criterion) {
     this.criterion = criterion;
   }
 

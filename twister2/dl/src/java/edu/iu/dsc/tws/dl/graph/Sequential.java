@@ -72,7 +72,7 @@ public class Sequential extends DynamicContainer {
     DenseTensor error = nextError;
     while (i > 0) {
       Activity inputLocal = modules.get(i - 1).output;
-      error = modules.get(i).backward(input, error);
+      error = modules.get(i).backward((DenseTensor) inputLocal, error);
       i -= 1;
     }
     error = modules.get(0).backward(input, error);
