@@ -11,14 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
-import edu.iu.dsc.tws.dl.data.Activity;
-import edu.iu.dsc.tws.dl.data.MiniBatch;
-import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
+import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
 public class LocalOptimizer<T> extends Optimizer<T> {
 
@@ -31,28 +27,13 @@ public class LocalOptimizer<T> extends Optimizer<T> {
   public AbstractModule optimize() {
     AbstractModule modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
-    this.getModel().getParameters();
+    double[] result = new double[1];
+    TensorPair parameters = this.getModel().getParameters();
 
-    this.getDataset().direct().forEach(data -> {
-      ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;
-      modal.zeroGradParameters();
-      modal.training();
-      Activity input = miniBatch.getInput();
-      Activity target = miniBatch.getTarget();
-      DenseTensor output = modal.forward((DenseTensor) input);
-      double loss = criterion.forward(output, target);
-      Activity errors = criterion.backward(output, target);
-      modal.backward((DenseTensor) input, (DenseTensor) errors);
-      System.out.println(output.toString());
-    });
+    this.getDataset().direct().map(new TrainMapFunction<T>(modal, criterion))
+        .allReduce(new TrainReduceFunction(result))
+        .forEach(data -> System.out.println("Loss value : " + data[0]));
     return null;
   }
 
-  private class TrainMap extends BaseMapFunc<T, double[]> {
-
-    @Override
-    public double[] map(T input) {
-      return new double[0];
-    }
-  }
 }

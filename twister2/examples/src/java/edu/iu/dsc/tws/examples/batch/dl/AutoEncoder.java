@@ -46,9 +46,11 @@ public class AutoEncoder implements Twister2Worker, Serializable {
   @Override
   public void execute(WorkerEnvironment workerEnv) {
     BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
+    Config config = env.getConfig();
+    int parallelism = config.getIntegerValue("parallelism");
 
     String dataFile = "/home/pulasthi/work/thesis/data/csv/20.csv";
-    SourceTSet<MiniBatch> source = env.createDlMiniBatchSource(dataFile, 4, 20, 1);
+    SourceTSet<MiniBatch> source = env.createDlMiniBatchSource(dataFile, 2, 20, parallelism);
 
     //Define model
     Sequential model = new Sequential();
@@ -79,6 +81,7 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     // lets put a configuration here
     JobConfig jobConfig = new JobConfig();
     jobConfig.put("dnn-key", "Twister2-DNN");
+    jobConfig.put("parallelism", numberOfWorkers);
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")

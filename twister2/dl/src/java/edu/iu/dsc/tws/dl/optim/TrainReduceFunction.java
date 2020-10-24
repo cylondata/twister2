@@ -9,15 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.optim.initialization;
+package edu.iu.dsc.tws.dl.optim;
 
-import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.optim.InitializationMethod;
-import edu.iu.dsc.tws.dl.utils.VariableFormat;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 
-public class Zeros implements InitializationMethod {
+public class TrainReduceFunction implements ReduceFunc<double[]> {
+
+  private double[] data;
+  public TrainReduceFunction(double[] result) {
+    this.data = result;
+  }
+
   @Override
-  public void init(Tensor variable, VariableFormat dataFormat) {
-    variable.fill(0.1);
+  public double[] reduce(double[] t1, double[] t2) {
+    this.data[0] = t1[0] + t2[0];
+    return this.data;
   }
 }
