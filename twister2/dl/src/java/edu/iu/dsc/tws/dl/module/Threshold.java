@@ -131,7 +131,7 @@ public class Threshold extends TensorModule {
       }
     } else {
       ((DenseTensor) gradInput).resizeAs(gradOutput);
-      ((DenseTensor) output).copy(gradOutput);
+      ((DenseTensor) gradInput).copy(gradOutput);
       double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
       int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
       int taskSize = gradOutput.nElement();
@@ -143,7 +143,7 @@ public class Threshold extends TensorModule {
         if (inputData[inputOffset + j] <= this.threshold) {
           gradInputData[gradInputOffset + j] = 0.0;
         } else {
-          gradInputData[gradInputOffset + j] = inputData[inputOffset + j];
+          gradInputData[gradInputOffset + j] = gradInputData[inputOffset + j];
         }
       }
     }

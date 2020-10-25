@@ -319,7 +319,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   private DenseTensor newWithTensor(DenseTensor old) {
     DenseTensor newTensor = new DenseTensor();
-    return newTensor.rawSet(newTensor, old.storage(), old.storageOffset(), old.nDimension(),
+    return newTensor.rawSet(newTensor, old.storage(), old.storageOffset() - 1, old.nDimension(),
         old.size(), old.stride());
   }
 

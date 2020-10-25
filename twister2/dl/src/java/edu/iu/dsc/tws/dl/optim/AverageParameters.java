@@ -11,22 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 
-public class TrainReduceFunction implements ReduceFunc<DoubleDoubleArrayPair> {
-
-  private DoubleDoubleArrayPair data;
-  public TrainReduceFunction(DoubleDoubleArrayPair result) {
-    this.data = result;
-  }
+public class AverageParameters extends BaseMapFunc<DoubleDoubleArrayPair, DoubleDoubleArrayPair> {
 
   @Override
-  public DoubleDoubleArrayPair reduce(DoubleDoubleArrayPair t1, DoubleDoubleArrayPair t2) {
-    this.data.setValue0(t1.getValue0() + t2.getValue0());
-    double[] grad = data.getValue1();
-    TensorNumeric.vAdd(grad.length, t1.getValue1(), 0, t2.getValue1(), 0, grad, 0);
-    return this.data;
+  public DoubleDoubleArrayPair map(DoubleDoubleArrayPair input) {
+    int parallelism = this.getTSetContext().getParallelism();
+    input.setValue0(input.getValue0() / parallelism);
+    double[] data = input.getValue1();
+    TensorNumeric.scal(data.length, 1.0 / parallelism, data, 0, 1);
+    return input;
   }
 }

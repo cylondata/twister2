@@ -50,7 +50,7 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     int parallelism = config.getIntegerValue("parallelism");
 
     String dataFile = "/home/pulasthi/work/thesis/data/csv/20.csv";
-    SourceTSet<MiniBatch> source = env.createDlMiniBatchSource(dataFile, 2, 20, parallelism);
+    SourceTSet<MiniBatch> source = env.createDlMiniBatchSource(dataFile, 10, 20, parallelism);
 
     //Define model
     Sequential model = new Sequential();

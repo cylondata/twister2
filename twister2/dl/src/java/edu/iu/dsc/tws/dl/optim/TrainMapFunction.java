@@ -17,8 +17,9 @@ import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
+import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 
-public class TrainMapFunction<T> extends BaseMapFunc<T, double[]> {
+public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
 
   private AbstractModule modal;
   private AbstractCriterion criterion;
@@ -29,8 +30,7 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, double[]> {
   }
 
   @Override
-  public double[] map(T data) {
-    double[] result = new double[1];
+  public DoubleDoubleArrayPair map(T data) {
     ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;
     modal.zeroGradParameters();
     modal.training();
@@ -41,7 +41,8 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, double[]> {
     Activity errors = criterion.backward(output, target);
     modal.backward((DenseTensor) input, (DenseTensor) errors);
     System.out.println("Loss Rank : " + this.getTSetContext().getIndex() + " : " + loss);
-    result[0] = loss;
+    DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(loss,
+        modal.getParameters().getValue1().storage().toDoubleArray());
     return result;
   }
 }
