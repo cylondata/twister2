@@ -11,10 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.optim;
 
+import java.util.List;
+import java.util.Map;
+
+import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
 public class LocalOptimizer<T> extends Optimizer<T> {
@@ -26,17 +33,42 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
   @Override
   public AbstractModule optimize() {
+    double[] loss = new double[1];
     AbstractModule modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
     TensorPair parameters = this.getModel().getParameters();
+    Tensor weight = parameters.getValue0();
+    Tensor grad = parameters.getValue1();
+    Map<String, OptimMethod> optimMethods = this.getOptimMethods();
+    this.state.put("epoch", this.state.getOrDefault("epoch", 1));
+    this.state.put("neval", this.state.getOrDefault("neval", 1));
+
     //TODO check of the exsiting array can be used
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
-        new double[modal.getParameters().getValue1().storage().length()]);
+        new double[grad.storage().length()]);
 
-    this.getDataset().direct().map(new TrainMapFunction<T>(modal, criterion))
-        .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).direct()
-        .forEach(data -> System.out.println("Loss value : " + data.getValue0() + " \n"
-            + "Grad : " + data.getValue1()[0]));
+    //TODO use caching TSet
+    StorableTBase<DoubleDoubleArrayPair> trainResult;
+    while (!this.getEndWhen().apply(this.state)) {
+      trainResult = this.getDataset().direct()
+          .map(new TrainMapFunction<T>(modal, criterion))
+          .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).cache();
+
+      List<DoubleDoubleArrayPair> resultValues = trainResult.getData();
+      DoubleTensorPair resultPair = new DoubleTensorPair(resultValues.get(0).getValue0(),
+          new DenseTensor(resultValues.get(0).getValue1()));
+
+      //TODO need to support individual layer optimizer methods later. this would mean updating the
+      // weight values need to be updated using tensors.
+      for (Map.Entry<String, OptimMethod> optimMethodEntry : optimMethods.entrySet()) {
+        optimMethodEntry.getValue().optimize(t -> resultPair, weight);
+      }
+      System.out.println("Loss : " + resultPair.getValue0());
+      this.state.put("epoch", this.state.getOrDefault("epoch", 1) + 1);
+      this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
+    }
+
+
     return null;
   }
 

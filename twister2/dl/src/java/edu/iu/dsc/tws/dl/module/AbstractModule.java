@@ -162,7 +162,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    */
   public final String getName() {
     if (this.name == null) {
-      return "${this.getClass.getSimpleName}${namePostfix}";
+      return this.getClass().getSimpleName() + namePostfix;
     } else {
       return this.name;
     }

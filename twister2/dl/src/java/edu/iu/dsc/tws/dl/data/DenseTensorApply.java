@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.dl.data;
 
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
+import edu.iu.dsc.tws.dl.data.function.TensorFunc6;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.Util;
 
@@ -145,6 +146,99 @@ public final class DenseTensorApply {
         hasFinished = counterMeta2[0];
         tensor2Offset = counterMeta2[1];
         i2 = 0;
+      }
+    }
+  }
+
+  /**
+   * Iterate through tensor1, tensor2, tensor3, and apply func to the elements
+   *
+   * @param tensor1 the tensor
+   * @param tensor2 the tensor
+   * @param tensor3 the tensor
+   * @param func    (tensor1Data, tensor1Offset, tensor2Data, tensor2Offset, tensor3Data,
+   *                tensor3Offset)
+   */
+  public static void apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, TensorFunc6 func) {
+
+    Util.require(tensor1.nElement() == tensor2.nElement()
+            && tensor2.nElement() == tensor3.nElement(),
+        "inconsistent tensor size");
+
+    if (tensor1.isEmpty()) {
+      return;
+    }
+
+    // shortcut for scalar
+    if (tensor1.isScalar() && tensor2.isScalar() && tensor3.isScalar()) {
+      double[] tensor1Data = tensor1.storage().toDoubleArray();
+      double[] tensor2Data = tensor2.storage().toDoubleArray();
+      double[] tensor3Data = tensor3.storage().toDoubleArray();
+      int tensor1Index = tensor1.storageOffset() - 1;
+      int tensor2Index = tensor2.storageOffset() - 1;
+      int tensor3Index = tensor3.storageOffset() - 1;
+      func.apply(tensor1Data, tensor1Index, tensor2Data, tensor2Index, tensor3Data, tensor3Index);
+      return;
+    }
+
+    double[] tensor1Data = tensor1.storage().toDoubleArray();
+    int tensor1Offset = tensor1.storageOffset() - 1;
+    int tensor1Stride = getStride(tensor1);
+    //meta1[0], meta1[1
+    int[] meta1 = getLargestContiguousSize(tensor1);
+    int[] tensor1Counter = getCounter(meta1[0]);
+
+    double[] tensor2Data = tensor2.storage().toDoubleArray();
+    int tensor2Offset = tensor2.storageOffset() - 1;
+    int tensor2Stride = getStride(tensor2);
+    //meta2[0], meta2[1
+    int[] meta2 = getLargestContiguousSize(tensor2);
+    int[] tensor2Counter = getCounter(meta2[0]);
+
+    double[] tensor3Data = tensor3.storage().toDoubleArray();
+    int tensor3Offset = tensor3.storageOffset() - 1;
+    int tensor3Stride = getStride(tensor3);
+    //tensor3Dim, meta3[1
+    int[] meta3 = getLargestContiguousSize(tensor3);
+    int[] tensor3Counter = getCounter(meta3[0]);
+
+    int[] counterMeta1 = new int[2];
+    int[] counterMeta2 = new int[2];
+    int[] counterMeta3 = new int[2];
+
+    int hasFinished = 0;
+    int i1 = 0;
+    int i2 = 0;
+    int i3 = 0;
+    while (hasFinished == 0) {
+      while (i1 < meta1[1] && i2 < meta2[1] && i3 < meta3[1]) {
+        func.apply(tensor1Data, tensor1Offset + i1 * tensor1Stride, tensor2Data,
+            tensor2Offset + i2 * tensor2Stride,
+            tensor3Data, tensor3Offset + i3 * tensor3Stride);
+        i1 += 1;
+        i2 += 1;
+        i3 += 1;
+      }
+
+      if (i1 == meta1[1]) {
+        updateCounter(tensor1, tensor1Counter, tensor1Offset, meta1[0], counterMeta1);
+        hasFinished = counterMeta1[0];
+        tensor1Offset = counterMeta1[1];
+        i1 = 0;
+      }
+
+      if (i2 == meta2[1]) {
+        updateCounter(tensor2, tensor2Counter, tensor2Offset, meta2[0], counterMeta2);
+        hasFinished = counterMeta2[0];
+        tensor2Offset = counterMeta2[1];
+        i2 = 0;
+      }
+
+      if (i3 == meta3[1]) {
+        updateCounter(tensor3, tensor3Counter, tensor3Offset, meta3[0], counterMeta3);
+        hasFinished = counterMeta3[0];
+        tensor3Offset = counterMeta3[1];
+        i3 = 0;
       }
     }
   }

@@ -42,6 +42,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
   private int dataSize;
   private int parallel;
   private int batchSize;
+  private int count = 0;
 
   public DLMiniBatchSourceFunction(String filePath, int batchsize, int datasize, int parallelism) {
     this.dataFilePath = filePath;
@@ -55,6 +56,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
     this.context = ctx;
+    count = count + 1;
     Config cfg = ctx.getConfig();
     this.dataSource = new DataSource(cfg, new LocalCSVInputPartitioner(
         new Path(dataFilePath), context.getParallelism(), dataSize, cfg), parallel);

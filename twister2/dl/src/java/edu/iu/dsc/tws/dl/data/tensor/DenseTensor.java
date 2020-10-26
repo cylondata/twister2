@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.dl.data.TensorMath;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
+import edu.iu.dsc.tws.dl.data.function.TensorFunc6;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 import edu.iu.dsc.tws.dl.utils.Util;
@@ -1259,7 +1260,16 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addcdiv(double value, Tensor tensor1, Tensor tensor2) {
-    throw new UnsupportedOperationException("Operation not supported");
+    if (this.isContiguous() && tensor1.isContiguous() && tensor2.isContiguous()) {
+      TensorNumeric.addcdiv(value, this.nElement(), this.storage().toDoubleArray(),
+          this.storageOffset() - 1, tensor1.storage().toDoubleArray(), tensor1.storageOffset() - 1,
+          tensor2.storage().toDoubleArray(), tensor2.storageOffset() - 1);
+    } else {
+      TensorFunc6 func = (data1, offset1, data2, offset2, data3, offset3)
+          -> data1[offset1] = data1[offset1] + (data2[offset2] / data3[offset3]) * value;
+      DenseTensorApply.apply3(this, tensor1, tensor2, func);
+    }
+    return this;
   }
 
   @Override

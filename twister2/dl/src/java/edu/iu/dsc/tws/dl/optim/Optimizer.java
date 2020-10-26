@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
+import edu.iu.dsc.tws.dl.optim.trigger.Trigger;
+import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
 
 /**
  * Optimizer is an abstract class which is used to train a model automatically
@@ -30,8 +32,9 @@ public abstract class Optimizer<T> {
   private BatchTSet<T> dataset;
   private AbstractCriterion criterion;
 
-  private Table state;
+  protected Table state;
   private Map<String, OptimMethod> optimMethods;
+  private Trigger endWhen;
 
   public Optimizer(AbstractModule dlmodel, BatchTSet<T> batchTSet,
                    AbstractCriterion errorCriterion) {
@@ -41,6 +44,7 @@ public abstract class Optimizer<T> {
     this.state = new Table();
     this.optimMethods = new HashMap<>();
     this.optimMethods.put(model.getName(), null); //TODO new SGD();
+    this.endWhen = Triggers.maxEpoch(10);
   }
 
   public AbstractModule getModel() {
@@ -75,6 +79,10 @@ public abstract class Optimizer<T> {
     this.state = state;
   }
 
+  public Trigger getEndWhen() {
+    return endWhen;
+  }
+
   public Map<String, OptimMethod> getOptimMethods() {
     return optimMethods;
   }
@@ -95,7 +103,7 @@ public abstract class Optimizer<T> {
    *
    * @param method optimization method
    */
-  Optimizer<T> setOptimMethod(OptimMethod method) {
+  public Optimizer<T> setOptimMethod(OptimMethod method) {
     List<String> nameList = new ArrayList<>();
     nameList.add(model.getName());
     checkSubModules(model, nameList);
@@ -140,5 +148,9 @@ public abstract class Optimizer<T> {
 //        i += 1
 //      }
 //    }
+  }
+
+  public void setEndWhen(Trigger trigger) {
+    this.endWhen = trigger;
   }
 }
