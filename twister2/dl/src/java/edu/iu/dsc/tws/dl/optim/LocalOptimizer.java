@@ -38,6 +38,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
   @Override
   public AbstractModule optimize() {
+    long startTime = System.nanoTime();
     double[] loss = new double[1];
     AbstractModule modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
@@ -47,6 +48,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     Map<String, OptimMethod> optimMethods = this.getOptimMethods();
     this.state.put("epoch", this.state.getOrDefault("epoch", 1));
     this.state.put("neval", this.state.getOrDefault("neval", 1));
+    int epoch = 1;
     int iterationsPerEpoch = 1;
     int currentIteration = 0;
     Config config = env.getConfig();
@@ -55,7 +57,6 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     StorableTBase<T> cachedDataTSet = this.getDataset().cache();
     List<T> cachedData = cachedDataTSet.getData();
     iterationsPerEpoch = cachedData.size();
-
 
     //TODO check of the exsiting array can be used
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
@@ -81,18 +82,29 @@ public class LocalOptimizer<T> extends Optimizer<T> {
       for (Map.Entry<String, OptimMethod> optimMethodEntry : optimMethods.entrySet()) {
         optimMethodEntry.getValue().optimize(t -> resultPair, weight);
       }
-      System.out.println("Loss : " + resultPair.getValue0());
 
+      if (env.getWorkerID() == 0) {
+        System.out.printf("Optimizer "
+                + "[Epoch %d]"
+                + "[Iteration %d] "
+                + "Loss : %f \n",
+            epoch, state.<Integer>get("neval"), resultPair.getValue0());
+      }
       currentIteration++;
       if (currentIteration == iterationsPerEpoch) {
         this.state.put("epoch", this.state.getOrDefault("epoch", 1) + 1);
         currentIteration = 0;
+        epoch++;
       }
       this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
     }
+    long endTime = System.nanoTime();
+    if (env.getWorkerID() == 0) {
+      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+    }
 
 
-    return null;
+    return this.getModel();
   }
 
 }

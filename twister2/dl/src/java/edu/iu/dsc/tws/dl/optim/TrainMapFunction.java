@@ -40,7 +40,6 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
     double loss = criterion.forward(output, target);
     Activity errors = criterion.backward(output, target);
     modal.backward((DenseTensor) input, (DenseTensor) errors);
-    System.out.println("Loss Rank : " + this.getTSetContext().getIndex() + " : " + loss);
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(loss,
         modal.getParameters().getValue1().storage().toDoubleArray());
     return result;
