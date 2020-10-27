@@ -24,6 +24,7 @@ t2_java_lib(
         "//twister2/proto:proto-java",
         "//twister2/proto/utils:proto-utils-java",
         "//twister2/master/src/java:master-java",
+        "//twister2/tset/src/java:tset-java",
         "@com_google_protobuf//:protobuf_java",
         "@com_google_guava_guava",
         "@org_apache_hadoop_hadoop_common//jar",

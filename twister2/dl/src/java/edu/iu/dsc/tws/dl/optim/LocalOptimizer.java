@@ -14,21 +14,26 @@ package edu.iu.dsc.tws.dl.optim;
 import java.util.List;
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.data.dataset.DataSet;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class LocalOptimizer<T> extends Optimizer<T> {
 
 
-  public LocalOptimizer(AbstractModule model, BatchTSet<T> dataset, AbstractCriterion criterion) {
-    super(model, dataset, criterion);
+  public LocalOptimizer(BatchEnvironment env, AbstractModule model,
+                        BatchTSet<T> dataset, AbstractCriterion criterion) {
+    super(env, model, dataset, criterion);
   }
 
   @Override
@@ -42,6 +47,15 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     Map<String, OptimMethod> optimMethods = this.getOptimMethods();
     this.state.put("epoch", this.state.getOrDefault("epoch", 1));
     this.state.put("neval", this.state.getOrDefault("neval", 1));
+    int iterationsPerEpoch = 1;
+    int currentIteration = 0;
+    Config config = env.getConfig();
+    int parallelism = config.getIntegerValue("parallelism");
+    //Load data
+    StorableTBase<T> cachedDataTSet = this.getDataset().cache();
+    List<T> cachedData = cachedDataTSet.getData();
+    iterationsPerEpoch = cachedData.size();
+
 
     //TODO check of the exsiting array can be used
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
@@ -50,7 +64,11 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     //TODO use caching TSet
     StorableTBase<DoubleDoubleArrayPair> trainResult;
     while (!this.getEndWhen().apply(this.state)) {
-      trainResult = this.getDataset().direct()
+
+      T currentData = cachedData.get(currentIteration);
+      SourceTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism);
+
+      trainResult = src.direct()
           .map(new TrainMapFunction<T>(modal, criterion))
           .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).cache();
 
@@ -64,7 +82,12 @@ public class LocalOptimizer<T> extends Optimizer<T> {
         optimMethodEntry.getValue().optimize(t -> resultPair, weight);
       }
       System.out.println("Loss : " + resultPair.getValue0());
-      this.state.put("epoch", this.state.getOrDefault("epoch", 1) + 1);
+
+      currentIteration++;
+      if (currentIteration == iterationsPerEpoch) {
+        this.state.put("epoch", this.state.getOrDefault("epoch", 1) + 1);
+        currentIteration = 0;
+      }
       this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
     }
 

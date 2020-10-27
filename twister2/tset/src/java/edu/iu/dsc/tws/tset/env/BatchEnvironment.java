@@ -27,10 +27,6 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.common.table.Row;
-import edu.iu.dsc.tws.dl.data.MiniBatch;
-import edu.iu.dsc.tws.dl.data.Sample;
-import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
-import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchSourceFunction;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.fn.impl.ArrowBasedSourceFunction;
 import edu.iu.dsc.tws.tset.fn.impl.CSVBasedSourceFunction;
@@ -102,15 +98,6 @@ public class BatchEnvironment extends TSetEnvironment {
         parallelism);
   }
 
-  public SourceTSet<Sample> createDlSampleSource(String filePath, int dataSize, int parallelism) {
-    return createSource(new DLBasicSourceFunction(filePath, dataSize, parallelism), parallelism);
-  }
-
-  public SourceTSet<MiniBatch> createDlMiniBatchSource(String filePath, int batchsize,
-                                                       int dataSize, int parallelism) {
-    return createSource(new DLMiniBatchSourceFunction(filePath, batchsize,
-        dataSize, parallelism), parallelism);
-  }
   @Override
   public BaseTSet<Integer> createArrowSource(String filePath, int parallelism) {
     return null;

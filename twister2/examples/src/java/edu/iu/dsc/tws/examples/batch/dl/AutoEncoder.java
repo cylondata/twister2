@@ -24,13 +24,16 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.criterion.MSECriterion;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
+import edu.iu.dsc.tws.dl.data.dataset.DataSet;
 import edu.iu.dsc.tws.dl.graph.Sequential;
 import edu.iu.dsc.tws.dl.module.Linear;
 import edu.iu.dsc.tws.dl.module.ReLU;
 import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.Sigmoid;
+import edu.iu.dsc.tws.dl.optim.Adam;
 import edu.iu.dsc.tws.dl.optim.LocalOptimizer;
 import edu.iu.dsc.tws.dl.optim.Optimizer;
+import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
@@ -48,9 +51,12 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     Config config = env.getConfig();
     int parallelism = config.getIntegerValue("parallelism");
+    int dataSize = config.getIntegerValue("dataSize");
+    int batchSize = config.getIntegerValue("batchSize");
 
     String dataFile = "/home/pulasthi/work/thesis/data/csv/20.csv";
-    SourceTSet<MiniBatch> source = env.createDlMiniBatchSource(dataFile, 10, 20, parallelism);
+    SourceTSet<MiniBatch> source = DataSet
+        .createMiniBatchDataSet(env, dataFile, batchSize, dataSize, parallelism);
 
     //Define model
     Sequential model = new Sequential();
@@ -63,16 +69,23 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     AbstractCriterion criterion = new MSECriterion();
 
     //Define Oprimizer
-    Optimizer<MiniBatch> optimizer = new LocalOptimizer<MiniBatch>(model, source, criterion);
-
+    Optimizer<MiniBatch> optimizer = new LocalOptimizer<MiniBatch>(env, model, source, criterion);
+    optimizer.setOptimMethod(new Adam());
+    optimizer.setEndWhen(Triggers.maxEpoch(10));
     optimizer.optimize();
   }
 
   public static void main(String[] args) {
     // lets take number of workers as an command line argument
     int numberOfWorkers = 1;
-    if (args.length == 1) {
+    int batchSize = 0;
+    int dataSize = 0;
+    if (args.length >= 3) {
       numberOfWorkers = Integer.valueOf(args[0]);
+      batchSize = Integer.valueOf(args[1]);
+      dataSize = Integer.valueOf(args[2]);
+    } else {
+      throw new IllegalStateException("need to provide parallelism, batchSize and dataSize");
     }
 
     // first load the configurations from command line and config files
@@ -82,6 +95,8 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     JobConfig jobConfig = new JobConfig();
     jobConfig.put("dnn-key", "Twister2-DNN");
     jobConfig.put("parallelism", numberOfWorkers);
+    jobConfig.put("batchSize", batchSize);
+    jobConfig.put("dataSize", dataSize);
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")

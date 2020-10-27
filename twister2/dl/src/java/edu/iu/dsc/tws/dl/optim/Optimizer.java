@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.optim.trigger.Trigger;
 import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
+import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 
 /**
  * Optimizer is an abstract class which is used to train a model automatically
@@ -31,12 +32,13 @@ public abstract class Optimizer<T> {
   private AbstractModule model;
   private BatchTSet<T> dataset;
   private AbstractCriterion criterion;
+  protected BatchEnvironment env;
 
   protected Table state;
   private Map<String, OptimMethod> optimMethods;
   private Trigger endWhen;
 
-  public Optimizer(AbstractModule dlmodel, BatchTSet<T> batchTSet,
+  public Optimizer(BatchEnvironment environment, AbstractModule dlmodel, BatchTSet<T> batchTSet,
                    AbstractCriterion errorCriterion) {
     this.model = dlmodel;
     this.dataset = batchTSet;
@@ -45,6 +47,7 @@ public abstract class Optimizer<T> {
     this.optimMethods = new HashMap<>();
     this.optimMethods.put(model.getName(), null); //TODO new SGD();
     this.endWhen = Triggers.maxEpoch(10);
+    this.env = environment;
   }
 
   public AbstractModule getModel() {

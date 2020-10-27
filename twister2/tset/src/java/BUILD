@@ -21,7 +21,6 @@ t2_java_lib(
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
         "//twister2/task/src/main/java:task-java",
-        "//twister2/dl/src/java:twister2dl-java",
         "//twister2/proto:proto-java",
         "//twister2/proto/utils:proto-utils-java",
         "//twister2/master/src/java:master-java",
