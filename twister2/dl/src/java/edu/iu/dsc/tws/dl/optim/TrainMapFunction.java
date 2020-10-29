@@ -24,13 +24,16 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
   private AbstractModule modal;
   private AbstractCriterion criterion;
 
-  public TrainMapFunction(AbstractModule localModal, AbstractCriterion localCriterion) {
-    this.modal = localModal;
+  public TrainMapFunction(AbstractCriterion localCriterion) {
     this.criterion = localCriterion;
   }
 
   @Override
   public DoubleDoubleArrayPair map(T data) {
+
+    modal = (AbstractModule) getTSetContext()
+        .getInput("modal").getConsumer().next();
+
     ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;
     modal.zeroGradParameters();
     modal.training();

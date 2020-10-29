@@ -26,13 +26,14 @@ import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
-public class LocalOptimizer<T> extends Optimizer<T> {
+public class DistributedOptimizer<T> extends Optimizer<T> {
 
 
-  public LocalOptimizer(BatchEnvironment env, AbstractModule model,
-                        BatchTSet<T> dataset, AbstractCriterion criterion) {
+  public DistributedOptimizer(BatchEnvironment env, AbstractModule model,
+                              BatchTSet<T> dataset, AbstractCriterion criterion) {
     super(env, model, dataset, criterion);
   }
 
@@ -63,16 +64,24 @@ public class LocalOptimizer<T> extends Optimizer<T> {
         new double[grad.storage().length()]);
 
     //TODO use caching TSet
-    StorableTBase<DoubleDoubleArrayPair> trainResult;
+    CachedTSet<DoubleDoubleArrayPair> trainResult;
+    T currentData = cachedData.get(currentIteration);
+    CachedTSet<AbstractModule> modalTSet = DataSet.createModalDataSet(env, modal, parallelism)
+        .cache();
+
+    CachedTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
+    CachedTSet<T> iterationData;
+    CachedTSet<AbstractModule> iterationModal;
+    ComputeTSet<DoubleDoubleArrayPair> trainMap = src.direct()
+        .map(new TrainMapFunction<T>(criterion));
+
+    //input the model
+    trainMap.addInput("modal", modalTSet);
+    trainResult = trainMap
+        .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).lazyCache();
+
     while (!this.getEndWhen().apply(this.state)) {
-
-      T currentData = cachedData.get(currentIteration);
-      SourceTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism);
-
-      trainResult = src.direct()
-          .map(new TrainMapFunction<T>(criterion))
-          .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).cache();
-
+      env.eval(trainResult);
       List<DoubleDoubleArrayPair> resultValues = trainResult.getData();
       DoubleTensorPair resultPair = new DoubleTensorPair(resultValues.get(0).getValue0(),
           new DenseTensor(resultValues.get(0).getValue1()));
@@ -97,13 +106,18 @@ public class LocalOptimizer<T> extends Optimizer<T> {
         epoch++;
       }
       this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
+      currentData = cachedData.get(currentIteration);
+      iterationData = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
+      iterationModal = DataSet.createModalDataSet(env, modal, parallelism).cache();
+      env.updateTSet(iterationData, src);
+      env.updateTSet(iterationModal, modalTSet);
     }
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
       System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e-6 + "ms");
     }
 
-
+    env.finishEval(trainResult);
     return this.getModel();
   }
 

@@ -169,7 +169,7 @@ public class BatchEnvironment extends TSetEnvironment {
   }
 
   // get data from a tset and update the another
-  private <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(ST tSet, ST updateTSet) {
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(ST tSet, ST updateTSet) {
     // get the data from the evaluation
     DataObject<T> data = getData(tSet.getId());
 

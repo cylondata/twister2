@@ -16,6 +16,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
@@ -31,7 +37,7 @@ import edu.iu.dsc.tws.dl.module.ReLU;
 import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.Sigmoid;
 import edu.iu.dsc.tws.dl.optim.Adam;
-import edu.iu.dsc.tws.dl.optim.LocalOptimizer;
+import edu.iu.dsc.tws.dl.optim.DistributedOptimizer;
 import edu.iu.dsc.tws.dl.optim.Optimizer;
 import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -48,46 +54,69 @@ public class AutoEncoder implements Twister2Worker, Serializable {
 
   @Override
   public void execute(WorkerEnvironment workerEnv) {
+    long startTime = System.nanoTime();
+
     BatchEnvironment env = TSetEnvironment.initBatch(workerEnv);
     Config config = env.getConfig();
     int parallelism = config.getIntegerValue("parallelism");
     int dataSize = config.getIntegerValue("dataSize");
     int batchSize = config.getIntegerValue("batchSize");
+    if (batchSize % parallelism != 0) {
+      throw new IllegalStateException("batch size should be a multiple of parallelism");
+    }
+    int miniBatchSize = batchSize / parallelism;
 
-    String dataFile = "/home/pulasthi/work/thesis/data/csv/20.csv";
+    String dataFile = "/home/pulasthi/work/thesis/data/csv/dummy100_100000.csv";
     SourceTSet<MiniBatch> source = DataSet
-        .createMiniBatchDataSet(env, dataFile, batchSize, dataSize, parallelism);
+        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
 
     //Define model
+    int features = 100;
+    int classes = 12;
     Sequential model = new Sequential();
-    model.add(new Reshape(new int[]{12}));
-    model.add(new Linear(12, 3));
+    model.add(new Reshape(new int[]{features}));
+    model.add(new Linear(features, classes));
     model.add(new ReLU(false));
-    model.add(new Linear(3, 12));
+    model.add(new Linear(classes, features));
     model.add(new Sigmoid());
     //criterion
     AbstractCriterion criterion = new MSECriterion();
 
     //Define Oprimizer
-    Optimizer<MiniBatch> optimizer = new LocalOptimizer<MiniBatch>(env, model, source, criterion);
+    Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
     optimizer.setOptimMethod(new Adam());
     optimizer.setEndWhen(Triggers.maxEpoch(10));
     optimizer.optimize();
+    long endTime = System.nanoTime();
+    if (env.getWorkerID() == 0) {
+      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+    }
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParseException {
     // lets take number of workers as an command line argument
-    int numberOfWorkers = 1;
-    int batchSize = 0;
-    int dataSize = 0;
-    if (args.length >= 3) {
-      numberOfWorkers = Integer.valueOf(args[0]);
-      batchSize = Integer.valueOf(args[1]);
-      dataSize = Integer.valueOf(args[2]);
-    } else {
-      throw new IllegalStateException("need to provide parallelism, batchSize and dataSize");
+    Options options = new Options();
+    options.addOption("p", true, "parallelism");
+    options.addOption("b", true, "batchSize");
+    options.addOption("d", true, "dataSize");
+    options.addOption("cpu", false, "CPU");
+    options.addOption("mem", false, "Mem");
+
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+    double cpu = 2.0;
+    int mem = 2048;
+    int numberOfWorkers = Integer.parseInt(cmd.getOptionValue("p"));
+    int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
+    int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
+
+    if (cmd.hasOption("cpu")) {
+      cpu = Double.valueOf(cmd.getOptionValue("cpu"));
     }
 
+    if (cmd.hasOption("mem")) {
+      mem = Integer.valueOf(cmd.getOptionValue("mem"));
+    }
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -101,7 +130,7 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")
         .setWorkerClass(AutoEncoder.class)
-        .addComputeResource(.2, 1024, numberOfWorkers)
+        .addComputeResource(cpu, mem, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

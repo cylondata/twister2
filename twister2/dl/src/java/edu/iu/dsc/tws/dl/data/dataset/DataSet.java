@@ -11,11 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.dataset;
 
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchSourceFunction;
+import edu.iu.dsc.tws.dl.data.tset.ModalSource;
 import edu.iu.dsc.tws.dl.data.tset.SingleDataSource;
+import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -39,6 +45,19 @@ public final class DataSet {
   public static <T> SourceTSet<T> createSingleDataSet(BatchEnvironment env, T data,
                                                       int parallelism) {
     return env.createSource(new SingleDataSource<T>(data), parallelism);
+  }
+
+  public static SourceTSet<AbstractModule> createModalDataSet(BatchEnvironment env,
+                                                              AbstractModule data,
+                                                              int parallelism) {
+    return env.createSource(new ModalSource(data), parallelism);
+  }
+
+  public static <T> DataObject<T> createDataObject(T data){
+    DataObject<T> dataObject = new DataObjectImpl<T>("modalData", null);
+    DataPartition<T> partition = new EntityPartition<T>(data);
+    dataObject.addPartition(partition);
+    return dataObject;
   }
 }
 
