@@ -53,9 +53,10 @@ public final class DataSet {
     return env.createSource(new ModalSource(data), parallelism);
   }
 
-  public static <T> DataObject<T> createDataObject(T data){
+  public static <T> DataObject<T> createDataObject(BatchEnvironment env, T data) {
     DataObject<T> dataObject = new DataObjectImpl<T>("modalData", null);
     DataPartition<T> partition = new EntityPartition<T>(data);
+    partition.setId(env.getWorkerID());
     dataObject.addPartition(partition);
     return dataObject;
   }

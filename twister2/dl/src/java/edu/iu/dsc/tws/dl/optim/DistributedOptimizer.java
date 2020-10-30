@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
@@ -70,8 +71,10 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
         .cache();
 
     CachedTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
-    CachedTSet<T> iterationData;
-    CachedTSet<AbstractModule> iterationModal;
+    DataObject<T> iterationData;
+    DataObject<AbstractModule> iterationModal;
+//    CachedTSet<T> iterationData;
+//    CachedTSet<AbstractModule> iterationModal;
     ComputeTSet<DoubleDoubleArrayPair> trainMap = src.direct()
         .map(new TrainMapFunction<T>(criterion));
 
@@ -107,8 +110,10 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
       }
       this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
       currentData = cachedData.get(currentIteration);
-      iterationData = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
-      iterationModal = DataSet.createModalDataSet(env, modal, parallelism).cache();
+      iterationData = DataSet.createDataObject(env, currentData);
+      iterationModal = DataSet.createDataObject(env, modal);
+//      iterationData = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
+//      iterationModal = DataSet.createModalDataSet(env, modal, parallelism).cache();
       env.updateTSet(iterationData, src);
       env.updateTSet(iterationModal, modalTSet);
     }

@@ -177,6 +177,12 @@ public class BatchEnvironment extends TSetEnvironment {
     addData(updateTSet.getId(), data);
   }
 
+  public <T, ST extends BaseTSet<T> & StorableTBase<T>> void updateTSet(DataObject<T> data,
+                                                                        ST updateTSet) {
+    // update the data mapping for targetTSet
+    addData(updateTSet.getId(), data);
+  }
+
   // adds the data into the task executor
   private <T> void addData(String key, DataObject<T> data) {
     getTaskExecutor().addInput(key, data);
