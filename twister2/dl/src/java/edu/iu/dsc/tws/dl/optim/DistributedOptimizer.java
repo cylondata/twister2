@@ -119,7 +119,7 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     }
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
-      System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e-6 + "ms");
+      System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e6 + "ms");
     }
 
     env.finishEval(trainResult);
