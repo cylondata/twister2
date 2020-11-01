@@ -99,8 +99,8 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     options.addOption("p", true, "parallelism");
     options.addOption("b", true, "batchSize");
     options.addOption("d", true, "dataSize");
-    options.addOption("cpu", false, "CPU");
-    options.addOption("mem", false, "Mem");
+    options.addOption("cpu", true, "CPU");
+    options.addOption("ram", true, "RAM");
     options.addOption("data", true, "Data");
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -113,11 +113,11 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     String data = cmd.getOptionValue("data");
 
     if (cmd.hasOption("cpu")) {
-      cpu = Double.valueOf(cmd.getOptionValue("cpu"));
+      cpu = Double.parseDouble(cmd.getOptionValue("cpu"));
     }
 
-    if (cmd.hasOption("mem")) {
-      mem = Integer.valueOf(cmd.getOptionValue("mem"));
+    if (cmd.hasOption("ram")) {
+      mem = Integer.parseInt(cmd.getOptionValue("ram"));
     }
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
