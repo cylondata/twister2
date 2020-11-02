@@ -61,6 +61,8 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     int dataSize = config.getIntegerValue("dataSize");
     int batchSize = config.getIntegerValue("batchSize");
     String dataFile = config.getStringValue("data");
+    int epoch = config.getIntegerValue("epoch");
+
     if (batchSize % parallelism != 0) {
       throw new IllegalStateException("batch size should be a multiple of parallelism");
     }
@@ -94,7 +96,7 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
     optimizer.setOptimMethod(new Adam());
-    optimizer.setEndWhen(Triggers.maxEpoch(10));
+    optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
@@ -111,6 +113,7 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     options.addOption("cpu", true, "CPU");
     options.addOption("ram", true, "RAM");
     options.addOption("data", true, "Data");
+    options.addOption("e", true, "Epcoh");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -119,6 +122,8 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     int numberOfWorkers = Integer.parseInt(cmd.getOptionValue("p"));
     int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
+    int epoch = Integer.parseInt(cmd.getOptionValue("e"));
+
     String data = cmd.getOptionValue("data");
 
     if (cmd.hasOption("cpu")) {
@@ -137,6 +142,7 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     jobConfig.put("parallelism", numberOfWorkers);
     jobConfig.put("batchSize", batchSize);
     jobConfig.put("dataSize", dataSize);
+    jobConfig.put("epoch", epoch);
     jobConfig.put("data", data);
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
