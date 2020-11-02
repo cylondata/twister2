@@ -41,6 +41,8 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
   @Override
   public AbstractModule optimize() {
     long startTime = System.nanoTime();
+    long dataLoatTime = System.nanoTime();
+
     double[] loss = new double[1];
     AbstractModule modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
@@ -59,10 +61,10 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     StorableTBase<T> cachedDataTSet = this.getDataset().cache();
     List<T> cachedData = cachedDataTSet.getData();
     iterationsPerEpoch = cachedData.size();
-
     //TODO check of the exsiting array can be used
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
         new double[grad.storage().length()]);
+    dataLoatTime = System.nanoTime() - dataLoatTime;
 
     //TODO use caching TSet
     CachedTSet<DoubleDoubleArrayPair> trainResult;
@@ -82,6 +84,7 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     trainMap.addInput("modal", modalTSet);
     trainResult = trainMap
         .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).lazyCache();
+    long iterationTime = System.nanoTime();
 
     while (!this.getEndWhen().apply(this.state)) {
       env.eval(trainResult);
@@ -120,6 +123,8 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
       System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e6 + "ms");
+      System.out.println("Data Load Time : " + dataLoatTime / 1e6 + "ms");
+      System.out.println("Iteration Time : " + (endTime - iterationTime) / 1e6 + "ms");
     }
 
     env.finishEval(trainResult);
