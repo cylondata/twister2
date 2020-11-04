@@ -74,27 +74,30 @@ public final class DoubleDoubleArrayPacker implements DataPacker<DoubleDoubleArr
       DoubleDoubleArrayPair> objectBuilder, int currentBufferLocation, DataBuffer dataBuffer) {
     int totalDataLength = objectBuilder.getTotalSize();
     int startIndex = objectBuilder.getCompletedSize();
+    int arrayStartIndex = 0;
     DoubleDoubleArrayPair val = objectBuilder.getPartialDataHolder();
     ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
     int bufferPosition = currentBufferLocation;
     int bytesRead = 0;
     int lossSize = Double.BYTES;
-    if (startIndex < lossSize) {
+    if (startIndex <= lossSize) {
       //Need to read in the loss value
       val.setValue0(byteBuffer.getDouble(bufferPosition));
       bytesRead += lossSize;
       bufferPosition += lossSize;
+      arrayStartIndex = 0;
+    } else {
+      arrayStartIndex = (startIndex - lossSize) / Double.BYTES;
     }
-    startIndex = (startIndex - lossSize) / Double.BYTES;
     int totalNoOfElements = totalDataLength - lossSize / Double.BYTES;
     int size = dataBuffer.getSize();
     int elementsLeftInBuffer = (size - bufferPosition) / Double.BYTES;
-    int noOfElementsToRead = Math.min(totalNoOfElements - startIndex, elementsLeftInBuffer);
+    int noOfElementsToRead = Math.min(totalNoOfElements - arrayStartIndex, elementsLeftInBuffer);
 
     // first try to bulk read if child implementation supports it
     byteBuffer.position(currentBufferLocation);
-    if (!bulkReadFromBuffer(byteBuffer, val.getValue1(), startIndex, noOfElementsToRead)) {
-      for (int i = startIndex; i < totalNoOfElements; i++) {
+    if (!bulkReadFromBuffer(byteBuffer, val.getValue1(), arrayStartIndex, noOfElementsToRead)) {
+      for (int i = arrayStartIndex; i < totalNoOfElements; i++) {
         int remaining = size - bufferPosition;
         if (remaining >= Double.BYTES) {
           this.readFromBufferAndSet(byteBuffer, bufferPosition, val.getValue1(), i);
@@ -108,7 +111,7 @@ public final class DoubleDoubleArrayPacker implements DataPacker<DoubleDoubleArr
       bytesRead += Double.BYTES * noOfElementsToRead;
     }
 
-    if (totalDataLength == bytesRead + startIndex * Double.BYTES) {
+    if (totalDataLength == bytesRead + arrayStartIndex * Double.BYTES + lossSize) {
       objectBuilder.setFinalObject(val);
     }
     return bytesRead;
