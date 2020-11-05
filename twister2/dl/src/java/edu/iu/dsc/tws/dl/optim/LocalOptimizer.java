@@ -71,7 +71,8 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
       trainResult = src.direct()
           .map(new TrainMapFunction<T>(criterion))
-          .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).cache();
+          .allReduce(new TrainReduceFunction(result, env.getWorkerID()))
+          .map(new AverageParameters()).cache();
 
       List<DoubleDoubleArrayPair> resultValues = trainResult.getData();
       DoubleTensorPair resultPair = new DoubleTensorPair(resultValues.get(0).getValue0(),

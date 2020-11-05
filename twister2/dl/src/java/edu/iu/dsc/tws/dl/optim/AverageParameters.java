@@ -19,10 +19,14 @@ public class AverageParameters extends BaseMapFunc<DoubleDoubleArrayPair, Double
 
   @Override
   public DoubleDoubleArrayPair map(DoubleDoubleArrayPair input) {
+    long startTime = System.nanoTime();
     int parallelism = this.getTSetContext().getParallelism();
     input.setValue0(input.getValue0() / parallelism);
     double[] data = input.getValue1();
     TensorNumeric.scal(data.length, 1.0 / parallelism, data, 0, 1);
+    if (this.getTSetContext().getIndex() == 0) {
+      System.out.println("Iteration Average time : " + (System.nanoTime() - startTime) / 1e6);
+    }
     return input;
   }
 }

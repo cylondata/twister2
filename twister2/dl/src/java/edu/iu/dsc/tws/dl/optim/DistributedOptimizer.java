@@ -83,7 +83,8 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     //input the model
     trainMap.addInput("modal", modalTSet);
     trainResult = trainMap
-        .allReduce(new TrainReduceFunction(result)).map(new AverageParameters()).lazyCache();
+        .allReduce(new TrainReduceFunction(result, env.getWorkerID()))
+        .map(new AverageParameters()).lazyCache();
     long iterationTime = System.nanoTime();
 
     while (!this.getEndWhen().apply(this.state)) {

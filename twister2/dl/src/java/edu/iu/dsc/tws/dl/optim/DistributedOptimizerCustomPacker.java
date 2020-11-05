@@ -84,7 +84,7 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
     //input the model
     trainMap.addInput("modal", modalTSet);
     trainResult = trainMap.withSchema(new DLSchema())
-        .allReduce(new TrainReduceFunction(result)).map(new AverageParameters())
+        .allReduce(new TrainReduceFunction(result, env.getWorkerID())).map(new AverageParameters())
         .withSchema(new DLSchema()).lazyCache();
     long iterationTime = System.nanoTime();
 

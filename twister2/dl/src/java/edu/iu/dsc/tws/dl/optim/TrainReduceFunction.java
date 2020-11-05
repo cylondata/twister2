@@ -18,9 +18,11 @@ import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 public class TrainReduceFunction implements ReduceFunc<DoubleDoubleArrayPair> {
 
   private DoubleDoubleArrayPair data;
+  private int index;
 
-  public TrainReduceFunction(DoubleDoubleArrayPair result) {
+  public TrainReduceFunction(DoubleDoubleArrayPair result, int rank) {
     this.data = result;
+    this.index = rank;
   }
 
   @Override
@@ -30,7 +32,9 @@ public class TrainReduceFunction implements ReduceFunc<DoubleDoubleArrayPair> {
     this.data.setValue0(t1.getValue0() + t2.getValue0());
     double[] grad = data.getValue1();
     TensorNumeric.vAdd(grad.length, t1.getValue1(), 0, t2.getValue1(), 0, grad, 0);
-    System.out.println("Iteration Reduce time : " + (System.nanoTime() - startTime) / 1e6);
+    if (this.index == 0) {
+      System.out.println("Iteration Reduce time : " + (System.nanoTime() - startTime) / 1e6);
+    }
     return this.data;
   }
 }
