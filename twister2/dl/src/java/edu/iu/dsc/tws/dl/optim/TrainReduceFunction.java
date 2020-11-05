@@ -18,15 +18,19 @@ import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 public class TrainReduceFunction implements ReduceFunc<DoubleDoubleArrayPair> {
 
   private DoubleDoubleArrayPair data;
+
   public TrainReduceFunction(DoubleDoubleArrayPair result) {
     this.data = result;
   }
 
   @Override
   public DoubleDoubleArrayPair reduce(DoubleDoubleArrayPair t1, DoubleDoubleArrayPair t2) {
+    long startTime = System.nanoTime();
+
     this.data.setValue0(t1.getValue0() + t2.getValue0());
     double[] grad = data.getValue1();
     TensorNumeric.vAdd(grad.length, t1.getValue1(), 0, t2.getValue1(), 0, grad, 0);
+    System.out.println("Iteration Reduce time : " + (System.nanoTime() - startTime) / 1e6);
     return this.data;
   }
 }

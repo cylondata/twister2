@@ -30,6 +30,7 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
 
   @Override
   public DoubleDoubleArrayPair map(T data) {
+    long startTime = System.nanoTime();
 
     modal = (AbstractModule) getTSetContext()
         .getInput("modal").getConsumer().next();
@@ -45,6 +46,10 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
     modal.backward((DenseTensor) input, (DenseTensor) errors);
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(loss,
         modal.getParameters().getValue1().storage().toDoubleArray());
+    if (this.getTSetContext().getIndex() == 0) {
+      System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+    }
+
     return result;
   }
 }

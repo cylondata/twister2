@@ -101,11 +101,11 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
       }
 
       if (env.getWorkerID() == 0) {
-        System.out.printf("Optimizer "
-                + "[Epoch %d]"
-                + "[Iteration %d] "
-                + "Loss : %f \n",
-            epoch, state.<Integer>get("neval"), resultPair.getValue0());
+//        System.out.printf("Optimizer "
+//                + "[Epoch %d]"
+//                + "[Iteration %d] "
+//                + "Loss : %f \n",
+//            epoch, state.<Integer>get("neval"), resultPair.getValue0());
       }
       currentIteration++;
       if (currentIteration == iterationsPerEpoch) {
