@@ -66,6 +66,7 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
     DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
         new double[grad.storage().length()]);
     dataLoatTime = System.nanoTime() - dataLoatTime;
+    long iterationTime = System.nanoTime();
 
     //TODO use caching TSet
     CachedTSet<DoubleDoubleArrayPair> trainResult;
@@ -76,8 +77,7 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
     CachedTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
     DataObject<T> iterationData;
     DataObject<AbstractModule> iterationModal;
-//    CachedTSet<T> iterationData;
-//    CachedTSet<AbstractModule> iterationModal;
+
     ComputeTSet<DoubleDoubleArrayPair> trainMap = src.direct()
         .map(new TrainMapFunction<T>(criterion));
 
@@ -86,7 +86,6 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
     trainResult = trainMap.withSchema(new DLSchema())
         .allReduce(new TrainReduceFunction(result, env.getWorkerID())).map(new AverageParameters())
         .withSchema(new DLSchema()).lazyCache();
-    long iterationTime = System.nanoTime();
 
     while (!this.getEndWhen().apply(this.state)) {
       env.eval(trainResult);
