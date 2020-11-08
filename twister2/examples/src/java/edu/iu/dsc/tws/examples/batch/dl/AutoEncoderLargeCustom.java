@@ -82,14 +82,14 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     model.add(new Reshape(new int[]{l1}));
     model.add(new Linear(l1, l2));
     model.add(new ReLU(false));
-    model.add(new Linear(l2, l3));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l4));
-    model.add(new ReLU(false));
-    model.add(new Linear(l4, l3));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l2));
-    model.add(new ReLU(false));
+//    model.add(new Linear(l2, l3));
+//    model.add(new ReLU(false));
+//    model.add(new Linear(l3, l4));
+//    model.add(new ReLU(false));
+//    model.add(new Linear(l4, l3));
+//    model.add(new ReLU(false));
+//    model.add(new Linear(l3, l2));
+//    model.add(new ReLU(false));
     model.add(new Linear(l2, l1));
     model.add(new Sigmoid());
     //criterion
