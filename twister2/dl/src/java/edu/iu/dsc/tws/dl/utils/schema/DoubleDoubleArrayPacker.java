@@ -111,7 +111,12 @@ public final class DoubleDoubleArrayPacker implements DataPacker<DoubleDoubleArr
       bytesRead += Double.BYTES * noOfElementsToRead;
     }
 
-    if (totalDataLength == bytesRead + arrayStartIndex * Double.BYTES + lossSize) {
+    int currentTotal = bytesRead + arrayStartIndex * Double.BYTES;
+    if (arrayStartIndex > 0) {
+      currentTotal += lossSize;
+    }
+
+    if (totalDataLength == currentTotal) {
       objectBuilder.setFinalObject(val);
     }
     return bytesRead;
