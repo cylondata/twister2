@@ -50,8 +50,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 /**
  * Simple AutoEncoder example
  */
-public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
-  private static final Logger LOG = Logger.getLogger(AutoEncoderLargeCustom.class.getName());
+public class AutoEncoderCustom implements Twister2Worker, Serializable {
+  private static final Logger LOG = Logger.getLogger(AutoEncoderCustom.class.getName());
 
   @Override
   public void execute(WorkerEnvironment workerEnv) {
@@ -62,9 +62,8 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     int parallelism = config.getIntegerValue("parallelism");
     int dataSize = config.getIntegerValue("dataSize");
     int batchSize = config.getIntegerValue("batchSize");
-    String dataFile = config.getStringValue("data");
     int epoch = config.getIntegerValue("epoch");
-
+    String dataFile = config.getStringValue("data");
     if (batchSize % parallelism != 0) {
       throw new IllegalStateException("batch size should be a multiple of parallelism");
     }
@@ -74,23 +73,13 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
         .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
 
     //Define model
-    int l1 = 1024;
-    int l2 = 512;
-    int l3 = 128;
-    int l4 = 8;
+    int features = 100;
+    int classes = 12;
     Sequential model = new Sequential();
-    model.add(new Reshape(new int[]{l1}));
-    model.add(new Linear(l1, l2));
+    model.add(new Reshape(new int[]{features}));
+    model.add(new Linear(features, classes));
     model.add(new ReLU(false));
-    model.add(new Linear(l2, l3));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l4));
-    model.add(new ReLU(false));
-    model.add(new Linear(l4, l3));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l2));
-    model.add(new ReLU(false));
-    model.add(new Linear(l2, l1));
+    model.add(new Linear(classes, features));
     model.add(new Sigmoid());
     //criterion
     AbstractCriterion criterion = new MSECriterion();
@@ -126,7 +115,6 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
     int epoch = Integer.parseInt(cmd.getOptionValue("e"));
-
     String data = cmd.getOptionValue("data");
 
     if (cmd.hasOption("cpu")) {
@@ -150,7 +138,7 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")
-        .setWorkerClass(AutoEncoderLargeCustom.class)
+        .setWorkerClass(AutoEncoderCustom.class)
         .addComputeResource(cpu, mem, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
