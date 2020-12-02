@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.dl.module;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
+import edu.iu.dsc.tws.dl.optim.Initializable;
 import edu.iu.dsc.tws.dl.optim.InitializationMethod;
 import edu.iu.dsc.tws.dl.optim.Regularizer;
 import edu.iu.dsc.tws.dl.optim.initialization.Zeros;
@@ -31,7 +32,7 @@ import edu.iu.dsc.tws.dl.utils.varformat.OUT_IN;
  * the number of columns should be equal to the `inputSize`).
  */
 @SuppressWarnings("NeedBraces")
-public class Linear extends TensorModule {
+public class Linear extends TensorModule implements Initializable {
 
   protected InitializationMethod weightInitMethod = new Zeros();
   protected InitializationMethod biasInitMethod = new Zeros();
@@ -237,6 +238,20 @@ public class Linear extends TensorModule {
   public AbstractModule clearState() {
     super.clearState();
     addBuffer.set();
+    return this;
+  }
+
+  @Override
+  public Initializable setInitMethod(InitializationMethod weightMethod,
+                                     InitializationMethod biasMethod) {
+    if (weightInitMethod != null) {
+      this.weightInitMethod = weightMethod;
+    }
+
+    if (biasInitMethod != null) {
+      this.biasInitMethod = biasMethod;
+    }
+    reset();
     return this;
   }
 }

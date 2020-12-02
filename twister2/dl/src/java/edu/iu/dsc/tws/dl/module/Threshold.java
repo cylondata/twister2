@@ -46,6 +46,7 @@ public class Threshold extends TensorModule {
       int inputOffset = input.storageOffset() - 1;
       int taskSize = input.nElement();
 
+      //TODO parallelize
       for (int i = 0; i < taskSize; i++) {
         if (inputData[inputOffset + i] <= this.threshold) {
           inputData[inputOffset + i] = this.value;
@@ -60,7 +61,7 @@ public class Threshold extends TensorModule {
       int inputOffset = input.storageOffset() - 1;
       int outputOffset = ((DenseTensor) output).storageOffset() - 1;
       int taskSize = input.nElement();
-
+      //TODO parallelize
       for (int i = 0; i < taskSize; i++) {
         if (inputData[inputOffset + i] <= this.threshold) {
           outputData[outputOffset + i] = this.value;
@@ -123,7 +124,7 @@ public class Threshold extends TensorModule {
       int taskSize = gradOutput.nElement();
       double[] inputData = input.storage().toDoubleArray();
       int inputOffset = input.storageOffset() - 1;
-
+      //TODO parallelize
       for (int j = 0; j < taskSize; j++) {
         if (inputData[inputOffset + j] <= this.threshold) {
           gradInputData[gradInputOffset + j] = 0.0;
@@ -138,7 +139,7 @@ public class Threshold extends TensorModule {
 
       double[] inputData = input.storage().toDoubleArray();
       int inputOffset = input.storageOffset() - 1;
-
+      //TODO parallelize
       for (int j = 0; j < taskSize; j++) {
         if (inputData[inputOffset + j] <= this.threshold) {
           gradInputData[gradInputOffset + j] = 0.0;

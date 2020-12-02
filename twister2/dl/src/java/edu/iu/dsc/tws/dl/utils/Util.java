@@ -37,4 +37,126 @@ public final class Util {
       return o.hashCode();
     }
   }
+
+  public static int[] getSAMEOutSizeAndPadding(int inputHeight, int inputWidth, int dH, int dW,
+                                               int kH, int kW) {
+    return getSAMEOutSizeAndPadding(inputHeight, inputWidth, dH, dW, kH, kW, -1, -1, -1);
+  }
+
+  /**
+   * Default values inputDepth = -1, dT = -1, kT = -1.
+   *
+   * @return Array(padTop, padBottom, padLeft, padRight, outputHeight, outputWidth)
+   * or Array(padFront, padBackward, padTop, padBottom, padLeft, padRight,
+   * outputDepth, outputHeight, outputWidth)
+   */
+  public static int[] getSAMEOutSizeAndPadding(int inputHeight, int inputWidth, int dH, int dW,
+                                               int kH, int kW, int inputDepth, int dT, int kT) {
+
+    int oW = (int) Math.ceil((double) inputWidth / (double) dW);
+    int oH = (int) Math.ceil((double) inputHeight / (double) dH);
+    int padAlongWidth = Math.max(0, (oW - 1) * dW + kW - inputWidth);
+    int padAlongHeight = Math.max(0, (oH - 1) * dH + kH - inputHeight);
+    if (inputDepth != -1) {
+      require(dT > 0 && kT > 0, "kernel size and strideSize cannot be smaller than 0");
+      int oT = (int) Math.ceil((double) inputDepth / (double) dT);
+      int padAlongDepth = Math.max(0, (oT - 1) * dT + kT - inputDepth);
+      return new int[]{padAlongDepth / 2, padAlongDepth - padAlongDepth / 2, padAlongHeight / 2,
+          padAlongHeight - padAlongHeight / 2, padAlongWidth / 2, padAlongWidth - padAlongWidth / 2,
+          oT, oH, oW};
+    }
+    return new int[]{padAlongHeight / 2, padAlongHeight - padAlongHeight / 2,
+        padAlongWidth / 2, padAlongWidth - padAlongWidth / 2,
+        oH, oW};
+  }
+
+  public static int[] getOutSizeAndPadding(
+      int inputHeight,
+      int inputWidth,
+      int dH,
+      int dW,
+      int kH,
+      int kW,
+      int padH,
+      int padW,
+      boolean ceilMode) {
+    return getOutSizeAndPadding(inputHeight, inputWidth, dH, dW, kH, kW, padH, padW, ceilMode,
+        1, 1, -1, -1, -1, 0, 1);
+  }
+
+  /**
+   * Default values, dilationHeight = 1, dilationWidth = 1,inputdepth = -1,
+   * dt = -1,kt = -1, padt = 0, dilationDepth = 1
+   *
+   * @return Array(padLeft, padRight, padTop, padBottom, outputHeight, outputWidth)
+   * or Array(padFront, padBack, padLeft, padRight, padTop, padBottom,
+   * outputDepth, outputHeight, outputWidth)
+   */
+  public static int[] getOutSizeAndPadding(
+      int inputHeight,
+      int inputWidth,
+      int dH,
+      int dW,
+      int kH,
+      int kW,
+      int padH,
+      int padW,
+      boolean ceilMode,
+      int dilationHeight,
+      int dilationWidth,
+      int inputdepth,
+      int dt,
+      int kt,
+      int padt,
+      int dilationDepth) {
+    int oheight = 0;
+    int owidth = 0;
+    int odepth = 0;
+
+    int dilationKernelHeight = dilationHeight * (kH - 1) + 1;
+    int dilationKernelWidth = dilationWidth * (kW - 1) + 1;
+    int dilationKernelDepth;
+    if (inputdepth > 0) {
+      dilationKernelDepth = dilationDepth * (kt - 1) + 1;
+    } else {
+      dilationKernelDepth = kt;
+    }
+
+    if (ceilMode) {
+      oheight = (int) (Math.ceil(1.0 * (inputHeight - dilationKernelHeight + 2 * padH) / dH) + 1);
+      owidth = (int) Math.ceil(1.0 * (inputWidth - dilationKernelWidth + 2 * padW) / dW) + 1;
+      if (inputdepth > 0) {
+        require(dt > 0 && kt > 0 && padt >= 0,
+            "kernel size, stride size, padding size cannot be smaller than 0");
+        odepth = (int) Math.ceil(1.0 * (inputdepth - dilationKernelDepth + 2 * padt) / dt) + 1;
+      }
+    } else {
+      oheight = (int) Math.floor(1.0 * (inputHeight - dilationKernelHeight + 2 * padH) / dH) + 1;
+      owidth = (int) Math.floor(1.0 * (inputWidth - dilationKernelWidth + 2 * padW) / dW) + 1;
+      if (inputdepth > 0) {
+        require(dt > 0 && kt > 0 && padt >= 0,
+            "kernel size, stride size, padding size cannot be smaller than 0");
+        odepth = (int) Math.floor(1.0 * (inputdepth - dilationKernelDepth + 2 * padt) / dt) + 1;
+      }
+    }
+
+    if (padH != 0 || padW != 0 || padt != 0) {
+      if ((oheight - 1) * dH >= inputHeight + padH) {
+        oheight -= 1;
+      }
+      if ((owidth - 1) * dW >= inputWidth + padW) {
+        owidth -= 1;
+      }
+      if (inputdepth > 0) {
+        if ((odepth - 1) * dt >= inputdepth + padt) {
+          odepth -= 1;
+        }
+        return new int[]{padt, padt, padH, padH, padW, padW, odepth, oheight, owidth};
+      }
+    } else if (inputdepth > 0) {
+      return new int[]{padt, padt, padH, padH, padW, padW, odepth, oheight, owidth};
+    }
+    return new int[]{padH, padH, padW, padW, oheight, owidth};
+  }
+
 }

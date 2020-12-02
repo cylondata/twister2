@@ -20,4 +20,10 @@ public final class ErrorConstants {
       "The input to the layer needs to be a vector(or a mini-batch of vectors); \n"
           + " please use the Reshape module to convert multi-dimensional input into vectors "
           + "if appropriate";
+
+  public static final String constrainInputAs3DOrBatch =
+      "The input to the layer needs to be a 3D tensor(or a mini-batch of 3D tensors) \n"
+          + "| please use the Reshape module to convert multi-dimensional input into 3D tensors\n"
+          + "| if appropriate";
+
 }

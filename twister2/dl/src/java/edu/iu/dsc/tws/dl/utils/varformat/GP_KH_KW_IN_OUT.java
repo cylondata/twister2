@@ -9,15 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.optim;
+package edu.iu.dsc.tws.dl.utils.varformat;
 
-public interface Initializable {
+import edu.iu.dsc.tws.dl.utils.VariableFormat;
 
-  Initializable setInitMethod(InitializationMethod weightMethod,
-                              InitializationMethod biasMethod);
+@SuppressWarnings("TypeName")
+public class GP_KH_KW_IN_OUT implements VariableFormat {
+  @Override
+  public int getFanIn(int[] shape) {
+    int receptiveFieldSize = shape[0] * shape[1] * shape[2];
+    return shape[2] * receptiveFieldSize;
+  }
 
-  default Initializable setInitMethod(InitializationMethod[] initMethod) {
-    throw new UnsupportedOperationException("setInitMethod with a array of InitializationMethod"
-        + " does not support for ${this.toString}");
+  @Override
+  public int getFanOut(int[] shape) {
+    int receptiveFieldSize = shape[0] * shape[1] * shape[2];
+    return shape[3] * receptiveFieldSize;
   }
 }

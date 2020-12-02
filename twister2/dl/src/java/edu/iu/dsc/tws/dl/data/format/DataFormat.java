@@ -9,15 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.optim;
+package edu.iu.dsc.tws.dl.data.format;
 
-public interface Initializable {
+public abstract class DataFormat {
+  private String value;
 
-  Initializable setInitMethod(InitializationMethod weightMethod,
-                              InitializationMethod biasMethod);
-
-  default Initializable setInitMethod(InitializationMethod[] initMethod) {
-    throw new UnsupportedOperationException("setInitMethod with a array of InitializationMethod"
-        + " does not support for ${this.toString}");
-  }
+  public abstract int[] getHWCDims(int inputDims);
 }

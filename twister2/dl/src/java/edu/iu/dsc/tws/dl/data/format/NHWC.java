@@ -9,15 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.optim;
+package edu.iu.dsc.tws.dl.data.format;
 
-public interface Initializable {
+/**
+ * Specify the input/output data format when data is stored in the order of
+ * [batch, height, width, channels]
+ */
+public class NHWC extends DataFormat {
+  @Override
+  public int[] getHWCDims(int inputDims) {
+    if (inputDims == 3) {
+      return new int[]{1, 2, 3};
+    } else {
+      return new int[]{2, 3, 4};
+    }
 
-  Initializable setInitMethod(InitializationMethod weightMethod,
-                              InitializationMethod biasMethod);
-
-  default Initializable setInitMethod(InitializationMethod[] initMethod) {
-    throw new UnsupportedOperationException("setInitMethod with a array of InitializationMethod"
-        + " does not support for ${this.toString}");
   }
 }

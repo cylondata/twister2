@@ -89,4 +89,8 @@ public class ArrayDoubleStorage implements Storage {
   public double get(int index) {
     return values[index];
   }
+
+  public boolean isEmpty() {
+    return values.length == 0;
+  }
 }
