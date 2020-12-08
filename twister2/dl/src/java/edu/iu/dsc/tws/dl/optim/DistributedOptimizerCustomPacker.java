@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.dataset.DataSet;
+import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
@@ -71,10 +71,10 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
     //TODO use caching TSet
     CachedTSet<DoubleDoubleArrayPair> trainResult;
     T currentData = cachedData.get(currentIteration);
-    CachedTSet<AbstractModule> modalTSet = DataSet.createModalDataSet(env, modal, parallelism)
+    CachedTSet<AbstractModule> modalTSet = DataSetFactory.createModalDataSet(env, modal, parallelism)
         .cache();
 
-    CachedTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
+    CachedTSet<T> src = DataSetFactory.createSingleDataSet(env, currentData, parallelism).cache();
     DataObject<T> iterationData;
     DataObject<AbstractModule> iterationModal;
 
@@ -114,8 +114,8 @@ public class DistributedOptimizerCustomPacker<T> extends Optimizer<T> {
       }
       this.state.put("neval", this.state.getOrDefault("neval", 1) + 1);
       currentData = cachedData.get(currentIteration);
-      iterationData = DataSet.createDataObject(env, currentData);
-      iterationModal = DataSet.createDataObject(env, modal);
+      iterationData = DataSetFactory.createDataObject(env, currentData);
+      iterationModal = DataSetFactory.createDataObject(env, modal);
 //      iterationData = DataSet.createSingleDataSet(env, currentData, parallelism).cache();
 //      iterationModal = DataSet.createModalDataSet(env, modal, parallelism).cache();
       env.updateTSet(iterationData, src);

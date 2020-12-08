@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.criterion.MSECriterion;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
-import edu.iu.dsc.tws.dl.data.dataset.DataSet;
+import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
 import edu.iu.dsc.tws.dl.graph.Sequential;
 import edu.iu.dsc.tws.dl.module.Linear;
 import edu.iu.dsc.tws.dl.module.ReLU;
@@ -69,7 +69,7 @@ public class AutoEncoderCustom implements Twister2Worker, Serializable {
     }
     int miniBatchSize = batchSize / parallelism;
 
-    SourceTSet<MiniBatch> source = DataSet
+    SourceTSet<MiniBatch> source = DataSetFactory
         .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
 
     //Define model

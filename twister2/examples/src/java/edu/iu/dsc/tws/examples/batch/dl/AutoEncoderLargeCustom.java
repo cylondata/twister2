@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.criterion.MSECriterion;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
-import edu.iu.dsc.tws.dl.data.dataset.DataSet;
+import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
 import edu.iu.dsc.tws.dl.graph.Sequential;
 import edu.iu.dsc.tws.dl.module.Linear;
 import edu.iu.dsc.tws.dl.module.ReLU;
@@ -70,14 +70,14 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     }
     int miniBatchSize = batchSize / parallelism;
 
-    SourceTSet<MiniBatch> source = DataSet
+    SourceTSet<MiniBatch> source = DataSetFactory
         .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
 
     //Define model
-    int l1 = 1024;
-    int l2 = 512;
-    int l3 = 128;
-    int l4 = 8;
+    int l1 = 2048;
+    int l2 = 1024;
+    int l3 = 512;
+    int l4 = 12;
     Sequential model = new Sequential();
     model.add(new Reshape(new int[]{l1}));
     model.add(new Linear(l1, l2));

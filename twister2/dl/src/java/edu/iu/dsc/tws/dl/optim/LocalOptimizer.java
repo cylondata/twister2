@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.sets.StorableTBase;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.dataset.DataSet;
+import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
@@ -67,7 +67,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     while (!this.getEndWhen().apply(this.state)) {
 
       T currentData = cachedData.get(currentIteration);
-      SourceTSet<T> src = DataSet.createSingleDataSet(env, currentData, parallelism);
+      SourceTSet<T> src = DataSetFactory.createSingleDataSet(env, currentData, parallelism);
 
       trainResult = src.direct()
           .map(new TrainMapFunction<T>(criterion))

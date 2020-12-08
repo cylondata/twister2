@@ -11,20 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.dataset;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class DataSet<T> {
-
-  private List<InputTransformer> transformers;
-
-  public DataSet() {
-    this.transformers = new ArrayList<>();
-  }
-
-  public DataSet transform(InputTransformer transformer){
-    transformers.add(transformer);
-    return this;
-  }
-
+/**
+ * Used to transform inputs as needed for the DL model
+ */
+public interface InputTransformer {
 }
