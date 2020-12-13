@@ -25,18 +25,17 @@ import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-import java.util.List;
-
 public final class DataSetFactory {
 
   private DataSetFactory() {
   }
 
   public static DataSet<MiniBatch> createImageMiniBathDataSet(BatchEnvironment env, String filePath,
-                                                         int imageSize, int batchSize, int dataSize,
-                                                         int parallelism){
+                                                              int imageSize, int batchSize,
+                                                              int dataSize, int parallelism) {
     return new DataSet<>();
   }
+
   public static SourceTSet<MiniBatch> createMiniBatchDataSet(BatchEnvironment env, String filePath,
                                                              int batchSize, int dataSize,
                                                              int parallelism) {

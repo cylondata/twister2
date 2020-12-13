@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
-import com.sun.xml.internal.ws.api.pipe.Engine;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;

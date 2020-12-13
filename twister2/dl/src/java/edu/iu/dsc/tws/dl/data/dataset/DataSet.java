@@ -22,7 +22,7 @@ public class DataSet<T> {
     this.transformers = new ArrayList<>();
   }
 
-  public DataSet transform(InputTransformer transformer){
+  public DataSet transform(InputTransformer transformer) {
     transformers.add(transformer);
     return this;
   }

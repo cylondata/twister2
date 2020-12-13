@@ -26,4 +26,7 @@ public final class ErrorConstants {
           + "| please use the Reshape module to convert multi-dimensional input into 3D tensors\n"
           + "| if appropriate";
 
+  public static final String constrainInputDimSameAsTarget =
+      "The dimensions of input and target to the criterion layer need to be the same; \n"
+          + "| please use the Reshape module to convert if appropriate";
 }

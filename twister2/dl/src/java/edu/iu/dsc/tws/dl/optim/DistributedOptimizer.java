@@ -69,7 +69,8 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     //TODO use caching TSet
     CachedTSet<DoubleDoubleArrayPair> trainResult;
     T currentData = cachedData.get(currentIteration);
-    CachedTSet<AbstractModule> modalTSet = DataSetFactory.createModalDataSet(env, modal, parallelism)
+    CachedTSet<AbstractModule> modalTSet = DataSetFactory
+        .createModalDataSet(env, modal, parallelism)
         .cache();
 
     CachedTSet<T> src = DataSetFactory.createSingleDataSet(env, currentData, parallelism).cache();

@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module;
 
+import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
+import edu.iu.dsc.tws.dl.utils.RandomGenerator;
 import edu.iu.dsc.tws.dl.utils.Shape;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
@@ -22,23 +24,23 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * true(true by default), the outputs are scaled by a factor of `1/(1-initP)`
  * during training.
  * During eintuating, output is the same as input.
- *
+ * <p>
  * It has been proven an effective approach for regularization and preventing
  * co-adaptation of feature detectors. For more details, plese see
  * [Improving neural networks by preventing co-adaptation of feature detectors]
  * (https://arxiv.org/abs/1207.0580)
  *
- * @param initP the probability p
+ * @param initP   the probability p
  * @param inplace whether to make `input` and `output` share the same storage
- * @param scale whether to scale the output by a factor of `1 / (1 - p)`
+ * @param scale   whether to scale the output by a factor of `1 / (1 - p)`
  */
 public class Dropout extends TensorModule {
-  double initP = 0.5;
-  boolean inplace = false;
-  boolean scale = true;
+  private double initP = 0.5;
+  private boolean inplace = false;
+  private boolean scale = true;
   private double p = initP;
-  DenseTensor noise = new DenseTensor();
-  boolean isResampling = true;
+  private DenseTensor noise = new DenseTensor();
+  private boolean isResampling = true;
 
   public Dropout() {
   }
@@ -58,7 +60,7 @@ public class Dropout extends TensorModule {
     if (inplace) {
       this.output = input;
     } else {
-      ((DenseTensor)this.output).resizeAs(input).copy(input);
+      ((DenseTensor) this.output).resizeAs(input).copy(input);
     }
 
     if (train) {
@@ -66,125 +68,89 @@ public class Dropout extends TensorModule {
       if (input.isContiguous()) {
         if (isResampling) {
           double[] noiseData = noise.storage().toDoubleArray();
-          int taskSize = noise.nElement() / Engine.model.getPoolSize;
-          int extraTask = noise.nElement() % Engine.model.getPoolSize;
-          int allocated = 0
-          int offset = ((DenseTensor)this.output).storageOffset() - 1;
-          int data = ((DenseTensor)this.output).storage.toDoubleArray();
-          int i = 0
-          while (allocated < noise.nElement()) {
-            int start = allocated;
-            allocated += taskSize;
-            if (extraTask > 0) {
-              allocated += 1;
-              extraTask -= 1;
-            }
-            int end = allocated;
-            results(i) = Engine.model.invoke(() => {
-                int k = start;
-            while (k < end) {
-              noiseData(k) = if (RNG.bernoulli(1 - p)) {
-                if (scale) {
-                  data(offset + k) = ev.divide(data(offset + k), ev.fromType[Double](1 - p))
-                  ev.fromType[Double](1.0 / (1 - p));
-                } else {
-                  ev.fromType[Int](1)
-                }
+          int taskSize = noise.nElement();
+          int extraTask = noise.nElement();
+          int allocated = 0;
+          int offset = ((DenseTensor) this.output).storageOffset() - 1;
+          double[] data = ((DenseTensor) this.output).storage().toDoubleArray();
+          //TODO parallelize
+          for (int k = 0; k < taskSize; k++) {
+            if (RandomGenerator.RNG().bernoulli(1 - p)) {
+              if (scale) {
+                data[offset + k] = TensorNumeric.divide(data[offset + k], 1.0 - p);
+                noiseData[k] = 1.0 / (1 - p);
               } else {
-                data(offset + k) = ev.fromType[Int](0)
-                ev.fromType[Int](0)
+                noiseData[k] = 1;
               }
-
-              k += 1
+            } else {
+              data[offset + k] = 0;
+              noiseData[k] = 0;
             }
-            })
-            i += 1;
-
           }
-
-          Engine.model.sync(results);
         } else {
-          ((DenseTensor)this.output).cmul(noise)
+          ((DenseTensor) this.output).cmul(noise);
         }
-        this.output
+        return (DenseTensor) this.output;
       } else {
         if (isResampling) {
           noise.bernoulli(1 - p);
 
           if (scale) {
-            noise.div(ev.fromType[Double](1 - p));
+            noise.div(1.0 - p);
           }
         }
 
-        ((DenseTensor)this.output).cmul(noise);
+        return (DenseTensor) ((DenseTensor) this.output).cmul(noise);
       }
     } else if (!scale) {
-      ((DenseTensor)this.output).mul(ev.fromType[Double](1 - p));
+      return (DenseTensor) ((DenseTensor) this.output).mul(1.0 - p);
     } else {
-      output
+      return (DenseTensor) output;
     }
-
   }
 
   @Override
   public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
-    if (results == null) {
-      results = new Array[Future[Unit]](Engine.model.getPoolSize);
-    }
     if (train) {
       if (inplace) {
-        this.gradInput = gradOutput
+        this.gradInput = gradOutput;
       } else {
-        this.gradInput.resizeAs(gradOutput).copy(gradOutput);
+        ((DenseTensor) this.gradInput).resizeAs(gradOutput).copy(gradOutput);
       }
 
-      if (gradInput.isContiguous()) {
-        int noiseData = noise.storage().toDoubleArray();
-        int taskSize = noise.nElement() / Engine.model.getPoolSize;
-        int extraTask = noise.nElement() % Engine.model.getPoolSize;
-        int gradInputData = gradInput.storage().toDoubleArray();
-        int gradInputOffset = gradInput.storageOffset() - 1;
+      if (((DenseTensor) gradInput).isContiguous()) {
+        double[] noiseData = noise.storage().toDoubleArray();
+        int taskSize = noise.nElement();
+        int extraTask = noise.nElement();
+        double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
         int allocated = 0;
-        int i = 0;
-        while (allocated < noise.nElement()) {
-          int start = allocated;
-          allocated += taskSize;
-          if (extraTask > 0) {
-            allocated += 1;
-            extraTask -= 1;
-          }
-          int end = allocated
-          results(i) = Engine.model.invoke(() => {
-              int k = start
-          while (k < end) {
-            gradInputData(gradInputOffset + k) =
-                ev.times(gradInputData(gradInputOffset + k), noiseData(k))
-            k += 1
-          }
-          })
-          i += 1
+        for (int k = 0; k < taskSize; k++) {
+          gradInputData[gradInputOffset + k] =
+              TensorNumeric.times(gradInputData[gradInputOffset + k], noiseData[k]);
         }
-
-        Engine.model.sync(results);
-
-        this.gradInput;
       } else {
-        this.gradInput.cmul(noise);
+        ((DenseTensor) this.gradInput).cmul(noise);
       }
     } else {
-      throw new IllegalArgumentException("backprop only defined while training")
+      throw new IllegalArgumentException("backprop only defined while training");
     }
 
+    return (DenseTensor) this.gradInput;
   }
 
   @Override
   public AbstractModule clearState() {
-    return super.clearState();
+    if (!inplace) {
+      super.clearState();
+    }
+    noise.set();
+    return this;
   }
 
   @Override
   public Shape computeOutputShape(Shape inputShape) {
-    return super.computeOutputShape(inputShape);
+    return inputShape;
   }
 
   @Override

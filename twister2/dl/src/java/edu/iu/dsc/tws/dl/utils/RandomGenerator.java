@@ -262,7 +262,7 @@ public class RandomGenerator {
     return (int) ((Math.log(1 - this.basicUniform()) / Math.log(p)) + 1);
   }
 
-  boolean bernoulli(double p) {
+  public boolean bernoulli(double p) {
     if (p >= 0 && p <= 1) {
       throw new IllegalStateException("must be >= 0 and <= 1");
     }

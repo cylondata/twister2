@@ -31,6 +31,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     implements Criterion {
   protected I gradInput;
   protected double output;
+  protected SizeAverageStatus sizeAverageStatus = SizeAverageStatus.NONE;
 
   public AbstractCriterion() {
     gradInput = (I) new DenseTensor();
@@ -113,9 +114,19 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     return Double.valueOf(output).hashCode();
   }
 
+  public boolean canEqual(Object other) {
+    return other instanceof AbstractCriterion;
+  }
+
   @Override
   public boolean equals(Object other) {
     return other instanceof AbstractCriterion && other.getClass() == this.getClass()
         && this.output == ((AbstractCriterion<?, ?>) other).getOutput();
+  }
+
+  enum SizeAverageStatus {
+    TRUE,
+    FALSE,
+    NONE
   }
 }
