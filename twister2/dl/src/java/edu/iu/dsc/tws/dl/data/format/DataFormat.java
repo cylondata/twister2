@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.format;
 
-public abstract class DataFormat {
+import java.io.Serializable;
+
+public abstract class DataFormat implements Serializable {
   private String value;
 
   public abstract int[] getHWCDims(int inputDims);

@@ -81,6 +81,26 @@ public class SpatialConvolution extends TensorModule implements Initializable {
   protected long im2colTime = 0L;
   protected long col2imTime = 0L;
 
+  public SpatialConvolution(int nInputPlane, int nOutputPlane, int kernelW, int kernelH,
+                            int strideW, int strideH, int padW, int padH, int nGroup,
+                            boolean propagateBack, Regularizer wRegularizer,
+                            Regularizer bRegularizer) {
+    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH,
+        nGroup, propagateBack, wRegularizer, bRegularizer, null, null, null,
+        null, true, new NCHW());
+  }
+
+  public SpatialConvolution(int nInputPlane, int nOutputPlane, int kernelW, int kernelH,
+                            int strideW, int strideH, int padW, int padH, int nGroup,
+                            boolean propagateBack, Regularizer wRegularizer,
+                            Regularizer bRegularizer, Tensor initWeight,
+                            Tensor initBias, Tensor initGradWeight, Tensor initGradBias,
+                            boolean withBias, DataFormat format) {
+    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH,
+        nGroup, propagateBack, wRegularizer, bRegularizer, initWeight, initBias, initGradWeight,
+        initGradBias, withBias, format);
+  }
+
   /**
    * SpatialConvolution.
    *
@@ -217,6 +237,12 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else {
       bInit = null;
     }
+    if (weightInitMethod != null) {
+      wInit = weightInitMethod;
+    }
+    if (biasInitMethod != null) {
+      bInit = biasInitMethod;
+    }
     setInitMethod(wInit, bInit);
   }
 
@@ -338,11 +364,12 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     int inputWidth = input.size(dimHWD[1]);
     int inputHeight = input.size(dimHWD[0]);
 
-    int[] sizes = new int[0];
+    int[] sizes;
     if (padW == -1 && padH == -1) {
-      Util.getSAMEOutSizeAndPadding(inputHeight, inputWidth, strideH, strideW, kernelH, kernelW);
+      sizes = Util.getSAMEOutSizeAndPadding(inputHeight, inputWidth, strideH,
+            strideW, kernelH, kernelW);
     } else {
-      Util.getOutSizeAndPadding(inputHeight, inputWidth, strideH, strideW,
+      sizes = Util.getOutSizeAndPadding(inputHeight, inputWidth, strideH, strideW,
           kernelH, kernelW, padH, padW, false);
     }
 
@@ -869,11 +896,11 @@ public class SpatialConvolution extends TensorModule implements Initializable {
   @Override
   public Initializable setInitMethod(InitializationMethod weightMethod,
                                      InitializationMethod biasMethod) {
-    if (weightInitMethod != null) {
+    if (weightMethod != null) {
       this.weightInitMethod = weightMethod;
     }
 
-    if (biasInitMethod != null) {
+    if (biasMethod != null) {
       this.biasInitMethod = biasMethod;
     }
     reset();

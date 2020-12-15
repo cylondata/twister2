@@ -23,6 +23,10 @@ public class ReLU extends Threshold {
     super(threshold, value, inPlace);
   }
 
+  public ReLU() {
+    this(false);
+  }
+
   public ReLU(boolean inPlace) {
     super(0.0, 0.0, inPlace);
   }

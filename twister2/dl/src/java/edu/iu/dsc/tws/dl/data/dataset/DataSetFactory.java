@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
+import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchImageSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.ModalSource;
 import edu.iu.dsc.tws.dl.data.tset.SingleDataSource;
@@ -30,10 +31,13 @@ public final class DataSetFactory {
   private DataSetFactory() {
   }
 
-  public static DataSet<MiniBatch> createImageMiniBathDataSet(BatchEnvironment env, String filePath,
-                                                              int imageSize, int batchSize,
-                                                              int dataSize, int parallelism) {
-    return new DataSet<>();
+  public static SourceTSet<MiniBatch> createImageMiniBatchDataSet(BatchEnvironment env,
+                                                                  String filePath, int nPlanes,
+                                                                  int width, int height,
+                                                                  int batchSize, int dataSize,
+                                                                  int parallelism) {
+    return env.createSource(new DLMiniBatchImageSourceFunction(filePath,
+        batchSize, dataSize, parallelism, nPlanes, width, height), parallelism);
   }
 
   public static SourceTSet<MiniBatch> createMiniBatchDataSet(BatchEnvironment env, String filePath,

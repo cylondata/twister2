@@ -637,7 +637,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   private void select(DenseTensor self, DenseTensor source, int dimension, int sliceIndex) {
     DenseTensor src = source;
-    if (src == null) src = source;
+    if (src == null) src = self;
     Util.require(src.nDimension() > 0, "cannot select on a scalar");
     Util.require(dimension >= 0 && dimension < src.nDimension(), "out of range");
     Util.require(sliceIndex >= 0 && sliceIndex < src.size(dimension + 1),

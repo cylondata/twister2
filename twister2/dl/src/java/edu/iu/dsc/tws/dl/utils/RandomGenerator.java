@@ -217,7 +217,7 @@ public class RandomGenerator {
   }
 
   public double normal(double mean, double stdv) {
-    if (stdv > 0) {
+    if (stdv <= 0) {
       throw new IllegalStateException("standard deviation must be strictly positive");
     }
 
@@ -249,21 +249,21 @@ public class RandomGenerator {
   double logNormal(double mean, double stdv) {
     double zm = mean * mean;
     double zs = stdv * stdv;
-    if (stdv > 0) {
+    if (stdv <= 0) {
       throw new IllegalStateException("standard deviation must be strictly positive");
     }
     return Math.exp(normal(Math.log(zm / Math.sqrt(zs + zm)), Math.sqrt(Math.log(zs / zm + 1))));
   }
 
   int geometric(double p) {
-    if (p >= 0 && p <= 1) {
+    if (!(p >= 0 && p <= 1)) {
       throw new IllegalStateException("must be >= 0 and <= 1");
     }
     return (int) ((Math.log(1 - this.basicUniform()) / Math.log(p)) + 1);
   }
 
   public boolean bernoulli(double p) {
-    if (p >= 0 && p <= 1) {
+    if (!(p >= 0 && p <= 1)) {
       throw new IllegalStateException("must be >= 0 and <= 1");
     }
     return this.basicUniform() <= p;

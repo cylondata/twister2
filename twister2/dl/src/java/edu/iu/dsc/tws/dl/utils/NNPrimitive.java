@@ -157,8 +157,8 @@ public final class NNPrimitive {
         int kw = 0;
         while (kw < kW) {
           int srcOffset = nPlane * (kH * kW * outputHeight * outputWidth)
-              +              kh * (kW * outputHeight * outputWidth)
-              +              kw * (outputHeight * outputWidth) + fInput.storageOffset() - 1;
+              + kh * (kW * outputHeight * outputWidth)
+              + kw * (outputHeight * outputWidth) + fInput.storageOffset() - 1;
           int dstOffset = nPlane * (inputHeight * inputWidth) + input.storageOffset() - 1;
           if (padLeft > 0 || padRight > 0 || padTop > 0 || padBottom > 0) {
             int y = 0;
@@ -367,6 +367,229 @@ public final class NNPrimitive {
       }
       h = h + 1;
       hPad = hPad + dH;
+    }
+  }
+
+  /**
+   * maxPoolingForwardDouble.
+   * @param inputTensor
+   * @param outputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padW
+   * @param padH
+   */
+  public static void maxPoolingForwardDouble(DenseTensor inputTensor, DenseTensor outputTensor,
+                                             DenseTensor indicesTensor, int oWidth, int oHeight,
+                                             int kW, int kH, int dW, int dH, int padW, int padH) {
+    int nSlices = inputTensor.size(1);
+    int iHeight = inputTensor.size(2);
+    int iWidth = inputTensor.size(3);
+
+    double[] input = inputTensor.storage().toDoubleArray();
+    int inputOffset = inputTensor.storageOffset() - 1;
+    double[] output = outputTensor.storage().toDoubleArray();
+    int outputOffset = outputTensor.storageOffset() - 1;
+    double[] indices = indicesTensor.storage().toDoubleArray();
+    int indicesOffset = indicesTensor.storageOffset() - 1;
+
+    for (int k = 0; k < nSlices; k++) {
+      int i = 0;
+      while (i < oHeight) {
+        int j = 0;
+        while (j < oWidth) {
+          // k, i, j output indexers
+          int hstart = i * dH - padH;
+          int wstart = j * dW - padW;
+          int hend = Math.min(hstart + kH, iHeight);
+          int wend = Math.min(wstart + kW, iWidth);
+          hstart = Math.max(hstart, 0);
+          wstart = Math.max(wstart, 0);
+
+          int maxindex = 0;  // default is 0
+          double maxval = Double.MIN_VALUE;
+          int tcntr = 0;
+          int y = hstart;
+          while (y < hend) {
+            int x = wstart;
+            while (x < wend) {
+              // k, y, x input indexers
+              tcntr = y * iWidth + x;
+              double value = input[tcntr + inputOffset + k * iWidth * iHeight];
+              if (value > maxval) {
+                maxval = value;
+                maxindex = tcntr;
+              }
+              x += 1;
+            }
+            y += 1;
+          }
+          output[outputOffset + k * oWidth * oHeight + i * oWidth + j] = maxval;
+          indices[indicesOffset + k * oWidth * oHeight + i * oWidth + j] = maxindex + 1;
+          j += 1;
+        }
+        i += 1;
+      }
+    }
+
+  }
+
+  /**
+   * maxPoolingForwardDoubleNHWC.
+   * @param inputTensor
+   * @param outputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padW
+   * @param padH
+   */
+  public static void maxPoolingForwardDoubleNHWC(DenseTensor inputTensor, DenseTensor outputTensor,
+                                                 DenseTensor indicesTensor, int oWidth, int oHeight,
+                                                 int kW, int kH, int dW, int dH, int padW,
+                                                 int padH) {
+    int nSlices = inputTensor.size(3);
+    int iHeight = inputTensor.size(1);
+    int iWidth = inputTensor.size(2);
+
+    double[] input = inputTensor.storage().toDoubleArray();
+    int inputOffset = inputTensor.storageOffset() - 1;
+    double[] output = outputTensor.storage().toDoubleArray();
+    int outputOffset = outputTensor.storageOffset() - 1;
+    double[] indices = indicesTensor.storage().toDoubleArray();
+    int indicesOffset = indicesTensor.storageOffset() - 1;
+
+    int i = 0;
+    while (i < oHeight) {
+      int j = 0;
+      int hstart = i * dH - padH;
+      int hend = Math.min(hstart + kH, iHeight);
+      hstart = Math.max(hstart, 0);
+      while (j < oWidth) {
+        int wstart = j * dW - padW;
+        int wend = Math.min(wstart + kW, iWidth);
+        wstart = Math.max(wstart, 0);
+
+        int currOutLocStart = outputOffset + (i * oWidth + j) * nSlices;
+        int currOutLocEnd = currOutLocStart + nSlices;
+        int currIndicesLocStart = indicesOffset + (i * oWidth + j) * nSlices;
+        int currIndicesLocEnd = currIndicesLocStart + nSlices;
+        Arrays.fill(output, currOutLocStart, currOutLocEnd, Double.MIN_VALUE);
+        Arrays.fill(indices, currIndicesLocStart, currIndicesLocEnd, 0);
+        int y = hstart;
+        while (y < hend) {
+          int x = wstart;
+          while (x < wend) {
+            // k, y, x input indexers
+            int tcntr = y * iWidth + x;
+            int currInLocStart = inputOffset + tcntr * nSlices;
+            int n = 0;
+            while (n < nSlices) {
+              double value = input[currInLocStart + n];
+              if (value > output[currOutLocStart + n]) {
+                output[currOutLocStart + n] = value;
+                indices[currOutLocStart + n] = tcntr + 1;
+              }
+              n = n + 1;
+            }
+            x += 1;
+          }
+          y += 1;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+  }
+
+  /**
+   * maxPoolingBackwardDoubleNHWC.
+   * @param gradInputTensor
+   * @param gradOutputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   */
+  public static void maxPoolingBackwardDoubleNHWC(DenseTensor gradInputTensor,
+                                                  DenseTensor gradOutputTensor,
+                                                  DenseTensor indicesTensor, int oWidth,
+                                                  int oHeight) {
+    int nSlices = gradInputTensor.size(3);
+    int iHeight = gradInputTensor.size(1);
+    int iWidth = gradInputTensor.size(2);
+
+    double[] gradInput = gradInputTensor.storage().toDoubleArray();
+    int gradInputOffset = gradInputTensor.storageOffset() - 1;
+    double[] gradOutput = gradOutputTensor.storage().toDoubleArray();
+    int gradOutputOffset = gradOutputTensor.storageOffset() - 1;
+    double[] indices = indicesTensor.storage().toDoubleArray();
+    int indicesOffset = indicesTensor.storageOffset() - 1;
+
+    int i = 0;
+    while (i < oHeight) {
+      int j = 0;
+      while (j < oWidth) {
+        int currOutLocStart = gradOutputOffset + (i * oWidth + j) * nSlices;
+        int currIndicesLocStart = indicesOffset + (i * oWidth + j) * nSlices;
+        int n = 0;
+        while (n < nSlices) {
+          int maxIndex = (int) indices[currIndicesLocStart + n] - 1;
+          double grad = gradOutput[currOutLocStart + n];
+          gradInput[gradInputOffset + maxIndex * nSlices + n] += grad;
+          n = n + 1;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+
+  }
+
+  /**
+   * maxPoolingBackwardDouble.
+   * @param gradInputTensor
+   * @param gradOutputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   */
+  public static void maxPoolingBackwardDouble(DenseTensor gradInputTensor,
+                                              DenseTensor gradOutputTensor,
+                                              DenseTensor indicesTensor, int oWidth,
+                                              int oHeight) {
+
+    int nSlices = gradInputTensor.size(1);
+    int iHeight = gradInputTensor.size(2);
+    int iWidth = gradInputTensor.size(3);
+
+    double[] gradInput = gradInputTensor.storage().toDoubleArray();
+    int gradInputOffset = gradInputTensor.storageOffset() - 1;
+    double[] gradOutput = gradOutputTensor.storage().toDoubleArray();
+    int gradOutputOffset = gradOutputTensor.storageOffset() - 1;
+    double[] indices = indicesTensor.storage().toDoubleArray();
+    int indicesOffset = indicesTensor.storageOffset() - 1;
+
+    for (int k = 0; k < nSlices; k++) {
+      int i = 0;
+      while (i < oHeight) {
+        int j = 0;
+        while (j < oWidth) {
+          int maxp = (int) indices[i * oWidth + j + indicesOffset + k * oWidth * oHeight] - 1;
+          gradInput[maxp + k * iWidth * iHeight + gradInputOffset] += gradOutput[gradOutputOffset
+              + k * oWidth * oHeight + i * oWidth + j];
+          j += 1;
+        }
+        i += 1;
+      }
     }
   }
 }

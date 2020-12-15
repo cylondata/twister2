@@ -246,6 +246,8 @@ public final class DenseTensorApply {
   private static void updateCounter(Tensor tensor, int[] counter, int offset, int dim,
                                     int[] counterMeta) {
     if (dim == 0) {
+      counterMeta[0] = 1;
+      counterMeta[1] = offset;
       return;
     }
 

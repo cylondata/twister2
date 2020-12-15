@@ -11,16 +11,43 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.dl;
 
+import java.io.Serializable;
+import java.util.HashMap;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.Twister2Worker;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
+import edu.iu.dsc.tws.dl.criterion.CrossEntropyCriterion;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
-import edu.iu.dsc.tws.dl.data.dataset.DataSet;
 import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
+import edu.iu.dsc.tws.dl.graph.Sequential;
+import edu.iu.dsc.tws.dl.module.Dropout;
+import edu.iu.dsc.tws.dl.module.Linear;
+import edu.iu.dsc.tws.dl.module.LogSoftMax;
+import edu.iu.dsc.tws.dl.module.ReLU;
+import edu.iu.dsc.tws.dl.module.Reshape;
+import edu.iu.dsc.tws.dl.module.SpatialConvolution;
+import edu.iu.dsc.tws.dl.module.SpatialMaxPooling;
+import edu.iu.dsc.tws.dl.optim.Adam;
+import edu.iu.dsc.tws.dl.optim.DistributedOptimizer;
+import edu.iu.dsc.tws.dl.optim.Optimizer;
+import edu.iu.dsc.tws.dl.optim.Regularizer;
+import edu.iu.dsc.tws.dl.optim.regularizer.L2Regularizer;
+import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
-
-import java.io.Serializable;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class CNNExample implements Twister2Worker, Serializable {
 
@@ -34,14 +61,111 @@ public class CNNExample implements Twister2Worker, Serializable {
     int dataSize = config.getIntegerValue("dataSize");
     int batchSize = config.getIntegerValue("batchSize");
     int epoch = config.getIntegerValue("epoch");
-    String dataFile = config.getStringValue("data");
+    String trainData = config.getStringValue("train");
+    String testData = config.getStringValue("test");
     if (batchSize % parallelism != 0) {
       throw new IllegalStateException("batch size should be a multiple of parallelism");
     }
     int miniBatchSize = batchSize / parallelism;
     int imageSize = 0;
-    DataSet<MiniBatch> source = DataSetFactory.createImageMiniBathDataSet(env, dataFile, imageSize,
-        miniBatchSize, dataSize, parallelism);
-    source.transform(null);
+    SourceTSet<MiniBatch> source = DataSetFactory.createImageMiniBatchDataSet(env, trainData,
+        1, 28, 28, miniBatchSize, dataSize, parallelism);
+    SourceTSet<MiniBatch> testSrc = DataSetFactory.createImageMiniBatchDataSet(env, testData,
+        1, 28, 28, miniBatchSize, 100, parallelism);
+    int featureSize = 3 * 3 * 64;
+
+    Sequential model = new Sequential();
+    model.add(convolutionMN(1, 32, 5, 5));
+    model.add(new ReLU());
+    model.add(convolutionMN(32, 32, 5, 5));
+    model.add(new SpatialMaxPooling(2, 2, 2, 2));
+    model.add(new ReLU());
+    model.add(new Dropout(0.5));
+    model.add(convolutionMN(32, 64, 5, 5));
+    model.add(new SpatialMaxPooling(2, 2, 2, 2));
+    model.add(new ReLU());
+    model.add(new Dropout(0.5));
+    model.add(new Reshape(new int[]{featureSize}));
+    model.add(new Linear(featureSize, 256));
+    model.add(new ReLU());
+    model.add(new Dropout(0.5));
+    model.add(new Linear(256, 10));
+    model.add(new LogSoftMax());
+
+
+    AbstractCriterion criterion = new CrossEntropyCriterion();
+
+    //Define Oprimizer
+    Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
+    optimizer.setOptimMethod(new Adam());
+    optimizer.setEndWhen(Triggers.maxEpoch(epoch));
+    optimizer.optimize();
+    model.predictClass(testSrc, batchSize);
+    long endTime = System.nanoTime();
+    if (env.getWorkerID() == 0) {
+      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+    }
+  }
+
+  private SpatialConvolution convolutionMN(int nInputPlane, int nOutputPlane, int kW, int kH) {
+
+    double weightDecay = 1e-4;
+    Regularizer wReg = new L2Regularizer(weightDecay);
+    Regularizer bReg = new L2Regularizer(weightDecay);
+    return new SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, 1, 1,
+        0, 0, 1, true, wReg, bReg);
+  }
+
+  public static void main(String[] args) throws ParseException {
+    // lets take number of workers as an command line argument
+    Options options = new Options();
+    options.addOption("p", true, "parallelism");
+    options.addOption("b", true, "batchSize");
+    options.addOption("d", true, "dataSize");
+    options.addOption("cpu", true, "CPU");
+    options.addOption("ram", true, "RAM");
+    options.addOption("train", true, "Train Data");
+    options.addOption("test", true, "Test Data");
+    options.addOption("e", true, "Epcoh");
+
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+    double cpu = 2.0;
+    int mem = 2048;
+    int numberOfWorkers = Integer.parseInt(cmd.getOptionValue("p"));
+    int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
+    int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
+    int epoch = Integer.parseInt(cmd.getOptionValue("e"));
+    String trainFile = cmd.getOptionValue("train");
+    String testFile = cmd.getOptionValue("test");
+
+    if (cmd.hasOption("cpu")) {
+      cpu = Double.parseDouble(cmd.getOptionValue("cpu"));
+    }
+
+    if (cmd.hasOption("ram")) {
+      mem = Integer.parseInt(cmd.getOptionValue("ram"));
+    }
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // lets put a configuration here
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.put("dnn-key", "Twister2-DNN");
+    jobConfig.put("parallelism", numberOfWorkers);
+    jobConfig.put("batchSize", batchSize);
+    jobConfig.put("dataSize", dataSize);
+    jobConfig.put("epoch", epoch);
+    jobConfig.put("train", trainFile);
+    jobConfig.put("test", testFile);
+
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName("CNN-job")
+        .setWorkerClass(CNNExample.class)
+        .addComputeResource(cpu, mem, numberOfWorkers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }

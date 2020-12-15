@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
@@ -28,10 +29,12 @@ import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Graph;
 import edu.iu.dsc.tws.dl.graph.Node;
 import edu.iu.dsc.tws.dl.optim.OptimMethod;
+import edu.iu.dsc.tws.dl.optim.PredictClassMapFunction;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ModuleNodeIntPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 @SuppressWarnings({"MemberName", "HiddenField"})
 public abstract class AbstractModule extends InferShape implements Module, Serializable {
@@ -294,7 +297,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
       updateParameter();
       updateOutput(input);
     } catch (Exception e) {
-      throw new IllegalStateException("Layer exception :" + e.getMessage());
+      throw new IllegalStateException("Layer exception :" + e.getMessage(), e);
 //      case l: LayerException =>
 //        l.layerMsg = this.toString() + "/" + l.layerMsg
 //        throw l
@@ -815,9 +818,11 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    *                  if -1, default is 4 * partitionNumber of dataset
    */
 
-  public final TSet<Integer> predictClass(TSet<Sample> dataset, int batchSize) {
-    //Predictor(this).predictClass(dataset, batchSize)
-    throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
+  public final TSet<Integer> predictClass(SourceTSet<MiniBatch> dataset, int batchSize) {
+    dataset.direct().<int[]>map(new PredictClassMapFunction(this))
+        .allGather()
+        .forEach(data -> System.out.printf(data.toString()));
+    return null;
   }
 
   /**
@@ -1107,7 +1112,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   }
 
   private void copyParam(Table params, Table copyParams,
-                               boolean deepCopy, String paraName) {
+                         boolean deepCopy, String paraName) {
     if (params.contains(paraName)) {
       // this is for quantization tensors where the weight might be an array
       if (params.get(paraName) instanceof Tensor[]) {

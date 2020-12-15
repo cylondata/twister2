@@ -49,7 +49,6 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
     if (this.getTSetContext().getIndex() == 0) {
       System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
     }
-
     return result;
   }
 }

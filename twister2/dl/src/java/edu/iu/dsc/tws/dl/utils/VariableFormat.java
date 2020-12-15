@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
-public interface VariableFormat {
+import java.io.Serializable;
+
+public interface VariableFormat extends Serializable {
   default int getFanIn(int[] shape) {
     throw new UnsupportedOperationException("FanIn is not defined in this format");
   }
