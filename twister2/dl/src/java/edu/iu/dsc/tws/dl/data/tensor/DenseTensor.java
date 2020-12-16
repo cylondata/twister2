@@ -16,12 +16,14 @@ import java.util.Arrays;
 import com.intel.analytics.bigdl.mkl.MKL;
 
 import edu.iu.dsc.tws.dl.data.DenseTensorApply;
+import edu.iu.dsc.tws.dl.data.DenseTensorDimApply;
 import edu.iu.dsc.tws.dl.data.DenseTensorMath;
 import edu.iu.dsc.tws.dl.data.Storage;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorMath;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
+import edu.iu.dsc.tws.dl.data.function.TensorDimFunc3;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc6;
@@ -1091,12 +1093,41 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public TensorPair max(int dim) {
-    throw new UnsupportedOperationException("operation not supported");
+    Util.require(dim > 0 && dim <= this.nDimension(), "dimension out of range");
+    return max(new DenseTensor(), new DenseTensor(), dim);
   }
 
   @Override
   public TensorPair max(Tensor values, Tensor indices, int dim) {
-    throw new UnsupportedOperationException("operation not supported");
+    Util.require(dim > 0 && dim <= this.nDimension(), "dimension out of range");
+    int[] sizes = this.size(); // here slice
+    sizes[dim - 1] = 1;
+    values.resize(sizes);
+    indices.resize(sizes);
+
+    // TODO: the performance of contiguous tensor should be optimize
+    TensorDimFunc3 func3 = new TensorDimFunc3() {
+      @Override
+      public void apply(double[] tdata, int toffset, int tstride, int tsize, double[] vdata,
+                        int voffset, int vstride, int vsize, double[] idata, int ioffset,
+                        int istride, int isize) {
+        double max = tdata[toffset];
+        int index = 1;
+        int i = 0;
+        while (i < tsize) {
+          if (TensorNumeric.minus(tdata[toffset + i * tstride], max) > 0) {
+            index = i + 1;
+            max = tdata[toffset + i * tstride];
+          }
+          i += 1;
+        }
+        vdata[voffset] = max;
+        idata[ioffset] = index;
+      }
+    };
+    DenseTensorDimApply.dimApply3(this, (DenseTensor) values, (DenseTensor) indices, dim, func3);
+
+    return new TensorPair(values, indices);
   }
 
   @Override

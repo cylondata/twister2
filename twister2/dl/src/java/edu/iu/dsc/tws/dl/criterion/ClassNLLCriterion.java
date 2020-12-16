@@ -113,7 +113,7 @@ public class ClassNLLCriterion extends TensorCriterion {
           "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
               + " Input dimension is: ${ input.dim() } , target dimension is: ${ target.dim() }");
       int curTarget = (int) target.valueAt(1);
-      if (curTarget >= 1 && curTarget <= nClasses || curTarget == paddingValue) {
+      if (curTarget < 1 && curTarget > nClasses || curTarget == paddingValue) {
         throw new IllegalStateException("curTarget ${curTarget} is out of range,"
             + " should be 1 to ${nClasses}");
       }
@@ -149,7 +149,7 @@ public class ClassNLLCriterion extends TensorCriterion {
       for (int i = 1; i <= batchSize; i++) {
 
         int curTarget = (int) target.valueAt(i);
-        if (curTarget >= 1 && curTarget <= nClasses || curTarget == paddingValue) {
+        if (curTarget < 1 && curTarget > nClasses || curTarget == paddingValue) {
           throw new IllegalStateException("curTarget " + curTarget
               + "is out of range 1 to ${nClasses}");
         }
@@ -195,7 +195,7 @@ public class ClassNLLCriterion extends TensorCriterion {
         "ClassNLLCriterion: "
             + ErrorConstants.constrainInputAsVectorOrBatch + "input dim ${input.dim()}");
 
-    if (total_weight > 0.0) {
+    if (total_weight <= 0.0) {
       throw new IllegalStateException("total weight must larger than 0");
     }
 

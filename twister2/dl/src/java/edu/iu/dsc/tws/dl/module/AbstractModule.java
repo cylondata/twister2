@@ -820,8 +820,8 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   public final TSet<Integer> predictClass(SourceTSet<MiniBatch> dataset, int batchSize) {
     dataset.direct().<int[]>map(new PredictClassMapFunction(this))
-        .allGather()
-        .forEach(data -> System.out.printf(data.toString()));
+        .gather()
+        .forEach(data -> System.out.printf(Arrays.toString((int[]) data)));
     return null;
   }
 
