@@ -11,18 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
-public interface Twister2Worker {
+import java.io.Serializable;
+
+public interface Twister2Worker extends Serializable {
 
   /**
-   * This is the main point of entry for Twister2 jobs.
-   * Every job should implement this interface.
-   * When a job is submitted, a class implementing this interface gets instantiated
-   * and executed by Twister2.
+   * This is the main point of entry for Twister2 jobs. Every job should implement
+   * this interface. When a job is submitted, a class implementing this interface
+   * gets instantiated and executed by Twister2.
    *
-   * As the first thing in the execute method,
-   * users are expected to initialize the proper environment object:
-   *   for batch jobs: BatchTSetEnvironment
-   *   for streaming jobs: StreamingTSetEnvironment
+   * As the first thing in the execute method, users are expected to initialize
+   * the proper environment object: for batch jobs: BatchTSetEnvironment for
+   * streaming jobs: StreamingTSetEnvironment
    */
   void execute(WorkerEnvironment workerEnv);
 }
