@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,6 +31,7 @@ import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.IExecutionPlanBuilder;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -431,7 +433,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     if (operationMode.equals(OperationMode.BATCH)) {
       if (newInstance instanceof ICompute) {
         TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
-            new LinkedBlockingQueue<>(),
+            new ArrayBlockingQueue<>(ExecutorContext.instanceQueueLowWaterMark(cfg)),
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
@@ -453,7 +455,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       if (newInstance instanceof ICompute) {
         TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-            new LinkedBlockingQueue<>(),
+            new ArrayBlockingQueue<>(ExecutorContext.instanceQueueLowWaterMark(cfg)),
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,

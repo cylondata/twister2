@@ -118,7 +118,7 @@ public abstract class BatchTSetImpl<T> extends BaseTSetWithSchema<T> implements 
   // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<T, Tuple<K, V>> mapToTupleFn) {
-    return direct().mapToTuple(mapToTupleFn);
+    return pipe().mapToTuple(mapToTupleFn);
   }
 
   @Override
