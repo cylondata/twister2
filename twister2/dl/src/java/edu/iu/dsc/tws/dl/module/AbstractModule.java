@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Graph;
 import edu.iu.dsc.tws.dl.graph.Node;
 import edu.iu.dsc.tws.dl.optim.OptimMethod;
+import edu.iu.dsc.tws.dl.optim.PredictAccuracyMapFunction;
 import edu.iu.dsc.tws.dl.optim.PredictClassMapFunction;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ModuleNodeIntPair;
@@ -812,19 +813,40 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * module predict, return the predict label
-   *
-   * @param dataset   dataset for prediction
+   *  @param dataset   dataset for prediction
    * @param batchSize total batchSize for all partitions.
-   *                  if -1, default is 4 * partitionNumber of dataset
+   * @param testDataSize
    */
 
-  public final TSet<Integer> predictClass(SourceTSet<MiniBatch> dataset, int batchSize) {
-    dataset.direct().<int[]>map(new PredictClassMapFunction(this))
-        .gather()
-        .forEach(data -> System.out.printf(Arrays.toString((int[]) data)));
-    return null;
+  public final int[] predictClass(SourceTSet<MiniBatch> dataset, int batchSize, int dataSize) {
+    int[] results = new int[dataSize];
+    int index = 0;
+    List dataList = dataset.direct().<int[]>map(new PredictClassMapFunction(this))
+        .gather().cache().getData();
+    for (Object data : dataList) {
+      int[] temp = (int[]) data;
+      for (int i = 0; i < temp.length; i++) {
+        results[index]  = temp[i];
+        index++;
+      }
+    }
+    return results;
   }
 
+  public double predictAccuracy(SourceTSet<MiniBatch> dataset, int batchSize, int testDataSize) {
+    List dataList = dataset.direct().<int[]>map(new PredictAccuracyMapFunction(this))
+        .gather().cache().getData();
+    int errorCount = 0;
+    int pointCount = 0;
+    for (Object data : dataList) {
+      int[] temp = (int[]) data;
+      pointCount += temp[0];
+      errorCount += temp[1];
+    }
+    Util.require(testDataSize == pointCount, "The point count in the dataset and "
+        + "given testDataSize do not match");
+    return 1.0 - ((double) errorCount / testDataSize);
+  }
   /**
    * Get weight and bias for the module
    *

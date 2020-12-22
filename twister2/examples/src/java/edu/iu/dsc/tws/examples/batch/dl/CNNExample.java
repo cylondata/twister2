@@ -59,6 +59,7 @@ public class CNNExample implements Twister2Worker, Serializable {
     Config config = env.getConfig();
     int parallelism = config.getIntegerValue("parallelism");
     int dataSize = config.getIntegerValue("dataSize");
+    int testDataSize = 100;
     int batchSize = config.getIntegerValue("batchSize");
     int epoch = config.getIntegerValue("epoch");
     String trainData = config.getStringValue("train");
@@ -71,7 +72,7 @@ public class CNNExample implements Twister2Worker, Serializable {
     SourceTSet<MiniBatch> source = DataSetFactory.createImageMiniBatchDataSet(env, trainData,
         1, 28, 28, miniBatchSize, dataSize, parallelism);
     SourceTSet<MiniBatch> testSrc = DataSetFactory.createImageMiniBatchDataSet(env, testData,
-        1, 28, 28, miniBatchSize, 100, parallelism);
+        1, 28, 28, miniBatchSize, testDataSize, parallelism);
     int featureSize = 3 * 3 * 64;
 
     Sequential model = new Sequential();
@@ -100,10 +101,11 @@ public class CNNExample implements Twister2Worker, Serializable {
     optimizer.setOptimMethod(new Adam());
     optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
-    model.predictClass(testSrc, batchSize);
+    double accuracy = model.predictAccuracy(testSrc, batchSize, testDataSize);
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
       System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+      System.out.println("Accuracy : " + accuracy * 100 + "%");
     }
   }
 
