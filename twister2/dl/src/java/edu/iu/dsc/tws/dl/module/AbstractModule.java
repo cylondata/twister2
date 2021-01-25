@@ -836,16 +836,21 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   public double predictAccuracy(SourceTSet<MiniBatch> dataset, int batchSize, int testDataSize) {
     List dataList = dataset.direct().<int[]>map(new PredictAccuracyMapFunction(this))
         .gather().cache().getData();
-    int errorCount = 0;
-    int pointCount = 0;
-    for (Object data : dataList) {
-      int[] temp = (int[]) data;
-      pointCount += temp[0];
-      errorCount += temp[1];
+    if (dataset.getTSetEnv().getWorkerID() == 0) {
+      int errorCount = 0;
+      int pointCount = 0;
+      for (Object data : dataList) {
+        int[] temp = (int[]) data;
+        pointCount += temp[0];
+        errorCount += temp[1];
+      }
+      Util.require(testDataSize == pointCount, "The point count in the dataset and "
+          + "given testDataSize do not match " + testDataSize + " : " + pointCount);
+      return 1.0 - ((double) errorCount / testDataSize);
+    } else {
+      return 0;
     }
-    Util.require(testDataSize == pointCount, "The point count in the dataset and "
-        + "given testDataSize do not match");
-    return 1.0 - ((double) errorCount / testDataSize);
+
   }
   /**
    * Get weight and bias for the module

@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.dl.optim.OptimMethod;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -83,9 +84,10 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     //criterion
     AbstractCriterion criterion = new MSECriterion();
 
+    OptimMethod optimMethod = new Adam();
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
-    optimizer.setOptimMethod(new Adam());
+    optimizer.setOptimMethod(optimMethod);
     optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
     long endTime = System.nanoTime();
