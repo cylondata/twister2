@@ -26,6 +26,6 @@ package edu.iu.dsc.tws.dl.data.function;
 /**
  * Lambda function
  */
-public interface TensorFunc2 {
-  void apply(double[] v1, int v2);
+public interface TensorFunc2<T> {
+  void apply(T v1, int v2);
 }

@@ -20,6 +20,12 @@ import java.io.Serializable;
 public interface Tensor extends Activity, Serializable, TensorMath {
 
   /**
+   * Check if Tensor type is float
+   * @return true if float tensor
+   */
+  boolean isFloat();
+
+  /**
    * Check if empty
    *
    * @return whether this tensor is an empty tensor. Note that nDimension == 0 is not
@@ -90,6 +96,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   Tensor fill(double v);
 
+  Tensor fill(float v);
+
   /**
    * Fill with a given value. It will change the value of the current tensor and return itself
    * <p>
@@ -99,6 +107,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @return current tensor
    */
   Tensor forceFill(double v);
+
+  Tensor forceFill(float v);
 
   /**
    * Fill with zero. It will change the value of the current tensor and return itself
@@ -122,7 +132,9 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    *
    * @return current tensor
    */
-  Tensor randn(Double mean, Double stdv);
+  Tensor randn(double mean, double stdv);
+
+  Tensor randn(float mean, float stdv);
 
   /**
    * Fill with random value(uniform distribution).
@@ -138,7 +150,9 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    *
    * @return current tensor
    */
-  Tensor rand(Double lowerBound, Double upperBound);
+  Tensor rand(double lowerBound, double upperBound);
+
+  Tensor rand(float lowerBound, float upperBound);
 
   /**
    * Fill with random value(bernoulli distribution).
@@ -147,6 +161,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @return current tensor
    */
   Tensor bernoulli(double p);
+
+  Tensor bernoulli(float p);
 
   /**
    * Create a new tensor which exchanges the given dimensions of the current tensor
@@ -206,6 +222,15 @@ public interface Tensor extends Activity, Serializable, TensorMath {
 
   double valueAt(int d1, int d2, int d3, int d4, int d5);
 
+  float valueAtf(int d1);
+
+  float valueAtf(int d1, int d2);
+
+  float valueAtf(int d1, int d2, int d3);
+
+  float valueAtf(int d1, int d2, int d3, int d4);
+
+  float valueAtf(int d1, int d2, int d3, int d4, int d5);
   /**
    * Subset the tensor by apply the elements of the given table to the corresponding dimension
    * of the tensor. The elements of the given table can be an int or another Table.
@@ -229,6 +254,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   void update(int index, double value);
 
+  void update(int index, float value);
+
   /**
    * Copy the give tensor value to the select subset of the current tensor by the given index.
    * The subset should have the same size of the given tensor
@@ -246,6 +273,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   void update(int[] indexes, double value);
 
+  void update(int[] indexes, float value);
+
 
   /**
    * Set value for a scalar tensor
@@ -254,6 +283,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @return
    */
   Tensor setValue(double value);
+
+  Tensor setValue(float value);
 
   /**
    * Write the value on a given position. The number of parameters
@@ -265,13 +296,23 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   Tensor setValue(int d1, double value);
 
+  Tensor setValue(int d1, float value);
+
   Tensor setValue(int d1, int d2, double value);
+
+  Tensor setValue(int d1, int d2, float value);
 
   Tensor setValue(int d1, int d2, int d3, double value);
 
+  Tensor setValue(int d1, int d2, int d3, float value);
+
   Tensor setValue(int d1, int d2, int d3, int d4, double value);
 
+  Tensor setValue(int d1, int d2, int d3, int d4, float value);
+
   Tensor setValue(int d1, int d2, int d3, int d4, int d5, double value);
+
+  Tensor setValue(int d1, int d2, int d3, int d4, int d5, float value);
 
   /**
    * Fill the select subset of the current tensor with the given value.
@@ -285,6 +326,8 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @param value value to write
    */
   void update(Table t, double value);
+
+  void update(Table t, float value);
 
   /**
    * Copy the given tensor values to the selected subset of the current tensor
@@ -623,6 +666,13 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    * @return
    */
   double[] toArray();
+
+  /**
+   * Convert 1D tensor to an float array. If the tensor is not 1D, an exception will be thrown out.
+   *
+   * @return
+   */
+  float[] toFloatArray();
 
   /**
    * Get a new tensor with same value and different storage

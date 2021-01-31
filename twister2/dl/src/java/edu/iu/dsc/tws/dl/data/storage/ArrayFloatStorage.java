@@ -11,20 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.storage;
 
+import edu.iu.dsc.tws.dl.data.Storage;
+
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.dl.data.Storage;
+public class ArrayFloatStorage extends ArrayStorage {
+  private float[] values;
 
-public class ArrayDoubleStorage extends ArrayStorage {
-  private double[] values;
-
-  public ArrayDoubleStorage(double[] values) {
+  public ArrayFloatStorage(float[] values) {
     this.values = values;
   }
 
-  public ArrayDoubleStorage(int size) {
-    this.values = new double[size];
+  public ArrayFloatStorage(int size) {
+    this.values = new float[size];
   }
 
   @Override
@@ -33,24 +33,18 @@ public class ArrayDoubleStorage extends ArrayStorage {
   }
 
   @Override
-  public void update(int index, double value) {
+  public void update(int index, float value) {
     this.values[index] = value;
   }
 
   @Override
-  public void update(int index, float value) {
-    throw new UnsupportedOperationException("float operations not supported in ArrayDoubleStorage");
+  public void update(int index, double value) {
+    throw new UnsupportedOperationException("float operations not supported in ArrayFloatStorage");
   }
 
   @Override
   public Storage copy(Storage source, int offset, int sourceOffset, int length) {
     System.arraycopy(source.toDoubleArray(), sourceOffset, this.values, offset, length);
-    return this;
-  }
-
-  @Override
-  public Storage fill(double value, int offset, int length) {
-    Arrays.fill(values, offset - 1, offset - 1 + length, value);
     return this;
   }
 
@@ -61,43 +55,48 @@ public class ArrayDoubleStorage extends ArrayStorage {
   }
 
   @Override
+  public Storage fill(double value, int offset, int length) {
+    throw new UnsupportedOperationException("float operations not supported in ArrayFloatStorage");
+  }
+
+  @Override
   public Storage resize(int size) {
-    this.values = new double[size];
+    this.values = new float[size];
     return this;
   }
 
   @Override
   public double[] toDoubleArray() {
-    return values;
+    throw new UnsupportedOperationException("float operations not supported in ArrayFloatStorage");
   }
 
   @Override
   public float[] toFloatArray() {
-    throw new UnsupportedOperationException("float operations not supported in ArrayDoubleStorage");
+    return values;
   }
 
   @Override
   public Storage set(Storage other) {
-    throw new UnsupportedOperationException("operations not supported in ArrayDoubleStorage");
+    throw new UnsupportedOperationException("operations not supported in ArrayFloatStorage");
   }
 
   @Override
   public Iterator iterator() {
-    throw new UnsupportedOperationException("operations not supported in ArrayDoubleStorage");
-  }
-
-  @Override
-  public double getDouble(int index) {
-    return values[index];
+    throw new UnsupportedOperationException("operations not supported in ArrayFloatStorage");
   }
 
   @Override
   public float getFloat(int index) {
-    throw new UnsupportedOperationException("operations not supported in ArrayDoubleStorage");
+    return values[index];
   }
 
   @Override
   public boolean isEmpty() {
     return values.length == 0;
+  }
+
+  @Override
+  public double getDouble(int index) {
+    throw new UnsupportedOperationException("operations not supported in ArrayFloatStorage");
   }
 }

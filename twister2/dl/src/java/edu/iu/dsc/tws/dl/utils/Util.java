@@ -11,9 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
+import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
+
 public final class Util {
 
   private Util() {
+  }
+
+  public static ArrayStorage buildStorage(int size, boolean isFloat){
+    if(isFloat){
+      return new ArrayFloatStorage(size);
+    }else{
+      return new ArrayDoubleStorage(size);
+    }
   }
 
   public static void require(boolean satisfied, String message) {

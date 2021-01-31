@@ -115,6 +115,46 @@ public final class DenseTensorBLAS {
     time += System.nanoTime() - start;
   }
 
+  public static void gemm(char transa, char transb, int m, int n, int k, float alpha,
+                          float[] a, int aOffset, int lda, float[] b, int bOffset, int ldb,
+                          float beta, float[] c, int cOffset, int ldc) {
+
+    boolean _transa = transa == 't' || transa == 'T';
+    boolean _transb = transb == 't' || transb == 'T';
+
+    int _ldc = ldc;
+    if (n == 1) {
+      _ldc = m;
+    }
+
+    int _lda = lda;
+    if (_transa) {
+      if (m == 1) {
+        _lda = k;
+      }
+    } else {
+      if (k == 1) {
+        _lda = m;
+      }
+    }
+
+    int _ldb = ldb;
+    if (_transb) {
+      if (k == 1) {
+        _ldb = n;
+      }
+    } else {
+      if (n == 1) {
+        _ldb = k;
+      }
+    }
+
+    long start = System.nanoTime();
+    TensorNumeric.gemm(transa, transb, m, n, k, alpha, a, aOffset, _lda, b, bOffset, _ldb, beta, c,
+        cOffset, _ldc);
+    time += System.nanoTime() - start;
+  }
+
   /**
    * to be fixed: this interface treat the input tensor as row-major array.
    *
@@ -146,6 +186,30 @@ public final class DenseTensorBLAS {
           mat.storage().toDoubleArray(), mat.storageOffset() - 1, mat.stride(1),
           vector.storage().toDoubleArray(), vector.storageOffset() - 1, vector.stride(1),
           beta, r.storage().toDoubleArray(), r.storageOffset() - 1, r.stride(1));
+    }
+  }
+
+  public static void gemv(float alpha, Tensor matrix, Tensor vector, float beta, Tensor r) {
+    Util.require(matrix.size(2) == vector.size(1), "matrix vector size doesn't match");
+    Util.require(matrix.size(1) == r.size(1), "matrix result size doesn't match");
+    if (matrix.stride(1) == 1) {
+      TensorNumeric.gemv('N', matrix.size(1), matrix.size(2), alpha,
+          matrix.storage().toFloatArray(), matrix.storageOffset() - 1, matrix.stride(2),
+          vector.storage().toFloatArray(), vector.storageOffset() - 1, vector.stride(1),
+          beta, r.storage().toFloatArray(),
+          r.storageOffset() - 1, r.stride(1));
+    } else if (matrix.stride(2) == 1) {
+      TensorNumeric.gemv('T', matrix.size(2), matrix.size(1), alpha,
+          matrix.storage().toFloatArray(), matrix.storageOffset() - 1, matrix.stride(1),
+          vector.storage().toFloatArray(), vector.storageOffset() - 1,
+          vector.stride(1), beta, r.storage().toFloatArray(),
+          r.storageOffset() - 1, r.stride(1));
+    } else {
+      Tensor mat = matrix.contiguous();
+      TensorNumeric.gemv('T', mat.size(2), mat.size(1), alpha,
+          mat.storage().toFloatArray(), mat.storageOffset() - 1, mat.stride(1),
+          vector.storage().toFloatArray(), vector.storageOffset() - 1, vector.stride(1),
+          beta, r.storage().toFloatArray(), r.storageOffset() - 1, r.stride(1));
     }
   }
 }

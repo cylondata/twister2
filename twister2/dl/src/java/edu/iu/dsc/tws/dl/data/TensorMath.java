@@ -35,6 +35,7 @@ public interface TensorMath {
 
   Tensor addCopy(double s);
 
+  Tensor addCopy(float s);
   /**
    * Add a Tensor to another one, return the result in new allocated memory.
    * The number of elements in the Tensors must match, but the sizes do not matter.
@@ -53,6 +54,8 @@ public interface TensorMath {
    * @return
    */
   Tensor subCopy(double s);
+
+  Tensor subCopy(float s);
 
   /**
    * Subtract a Tensor from another one, return the result in new allocated memory.
@@ -75,6 +78,8 @@ public interface TensorMath {
    */
   Tensor divCopy(double s);
 
+  Tensor divCopy(float s);
+
   /**
    * Divide a Tensor by another one, return the result in new allocated memory.
    * The number of elements in the Tensors must match, but the sizes do not matter.
@@ -94,6 +99,8 @@ public interface TensorMath {
    */
   Tensor mulCopy(double s);
 
+  Tensor mulCopy(float s);
+
   /**
    * Multiply a Tensor by another one, return the result in new allocated memory.
    * The number of elements in the Tensors must match, but the sizes do not matter.
@@ -112,12 +119,16 @@ public interface TensorMath {
    */
   double sum();
 
+  float sumf();
+
   /**
    * returns the product of the elements of this
    *
    * @return
    */
   double prod();
+
+  float prodf();
 
   Tensor prod(Tensor x, int dim);
 
@@ -138,6 +149,7 @@ public interface TensorMath {
    */
   double mean();
 
+  float meanf();
   /**
    * performs the mean operation over the dimension dim.
    *
@@ -153,6 +165,7 @@ public interface TensorMath {
    */
   double max();
 
+  float maxf();
   /**
    * performs the max operation over the dimension n
    *
@@ -177,6 +190,8 @@ public interface TensorMath {
    * @return
    */
   double min();
+
+  float minf();
 
   /**
    * performs the min operation over the dimension n
@@ -270,6 +285,8 @@ public interface TensorMath {
    */
   Tensor add(double value, Tensor y);
 
+  Tensor add(float value, Tensor y);
+
   /**
    * accumulates all elements of y into this
    *
@@ -289,6 +306,8 @@ public interface TensorMath {
    */
   Tensor add(Tensor x, double value, Tensor y);
 
+  Tensor add(Tensor x, float value, Tensor y);
+
   /**
    * x.add(value) : add value to all elements of x in place.
    *
@@ -296,6 +315,8 @@ public interface TensorMath {
    * @return
    */
   Tensor add(double value);
+
+  Tensor add(float value);
 
   Tensor add(Tensor x, Tensor y);
 
@@ -308,6 +329,8 @@ public interface TensorMath {
    */
   double dot(Tensor y);
 
+  float dotf(Tensor y);
+
 
   /**
    * For each elements of the tensor, performs the max operation compared with the given value
@@ -318,6 +341,8 @@ public interface TensorMath {
    */
   Tensor cmax(double value);
 
+  Tensor cmax(float value);
+
   /**
    * Performs the p-norm distance calculation between two tensors
    *
@@ -326,6 +351,8 @@ public interface TensorMath {
    * @return
    */
   double dist(Tensor y, int norm);
+
+  float distf(Tensor y, int norm);
 
   /**
    * Performs the element-wise multiplication of tensor1 by tensor2, multiply the result by the
@@ -337,6 +364,8 @@ public interface TensorMath {
    * @param tensor2
    */
   Tensor addcmul(double value, Tensor tensor1, Tensor tensor2);
+
+  Tensor addcmul(float value, Tensor tensor1, Tensor tensor2);
 
   Tensor addcmul(Tensor tensor1, Tensor tensor2);
 
@@ -352,10 +381,16 @@ public interface TensorMath {
    */
   Tensor addcdiv(double value, Tensor tensor1, Tensor tensor2);
 
+  Tensor addcdiv(float value, Tensor tensor1, Tensor tensor2);
+
   Tensor sub(double value, Tensor y);
+
+  Tensor sub(float value, Tensor y);
 
   // Puts the result of x - value * y in current tensor
   Tensor sub(Tensor x, double value, Tensor y);
+
+  Tensor sub(Tensor x, float value, Tensor y);
 
   /**
    * subtracts all elements of y from this
@@ -368,6 +403,8 @@ public interface TensorMath {
   Tensor sub(Tensor x, Tensor y);
 
   Tensor sub(double value);
+
+  Tensor sub(float value);
 
   /**
    * Element-wise multiply
@@ -417,6 +454,8 @@ public interface TensorMath {
    */
   Tensor mul(double value);
 
+  Tensor mul(float value);
+
   /**
    * divide all elements of this with value in-place.
    *
@@ -424,6 +463,8 @@ public interface TensorMath {
    * @return
    */
   Tensor div(double value);
+
+  Tensor div(float value);
 
   /**
    * Element-wise divide
@@ -443,6 +484,8 @@ public interface TensorMath {
    */
   Tensor mul(Tensor x, double value);
 
+  Tensor mul(Tensor x, float value);
+
   /**
    * Performs a matrix-matrix multiplication between mat1 (2D tensor) and mat2 (2D tensor).
    * Optional values v1 and v2 are scalars that multiply m and mat1 * mat2 respectively.
@@ -460,6 +503,8 @@ public interface TensorMath {
    */
   Tensor addmm(double v1, Tensor m, double v2, Tensor mat1, Tensor mat2);
 
+  Tensor addmm(float v1, Tensor m, float v2, Tensor mat1, Tensor mat2);
+
   /**
    * res = m + (mat1*mat2)
    */
@@ -475,10 +520,14 @@ public interface TensorMath {
    */
   Tensor addmm(double v2, Tensor mat1, Tensor mat2);
 
+  Tensor addmm(float v2, Tensor mat1, Tensor mat2);
+
   /**
    * res = v1 * res + v2 * mat1*mat2
    */
   Tensor addmm(double v1, double v2, Tensor mat1, Tensor mat2);
+
+  Tensor addmm(float v1, float v2, Tensor mat1, Tensor mat2);
 
   /**
    * res = mat1*mat2
@@ -499,7 +548,11 @@ public interface TensorMath {
 
   Tensor addr(double v1, Tensor t1, Tensor t2);
 
+  Tensor addr(float v1, Tensor t1, Tensor t2);
+
   Tensor addr(double v1, Tensor t1, double v2, Tensor t2);
+
+  Tensor addr(float v1, Tensor t1, float v2, Tensor t2);
 
   /**
    * Performs the outer-product between vec1 (1D Tensor) and vec2 (1D Tensor).
@@ -515,6 +568,8 @@ public interface TensorMath {
    */
   Tensor addr(double v1, Tensor t1, double v2, Tensor t2, Tensor t3);
 
+  Tensor addr(float v1, Tensor t1, float v2, Tensor t2, Tensor t3);
+
   /**
    * return pseudo-random numbers, require 0<=args.length<=2
    * if args.length = 0, return [0, 1)
@@ -524,6 +579,8 @@ public interface TensorMath {
    * @param args
    */
   double uniform(double... args);
+
+  float uniform(float... args);
 
   /**
    * Performs a matrix-vector multiplication between mat (2D Tensor) and vec2 (1D Tensor) and add
@@ -536,16 +593,22 @@ public interface TensorMath {
    * vec2 must be vector of size m and vec1 must be a vector of size n.
    */
   Tensor addmv(double beta, Tensor vec1, double alpha, Tensor mat, Tensor vec2);
+  
+  Tensor addmv(float beta, Tensor vec1, float alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = beta * res + alpha * (mat * vec2)
    */
   Tensor addmv(double beta, double alpha, Tensor mat, Tensor vec2);
+  
+  Tensor addmv(float beta, float alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = res + alpha * (mat * vec2)
    */
   Tensor addmv(double alpha, Tensor mat, Tensor vec2);
+  
+  Tensor addmv(float alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = res + (mat * vec2)
@@ -563,15 +626,21 @@ public interface TensorMath {
    */
   Tensor baddbmm(double beta, Tensor m, double alpha, Tensor batch1, Tensor batch2);
 
+  Tensor baddbmm(float beta, Tensor m, float alpha, Tensor batch1, Tensor batch2);
+
   /**
    * res_i = (beta * res_i) + (alpha * batch1_i * batch2_i)
    */
   Tensor baddbmm(double beta, double alpha, Tensor batch1, Tensor batch2);
 
+  Tensor baddbmm(float beta, float alpha, Tensor batch1, Tensor batch2);
+
   /**
    * res_i = res_i + (alpha * batch1_i * batch2_i)
    */
   Tensor baddbmm(double alpha, Tensor batch1, Tensor batch2);
+
+  Tensor baddbmm(float alpha, Tensor batch1, Tensor batch2);
 
   /**
    * res_i = res_i + batch1_i * batch2_i
@@ -587,7 +656,11 @@ public interface TensorMath {
    */
   Tensor pow(Tensor y, double n);
 
+  Tensor pow(Tensor y, float n);
+
   Tensor pow(double n);
+
+  Tensor pow(float n);
 
   /**
    * Replaces all elements in-place with the elements of x squared
@@ -739,6 +812,8 @@ public interface TensorMath {
    */
   Tensor eq(Tensor x, double y);
 
+  Tensor eq(Tensor x, float y);
+
   /**
    * Fills the masked elements of itself with value val
    *
@@ -747,6 +822,8 @@ public interface TensorMath {
    * @return current tensor reference
    */
   Tensor maskedFill(Tensor mask, double e);
+
+  Tensor maskedFill(Tensor mask, float e);
 
   /**
    * Copies the elements of tensor into mask locations of itself.
@@ -774,6 +851,8 @@ public interface TensorMath {
    */
   double norm(int value);
 
+  float normf(int value);
+
   /**
    * returns a new Tensor with the sign (+/- 1 or 0) of the elements of x.
    *
@@ -789,6 +868,8 @@ public interface TensorMath {
    * @return
    */
   Tensor ge(Tensor x, double value);
+
+  Tensor ge(Tensor x, float value);
 
   /**
    * Accumulate the elements of tensor into the original tensor by adding to the indices
@@ -861,6 +942,8 @@ public interface TensorMath {
    */
   Tensor range(double xmin, double xmax, int step);
 
+  Tensor range(float xmin, float xmax, int step);
+
   /**
    * Computes numerical negative value element-wise. y = -x
    *
@@ -880,6 +963,10 @@ public interface TensorMath {
 // Tensor reduce(int dim,Tensor result, reducer: (double, double) => double);
   double sumSquare();
 
+  float sumSquaref();
+
   Tensor clamp(double min, double max);
+
+  Tensor clamp(float min, float max);
 }
 

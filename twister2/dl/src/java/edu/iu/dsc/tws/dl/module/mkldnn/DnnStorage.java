@@ -109,8 +109,8 @@ public class DnnStorage implements Storage {
   }
 
   @Override
-  public double[] toFloatArray() {
-    return new double[0];
+  public float[] toFloatArray() {
+    return new float[][0];
   }
 
   @Override

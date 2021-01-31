@@ -108,7 +108,7 @@ public interface Storage extends Serializable, Iterable {
    *
    * @return
    */
-  double[] toFloatArray();
+  float[] toFloatArray();
 
   /**
    * Get the element type in the storage

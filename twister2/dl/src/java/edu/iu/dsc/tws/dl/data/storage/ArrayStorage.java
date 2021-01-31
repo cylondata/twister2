@@ -9,12 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.data.function;
+package edu.iu.dsc.tws.dl.data.storage;
 
-/**
- * Lambda function
- */
-public interface TensorDimFunc3<T> {
-  void apply(T arr1, int v1, int v2, int v3, T arr2, int v4, int v5, int v6,
-             T arr3, int v7, int v8, int v9);
+import edu.iu.dsc.tws.dl.data.Storage;
+
+public abstract class ArrayStorage implements Storage {
+  public abstract boolean isEmpty();
+
+  public abstract double getDouble(int index);
+
+  public abstract float getFloat(int index);
 }

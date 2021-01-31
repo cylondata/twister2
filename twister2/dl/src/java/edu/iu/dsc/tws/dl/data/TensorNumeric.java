@@ -512,10 +512,10 @@ public final class TensorNumeric implements Serializable {
     MKL.vsaxpy(n, da, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
-  public static void dot(int n, float[] dx, int dxOffset, int incx, float[] dy, int dyOffset,
+  public static float dot(int n, float[] dx, int dxOffset, int incx, float[] dy, int dyOffset,
                          int incy) {
     checkMKL();
-    MKL.vsdot(n, dx, dxOffset, incx, dy, dyOffset, incy);
+    return MKL.vsdot(n, dx, dxOffset, incx, dy, dyOffset, incy);
   }
 
   public static void ger(int m, int n, float alpha, float[] x, int xOffset, int incx, float[] y,
