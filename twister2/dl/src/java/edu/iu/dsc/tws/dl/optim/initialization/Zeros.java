@@ -18,6 +18,10 @@ import edu.iu.dsc.tws.dl.utils.VariableFormat;
 public class Zeros implements InitializationMethod {
   @Override
   public void init(Tensor variable, VariableFormat dataFormat) {
-    variable.fill(0.1);
+    if(variable.isFloat()){
+      variable.fill(0.1f);
+    }else {
+      variable.fill(0.1);
+    }
   }
 }

@@ -18,17 +18,30 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
 public class Sigmoid extends TensorModule {
 
-  private DenseTensor buffer = new DenseTensor();
+  private DenseTensor buffer = new DenseTensor(false);
 
   public Sigmoid() {
   }
 
   @Override
+  public void toFloat() {
+    super.toFloat();
+    buffer = new DenseTensor(true);
+  }
+
+  @Override
   public DenseTensor updateOutput(DenseTensor input) {
-    ((DenseTensor) output).resizeAs(input).fill(1.0);
-    buffer.resizeAs(input).copy(input).mul(-1.0);
-    buffer.exp().add(1.0);
-    ((DenseTensor) output).cdiv(buffer);
+    if(this.isFloat){
+      ((DenseTensor) output).resizeAs(input).fill(1.0f);
+      buffer.resizeAs(input).copy(input).mul(-1.0f);
+      buffer.exp().add(1.0f);
+      ((DenseTensor) output).cdiv(buffer);
+    }else {
+      ((DenseTensor) output).resizeAs(input).fill(1.0);
+      buffer.resizeAs(input).copy(input).mul(-1.0);
+      buffer.exp().add(1.0);
+      ((DenseTensor) output).cdiv(buffer);
+    }
 
     return (DenseTensor) output;
   }
@@ -39,10 +52,17 @@ public class Sigmoid extends TensorModule {
   }
 
   private DenseTensor updateGradInputInternal(Tensor output, DenseTensor gradOutput) {
-    ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
-    buffer.resizeAs(gradOutput);
-    buffer.fill(1.0).sub(output);
-    ((DenseTensor) gradInput).cmul(output).cmul(buffer);
+    if(this.isFloat){
+      ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
+      buffer.resizeAs(gradOutput);
+      buffer.fill(1.0f).sub(output);
+      ((DenseTensor) gradInput).cmul(output).cmul(buffer);
+    }else {
+      ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
+      buffer.resizeAs(gradOutput);
+      buffer.fill(1.0).sub(output);
+      ((DenseTensor) gradInput).cmul(output).cmul(buffer);
+    }
     return (DenseTensor) gradInput;
   }
 

@@ -42,6 +42,13 @@ public class L1L2Regularizer extends Regularizer {
     accL1L2Regularization(l1, l2, parameter, gradParameter, scale);
   }
 
+  @Override
+  public void accRegularization(Tensor parameter, Tensor gradParameter, float scale) {
+    if (!preCheck(parameter, gradParameter)) {
+      return;
+    }
+    accL1L2Regularization(l1, l2, parameter, gradParameter, scale);
+  }
   /**
    * Accumulates the gradient of the l1, l2 regularization of `parameter`
    * to `gradParameter`
@@ -63,6 +70,17 @@ public class L1L2Regularizer extends Regularizer {
     accL2Regularization(l2Alpha, parameter, gradParameter, scale);
   }
 
+  private void accL1L2Regularization(
+      float l1Alpha,
+      float l2Alpha,
+      Tensor parameter,
+      Tensor gradParameter,
+      float scale
+  ) {
+    accL1Regularization(l1Alpha, parameter, gradParameter, scale);
+    accL2Regularization(l2Alpha, parameter, gradParameter, scale);
+  }
+
   /**
    * Accumulates the gradient of the l1 regularization of `parameter`
    * to `gradParameter`
@@ -79,12 +97,24 @@ public class L1L2Regularizer extends Regularizer {
       double scale
   ) {
     if (alpha != 0 && scale != 0) {
-      if (null == l1SignBuffer) l1SignBuffer = new DenseTensor();
+      if (null == l1SignBuffer) l1SignBuffer = new DenseTensor(false);
       gradParameter.add(alpha * scale,
           l1SignBuffer.resizeAs(parameter).copy(parameter).sign());
     }
   }
 
+  private void accL1Regularization(
+      float alpha,
+      Tensor parameter,
+      Tensor gradParameter,
+      float scale
+  ) {
+    if (alpha != 0 && scale != 0) {
+      if (null == l1SignBuffer) l1SignBuffer = new DenseTensor(true);
+      gradParameter.add(alpha * scale,
+          l1SignBuffer.resizeAs(parameter).copy(parameter).sign());
+    }
+  }
 
   /**
    * Accumulates the gradient of the l2 regularization of `parameter`
@@ -100,6 +130,15 @@ public class L1L2Regularizer extends Regularizer {
       Tensor parameter,
       Tensor gradParameter,
       double scale
+  ) {
+    if (alpha != 0 && scale != 0) gradParameter.add(alpha * scale, parameter);
+  }
+
+  private void accL2Regularization(
+      float alpha,
+      Tensor parameter,
+      Tensor gradParameter,
+      float scale
   ) {
     if (alpha != 0 && scale != 0) gradParameter.add(alpha * scale, parameter);
   }

@@ -276,7 +276,11 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor zero() {
-    return this.fill(0.0);
+    if(this.isFloat){
+      return this.fill(0.0f);
+    }else{
+      return this.fill(0.0);
+    }
   }
 
   @Override
@@ -1906,12 +1910,20 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addmm(Tensor m, Tensor mat1, Tensor mat2) {
-    return DenseTensorMath.addmm(this, 1.0, m, 1.0, mat1, mat2);
+    if(this.isFloat){
+      return DenseTensorMath.addmm(this, 1.0f, m, 1.0f, mat1, mat2);
+    }else {
+      return DenseTensorMath.addmm(this, 1.0, m, 1.0, mat1, mat2);
+    }
   }
 
   @Override
   public Tensor addmm(Tensor mat1, Tensor mat2) {
-    return DenseTensorMath.addmm(this, 1.0, this, 1.0, mat1, mat2);
+    if(this.isFloat){
+      return DenseTensorMath.addmm(this, 1.0f, this, 1.0f, mat1, mat2);
+    }else {
+      return DenseTensorMath.addmm(this, 1.0, this, 1.0, mat1, mat2);
+    }
   }
 
   @Override
@@ -1921,7 +1933,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addmm(float v2, Tensor mat1, Tensor mat2) {
-    return DenseTensorMath.addmm(this, 1.0, this, v2, mat1, mat2);
+    return DenseTensorMath.addmm(this, 1.0f, this, v2, mat1, mat2);
   }
 
   @Override
@@ -1936,12 +1948,20 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor mm(Tensor mat1, Tensor mat2) {
-    return DenseTensorMath.addmm(this, 0.0, this, 1.0, mat1, mat2);
+    if(this.isFloat){
+      return DenseTensorMath.addmm(this, 0.0f, this, 1.0f, mat1, mat2);
+    }else {
+      return DenseTensorMath.addmm(this, 0.0, this, 1.0, mat1, mat2);
+    }
   }
 
   @Override
   public Tensor addr(Tensor t1, Tensor t2) {
-    return DenseTensorMath.addr(this, 1.0, this, 1.0, t1, t2);
+    if(this.isFloat){
+      return DenseTensorMath.addr(this, 1.0f, this, 1.0f, t1, t2);
+    }else {
+      return DenseTensorMath.addr(this, 1.0, this, 1.0, t1, t2);
+    }
   }
 
   @Override
@@ -1951,7 +1971,7 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addr(float v1, Tensor t1, Tensor t2) {
-    return DenseTensorMath.addr(this, 1.0, this, v1, t1, t2);
+    return DenseTensorMath.addr(this, 1.0f, this, v1, t1, t2);
   }
 
   @Override
@@ -2011,12 +2031,16 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addmv(float alpha, Tensor mat, Tensor vec2) {
-    return DenseTensorMath.addmv(this, 1.0, this, alpha, mat, vec2);
+    return DenseTensorMath.addmv(this, 1.0f, this, alpha, mat, vec2);
   }
 
   @Override
   public Tensor mv(Tensor mat, Tensor vec2) {
-    return DenseTensorMath.addmv(this, 1.0, this, 1.0, mat, vec2);
+    if(this.isFloat){
+      return DenseTensorMath.addmv(this, 1.0f, this, 1.0f, mat, vec2);
+    }else {
+      return DenseTensorMath.addmv(this, 1.0, this, 1.0, mat, vec2);
+    }
   }
 
   @Override
@@ -2046,12 +2070,16 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor baddbmm(float alpha, Tensor batch1, Tensor batch2) {
-    return DenseTensorMath.baddbmm(this, 1.0, this, alpha, batch1, batch2);
+    return DenseTensorMath.baddbmm(this, 1.0f, this, alpha, batch1, batch2);
   }
 
   @Override
   public Tensor bmm(Tensor batch1, Tensor batch2) {
-    return DenseTensorMath.baddbmm(this, 1.0, this, 1.0, batch1, batch2);
+    if(this.isFloat){
+      return DenseTensorMath.baddbmm(this, 1.0f, this, 1.0f, batch1, batch2);
+    }else {
+      return DenseTensorMath.baddbmm(this, 1.0, this, 1.0, batch1, batch2);
+    }
   }
 
   @Override

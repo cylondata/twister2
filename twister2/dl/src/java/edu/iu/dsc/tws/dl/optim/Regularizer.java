@@ -46,6 +46,8 @@ public abstract class Regularizer implements Serializable {
    */
   public abstract void accRegularization(Tensor parameter, Tensor gradParameter, double scale);
 
+  public abstract void accRegularization(Tensor parameter, Tensor gradParameter, float scale);
+
   /**
    * Check the regularization is applied or not
    *

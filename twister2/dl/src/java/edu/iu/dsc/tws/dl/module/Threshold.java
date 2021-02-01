@@ -40,36 +40,70 @@ public class Threshold extends TensorModule {
     Util.require(input.isContiguous());
     validateParameters();
 
-    if (inPlace) {
-      output = input;
-      double[] inputData = input.storage().toDoubleArray();
-      int inputOffset = input.storageOffset() - 1;
-      int taskSize = input.nElement();
+    if(this.isFloat){
+      if (inPlace) {
+        output = input;
+        float[] inputData = input.storage().toFloatArray();
+        int inputOffset = input.storageOffset() - 1;
+        int taskSize = input.nElement();
 
-      //TODO parallelize
-      for (int i = 0; i < taskSize; i++) {
-        if (inputData[inputOffset + i] <= this.threshold) {
-          inputData[inputOffset + i] = this.value;
+        //TODO parallelize
+        for (int i = 0; i < taskSize; i++) {
+          if (inputData[inputOffset + i] <= this.threshold) {
+            inputData[inputOffset + i] = (float) this.value;
+          }
         }
-      }
-      return input;
-    } else {
-      ((DenseTensor) output).resizeAs(input);
+        return input;
+      } else {
+        ((DenseTensor) output).resizeAs(input);
 
-      double[] inputData = input.storage().toDoubleArray();
-      double[] outputData = ((DenseTensor) output).storage().toDoubleArray();
-      int inputOffset = input.storageOffset() - 1;
-      int outputOffset = ((DenseTensor) output).storageOffset() - 1;
-      int taskSize = input.nElement();
-      //TODO parallelize
-      for (int i = 0; i < taskSize; i++) {
-        if (inputData[inputOffset + i] <= this.threshold) {
-          outputData[outputOffset + i] = this.value;
-        } else {
-          outputData[outputOffset + i] = inputData[inputOffset + i];
+        float[] inputData = input.storage().toFloatArray();
+        float[] outputData = ((DenseTensor) output).storage().toFloatArray();
+        int inputOffset = input.storageOffset() - 1;
+        int outputOffset = ((DenseTensor) output).storageOffset() - 1;
+        int taskSize = input.nElement();
+        //TODO parallelize
+        for (int i = 0; i < taskSize; i++) {
+          if (inputData[inputOffset + i] <= this.threshold) {
+            outputData[outputOffset + i] = (float) this.value;
+          } else {
+            outputData[outputOffset + i] = inputData[inputOffset + i];
+          }
         }
+        return (DenseTensor) output;
       }
-      return (DenseTensor) output;
+    }else {
+      if (inPlace) {
+        output = input;
+        double[] inputData = input.storage().toDoubleArray();
+        int inputOffset = input.storageOffset() - 1;
+        int taskSize = input.nElement();
+
+        //TODO parallelize
+        for (int i = 0; i < taskSize; i++) {
+          if (inputData[inputOffset + i] <= this.threshold) {
+            inputData[inputOffset + i] = this.value;
+          }
+        }
+        return input;
+      } else {
+        ((DenseTensor) output).resizeAs(input);
+
+        double[] inputData = input.storage().toDoubleArray();
+        double[] outputData = ((DenseTensor) output).storage().toDoubleArray();
+        int inputOffset = input.storageOffset() - 1;
+        int outputOffset = ((DenseTensor) output).storageOffset() - 1;
+        int taskSize = input.nElement();
+        //TODO parallelize
+        for (int i = 0; i < taskSize; i++) {
+          if (inputData[inputOffset + i] <= this.threshold) {
+            outputData[outputOffset + i] = this.value;
+          } else {
+            outputData[outputOffset + i] = inputData[inputOffset + i];
+          }
+        }
+        return (DenseTensor) output;
+      }
     }
   }
 
@@ -117,38 +151,71 @@ public class Threshold extends TensorModule {
       i += 1;
     }
 
-    if (inPlace) {
-      gradInput = gradOutput;
-      double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
-      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
-      int taskSize = gradOutput.nElement();
-      double[] inputData = input.storage().toDoubleArray();
-      int inputOffset = input.storageOffset() - 1;
-      //TODO parallelize
-      for (int j = 0; j < taskSize; j++) {
-        if (inputData[inputOffset + j] <= this.threshold) {
-          gradInputData[gradInputOffset + j] = 0.0;
+    if(this.isFloat){
+      if (inPlace) {
+        gradInput = gradOutput;
+        float[] gradInputData = ((DenseTensor) gradInput).storage().toFloatArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        int taskSize = gradOutput.nElement();
+        float[] inputData = input.storage().toFloatArray();
+        int inputOffset = input.storageOffset() - 1;
+        //TODO parallelize
+        for (int j = 0; j < taskSize; j++) {
+          if (inputData[inputOffset + j] <= this.threshold) {
+            gradInputData[gradInputOffset + j] = 0.0f;
+          }
+        }
+      } else {
+        ((DenseTensor) gradInput).resizeAs(gradOutput);
+        ((DenseTensor) gradInput).copy(gradOutput);
+        float[] gradInputData = ((DenseTensor) gradInput).storage().toFloatArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        int taskSize = gradOutput.nElement();
+
+        float[] inputData = input.storage().toFloatArray();
+        int inputOffset = input.storageOffset() - 1;
+        //TODO parallelize
+        for (int j = 0; j < taskSize; j++) {
+          if (inputData[inputOffset + j] <= this.threshold) {
+            gradInputData[gradInputOffset + j] = 0.0f;
+          } else {
+            gradInputData[gradInputOffset + j] = gradInputData[inputOffset + j];
+          }
         }
       }
-    } else {
-      ((DenseTensor) gradInput).resizeAs(gradOutput);
-      ((DenseTensor) gradInput).copy(gradOutput);
-      double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
-      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
-      int taskSize = gradOutput.nElement();
+    }else {
+      if (inPlace) {
+        gradInput = gradOutput;
+        double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        int taskSize = gradOutput.nElement();
+        double[] inputData = input.storage().toDoubleArray();
+        int inputOffset = input.storageOffset() - 1;
+        //TODO parallelize
+        for (int j = 0; j < taskSize; j++) {
+          if (inputData[inputOffset + j] <= this.threshold) {
+            gradInputData[gradInputOffset + j] = 0.0;
+          }
+        }
+      } else {
+        ((DenseTensor) gradInput).resizeAs(gradOutput);
+        ((DenseTensor) gradInput).copy(gradOutput);
+        double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        int taskSize = gradOutput.nElement();
 
-      double[] inputData = input.storage().toDoubleArray();
-      int inputOffset = input.storageOffset() - 1;
-      //TODO parallelize
-      for (int j = 0; j < taskSize; j++) {
-        if (inputData[inputOffset + j] <= this.threshold) {
-          gradInputData[gradInputOffset + j] = 0.0;
-        } else {
-          gradInputData[gradInputOffset + j] = gradInputData[inputOffset + j];
+        double[] inputData = input.storage().toDoubleArray();
+        int inputOffset = input.storageOffset() - 1;
+        //TODO parallelize
+        for (int j = 0; j < taskSize; j++) {
+          if (inputData[inputOffset + j] <= this.threshold) {
+            gradInputData[gradInputOffset + j] = 0.0;
+          } else {
+            gradInputData[gradInputOffset + j] = gradInputData[inputOffset + j];
+          }
         }
       }
     }
-
     return (DenseTensor) gradInput;
   }
 

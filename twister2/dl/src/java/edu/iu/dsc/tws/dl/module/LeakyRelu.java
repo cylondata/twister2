@@ -38,33 +38,65 @@ public class LeakyRelu extends TensorModule {
     if (inplace) {
       output = input;
     }
-    if (inplace) {
-      int i = input.storageOffset() - 1;
-      double[] array = input.storage().toDoubleArray();
-      int end = input.nElement() + input.storageOffset() - 1;
-      while (i < end) {
-        if (array[i] < 0) {
-          array[i] *= negValue;
+    if(this.isFloat){
+      float negValuef = (float) negValue;
+      if (inplace) {
+        int i = input.storageOffset() - 1;
+        float[] array = input.storage().toFloatArray();
+        int end = input.nElement() + input.storageOffset() - 1;
+        while (i < end) {
+          if (array[i] < 0) {
+            array[i] *= negValuef;
+          }
+          i += 1;
         }
-        i += 1;
+      } else {
+        ((DenseTensor) output).resizeAs(input);
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        float[] inputArray = input.storage().toFloatArray();
+        int outputOffset = ((DenseTensor) output).storageOffset() - 1;
+        float[] outputArray = ((DenseTensor) output).storage().toFloatArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] < 0) {
+            outputArray[i + outputOffset] = inputArray[i + inputOffset] * negValuef;
+          } else {
+            outputArray[i + outputOffset] = inputArray[i + inputOffset];
+          }
+          i += 1;
+        }
       }
-    } else {
-      ((DenseTensor) output).resizeAs(input);
-      int i = 0;
-      int inputOffset = input.storageOffset() - 1;
-      double[] inputArray = input.storage().toDoubleArray();
-      int outputOffset = ((DenseTensor) output).storageOffset() - 1;
-      double[] outputArray = ((DenseTensor) output).storage().toDoubleArray();
-      int end = input.nElement();
-      while (i < end) {
-        if (inputArray[i + inputOffset] < 0) {
-          outputArray[i + outputOffset] = inputArray[i + inputOffset] * negValue;
-        } else {
-          outputArray[i + outputOffset] = inputArray[i + inputOffset];
+    }else {
+      if (inplace) {
+        int i = input.storageOffset() - 1;
+        double[] array = input.storage().toDoubleArray();
+        int end = input.nElement() + input.storageOffset() - 1;
+        while (i < end) {
+          if (array[i] < 0) {
+            array[i] *= negValue;
+          }
+          i += 1;
         }
-        i += 1;
+      } else {
+        ((DenseTensor) output).resizeAs(input);
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        double[] inputArray = input.storage().toDoubleArray();
+        int outputOffset = ((DenseTensor) output).storageOffset() - 1;
+        double[] outputArray = ((DenseTensor) output).storage().toDoubleArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] < 0) {
+            outputArray[i + outputOffset] = inputArray[i + inputOffset] * negValue;
+          } else {
+            outputArray[i + outputOffset] = inputArray[i + inputOffset];
+          }
+          i += 1;
+        }
       }
     }
+
     return (DenseTensor) output;
   }
 
@@ -77,37 +109,73 @@ public class LeakyRelu extends TensorModule {
     if (inplace) {
       gradInput = gradOutput;
     }
+    if(this.isFloat){
+      float negValuef = (float) negValue;
 
-    if (inplace) {
-      int i = 0;
-      int inputOffset = input.storageOffset() - 1;
-      double[] inputArray = input.storage().toDoubleArray();
-      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
-      double[] gradInputArray = ((DenseTensor) gradInput).storage().toDoubleArray();
-      int end = input.nElement();
-      while (i < end) {
-        if (inputArray[i + inputOffset] > 0) {
-          gradInputArray[i + gradInputOffset] *= negValue;
+      if (inplace) {
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        float[] inputArray = input.storage().toFloatArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        float[] gradInputArray = ((DenseTensor) gradInput).storage().toFloatArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] > 0) {
+            gradInputArray[i + gradInputOffset] *= negValuef;
+          }
+          i += 1;
         }
-        i += 1;
+      } else {
+        ((DenseTensor) gradInput).resizeAs(input);
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        float[] inputArray = input.storage().toFloatArray();
+        int gradOutputOffset = gradOutput.storageOffset() - 1;
+        float[] gradOutputArray = gradOutput.storage().toFloatArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        float[] gradInputArray = ((DenseTensor) gradInput).storage().toFloatArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] < 0) {
+            gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset] * negValuef;
+          } else {
+            gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset];
+          }
+          i += 1;
+        }
       }
-    } else {
-      ((DenseTensor) gradInput).resizeAs(input);
-      int i = 0;
-      int inputOffset = input.storageOffset() - 1;
-      double[] inputArray = input.storage().toDoubleArray();
-      int gradOutputOffset = gradOutput.storageOffset() - 1;
-      double[] gradOutputArray = gradOutput.storage().toDoubleArray();
-      int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
-      double[] gradInputArray = ((DenseTensor) gradInput).storage().toDoubleArray();
-      int end = input.nElement();
-      while (i < end) {
-        if (inputArray[i + inputOffset] < 0) {
-          gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset] * negValue;
-        } else {
-          gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset];
+    }else {
+      if (inplace) {
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        double[] inputArray = input.storage().toDoubleArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        double[] gradInputArray = ((DenseTensor) gradInput).storage().toDoubleArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] > 0) {
+            gradInputArray[i + gradInputOffset] *= negValue;
+          }
+          i += 1;
         }
-        i += 1;
+      } else {
+        ((DenseTensor) gradInput).resizeAs(input);
+        int i = 0;
+        int inputOffset = input.storageOffset() - 1;
+        double[] inputArray = input.storage().toDoubleArray();
+        int gradOutputOffset = gradOutput.storageOffset() - 1;
+        double[] gradOutputArray = gradOutput.storage().toDoubleArray();
+        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+        double[] gradInputArray = ((DenseTensor) gradInput).storage().toDoubleArray();
+        int end = input.nElement();
+        while (i < end) {
+          if (inputArray[i + inputOffset] < 0) {
+            gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset] * negValue;
+          } else {
+            gradInputArray[i + gradInputOffset] = gradOutputArray[i + gradOutputOffset];
+          }
+          i += 1;
+        }
       }
     }
 

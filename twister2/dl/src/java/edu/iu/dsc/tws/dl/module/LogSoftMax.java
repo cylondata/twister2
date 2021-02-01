@@ -30,10 +30,17 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  */
 public class LogSoftMax extends TensorModule {
 
-  private DenseTensor ones = new DenseTensor();
-  private DenseTensor buffer = new DenseTensor();
+  private DenseTensor ones = new DenseTensor(false);
+  private DenseTensor buffer = new DenseTensor(false);
 
   public LogSoftMax() {
+  }
+
+  @Override
+  public void toFloat() {
+    super.toFloat();
+    ones = new DenseTensor(true);
+    buffer = new DenseTensor(true);
   }
 
   @Override
@@ -69,21 +76,39 @@ public class LogSoftMax extends TensorModule {
 
   private void updateOutputFrame(DenseTensor in, DenseTensor out) {
 
-    if (ones.nElement() < in.nElement()) {
-      ones.resizeAs(in).fill(1);
-    }
-    if (buffer.nElement() != out.nElement()) {
-      buffer.resizeAs(out);
-    }
-    // use exp(in - maxInput) to avoid Infinity error
-    double maxInput = in.max();
+    if(this.isFloat){
+      if (ones.nElement() < in.nElement()) {
+        ones.resizeAs(in).fill(1.0f);
+      }
+      if (buffer.nElement() != out.nElement()) {
+        buffer.resizeAs(out);
+      }
+      // use exp(in - maxInput) to avoid Infinity error
+      float maxInput = in.maxf();
 
-    buffer.fill(TensorNumeric.negative(maxInput));
-    buffer.add(in);
-    buffer.exp();
-    double logSum = TensorNumeric.plus(maxInput, TensorNumeric.log(buffer.dot(ones)));
+      buffer.fill(TensorNumeric.negative(maxInput));
+      buffer.add(in);
+      buffer.exp();
+      float logSum = TensorNumeric.plus(maxInput, TensorNumeric.log(buffer.dotf(ones)));
 
-    out.add(TensorNumeric.negative(logSum));
+      out.add(TensorNumeric.negative(logSum));
+    }else {
+      if (ones.nElement() < in.nElement()) {
+        ones.resizeAs(in).fill(1.0);
+      }
+      if (buffer.nElement() != out.nElement()) {
+        buffer.resizeAs(out);
+      }
+      // use exp(in - maxInput) to avoid Infinity error
+      double maxInput = in.max();
+
+      buffer.fill(TensorNumeric.negative(maxInput));
+      buffer.add(in);
+      buffer.exp();
+      double logSum = TensorNumeric.plus(maxInput, TensorNumeric.log(buffer.dot(ones)));
+
+      out.add(TensorNumeric.negative(logSum));
+    }
   }
 
 
@@ -117,9 +142,15 @@ public class LogSoftMax extends TensorModule {
   }
 
   private void updateGradInputFrame(DenseTensor out, DenseTensor gradOut) {
-    buffer.exp(out);
-    double outSum = gradOut.dot(ones);
-    gradOut.add(TensorNumeric.negative(outSum), buffer);
+    if(this.isFloat){
+      buffer.exp(out);
+      float outSum = gradOut.dotf(ones);
+      gradOut.add(TensorNumeric.negative(outSum), buffer);
+    }else {
+      buffer.exp(out);
+      double outSum = gradOut.dot(ones);
+      gradOut.add(TensorNumeric.negative(outSum), buffer);
+    }
   }
 
   @Override

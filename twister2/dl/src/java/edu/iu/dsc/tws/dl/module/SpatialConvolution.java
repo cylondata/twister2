@@ -67,10 +67,10 @@ public class SpatialConvolution extends TensorModule implements Initializable {
   private int[] weightMMShape;
   private VariableFormat weightFormat;
 
-  private DenseTensor fInput = new DenseTensor();
-  private DenseTensor fGradInput = new DenseTensor();
-  protected DenseTensor ones = new DenseTensor();
-  protected DenseTensor onesBatch = new DenseTensor();
+  private DenseTensor fInput = new DenseTensor(false);
+  private DenseTensor fGradInput = new DenseTensor(false);
+  protected DenseTensor ones = new DenseTensor(false);
+  protected DenseTensor onesBatch = new DenseTensor(false);
   protected DenseTensor onesBias = null;
   protected DenseTensor weightMM = null;
   protected DenseTensor gradientBiasMT = null;
@@ -99,6 +99,15 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH,
         nGroup, propagateBack, wRegularizer, bRegularizer, initWeight, initBias, initGradWeight,
         initGradBias, withBias, format);
+  }
+
+  @Override
+  public void toFloat() {
+    super.toFloat();
+    fInput = new DenseTensor(true);
+    fGradInput = new DenseTensor(true);
+    ones = new DenseTensor(true);
+    onesBatch = new DenseTensor(true);
   }
 
   /**
@@ -175,9 +184,9 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else {
       if (format instanceof NCHW) {
         this.weight = new DenseTensor(new int[]{nGroup, nOutputPlane / nGroup,
-            nInputPlane * kernelH * kernelW / nGroup});
+            nInputPlane * kernelH * kernelW / nGroup}, this.isFloat);
       } else if (format instanceof NHWC) {
-        this.weight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane);
+        this.weight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane, this.isFloat);
       }
     }
 
@@ -186,7 +195,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else if (initBias != null) {
       bias = (DenseTensor) initBias;
     } else {
-      bias = new DenseTensor(nOutputPlane);
+      bias = new DenseTensor(nOutputPlane, this.isFloat);
     }
 
     if (initGradWeight != null) {
@@ -194,9 +203,9 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else {
       if (format instanceof NCHW) {
         this.gradWeight = new DenseTensor(new int[]{nGroup, nOutputPlane / nGroup,
-            nInputPlane * kernelH * kernelW / nGroup});
+            nInputPlane * kernelH * kernelW / nGroup}, this.isFloat);
       } else if (format instanceof NHWC) {
-        this.gradWeight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane);
+        this.gradWeight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane, this.isFloat);
       }
     }
 
@@ -205,7 +214,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else if (initBias != null) {
       gradBias = (DenseTensor) initGradBias;
     } else {
-      gradBias = new DenseTensor(nOutputPlane);
+      gradBias = new DenseTensor(nOutputPlane, this.isFloat);
     }
 
     if (format instanceof NCHW) {
@@ -218,8 +227,8 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     }
 
     if (withBias) {
-      this.onesBias = new DenseTensor();
-      this.gradientBiasMT = new DenseTensor();
+      this.onesBias = new DenseTensor(this.isFloat);
+      this.gradientBiasMT = new DenseTensor(this.isFloat);
     }
 
     if (kernelH == 1 && kernelW == 1 && strideW == 1 && strideH == 1
@@ -384,7 +393,11 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         "output size is too small. outputWidth: $outputWidth, outputHeight: $outputHeight");
 
     if (withBias && (onesBias.dim() != 1 || onesBias.size(1) != outputHeight * outputWidth)) {
-      onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0);
+      if(this.isFloat){
+        onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0f);
+      }else {
+        onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0);
+      }
     }
 
     if (input.dim() == 3) {
@@ -577,18 +590,26 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     } else {
       int batchSize = input.size(1);
       if (gradWeightMMInBatch == null) {
-        gradWeightMMInBatch = (DenseTensor) new DenseTensor()
+        gradWeightMMInBatch = (DenseTensor) new DenseTensor(input.isFloat())
             .resize(getGradWeightMMInBatchShape(batchSize));
       }
       if (withBias && gradientBiasMT.nElement() == 0) {
         gradientBiasMT.resize(new int[]{batchSize, nOutputPlane});
       }
       if (ones.dim() != 1 || ones.size(1) != oh * ow) {
-        ones.resize(new int[]{oh * ow}).fill(1.0);
+        if(this.isFloat){
+          ones.resize(new int[]{oh * ow}).fill(1.0f);
+        }else {
+          ones.resize(new int[]{oh * ow}).fill(1.0);
+        }
       }
 
       if (onesBatch.dim() != 1 || onesBatch.size(1) != batchSize) {
-        onesBatch.resize(new int[]{batchSize}).fill(1.0);
+        if(this.isFloat){
+          onesBatch.resize(new int[]{batchSize}).fill(1.0f);
+        }else {
+          onesBatch.resize(new int[]{batchSize}).fill(1.0);
+        }
       }
 
       for (int i = 0; i < batchSize; i++) {
@@ -618,17 +639,31 @@ public class SpatialConvolution extends TensorModule implements Initializable {
           nOutputPlane * nInputPlane * kernelH * kernelW / nGroup}).t();
       DenseTensor grad = (DenseTensor) gradWeight
           .view(new int[]{nOutputPlane * nInputPlane * kernelH * kernelW / nGroup});
-      grad.addmv(1.0, 1.0, gradView, onesBatch);
-      if (withBias) {
-        gradBias.addmv(1.0, 1.0, gradientBiasMT.t(), onesBatch);
-      }
-    }
+      if(this.isFloat){
+        grad.addmv(1.0f, 1.0f, gradView, onesBatch);
+        if (withBias) {
+          gradBias.addmv(1.0f, 1.0f, gradientBiasMT.t(), onesBatch);
+        }
 
-    if (null != wRegularizer) {
-      wRegularizer.accRegularization(weight, gradWeight, scaleW);
-    }
-    if (withBias && null != bRegularizer) {
-      bRegularizer.accRegularization(bias, gradBias, scaleB);
+        if (null != wRegularizer) {
+          wRegularizer.accRegularization(weight, gradWeight, (float)scaleW);
+        }
+        if (withBias && null != bRegularizer) {
+          bRegularizer.accRegularization(bias, gradBias, (float)scaleB);
+        }
+      }else {
+        grad.addmv(1.0, 1.0, gradView, onesBatch);
+        if (withBias) {
+          gradBias.addmv(1.0, 1.0, gradientBiasMT.t(), onesBatch);
+        }
+
+        if (null != wRegularizer) {
+          wRegularizer.accRegularization(weight, gradWeight, scaleW);
+        }
+        if (withBias && null != bRegularizer) {
+          bRegularizer.accRegularization(bias, gradBias, scaleB);
+        }
+      }
     }
   }
 
@@ -720,32 +755,62 @@ public class SpatialConvolution extends TensorModule implements Initializable {
                                    int nInputPlane, int inputWidth, int inputHeight,
                                    int nOutputPlane, int outputWidth, int outputHeight) {
 
-    if (format instanceof NCHW) {
-      DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
-          outputHeight * outputWidth});
-      if (!_1x1) {
-        long before = System.nanoTime();
-        NNPrimitive.im2colDouble(fInput,
-            input, kW, kH, dW, dH,
-            padLeft, padTop, padRight, padBottom,
-            outputWidth, outputHeight);
-        im2colTime += System.nanoTime() - before;
+    if(this.isFloat){
+      if (format instanceof NCHW) {
+        DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
+            outputHeight * outputWidth});
+        if (!_1x1) {
+          long before = System.nanoTime();
+          NNPrimitive.im2colFloat(fInput,
+              input, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              outputWidth, outputHeight);
+          im2colTime += System.nanoTime() - before;
+        }
+        output2d.addmm(0.0f, output2d, 1.0f, weight, fInput);
+        if (withBias) output2d.addr(1.0f, bias, onesBias);
+      } else if (format instanceof NHWC) {
+        DenseTensor output2d = (DenseTensor) output
+            .view(new int[]{outputHeight * outputWidth, nOutputPlane});
+        if (!_1x1) {
+          long before = System.nanoTime();
+          NNPrimitive.im2colFloatNHWC(fInput,
+              input, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              outputWidth, outputHeight);
+          im2colTime += System.nanoTime() - before;
+        }
+        output2d.addmm(0.0f, output2d, 1.0f, fInput, weight);
+        if (withBias) output2d.addr(1.0f, onesBias, bias);
       }
-      output2d.addmm(0, output2d, 1, weight, fInput);
-      if (withBias) output2d.addr(1, bias, onesBias);
-    } else if (format instanceof NHWC) {
-      DenseTensor output2d = (DenseTensor) output
-          .view(new int[]{outputHeight * outputWidth, nOutputPlane});
-      if (!_1x1) {
-        long before = System.nanoTime();
-        NNPrimitive.im2colDoubleNHWC(fInput,
-            input, kW, kH, dW, dH,
-            padLeft, padTop, padRight, padBottom,
-            outputWidth, outputHeight);
-        im2colTime += System.nanoTime() - before;
+    }else {
+      if (format instanceof NCHW) {
+        DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
+            outputHeight * outputWidth});
+        if (!_1x1) {
+          long before = System.nanoTime();
+          NNPrimitive.im2colDouble(fInput,
+              input, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              outputWidth, outputHeight);
+          im2colTime += System.nanoTime() - before;
+        }
+        output2d.addmm(0.0, output2d, 1.0, weight, fInput);
+        if (withBias) output2d.addr(1.0, bias, onesBias);
+      } else if (format instanceof NHWC) {
+        DenseTensor output2d = (DenseTensor) output
+            .view(new int[]{outputHeight * outputWidth, nOutputPlane});
+        if (!_1x1) {
+          long before = System.nanoTime();
+          NNPrimitive.im2colDoubleNHWC(fInput,
+              input, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              outputWidth, outputHeight);
+          im2colTime += System.nanoTime() - before;
+        }
+        output2d.addmm(0.0, output2d, 1.0, fInput, weight);
+        if (withBias) output2d.addr(1.0, onesBias, bias);
       }
-      output2d.addmm(0, output2d, 1, fInput, weight);
-      if (withBias) output2d.addr(1, onesBias, bias);
     }
 
   }
@@ -759,37 +824,73 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     DenseTensor fGradInDouble = fgradInput;
     DenseTensor weightDouble = weight;
     DenseTensor gradInputDouble = gradInput;
-    if (format instanceof NCHW) {
-      int channel = gradOutDouble.size(1);
-      int oh = gradOutDouble.size(2);
-      int ow = gradOutDouble.size(3);
-      Tensor gradOutput2d = gradOutDouble.view(new int[]{channel, oh * ow});
-      fGradInDouble.addmm(0.0, fGradInDouble, 1.0, weightDouble, gradOutput2d);
-      if (!_1x1) {
-        gradInputDouble.zero();
-        long before = System.nanoTime();
-        NNPrimitive.col2imDouble(fGradInDouble,
-            gradInputDouble, kW, kH, dW, dH,
-            padLeft, padTop, padRight, padBottom,
-            gradOutput.size(3), gradOutput.size(2));
-        col2imTime += System.nanoTime() - before;
+
+    if(this.isFloat){
+      if (format instanceof NCHW) {
+        int channel = gradOutDouble.size(1);
+        int oh = gradOutDouble.size(2);
+        int ow = gradOutDouble.size(3);
+        Tensor gradOutput2d = gradOutDouble.view(new int[]{channel, oh * ow});
+        fGradInDouble.addmm(0.0f, fGradInDouble, 1.0f, weightDouble, gradOutput2d);
+        if (!_1x1) {
+          gradInputDouble.zero();
+          long before = System.nanoTime();
+          NNPrimitive.col2imFloat(fGradInDouble,
+              gradInputDouble, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              gradOutput.size(3), gradOutput.size(2));
+          col2imTime += System.nanoTime() - before;
+        }
+      } else if (format instanceof NHWC) {
+        int channel = gradOutDouble.size(3);
+        int oh = gradOutDouble.size(1);
+        int ow = gradOutDouble.size(2);
+        Tensor gradOutput2d = gradOutDouble.view(new int[]{oh * ow, channel});
+        fGradInDouble.addmm(0.0f, fGradInDouble, 1.0f, gradOutput2d, weightDouble);
+        if (!_1x1) {
+          gradInputDouble.zero();
+          long before = System.nanoTime();
+          NNPrimitive.col2imFloatNHWC(fGradInDouble,
+              gradInputDouble, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              gradOutput.size(2), gradOutput.size(1));
+          col2imTime += System.nanoTime() - before;
+        }
       }
-    } else if (format instanceof NHWC) {
-      int channel = gradOutDouble.size(3);
-      int oh = gradOutDouble.size(1);
-      int ow = gradOutDouble.size(2);
-      Tensor gradOutput2d = gradOutDouble.view(new int[]{oh * ow, channel});
-      fGradInDouble.addmm(0.0, fGradInDouble, 1.0, gradOutput2d, weightDouble);
-      if (!_1x1) {
-        gradInputDouble.zero();
-        long before = System.nanoTime();
-        NNPrimitive.col2imDoubleNHWC(fGradInDouble,
-            gradInputDouble, kW, kH, dW, dH,
-            padLeft, padTop, padRight, padBottom,
-            gradOutput.size(2), gradOutput.size(1));
-        col2imTime += System.nanoTime() - before;
+    }else {
+      if (format instanceof NCHW) {
+        int channel = gradOutDouble.size(1);
+        int oh = gradOutDouble.size(2);
+        int ow = gradOutDouble.size(3);
+        Tensor gradOutput2d = gradOutDouble.view(new int[]{channel, oh * ow});
+        fGradInDouble.addmm(0.0, fGradInDouble, 1.0, weightDouble, gradOutput2d);
+        if (!_1x1) {
+          gradInputDouble.zero();
+          long before = System.nanoTime();
+          NNPrimitive.col2imDouble(fGradInDouble,
+              gradInputDouble, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              gradOutput.size(3), gradOutput.size(2));
+          col2imTime += System.nanoTime() - before;
+        }
+      } else if (format instanceof NHWC) {
+        int channel = gradOutDouble.size(3);
+        int oh = gradOutDouble.size(1);
+        int ow = gradOutDouble.size(2);
+        Tensor gradOutput2d = gradOutDouble.view(new int[]{oh * ow, channel});
+        fGradInDouble.addmm(0.0, fGradInDouble, 1.0, gradOutput2d, weightDouble);
+        if (!_1x1) {
+          gradInputDouble.zero();
+          long before = System.nanoTime();
+          NNPrimitive.col2imDoubleNHWC(fGradInDouble,
+              gradInputDouble, kW, kH, dW, dH,
+              padLeft, padTop, padRight, padBottom,
+              gradOutput.size(2), gradOutput.size(1));
+          col2imTime += System.nanoTime() - before;
+        }
       }
     }
+
   }
 
   protected void accGradParametersFrame(DenseTensor gradOutput, DenseTensor gradWeight,
@@ -803,51 +904,104 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     double sBDouble = scaleB;
     DenseTensor gradBDouble = gradBias;
 
-    if (format instanceof NCHW) {
-      int outChannel = gradOutput.size(1);
-      int outSize = gradOutput.size(2) * gradOutput.size(3);
-      Tensor gradOutput2d = gradODouble.view(new int[]{outChannel, outSize});
-      if (sWDouble != 0) {
-        gradWDouble.addmm(1.0, gradWDouble, sWDouble, gradOutput2d, fIDouble.t());
-      }
-      if (withBias && sBDouble != 0) {
-        int i = 0;
-        while (i < gradBias.size(1)) {
-          double sum = 0.0;
-          double[] data = gradOutput2d.storage().toDoubleArray();
-          int offset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
-          int k = 0;
-          while (k < gradOutput2d.size(2)) {
-            sum += data[k + offset];
-            k += 1;
+    if(this.isFloat){
+      float sWDoublef = (float)scaleW;
+      float sBDoublef = (float)scaleB;
+      if (format instanceof NCHW) {
+        int outChannel = gradOutput.size(1);
+        int outSize = gradOutput.size(2) * gradOutput.size(3);
+        Tensor gradOutput2d = gradODouble.view(new int[]{outChannel, outSize});
+        if (sWDoublef != 0) {
+          gradWDouble.addmm(1.0f, gradWDouble, sWDoublef, gradOutput2d, fIDouble.t());
+        }
+        if (withBias && sBDoublef != 0) {
+          int i = 0;
+          while (i < gradBias.size(1)) {
+            float sum = 0.0f;
+            float[] data = gradOutput2d.storage().toFloatArray();
+            int offset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
+            int k = 0;
+            while (k < gradOutput2d.size(2)) {
+              sum += data[k + offset];
+              k += 1;
+            }
+            gradBDouble.setValue(i + 1, gradBDouble.valueAtf(i + 1) + (sBDoublef * sum));
+            i += 1;
           }
-          gradBDouble.setValue(i + 1, gradBDouble.valueAt(i + 1) + (sBDouble * sum));
-          i += 1;
+        }
+      } else if (format instanceof NHWC) {
+        int outChannel = gradOutput.size(3);
+        int outSize = gradOutput.size(1) * gradOutput.size(2);
+        Tensor gradOutput2d = gradODouble.view(new int[]{outSize, outChannel});
+
+        if (sWDoublef != 0) {
+          gradWDouble.addmm(1.0f, gradWDouble, sWDoublef, fIDouble.t(), gradOutput2d);
+        }
+
+        if (sBDoublef != 0) {
+          int i = 0;
+          float[] gradData = gradOutput2d.storage().toFloatArray();
+          float[] biasData = gradBDouble.storage().toFloatArray();
+          int biasOffset = gradBDouble.storageOffset() - 1;
+
+          while (i < gradODouble.size(1)) {
+            int gradOffset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
+            int j = 0;
+            while (j < gradOutput2d.size(2)) {
+              biasData[biasOffset + j] += gradData[gradOffset + j];
+              j = j + 1;
+            }
+            i = i + 1;
+          }
         }
       }
-    } else if (format instanceof NHWC) {
-      int outChannel = gradOutput.size(3);
-      int outSize = gradOutput.size(1) * gradOutput.size(2);
-      Tensor gradOutput2d = gradODouble.view(new int[]{outSize, outChannel});
-
-      if (sWDouble != 0) {
-        gradWDouble.addmm(1.0, gradWDouble, sWDouble, fIDouble.t(), gradOutput2d);
-      }
-
-      if (sBDouble != 0) {
-        int i = 0;
-        double[] gradData = gradOutput2d.storage().toDoubleArray();
-        double[] biasData = gradBDouble.storage().toDoubleArray();
-        int biasOffset = gradBDouble.storageOffset() - 1;
-
-        while (i < gradODouble.size(1)) {
-          int gradOffset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
-          int j = 0;
-          while (j < gradOutput2d.size(2)) {
-            biasData[biasOffset + j] += gradData[gradOffset + j];
-            j = j + 1;
+    }else {
+      if (format instanceof NCHW) {
+        int outChannel = gradOutput.size(1);
+        int outSize = gradOutput.size(2) * gradOutput.size(3);
+        Tensor gradOutput2d = gradODouble.view(new int[]{outChannel, outSize});
+        if (sWDouble != 0) {
+          gradWDouble.addmm(1.0, gradWDouble, sWDouble, gradOutput2d, fIDouble.t());
+        }
+        if (withBias && sBDouble != 0) {
+          int i = 0;
+          while (i < gradBias.size(1)) {
+            double sum = 0.0;
+            double[] data = gradOutput2d.storage().toDoubleArray();
+            int offset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
+            int k = 0;
+            while (k < gradOutput2d.size(2)) {
+              sum += data[k + offset];
+              k += 1;
+            }
+            gradBDouble.setValue(i + 1, gradBDouble.valueAt(i + 1) + (sBDouble * sum));
+            i += 1;
           }
-          i = i + 1;
+        }
+      } else if (format instanceof NHWC) {
+        int outChannel = gradOutput.size(3);
+        int outSize = gradOutput.size(1) * gradOutput.size(2);
+        Tensor gradOutput2d = gradODouble.view(new int[]{outSize, outChannel});
+
+        if (sWDouble != 0) {
+          gradWDouble.addmm(1.0, gradWDouble, sWDouble, fIDouble.t(), gradOutput2d);
+        }
+
+        if (sBDouble != 0) {
+          int i = 0;
+          double[] gradData = gradOutput2d.storage().toDoubleArray();
+          double[] biasData = gradBDouble.storage().toDoubleArray();
+          int biasOffset = gradBDouble.storageOffset() - 1;
+
+          while (i < gradODouble.size(1)) {
+            int gradOffset = gradOutput2d.storageOffset() - 1 + i * gradOutput2d.stride(1);
+            int j = 0;
+            while (j < gradOutput2d.size(2)) {
+              biasData[biasOffset + j] += gradData[gradOffset + j];
+              j = j + 1;
+            }
+            i = i + 1;
+          }
         }
       }
     }
@@ -864,31 +1018,63 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     DenseTensor gradBDouble = gradBias;
     DenseTensor onesDouble = ones;
 
-    if (format instanceof NCHW) {
-      int channel = gradODouble.size(1);
-      int oh = gradODouble.size(2);
-      int ow = gradODouble.size(3);
-      Tensor gradOutput2d = gradODouble.view(new int[]{channel, oh * ow});
+    if(this.isFloat){
+      float sWDoublef = (float)scaleW;
+      float sBDoublef = (float)scaleB;
+      if (format instanceof NCHW) {
+        int channel = gradODouble.size(1);
+        int oh = gradODouble.size(2);
+        int ow = gradODouble.size(3);
+        Tensor gradOutput2d = gradODouble.view(new int[]{channel, oh * ow});
 
-      if (scaleW != 0) {
-        gradWDouble.addmm(0.0, gradWDouble, sWDouble, gradOutput2d, fIDouble.t());
+        if (scaleW != 0) {
+          gradWDouble.addmm(0.0f, gradWDouble, sWDoublef, gradOutput2d, fIDouble.t());
+        }
+
+        if (withBias && scaleB != 0) {
+          gradBDouble.addmv(0.0f, sBDoublef, gradOutput2d, onesDouble);
+        }
+      } else if (format instanceof NHWC) {
+        int channel = gradODouble.size(3);
+        int oh = gradODouble.size(1);
+        int ow = gradODouble.size(2);
+        Tensor gradOutput2d = gradODouble.view(new int[]{oh * ow, channel});
+
+        if (scaleW != 0) {
+          gradWDouble.addmm(0.0f, gradWDouble, sWDoublef, fIDouble.t(), gradOutput2d);
+        }
+
+        if (withBias && scaleB != 0) {
+          gradBDouble.addmv(0.0f, sBDoublef, gradOutput2d.t(), onesDouble);
+        }
       }
+    }else {
+      if (format instanceof NCHW) {
+        int channel = gradODouble.size(1);
+        int oh = gradODouble.size(2);
+        int ow = gradODouble.size(3);
+        Tensor gradOutput2d = gradODouble.view(new int[]{channel, oh * ow});
 
-      if (withBias && scaleB != 0) {
-        gradBDouble.addmv(0.0, sBDouble, gradOutput2d, onesDouble);
-      }
-    } else if (format instanceof NHWC) {
-      int channel = gradODouble.size(3);
-      int oh = gradODouble.size(1);
-      int ow = gradODouble.size(2);
-      Tensor gradOutput2d = gradODouble.view(new int[]{oh * ow, channel});
+        if (scaleW != 0) {
+          gradWDouble.addmm(0.0, gradWDouble, sWDouble, gradOutput2d, fIDouble.t());
+        }
 
-      if (scaleW != 0) {
-        gradWDouble.addmm(0.0, gradWDouble, sWDouble, fIDouble.t(), gradOutput2d);
-      }
+        if (withBias && scaleB != 0) {
+          gradBDouble.addmv(0.0, sBDouble, gradOutput2d, onesDouble);
+        }
+      } else if (format instanceof NHWC) {
+        int channel = gradODouble.size(3);
+        int oh = gradODouble.size(1);
+        int ow = gradODouble.size(2);
+        Tensor gradOutput2d = gradODouble.view(new int[]{oh * ow, channel});
 
-      if (withBias && scaleB != 0) {
-        gradBDouble.addmv(0.0, sBDouble, gradOutput2d.t(), onesDouble);
+        if (scaleW != 0) {
+          gradWDouble.addmm(0.0, gradWDouble, sWDouble, fIDouble.t(), gradOutput2d);
+        }
+
+        if (withBias && scaleB != 0) {
+          gradBDouble.addmv(0.0, sBDouble, gradOutput2d.t(), onesDouble);
+        }
       }
     }
   }

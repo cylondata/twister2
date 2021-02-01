@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.dl.module;
 
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.Util;
 
@@ -34,19 +36,28 @@ public final class ModuleUtil {
       i += 1;
     }
 
-    DenseTensor result = new DenseTensor(length);
-    ArrayDoubleStorage resultStorage = result.storage();
+    DenseTensor result = new DenseTensor(length, compactedTensor.isFloat());
+    ArrayStorage resultStorage = result.storage();
 
     i = 0;
     int offset = 0;
-    while (i < parameters.length) {
-      System.arraycopy(parameters[i].storage().toDoubleArray(), parameters[i].storageOffset() - 1,
-          resultStorage.toDoubleArray(), offset, parameters[i].nElement());
-      parameters[i].set(resultStorage, offset + 1, parameters[i].size(), parameters[i].stride());
-      offset += parameters[i].nElement();
-      i += 1;
+    if(result.isFloat()){
+      while (i < parameters.length) {
+        System.arraycopy(parameters[i].storage().toFloatArray(), parameters[i].storageOffset() - 1,
+            resultStorage.toFloatArray(), offset, parameters[i].nElement());
+        parameters[i].set(resultStorage, offset + 1, parameters[i].size(), parameters[i].stride());
+        offset += parameters[i].nElement();
+        i += 1;
+      }
+    }else {
+      while (i < parameters.length) {
+        System.arraycopy(parameters[i].storage().toDoubleArray(), parameters[i].storageOffset() - 1,
+            resultStorage.toDoubleArray(), offset, parameters[i].nElement());
+        parameters[i].set(resultStorage, offset + 1, parameters[i].size(), parameters[i].stride());
+        offset += parameters[i].nElement();
+        i += 1;
+      }
     }
-
     return result;
   }
 
@@ -57,20 +68,41 @@ public final class ModuleUtil {
             + " ${parameters.length}");
 
     int i = 1;
-    ArrayDoubleStorage storage = (ArrayDoubleStorage) parameters[0].storage();
-    int length = parameters[0].nElement();
-    int offset = parameters[0].storageOffset();
-    // make sure parameters is shared and contiguous
-    while (i < parameters.length) {
-      if (storage != parameters[i].storage()) {
-        return null;
+    ArrayStorage storage;
+    int length;
+    int offset;
+    if(parameters[0].isFloat()){
+      storage = (ArrayFloatStorage) parameters[0].storage();
+      length = parameters[0].nElement();
+      offset = parameters[0].storageOffset();
+      // make sure parameters is shared and contiguous
+      while (i < parameters.length) {
+        if (storage != parameters[i].storage()) {
+          return null;
+        }
+        if (offset + length != parameters[i].storageOffset()) {
+          return null;
+        }
+        length += parameters[i].nElement();
+        i += 1;
       }
-      if (offset + length != parameters[i].storageOffset()) {
-        return null;
+    }else {
+      storage = (ArrayDoubleStorage) parameters[0].storage();
+      length = parameters[0].nElement();
+      offset = parameters[0].storageOffset();
+      // make sure parameters is shared and contiguous
+      while (i < parameters.length) {
+        if (storage != parameters[i].storage()) {
+          return null;
+        }
+        if (offset + length != parameters[i].storageOffset()) {
+          return null;
+        }
+        length += parameters[i].nElement();
+        i += 1;
       }
-      length += parameters[i].nElement();
-      i += 1;
     }
+
 
     return new DenseTensor(storage, offset, new int[length]);
   }

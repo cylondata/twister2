@@ -44,12 +44,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   /**
    * The cached output. So we don't compute it again when need it
    */
-  public Activity output = new DenseTensor();
+  public Activity output = new DenseTensor(false);
 
   /**
    * The cached gradient of activities. So we don't compute it again when need it
    */
-  public Activity gradInput = new DenseTensor();
+  public Activity gradInput = new DenseTensor(false);
 
   protected List<Integer> inputsFormats = null;
   protected List<Integer> outputsFormats = null;
@@ -65,6 +65,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * Module status. It is useful for modules like dropout/batch normalization
    */
   protected boolean train = true;
+  protected boolean isFloat = false;
   protected String line = "\n";
   private String namePostfix = Integer.toHexString(java.util.UUID.randomUUID().hashCode());
   private String getNamePostfix = namePostfix;
@@ -76,6 +77,16 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
   private double scaleWCache = scaleW;
   private double scaleBCache = scaleB;
   private OptimMethod _optimMethod = null;
+
+  /**
+   * Convert the modules to float. If there are any specific changes needed to support float
+   * at the module level this method needs to be overridden.
+   */
+  public void toFloat(){
+    this.output = new DenseTensor(true);
+    this.gradInput = new DenseTensor(true);
+    this.isFloat = true;
+  }
 
   /**
    * set input formats for graph

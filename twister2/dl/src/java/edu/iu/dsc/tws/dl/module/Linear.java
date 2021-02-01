@@ -86,23 +86,23 @@ public class Linear extends TensorModule implements Initializable {
   }
 
   private void init() {
-    weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize, inputSize);
+    weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize, inputSize, this.isFloat);
 
     if (initBias != null) {
       bias = initBias;
     } else if (withBias) {
-      bias = new DenseTensor(outputSize);
+      bias = new DenseTensor(outputSize, this.isFloat);
     } else {
       bias = null;
     }
-    addBuffer = new DenseTensor();
+    addBuffer = new DenseTensor(this.isFloat);
 
-    gradWeight = (initGradWeight != null) ? initGradWeight : new DenseTensor();
+    gradWeight = (initGradWeight != null) ? initGradWeight : new DenseTensor(this.isFloat);
 
     if (initGradBias != null) {
       gradBias = initGradBias;
     } else if (withBias) {
-      gradBias = new DenseTensor();
+      gradBias = new DenseTensor(this.isFloat);
     } else {
       bias = null;
     }
@@ -119,31 +119,60 @@ public class Linear extends TensorModule implements Initializable {
         "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch
             + "input dim ${input.dim()}");
 
-    if (input.dim() == 1) {
-      ((DenseTensor) output).resize(new int[]{outputSize});
-      if (withBias) {
-        ((DenseTensor) output).copy(bias);
-      } else {
-        ((DenseTensor) output).zero();
-      }
+    if(this.isFloat){
+      if (input.dim() == 1) {
+        ((DenseTensor) output).resize(new int[]{outputSize});
+        if (withBias) {
+          ((DenseTensor) output).copy(bias);
+        } else {
+          ((DenseTensor) output).zero();
+        }
 
-      ((DenseTensor) output).addmv(1, weight, input);
-    } else if (input.dim() == 2) {
-      int nFrame = input.size(1);
-      int nElement = ((DenseTensor) output).nElement();
-      int[] t = new int[]{nFrame, weight.size(1)};
-      ((DenseTensor) output).resize(t);
-      if (((DenseTensor) output).nElement() != nElement) {
-        ((DenseTensor) output).zero();
-      }
+        ((DenseTensor) output).addmv(1f, weight, input);
+      } else if (input.dim() == 2) {
+        int nFrame = input.size(1);
+        int nElement = ((DenseTensor) output).nElement();
+        int[] t = new int[]{nFrame, weight.size(1)};
+        ((DenseTensor) output).resize(t);
+        if (((DenseTensor) output).nElement() != nElement) {
+          ((DenseTensor) output).zero();
+        }
 
-      if (addBuffer.nElement() != nFrame) {
-        addBuffer.resize(new int[]{nFrame}).fill(1.0);
-      }
+        if (addBuffer.nElement() != nFrame) {
+          addBuffer.resize(new int[]{nFrame}).fill(1.0f);
+        }
 
-      ((DenseTensor) output).addmm(0.0, (DenseTensor) output, 1.0, input, weight.t());
-      if (withBias) ((DenseTensor) output).addr(1.0, addBuffer, bias);
+        ((DenseTensor) output).addmm(0.0f, (DenseTensor) output, 1.0f, input, weight.t());
+        if (withBias) ((DenseTensor) output).addr(1.0f, addBuffer, bias);
+      }
+    }else {
+      if (input.dim() == 1) {
+        ((DenseTensor) output).resize(new int[]{outputSize});
+        if (withBias) {
+          ((DenseTensor) output).copy(bias);
+        } else {
+          ((DenseTensor) output).zero();
+        }
+
+        ((DenseTensor) output).addmv(1, weight, input);
+      } else if (input.dim() == 2) {
+        int nFrame = input.size(1);
+        int nElement = ((DenseTensor) output).nElement();
+        int[] t = new int[]{nFrame, weight.size(1)};
+        ((DenseTensor) output).resize(t);
+        if (((DenseTensor) output).nElement() != nElement) {
+          ((DenseTensor) output).zero();
+        }
+
+        if (addBuffer.nElement() != nFrame) {
+          addBuffer.resize(new int[]{nFrame}).fill(1.0);
+        }
+
+        ((DenseTensor) output).addmm(0.0, (DenseTensor) output, 1.0, input, weight.t());
+        if (withBias) ((DenseTensor) output).addr(1.0, addBuffer, bias);
+      }
     }
+
     return (DenseTensor) output;
   }
 
@@ -159,10 +188,18 @@ public class Linear extends TensorModule implements Initializable {
       ((DenseTensor) gradInput).zero();
     }
 
-    if (input.dim() == 1) {
-      ((DenseTensor) gradInput).addmv(0.0, 1.0, weight.t(), gradOutput);
-    } else if (input.dim() == 2) {
-      ((DenseTensor) gradInput).addmm(0.0, 1.0, gradOutput, weight);
+    if(this.isFloat){
+      if (input.dim() == 1) {
+        ((DenseTensor) gradInput).addmv(0.0f, 1.0f, weight.t(), gradOutput);
+      } else if (input.dim() == 2) {
+        ((DenseTensor) gradInput).addmm(0.0f, 1.0f, gradOutput, weight);
+      }
+    }else {
+      if (input.dim() == 1) {
+        ((DenseTensor) gradInput).addmv(0.0, 1.0, weight.t(), gradOutput);
+      } else if (input.dim() == 2) {
+        ((DenseTensor) gradInput).addmm(0.0, 1.0, gradOutput, weight);
+      }
     }
     return (DenseTensor) gradInput;
   }
@@ -187,30 +224,56 @@ public class Linear extends TensorModule implements Initializable {
     if (withBias) {
       gradBias.resize(outputSize);
     }
+    if(this.isFloat){
+      float scaleWf = (float) scaleW;
+      float scaleBf = (float) scaleB;
+      if (input.dim() == 1) {
+        if (scaleW != 0) {
+          gradWeight.addr(scaleWf, gradOutput, input);
+        }
 
-    if (input.dim() == 1) {
-      if (scaleW != 0) {
-        gradWeight.addr(scaleW, gradOutput, input);
-      }
+        if (withBias && scaleBf != 0) {
+          gradBias.add(scaleBf, gradOutput);
+        }
+      } else if (input.dim() == 2) {
+        if (scaleW != 0) {
+          gradWeight.addmm(scaleWf, gradOutput.t(), input);
+        }
 
-      if (withBias && scaleB != 0) {
-        gradBias.add(scaleB, gradOutput);
+        if (withBias && scaleBf != 0) {
+          gradBias.addmv(scaleBf, gradOutput.t(), addBuffer);
+        }
       }
-    } else if (input.dim() == 2) {
-      if (scaleW != 0) {
-        gradWeight.addmm(scaleW, gradOutput.t(), input);
+      if (null != wRegularizer && scaleW != 0) {
+        wRegularizer.accRegularization(weight, gradWeight, scaleWf);
       }
+      if (null != bRegularizer && scaleB != 0) {
+        bRegularizer.accRegularization(bias, gradBias, scaleBf);
+      }
+    }else {
+      if (input.dim() == 1) {
+        if (scaleW != 0) {
+          gradWeight.addr(scaleW, gradOutput, input);
+        }
 
-      if (withBias && scaleB != 0) {
-        gradBias.addmv(scaleB, gradOutput.t(), addBuffer);
-      }
-    }
+        if (withBias && scaleB != 0) {
+          gradBias.add(scaleB, gradOutput);
+        }
+      } else if (input.dim() == 2) {
+        if (scaleW != 0) {
+          gradWeight.addmm(scaleW, gradOutput.t(), input);
+        }
 
-    if (null != wRegularizer && scaleW != 0) {
-      wRegularizer.accRegularization(weight, gradWeight, scaleW);
-    }
-    if (null != bRegularizer && scaleB != 0) {
-      bRegularizer.accRegularization(bias, gradBias, scaleB);
+        if (withBias && scaleB != 0) {
+          gradBias.addmv(scaleB, gradOutput.t(), addBuffer);
+        }
+      }
+      if (null != wRegularizer && scaleW != 0) {
+        wRegularizer.accRegularization(weight, gradWeight, scaleW);
+      }
+      if (null != bRegularizer && scaleB != 0) {
+        bRegularizer.accRegularization(bias, gradBias, scaleB);
+      }
     }
   }
 

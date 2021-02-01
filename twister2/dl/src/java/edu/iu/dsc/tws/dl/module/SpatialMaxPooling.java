@@ -63,7 +63,7 @@ public class SpatialMaxPooling extends TensorModule {
   private DataFormat format = new NCHW();
 
   private boolean ceilMode;
-  private DenseTensor indices = new DenseTensor();
+  private DenseTensor indices = new DenseTensor(false);
 
   public SpatialMaxPooling(int kW, int kH) {
     this(kW, kH, 1, 1, 0, 0, new NCHW());
@@ -81,6 +81,12 @@ public class SpatialMaxPooling extends TensorModule {
     this.padW = padW;
     this.padH = padH;
     this.format = format;
+  }
+
+  @Override
+  public void toFloat() {
+    super.toFloat();
+    indices = new DenseTensor(true);
   }
 
   /**
@@ -143,61 +149,122 @@ public class SpatialMaxPooling extends TensorModule {
       ceilMode = false; // The ceil mode is not needed.
     }
 
-    if (input.dim() == 3) {
+    if(this.isFloat){
+      if (input.dim() == 3) {
 
-      if (format instanceof NCHW) {
-        ((DenseTensor) output).resize(new int[]{nInputPlane, oHeight, oWidth});
-        /* indices will contain the locations for each output point */
-        indices.resize(new int[]{nInputPlane, oHeight, oWidth});
+        if (format instanceof NCHW) {
+          ((DenseTensor) output).resize(new int[]{nInputPlane, oHeight, oWidth});
+          /* indices will contain the locations for each output point */
+          indices.resize(new int[]{nInputPlane, oHeight, oWidth});
 
-        NNPrimitive.maxPoolingForwardDouble(
-            input,
-            (DenseTensor) output,
-            indices,
-            oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
+          NNPrimitive.maxPoolingForwardFloat(
+              input,
+              (DenseTensor) output,
+              indices,
+              oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
 
-      } else if (format instanceof NHWC) {
-        ((DenseTensor) output).resize(new int[]{oHeight, oWidth, nInputPlane});
-        /* indices will contain the locations for each output point */
-        indices.resize(new int[]{oHeight, oWidth, nInputPlane});
+        } else if (format instanceof NHWC) {
+          ((DenseTensor) output).resize(new int[]{oHeight, oWidth, nInputPlane});
+          /* indices will contain the locations for each output point */
+          indices.resize(new int[]{oHeight, oWidth, nInputPlane});
 
-        NNPrimitive.maxPoolingForwardDoubleNHWC(
-            input,
-            (DenseTensor) output,
-            indices,
-            oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
+          NNPrimitive.maxPoolingForwardFloatNHWC(
+              input,
+              (DenseTensor) output,
+              indices,
+              oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
 
-      }
-    } else {
-      int nbatch = input.size(1);
-      if (format instanceof NCHW) {
-        ((DenseTensor) output).resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
-        indices.resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
-        for (int i = 1; i <= nbatch; i++) {
-          DenseTensor curInput = (DenseTensor) input.apply(i);
-          DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
-          DenseTensor curIndices = (DenseTensor) indices.apply(i);
-          NNPrimitive.maxPoolingForwardDouble(
-              curInput,
-              curOutput,
-              curIndices,
-              oWidth, oHeight,
-              kW, kH, dW, dH, padLeft, padTop);
         }
-      } else if (format instanceof NHWC) {
-        ((DenseTensor) output).resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
-        indices.resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
+      } else {
+        int nbatch = input.size(1);
+        if (format instanceof NCHW) {
+          ((DenseTensor) output).resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
+          indices.resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
+          for (int i = 1; i <= nbatch; i++) {
+            DenseTensor curInput = (DenseTensor) input.apply(i);
+            DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
+            DenseTensor curIndices = (DenseTensor) indices.apply(i);
+            NNPrimitive.maxPoolingForwardFloat(
+                curInput,
+                curOutput,
+                curIndices,
+                oWidth, oHeight,
+                kW, kH, dW, dH, padLeft, padTop);
+          }
+        } else if (format instanceof NHWC) {
+          ((DenseTensor) output).resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
+          indices.resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
 
-        for (int i = 1; i <= nbatch; i++) {
-          DenseTensor curInput = (DenseTensor) input.apply(i);
-          DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
-          DenseTensor curIndices = (DenseTensor) indices.apply(i);
+          for (int i = 1; i <= nbatch; i++) {
+            DenseTensor curInput = (DenseTensor) input.apply(i);
+            DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
+            DenseTensor curIndices = (DenseTensor) indices.apply(i);
+            NNPrimitive.maxPoolingForwardFloatNHWC(
+                curInput,
+                curOutput,
+                curIndices,
+                oWidth, oHeight,
+                kW, kH, dW, dH, padLeft, padTop);
+          }
+        }
+      }
+    }else {
+      if (input.dim() == 3) {
+
+        if (format instanceof NCHW) {
+          ((DenseTensor) output).resize(new int[]{nInputPlane, oHeight, oWidth});
+          /* indices will contain the locations for each output point */
+          indices.resize(new int[]{nInputPlane, oHeight, oWidth});
+
+          NNPrimitive.maxPoolingForwardDouble(
+              input,
+              (DenseTensor) output,
+              indices,
+              oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
+
+        } else if (format instanceof NHWC) {
+          ((DenseTensor) output).resize(new int[]{oHeight, oWidth, nInputPlane});
+          /* indices will contain the locations for each output point */
+          indices.resize(new int[]{oHeight, oWidth, nInputPlane});
+
           NNPrimitive.maxPoolingForwardDoubleNHWC(
-              curInput,
-              curOutput,
-              curIndices,
-              oWidth, oHeight,
-              kW, kH, dW, dH, padLeft, padTop);
+              input,
+              (DenseTensor) output,
+              indices,
+              oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop);
+
+        }
+      } else {
+        int nbatch = input.size(1);
+        if (format instanceof NCHW) {
+          ((DenseTensor) output).resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
+          indices.resize(new int[]{nbatch, nInputPlane, oHeight, oWidth});
+          for (int i = 1; i <= nbatch; i++) {
+            DenseTensor curInput = (DenseTensor) input.apply(i);
+            DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
+            DenseTensor curIndices = (DenseTensor) indices.apply(i);
+            NNPrimitive.maxPoolingForwardDouble(
+                curInput,
+                curOutput,
+                curIndices,
+                oWidth, oHeight,
+                kW, kH, dW, dH, padLeft, padTop);
+          }
+        } else if (format instanceof NHWC) {
+          ((DenseTensor) output).resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
+          indices.resize(new int[]{nbatch, oHeight, oWidth, nInputPlane});
+
+          for (int i = 1; i <= nbatch; i++) {
+            DenseTensor curInput = (DenseTensor) input.apply(i);
+            DenseTensor curOutput = (DenseTensor) ((DenseTensor) output).apply(i);
+            DenseTensor curIndices = (DenseTensor) indices.apply(i);
+            NNPrimitive.maxPoolingForwardDoubleNHWC(
+                curInput,
+                curOutput,
+                curIndices,
+                oWidth, oHeight,
+                kW, kH, dW, dH, padLeft, padTop);
+          }
         }
       }
     }
@@ -214,48 +281,95 @@ public class SpatialMaxPooling extends TensorModule {
     int oWidth = gradOutput.size(dimHWC[1]);
     ((DenseTensor) gradInput).resizeAs(input);
     ((DenseTensor) gradInput).zero();
-    if (input.dim() == 3) {
 
-      if (format instanceof NCHW) {
-        NNPrimitive.maxPoolingBackwardDouble(
-            (DenseTensor) gradInput,
-            gradOutput,
-            indices,
-            oWidth, oHeight);
-      } else if (format instanceof NHWC) {
-        NNPrimitive.maxPoolingBackwardDoubleNHWC(
-            (DenseTensor) gradInput,
-            gradOutput,
-            indices,
-            oWidth, oHeight);
-      }
-    } else {
-      int nbatch = input.size(1);
+    if(this.isFloat){
+      if (input.dim() == 3) {
 
-      if (format instanceof NCHW) {
-        for (int k = 1; k <= nbatch; k++) {
-          DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
-          DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
-          DenseTensor curIndices = (DenseTensor) indices.apply(k);
-          NNPrimitive.maxPoolingBackwardDouble(
-              curGradInput,
-              curGradOutput,
-              curIndices,
+        if (format instanceof NCHW) {
+          NNPrimitive.maxPoolingBackwardFloat(
+              (DenseTensor) gradInput,
+              gradOutput,
+              indices,
+              oWidth, oHeight);
+        } else if (format instanceof NHWC) {
+          NNPrimitive.maxPoolingBackwardFloatNHWC(
+              (DenseTensor) gradInput,
+              gradOutput,
+              indices,
               oWidth, oHeight);
         }
-      } else if (format instanceof NHWC) {
-        for (int k = 1; k <= nbatch; k++) {
-          DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
-          DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
-          DenseTensor curIndices = (DenseTensor) indices.apply(k);
-          NNPrimitive.maxPoolingBackwardDoubleNHWC(
-              curGradInput,
-              curGradOutput,
-              curIndices,
+      } else {
+        int nbatch = input.size(1);
+
+        if (format instanceof NCHW) {
+          for (int k = 1; k <= nbatch; k++) {
+            DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
+            DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
+            DenseTensor curIndices = (DenseTensor) indices.apply(k);
+            NNPrimitive.maxPoolingBackwardFloat(
+                curGradInput,
+                curGradOutput,
+                curIndices,
+                oWidth, oHeight);
+          }
+        } else if (format instanceof NHWC) {
+          for (int k = 1; k <= nbatch; k++) {
+            DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
+            DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
+            DenseTensor curIndices = (DenseTensor) indices.apply(k);
+            NNPrimitive.maxPoolingBackwardFloatNHWC(
+                curGradInput,
+                curGradOutput,
+                curIndices,
+                oWidth, oHeight);
+          }
+        }
+      }
+    }else {
+      if (input.dim() == 3) {
+
+        if (format instanceof NCHW) {
+          NNPrimitive.maxPoolingBackwardDouble(
+              (DenseTensor) gradInput,
+              gradOutput,
+              indices,
               oWidth, oHeight);
+        } else if (format instanceof NHWC) {
+          NNPrimitive.maxPoolingBackwardDoubleNHWC(
+              (DenseTensor) gradInput,
+              gradOutput,
+              indices,
+              oWidth, oHeight);
+        }
+      } else {
+        int nbatch = input.size(1);
+
+        if (format instanceof NCHW) {
+          for (int k = 1; k <= nbatch; k++) {
+            DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
+            DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
+            DenseTensor curIndices = (DenseTensor) indices.apply(k);
+            NNPrimitive.maxPoolingBackwardDouble(
+                curGradInput,
+                curGradOutput,
+                curIndices,
+                oWidth, oHeight);
+          }
+        } else if (format instanceof NHWC) {
+          for (int k = 1; k <= nbatch; k++) {
+            DenseTensor curGradInput = (DenseTensor) ((DenseTensor) gradInput).apply(k);
+            DenseTensor curGradOutput = (DenseTensor) gradOutput.apply(k);
+            DenseTensor curIndices = (DenseTensor) indices.apply(k);
+            NNPrimitive.maxPoolingBackwardDoubleNHWC(
+                curGradInput,
+                curGradOutput,
+                curIndices,
+                oWidth, oHeight);
+          }
         }
       }
     }
+
     return (DenseTensor) gradInput;
   }
 

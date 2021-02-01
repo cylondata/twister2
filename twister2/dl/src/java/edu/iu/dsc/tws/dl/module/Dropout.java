@@ -36,10 +36,10 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  */
 public class Dropout extends TensorModule {
   private double initP = 0.5;
+  private float initPf = 0.5f;
   private boolean inplace = false;
   private boolean scale = true;
-  private double p = initP;
-  private DenseTensor noise = new DenseTensor();
+  private DenseTensor noise = new DenseTensor(false);
   private boolean isResampling = true;
 
   public Dropout() {
@@ -47,12 +47,20 @@ public class Dropout extends TensorModule {
 
   public Dropout(double initP) {
     this.initP = initP;
+    this.initPf = (float) initP;
   }
 
   public Dropout(double initP, boolean inplace, boolean scale) {
     this.initP = initP;
+    this.initPf = (float) initP;
     this.inplace = inplace;
     this.scale = scale;
+  }
+
+  @Override
+  public void toFloat() {
+    super.toFloat();
+    noise = new DenseTensor(true);
   }
 
   @Override
@@ -67,24 +75,47 @@ public class Dropout extends TensorModule {
       noise.resizeAs(input);
       if (input.isContiguous()) {
         if (isResampling) {
-          double[] noiseData = noise.storage().toDoubleArray();
-          int taskSize = noise.nElement();
-          int extraTask = noise.nElement();
-          int allocated = 0;
-          int offset = ((DenseTensor) this.output).storageOffset() - 1;
-          double[] data = ((DenseTensor) this.output).storage().toDoubleArray();
-          //TODO parallelize
-          for (int k = 0; k < taskSize; k++) {
-            if (RandomGenerator.RNG().bernoulli(1 - p)) {
-              if (scale) {
-                data[offset + k] = TensorNumeric.divide(data[offset + k], 1.0 - p);
-                noiseData[k] = 1.0 / (1 - p);
+          if(this.isFloat){
+            float[] noiseData = noise.storage().toFloatArray();
+            int taskSize = noise.nElement();
+            int extraTask = noise.nElement();
+            int allocated = 0;
+            int offset = ((DenseTensor) this.output).storageOffset() - 1;
+            float[] data = ((DenseTensor) this.output).storage().toFloatArray();
+            //TODO parallelize
+            for (int k = 0; k < taskSize; k++) {
+              if (RandomGenerator.RNG().bernoulli(1 - initPf)) {
+                if (scale) {
+                  data[offset + k] = TensorNumeric.divide(data[offset + k], 1.0f - initPf);
+                  noiseData[k] = (float)(1.0 / (1 - initPf));
+                } else {
+                  noiseData[k] = 1;
+                }
               } else {
-                noiseData[k] = 1;
+                data[offset + k] = 0;
+                noiseData[k] = 0;
               }
-            } else {
-              data[offset + k] = 0;
-              noiseData[k] = 0;
+            }
+          }else {
+            double[] noiseData = noise.storage().toDoubleArray();
+            int taskSize = noise.nElement();
+            int extraTask = noise.nElement();
+            int allocated = 0;
+            int offset = ((DenseTensor) this.output).storageOffset() - 1;
+            double[] data = ((DenseTensor) this.output).storage().toDoubleArray();
+            //TODO parallelize
+            for (int k = 0; k < taskSize; k++) {
+              if (RandomGenerator.RNG().bernoulli(1 - initP)) {
+                if (scale) {
+                  data[offset + k] = TensorNumeric.divide(data[offset + k], 1.0 - initP);
+                  noiseData[k] = 1.0 / (1 - initP);
+                } else {
+                  noiseData[k] = 1;
+                }
+              } else {
+                data[offset + k] = 0;
+                noiseData[k] = 0;
+              }
             }
           }
         } else {
@@ -92,18 +123,33 @@ public class Dropout extends TensorModule {
         }
         return (DenseTensor) this.output;
       } else {
-        if (isResampling) {
-          noise.bernoulli(1 - p);
+        if(this.isFloat){
+          if (isResampling) {
+            noise.bernoulli(1f - initPf);
 
-          if (scale) {
-            noise.div(1.0 - p);
+            if (scale) {
+              noise.div(1.0f - initPf);
+            }
+          }
+        }else {
+          if (isResampling) {
+            noise.bernoulli(1 - initP);
+
+            if (scale) {
+              noise.div(1.0 - initP);
+            }
           }
         }
+
 
         return (DenseTensor) ((DenseTensor) this.output).cmul(noise);
       }
     } else if (!scale) {
-      return (DenseTensor) ((DenseTensor) this.output).mul(1.0 - p);
+      if(this.isFloat){
+        return (DenseTensor) ((DenseTensor) this.output).mul(1.0f - initPf);
+      }else {
+        return (DenseTensor) ((DenseTensor) this.output).mul(1.0 - initP);
+      }
     } else {
       return (DenseTensor) output;
     }
@@ -119,15 +165,28 @@ public class Dropout extends TensorModule {
       }
 
       if (((DenseTensor) gradInput).isContiguous()) {
-        double[] noiseData = noise.storage().toDoubleArray();
-        int taskSize = noise.nElement();
-        int extraTask = noise.nElement();
-        double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
-        int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
-        int allocated = 0;
-        for (int k = 0; k < taskSize; k++) {
-          gradInputData[gradInputOffset + k] =
-              TensorNumeric.times(gradInputData[gradInputOffset + k], noiseData[k]);
+        if(this.isFloat){
+          float[] noiseData = noise.storage().toFloatArray();
+          int taskSize = noise.nElement();
+          int extraTask = noise.nElement();
+          float[] gradInputData = ((DenseTensor) gradInput).storage().toFloatArray();
+          int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+          int allocated = 0;
+          for (int k = 0; k < taskSize; k++) {
+            gradInputData[gradInputOffset + k] =
+                TensorNumeric.times(gradInputData[gradInputOffset + k], noiseData[k]);
+          }
+        }else {
+          double[] noiseData = noise.storage().toDoubleArray();
+          int taskSize = noise.nElement();
+          int extraTask = noise.nElement();
+          double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();
+          int gradInputOffset = ((DenseTensor) gradInput).storageOffset() - 1;
+          int allocated = 0;
+          for (int k = 0; k < taskSize; k++) {
+            gradInputData[gradInputOffset + k] =
+                TensorNumeric.times(gradInputData[gradInputOffset + k], noiseData[k]);
+          }
         }
       } else {
         ((DenseTensor) this.gradInput).cmul(noise);
