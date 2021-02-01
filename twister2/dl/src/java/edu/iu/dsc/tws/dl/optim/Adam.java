@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
-import edu.iu.dsc.tws.dl.utils.pair.TensorDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.TensorAndArrayPair;
 
 @SuppressWarnings({"LocalVariableName", "HiddenField", "NeedBraces"})
 public class Adam implements OptimMethod {
@@ -81,61 +81,117 @@ public class Adam implements OptimMethod {
    * @return the new x vector and the function list {fx}, evaluated before the update
    */
   @Override
-  public TensorDoubleArrayPair optimize(OptimFunction feval, Tensor parameter) {
-    if (buffer == null) buffer = new DenseTensor();
-    double lr = this.learningRate;
-    double lrd = this.learningRateDecay;
-    double beta1 = this.beta1;
-    double beta2 = this.beta2;
-    double eps = this.epsilon;
+  public TensorAndArrayPair optimize(OptimFunction feval, Tensor parameter) {
+    if (buffer == null) buffer = new DenseTensor(parameter.isFloat());
+    if(!parameter.isFloat()){
+      double lr = this.learningRate;
+      double lrd = this.learningRateDecay;
+      double beta1 = this.beta1;
+      double beta2 = this.beta2;
+      double eps = this.epsilon;
 
-    DoubleTensorPair eval = feval.apply(parameter);
+      DoubleTensorPair eval = feval.apply(parameter);
 
-    int timestep = state.<Integer>getOrDefault("evalCounter", 0);
+      int timestep = state.<Integer>getOrDefault("evalCounter", 0);
 
-    Tensor _s;
-    Tensor _r;
-    Tensor _denom;
+      Tensor _s;
+      Tensor _r;
+      Tensor _denom;
 
-    if (state.<Tensor>get("s") != null) {
-      _s = state.<Tensor>get("s");
-      _r = state.<Tensor>get("r");
-      _denom = state.<Tensor>get("denom").resizeAs(eval.getValue1());
-    } else {
-      _s = new DenseTensor().resizeAs(eval.getValue1()).zero();
-      _r = new DenseTensor().resizeAs(eval.getValue1()).zero();
-      _denom = new DenseTensor().resizeAs(eval.getValue1()).zero();
+      if (state.<Tensor>get("s") != null) {
+        _s = state.<Tensor>get("s");
+        _r = state.<Tensor>get("r");
+        _denom = state.<Tensor>get("denom").resizeAs(eval.getValue1());
+      } else {
+        _s = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+        _r = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+        _denom = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+      }
+      double clr = lr / (1 + timestep * lrd);
+
+      timestep = timestep + 1;
+
+      /**
+       * m_t = beta_1 * m_t-1 + (1 - beta_1) * g_t
+       * v_t = beta_2 * v_t-1 + (1 - beta_2) * g_t * g_t
+       */
+      _s.mul(beta1).add(1 - beta1, eval.getValue1());
+      // buffer = eval.getValue1() * eval.getValue1()
+      buffer.resizeAs(eval.getValue1()).cmul(eval.getValue1(), eval.getValue1());
+      _r.mul(beta2).add(1 - beta2, buffer);
+      _denom.sqrt(_r);
+
+      // used as MKL.axpy: 1 * a + y = y, and fill buffer with one
+      buffer.fill(1.0);
+      _denom.add(eps, buffer);
+
+      // efficiency improved upon by changing the order of computation, at expense of clarity
+      double biasCorrection1 = 1 - Math.pow(beta1, timestep);
+      double biasCorrection2 = 1 - Math.pow(beta2, timestep);
+      double stepSize = clr * Math.sqrt(biasCorrection2) / biasCorrection1;
+      parameter.addcdiv(-stepSize, _s, _denom);
+
+      state.put("evalCounter", timestep); // A tmp tensor to hold the sqrt(v) + epsilon
+      state.put("s", _s); // 1st moment variables
+      state.put("r", _r); // 2nd moment variables
+      state.put("denom", _denom); // 3nd moment variables
+
+      return new TensorAndArrayPair(parameter, new double[]{eval.getValue0()});
+    }else {
+      float lr = (float)this.learningRate;
+      float lrd = (float)this.learningRateDecay;
+      float beta1 = (float)this.beta1;
+      float beta2 = (float)this.beta2;
+      float eps = (float)this.epsilon;
+
+      DoubleTensorPair eval = feval.apply(parameter);
+
+      int timestep = state.<Integer>getOrDefault("evalCounter", 0);
+
+      Tensor _s;
+      Tensor _r;
+      Tensor _denom;
+
+      if (state.<Tensor>get("s") != null) {
+        _s = state.<Tensor>get("s");
+        _r = state.<Tensor>get("r");
+        _denom = state.<Tensor>get("denom").resizeAs(eval.getValue1());
+      } else {
+        _s = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+        _r = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+        _denom = new DenseTensor(parameter.isFloat()).resizeAs(eval.getValue1()).zero();
+      }
+      float clr = lr / (1 + timestep * lrd);
+
+      timestep = timestep + 1;
+
+      /**
+       * m_t = beta_1 * m_t-1 + (1 - beta_1) * g_t
+       * v_t = beta_2 * v_t-1 + (1 - beta_2) * g_t * g_t
+       */
+      _s.mul(beta1).add(1 - beta1, eval.getValue1());
+      // buffer = eval.getValue1() * eval.getValue1()
+      buffer.resizeAs(eval.getValue1()).cmul(eval.getValue1(), eval.getValue1());
+      _r.mul(beta2).add(1 - beta2, buffer);
+      _denom.sqrt(_r);
+
+      // used as MKL.axpy: 1 * a + y = y, and fill buffer with one
+      buffer.fill(1.0);
+      _denom.add(eps, buffer);
+
+      // efficiency improved upon by changing the order of computation, at expense of clarity
+      float biasCorrection1 = (float)( 1 - Math.pow(beta1, timestep));
+      float biasCorrection2 = (float)(1 - Math.pow(beta2, timestep));
+      float stepSize = (float)(clr * Math.sqrt(biasCorrection2) / biasCorrection1);
+      parameter.addcdiv(-stepSize, _s, _denom);
+
+      state.put("evalCounter", timestep); // A tmp tensor to hold the sqrt(v) + epsilon
+      state.put("s", _s); // 1st moment variables
+      state.put("r", _r); // 2nd moment variables
+      state.put("denom", _denom); // 3nd moment variables
+
+      return new TensorAndArrayPair(parameter, new float[]{(float)eval.getValue0()});
     }
-    double clr = lr / (1 + timestep * lrd);
-
-    timestep = timestep + 1;
-
-    /**
-     * m_t = beta_1 * m_t-1 + (1 - beta_1) * g_t
-     * v_t = beta_2 * v_t-1 + (1 - beta_2) * g_t * g_t
-     */
-    _s.mul(beta1).add(1 - beta1, eval.getValue1());
-    // buffer = eval.getValue1() * eval.getValue1()
-    buffer.resizeAs(eval.getValue1()).cmul(eval.getValue1(), eval.getValue1());
-    _r.mul(beta2).add(1 - beta2, buffer);
-    _denom.sqrt(_r);
-
-    // used as MKL.axpy: 1 * a + y = y, and fill buffer with one
-    buffer.fill(1.0);
-    _denom.add(eps, buffer);
-
-    // efficiency improved upon by changing the order of computation, at expense of clarity
-    double biasCorrection1 = 1 - Math.pow(beta1, timestep);
-    double biasCorrection2 = 1 - Math.pow(beta2, timestep);
-    double stepSize = clr * Math.sqrt(biasCorrection2) / biasCorrection1;
-    parameter.addcdiv(-stepSize, _s, _denom);
-
-    state.put("evalCounter", timestep); // A tmp tensor to hold the sqrt(v) + epsilon
-    state.put("s", _s); // 1st moment variables
-    state.put("r", _r); // 2nd moment variables
-    state.put("denom", _denom); // 3nd moment variables
-
-    return new TensorDoubleArrayPair(parameter, new double[]{eval.getValue0()});
   }
 
   @Override

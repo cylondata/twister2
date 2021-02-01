@@ -31,11 +31,20 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     implements Criterion {
   protected I gradInput;
   protected double output;
+  protected float outputf;
+  protected boolean isFloat;
   protected SizeAverageStatus sizeAverageStatus = SizeAverageStatus.NONE;
 
   public AbstractCriterion() {
-    gradInput = (I) new DenseTensor();
+    gradInput = (I) new DenseTensor(false);
     output = 0.0;
+    outputf = 0.0f;
+    isFloat = false;
+  }
+
+  public void toFloat(){
+    isFloat = true;
+    gradInput = (I) new DenseTensor(true);
   }
 
   public Activity getGradInput() {
@@ -50,8 +59,16 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     return output;
   }
 
+  public float getOutputf() {
+    return outputf;
+  }
+
   public void setOutput(double output) {
     this.output = output;
+  }
+
+  public void setOutput(float outputf) {
+    this.outputf = outputf;
   }
 
   /**
@@ -64,6 +81,10 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
    */
   public double forward(I input, O target) {
     return updateOutput(input, target);
+  }
+
+  public float forwardf(I input, O target) {
+    return updateOutputf(input, target);
   }
 
   /**
@@ -89,6 +110,10 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     return this.output;
   }
 
+  public float updateOutputf(I input, O target) {
+    return this.outputf;
+  }
+
   /**
    * Computing the gradient of the criterion with respect to its own input. This is returned in
    * gradInput. Also, the gradInput state variable is updated accordingly.
@@ -111,7 +136,11 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
   @Override
   public int hashCode() {
     //TODO check correctness
-    return Double.valueOf(output).hashCode();
+    if(this.isFloat){
+      return Double.valueOf(outputf).hashCode();
+    }else {
+      return Double.valueOf(output).hashCode();
+    }
   }
 
   public boolean canEqual(Object other) {
@@ -120,8 +149,13 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
 
   @Override
   public boolean equals(Object other) {
-    return other instanceof AbstractCriterion && other.getClass() == this.getClass()
-        && this.output == ((AbstractCriterion<?, ?>) other).getOutput();
+    if(this.isFloat){
+      return other instanceof AbstractCriterion && other.getClass() == this.getClass()
+          && this.outputf == ((AbstractCriterion<?, ?>) other).getOutput();
+    }else {
+      return other instanceof AbstractCriterion && other.getClass() == this.getClass()
+          && this.output == ((AbstractCriterion<?, ?>) other).getOutput();
+    }
   }
 
   enum SizeAverageStatus {

@@ -41,6 +41,13 @@ public class CrossEntropyCriterion extends TensorCriterion {
   }
 
   @Override
+  public void toFloat() {
+    super.toFloat();
+    nll.toFloat();
+    lsm.toFloat();
+  }
+
+  @Override
   public double updateOutput(Tensor input, Tensor target) {
     lsm.updateOutput((DenseTensor) input);
     nll.updateOutput((Tensor) lsm.output, target);
@@ -49,9 +56,17 @@ public class CrossEntropyCriterion extends TensorCriterion {
   }
 
   @Override
+  public float updateOutputf(Tensor input, Tensor target) {
+    lsm.updateOutput((DenseTensor) input);
+    nll.updateOutput((Tensor) lsm.output, target);
+    outputf = nll.outputf;
+    return outputf;
+  }
+
+  @Override
   public Tensor updateGradInput(Tensor input, Tensor target) {
     int[] size = input.size();
-    DenseTensor _gradInput = new DenseTensor();
+    DenseTensor _gradInput = new DenseTensor(this.isFloat);
     _gradInput = (DenseTensor) nll.updateGradInput((Tensor) lsm.output, target);
     lsm.updateGradInput((DenseTensor) input, _gradInput);
     gradInput.resizeAs((Tensor) lsm.gradInput).copy((Tensor) lsm.gradInput).view(size);

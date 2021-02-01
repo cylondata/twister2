@@ -28,12 +28,12 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 /**
  * Holds a pair of Tensors
  */
-public class TensorDoubleArrayPair {
+public class TensorAndArrayPair<T> {
 
   private Tensor t0;
-  private double[] t1;
+  private T t1;
 
-  public TensorDoubleArrayPair(Tensor t0, double[] t1) {
+  public TensorAndArrayPair(Tensor t0, T t1) {
     this.t0 = t0;
     this.t1 = t1;
   }
@@ -42,7 +42,7 @@ public class TensorDoubleArrayPair {
     return t0;
   }
 
-  public double[] getValue1() {
+  public T getValue1() {
     return t1;
   }
 }

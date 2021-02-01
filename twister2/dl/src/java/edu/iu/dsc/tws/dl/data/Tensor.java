@@ -197,6 +197,7 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   double apply(int[] indexes);
 
+  float applyf(int[] indexes);
   /**
    * Get value
    *

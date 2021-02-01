@@ -62,7 +62,7 @@ public class ClassNLLCriterion extends TensorCriterion {
   private boolean logProbAsInput;
   private int paddingValue;
 
-  private double total_weight = 0;
+  private double total_weight = 0.0;
 
 
   //private transient results: Array[Future[(T, T)]] = null
@@ -190,6 +190,94 @@ public class ClassNLLCriterion extends TensorCriterion {
   }
 
   @Override
+  public float updateOutputf(Tensor input, Tensor target) {
+    Util.require(input.dim() == 1 || input.dim() == 2,
+        "ClassNLLCriterion: "
+            + ErrorConstants.constrainInputAsVectorOrBatch
+            + "input dim(${input.dim()})");
+    int nClasses = input.size(input.dim());
+    if (input.dim() == 1) {
+      Util.require(input.dim() == target.dim(),
+          "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
+              + " Input dimension is: ${ input.dim() } , target dimension is: ${ target.dim() }");
+      int curTarget = (int) target.valueAtf(1);
+      if (curTarget < 1 && curTarget > nClasses || curTarget == paddingValue) {
+        throw new IllegalStateException("curTarget ${curTarget} is out of range,"
+            + " should be 1 to ${nClasses}");
+      }
+
+      if (weights != null) {
+        total_weight = weights.applyf(new int[]{curTarget});
+      } else {
+        total_weight = 1.0;
+      }
+
+      if (curTarget == paddingValue) {
+        outputf = 0.0f;
+      } else {
+        if (!logProbAsInput) {
+          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon, (float) oneMinusEpsilon);
+          TensorNumeric.times(TensorNumeric.negative(TensorNumeric.log(clipped)), (float) total_weight);
+        } else {
+          TensorNumeric.times(TensorNumeric.negative(input.valueAtf(curTarget)), (float) total_weight);
+        }
+      }
+    } else if (input.dim() == 2) {
+      int batchSize = input.size(1);
+      int[] targetSize = target.size();
+      target.squeeze();
+      Util.require(target.dim() == 1,
+          "ClassNLLCriterion: illegal target! Target should be 1D tensor after squeeze,"
+              + "but target's size is: ${ target.size() }, please check your data.");
+
+      total_weight = 0.0;
+      outputf = 0.0f;
+
+
+      for (int i = 1; i <= batchSize; i++) {
+
+        int curTarget = (int) target.valueAtf(i);
+        if (curTarget < 1 && curTarget > nClasses || curTarget == paddingValue) {
+          throw new IllegalStateException("curTarget " + curTarget
+              + "is out of range 1 to ${nClasses}");
+        }
+        if (curTarget == paddingValue) {
+          outputf = TensorNumeric.minus(outputf, 0.0f);
+          total_weight = TensorNumeric.plus((float) total_weight, 0.0f);
+        } else {
+          float curWeight;
+          if (weights != null) {
+            curWeight = weights.valueAtf(curTarget);
+          } else {
+            curWeight = 1;
+          }
+
+          if (!logProbAsInput) {
+            float clipped = TensorNumeric.clip(input.valueAtf(i, curTarget),
+                (float) epsilon, (float) oneMinusEpsilon);
+            outputf = TensorNumeric.minus(outputf,
+                TensorNumeric.times(TensorNumeric.log(clipped), curWeight));
+            total_weight = TensorNumeric.plus(total_weight, curWeight);
+          } else {
+            outputf = TensorNumeric.minus(outputf,
+                TensorNumeric.times(input.valueAtf(i, curTarget), curWeight));
+            total_weight = TensorNumeric.plus(total_weight, curWeight);
+          }
+        }
+      }
+
+      if (total_weight == 0) {
+        total_weight = 1;
+      }
+      target.resize(targetSize);
+    }
+    if (sizeAverage && total_weight != 0) {
+      outputf = TensorNumeric.divide(outputf, (float) total_weight);
+    }
+    return outputf;
+  }
+  
+  @Override
   public Tensor updateGradInput(Tensor input, Tensor target) {
     Util.require(input.dim() == 1 || input.dim() == 2,
         "ClassNLLCriterion: "
@@ -201,58 +289,112 @@ public class ClassNLLCriterion extends TensorCriterion {
 
     gradInput.resizeAs(input);
     gradInput.zero();
+    if(this.isFloat){
+      if (input.dim() == 1) {
+        Util.require(input.dim() == target.dim(),
+            "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
+                + " Input dimension is: ${ input.dim() } , target dimension is: ${ target.dim() }");
+        int curTarget = (int) target.valueAtf(1);
+        if (curTarget == paddingValue) {
+          return gradInput;
+        }
 
-    if (input.dim() == 1) {
-      Util.require(input.dim() == target.dim(),
-          "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
-              + " Input dimension is: ${ input.dim() } , target dimension is: ${ target.dim() }");
-      int curTarget = (int) target.valueAt(1);
-      if (curTarget == paddingValue) {
-        return gradInput;
-      }
+        float temp = -1;
+        if (weights != null) {
+          temp = TensorNumeric.times(-1, weights.valueAtf(curTarget));
+        }
+        gradInput.setValue(curTarget, temp);
 
-      double temp = -1;
-      if (weights != null) {
-        temp = TensorNumeric.times(-1, weights.valueAt(curTarget));
-      }
-      gradInput.setValue(curTarget, temp);
+        if (sizeAverage) {
+          gradInput.setValue(curTarget, TensorNumeric.divide(gradInput.valueAtf(curTarget),
+              (float) total_weight));
+        }
+        if (!logProbAsInput) {
+          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon, (float) oneMinusEpsilon);
+          gradInput.setValue(curTarget,
+              TensorNumeric.times(gradInput.valueAtf(curTarget), TensorNumeric.inv(clipped)));
+        }
+      } else if (input.dim() == 2) {
+        int batchSize = input.size(1);
+        int[] targetSize = target.size();
+        target.squeeze();
 
-      if (sizeAverage) {
-        gradInput.setValue(curTarget, TensorNumeric.divide(gradInput.valueAt(curTarget),
-            total_weight));
-      }
-      if (!logProbAsInput) {
-        double clipped = TensorNumeric.clip(input.valueAt(curTarget), epsilon, oneMinusEpsilon);
-        gradInput.setValue(curTarget,
-            TensorNumeric.times(gradInput.valueAt(curTarget), TensorNumeric.inv(clipped)));
-      }
-    } else if (input.dim() == 2) {
-      int batchSize = input.size(1);
-      int[] targetSize = target.size();
-      target.squeeze();
+        for (int i = 1; i <= batchSize; i++) {
+          int curTarget = (int) target.valueAtf(i);
+          if (curTarget != paddingValue) {
+            float temp = -1;
+            if (weights != null) {
+              temp = TensorNumeric.times(-1, weights.valueAtf(curTarget));
+            }
 
-      for (int i = 1; i <= batchSize; i++) {
-        int curTarget = (int) target.valueAt(i);
-        if (curTarget != paddingValue) {
-          double temp = -1;
-          if (weights != null) {
-            temp = TensorNumeric.times(-1, weights.valueAt(curTarget));
-          }
-
-          gradInput.setValue(i, curTarget, temp);
-          if (sizeAverage) {
-            gradInput.setValue(i, curTarget, TensorNumeric.divide(gradInput.valueAt(i,
-                curTarget), total_weight));
-          }
-          if (!logProbAsInput) {
-            double clipped = TensorNumeric.clip(input.valueAt(i, curTarget),
-                epsilon, oneMinusEpsilon);
-            gradInput.setValue(i, curTarget,
-                TensorNumeric.times(gradInput.valueAt(i, curTarget), TensorNumeric.inv(clipped)));
+            gradInput.setValue(i, curTarget, temp);
+            if (sizeAverage) {
+              gradInput.setValue(i, curTarget, TensorNumeric.divide(gradInput.valueAtf(i,
+                  curTarget), (float) total_weight));
+            }
+            if (!logProbAsInput) {
+              float clipped = TensorNumeric.clip(input.valueAtf(i, curTarget),
+                  (float) epsilon, (float) oneMinusEpsilon);
+              gradInput.setValue(i, curTarget,
+                  TensorNumeric.times(gradInput.valueAtf(i, curTarget), TensorNumeric.inv(clipped)));
+            }
           }
         }
+        target.resize(targetSize);
       }
-      target.resize(targetSize);
+    }else {
+      if (input.dim() == 1) {
+        Util.require(input.dim() == target.dim(),
+            "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
+                + " Input dimension is: ${ input.dim() } , target dimension is: ${ target.dim() }");
+        int curTarget = (int) target.valueAt(1);
+        if (curTarget == paddingValue) {
+          return gradInput;
+        }
+
+        double temp = -1;
+        if (weights != null) {
+          temp = TensorNumeric.times(-1, weights.valueAt(curTarget));
+        }
+        gradInput.setValue(curTarget, temp);
+
+        if (sizeAverage) {
+          gradInput.setValue(curTarget, TensorNumeric.divide(gradInput.valueAt(curTarget),
+              total_weight));
+        }
+        if (!logProbAsInput) {
+          double clipped = TensorNumeric.clip(input.valueAt(curTarget), epsilon, oneMinusEpsilon);
+          gradInput.setValue(curTarget,
+              TensorNumeric.times(gradInput.valueAt(curTarget), TensorNumeric.inv(clipped)));
+        }
+      } else if (input.dim() == 2) {
+        int batchSize = input.size(1);
+        int[] targetSize = target.size();
+        target.squeeze();
+
+        for (int i = 1; i <= batchSize; i++) {
+          int curTarget = (int) target.valueAt(i);
+          if (curTarget != paddingValue) {
+            double temp = -1;
+            if (weights != null) {
+              temp = TensorNumeric.times(-1, weights.valueAt(curTarget));
+            }
+
+            gradInput.setValue(i, curTarget, temp);
+            if (sizeAverage) {
+              gradInput.setValue(i, curTarget, TensorNumeric.divide(gradInput.valueAt(i,
+                  curTarget), total_weight));
+            }
+            if (!logProbAsInput) {
+              double clipped = TensorNumeric.clip(input.valueAt(i, curTarget),
+                  epsilon, oneMinusEpsilon);
+              gradInput.setValue(i, curTarget,
+                  TensorNumeric.times(gradInput.valueAt(i, curTarget), TensorNumeric.inv(clipped)));
+            }
+          }
+        }
+        target.resize(targetSize);
+      }
     }
     return gradInput;
   }

@@ -37,12 +37,27 @@ public class MSECriterion extends TensorCriterion {
   }
 
   @Override
+  public float updateOutputf(Tensor input, Tensor target) {
+    gradInput.resizeAs(input).copy(input);
+    gradInput.sub(target);
+    outputf = gradInput.dotf(gradInput);
+    if (sizeAverage) {
+      outputf = TensorNumeric.divide(outputf, input.nElement());
+    }
+    return outputf;
+  }
+
+  @Override
   public Tensor updateGradInput(Tensor input, Tensor target) {
     double norm = 2.0;
     if (sizeAverage) {
       norm = 2.0 / input.nElement();
     }
-    gradInput.mul(norm);
+    if(this.isFloat){
+      gradInput.mul((float)norm);
+    }else {
+      gradInput.mul(norm);
+    }
     return gradInput;
   }
 

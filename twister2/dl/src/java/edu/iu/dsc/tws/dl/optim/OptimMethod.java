@@ -15,7 +15,7 @@ import java.io.Serializable;
 
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.utils.pair.TensorDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.TensorAndArrayPair;
 
 @SuppressWarnings("ConstantName")
 public interface OptimMethod extends Serializable {
@@ -31,7 +31,7 @@ public interface OptimMethod extends Serializable {
    * @param parameter the initial point
    * @return the new x vector and the function list, evaluated before the update
    */
-  TensorDoubleArrayPair optimize(OptimFunction feval, Tensor parameter);
+  TensorAndArrayPair optimize(OptimFunction feval, Tensor parameter);
 
   /**
    * Clear the history information in the OptimMethod state

@@ -450,6 +450,18 @@ public class DenseTensor implements Tensor, TensorMath {
     return this.storageInternal.getDouble(offset);
   }
 
+  @Override
+  public float applyf(int[] indexes) {
+    Util.require(indexes.length == this.nDimension(), "invalid size");
+    int offset = this.storageOffsetInternal;
+    int d = 0;
+    while (d < indexes.length) {
+      offset += getOffset(indexes[d] - 1, d + 1);
+      d += 1;
+    }
+    return this.storageInternal.getFloat(offset);
+  }
+
   private int getOffset(int z, int dim) {
     int _z = z;
     if (_z < 0) {
