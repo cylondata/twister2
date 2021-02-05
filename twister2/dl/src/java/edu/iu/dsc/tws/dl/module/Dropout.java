@@ -75,7 +75,7 @@ public class Dropout extends TensorModule {
       noise.resizeAs(input);
       if (input.isContiguous()) {
         if (isResampling) {
-          if(this.isFloat){
+          if (this.isFloat) {
             float[] noiseData = noise.storage().toFloatArray();
             int taskSize = noise.nElement();
             int extraTask = noise.nElement();
@@ -87,7 +87,7 @@ public class Dropout extends TensorModule {
               if (RandomGenerator.RNG().bernoulli(1 - initPf)) {
                 if (scale) {
                   data[offset + k] = TensorNumeric.divide(data[offset + k], 1.0f - initPf);
-                  noiseData[k] = (float)(1.0 / (1 - initPf));
+                  noiseData[k] = (float) (1.0 / (1 - initPf));
                 } else {
                   noiseData[k] = 1;
                 }
@@ -96,7 +96,7 @@ public class Dropout extends TensorModule {
                 noiseData[k] = 0;
               }
             }
-          }else {
+          } else {
             double[] noiseData = noise.storage().toDoubleArray();
             int taskSize = noise.nElement();
             int extraTask = noise.nElement();
@@ -123,7 +123,7 @@ public class Dropout extends TensorModule {
         }
         return (DenseTensor) this.output;
       } else {
-        if(this.isFloat){
+        if (this.isFloat) {
           if (isResampling) {
             noise.bernoulli(1f - initPf);
 
@@ -131,7 +131,7 @@ public class Dropout extends TensorModule {
               noise.div(1.0f - initPf);
             }
           }
-        }else {
+        } else {
           if (isResampling) {
             noise.bernoulli(1 - initP);
 
@@ -145,9 +145,9 @@ public class Dropout extends TensorModule {
         return (DenseTensor) ((DenseTensor) this.output).cmul(noise);
       }
     } else if (!scale) {
-      if(this.isFloat){
+      if (this.isFloat) {
         return (DenseTensor) ((DenseTensor) this.output).mul(1.0f - initPf);
-      }else {
+      } else {
         return (DenseTensor) ((DenseTensor) this.output).mul(1.0 - initP);
       }
     } else {
@@ -165,7 +165,7 @@ public class Dropout extends TensorModule {
       }
 
       if (((DenseTensor) gradInput).isContiguous()) {
-        if(this.isFloat){
+        if (this.isFloat) {
           float[] noiseData = noise.storage().toFloatArray();
           int taskSize = noise.nElement();
           int extraTask = noise.nElement();
@@ -176,7 +176,7 @@ public class Dropout extends TensorModule {
             gradInputData[gradInputOffset + k] =
                 TensorNumeric.times(gradInputData[gradInputOffset + k], noiseData[k]);
           }
-        }else {
+        } else {
           double[] noiseData = noise.storage().toDoubleArray();
           int taskSize = noise.nElement();
           int extraTask = noise.nElement();

@@ -83,7 +83,7 @@ public class Adam implements OptimMethod {
   @Override
   public TensorAndArrayPair optimize(OptimFunction feval, Tensor parameter) {
     if (buffer == null) buffer = new DenseTensor(parameter.isFloat());
-    if(!parameter.isFloat()){
+    if (!parameter.isFloat()) {
       double lr = this.learningRate;
       double lrd = this.learningRateDecay;
       double beta1 = this.beta1;
@@ -137,12 +137,12 @@ public class Adam implements OptimMethod {
       state.put("denom", _denom); // 3nd moment variables
 
       return new TensorAndArrayPair(parameter, new double[]{eval.getValue0()});
-    }else {
-      float lr = (float)this.learningRate;
-      float lrd = (float)this.learningRateDecay;
-      float beta1 = (float)this.beta1;
-      float beta2 = (float)this.beta2;
-      float eps = (float)this.epsilon;
+    } else {
+      float lr = (float) this.learningRate;
+      float lrd = (float) this.learningRateDecay;
+      float beta1 = (float) this.beta1;
+      float beta2 = (float) this.beta2;
+      float eps = (float) this.epsilon;
 
       DoubleTensorPair eval = feval.apply(parameter);
 
@@ -176,13 +176,13 @@ public class Adam implements OptimMethod {
       _denom.sqrt(_r);
 
       // used as MKL.axpy: 1 * a + y = y, and fill buffer with one
-      buffer.fill(1.0);
+      buffer.fill(1.0f);
       _denom.add(eps, buffer);
 
       // efficiency improved upon by changing the order of computation, at expense of clarity
-      float biasCorrection1 = (float)( 1 - Math.pow(beta1, timestep));
-      float biasCorrection2 = (float)(1 - Math.pow(beta2, timestep));
-      float stepSize = (float)(clr * Math.sqrt(biasCorrection2) / biasCorrection1);
+      float biasCorrection1 = (float) (1 - Math.pow(beta1, timestep));
+      float biasCorrection2 = (float) (1 - Math.pow(beta2, timestep));
+      float stepSize = (float) (clr * Math.sqrt(biasCorrection2) / biasCorrection1);
       parameter.addcdiv(-stepSize, _s, _denom);
 
       state.put("evalCounter", timestep); // A tmp tensor to hold the sqrt(v) + epsilon
@@ -190,7 +190,7 @@ public class Adam implements OptimMethod {
       state.put("r", _r); // 2nd moment variables
       state.put("denom", _denom); // 3nd moment variables
 
-      return new TensorAndArrayPair(parameter, new float[]{(float)eval.getValue0()});
+      return new TensorAndArrayPair(parameter, new float[]{(float) eval.getValue0()});
     }
   }
 

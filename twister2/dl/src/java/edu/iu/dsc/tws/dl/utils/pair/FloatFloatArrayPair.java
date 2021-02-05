@@ -9,22 +9,35 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.module.mkldnn.memory;
+package edu.iu.dsc.tws.dl.utils.pair;
 
-import com.intel.analytics.bigdl.mkl.MklDnn;
 
-import edu.iu.dsc.tws.dl.module.mkldnn.MemoryOwner;
-import edu.iu.dsc.tws.dl.module.mkldnn.MklDnnNativeMemory;
+public class FloatFloatArrayPair implements PrimitiveArrayPair {
+  private float t0;
+  private float[] t1;
 
-@SuppressWarnings({"LocalVariableName", "ParameterName"})
-public class MklMemoryAttr extends MklDnnNativeMemory {
-
-  public MklMemoryAttr(long __ptr, MemoryOwner owner) {
-    super(__ptr, owner);
+  public FloatFloatArrayPair() {
+    //For Kryo
   }
 
-  @Override
-  public void doRelease() {
-    MklDnn.DestroyAttr(ptr);
+  public FloatFloatArrayPair(float t0, float[] t1) {
+    this.t0 = t0;
+    this.t1 = t1;
+  }
+
+  public float getValue0() {
+    return t0;
+  }
+
+  public float[] getValue1() {
+    return t1;
+  }
+
+  public void setValue0(float value) {
+    this.t0 = value;
+  }
+
+  public void setValue1(float[] value) {
+    this.t1 = value;
   }
 }

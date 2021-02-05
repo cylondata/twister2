@@ -76,7 +76,7 @@ public class LogSoftMax extends TensorModule {
 
   private void updateOutputFrame(DenseTensor in, DenseTensor out) {
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (ones.nElement() < in.nElement()) {
         ones.resizeAs(in).fill(1.0f);
       }
@@ -92,7 +92,7 @@ public class LogSoftMax extends TensorModule {
       float logSum = TensorNumeric.plus(maxInput, TensorNumeric.log(buffer.dotf(ones)));
 
       out.add(TensorNumeric.negative(logSum));
-    }else {
+    } else {
       if (ones.nElement() < in.nElement()) {
         ones.resizeAs(in).fill(1.0);
       }
@@ -142,11 +142,11 @@ public class LogSoftMax extends TensorModule {
   }
 
   private void updateGradInputFrame(DenseTensor out, DenseTensor gradOut) {
-    if(this.isFloat){
+    if (this.isFloat) {
       buffer.exp(out);
       float outSum = gradOut.dotf(ones);
       gradOut.add(TensorNumeric.negative(outSum), buffer);
-    }else {
+    } else {
       buffer.exp(out);
       double outSum = gradOut.dot(ones);
       gradOut.add(TensorNumeric.negative(outSum), buffer);

@@ -18,8 +18,10 @@ import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 
-public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
+public class TrainMapFunction<T> extends BaseMapFunc<T, PrimitiveArrayPair> {
 
   private AbstractModule modal;
   private AbstractCriterion criterion;
@@ -29,7 +31,7 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
   }
 
   @Override
-  public DoubleDoubleArrayPair map(T data) {
+  public PrimitiveArrayPair map(T data) {
     long startTime = System.nanoTime();
 
     modal = (AbstractModule) getTSetContext()
@@ -41,14 +43,27 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, DoubleDoubleArrayPair> {
     Activity input = miniBatch.getInput();
     Activity target = miniBatch.getTarget();
     DenseTensor output = modal.forward((DenseTensor) input);
-    double loss = criterion.forward(output, target);
-    Activity errors = criterion.backward(output, target);
-    modal.backward((DenseTensor) input, (DenseTensor) errors);
-    DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(loss,
-        modal.getParameters().getValue1().storage().toDoubleArray());
-    if (this.getTSetContext().getIndex() == 0) {
-      System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+    PrimitiveArrayPair result;
+    if (modal.isFloat()) {
+      float loss = criterion.forwardf(output, target);
+      Activity errors = criterion.backward(output, target);
+      modal.backward((DenseTensor) input, (DenseTensor) errors);
+      result = new FloatFloatArrayPair(loss,
+          modal.getParameters().getValue1().storage().toFloatArray());
+      if (this.getTSetContext().getIndex() == 0) {
+        System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+      }
+    } else {
+      double loss = criterion.forward(output, target);
+      Activity errors = criterion.backward(output, target);
+      modal.backward((DenseTensor) input, (DenseTensor) errors);
+      result = new DoubleDoubleArrayPair(loss,
+          modal.getParameters().getValue1().storage().toDoubleArray());
+      if (this.getTSetContext().getIndex() == 0) {
+        System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+      }
     }
+
     return result;
   }
 }

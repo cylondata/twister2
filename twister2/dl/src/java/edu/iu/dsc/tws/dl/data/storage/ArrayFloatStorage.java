@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.data.storage;
 
-import edu.iu.dsc.tws.dl.data.Storage;
-
 import java.util.Arrays;
 import java.util.Iterator;
+
+import edu.iu.dsc.tws.dl.data.Storage;
 
 public class ArrayFloatStorage extends ArrayStorage {
   private float[] values;

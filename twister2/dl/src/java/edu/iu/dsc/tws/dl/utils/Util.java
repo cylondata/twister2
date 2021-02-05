@@ -20,10 +20,10 @@ public final class Util {
   private Util() {
   }
 
-  public static ArrayStorage buildStorage(int size, boolean isFloat){
-    if(isFloat){
+  public static ArrayStorage buildStorage(int size, boolean isFloat) {
+    if (isFloat) {
       return new ArrayFloatStorage(size);
-    }else{
+    } else {
       return new ArrayDoubleStorage(size);
     }
   }

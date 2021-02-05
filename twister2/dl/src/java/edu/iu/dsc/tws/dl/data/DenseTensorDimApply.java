@@ -119,7 +119,7 @@ public final class DenseTensorDimApply {
       d += 1;
     }
 
-    if(tensor1.isFloat()){
+    if (tensor1.isFloat()) {
       int[] counter = new int[tensor1.nDimension()];
       float[] _data1 = tensor1.storage().toFloatArray();
       int _offset1 = tensor1.storageOffset() - 1;
@@ -178,7 +178,7 @@ public final class DenseTensorDimApply {
           }
         }
       }
-    }else{
+    } else {
 
       int[] counter = new int[tensor1.nDimension()];
       double[] _data1 = tensor1.storage().toDoubleArray();

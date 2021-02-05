@@ -31,6 +31,9 @@ public abstract class DynamicContainer extends Container {
         "Add operations to dynamic container is not allowed, as operations don't have backward. "
             + "Operation can only be used in Graph");
     List<AbstractModule> moduleList = new ArrayList<>();
+    if (this.isFloat()) {
+      module.toFloat();
+    }
     moduleList.add(module);
     validateInput(moduleList);
     this.modules.add(module);

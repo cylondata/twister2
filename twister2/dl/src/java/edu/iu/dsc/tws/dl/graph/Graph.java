@@ -131,7 +131,7 @@ public abstract class Graph extends Container {
     while (i < output.length()) {
       if (!gradOutput.contains(i + 1)) {
         Tensor tensor = output.<Tensor>get(i + 1);
-        Tensor zero = new DenseTensor(tensor.size());
+        Tensor zero = new DenseTensor(tensor.size(), this.isFloat());
         gradOutput.update(i + 1, zero);
       }
       i = i + 1;

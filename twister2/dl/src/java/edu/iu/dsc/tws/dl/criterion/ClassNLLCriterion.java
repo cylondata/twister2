@@ -216,10 +216,13 @@ public class ClassNLLCriterion extends TensorCriterion {
         outputf = 0.0f;
       } else {
         if (!logProbAsInput) {
-          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon, (float) oneMinusEpsilon);
-          TensorNumeric.times(TensorNumeric.negative(TensorNumeric.log(clipped)), (float) total_weight);
+          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon,
+              (float) oneMinusEpsilon);
+          TensorNumeric.times(TensorNumeric.negative(TensorNumeric.log(clipped)),
+              (float) total_weight);
         } else {
-          TensorNumeric.times(TensorNumeric.negative(input.valueAtf(curTarget)), (float) total_weight);
+          TensorNumeric.times(TensorNumeric.negative(input.valueAtf(curTarget)),
+              (float) total_weight);
         }
       }
     } else if (input.dim() == 2) {
@@ -276,7 +279,7 @@ public class ClassNLLCriterion extends TensorCriterion {
     }
     return outputf;
   }
-  
+
   @Override
   public Tensor updateGradInput(Tensor input, Tensor target) {
     Util.require(input.dim() == 1 || input.dim() == 2,
@@ -289,7 +292,7 @@ public class ClassNLLCriterion extends TensorCriterion {
 
     gradInput.resizeAs(input);
     gradInput.zero();
-    if(this.isFloat){
+    if (this.isFloat) {
       if (input.dim() == 1) {
         Util.require(input.dim() == target.dim(),
             "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget
@@ -310,7 +313,8 @@ public class ClassNLLCriterion extends TensorCriterion {
               (float) total_weight));
         }
         if (!logProbAsInput) {
-          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon, (float) oneMinusEpsilon);
+          float clipped = TensorNumeric.clip(input.valueAtf(curTarget), (float) epsilon,
+              (float) oneMinusEpsilon);
           gradInput.setValue(curTarget,
               TensorNumeric.times(gradInput.valueAtf(curTarget), TensorNumeric.inv(clipped)));
         }
@@ -336,13 +340,14 @@ public class ClassNLLCriterion extends TensorCriterion {
               float clipped = TensorNumeric.clip(input.valueAtf(i, curTarget),
                   (float) epsilon, (float) oneMinusEpsilon);
               gradInput.setValue(i, curTarget,
-                  TensorNumeric.times(gradInput.valueAtf(i, curTarget), TensorNumeric.inv(clipped)));
+                  TensorNumeric.times(gradInput.valueAtf(i, curTarget),
+                      TensorNumeric.inv(clipped)));
             }
           }
         }
         target.resize(targetSize);
       }
-    }else {
+    } else {
       if (input.dim() == 1) {
         Util.require(input.dim() == target.dim(),
             "ClassNLLCriterion: " + ErrorConstants.constrainInputDimSameAsTarget

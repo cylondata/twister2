@@ -60,17 +60,22 @@ public class Linear extends TensorModule implements Initializable {
 
 
   public Linear(int inputSize, int outputSize) {
-    this(inputSize, outputSize, null, null);
+    this(inputSize, outputSize, null, null, false);
   }
 
-  public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer) {
+  public Linear(int inputSize, int outputSize, boolean isF) {
+    this(inputSize, outputSize, null, null, isF);
+  }
+
+  public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer,
+                boolean isF) {
     this(inputSize, outputSize, wRegularizer, bRegularizer, true, null,
-        null, null, null);
+        null, null, null, isF);
   }
 
   public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer,
                 boolean withBias, Tensor initWeight, Tensor initBias, Tensor initGradWeight,
-                Tensor initGradBias) {
+                Tensor initGradBias, boolean isF) {
     this.inputSize = inputSize;
     this.outputSize = outputSize;
     this.wRegularizer = wRegularizer;
@@ -80,13 +85,14 @@ public class Linear extends TensorModule implements Initializable {
     this.initBias = initBias;
     this.initGradWeight = initGradWeight;
     this.initGradBias = initGradBias;
-
+    this.isFloat = isF;
     init();
 
   }
 
   private void init() {
-    weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize, inputSize, this.isFloat);
+    weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize,
+        inputSize, this.isFloat);
 
     if (initBias != null) {
       bias = initBias;
@@ -119,7 +125,7 @@ public class Linear extends TensorModule implements Initializable {
         "Linear: " + ErrorConstants.constrainInputAsVectorOrBatch
             + "input dim ${input.dim()}");
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (input.dim() == 1) {
         ((DenseTensor) output).resize(new int[]{outputSize});
         if (withBias) {
@@ -145,7 +151,7 @@ public class Linear extends TensorModule implements Initializable {
         ((DenseTensor) output).addmm(0.0f, (DenseTensor) output, 1.0f, input, weight.t());
         if (withBias) ((DenseTensor) output).addr(1.0f, addBuffer, bias);
       }
-    }else {
+    } else {
       if (input.dim() == 1) {
         ((DenseTensor) output).resize(new int[]{outputSize});
         if (withBias) {
@@ -188,13 +194,13 @@ public class Linear extends TensorModule implements Initializable {
       ((DenseTensor) gradInput).zero();
     }
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (input.dim() == 1) {
         ((DenseTensor) gradInput).addmv(0.0f, 1.0f, weight.t(), gradOutput);
       } else if (input.dim() == 2) {
         ((DenseTensor) gradInput).addmm(0.0f, 1.0f, gradOutput, weight);
       }
-    }else {
+    } else {
       if (input.dim() == 1) {
         ((DenseTensor) gradInput).addmv(0.0, 1.0, weight.t(), gradOutput);
       } else if (input.dim() == 2) {
@@ -224,7 +230,7 @@ public class Linear extends TensorModule implements Initializable {
     if (withBias) {
       gradBias.resize(outputSize);
     }
-    if(this.isFloat){
+    if (this.isFloat) {
       float scaleWf = (float) scaleW;
       float scaleBf = (float) scaleB;
       if (input.dim() == 1) {
@@ -250,7 +256,7 @@ public class Linear extends TensorModule implements Initializable {
       if (null != bRegularizer && scaleB != 0) {
         bRegularizer.accRegularization(bias, gradBias, scaleBf);
       }
-    }else {
+    } else {
       if (input.dim() == 1) {
         if (scaleW != 0) {
           gradWeight.addr(scaleW, gradOutput, input);

@@ -11,11 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import edu.iu.dsc.tws.dl.data.Storage;
-import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
-import edu.iu.dsc.tws.dl.utils.Pointer;
-import edu.iu.dsc.tws.dl.utils.Util;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,25 +20,39 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.intel.analytics.bigdl.mkl.Memory;
 
+import edu.iu.dsc.tws.dl.data.Storage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.utils.Pointer;
+import edu.iu.dsc.tws.dl.utils.Util;
+
 /**
  * Represent a native array which is needed by mkl-dnn
+ *
  * @param size Storage size
  * @tparam T data type, only support float now
  */
+@SuppressWarnings({"StaticVariableName", "ParameterName", "MemberName"})
 public class DnnStorage implements Storage {
 
-  private int size;
+  private int sizeInternal;
   private int bytes;
   private boolean _isReleased = false;
   // Hold the address of the native array
-  transient Pointer ptr = new Pointer(allocate(size));
+  private transient Pointer ptrInternal;
 
-  public static int CACHE_LINE_SIZE = Integer.parseInt(System.getProperty("bigdl.cache.line", "64"));
+  public static int CACHE_LINE_SIZE = Integer.parseInt(System.getProperty("bigdl.cache.line",
+      "64"));
   public static int FLOAT_BYTES = 4;
   public static int INT8_BYTES = 1;
   public static int INT_BYTES = 4;
 
   private static ConcurrentHashMap<Long, Boolean> nativeStorages = new ConcurrentHashMap();
+
+  public DnnStorage(int size) {
+    this.sizeInternal = size;
+    this.ptrInternal = new Pointer(allocate(size));
+    this.bytes = DnnStorage.FLOAT_BYTES;
+  }
 
   public static boolean checkAndSet(long pointer) {
     return nativeStorages.replace(pointer, false, true);
@@ -53,13 +62,17 @@ public class DnnStorage implements Storage {
     nativeStorages.put(key, false);
   }
 
-  public static Map<Long, Boolean> get(){
+  public static Map<Long, Boolean> get() {
     return nativeStorages;
+  }
+
+  public Pointer getPtrInternal() {
+    return ptrInternal;
   }
 
   @Override
   public int length() {
-    return size;
+    return sizeInternal;
   }
 
   @Override
@@ -74,18 +87,18 @@ public class DnnStorage implements Storage {
 
   @Override
   public Storage copy(Storage source, int offset, int sourceOffset, int length) {
-      //TODO Need to complete copy
-      if(source instanceof ArrayDoubleStorage) {
-        //Util.require(checkIsInstanceOf(ClassTag.Float), "copy from float storage not supported");
+    //TODO Need to complete copy
+    if (source instanceof ArrayDoubleStorage) {
+      //Util.require(checkIsInstanceOf(ClassTag.Float), "copy from float storage not supported");
 //        Memory.CopyArray2Ptr(s.array().asInstanceOf[Array[Float]], sourceOffset,
 //            ptr.address, offset, length, bytes)
-      }else if(source instanceof DnnStorage) {
+    } else if (source instanceof DnnStorage) {
 //        Memory.CopyPtr2Ptr(s.ptr.address, sourceOffset, ptr.address, offset, length,
 //            bytes)
-      }else {
-        throw new UnsupportedOperationException("Only support copy from ArrayStorage or DnnStorage");
-      }
-      return null;
+    } else {
+      throw new UnsupportedOperationException("Only support copy from ArrayStorage or DnnStorage");
+    }
+    return null;
   }
 
   @Override
@@ -110,7 +123,7 @@ public class DnnStorage implements Storage {
 
   @Override
   public float[] toFloatArray() {
-    return new float[][0];
+    return new float[0];
   }
 
   @Override
@@ -123,7 +136,7 @@ public class DnnStorage implements Storage {
     throw new UnsupportedOperationException("Not support this operation in DnnStorage");
   }
 
-  private boolean checkIsInstanceOf(Object that){
+  private boolean checkIsInstanceOf(Object that) {
     //TODO check if type check is needed
     //scala.reflect.classTag[T] == that
     return true;
@@ -132,16 +145,16 @@ public class DnnStorage implements Storage {
   /**
    * Release the native array, the storage object is useless
    */
-  private synchronized void release(){
-    if (!this.isReleased() && ptr.address() != 0L) {
-      Memory.AlignedFree(ptr.address());
-      DnnStorage.checkAndSet(ptr.address());
+  public synchronized void release() {
+    if (!this.isReleased() && ptrInternal.address() != 0L) {
+      Memory.AlignedFree(ptrInternal.address());
+      DnnStorage.checkAndSet(ptrInternal.address());
       _isReleased = true;
-      ptr = null;
+      ptrInternal = null;
     }
   }
 
-  private boolean isReleased(){
+  public boolean isReleased() {
     return _isReleased;
   }
 
@@ -157,9 +170,10 @@ public class DnnStorage implements Storage {
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     if (!_isReleased) {
-      ptr = new Pointer(allocate(this.size));
+      ptrInternal = new Pointer(allocate(this.sizeInternal));
       float[] elements = (float[]) in.readObject();
-      Memory.CopyArray2Ptr(elements, 0, ptr.address(), 0, size, DnnStorage.FLOAT_BYTES);
+      Memory.CopyArray2Ptr(elements, 0, ptrInternal.address(), 0, sizeInternal,
+          DnnStorage.FLOAT_BYTES);
     }
   }
 
@@ -167,7 +181,8 @@ public class DnnStorage implements Storage {
     out.defaultWriteObject();
     if (!_isReleased) {
       float[] elements = new float[this.length()];
-      Memory.CopyPtr2Array(this.ptr.address(), 0, elements, 0, size, DnnStorage.FLOAT_BYTES);
+      Memory.CopyPtr2Array(this.ptrInternal.address(), 0, elements, 0, sizeInternal,
+          DnnStorage.FLOAT_BYTES);
       out.writeObject(elements);
     }
   }

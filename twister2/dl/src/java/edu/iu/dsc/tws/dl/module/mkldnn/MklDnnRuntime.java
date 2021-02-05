@@ -12,11 +12,10 @@
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
 import com.intel.analytics.bigdl.mkl.Engine;
-import com.intel.analytics.bigdl.mkl.MklDnn;
 import com.intel.analytics.bigdl.mkl.Stream;
 
 public class MklDnnRuntime {
   // TODO MklDnn.isLoaded
-  transient long engine = Engine.Create(Engine.Kind.Cpu, 0);
-  transient long stream = Stream.Create(Stream.Kind.Eager);
+  public transient long engine = Engine.Create(Engine.Kind.Cpu, 0);
+  public transient long stream = Stream.Create(Stream.Kind.Eager);
 }

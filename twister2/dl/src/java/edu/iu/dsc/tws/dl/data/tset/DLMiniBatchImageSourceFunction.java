@@ -111,8 +111,8 @@ public class DLMiniBatchImageSourceFunction extends BaseSourceFunc<MiniBatch> {
 
       int[] sizesD = new int[]{realBatchSize, nPlanes, w, h};
       int[] sizesL = new int[]{realBatchSize, 1};
-      features = new DenseTensor();
-      lables = new DenseTensor();
+      features = new DenseTensor(false);
+      lables = new DenseTensor(false);
       features.set(new ArrayDoubleStorage(data), 1, sizesD, null);
       lables.set(new ArrayDoubleStorage(label), 1, sizesL, null);
       return new ArrayTensorMiniBatch(features, lables);

@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn.memory;
 
-import edu.iu.dsc.tws.dl.module.mkldnn.MemoryOwner;
-import edu.iu.dsc.tws.dl.module.mkldnn.MklDnnNativeMemory;
 import com.intel.analytics.bigdl.mkl.MklDnn;
 
+import edu.iu.dsc.tws.dl.module.mkldnn.MemoryOwner;
+import edu.iu.dsc.tws.dl.module.mkldnn.MklDnnNativeMemory;
+
+@SuppressWarnings({"LocalVariableName", "ParameterName"})
 public class MklMemoryPrimitiveDesc extends MklDnnNativeMemory {
 
   public MklMemoryPrimitiveDesc(long __ptr, MemoryOwner owner) {

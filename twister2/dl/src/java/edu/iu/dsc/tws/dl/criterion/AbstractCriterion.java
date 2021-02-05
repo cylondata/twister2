@@ -42,7 +42,7 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     isFloat = false;
   }
 
-  public void toFloat(){
+  public void toFloat() {
     isFloat = true;
     gradInput = (I) new DenseTensor(true);
   }
@@ -67,8 +67,8 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
     this.output = output;
   }
 
-  public void setOutput(float outputf) {
-    this.outputf = outputf;
+  public void setOutput(float output) {
+    this.outputf = output;
   }
 
   /**
@@ -136,9 +136,9 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
   @Override
   public int hashCode() {
     //TODO check correctness
-    if(this.isFloat){
+    if (this.isFloat) {
       return Double.valueOf(outputf).hashCode();
-    }else {
+    } else {
       return Double.valueOf(output).hashCode();
     }
   }
@@ -149,10 +149,10 @@ public abstract class AbstractCriterion<I extends Activity, O extends Activity>
 
   @Override
   public boolean equals(Object other) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return other instanceof AbstractCriterion && other.getClass() == this.getClass()
           && this.outputf == ((AbstractCriterion<?, ?>) other).getOutput();
-    }else {
+    } else {
       return other instanceof AbstractCriterion && other.getClass() == this.getClass()
           && this.output == ((AbstractCriterion<?, ?>) other).getOutput();
     }

@@ -82,10 +82,19 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * Convert the modules to float. If there are any specific changes needed to support float
    * at the module level this method needs to be overridden.
    */
-  public void toFloat(){
+  public void toFloat() {
     this.output = new DenseTensor(true);
     this.gradInput = new DenseTensor(true);
     this.isFloat = true;
+  }
+
+  /**
+   * Check if module is float
+   *
+   * @return true if float
+   */
+  public boolean isFloat() {
+    return isFloat;
   }
 
   /**
@@ -824,8 +833,9 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 
   /**
    * module predict, return the predict label
-   *  @param dataset   dataset for prediction
-   * @param batchSize total batchSize for all partitions.
+   *
+   * @param dataset      dataset for prediction
+   * @param batchSize    total batchSize for all partitions.
    * @param testDataSize
    */
 
@@ -837,7 +847,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     for (Object data : dataList) {
       int[] temp = (int[]) data;
       for (int i = 0; i < temp.length; i++) {
-        results[index]  = temp[i];
+        results[index] = temp[i];
         index++;
       }
     }
@@ -863,6 +873,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
 
   }
+
   /**
    * Get weight and bias for the module
    *

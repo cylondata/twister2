@@ -71,7 +71,7 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     int miniBatchSize = batchSize / parallelism;
 
     SourceTSet<MiniBatch> source = DataSetFactory
-        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
+        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, false);
 
     //Define model
     int l1 = 2048;

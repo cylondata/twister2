@@ -121,6 +121,21 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * im2colFloat.
+   * @param fInput
+   * @param input
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padLeft
+   * @param padTop
+   * @param padRight
+   * @param padBottom
+   * @param outputWidth
+   * @param outputHeight
+   */
   public static void im2colFloat(
       DenseTensor fInput, DenseTensor input,
       int kW, int kH, int
@@ -307,6 +322,21 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * col2imFloat.
+   * @param fInput
+   * @param input
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padLeft
+   * @param padTop
+   * @param padRight
+   * @param padBottom
+   * @param outputWidth
+   * @param outputHeight
+   */
   public static void col2imFloat(
       DenseTensor fInput, DenseTensor input,
       int kW, int kH, int
@@ -472,6 +502,21 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * im2colFloatNHWC
+   * @param fInput
+   * @param input
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padLeft
+   * @param padTop
+   * @param padRight
+   * @param padBottom
+   * @param outputWidth
+   * @param outputHeight
+   */
   public static void im2colFloatNHWC(
       DenseTensor fInput, DenseTensor input,
       int kW, int kH, int
@@ -603,6 +648,21 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * col2imFloatNHWC.
+   * @param fInput
+   * @param input
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padLeft
+   * @param padTop
+   * @param padRight
+   * @param padBottom
+   * @param outputWidth
+   * @param outputHeight
+   */
   public static void col2imFloatNHWC(
       DenseTensor fInput, DenseTensor input,
       int kW, int kH, int
@@ -654,8 +714,10 @@ public final class NNPrimitive {
       hPad = hPad + dH;
     }
   }
+
   /**
    * maxPoolingForwardDouble.
+   *
    * @param inputTensor
    * @param outputTensor
    * @param indicesTensor
@@ -723,9 +785,23 @@ public final class NNPrimitive {
 
   }
 
+  /**
+   * maxPoolingForwardFloat.
+   * @param inputTensor
+   * @param outputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padW
+   * @param padH
+   */
   public static void maxPoolingForwardFloat(DenseTensor inputTensor, DenseTensor outputTensor,
-                                             DenseTensor indicesTensor, int oWidth, int oHeight,
-                                             int kW, int kH, int dW, int dH, int padW, int padH) {
+                                            DenseTensor indicesTensor, int oWidth, int oHeight,
+                                            int kW, int kH, int dW, int dH, int padW, int padH) {
     int nSlices = inputTensor.size(1);
     int iHeight = inputTensor.size(2);
     int iWidth = inputTensor.size(3);
@@ -780,6 +856,7 @@ public final class NNPrimitive {
 
   /**
    * maxPoolingForwardDoubleNHWC.
+   *
    * @param inputTensor
    * @param outputTensor
    * @param indicesTensor
@@ -850,10 +927,24 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * maxPoolingForwardFloatNHWC.
+   * @param inputTensor
+   * @param outputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   * @param kW
+   * @param kH
+   * @param dW
+   * @param dH
+   * @param padW
+   * @param padH
+   */
   public static void maxPoolingForwardFloatNHWC(DenseTensor inputTensor, DenseTensor outputTensor,
-                                                 DenseTensor indicesTensor, int oWidth, int oHeight,
-                                                 int kW, int kH, int dW, int dH, int padW,
-                                                 int padH) {
+                                                DenseTensor indicesTensor, int oWidth, int oHeight,
+                                                int kW, int kH, int dW, int dH, int padW,
+                                                int padH) {
     int nSlices = inputTensor.size(3);
     int iHeight = inputTensor.size(1);
     int iWidth = inputTensor.size(2);
@@ -907,8 +998,10 @@ public final class NNPrimitive {
       i += 1;
     }
   }
+
   /**
    * maxPoolingBackwardDoubleNHWC.
+   *
    * @param gradInputTensor
    * @param gradOutputTensor
    * @param indicesTensor
@@ -950,10 +1043,18 @@ public final class NNPrimitive {
 
   }
 
+  /**
+   * maxPoolingBackwardFloatNHWC.
+   * @param gradInputTensor
+   * @param gradOutputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   */
   public static void maxPoolingBackwardFloatNHWC(DenseTensor gradInputTensor,
-                                                  DenseTensor gradOutputTensor,
-                                                  DenseTensor indicesTensor, int oWidth,
-                                                  int oHeight) {
+                                                 DenseTensor gradOutputTensor,
+                                                 DenseTensor indicesTensor, int oWidth,
+                                                 int oHeight) {
     int nSlices = gradInputTensor.size(3);
     int iHeight = gradInputTensor.size(1);
     int iWidth = gradInputTensor.size(2);
@@ -984,8 +1085,10 @@ public final class NNPrimitive {
     }
 
   }
+
   /**
    * maxPoolingBackwardDouble.
+   *
    * @param gradInputTensor
    * @param gradOutputTensor
    * @param indicesTensor
@@ -1023,10 +1126,18 @@ public final class NNPrimitive {
     }
   }
 
+  /**
+   * maxPoolingBackwardFloat.
+   * @param gradInputTensor
+   * @param gradOutputTensor
+   * @param indicesTensor
+   * @param oWidth
+   * @param oHeight
+   */
   public static void maxPoolingBackwardFloat(DenseTensor gradInputTensor,
-                                              DenseTensor gradOutputTensor,
-                                              DenseTensor indicesTensor, int oWidth,
-                                              int oHeight) {
+                                             DenseTensor gradOutputTensor,
+                                             DenseTensor indicesTensor, int oWidth,
+                                             int oHeight) {
 
     int nSlices = gradInputTensor.size(1);
     int iHeight = gradInputTensor.size(2);

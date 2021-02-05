@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 
 public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
@@ -43,13 +44,16 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
   private int parallel;
   private int batchSize;
   private int count = 0;
+  private boolean isFloatType = false;
 
-  public DLMiniBatchSourceFunction(String filePath, int batchsize, int datasize, int parallelism) {
+  public DLMiniBatchSourceFunction(String filePath, int batchsize, int datasize, int parallelism,
+                                   boolean isFloat) {
     this.dataFilePath = filePath;
     this.batchSize = batchsize;
     this.dataSize = datasize;
     this.parallel = parallelism;
     this.pattern = Pattern.compile(CSVInputSplit.DEFAULT_FIELD_DELIMITER);
+    this.isFloatType = isFloat;
   }
 
   @Override
@@ -78,7 +82,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
   @Override
   public MiniBatch next() {
     try {
-      DenseTensor batch = new DenseTensor();
+      DenseTensor batch = new DenseTensor(false);
       int i = 0;
       int rowSize = 0;
       List<String> dataString = new ArrayList<String>();
@@ -88,15 +92,27 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
         rowSize = entries.length;
         i++;
       }
-      double[] data = new double[dataString.size()];
-      for (int j = 0; j < dataString.size(); j++) {
-        data[j] = Double.parseDouble(dataString.get(j));
-      }
+      if (this.isFloatType) {
+        float[] data = new float[dataString.size()];
+        for (int j = 0; j < dataString.size(); j++) {
+          data[j] = Float.parseFloat(dataString.get(j));
+        }
 
-      int[] sizes = new int[]{i, rowSize};
-      batch = new DenseTensor();
-      batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
-      return new ArrayTensorMiniBatch(batch, batch);
+        int[] sizes = new int[]{i, rowSize};
+        batch = new DenseTensor(true);
+        batch.set(new ArrayFloatStorage(data), 1, sizes, null);
+        return new ArrayTensorMiniBatch(batch, batch);
+      } else {
+        double[] data = new double[dataString.size()];
+        for (int j = 0; j < dataString.size(); j++) {
+          data[j] = Double.parseDouble(dataString.get(j));
+        }
+
+        int[] sizes = new int[]{i, rowSize};
+        batch = new DenseTensor(false);
+        batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
+        return new ArrayTensorMiniBatch(batch, batch);
+      }
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split", e);
     }

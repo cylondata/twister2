@@ -23,12 +23,17 @@ public final class DenseTensorApply {
   private DenseTensorApply() {
   }
 
+  /**
+   * apply1.
+   * @param tensor
+   * @param func
+   */
   public static void apply1(DenseTensor tensor, TensorFunc2 func) {
     if (tensor.isEmpty()) {
       return;
     }
 
-    if(tensor.isFloat()){
+    if (tensor.isFloat()) {
       float[] data = tensor.storage().toFloatArray();
       int index = tensor.storageOffset() - 1;
 
@@ -58,7 +63,7 @@ public final class DenseTensorApply {
         offset = counterMeta[1];
         i = 0;
       }
-    }else {
+    } else {
       double[] data = tensor.storage().toDoubleArray();
       int index = tensor.storageOffset() - 1;
 
@@ -105,7 +110,7 @@ public final class DenseTensorApply {
     if (tensor1.isEmpty()) {
       return;
     }
-    if(tensor1.isFloat()){
+    if (tensor1.isFloat()) {
 // shortcut for scalar
       if (tensor1.isScalar() && tensor2.isScalar()) {
         float[] tensor1Data = tensor1.storage().toFloatArray();
@@ -180,7 +185,7 @@ public final class DenseTensorApply {
           i2 = 0;
         }
       }
-    }else {
+    } else {
 // shortcut for scalar
       if (tensor1.isScalar() && tensor2.isScalar()) {
         double[] tensor1Data = tensor1.storage().toDoubleArray();
@@ -277,7 +282,7 @@ public final class DenseTensorApply {
     if (tensor1.isEmpty()) {
       return;
     }
-    if(tensor1.isFloat()){
+    if (tensor1.isFloat()) {
 // shortcut for scalar
       if (tensor1.isScalar() && tensor2.isScalar() && tensor3.isScalar()) {
         float[] tensor1Data = tensor1.storage().toFloatArray();
@@ -350,7 +355,7 @@ public final class DenseTensorApply {
           i3 = 0;
         }
       }
-    }else {
+    } else {
 // shortcut for scalar
       if (tensor1.isScalar() && tensor2.isScalar() && tensor3.isScalar()) {
         double[] tensor1Data = tensor1.storage().toDoubleArray();

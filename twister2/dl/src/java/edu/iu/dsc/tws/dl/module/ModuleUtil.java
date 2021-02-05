@@ -36,12 +36,12 @@ public final class ModuleUtil {
       i += 1;
     }
 
-    DenseTensor result = new DenseTensor(length, compactedTensor.isFloat());
+    DenseTensor result = new DenseTensor(length, parameters[0].isFloat());
     ArrayStorage resultStorage = result.storage();
 
     i = 0;
     int offset = 0;
-    if(result.isFloat()){
+    if (result.isFloat()) {
       while (i < parameters.length) {
         System.arraycopy(parameters[i].storage().toFloatArray(), parameters[i].storageOffset() - 1,
             resultStorage.toFloatArray(), offset, parameters[i].nElement());
@@ -49,7 +49,7 @@ public final class ModuleUtil {
         offset += parameters[i].nElement();
         i += 1;
       }
-    }else {
+    } else {
       while (i < parameters.length) {
         System.arraycopy(parameters[i].storage().toDoubleArray(), parameters[i].storageOffset() - 1,
             resultStorage.toDoubleArray(), offset, parameters[i].nElement());
@@ -71,7 +71,7 @@ public final class ModuleUtil {
     ArrayStorage storage;
     int length;
     int offset;
-    if(parameters[0].isFloat()){
+    if (parameters[0].isFloat()) {
       storage = (ArrayFloatStorage) parameters[0].storage();
       length = parameters[0].nElement();
       offset = parameters[0].storageOffset();
@@ -86,7 +86,7 @@ public final class ModuleUtil {
         length += parameters[i].nElement();
         i += 1;
       }
-    }else {
+    } else {
       storage = (ArrayDoubleStorage) parameters[0].storage();
       length = parameters[0].nElement();
       offset = parameters[0].storageOffset();

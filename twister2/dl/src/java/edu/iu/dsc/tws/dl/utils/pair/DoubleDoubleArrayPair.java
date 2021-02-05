@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.dl.utils.pair;
 
 
-public class DoubleDoubleArrayPair {
+public class DoubleDoubleArrayPair implements PrimitiveArrayPair {
   private double t0;
   private double[] t1;
 

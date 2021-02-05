@@ -23,9 +23,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn.memory;
 
+import com.intel.analytics.bigdl.mkl.DataType;
+
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
+import edu.iu.dsc.tws.dl.data.tensor.DnnTensor;
 import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
 import edu.iu.dsc.tws.dl.module.mkldnn.MemoryOwner;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.HeapData;
@@ -34,53 +38,57 @@ import edu.iu.dsc.tws.dl.utils.Util;
 
 public class MklDnnModuleHelper extends MemoryOwner {
 
-  transient protected MemoryOwner _this = this;
-
-  protected Activity initActivity(MemoryData[] formats){
+  protected Activity initActivity(MemoryData[] formats) {
     if (formats.length == 1) {
-      initTensor(formats[0]);
+      return initTensor(formats[0]);
     } else {
-      T.array(formats.map(initTensor(_)));
+      Tensor[] tensors = new Tensor[formats.length];
+      for (int i = 0; i < tensors.length; i++) {
+        tensors[i] = initTensor(formats[i]);
+      }
+      return new Table(tensors);
     }
   }
 
-  protected Tensor initTensor(MemoryData format){
+  protected Tensor initTensor(MemoryData format) {
     int[] paddingShape = format.getPaddingShape();
     long realSize = format.getRealSize();
 
-    if(format instanceof NativeData){
+    if (format instanceof NativeData) {
       switch (format.dataType()) {
         case DataType.S8:
-          return new DnnTensor(paddingShape, realSize); //Byte
+          return new DnnTensor(paddingShape, realSize, this); //Byte
         case DataType.U8:
-          return new DnnTensor(paddingShape, realSize); //Byte
+          return new DnnTensor(paddingShape, realSize, this); //Byte
         case DataType.S32:
-          return new DnnTensor(paddingShape, realSize); //Int
+          return new DnnTensor(paddingShape, realSize, this); //Int
         case DataType.F32:
-          return new DnnTensor(paddingShape, realSize);
+          return new DnnTensor(paddingShape, realSize, this);
+        default:
+          break;
       }
-    }else if(format instanceof MemoryData){
-      return new DenseTensor(paddingShape);
+    } else if (format instanceof MemoryData) {
+      return new DenseTensor(paddingShape, true);
     } else {
       throw new UnsupportedOperationException("memory format is not supported");
     }
     return null;
   }
 
-  protected MemoryData[] singleNativeData(MemoryData[] formats){
+  protected MemoryData[] singleNativeData(MemoryData[] formats) {
     Util.require(formats.length == 1, "Only accept one tensor as input");
-    nativeData(formats);
+    return nativeData(formats);
   }
 
   protected MemoryData[] nativeData(MemoryData[] formats) {
     MemoryData[] nativeDataArray = new MemoryData[formats.length];
     for (int i = 0; i < formats.length; i++) {
       MemoryData format = formats[i];
-      if(!(format instanceof HeapData || format instanceof NativeData)){
+      if (!(format instanceof HeapData || format instanceof NativeData)) {
         throw new UnsupportedOperationException("Not support memory format");
       }
-      if(format instanceof HeapData) {
-        format = ((HeapData)formats[i]).toNative();
+      if (format instanceof HeapData) {
+        format = ((HeapData) formats[i]).toNative();
       }
       nativeDataArray[i] = format;
     }

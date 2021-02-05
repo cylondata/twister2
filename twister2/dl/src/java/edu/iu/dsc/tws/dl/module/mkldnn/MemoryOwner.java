@@ -24,14 +24,15 @@ import java.util.List;
  * MemoryOwner. ReorderMemory is a kind of special resource. They can be a normal layer or a
  * resource of another layer.
  */
+@SuppressWarnings({"MemberName", "ParameterName"})
 public abstract class MemoryOwner {
-  transient private List<Releasable> _resources = new ArrayList();
+  private transient List<Releasable> _resources = new ArrayList();
 
-  public void registerResource(Releasable m){
+  public void registerResource(Releasable m) {
     _resources.add(m);
   }
 
-  public void releaseResources(){
+  public void releaseResources() {
     _resources.forEach(o -> o.release());
     _resources.clear();
   }

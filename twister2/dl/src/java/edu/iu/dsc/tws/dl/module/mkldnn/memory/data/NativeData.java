@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn.memory.data;
 
-import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
-import com.intel.analytics.bigdl.mkl.DataType;
-
 import java.util.Arrays;
 
+import com.intel.analytics.bigdl.mkl.DataType;
+
+import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
+
+@SuppressWarnings({"LocalVariableName", "ParameterName", "MemberName"})
 public class NativeData extends MemoryData {
   private int[] _shape;
   private int _layout;
@@ -87,10 +89,14 @@ public class NativeData extends MemoryData {
       return true;
     }
     if (this.shape() != null && other.shape() != null) {
-      if (this.shape().length != other.shape().length) return false;
+      if (this.shape().length != other.shape().length) {
+        return false;
+      }
       int i = 0;
-      while(i < this.shape().length) {
-        if (this.shape()[i] != other.shape()[i]) return false;
+      while (i < this.shape().length) {
+        if (this.shape()[i] != other.shape()[i]) {
+          return false;
+        }
         i += 1;
       }
       return true;
@@ -101,10 +107,10 @@ public class NativeData extends MemoryData {
 
   @Override
   public String toString() {
-    return "NativeData{" +
-        "_shape=" + Arrays.toString(_shape) +
-        ", _layout=" + _layout +
-        ", _dataType=" + _dataType +
-        '}';
+    return "NativeData{"
+        + "_shape=" + Arrays.toString(_shape)
+        + ", _layout=" + _layout
+        + ", _dataType=" + _dataType
+        + '}';
   }
 }

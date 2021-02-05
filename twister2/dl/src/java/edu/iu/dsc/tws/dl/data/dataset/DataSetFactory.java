@@ -42,9 +42,9 @@ public final class DataSetFactory {
 
   public static SourceTSet<MiniBatch> createMiniBatchDataSet(BatchEnvironment env, String filePath,
                                                              int batchSize, int dataSize,
-                                                             int parallelism) {
+                                                             int parallelism, boolean isFloat) {
     return env.createSource(new DLMiniBatchSourceFunction(filePath,
-        batchSize, dataSize, parallelism), parallelism);
+        batchSize, dataSize, parallelism, isFloat), parallelism);
   }
 
   public static SourceTSet<Sample> createSampleDataSet(BatchEnvironment env, String filePath,

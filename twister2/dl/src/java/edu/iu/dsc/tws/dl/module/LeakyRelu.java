@@ -38,7 +38,7 @@ public class LeakyRelu extends TensorModule {
     if (inplace) {
       output = input;
     }
-    if(this.isFloat){
+    if (this.isFloat) {
       float negValuef = (float) negValue;
       if (inplace) {
         int i = input.storageOffset() - 1;
@@ -67,7 +67,7 @@ public class LeakyRelu extends TensorModule {
           i += 1;
         }
       }
-    }else {
+    } else {
       if (inplace) {
         int i = input.storageOffset() - 1;
         double[] array = input.storage().toDoubleArray();
@@ -109,7 +109,7 @@ public class LeakyRelu extends TensorModule {
     if (inplace) {
       gradInput = gradOutput;
     }
-    if(this.isFloat){
+    if (this.isFloat) {
       float negValuef = (float) negValue;
 
       if (inplace) {
@@ -144,7 +144,7 @@ public class LeakyRelu extends TensorModule {
           i += 1;
         }
       }
-    }else {
+    } else {
       if (inplace) {
         int i = 0;
         int inputOffset = input.storageOffset() - 1;

@@ -36,7 +36,8 @@ public final class DenseTensorMath {
       TensorNumeric.scal(self.nElement(), value, self.storage().toDoubleArray(),
           self.storageOffset() - 1, 1);
     } else {
-      TensorFunc2<double[]> func = (data, index) -> data[index] = TensorNumeric.times(data[index], value);
+      TensorFunc2<double[]> func = (data, index) -> data[index] = TensorNumeric.times(data[index],
+          value);
       DenseTensorApply.apply1(self, func);
     }
     return self;
@@ -52,12 +53,20 @@ public final class DenseTensorMath {
       TensorNumeric.scal(self.nElement(), value, self.storage().toFloatArray(),
           self.storageOffset() - 1, 1);
     } else {
-      TensorFunc2<float[]> func = (data, index) -> data[index] = TensorNumeric.times(data[index], value);
+      TensorFunc2<float[]> func = (data, index) -> data[index] = TensorNumeric.times(data[index],
+          value);
       DenseTensorApply.apply1(self, func);
     }
     return self;
   }
 
+  /**
+   * cmul.
+   * @param self
+   * @param x
+   * @param y
+   * @return
+   */
   public static Tensor cmul(DenseTensor self, DenseTensor x, DenseTensor y) {
     if (x.nElement() != y.nElement() && DenseTensor.canFastBroadcast(x, y)) {
       Util.require(self.nElement() == x.nElement(),
@@ -85,7 +94,7 @@ public final class DenseTensorMath {
     } else {
       Util.require(self.nElement() == y.nElement(), "element number doesn't match "
           + "self(${self.nElement()}) y(${y.nElement()}) x(${x.nElement()})");
-      if(self.isFloat()){
+      if (self.isFloat()) {
         if (self.isContiguous() && x.isContiguous() && y.isContiguous() && MKL.isMKLLoaded()) {
 
           TensorNumeric.vMul(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
@@ -94,7 +103,7 @@ public final class DenseTensorMath {
         } else {
           throw new UnsupportedOperationException("operation not supported");
         }
-      }else {
+      } else {
         if (self.isContiguous() && x.isContiguous() && y.isContiguous() && MKL.isMKLLoaded()) {
 
           TensorNumeric.vMul(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
@@ -113,11 +122,11 @@ public final class DenseTensorMath {
     Util.require(self.nElement() == y.nElement() && self.nElement() == x.nElement(),
         "element number doesn't match");
     if (self.isContiguous() && y.isContiguous() && x.isContiguous() && MKL.isMKLLoaded()) {
-      if(self.isFloat()){
+      if (self.isFloat()) {
         TensorNumeric.vDiv(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             y.storage().toFloatArray(), y.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
-      }else {
+      } else {
         TensorNumeric.vDiv(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             y.storage().toDoubleArray(), y.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -227,7 +236,7 @@ public final class DenseTensorMath {
     result.resizeAs(self);
     result.copy(self);
     int n = result.nElement();
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (result.isContiguous() && t.isContiguous() && n == t.nElement()) {
         TensorNumeric.axpy(n, 1.0f, t.storage().toFloatArray(), t.storageOffset() - 1, 1,
             result.storage().toFloatArray(),
@@ -239,7 +248,7 @@ public final class DenseTensorMath {
         DenseTensorApply.apply2(self, t, func2);
         return result;
       }
-    }else {
+    } else {
       if (result.isContiguous() && t.isContiguous() && n == t.nElement()) {
         TensorNumeric.axpy(n, 1.0, t.storage().toDoubleArray(), t.storageOffset() - 1, 1,
             result.storage().toDoubleArray(),
@@ -276,11 +285,11 @@ public final class DenseTensorMath {
     DenseTensor result = new DenseTensor(self.isFloat());
     result.resizeAs(self);
     result.copy(self);
-    if(self.isFloat()){
+    if (self.isFloat()) {
       TensorFunc4<float[]> func2 = (data1, offset1, data2, offset2)
           -> data1[offset1] = TensorNumeric.minus(data1[offset1], data2[offset2]);
       DenseTensorApply.apply2(result, t, func2);
-    }else{
+    } else {
       TensorFunc4<double[]> func2 = (data1, offset1, data2, offset2)
           -> data1[offset1] = TensorNumeric.minus(data1[offset1], data2[offset2]);
       DenseTensorApply.apply2(result, t, func2);
@@ -293,11 +302,13 @@ public final class DenseTensorMath {
     DenseTensor result = new DenseTensor(self.isFloat());
     result.resizeAs(self);
     result.copy(self);
-    if(self.isFloat()){
-      TensorFunc2<double[]> func = (data, index) -> data[index] = TensorNumeric.negative(data[index]);
+    if (self.isFloat()) {
+      TensorFunc2<double[]> func = (data, index)
+          -> data[index] = TensorNumeric.negative(data[index]);
       DenseTensorApply.apply1(result, func);
-    }else {
-      TensorFunc2<double[]> func = (data, index) -> data[index] = TensorNumeric.negative(data[index]);
+    } else {
+      TensorFunc2<double[]> func = (data, index)
+          -> data[index] = TensorNumeric.negative(data[index]);
       DenseTensorApply.apply1(result, func);
     }
 
@@ -308,7 +319,8 @@ public final class DenseTensorMath {
     DenseTensor result = new DenseTensor(false);
     result.resizeAs(t);
     result.copy(t);
-    TensorFunc2<double[]> func = (data, index) -> data[index] = TensorNumeric.divide(data[index], s);
+    TensorFunc2<double[]> func = (data, index)
+        -> data[index] = TensorNumeric.divide(data[index], s);
     DenseTensorApply.apply1(result, func);
     return result;
   }
@@ -317,7 +329,8 @@ public final class DenseTensorMath {
     DenseTensor result = new DenseTensor(true);
     result.resizeAs(t);
     result.copy(t);
-    TensorFunc2<float[]> func = (data, index) -> data[index] = TensorNumeric.divide(data[index], s);
+    TensorFunc2<float[]> func = (data, index)
+        -> data[index] = TensorNumeric.divide(data[index], s);
     DenseTensorApply.apply1(result, func);
     return result;
   }
@@ -326,11 +339,11 @@ public final class DenseTensorMath {
     DenseTensor result = new DenseTensor(self.isFloat());
     result.resizeAs(self);
     result.copy(self);
-    if(self.isFloat()){
+    if (self.isFloat()) {
       TensorFunc4<float[]> func2 = (data1, offset1, data2, offset2)
           -> data1[offset1] = TensorNumeric.divide(data1[offset1], data2[offset2]);
       DenseTensorApply.apply2(result, t, func2);
-    }else {
+    } else {
       TensorFunc4<double[]> func2 = (data1, offset1, data2, offset2)
           -> data1[offset1] = TensorNumeric.divide(data1[offset1], data2[offset2]);
       DenseTensorApply.apply2(result, t, func2);
@@ -360,12 +373,12 @@ public final class DenseTensorMath {
   public static Tensor mul(Tensor self, Tensor t) {
     if (self.nDimension() == 1 && t.nDimension() == 1) {
       Util.require(self.size(1) == t.size(1), "vector size not match");
-      if(self.isFloat()){
+      if (self.isFloat()) {
         float result = TensorNumeric.dot(self.nElement(), self.storage().toFloatArray(),
             self.storageOffset() - 1, self.stride(1), t.storage().toFloatArray(),
             t.storageOffset() - 1, t.stride(1));
         new DenseTensor(new ArrayFloatStorage(new float[]{result}));
-      }else {
+      } else {
         double result = TensorNumeric.dot(self.nElement(), self.storage().toDoubleArray(),
             self.storageOffset() - 1, self.stride(1), t.storage().toDoubleArray(),
             t.storageOffset() - 1, t.stride(1));
@@ -373,17 +386,17 @@ public final class DenseTensorMath {
       }
     } else if (self.nDimension() == 2 && t.nDimension() == 1) {
       DenseTensor result = new DenseTensor(self.size(1), self.isFloat());
-      if(self.isFloat()){
+      if (self.isFloat()) {
         DenseTensorBLAS.gemv(1.0f, self, t, 0.0f, result);
-      }else {
+      } else {
         DenseTensorBLAS.gemv(1.0, self, t, 0.0, result);
       }
       return result;
     } else if (self.nDimension() == 2 && t.nDimension() == 2) {
       Tensor result = new DenseTensor(t.size(2), self.size(1), self.isFloat()).t();
-      if(self.isFloat()){
+      if (self.isFloat()) {
         addmm(result, 0.0f, result, 1.0f, self, t);
-      }else {
+      } else {
         addmm(result, 0.0, result, 1.0, self, t);
       }
       return result;
@@ -425,7 +438,7 @@ public final class DenseTensorMath {
       self.resizeAs(x);
     }
 
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vExp(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
@@ -434,7 +447,7 @@ public final class DenseTensorMath {
             -> data1[offset1] = TensorNumeric.exp(data2[offset2]);
         DenseTensorApply.apply2(self, x, func);
       }
-    }else {
+    } else {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vExp(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -451,7 +464,7 @@ public final class DenseTensorMath {
   public static Tensor log(DenseTensor self, Tensor x) {
     Util.require(self.nElement() == x.nElement());
 
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vLn(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
@@ -460,7 +473,7 @@ public final class DenseTensorMath {
             -> data1[offset1] = TensorNumeric.log(data2[offset2]);
         DenseTensorApply.apply2(self, x, func);
       }
-    }else {
+    } else {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vLn(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -475,7 +488,7 @@ public final class DenseTensorMath {
 
   public static Tensor sqrt(DenseTensor self, Tensor x) {
     Util.require(self.nElement() == x.nElement());
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vSqrt(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
@@ -484,7 +497,7 @@ public final class DenseTensorMath {
             -> data1[offset1] = TensorNumeric.sqrt(data2[offset2]);
         DenseTensorApply.apply2(self, x, func);
       }
-    }else {
+    } else {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vSqrt(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -499,7 +512,7 @@ public final class DenseTensorMath {
 
   public static Tensor tanh(DenseTensor self, Tensor x) {
     Util.require(self.nElement() == x.nElement());
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vTanh(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
@@ -508,7 +521,7 @@ public final class DenseTensorMath {
             -> data1[offset1] = TensorNumeric.tanh(data2[offset2]);
         DenseTensorApply.apply2(self, x, func);
       }
-    }else {
+    } else {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vTanh(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -523,7 +536,7 @@ public final class DenseTensorMath {
 
   public static Tensor log1p(DenseTensor self, Tensor x) {
     Util.require(self.nElement() == x.nElement());
-    if(self.isFloat()){
+    if (self.isFloat()) {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vLog1p(self.nElement(), x.storage().toFloatArray(), x.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1);
@@ -532,7 +545,7 @@ public final class DenseTensorMath {
             -> data1[offset1] = TensorNumeric.log1p(data2[offset2]);
         DenseTensorApply.apply2(self, x, func);
       }
-    }else {
+    } else {
       if (MKL.isMKLLoaded() && self.isContiguous() && x.isContiguous()) {
         TensorNumeric.vLog1p(self.nElement(), x.storage().toDoubleArray(), x.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1);
@@ -549,14 +562,16 @@ public final class DenseTensorMath {
 
   public static double prodAll(DenseTensor self) {
     double[] product = new double[1];
-    TensorFunc2<double[]> func = (data, index) -> product[0] = TensorNumeric.times(data[index], product[0]);
+    TensorFunc2<double[]> func = (data, index) ->
+        product[0] = TensorNumeric.times(data[index], product[0]);
     DenseTensorApply.apply1(self, func);
     return product[0];
   }
 
   public static float prodAllf(DenseTensor self) {
     float[] product = new float[1];
-    TensorFunc2<float[]> func = (data, index) -> product[0] = TensorNumeric.times(data[index], product[0]);
+    TensorFunc2<float[]> func = (data, index) ->
+        product[0] = TensorNumeric.times(data[index], product[0]);
     DenseTensorApply.apply1(self, func);
     return product[0];
   }
@@ -654,6 +669,7 @@ public final class DenseTensorMath {
     DenseTensorApply.apply1(self, func);
     return min[0];
   }
+
   /**
    * addmm
    *
@@ -745,6 +761,16 @@ public final class DenseTensorMath {
     return r;
   }
 
+  /**
+   * addmm.
+   * @param r
+   * @param beta
+   * @param t
+   * @param alpha
+   * @param m1
+   * @param m2
+   * @return
+   */
   public static Tensor addmm(Tensor r, float beta, Tensor t,
                              float alpha, Tensor m1, Tensor m2) {
     Util.require(m1.dim() == 2 && m2.dim() == 2,
@@ -903,7 +929,8 @@ public final class DenseTensorMath {
                                Tensor batch1, Tensor batch2) {
     Util.require(batch1.dim() == 3, "expected 3D tensor, got ${batch1.dim()}D");
     Util.require(batch2.dim() == 3, "expected 3D tensor, got ${batch2.dim()}D");
-    Util.require(batch1.size(1) == batch2.size(1), "equal number of batches expected, got "
+    Util.require(batch1.size(1) == batch2.size(1),
+        "equal number of batches expected, got "
         + "${batch1.size(1)}, ${batch2.size(1)}");
     Util.require(batch1.size(3) == batch2.size(2), "wrong matrix size, batch1: "
         + "${batch1.size(2)}${batch1.size(3)}, batch2: "
@@ -937,7 +964,8 @@ public final class DenseTensorMath {
                                Tensor batch1, Tensor batch2) {
     Util.require(batch1.dim() == 3, "expected 3D tensor, got ${batch1.dim()}D");
     Util.require(batch2.dim() == 3, "expected 3D tensor, got ${batch2.dim()}D");
-    Util.require(batch1.size(1) == batch2.size(1), "equal number of batches expected, got "
+    Util.require(batch1.size(1) == batch2.size(1),
+        "equal number of batches expected, got "
         + "${batch1.size(1)}, ${batch2.size(1)}");
     Util.require(batch1.size(3) == batch2.size(2), "wrong matrix size, batch1: "
         + "${batch1.size(2)}${batch1.size(3)}, batch2: "

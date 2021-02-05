@@ -53,9 +53,9 @@ public class MSECriterion extends TensorCriterion {
     if (sizeAverage) {
       norm = 2.0 / input.nElement();
     }
-    if(this.isFloat){
-      gradInput.mul((float)norm);
-    }else {
+    if (this.isFloat) {
+      gradInput.mul((float) norm);
+    } else {
       gradInput.mul(norm);
     }
     return gradInput;

@@ -14,16 +14,28 @@ package edu.iu.dsc.tws.dl.optim;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 
-public class AverageParameters extends BaseMapFunc<DoubleDoubleArrayPair, DoubleDoubleArrayPair> {
+public class AverageParameters extends BaseMapFunc<PrimitiveArrayPair, PrimitiveArrayPair> {
 
   @Override
-  public DoubleDoubleArrayPair map(DoubleDoubleArrayPair input) {
+  public PrimitiveArrayPair map(PrimitiveArrayPair input) {
     long startTime = System.nanoTime();
     int parallelism = this.getTSetContext().getParallelism();
-    input.setValue0(input.getValue0() / parallelism);
-    double[] data = input.getValue1();
-    TensorNumeric.scal(data.length, 1.0 / parallelism, data, 0, 1);
+
+
+    if (input instanceof DoubleDoubleArrayPair) {
+      DoubleDoubleArrayPair tempInput = (DoubleDoubleArrayPair) input;
+      tempInput.setValue0(tempInput.getValue0() / parallelism);
+      double[] data = tempInput.getValue1();
+      TensorNumeric.scal(data.length, 1.0 / parallelism, data, 0, 1);
+    } else {
+      FloatFloatArrayPair tempInput = (FloatFloatArrayPair) input;
+      tempInput.setValue0(tempInput.getValue0() / parallelism);
+      float[] data = tempInput.getValue1();
+      TensorNumeric.scal(data.length, 1.0f / parallelism, data, 0, 1);
+    }
     if (this.getTSetContext().getIndex() == 0) {
       System.out.println("Iteration Average time : " + (System.nanoTime() - startTime) / 1e6);
     }

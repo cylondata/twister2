@@ -14,24 +14,40 @@ package edu.iu.dsc.tws.dl.optim;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 
-public class TrainReduceFunction implements ReduceFunc<DoubleDoubleArrayPair> {
+public class TrainReduceFunction implements ReduceFunc<PrimitiveArrayPair> {
 
-  private DoubleDoubleArrayPair data;
+  private PrimitiveArrayPair data;
   private int index;
+  private boolean isFloat;
 
-  public TrainReduceFunction(DoubleDoubleArrayPair result, int rank) {
+  public TrainReduceFunction(PrimitiveArrayPair result, int rank, boolean isf) {
     this.data = result;
     this.index = rank;
+    this.isFloat = isf;
   }
 
   @Override
-  public DoubleDoubleArrayPair reduce(DoubleDoubleArrayPair t1, DoubleDoubleArrayPair t2) {
+  public PrimitiveArrayPair reduce(PrimitiveArrayPair t1, PrimitiveArrayPair t2) {
     long startTime = System.nanoTime();
+    if (this.isFloat) {
+      DoubleDoubleArrayPair tempdata = (DoubleDoubleArrayPair) this.data;
+      DoubleDoubleArrayPair temp1 = (DoubleDoubleArrayPair) t1;
+      DoubleDoubleArrayPair temp2 = (DoubleDoubleArrayPair) t2;
+      tempdata.setValue0(temp1.getValue0() + temp2.getValue0());
+      double[] grad = tempdata.getValue1();
+      TensorNumeric.vAdd(grad.length, temp1.getValue1(), 0, temp2.getValue1(), 0, grad, 0);
+    } else {
+      FloatFloatArrayPair tempdata = (FloatFloatArrayPair) this.data;
+      FloatFloatArrayPair temp1 = (FloatFloatArrayPair) t1;
+      FloatFloatArrayPair temp2 = (FloatFloatArrayPair) t2;
+      tempdata.setValue0(temp1.getValue0() + temp2.getValue0());
+      float[] grad = tempdata.getValue1();
+      TensorNumeric.vAdd(grad.length, temp1.getValue1(), 0, temp2.getValue1(), 0, grad, 0);
+    }
 
-    this.data.setValue0(t1.getValue0() + t2.getValue0());
-    double[] grad = data.getValue1();
-    TensorNumeric.vAdd(grad.length, t1.getValue1(), 0, t2.getValue1(), 0, grad, 0);
     if (this.index == 0) {
       System.out.println("Iteration Reduce time : " + (System.nanoTime() - startTime) / 1e6);
     }

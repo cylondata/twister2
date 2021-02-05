@@ -149,7 +149,7 @@ public class SpatialMaxPooling extends TensorModule {
       ceilMode = false; // The ceil mode is not needed.
     }
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (input.dim() == 3) {
 
         if (format instanceof NCHW) {
@@ -208,7 +208,7 @@ public class SpatialMaxPooling extends TensorModule {
           }
         }
       }
-    }else {
+    } else {
       if (input.dim() == 3) {
 
         if (format instanceof NCHW) {
@@ -282,7 +282,7 @@ public class SpatialMaxPooling extends TensorModule {
     ((DenseTensor) gradInput).resizeAs(input);
     ((DenseTensor) gradInput).zero();
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (input.dim() == 3) {
 
         if (format instanceof NCHW) {
@@ -325,7 +325,7 @@ public class SpatialMaxPooling extends TensorModule {
           }
         }
       }
-    }else {
+    } else {
       if (input.dim() == 3) {
 
         if (format instanceof NCHW) {

@@ -16,7 +16,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.dl.optim.OptimMethod;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -39,6 +38,7 @@ import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.Sigmoid;
 import edu.iu.dsc.tws.dl.optim.Adam;
 import edu.iu.dsc.tws.dl.optim.DistributedOptimizer;
+import edu.iu.dsc.tws.dl.optim.OptimMethod;
 import edu.iu.dsc.tws.dl.optim.Optimizer;
 import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -70,7 +70,7 @@ public class AutoEncoder implements Twister2Worker, Serializable {
     int miniBatchSize = batchSize / parallelism;
 
     SourceTSet<MiniBatch> source = DataSetFactory
-        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism);
+        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, false);
 
     //Define model
     int features = 100;

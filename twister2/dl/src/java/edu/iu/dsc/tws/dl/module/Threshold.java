@@ -40,7 +40,7 @@ public class Threshold extends TensorModule {
     Util.require(input.isContiguous());
     validateParameters();
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (inPlace) {
         output = input;
         float[] inputData = input.storage().toFloatArray();
@@ -72,7 +72,7 @@ public class Threshold extends TensorModule {
         }
         return (DenseTensor) output;
       }
-    }else {
+    } else {
       if (inPlace) {
         output = input;
         double[] inputData = input.storage().toDoubleArray();
@@ -151,7 +151,7 @@ public class Threshold extends TensorModule {
       i += 1;
     }
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (inPlace) {
         gradInput = gradOutput;
         float[] gradInputData = ((DenseTensor) gradInput).storage().toFloatArray();
@@ -183,7 +183,7 @@ public class Threshold extends TensorModule {
           }
         }
       }
-    }else {
+    } else {
       if (inPlace) {
         gradInput = gradOutput;
         double[] gradInputData = ((DenseTensor) gradInput).storage().toDoubleArray();

@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
+import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -59,11 +61,14 @@ public class LocalOptimizer<T> extends Optimizer<T> {
     iterationsPerEpoch = cachedData.size();
 
     //TODO check of the exsiting array can be used
-    DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
-        new double[grad.storage().length()]);
-
+    PrimitiveArrayPair result;
+    if (modal.isFloat()) {
+      result = new FloatFloatArrayPair(0.0f, new float[grad.storage().length()]);
+    } else {
+      result = new DoubleDoubleArrayPair(0.0, new double[grad.storage().length()]);
+    }
     //TODO use caching TSet
-    StorableTBase<DoubleDoubleArrayPair> trainResult;
+    StorableTBase<PrimitiveArrayPair> trainResult;
     while (!this.getEndWhen().apply(this.state)) {
 
       T currentData = cachedData.get(currentIteration);
@@ -71,12 +76,19 @@ public class LocalOptimizer<T> extends Optimizer<T> {
 
       trainResult = src.direct()
           .map(new TrainMapFunction<T>(criterion))
-          .allReduce(new TrainReduceFunction(result, env.getWorkerID()))
+          .allReduce(new TrainReduceFunction(result, env.getWorkerID(), modal.isFloat()))
           .map(new AverageParameters()).cache();
 
-      List<DoubleDoubleArrayPair> resultValues = trainResult.getData();
-      DoubleTensorPair resultPair = new DoubleTensorPair(resultValues.get(0).getValue0(),
-          new DenseTensor(resultValues.get(0).getValue1()));
+      List<PrimitiveArrayPair> resultValues = trainResult.getData();
+      DoubleTensorPair resultPair;
+
+      if (modal.isFloat()) {
+        resultPair = new DoubleTensorPair(((FloatFloatArrayPair) resultValues.get(0)).getValue0(),
+            new DenseTensor(((FloatFloatArrayPair) resultValues.get(0)).getValue1()));
+      } else {
+        resultPair = new DoubleTensorPair(((DoubleDoubleArrayPair) resultValues.get(0)).getValue0(),
+            new DenseTensor(((DoubleDoubleArrayPair) resultValues.get(0)).getValue1()));
+      }
 
       //TODO need to support individual layer optimizer methods later. this would mean updating the
       // weight values need to be updated using tensors.

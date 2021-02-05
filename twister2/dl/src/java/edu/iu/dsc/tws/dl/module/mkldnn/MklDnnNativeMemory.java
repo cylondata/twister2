@@ -11,18 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import com.intel.analytics.bigdl.mkl.MklDnn;
-import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklMemoryAttr;
-import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklMemoryDescInit;
-import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklMemoryPostOps;
-import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklMemoryPrimitive;
-import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklMemoryPrimitiveDesc;
-
+@SuppressWarnings({"LocalVariableName", "ParameterName", "MemberName"})
 public abstract class MklDnnNativeMemory implements Releasable {
   protected long __ptr;
   protected MemoryOwner owner;
-  private long UNDEFINED= -1l;
-  private long ERROR = 0l;
+  private long UNDEFINED = -1L;
+  private long ERROR = 0L;
   protected long ptr = __ptr;
   private boolean isUndefOrError = __ptr == UNDEFINED || __ptr == ERROR;
 
@@ -33,7 +27,7 @@ public abstract class MklDnnNativeMemory implements Releasable {
   }
 
   @Override
-  public void release(){
+  public void release() {
     if (!isUndefOrError) {
       doRelease();
       reset();
@@ -42,7 +36,7 @@ public abstract class MklDnnNativeMemory implements Releasable {
 
   public abstract void doRelease();
 
-  public void reset(){
+  public void reset() {
     __ptr = ERROR;
   }
 

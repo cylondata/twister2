@@ -26,7 +26,7 @@ public class Pointer {
     this.ptr = ptr;
   }
 
-  public long address(){
+  public long address() {
     return ptr;
   }
 }

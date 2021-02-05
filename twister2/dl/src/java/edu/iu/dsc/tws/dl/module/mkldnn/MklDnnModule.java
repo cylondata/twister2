@@ -17,20 +17,21 @@ import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
 /**
  * Helper utilities when integrating Module with MKL-DNN
  */
+@SuppressWarnings("ConstantName")
 public interface MklDnnModule {
   /**
    * MklDnn runtime, which includes a MKL-DNN engine and a MKL-DNN stream.
    * Note that this instance will be erased when send to remote worker, so you
    * should recreate a MklDnnRuntime.
    */
-   MklDnnRuntime runtime = new MklDnnRuntime();
+  MklDnnRuntime runtime = new MklDnnRuntime();
 
-  public default void setRuntime(MklDnnRuntime runtime){
+  default void setRuntime(MklDnnRuntime runtime) {
     // TODO need to check how this is used and address this
     //this.runtime = runtime;
   }
 
-  public default MklDnnRuntime getRuntime() {
+  default MklDnnRuntime getRuntime() {
     Util.require(runtime != null, "you should init the mkldnn runtime first");
     return runtime;
   }
@@ -39,37 +40,37 @@ public interface MklDnnModule {
    * Init the MKL-DNN primitives for the layer. Note that these primitives will be erased when
    * sent to a remote worker.
    */
-  public abstract MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs, Phase phase);
+  MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs, Phase phase);
 
-  public abstract MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad, Phase phase);
+  MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad, Phase phase);
 
-  public default MemoryData[] initGradWPrimitives(MemoryData[] grad, Phase phase){
+  default MemoryData[] initGradWPrimitives(MemoryData[] grad, Phase phase) {
     return grad;
   }
 
-  public default MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs){
-   return initFwdPrimitives(inputs, null);
+  default MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs) {
+    return initFwdPrimitives(inputs, null);
   }
 
-  public default MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad) {
+  default MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad) {
     return initBwdPrimitives(grad, null);
   }
 
-  public default MemoryData[] initGradWPrimitives(MemoryData[] grad){
-   return initGradWPrimitives(grad, null);
+  default MemoryData[] initGradWPrimitives(MemoryData[] grad) {
+    return initGradWPrimitives(grad, null);
   }
 
-  public abstract MemoryData[] inputFormats();
+  MemoryData[] inputFormats();
 
-  public abstract MemoryData[] gradInputFormats();
+  MemoryData[] gradInputFormats();
 
-  public abstract MemoryData[] outputFormats();
+  MemoryData[] outputFormats();
 
-  public abstract MemoryData[] gradOutputFormats();
+  MemoryData[] gradOutputFormats();
 
-  public abstract MemoryData[] gradOutputWeightFormats();
+  MemoryData[] gradOutputWeightFormats();
 
-  public default MklDnnModule setQuantize(boolean value){
+  default MklDnnModule setQuantize(boolean value) {
     return this;
   }
 }

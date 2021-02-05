@@ -25,6 +25,8 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
+import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
+import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -62,12 +64,18 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     List<T> cachedData = cachedDataTSet.getData();
     iterationsPerEpoch = cachedData.size();
     //TODO check of the exsiting array can be used
-    DoubleDoubleArrayPair result = new DoubleDoubleArrayPair(0.0,
-        new double[grad.storage().length()]);
+    PrimitiveArrayPair result;
+
+    if (modal.isFloat()) {
+      result = new FloatFloatArrayPair(0.0f, new float[grad.storage().length()]);
+    } else {
+      result = new DoubleDoubleArrayPair(0.0, new double[grad.storage().length()]);
+    }
+
     dataLoatTime = System.nanoTime() - dataLoatTime;
 
     //TODO use caching TSet
-    CachedTSet<DoubleDoubleArrayPair> trainResult;
+    CachedTSet<PrimitiveArrayPair> trainResult;
     T currentData = cachedData.get(currentIteration);
     CachedTSet<AbstractModule> modalTSet = DataSetFactory
         .createModalDataSet(env, modal, parallelism)
@@ -78,21 +86,28 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     DataObject<AbstractModule> iterationModal;
 //    CachedTSet<T> iterationData;
 //    CachedTSet<AbstractModule> iterationModal;
-    ComputeTSet<DoubleDoubleArrayPair> trainMap = src.direct()
+    ComputeTSet<PrimitiveArrayPair> trainMap = src.direct()
         .map(new TrainMapFunction<T>(criterion));
 
     //input the model
     trainMap.addInput("modal", modalTSet);
     trainResult = trainMap
-        .allReduce(new TrainReduceFunction(result, env.getWorkerID()))
+        .allReduce(new TrainReduceFunction(result, env.getWorkerID(), modal.isFloat()))
         .map(new AverageParameters()).lazyCache();
     long iterationTime = System.nanoTime();
 
     while (!this.getEndWhen().apply(this.state)) {
       env.eval(trainResult);
-      List<DoubleDoubleArrayPair> resultValues = trainResult.getData();
-      DoubleTensorPair resultPair = new DoubleTensorPair(resultValues.get(0).getValue0(),
-          new DenseTensor(resultValues.get(0).getValue1()));
+      List<PrimitiveArrayPair> resultValues = trainResult.getData();
+      DoubleTensorPair resultPair;
+
+      if (modal.isFloat()) {
+        resultPair = new DoubleTensorPair(((FloatFloatArrayPair) resultValues.get(0)).getValue0(),
+            new DenseTensor(((FloatFloatArrayPair) resultValues.get(0)).getValue1()));
+      } else {
+        resultPair = new DoubleTensorPair(((DoubleDoubleArrayPair) resultValues.get(0)).getValue0(),
+            new DenseTensor(((DoubleDoubleArrayPair) resultValues.get(0)).getValue1()));
+      }
 
       //TODO need to support individual layer optimizer methods later. this would mean updating the
       // weight values need to be updated using tensors.

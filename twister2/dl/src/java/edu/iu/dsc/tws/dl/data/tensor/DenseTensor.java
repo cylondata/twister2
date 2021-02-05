@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorMath;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
+import edu.iu.dsc.tws.dl.data.TensorType;
 import edu.iu.dsc.tws.dl.data.function.TensorDimFunc3;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc2;
 import edu.iu.dsc.tws.dl.data.function.TensorFunc4;
@@ -67,7 +68,7 @@ public class DenseTensor implements Tensor, TensorMath {
   public DenseTensor(ArrayStorage storage) {
     this.storageInternal = storage;
     initWithStorage(storage, 0, new int[]{storage.length()}, new int[]{1});
-    if(storage instanceof ArrayFloatStorage){
+    if (storage instanceof ArrayFloatStorage) {
       this.isFloat = true;
     }
   }
@@ -75,7 +76,7 @@ public class DenseTensor implements Tensor, TensorMath {
   public DenseTensor(ArrayStorage storage, int[] sizes, int[] stride) {
     this.storageInternal = storage;
     initWithStorage(storage, 0, sizes, stride);
-    if(storage instanceof ArrayFloatStorage){
+    if (storage instanceof ArrayFloatStorage) {
       this.isFloat = true;
     }
   }
@@ -100,7 +101,7 @@ public class DenseTensor implements Tensor, TensorMath {
     this.sizeInternal = size;
     this.strideInternal = stride;
     this.nDimensionInternal = nDimension;
-    if(storage instanceof ArrayFloatStorage){
+    if (storage instanceof ArrayFloatStorage) {
       this.isFloat = true;
     }
   }
@@ -110,7 +111,7 @@ public class DenseTensor implements Tensor, TensorMath {
     this.storageOffsetInternal = storageOffset;
     this.sizeInternal = size;
     this.strideInternal = stride;
-    if(storage instanceof ArrayFloatStorage){
+    if (storage instanceof ArrayFloatStorage) {
       this.isFloat = true;
     }
   }
@@ -276,9 +277,9 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor zero() {
-    if(this.isFloat){
+    if (this.isFloat) {
       return this.fill(0.0f);
-    }else{
+    } else {
       return this.fill(0.0);
     }
   }
@@ -290,8 +291,8 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor randn(double mean, double stdv) {
-    if(this.isFloat) {
-      return randn((float)mean, (float)stdv);
+    if (this.isFloat) {
+      return randn((float) mean, (float) stdv);
     }
 
     if (this.isContiguous()) {
@@ -317,7 +318,7 @@ public class DenseTensor implements Tensor, TensorMath {
       float[] data = this.storage().toFloatArray();
       int offset = this.storageOffset() - 1;
       while (i < total) {
-        data[offset + i] = (float)RandomGenerator.RNG().normal(mean, stdv);
+        data[offset + i] = (float) RandomGenerator.RNG().normal(mean, stdv);
         i += 1;
       }
     } else {
@@ -339,7 +340,7 @@ public class DenseTensor implements Tensor, TensorMath {
       float[] data = this.storage().toFloatArray();
       int offset = this.storageOffset() - 1;
       while (i < total) {
-        data[offset + i] = (float)RandomGenerator.RNG().uniform(lowerBound, upperBound);
+        data[offset + i] = (float) RandomGenerator.RNG().uniform(lowerBound, upperBound);
         i += 1;
       }
     } else {
@@ -350,8 +351,8 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor rand(double lowerBound, double upperBound) {
-    if(this.isFloat){
-      return rand((float)lowerBound, (float)upperBound);
+    if (this.isFloat) {
+      return rand((float) lowerBound, (float) upperBound);
     }
 
     if (this.isContiguous()) {
@@ -967,11 +968,11 @@ public class DenseTensor implements Tensor, TensorMath {
     }
 
     if (self.isContiguous() && src.isContiguous() && sameStride(self.stride(), src.stride())) {
-      if(self.isFloat()){
+      if (self.isFloat()) {
         System.arraycopy(src.storage().toFloatArray(), src.storageOffset() - 1,
             self.storage().toFloatArray(), self.storageOffset() - 1, self.nElement());
         return;
-      }else {
+      } else {
         System.arraycopy(src.storage().toDoubleArray(), src.storageOffset() - 1,
             self.storage().toDoubleArray(), self.storageOffset() - 1, self.nElement());
         return;
@@ -1165,6 +1166,11 @@ public class DenseTensor implements Tensor, TensorMath {
   }
 
   @Override
+  public TensorType getTensorType() {
+    return TensorType.DenseType;
+  }
+
+  @Override
   public double[] toArray() {
     Util.require(this.dim() == 1, "toArray only support 1D tensor");
     int n = this.nElement();
@@ -1222,7 +1228,7 @@ public class DenseTensor implements Tensor, TensorMath {
     result.resizeAs(this);
     result.copy(this);
     int n = result.nDimension();
-    if(t.isFloat()){
+    if (t.isFloat()) {
       if (result.isContiguous() && t.isContiguous() && n == t.nElement()) {
         TensorNumeric.axpy(n, 1.0f, t.storage().toFloatArray(), t.storageOffset() - 1, 1,
             result.storage().toFloatArray(), result.storageOffset() - 1, 1);
@@ -1233,7 +1239,7 @@ public class DenseTensor implements Tensor, TensorMath {
         DenseTensorApply.apply2(result, t, addFunc);
         return result;
       }
-    }else {
+    } else {
       if (result.isContiguous() && t.isContiguous() && n == t.nElement()) {
         TensorNumeric.axpy(n, 1.0, t.storage().toDoubleArray(), t.storageOffset() - 1, 1,
             result.storage().toDoubleArray(), result.storageOffset() - 1, 1);
@@ -1266,18 +1272,19 @@ public class DenseTensor implements Tensor, TensorMath {
     TensorFunc2<float[]> subFunc = (data, index) -> data[index] = data[index] - s;
 
     DenseTensorApply.apply1(result, subFunc);
-    return result;  }
+    return result;
+  }
 
   @Override
   public Tensor subCopy(Tensor t) {
     DenseTensor result = new DenseTensor(t.isFloat());
     result.resizeAs(this);
     result.copy(this);
-    if(t.isFloat()){
+    if (t.isFloat()) {
       TensorFunc4<float[]> subFunc = (data1, offset1, data2, offset2)
           -> data1[offset1] = data1[offset1] - data2[offset2];
       DenseTensorApply.apply2(result, t, subFunc);
-    }else {
+    } else {
       TensorFunc4<double[]> subFunc = (data1, offset1, data2, offset2)
           -> data1[offset1] = data1[offset1] - data2[offset2];
       DenseTensorApply.apply2(result, t, subFunc);
@@ -1290,10 +1297,10 @@ public class DenseTensor implements Tensor, TensorMath {
     DenseTensor result = new DenseTensor(this.isFloat);
     result.resizeAs(this);
     result.copy(this);
-    if(this.isFloat()){
+    if (this.isFloat()) {
       TensorFunc2<float[]> negFunc = (data, index) -> data[index] = -data[index];
       DenseTensorApply.apply1(result, negFunc);
-    }else {
+    } else {
       TensorFunc2<double[]> negFunc = (data, index) -> data[index] = -data[index];
       DenseTensorApply.apply1(result, negFunc);
     }
@@ -1325,11 +1332,11 @@ public class DenseTensor implements Tensor, TensorMath {
     DenseTensor result = new DenseTensor(t.isFloat());
     result.resizeAs(this);
     result.copy(this);
-    if(t.isFloat()){
+    if (t.isFloat()) {
       TensorFunc4<float[]> func = (data1, offset1, data2, offset2)
           -> data1[offset1] = data1[offset1] / data2[offset2];
       DenseTensorApply.apply2(result, t, func);
-    }else {
+    } else {
       TensorFunc4<double[]> func = (data1, offset1, data2, offset2)
           -> data1[offset1] = data1[offset1] / data2[offset2];
       DenseTensorApply.apply2(result, t, func);
@@ -1438,7 +1445,7 @@ public class DenseTensor implements Tensor, TensorMath {
     values.resize(sizes);
     indices.resize(sizes);
 
-    if(this.isFloat()){
+    if (this.isFloat()) {
 // TODO: the performance of contiguous tensor should be optimize
       TensorDimFunc3<float[]> func3 = new TensorDimFunc3<float[]>() {
         @Override
@@ -1460,7 +1467,7 @@ public class DenseTensor implements Tensor, TensorMath {
         }
       };
       DenseTensorDimApply.dimApply3(this, (DenseTensor) values, (DenseTensor) indices, dim, func3);
-    }else {
+    } else {
 // TODO: the performance of contiguous tensor should be optimize
       TensorDimFunc3<double[]> func3 = new TensorDimFunc3<double[]>() {
         @Override
@@ -1556,7 +1563,7 @@ public class DenseTensor implements Tensor, TensorMath {
   public Tensor add(Tensor x) {
     Util.require(x instanceof DenseTensor, "Only support dense tensor in this operation");
     if (this.nElement() == x.nElement()) {
-      if(x.isFloat()){
+      if (x.isFloat()) {
         if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
           TensorNumeric.vAdd(this.nElement(), this.storage().toFloatArray(),
               this.storageOffset() - 1,
@@ -1567,7 +1574,7 @@ public class DenseTensor implements Tensor, TensorMath {
               -> data1[offset1] = TensorNumeric.plus(data1[offset1], data2[offset2]);
           DenseTensorApply.apply2(this, x, subFunc);
         }
-      }else {
+      } else {
         if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
           TensorNumeric.vAdd(this.nElement(), this.storage().toDoubleArray(),
               this.storageOffset() - 1,
@@ -1770,7 +1777,7 @@ public class DenseTensor implements Tensor, TensorMath {
   public Tensor sub(Tensor x) {
     Util.require(x instanceof DenseTensor, "Only dense tensor is supported in this operation");
     if (this.nElement() == x.nElement()) {
-      if(((DenseTensor) x).isFloat){
+      if (((DenseTensor) x).isFloat) {
         if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
           TensorNumeric.vSub(this.nElement(), this.storage().toFloatArray(),
               this.storageOffset() - 1, x.storage().toFloatArray(), x.storageOffset() - 1,
@@ -1780,7 +1787,7 @@ public class DenseTensor implements Tensor, TensorMath {
               -> data1[offset1] = TensorNumeric.minus(data1[offset1], data2[offset2]);
           DenseTensorApply.apply2(this, x, subFunc);
         }
-      }else{
+      } else {
         if (MKL.isMKLLoaded() && this.isContiguous() && x.isContiguous()) {
           TensorNumeric.vSub(this.nElement(), this.storage().toDoubleArray(),
               this.storageOffset() - 1, x.storage().toDoubleArray(), x.storageOffset() - 1,
@@ -1922,18 +1929,18 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor addmm(Tensor m, Tensor mat1, Tensor mat2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.addmm(this, 1.0f, m, 1.0f, mat1, mat2);
-    }else {
+    } else {
       return DenseTensorMath.addmm(this, 1.0, m, 1.0, mat1, mat2);
     }
   }
 
   @Override
   public Tensor addmm(Tensor mat1, Tensor mat2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.addmm(this, 1.0f, this, 1.0f, mat1, mat2);
-    }else {
+    } else {
       return DenseTensorMath.addmm(this, 1.0, this, 1.0, mat1, mat2);
     }
   }
@@ -1960,18 +1967,18 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor mm(Tensor mat1, Tensor mat2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.addmm(this, 0.0f, this, 1.0f, mat1, mat2);
-    }else {
+    } else {
       return DenseTensorMath.addmm(this, 0.0, this, 1.0, mat1, mat2);
     }
   }
 
   @Override
   public Tensor addr(Tensor t1, Tensor t2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.addr(this, 1.0f, this, 1.0f, t1, t2);
-    }else {
+    } else {
       return DenseTensorMath.addr(this, 1.0, this, 1.0, t1, t2);
     }
   }
@@ -2048,9 +2055,9 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor mv(Tensor mat, Tensor vec2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.addmv(this, 1.0f, this, 1.0f, mat, vec2);
-    }else {
+    } else {
       return DenseTensorMath.addmv(this, 1.0, this, 1.0, mat, vec2);
     }
   }
@@ -2087,9 +2094,9 @@ public class DenseTensor implements Tensor, TensorMath {
 
   @Override
   public Tensor bmm(Tensor batch1, Tensor batch2) {
-    if(this.isFloat){
+    if (this.isFloat) {
       return DenseTensorMath.baddbmm(this, 1.0f, this, 1.0f, batch1, batch2);
-    }else {
+    } else {
       return DenseTensorMath.baddbmm(this, 1.0, this, 1.0, batch1, batch2);
     }
   }
@@ -2498,7 +2505,8 @@ public class DenseTensor implements Tensor, TensorMath {
           targetSize,
           expandStrides
       );
-      DenseTensor newTensor = (DenseTensor) new DenseTensor(x.isFloat()).resize(targetSize).add(tensor1);
+      DenseTensor newTensor = (DenseTensor) new DenseTensor(x.isFloat())
+          .resize(targetSize).add(tensor1);
       this.set(newTensor);
     }
     return expandX;

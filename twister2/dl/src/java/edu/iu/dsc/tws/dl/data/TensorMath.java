@@ -36,6 +36,7 @@ public interface TensorMath {
   Tensor addCopy(double s);
 
   Tensor addCopy(float s);
+
   /**
    * Add a Tensor to another one, return the result in new allocated memory.
    * The number of elements in the Tensors must match, but the sizes do not matter.
@@ -150,6 +151,7 @@ public interface TensorMath {
   double mean();
 
   float meanf();
+
   /**
    * performs the mean operation over the dimension dim.
    *
@@ -166,6 +168,7 @@ public interface TensorMath {
   double max();
 
   float maxf();
+
   /**
    * performs the max operation over the dimension n
    *
@@ -593,21 +596,21 @@ public interface TensorMath {
    * vec2 must be vector of size m and vec1 must be a vector of size n.
    */
   Tensor addmv(double beta, Tensor vec1, double alpha, Tensor mat, Tensor vec2);
-  
+
   Tensor addmv(float beta, Tensor vec1, float alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = beta * res + alpha * (mat * vec2)
    */
   Tensor addmv(double beta, double alpha, Tensor mat, Tensor vec2);
-  
+
   Tensor addmv(float beta, float alpha, Tensor mat, Tensor vec2);
 
   /**
    * res = res + alpha * (mat * vec2)
    */
   Tensor addmv(double alpha, Tensor mat, Tensor vec2);
-  
+
   Tensor addmv(float alpha, Tensor mat, Tensor vec2);
 
   /**

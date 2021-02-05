@@ -85,7 +85,8 @@ public class SpatialConvolution extends TensorModule implements Initializable {
                             int strideW, int strideH, int padW, int padH, int nGroup,
                             boolean propagateBack, Regularizer wRegularizer,
                             Regularizer bRegularizer) {
-    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH,
+    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH,
+        strideW, strideH, padW, padH,
         nGroup, propagateBack, wRegularizer, bRegularizer, null, null, null,
         null, true, new NCHW());
   }
@@ -96,7 +97,8 @@ public class SpatialConvolution extends TensorModule implements Initializable {
                             Regularizer bRegularizer, Tensor initWeight,
                             Tensor initBias, Tensor initGradWeight, Tensor initGradBias,
                             boolean withBias, DataFormat format) {
-    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH,
+    this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH,
+        strideW, strideH, padW, padH,
         nGroup, propagateBack, wRegularizer, bRegularizer, initWeight, initBias, initGradWeight,
         initGradBias, withBias, format);
   }
@@ -186,7 +188,8 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         this.weight = new DenseTensor(new int[]{nGroup, nOutputPlane / nGroup,
             nInputPlane * kernelH * kernelW / nGroup}, this.isFloat);
       } else if (format instanceof NHWC) {
-        this.weight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane, this.isFloat);
+        this.weight = new DenseTensor(1, nInputPlane * kernelH * kernelW,
+            nOutputPlane, this.isFloat);
       }
     }
 
@@ -205,7 +208,8 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         this.gradWeight = new DenseTensor(new int[]{nGroup, nOutputPlane / nGroup,
             nInputPlane * kernelH * kernelW / nGroup}, this.isFloat);
       } else if (format instanceof NHWC) {
-        this.gradWeight = new DenseTensor(1, nInputPlane * kernelH * kernelW, nOutputPlane, this.isFloat);
+        this.gradWeight = new DenseTensor(1, nInputPlane * kernelH * kernelW,
+            nOutputPlane, this.isFloat);
       }
     }
 
@@ -376,7 +380,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     int[] sizes;
     if (padW == -1 && padH == -1) {
       sizes = Util.getSAMEOutSizeAndPadding(inputHeight, inputWidth, strideH,
-            strideW, kernelH, kernelW);
+          strideW, kernelH, kernelW);
     } else {
       sizes = Util.getOutSizeAndPadding(inputHeight, inputWidth, strideH, strideW,
           kernelH, kernelW, padH, padW, false);
@@ -393,9 +397,9 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         "output size is too small. outputWidth: $outputWidth, outputHeight: $outputHeight");
 
     if (withBias && (onesBias.dim() != 1 || onesBias.size(1) != outputHeight * outputWidth)) {
-      if(this.isFloat){
+      if (this.isFloat) {
         onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0f);
-      }else {
+      } else {
         onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0);
       }
     }
@@ -597,17 +601,17 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         gradientBiasMT.resize(new int[]{batchSize, nOutputPlane});
       }
       if (ones.dim() != 1 || ones.size(1) != oh * ow) {
-        if(this.isFloat){
+        if (this.isFloat) {
           ones.resize(new int[]{oh * ow}).fill(1.0f);
-        }else {
+        } else {
           ones.resize(new int[]{oh * ow}).fill(1.0);
         }
       }
 
       if (onesBatch.dim() != 1 || onesBatch.size(1) != batchSize) {
-        if(this.isFloat){
+        if (this.isFloat) {
           onesBatch.resize(new int[]{batchSize}).fill(1.0f);
-        }else {
+        } else {
           onesBatch.resize(new int[]{batchSize}).fill(1.0);
         }
       }
@@ -639,19 +643,19 @@ public class SpatialConvolution extends TensorModule implements Initializable {
           nOutputPlane * nInputPlane * kernelH * kernelW / nGroup}).t();
       DenseTensor grad = (DenseTensor) gradWeight
           .view(new int[]{nOutputPlane * nInputPlane * kernelH * kernelW / nGroup});
-      if(this.isFloat){
+      if (this.isFloat) {
         grad.addmv(1.0f, 1.0f, gradView, onesBatch);
         if (withBias) {
           gradBias.addmv(1.0f, 1.0f, gradientBiasMT.t(), onesBatch);
         }
 
         if (null != wRegularizer) {
-          wRegularizer.accRegularization(weight, gradWeight, (float)scaleW);
+          wRegularizer.accRegularization(weight, gradWeight, (float) scaleW);
         }
         if (withBias && null != bRegularizer) {
-          bRegularizer.accRegularization(bias, gradBias, (float)scaleB);
+          bRegularizer.accRegularization(bias, gradBias, (float) scaleB);
         }
-      }else {
+      } else {
         grad.addmv(1.0, 1.0, gradView, onesBatch);
         if (withBias) {
           gradBias.addmv(1.0, 1.0, gradientBiasMT.t(), onesBatch);
@@ -755,7 +759,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
                                    int nInputPlane, int inputWidth, int inputHeight,
                                    int nOutputPlane, int outputWidth, int outputHeight) {
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (format instanceof NCHW) {
         DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
             outputHeight * outputWidth});
@@ -783,7 +787,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
         output2d.addmm(0.0f, output2d, 1.0f, fInput, weight);
         if (withBias) output2d.addr(1.0f, onesBias, bias);
       }
-    }else {
+    } else {
       if (format instanceof NCHW) {
         DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
             outputHeight * outputWidth});
@@ -825,7 +829,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     DenseTensor weightDouble = weight;
     DenseTensor gradInputDouble = gradInput;
 
-    if(this.isFloat){
+    if (this.isFloat) {
       if (format instanceof NCHW) {
         int channel = gradOutDouble.size(1);
         int oh = gradOutDouble.size(2);
@@ -857,7 +861,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
           col2imTime += System.nanoTime() - before;
         }
       }
-    }else {
+    } else {
       if (format instanceof NCHW) {
         int channel = gradOutDouble.size(1);
         int oh = gradOutDouble.size(2);
@@ -904,9 +908,9 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     double sBDouble = scaleB;
     DenseTensor gradBDouble = gradBias;
 
-    if(this.isFloat){
-      float sWDoublef = (float)scaleW;
-      float sBDoublef = (float)scaleB;
+    if (this.isFloat) {
+      float sWDoublef = (float) scaleW;
+      float sBDoublef = (float) scaleB;
       if (format instanceof NCHW) {
         int outChannel = gradOutput.size(1);
         int outSize = gradOutput.size(2) * gradOutput.size(3);
@@ -955,7 +959,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
           }
         }
       }
-    }else {
+    } else {
       if (format instanceof NCHW) {
         int outChannel = gradOutput.size(1);
         int outSize = gradOutput.size(2) * gradOutput.size(3);
@@ -1018,9 +1022,9 @@ public class SpatialConvolution extends TensorModule implements Initializable {
     DenseTensor gradBDouble = gradBias;
     DenseTensor onesDouble = ones;
 
-    if(this.isFloat){
-      float sWDoublef = (float)scaleW;
-      float sBDoublef = (float)scaleB;
+    if (this.isFloat) {
+      float sWDoublef = (float) scaleW;
+      float sBDoublef = (float) scaleB;
       if (format instanceof NCHW) {
         int channel = gradODouble.size(1);
         int oh = gradODouble.size(2);
@@ -1048,7 +1052,7 @@ public class SpatialConvolution extends TensorModule implements Initializable {
           gradBDouble.addmv(0.0f, sBDoublef, gradOutput2d.t(), onesDouble);
         }
       }
-    }else {
+    } else {
       if (format instanceof NCHW) {
         int channel = gradODouble.size(1);
         int oh = gradODouble.size(2);

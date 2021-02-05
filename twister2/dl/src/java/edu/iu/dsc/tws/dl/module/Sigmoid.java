@@ -31,12 +31,12 @@ public class Sigmoid extends TensorModule {
 
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
-    if(this.isFloat){
+    if (this.isFloat) {
       ((DenseTensor) output).resizeAs(input).fill(1.0f);
       buffer.resizeAs(input).copy(input).mul(-1.0f);
       buffer.exp().add(1.0f);
       ((DenseTensor) output).cdiv(buffer);
-    }else {
+    } else {
       ((DenseTensor) output).resizeAs(input).fill(1.0);
       buffer.resizeAs(input).copy(input).mul(-1.0);
       buffer.exp().add(1.0);
@@ -52,12 +52,12 @@ public class Sigmoid extends TensorModule {
   }
 
   private DenseTensor updateGradInputInternal(Tensor output, DenseTensor gradOutput) {
-    if(this.isFloat){
+    if (this.isFloat) {
       ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
       buffer.resizeAs(gradOutput);
       buffer.fill(1.0f).sub(output);
       ((DenseTensor) gradInput).cmul(output).cmul(buffer);
-    }else {
+    } else {
       ((DenseTensor) gradInput).resizeAs(gradOutput).copy(gradOutput);
       buffer.resizeAs(gradOutput);
       buffer.fill(1.0).sub(output);

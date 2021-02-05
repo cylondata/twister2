@@ -9,22 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.module.mkldnn.memory;
+package edu.iu.dsc.tws.dl.utils.schema;
 
-import com.intel.analytics.bigdl.mkl.MklDnn;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.tset.schema.Schema;
 
-import edu.iu.dsc.tws.dl.module.mkldnn.MemoryOwner;
-import edu.iu.dsc.tws.dl.module.mkldnn.MklDnnNativeMemory;
-
-@SuppressWarnings({"LocalVariableName", "ParameterName"})
-public class MklMemoryAttr extends MklDnnNativeMemory {
-
-  public MklMemoryAttr(long __ptr, MemoryOwner owner) {
-    super(__ptr, owner);
-  }
-
+public class DLFSchema implements Schema {
   @Override
-  public void doRelease() {
-    MklDnn.DestroyAttr(ptr);
+  public MessageType getDataType() {
+    return new FloatFloatArrayType();
   }
 }

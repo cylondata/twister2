@@ -655,11 +655,11 @@ public interface Tensor extends Activity, Serializable, TensorMath {
    */
   TensorNumeric getTensorNumeric();
 
-//  /**
-//   * Return tensor type
-//   * @return Dense / Quant
-//   */
-//  TensorType getTensorType();
+  /**
+   * Return tensor type
+   * @return Dense / Quant
+   */
+  TensorType getTensorType();
 
   /**
    * Convert 1D tensor to an array. If the tensor is not 1D, an exception will be thrown out.

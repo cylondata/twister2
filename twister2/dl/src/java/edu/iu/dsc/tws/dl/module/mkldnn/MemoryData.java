@@ -12,16 +12,18 @@
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
 import java.io.Serializable;
+
 import com.intel.analytics.bigdl.mkl.DataType;
 import com.intel.analytics.bigdl.mkl.Memory;
 import com.intel.analytics.bigdl.mkl.MklDnn;
+
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklDnnMemory;
 import edu.iu.dsc.tws.dl.utils.Util;
 
+@SuppressWarnings({"LocalVariableName", "ParameterName", "MemberName"})
+public abstract class MemoryData implements Serializable {
 
-public abstract class MemoryData  implements Serializable {
-
-  int heapFormat = -1;
+  private int heapFormat = -1;
 
   private int _mask = -1;
   private float[] _scales;
@@ -30,59 +32,65 @@ public abstract class MemoryData  implements Serializable {
   private long UNDEFINED = -1;
   private long ERROR = 0;
 
-  transient private long primitive = UNDEFINED;
-  transient private long primitiveDesc = UNDEFINED;
-  transient private long description = UNDEFINED;
+  private transient long primitive = UNDEFINED;
+  private transient long primitiveDesc = UNDEFINED;
+  private transient long description = UNDEFINED;
 
   public abstract int[] shape();
+
   public abstract int layout();
+
   public abstract int dataType();
 
-  public int mask(){
+  public int mask() {
     return _mask;
   }
 
-  public void setMask(int s){
+  public void setMask(int s) {
     _mask = s;
   }
+
   public float[] scales = _scales;
-  public void setScales(float[] f){
+
+  public void setScales(float[] f) {
     _scales = f;
   }
 
-  public MemoryData setHeapFormat(int f){
+  public MemoryData setHeapFormat(int f) {
     heapFormat = f;
     return this;
   }
 
-  public int[] getHeapShape(){
+  public int[] getHeapShape() {
     if (layout() == Memory.Format.nhwc) { // native shape is nchw
-      return  new int[]{shape()[0], shape()[2], shape()[3], shape()[1]};
-    } else{
+      return new int[]{shape()[0], shape()[2], shape()[3], shape()[1]};
+    } else {
       return shape();
     }
   }
 
   public abstract MemoryData cloneFormat();
 
-  long getMemoryDescription(MemoryOwner owner){
+  long getMemoryDescription(MemoryOwner owner) {
     if (description == UNDEFINED || description == ERROR) {
       checkConsistency(shape(), layout());
-      description = MklDnnMemory.MemoryDescInit(shape().length, shape(), dataType(), layout(), owner);
+      description = MklDnnMemory.MemoryDescInit(shape().length, shape(), dataType(), layout(),
+          owner);
     }
     return description;
   }
 
-  long getPrimitiveDescription(MklDnnRuntime runtime, MemoryOwner owner){
+  long getPrimitiveDescription(MklDnnRuntime runtime, MemoryOwner owner) {
     Util.require(runtime != null, "Have you initialized the MklDnnRuntime?");
     if (primitiveDesc == UNDEFINED || primitiveDesc == ERROR) {
       primitiveDesc =
-          MklDnnMemory.MemoryPrimitiveDescCreate(getMemoryDescription(owner), runtime.engine, owner);
+          MklDnnMemory.MemoryPrimitiveDescCreate(getMemoryDescription(owner), runtime.engine,
+              owner);
     }
     return primitiveDesc;
   }
 
-  long getPrimitive(MklDnnRuntime runtime, MemoryOwner owner){
+  long getPrimitive(MklDnnRuntime runtime, MemoryOwner owner) {
     Util.require(runtime != null, "Have you initialized the MklDnnRuntime?");
     if (primitive == UNDEFINED || primitive == ERROR) {
       primitive =
@@ -91,26 +99,26 @@ public abstract class MemoryData  implements Serializable {
     return primitive;
   }
 
-  public void setPrimitiveDescription(long desc){
+  public void setPrimitiveDescription(long desc) {
     primitiveDesc = desc;
   }
 
-  public void setMemoryDescription(long desc){
+  public void setMemoryDescription(long desc) {
     description = desc;
   }
 
-  public long getRealSize(){
+  public long getRealSize() {
     Util.require(primitiveDesc != UNDEFINED && primitiveDesc != ERROR);
     return MklDnn.PrimitiveDescGetSize(primitiveDesc) / getDataTypeBytes();
   }
 
-  public int[] getPaddingShape(){
+  public int[] getPaddingShape() {
     Util.require(description != UNDEFINED && description != ERROR);
     return Memory.GetPaddingShape(description);
   }
 
-  private int getDataTypeBytes(){
-    switch (dataType()){
+  private int getDataTypeBytes() {
+    switch (dataType()) {
       case DataType.F32:
         return DnnStorage.FLOAT_BYTES;
       case DataType.S32:
@@ -119,22 +127,22 @@ public abstract class MemoryData  implements Serializable {
         return DnnStorage.INT8_BYTES;
       case DataType.U8:
         return DnnStorage.INT8_BYTES;
-      default :
+      default:
         throw new UnsupportedOperationException("unsupported data type");
     }
   }
 
-  private void checkConsistency(int[] shape,int layout){
+  private void checkConsistency(int[] shape, int layout) {
     boolean switchCheck = false;
-    switch(shape.length){
-      case 1 :
+    switch (shape.length) {
+      case 1:
         switchCheck = layout == Memory.Format.x;
         break;
-      case 2 :
-        switchCheck = layout == Memory.Format.nc || layout == Memory.Format.io ||
-          layout == Memory.Format.oi;
+      case 2:
+        switchCheck = layout == Memory.Format.nc || layout == Memory.Format.io
+            || layout == Memory.Format.oi;
         break;
-      case 3 | 4 | 5 :
+      case 3 | 4 | 5:
         switchCheck = layout != Memory.Format.nc || layout != Memory.Format.x;
         break;
       default:

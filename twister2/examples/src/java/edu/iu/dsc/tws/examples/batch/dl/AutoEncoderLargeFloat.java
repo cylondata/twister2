@@ -45,11 +45,13 @@ import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
+
+
 /**
  * Simple AutoEncoder example
  */
-public class AutoEncoderLarge implements Twister2Worker, Serializable {
-  private static final Logger LOG = Logger.getLogger(AutoEncoderLarge.class.getName());
+public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
+  private static final Logger LOG = Logger.getLogger(AutoEncoderLargeFloat.class.getName());
 
   @Override
   public void execute(WorkerEnvironment workerEnv) {
@@ -69,7 +71,7 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     int miniBatchSize = batchSize / parallelism;
 
     SourceTSet<MiniBatch> source = DataSetFactory
-        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, false);
+        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, true);
 
     //Define model
     int l1 = 1024;
@@ -77,21 +79,23 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
     int l3 = 128;
     int l4 = 8;
     Sequential model = new Sequential();
+    model.toFloat();
     model.add(new Reshape(new int[]{l1}));
-    model.add(new Linear(l1, l2));
+    model.add(new Linear(l1, l2, true));
     model.add(new ReLU(false));
-    model.add(new Linear(l2, l3));
+    model.add(new Linear(l2, l3, true));
     model.add(new ReLU(false));
-    model.add(new Linear(l3, l4));
+    model.add(new Linear(l3, l4, true));
     model.add(new ReLU(false));
-    model.add(new Linear(l4, l3));
+    model.add(new Linear(l4, l3, true));
     model.add(new ReLU(false));
-    model.add(new Linear(l3, l2));
+    model.add(new Linear(l3, l2, true));
     model.add(new ReLU(false));
-    model.add(new Linear(l2, l1));
+    model.add(new Linear(l2, l1, true));
     model.add(new Sigmoid());
     //criterion
     AbstractCriterion criterion = new MSECriterion();
+    criterion.toFloat();
 
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
@@ -147,7 +151,7 @@ public class AutoEncoderLarge implements Twister2Worker, Serializable {
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")
-        .setWorkerClass(AutoEncoderLarge.class)
+        .setWorkerClass(AutoEncoderLargeFloat.class)
         .addComputeResource(cpu, mem, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
