@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.dl.utils.varformat.OUT_IN;
  * the number of columns should be equal to the `inputSize`).
  */
 @SuppressWarnings("NeedBraces")
-public class Linear extends TensorModule implements Initializable {
+public class Linear extends TensorModule<DenseTensor> implements Initializable {
 
   protected InitializationMethod weightInitMethod = new Zeros();
   protected InitializationMethod biasInitMethod = new Zeros();

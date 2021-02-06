@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * The input given in `forward(input)` must be either
  * a vector (1D tensor) or matrix (2D tensor).
  */
-public class LogSoftMax extends TensorModule {
+public class LogSoftMax extends TensorModule<DenseTensor> {
 
   private DenseTensor ones = new DenseTensor(false);
   private DenseTensor buffer = new DenseTensor(false);

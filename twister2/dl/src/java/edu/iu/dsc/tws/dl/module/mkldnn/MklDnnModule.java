@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
+import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklDnnModuleHelper;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
 
@@ -18,7 +19,7 @@ import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
  * Helper utilities when integrating Module with MKL-DNN
  */
 @SuppressWarnings("ConstantName")
-public interface MklDnnModule {
+public interface MklDnnModule extends MklDnnModuleHelper {
   /**
    * MklDnn runtime, which includes a MKL-DNN engine and a MKL-DNN stream.
    * Note that this instance will be erased when send to remote worker, so you

@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.dl.graph.TensorModule;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-public class LeakyRelu extends TensorModule {
+public class LeakyRelu extends TensorModule<DenseTensor> {
   private double negValue = 0.01;
   private boolean inplace = false;
 

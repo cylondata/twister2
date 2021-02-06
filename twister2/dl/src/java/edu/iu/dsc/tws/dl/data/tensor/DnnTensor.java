@@ -1434,7 +1434,7 @@ public class DnnTensor implements Tensor, Releasable {
   public void release() {
   }
 
-  private long storageAddress() {
+  public long storageAddress() {
     return storageInternal.getPtrInternal().getPtr();
   }
 

@@ -52,7 +52,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * format          DataFormat.NCHW or DataFormat.NHWC, indicating the input
  * data format
  */
-public class SpatialMaxPooling extends TensorModule {
+public class SpatialMaxPooling extends TensorModule<DenseTensor> {
 
   private int kW;
   private int kH;

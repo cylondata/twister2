@@ -25,14 +25,14 @@ import java.util.List;
  * resource of another layer.
  */
 @SuppressWarnings({"MemberName", "ParameterName"})
-public abstract class MemoryOwner {
-  private transient List<Releasable> _resources = new ArrayList();
+public interface MemoryOwner {
+  List<Releasable> _resources = new ArrayList();
 
-  public void registerResource(Releasable m) {
+  default void registerResource(Releasable m) {
     _resources.add(m);
   }
 
-  public void releaseResources() {
+  default void releaseResources() {
     _resources.forEach(o -> o.release());
     _resources.clear();
   }

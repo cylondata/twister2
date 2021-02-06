@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Graph;
 import edu.iu.dsc.tws.dl.graph.Node;
@@ -38,18 +37,18 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 @SuppressWarnings({"MemberName", "HiddenField"})
-public abstract class AbstractModule extends InferShape implements Module, Serializable {
+public abstract class AbstractModule<A extends Activity> extends InferShape implements Module, Serializable {
 
   // ================================= Public APIs =============================================
   /**
    * The cached output. So we don't compute it again when need it
    */
-  public Activity output = new DenseTensor(false);
+  public A output;
 
   /**
    * The cached gradient of activities. So we don't compute it again when need it
    */
-  public Activity gradInput = new DenseTensor(false);
+  public A gradInput;
 
   protected List<Integer> inputsFormats = null;
   protected List<Integer> outputsFormats = null;
@@ -83,8 +82,6 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * at the module level this method needs to be overridden.
    */
   public void toFloat() {
-    this.output = new DenseTensor(true);
-    this.gradInput = new DenseTensor(true);
     this.isFloat = true;
   }
 
@@ -165,8 +162,12 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @return
    */
   public AbstractModule clearState() {
-    ((DenseTensor) output).set();
-    ((DenseTensor) gradInput).set();
+    if(output instanceof Tensor){
+      ((Tensor)output).set();
+    }
+    if(gradInput instanceof Tensor){
+      ((Tensor)gradInput).set();
+    }
     return this;
   }
 
@@ -312,7 +313,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input input data
    * @return output data
    */
-  public final DenseTensor forward(DenseTensor input) {
+  public final A forward(A input) {
     long before = System.nanoTime();
     try {
       updateParameter();
@@ -327,7 +328,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
     }
     forwardTime += System.nanoTime() - before;
 
-    return (DenseTensor) output;
+    return output;
   }
 
   /**
@@ -340,13 +341,13 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param gradOutput gradient of next layer
    * @return gradient corresponding to input data
    */
-  public DenseTensor backward(DenseTensor input, DenseTensor gradOutput) {
+  public A backward(A input, A gradOutput) {
     long before = System.nanoTime();
     updateGradInput(input, gradOutput);
     accGradParameters(input, gradOutput);
     backwardTime += System.nanoTime() - before;
     asyncGradient();
-    return (DenseTensor) gradInput;
+    return gradInput;
   }
 
   protected void asyncGradient() {
@@ -365,7 +366,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input
    * @return
    */
-  public abstract DenseTensor updateOutput(DenseTensor input);
+  public abstract A updateOutput(A input);
 
   /**
    * Computing the gradient of the module with respect to its own input. This is returned in
@@ -375,7 +376,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param gradOutput
    * @return
    */
-  public abstract DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput);
+  public abstract A updateGradInput(A input, A gradOutput);
 
   /**
    * Computing the gradient of the module with respect to its own parameters. Many modules do not
@@ -386,7 +387,7 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    * @param input
    * @param gradOutput
    */
-  public void accGradParameters(DenseTensor input, DenseTensor gradOutput) {
+  public void accGradParameters(A input, A gradOutput) {
 
   }
 
@@ -685,8 +686,8 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
 //        storages, ProtoStorageType, false)
 //    ModuleLoader.initTensorStorage[T](deserializeContext)
 //        val copy = ModuleSerializer.load[T](deserializeContext).module
-//        .asInstanceOf[AbstractModule[DenseTensor
-//      , DenseTensor, T]]
+//        .asInstanceOf[AbstractModule[A
+//      , A, T]]
 //    setWeightAndBias(copy, deepCopy)
 //    copy
   }
@@ -836,7 +837,6 @@ public abstract class AbstractModule extends InferShape implements Module, Seria
    *
    * @param dataset      dataset for prediction
    * @param batchSize    total batchSize for all partitions.
-   * @param testDataSize
    */
 
   public final int[] predictClass(SourceTSet<MiniBatch> dataset, int batchSize, int dataSize) {

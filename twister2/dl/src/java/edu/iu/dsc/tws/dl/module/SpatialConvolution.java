@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.dl.utils.varformat.GP_OUT_IN_KW_KH;
 import edu.iu.dsc.tws.dl.utils.varformat.ONE_D;
 
 @SuppressWarnings({"HiddenField", "LocalVariableName", "NeedBraces", "MemberName"})
-public class SpatialConvolution extends TensorModule implements Initializable {
+public class SpatialConvolution extends TensorModule<DenseTensor> implements Initializable {
 
   protected InitializationMethod weightInitMethod = new Zeros();
   protected InitializationMethod biasInitMethod = new Zeros();

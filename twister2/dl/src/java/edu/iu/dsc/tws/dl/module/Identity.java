@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-public class Identity extends AbstractModule {
+public class Identity extends AbstractModule<DenseTensor> {
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
     this.output = input;

@@ -36,9 +36,9 @@ import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.HeapData;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.NativeData;
 import edu.iu.dsc.tws.dl.utils.Util;
 
-public class MklDnnModuleHelper extends MemoryOwner {
+public interface MklDnnModuleHelper extends MemoryOwner {
 
-  protected Activity initActivity(MemoryData[] formats) {
+  default Activity initActivity(MemoryData[] formats) {
     if (formats.length == 1) {
       return initTensor(formats[0]);
     } else {
@@ -50,7 +50,7 @@ public class MklDnnModuleHelper extends MemoryOwner {
     }
   }
 
-  protected Tensor initTensor(MemoryData format) {
+  default Tensor initTensor(MemoryData format) {
     int[] paddingShape = format.getPaddingShape();
     long realSize = format.getRealSize();
 
@@ -75,12 +75,12 @@ public class MklDnnModuleHelper extends MemoryOwner {
     return null;
   }
 
-  protected MemoryData[] singleNativeData(MemoryData[] formats) {
+  default MemoryData[] singleNativeData(MemoryData[] formats) {
     Util.require(formats.length == 1, "Only accept one tensor as input");
     return nativeData(formats);
   }
 
-  protected MemoryData[] nativeData(MemoryData[] formats) {
+  default MemoryData[] nativeData(MemoryData[] formats) {
     MemoryData[] nativeDataArray = new MemoryData[formats.length];
     for (int i = 0; i < formats.length; i++) {
       MemoryData format = formats[i];

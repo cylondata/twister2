@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * <p>
  * Please note that the return is not a layer but a Node containing input layer.
  */
-public class Input extends AbstractModule {
+public class Input extends AbstractModule<DenseTensor> {
 
   public Input() {
 

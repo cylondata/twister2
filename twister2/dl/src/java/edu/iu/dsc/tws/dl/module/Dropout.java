@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * @param inplace whether to make `input` and `output` share the same storage
  * @param scale   whether to scale the output by a factor of `1 / (1 - p)`
  */
-public class Dropout extends TensorModule {
+public class Dropout extends TensorModule<DenseTensor> {
   private double initP = 0.5;
   private float initPf = 0.5f;
   private boolean inplace = false;

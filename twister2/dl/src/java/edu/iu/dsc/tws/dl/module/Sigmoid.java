@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.TensorModule;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-public class Sigmoid extends TensorModule {
+public class Sigmoid extends TensorModule<DenseTensor> {
 
   private DenseTensor buffer = new DenseTensor(false);
 

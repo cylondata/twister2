@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
 @SuppressWarnings("NeedBraces")
-public class Threshold extends TensorModule {
+public class Threshold extends TensorModule<DenseTensor> {
 
   private double threshold = 1e-6;
   private double value = 0.0;

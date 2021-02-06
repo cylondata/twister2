@@ -9,10 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.graph;
+package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import edu.iu.dsc.tws.dl.data.Tensor;
-import edu.iu.dsc.tws.dl.module.AbstractModule;
-
-public abstract class TensorModule<A extends Tensor> extends AbstractModule<A> {
+public class MklDnnAbstractModule  {
 }

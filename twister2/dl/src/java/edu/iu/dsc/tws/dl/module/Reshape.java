@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * `size(0) * size(1) * ...` tensor, taking the elements row-wise.
  */
 @SuppressWarnings("NeedBraces")
-public class Reshape extends TensorModule {
+public class Reshape extends TensorModule<DenseTensor> {
 
   // size the reshape size
   private int[] size;
@@ -72,9 +72,9 @@ public class Reshape extends TensorModule {
               + "But In ${this.getName()} : element number is: ${ input.nElement() } , "
               + "reshape size is: ${nElement}");
       if (input.isContiguous()) {
-        output = input.view(size);
+        output = (DenseTensor) input.view(size);
       } else {
-        output = input.contiguous().view(size);
+        output = (DenseTensor) input.contiguous().view(size);
         this.inPlace = false;
       }
     } else {
@@ -84,9 +84,9 @@ public class Reshape extends TensorModule {
               + "reshape size is: ${ nElement * input.size(1) }");
       batchSize[0] = input.size(1);
       if (input.isContiguous()) {
-        output = input.view(batchSize);
+        output = (DenseTensor) input.view(batchSize);
       } else {
-        output = input.contiguous().view(batchSize);
+        output = (DenseTensor) input.contiguous().view(batchSize);
         this.inPlace = false;
       }
     }
@@ -96,9 +96,9 @@ public class Reshape extends TensorModule {
   @Override
   public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
     if (gradOutput.isContiguous()) {
-      gradInput = gradOutput.view(input.size());
+      gradInput = (DenseTensor) gradOutput.view(input.size());
     } else {
-      gradInput = gradOutput.contiguous().view(input.size());
+      gradInput = (DenseTensor) gradOutput.contiguous().view(input.size());
     }
     return (DenseTensor) gradInput;
   }
