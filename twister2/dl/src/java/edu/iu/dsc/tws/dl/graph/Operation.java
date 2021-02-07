@@ -11,23 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.graph;
 
+import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.EmptyGradInput;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 
-public abstract class Operation extends AbstractModule {
+public abstract class Operation<A extends Activity> extends AbstractModule<A> {
 
   public Operation() {
-    this.gradInput = new EmptyGradInput(this.getName());
+    this.gradInput = (A) new EmptyGradInput(this.getName());
   }
 
   @Override
-  public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
+  public Activity updateGradInput(Activity input, Activity gradOutput) {
     throw new UnsupportedOperationException("Operation does not support updateGradInput() method");
   }
 
   @Override
-  public DenseTensor backward(DenseTensor input, DenseTensor gradOutput) {
+  public Activity backward(Activity input, Activity gradOutput) {
     throw new UnsupportedOperationException("Operation does not support updateGradInput() method");
   }
 }

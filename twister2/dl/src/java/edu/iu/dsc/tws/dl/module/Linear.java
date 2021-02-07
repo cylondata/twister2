@@ -91,6 +91,8 @@ public class Linear extends TensorModule<DenseTensor> implements Initializable {
   }
 
   private void init() {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
     weight = (initWeight != null) ? initWeight : new DenseTensor(outputSize,
         inputSize, this.isFloat);
 

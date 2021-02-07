@@ -11,11 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import edu.iu.dsc.tws.comms.utils.Heap;
+import com.intel.analytics.bigdl.mkl.DataType;
+import com.intel.analytics.bigdl.mkl.Memory;
+
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorNumeric;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklDnnMemory;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.HeapData;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.NativeData;
@@ -41,6 +42,11 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
   // If it is not null, it means ReorderMemory is owned by another layer
 
 
+  public ReorderMemory(MemoryData outputFormat, MemoryOwner memoryOwner) {
+    this(null, outputFormat, null, null,
+        memoryOwner);
+  }
+
   public ReorderMemory(MemoryData outputFormat, MemoryData gradInputFormat,
                        MemoryOwner memoryOwner) {
     this(null, outputFormat, gradInputFormat, null,
@@ -65,11 +71,11 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
   private MemoryData[] initMemory(MemoryData src, int[] shape, int layout) {
     MemoryData[] ret;
 
-    if(src instanceof HeapData){
+    if (src instanceof HeapData) {
       ret = new HeapData[]{new HeapData(shape, layout, src.dataType())};
-    }else if(src instanceof NativeData){
+    } else if (src instanceof NativeData) {
       ret = new NativeData[]{new NativeData(shape, layout, src.dataType())};
-    }else{
+    } else {
       throw new UnsupportedOperationException("Not support such memory format");
     }
 
@@ -147,7 +153,7 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
   }
 
   @Override
-  public long[] getUpdateGradInputMemoryPrimitives(){
+  public long[] getUpdateGradInputMemoryPrimitives() {
     long[] result = new long[inputFormats().length + outputFormats().length];
     int index = 0;
     for (MemoryData memoryData : realgradOutput) {
@@ -162,7 +168,7 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
   }
 
   @Override
-  public long[] getUpdateOutputMemoryPrimitives(){
+  public long[] getUpdateOutputMemoryPrimitives() {
     long[] result = new long[inputFormats().length + outputFormats().length];
     int index = 0;
     for (MemoryData memoryData : realInput) {
@@ -178,9 +184,9 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
 
   @Override
   public MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs, Phase phase) {
-    if (inputFormat == null){
+    if (inputFormat == null) {
       _inputFormats = inputs;
-    } else{
+    } else {
       _inputFormats = new MemoryData[]{inputFormat};
     }
     Util.require(_inputFormats.length == 1, "Only accept one tensor as input");
@@ -191,7 +197,8 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
 
     shapeToString(_inputFormats[0].shape());
 
-    Util.require(TensorNumeric.product(_inputFormats[0].shape()) == TensorNumeric.product(_outputFormats[0].shape()),
+    Util.require(TensorNumeric.product(_inputFormats[0].shape())
+            == TensorNumeric.product(_outputFormats[0].shape()),
         "input output memory not match, input shape " + shapeToString(_inputFormats[0].shape())
             + "output shape " + shapeToString(_outputFormats[0].shape()));
 
@@ -224,7 +231,7 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
           realOutput[0].getPrimitiveDescription(runtime, memoryOwner), memoryOwner);
     } else {
       throw new UnsupportedOperationException("Int8 not supported");
-     }
+    }
 
     long fwdReorderPrim = MklDnnMemory.PrimitiveCreate2(fwdReorderPrimDesc,
         new long[]{realInput[0].getPrimitive(runtime, memoryOwner)}, new int[]{0}, 1,
@@ -244,11 +251,11 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
   @Override
   public MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad, Phase phase) {
 
-    if(gradInputFormat == null && inputFormat == null){
+    if (gradInputFormat == null && inputFormat == null) {
       _gradInputFormats = inputFormats();
-    }else if(gradInputFormat == null && inputFormat != null){
+    } else if (gradInputFormat == null && inputFormat != null) {
       _gradInputFormats = new MemoryData[]{inputFormat};
-    }else if(gradInputFormat != null){
+    } else if (gradInputFormat != null) {
       _gradInputFormats = new MemoryData[]{gradInputFormat};
     }
 
@@ -258,9 +265,10 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
       _gradOutputFormats = new MemoryData[]{gradOutputFormat};
     }
     Util.require(_gradOutputFormats.length == 1, "Only accept one tensor as input");
-    Util.require(TensorNumeric.product(_gradOutputFormats[0].shape()) == TensorNumeric.product(_gradInputFormats[0].shape()),
-        "gradInput and gradOutput memory not match," +
-            "gradInput shape " + shapeToString(_gradInputFormats[0].shape())
+    Util.require(TensorNumeric.product(_gradOutputFormats[0].shape())
+            == TensorNumeric.product(_gradInputFormats[0].shape()),
+        "gradInput and gradOutput memory not match,"
+            + "gradInput shape " + shapeToString(_gradInputFormats[0].shape())
             + "gradOutput shape " + shapeToString(_gradOutputFormats[0].shape()));
 
     int[] gradInputShape = _gradInputFormats[0].shape();

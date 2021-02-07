@@ -54,6 +54,8 @@ public class Reshape extends TensorModule<DenseTensor> {
   }
 
   public Reshape(int[] size, Boolean mode) {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
     this.size = size;
     this.batchMode = mode;
     this.batchSize = new int[size.length + 1];
@@ -61,6 +63,7 @@ public class Reshape extends TensorModule<DenseTensor> {
       this.batchSize[i] = size[i - 1];
       nElement *= size[i - 1];
     }
+
   }
 
   @Override

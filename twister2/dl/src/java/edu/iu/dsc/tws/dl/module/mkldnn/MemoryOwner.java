@@ -24,7 +24,7 @@ import java.util.List;
  * MemoryOwner. ReorderMemory is a kind of special resource. They can be a normal layer or a
  * resource of another layer.
  */
-@SuppressWarnings({"MemberName", "ParameterName"})
+@SuppressWarnings({"MemberName", "ParameterName", "ConstantName"})
 public interface MemoryOwner {
   List<Releasable> _resources = new ArrayList();
 

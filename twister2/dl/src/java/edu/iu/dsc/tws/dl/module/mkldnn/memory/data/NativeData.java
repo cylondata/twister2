@@ -29,6 +29,11 @@ public class NativeData extends MemoryData {
     this._dataType = _dataType;
   }
 
+  public NativeData(int[] _shape, int _layout) {
+    this._shape = _shape;
+    this._layout = _layout;
+  }
+
   @Override
   public int[] shape() {
     return _shape.clone();

@@ -110,6 +110,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
     fGradInput = new DenseTensor(true);
     ones = new DenseTensor(true);
     onesBatch = new DenseTensor(true);
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   /**
@@ -180,6 +182,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
     }
     Util.require((padW >= 0 && padH >= 0) || (padW == -1 && padH == -1),
         "Illegal padding configuration (padW: $padW, padH: $padH)");
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
 
     if (initWeight != null) {
       this.weight = (DenseTensor) initWeight;

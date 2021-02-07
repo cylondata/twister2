@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
-public class DistributedOptimizer<T> extends Optimizer<T> {
+public class DistributedOptimizer<A extends Tensor, T> extends Optimizer<T> {
 
 
   public DistributedOptimizer(BatchEnvironment env, AbstractModule model,
@@ -46,7 +46,7 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
     long dataLoatTime = System.nanoTime();
 
     double[] loss = new double[1];
-    AbstractModule modal = this.getModel();
+    AbstractModule<A> modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
     TensorPair parameters = this.getModel().getParameters();
     Tensor weight = parameters.getValue0();
@@ -87,7 +87,7 @@ public class DistributedOptimizer<T> extends Optimizer<T> {
 //    CachedTSet<T> iterationData;
 //    CachedTSet<AbstractModule> iterationModal;
     ComputeTSet<PrimitiveArrayPair> trainMap = src.direct()
-        .map(new TrainMapFunction<T>(criterion));
+        .map(new TrainMapFunction<A, T>(criterion));
 
     //input the model
     trainMap.addInput("modal", modalTSet);

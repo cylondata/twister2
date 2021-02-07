@@ -13,14 +13,15 @@ package edu.iu.dsc.tws.dl.optim;
 
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
-public class PredictAccuracyMapFunction<T> extends BaseMapFunc<T, int[]> {
+public class PredictAccuracyMapFunction<A extends Tensor, T> extends BaseMapFunc<T, int[]> {
 
-  private AbstractModule modal;
+  private AbstractModule<A> modal;
 
   public PredictAccuracyMapFunction(AbstractModule predictionModal) {
     this.modal = predictionModal;
@@ -33,9 +34,9 @@ public class PredictAccuracyMapFunction<T> extends BaseMapFunc<T, int[]> {
     modal.evaluate();
     Activity data = miniBatch.getInput();
     double[] target = ((DenseTensor) miniBatch.getTarget()).storage().toDoubleArray();
-    DenseTensor outputProbs = modal.forward((DenseTensor) data);
+    A outputProbs = modal.forward((A) data);
     TensorPair output = outputProbs.max(2);
-    DenseTensor classes = (DenseTensor) output.getValue1();
+    A classes = (A) output.getValue1();
     double[] tempres = classes.storage().toDoubleArray();
 
     //returns data point count and error count

@@ -25,14 +25,25 @@ public class Threshold extends TensorModule<DenseTensor> {
   private boolean inPlace = false;
 
   public Threshold() {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
     validateParameters();
   }
 
   public Threshold(double threshold, double value, boolean inPlace) {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
     this.threshold = threshold;
     this.value = value;
     this.inPlace = inPlace;
     validateParameters();
+  }
+
+  @Override
+  public void toFloat() {
+    super.toFloat();
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override

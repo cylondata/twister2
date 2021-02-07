@@ -21,12 +21,16 @@ public class Sigmoid extends TensorModule<DenseTensor> {
   private DenseTensor buffer = new DenseTensor(false);
 
   public Sigmoid() {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override
   public void toFloat() {
     super.toFloat();
     buffer = new DenseTensor(true);
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override

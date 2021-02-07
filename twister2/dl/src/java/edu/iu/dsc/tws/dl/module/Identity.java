@@ -16,6 +16,12 @@ import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
 public class Identity extends AbstractModule<DenseTensor> {
+
+  public Identity() {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
+  }
+
   @Override
   public DenseTensor updateOutput(DenseTensor input) {
     this.output = input;

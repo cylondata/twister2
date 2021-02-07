@@ -34,6 +34,8 @@ public class LogSoftMax extends TensorModule<DenseTensor> {
   private DenseTensor buffer = new DenseTensor(false);
 
   public LogSoftMax() {
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override
@@ -41,6 +43,8 @@ public class LogSoftMax extends TensorModule<DenseTensor> {
     super.toFloat();
     ones = new DenseTensor(true);
     buffer = new DenseTensor(true);
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override

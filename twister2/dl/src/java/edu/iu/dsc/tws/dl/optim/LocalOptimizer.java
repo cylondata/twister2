@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-public class LocalOptimizer<T> extends Optimizer<T> {
+public class LocalOptimizer<A extends Tensor, T> extends Optimizer<T> {
 
 
   public LocalOptimizer(BatchEnvironment env, AbstractModule model,
@@ -42,7 +42,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
   public AbstractModule optimize() {
     long startTime = System.nanoTime();
     double[] loss = new double[1];
-    AbstractModule modal = this.getModel();
+    AbstractModule<A> modal = this.getModel();
     AbstractCriterion criterion = this.getCriterion();
     TensorPair parameters = this.getModel().getParameters();
     Tensor weight = parameters.getValue0();
@@ -75,7 +75,7 @@ public class LocalOptimizer<T> extends Optimizer<T> {
       SourceTSet<T> src = DataSetFactory.createSingleDataSet(env, currentData, parallelism);
 
       trainResult = src.direct()
-          .map(new TrainMapFunction<T>(criterion))
+          .map(new TrainMapFunction<A, T>(criterion))
           .allReduce(new TrainReduceFunction(result, env.getWorkerID(), modal.isFloat()))
           .map(new AverageParameters()).cache();
 

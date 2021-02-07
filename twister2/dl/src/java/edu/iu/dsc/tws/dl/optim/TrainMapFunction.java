@@ -14,16 +14,16 @@ package edu.iu.dsc.tws.dl.optim;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.dl.criterion.AbstractCriterion;
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 
-public class TrainMapFunction<T> extends BaseMapFunc<T, PrimitiveArrayPair> {
+public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, PrimitiveArrayPair> {
 
-  private AbstractModule modal;
+  private AbstractModule<A> modal;
   private AbstractCriterion criterion;
 
   public TrainMapFunction(AbstractCriterion localCriterion) {
@@ -42,12 +42,12 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, PrimitiveArrayPair> {
     modal.training();
     Activity input = miniBatch.getInput();
     Activity target = miniBatch.getTarget();
-    DenseTensor output = modal.forward((DenseTensor) input);
+    A output = modal.forward((A) input);
     PrimitiveArrayPair result;
     if (modal.isFloat()) {
       float loss = criterion.forwardf(output, target);
       Activity errors = criterion.backward(output, target);
-      modal.backward((DenseTensor) input, (DenseTensor) errors);
+      modal.backward((A) input, (A) errors);
       result = new FloatFloatArrayPair(loss,
           modal.getParameters().getValue1().storage().toFloatArray());
       if (this.getTSetContext().getIndex() == 0) {
@@ -56,7 +56,7 @@ public class TrainMapFunction<T> extends BaseMapFunc<T, PrimitiveArrayPair> {
     } else {
       double loss = criterion.forward(output, target);
       Activity errors = criterion.backward(output, target);
-      modal.backward((DenseTensor) input, (DenseTensor) errors);
+      modal.backward((A) input, (A) errors);
       result = new DoubleDoubleArrayPair(loss,
           modal.getParameters().getValue1().storage().toDoubleArray());
       if (this.getTSetContext().getIndex() == 0) {

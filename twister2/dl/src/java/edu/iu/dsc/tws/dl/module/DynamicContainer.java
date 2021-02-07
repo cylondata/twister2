@@ -15,10 +15,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.graph.Operation;
 import edu.iu.dsc.tws.dl.utils.Util;
 
-public abstract class DynamicContainer extends Container {
+public abstract class DynamicContainer<A extends Activity> extends Container<A> {
 
   /**
    * Add a sub-module to the contained `modules`

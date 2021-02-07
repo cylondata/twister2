@@ -48,6 +48,8 @@ public class Dropout extends TensorModule<DenseTensor> {
   public Dropout(double initP) {
     this.initP = initP;
     this.initPf = (float) initP;
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   public Dropout(double initP, boolean inplace, boolean scale) {
@@ -55,6 +57,8 @@ public class Dropout extends TensorModule<DenseTensor> {
     this.initPf = (float) initP;
     this.inplace = inplace;
     this.scale = scale;
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override

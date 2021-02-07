@@ -23,6 +23,11 @@ public class HeapData extends MemoryData {
   private int _layout;
   private int _dataType = DataType.F32;
 
+  public HeapData(int[] _shape, int _layout) {
+    this._shape = _shape;
+    this._layout = _layout;
+  }
+
   public HeapData(int[] _shape, int _layout, int _dataType) {
     this._shape = _shape;
     this._layout = _layout;

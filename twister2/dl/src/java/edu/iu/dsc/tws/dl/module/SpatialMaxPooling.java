@@ -81,12 +81,16 @@ public class SpatialMaxPooling extends TensorModule<DenseTensor> {
     this.padW = padW;
     this.padH = padH;
     this.format = format;
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override
   public void toFloat() {
     super.toFloat();
     indices = new DenseTensor(true);
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   /**

@@ -15,49 +15,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.DynamicContainer;
 
-public class Sequential extends DynamicContainer {
+public class Sequential<A extends Tensor> extends DynamicContainer<A> {
 
   @Override
-  public DenseTensor updateOutput(DenseTensor input) {
+  public A updateOutput(A input) {
     int i = 0;
-    DenseTensor result = input;
+    A result = input;
     while (i < modules.size()) {
-      result = modules.get(i).forward(result);
+      result = (A) modules.get(i).forward(result);
       i += 1;
     }
 
-    this.output = result;
-    return (DenseTensor) output;
+    this.output = (A) result;
+    return output;
   }
 
   @Override
-  public DenseTensor updateGradInput(DenseTensor input, DenseTensor nextError) {
+  public A updateGradInput(A input, A nextError) {
     int i = modules.size() - 1;
-    DenseTensor error = nextError;
+    A error = nextError;
     while (i > 0) {
       DenseTensor inputTemp = (DenseTensor) modules.get(i - 1).output;
-      error = modules.get(i).updateGradInput(inputTemp, error);
+      error = (A) modules.get(i).updateGradInput(inputTemp, error);
       i -= 1;
     }
-    error = modules.get(0).updateGradInput(input, error);
+    error = (A) modules.get(0).updateGradInput(input, error);
 
     this.gradInput = error;
-    return (DenseTensor) gradInput;
+    return gradInput;
   }
 
   @Override
-  public void accGradParameters(DenseTensor input, DenseTensor gradOutput) {
+  public void accGradParameters(A input, A gradOutput) {
     int i = modules.size() - 1;
     AbstractModule currentModule = modules.get(i);
-    DenseTensor currentGradOutput = gradOutput;
+    A currentGradOutput = gradOutput;
     while (i > 0) {
       AbstractModule previousModule = modules.get(i - 1);
       currentModule.accGradParameters((DenseTensor) previousModule.output, currentGradOutput);
-      currentGradOutput = (DenseTensor) currentModule.gradInput;
+      currentGradOutput = (A) currentModule.gradInput;
       currentModule = previousModule;
       i -= 1;
     }
@@ -66,20 +67,20 @@ public class Sequential extends DynamicContainer {
   }
 
   @Override
-  public DenseTensor backward(DenseTensor input, DenseTensor nextError) {
+  public A backward(A input, A nextError) {
     long before = System.nanoTime();
     int i = modules.size() - 1;
-    DenseTensor error = nextError;
+    A error = nextError;
     while (i > 0) {
       Activity inputLocal = modules.get(i - 1).output;
-      error = modules.get(i).backward((DenseTensor) inputLocal, error);
+      error = (A) modules.get(i).backward((DenseTensor) inputLocal, error);
       i -= 1;
     }
-    error = modules.get(0).backward(input, error);
+    error = (A) modules.get(0).backward(input, error);
 
     this.gradInput = error;
     backwardTime += System.nanoTime() - before;
-    return (DenseTensor) gradInput;
+    return gradInput;
   }
 
   @Override

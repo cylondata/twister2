@@ -23,8 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
-import edu.iu.dsc.tws.dl.data.Tensor;
-
 /**
  * Holds a pair of Tensors
  */

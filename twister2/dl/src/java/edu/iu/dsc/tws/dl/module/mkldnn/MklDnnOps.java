@@ -19,18 +19,19 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.tensor.DnnTensor;
 import edu.iu.dsc.tws.dl.utils.Util;
 
+@SuppressWarnings("ParameterName")
 public final class MklDnnOps {
 
   private MklDnnOps() {
   }
 
   public static long memorySetDataHandle(long memory, Tensor data, int offset) {
-    Util.require(MklDnn.isLoaded, "mkldnn isn't loaded");
+    Util.require(MklDnn.isLoaded(), "mkldnn isn't loaded");
     return MklDnn.MemorySetDataHandle(memory, data.storage().toFloatArray(), offset);
   }
 
   public static void memoryReleaseDataHandle(Tensor data, long ptr) {
-    Util.require(MklDnn.isLoaded, "mkldnn isn't loaded");
+    Util.require(MklDnn.isLoaded(), "mkldnn isn't loaded");
     MklDnn.MemoryReleaseDataHandle(data.storage().toFloatArray(), ptr);
   }
 
@@ -38,7 +39,7 @@ public final class MklDnnOps {
                                   long[] memory_primitives,
                                   Tensor[] buffers) {
     // the tensor maybe Tensor[Byte]. so use the unchecked to handle this
-    Util.require(MklDnn.isLoaded, "mkldnn isn't loaded");
+    Util.require(MklDnn.isLoaded(), "mkldnn isn't loaded");
     Util.require(memory_primitives.length == buffers.length);
 
     long[] handle = new long[memory_primitives.length];
@@ -49,7 +50,7 @@ public final class MklDnnOps {
               ((DnnTensor) buffers[i]).storageAddress(), 0);
         } else {
           handle[i] = MklDnnOps.memorySetDataHandle(
-              memory_primitives[(i), buffers[i], buffers[i].storageOffset() - 1);
+              memory_primitives[i], buffers[i], buffers[i].storageOffset() - 1);
         }
       }
     }

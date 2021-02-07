@@ -11,19 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
+import java.util.ArrayList;
+
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorType;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
-import edu.iu.dsc.tws.dl.data.tensor.DnnTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ArrayPair;
 
-import java.util.ArrayList;
-
-public abstract class MklDnnLayer extends AbstractModule<Activity> implements MklDnnModule{
+@SuppressWarnings("MemberName")
+public abstract class MklDnnLayer extends AbstractModule<Activity> implements MklDnnModule {
   /**
    * MKL-DNN primitives of the module. Note you should only initialize this field by calling
    * initPrimitives method. This field will be erased when sending model to remote worker. So you
@@ -47,7 +47,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
   private transient Activity cachedGradOutput;
 
   @Override
-  public MemoryData[] initGradWPrimitives(MemoryData[] grad,Phase phase) {
+  public MemoryData[] initGradWPrimitives(MemoryData[] grad, Phase phase) {
     _gradOutputFormatsForWeight = grad;
     return grad;
   }
@@ -63,7 +63,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
       result[index] = memoryData.getPrimitive(runtime, this);
       index++;
     }
-   return result;
+    return result;
   }
 
   public long[] getUpdateGradInputMemoryPrimitives() {
@@ -119,7 +119,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
   }
 
   @Override
-  public Activity updateGradInput(Activity input,Activity gradOutput) {
+  public Activity updateGradInput(Activity input, Activity gradOutput) {
     if (updateGradInputMemoryPrimitives == null) {
       updateGradInputMemoryPrimitives = getUpdateGradInputMemoryPrimitives();
     }
@@ -158,25 +158,25 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
 
 
   @Override
-  public MemoryData[] inputFormats(){
+  public MemoryData[] inputFormats() {
     Util.require(_inputFormats != null, "You should call initFwdPrimitives first");
     return _inputFormats;
   }
 
   @Override
-  public MemoryData[] gradInputFormats(){
+  public MemoryData[] gradInputFormats() {
     Util.require(_gradInputFormats != null, "You should call initBwdPrimitives first");
     return _gradInputFormats;
   }
 
   @Override
-  public MemoryData[] outputFormats(){
+  public MemoryData[] outputFormats() {
     Util.require(_outputFormats != null, "You should call initFwdPrimitives first");
     return _outputFormats;
   }
 
   @Override
-  public MemoryData[] gradOutputFormats(){
+  public MemoryData[] gradOutputFormats() {
     Util.require(_gradOutputFormats != null, "You should call initBwdPrimitives first");
     return _gradOutputFormats;
   }
@@ -190,7 +190,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
 
 
     for (int i = 0; i < from.length; i++) {
-      if (from[i].getTensorType() == TensorType.DenseType){
+      if (from[i].getTensorType() == TensorType.DenseType) {
         from[i] = value.toTensor();
       }
     }
@@ -208,7 +208,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
 
   public ArrayPair<TensorMMap> paramsMMap() {
     // return null for weight and gradWeight by default
-    return new ArrayPair<TensorMMap>(new TensorMMap[], new TensorMMap[]);
+    return new ArrayPair<TensorMMap>(new TensorMMap[0], new TensorMMap[0]);
   }
 }
 

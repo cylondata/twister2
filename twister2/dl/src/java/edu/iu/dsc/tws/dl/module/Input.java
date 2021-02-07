@@ -27,7 +27,8 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 public class Input extends AbstractModule<DenseTensor> {
 
   public Input() {
-
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   public Input(String name) {

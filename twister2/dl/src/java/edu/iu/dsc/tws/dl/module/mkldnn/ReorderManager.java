@@ -11,101 +11,126 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.intel.analytics.bigdl.mkl.DataType;
+
+import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Table;
+import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.HeapData;
+import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.NativeData;
+import edu.iu.dsc.tws.dl.utils.Util;
+import edu.iu.dsc.tws.dl.utils.pair.ReorderManagerKey;
+
 public class ReorderManager {
   private MemoryOwner owner;
   // (MemoryFormatId, TargetFormat) -> Reorder
-  val reorders = mutable.HashMap[(Int, MemoryData), ReorderMemory]()
+
+  private Map<ReorderManagerKey, ReorderMemory> reorders = new HashMap<>();
   // ReorderId -> RefCount
-  val refCounts = mutable.HashMap[Int, Int]()
-  val useCounts = mutable.HashMap[Int, Int]()
+  private Map<Integer, Integer> refCounts = new HashMap<>();
+  private Map<Integer, Integer> useCounts = new HashMap<>();
 
-  private var runtime: MklDnnRuntime = _
+  private MklDnnRuntime runtime;
 
-  def register(from: MemoryData, to: MemoryData): Unit = {
-    require(runtime != null, "Please call setRuntime first")
-    val mId = System.identityHashCode(from)
+  public ReorderManager(MemoryOwner owner) {
+    this.owner = owner;
+  }
+
+  public void register(MemoryData from, MemoryData to) {
+    Util.require(runtime != null, "Please call setRuntime first");
+    int mId = System.identityHashCode(from);
+    ReorderManagerKey tempKey = new ReorderManagerKey(mId, to);
     if (needReorder(from, to)) {
-      if (reorders.contains((mId, to))) {
-        refCounts(System.identityHashCode(reorders((mId, to)))) += 1
+      if (reorders.containsKey(new ReorderManagerKey(mId, to))) {
+        int temp = refCounts.get(System.identityHashCode(reorders.get(tempKey)));
+        refCounts.put(System.identityHashCode(reorders.get(tempKey)), temp + 1);
       } else {
-        val reorder = ReorderMemory(to)
-        reorder.setRuntime(runtime)
-        reorder.initFwdPrimitives(Array(from), Phase.InferencePhase)
-        reorders((mId, to)) = reorder
-        val reorderId = System.identityHashCode(reorder)
-        refCounts(reorderId) = 1
-        useCounts(reorderId) = 0
+        ReorderMemory reorder = new ReorderMemory(to, owner);
+        reorder.setRuntime(runtime);
+        reorder.initFwdPrimitives(new MemoryData[]{from}, Phase.INFERENCE);
+        reorders.put(tempKey, reorder);
+        int reorderId = System.identityHashCode(reorder);
+        refCounts.put(reorderId, 1);
+        useCounts.put(reorderId, 0);
       }
     }
   }
 
-  def setRuntime(runtime: MklDnnRuntime): Unit = {
-    this.runtime = runtime
+  public void setRuntime(MklDnnRuntime runtim) {
+    this.runtime = runtim;
   }
 
-  def infer(from: Array[MemoryData], to: Array[MemoryData], output: Activity)
-  : Activity = {
+  public Activity infer(MemoryData[] from, MemoryData[] to, Activity output) {
     if (from.length == 1) {
-      require(output.isTensor, "output activity should be a tensor")
-      inferTensor(from(0), to(0), output.asInstanceOf[Tensor[Float]])
+      Util.require(output.isTensor(), "output activity should be a tensor");
+      return inferTensor(from[0], to[0], (Tensor) output);
     } else {
-      require(output.toTable.length() == from.length,
-          "output activity length doesn't match")
-      val outputTable = T()
-      var i = 0
-      while(i < from.length) {
-        outputTable(i + 1) = inferTensor(from(i), to(i), output.toTable(i + 1))
-        i += 1
+      Util.require(output.toTable().length() == from.length,
+          "output activity length doesn't match");
+      Table outputTable = new Table();
+      int i = 0;
+      while (i < from.length) {
+        outputTable.put(i + 1, inferTensor(from[i], to[i], output.toTable().get(i + 1)));
+        i += 1;
       }
-      outputTable
+      return outputTable;
     }
   }
 
-  private def inferTensor(from: MemoryData, to : MemoryData, output: Tensor[Float])
-  : Tensor[Float] = {
-    val mId = System.identityHashCode(from)
-    if (reorders.contains((mId, to))) {
-      val reorder = reorders((mId, to))
-      val reorderId = System.identityHashCode(reorder)
-      val result = if (useCounts(reorderId) == 0) {
-        reorder.forward(output).asInstanceOf[Tensor[Float]]
+  private Tensor inferTensor(MemoryData from, MemoryData to, Tensor output) {
+    int mId = System.identityHashCode(from);
+    ReorderManagerKey tempKey = new ReorderManagerKey(mId, to);
+
+    if (reorders.containsKey(tempKey)) {
+      ReorderMemory reorder = reorders.get(tempKey);
+      int reorderId = System.identityHashCode(reorder);
+      Activity result;
+      if (useCounts.get(reorderId) == 0) {
+        result = reorder.forward(output);
       } else {
-        reorder.output.asInstanceOf[Tensor[Float]]
+        result = reorder.output;
       }
-      useCounts(reorderId) += 1
-      if (useCounts(reorderId) == refCounts(reorderId)) {
-        useCounts(reorderId) = 0
+      useCounts.put(reorderId, useCounts.get(reorderId) + 1);
+      if (useCounts.get(reorderId) == refCounts.get(reorderId)) {
+        useCounts.put(reorderId, 0);
       }
-      result
+      return (Tensor) result;
     } else {
-      output
+      return output;
     }
   }
 
-  private def needReorder(from: MemoryData, to: MemoryData): Boolean = {
-    from match {
-      case h: HeapData =>
-        to match {
-        case hh: HeapData => h.layout != hh.layout
-        case nn: NativeData => true
-        case _ => throw new UnsupportedOperationException("Not support such memory format")
+  private boolean needReorder(MemoryData from, MemoryData to) {
+    if (from instanceof HeapData) {
+      if (to instanceof HeapData) {
+        return from.layout() != to.layout();
+      } else if (to instanceof NativeData) {
+        return true;
+      } else {
+        throw new UnsupportedOperationException("Not support such memory format");
       }
-      case n: NativeData =>
-        to match {
-        case hh: HeapData => true
-        case nn: NativeData =>
-          // we will skip the S8 to U8 reorder
-          val doNotReorderIt = n.layout == nn.layout && (
-              n.dataType == nn.dataType || // the same data type
-                  (n.dataType == DataType.S8 && nn.dataType == DataType.U8) || // skip the u8 -> s8
-                  (n.dataType == DataType.U8 && nn.dataType == DataType.S8)) // skip the s8->u8
+    } else if (from instanceof NativeData) {
+      if (to instanceof HeapData) {
+        return true;
+      } else if (to instanceof NativeData) {
+        boolean doNotReorderIt = from.layout() == to.layout()
+            && (from.dataType() == to.dataType()
+            || (from.dataType() == DataType.S8 && to.dataType() == DataType.U8)
+            || (from.dataType() == DataType.U8 && to.dataType() == DataType.S8)); // skip the s8->u8
 
-          !doNotReorderIt
-        case _ => throw new UnsupportedOperationException("Not support such memory format")
+        return !doNotReorderIt;
+      } else {
+        throw new UnsupportedOperationException("Not support such memory format");
       }
-      case _ => throw new UnsupportedOperationException("Not support such memory format")
+    } else {
+      throw new UnsupportedOperationException("Not support such memory format");
     }
   }
 
-  def release(): Unit = { }
+  public void release() {
+
+  }
 }

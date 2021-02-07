@@ -22,6 +22,8 @@ public class LeakyRelu extends TensorModule<DenseTensor> {
 
   public LeakyRelu(double negValue) {
     this.negValue = negValue;
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
     if (negValue < 0) {
       inplace = false;
     }
@@ -30,6 +32,8 @@ public class LeakyRelu extends TensorModule<DenseTensor> {
   public LeakyRelu(double negValue, boolean inplace) {
     this.negValue = negValue;
     this.inplace = inplace;
+    this.output = new DenseTensor(this.isFloat);
+    this.gradInput = new DenseTensor(this.isFloat);
   }
 
   @Override

@@ -11,14 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import edu.iu.dsc.tws.comms.utils.Heap;
+import java.io.Serializable;
+
+import com.intel.analytics.bigdl.mkl.Memory;
+
 import edu.iu.dsc.tws.dl.data.Tensor;
+import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.data.tensor.DnnTensor;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.HeapData;
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.NativeData;
 import edu.iu.dsc.tws.dl.utils.Util;
-
-import java.io.Serializable;
 
 /**
  * `TensorMMap` contains two tensors, dense and native, which are a map of each other.
@@ -28,12 +30,13 @@ import java.io.Serializable;
  *
  * @param _size the shape of Tensor, such as Array(4, 3, 224, 224)
  */
+@SuppressWarnings({"MemberName", "ParameterName"})
 public class TensorMMap implements Serializable {
   private int[] _size;
   private MemoryOwner owner;
   // dense weight on heap is used to optimizer and so on, which is exposed to
   // AbstractModule level.
-  Tensor dense = Tensor[Float](_size);
+  private Tensor dense;
 
   // the native DnnTensor. It's allocate at runtime when do primitive initialization.
   // it has two benefits, the first is the clone will only clone one copy of weights and gradients
@@ -46,56 +49,73 @@ public class TensorMMap implements Serializable {
   private transient ReorderMemory _reorder = null;
 
   private transient HeapData _heapData = null;
+
+  public TensorMMap(int[] _size, MemoryOwner owner) {
+    this._size = _size;
+    this.owner = owner;
+    dense = new DenseTensor(_size, true);
+  }
+
   public DnnTensor nativeDnn() {
     return (DnnTensor) _native;
   }
 
-  public HeapData heapData(){
-   return _heapData;
+  public HeapData heapData() {
+    return _heapData;
   }
 
   public void sync() {
     Util.require(_reorder != null && _native != null,
         "you should initialize the native relevant resources first");
 
-    if(_from instanceof HeapData){
+    if (_from instanceof HeapData) {
       _reorder.forward(this.dense);
-    }else if(_from instanceof NativeData){
-      _reorder.forward(this.native);
+    } else if (_from instanceof NativeData) {
+      _reorder.forward(this.nativeDnn());
     }
+  }
+
+  public Tensor getDense() {
+    return dense;
+  }
+
+  public void setDense(Tensor dense) {
+    this.dense = dense;
   }
 
   /**
    * set the dense <-> native map, maintain the format to reorder
-   *
+   * <p>
    * Note, it will only create the native tensor based on the size and will not
    * do the reorder. So you should call `sync()` by manual.
    *
-   * @param from the source tensor memory data, could be HeapData or NativeData
-   * @param to the dest tensor memory data, could be HeapData or NativeData
+   * @param from    the source tensor memory data, could be HeapData or NativeData
+   * @param to      the dest tensor memory data, could be HeapData or NativeData
    * @param runtime the mkldnn runtime for reorder operation
    */
-  public void setMemoryData(MemoryData from,MemoryData to,MklDnnRuntime runtime) {
+  public void setMemoryData(MemoryData from, MemoryData to, MklDnnRuntime runtime) {
     Util.require(_from == null && _to == null, "you only can set once the memory data");
     _from = from;
     _to = to;
 
-    _reorder = ReorderMemory(to);
+    _reorder = new ReorderMemory(to, owner);
     _reorder.setRuntime(runtime);
-    _reorder.initFwdPrimitives(Array(_from), InferencePhase);
+    _reorder.initFwdPrimitives(new MemoryData[]{_from}, Phase.INFERENCE);
 
-    _from match {
-      case _: HeapData =>
-        this._native = _reorder.output.asInstanceOf[DnnTensor[Float]]
-        _heapData = _from.asInstanceOf[HeapData]
-      case _: NativeData =>
-        // the native tensor size should be determined by the memory description
-        // other wise will be segment fault
-        this._native = DnnTensor[Float](Memory.GetPaddingShape(_from.getMemoryDescription()));
-        // the native initialize value should be all zeros.
-        this._native.zero();
-        _reorder.output.toTensor[Float].set(this.dense);
-        _heapData = _to.asInstanceOf[HeapData];
+    if (_from instanceof HeapData) {
+      this._native = (DnnTensor) _reorder.output;
+      _heapData = (HeapData) _from;
+    } else if (_from instanceof NativeData) {
+      // the native tensor size should be determined by the memory description
+      // other wise will be segment fault
+      this._native = new DnnTensor(Memory.GetPaddingShape(_from.getMemoryDescription(owner)),
+          owner);
+      // the native initialize value should be all zeros.
+      this._native.zero();
+      ((Tensor) _reorder.output).set(this.dense);
+      _heapData = (HeapData) _to;
+    } else {
+      throw new UnsupportedOperationException("Not support such memory format");
     }
   }
 

@@ -16,8 +16,10 @@ import java.io.Serializable;
 import com.intel.analytics.bigdl.mkl.DataType;
 import com.intel.analytics.bigdl.mkl.Memory;
 import com.intel.analytics.bigdl.mkl.MklDnn;
+import com.intel.analytics.bigdl.mkl.Query;
 
 import edu.iu.dsc.tws.dl.module.mkldnn.memory.MklDnnMemory;
+import edu.iu.dsc.tws.dl.module.mkldnn.memory.data.NativeData;
 import edu.iu.dsc.tws.dl.utils.Util;
 
 @SuppressWarnings({"LocalVariableName", "ParameterName", "MemberName"})
@@ -35,6 +37,32 @@ public abstract class MemoryData implements Serializable {
   private transient long primitive = UNDEFINED;
   private transient long primitiveDesc = UNDEFINED;
   private transient long description = UNDEFINED;
+
+  public static NativeData primitiveOutput(long pd) {
+    return operationWant(pd, Query.DstPd, 0);
+  }
+
+  public static NativeData operationWant(long primDesc, int queryType) {
+    return operationWant(primDesc, queryType, 0);
+  }
+
+  public static NativeData operationWant(long primDesc, int queryType, int index) {
+    long memoryPrimDesc = MklDnn.PrimitiveDescQueryPd(primDesc, queryType, index);
+    long memoryDesc = MklDnn.PrimitiveDescQueryMemory(memoryPrimDesc);
+    int[] shape = Memory.GetShape(memoryDesc);
+    int[] paddingShape = Memory.GetPaddingShape(memoryDesc);
+    int layout = Memory.GetLayout(memoryDesc);
+    int dataType = Memory.GetDataType(memoryDesc);
+
+    NativeData memory = new NativeData(shape, layout, dataType);
+    memory.setMemoryDescription(memoryDesc);
+    memory.setPrimitiveDescription(memoryPrimDesc);
+    return memory;
+  }
+
+  public int getHeapFormat() {
+    return heapFormat;
+  }
 
   public abstract int[] shape();
 
@@ -71,7 +99,7 @@ public abstract class MemoryData implements Serializable {
 
   public abstract MemoryData cloneFormat();
 
-  long getMemoryDescription(MemoryOwner owner) {
+  public long getMemoryDescription(MemoryOwner owner) {
     if (description == UNDEFINED || description == ERROR) {
       checkConsistency(shape(), layout());
       description = MklDnnMemory.MemoryDescInit(shape().length, shape(), dataType(), layout(),
@@ -80,7 +108,7 @@ public abstract class MemoryData implements Serializable {
     return description;
   }
 
-  long getPrimitiveDescription(MklDnnRuntime runtime, MemoryOwner owner) {
+  public long getPrimitiveDescription(MklDnnRuntime runtime, MemoryOwner owner) {
     Util.require(runtime != null, "Have you initialized the MklDnnRuntime?");
     if (primitiveDesc == UNDEFINED || primitiveDesc == ERROR) {
       primitiveDesc =
@@ -90,7 +118,7 @@ public abstract class MemoryData implements Serializable {
     return primitiveDesc;
   }
 
-  long getPrimitive(MklDnnRuntime runtime, MemoryOwner owner) {
+  public long getPrimitive(MklDnnRuntime runtime, MemoryOwner owner) {
     Util.require(runtime != null, "Have you initialized the MklDnnRuntime?");
     if (primitive == UNDEFINED || primitive == ERROR) {
       primitive =

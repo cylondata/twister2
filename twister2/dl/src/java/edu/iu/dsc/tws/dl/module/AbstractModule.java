@@ -37,7 +37,8 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 @SuppressWarnings({"MemberName", "HiddenField"})
-public abstract class AbstractModule<A extends Activity> extends InferShape implements Module, Serializable {
+public abstract class AbstractModule<A extends Activity> extends InferShape
+    implements Module, Serializable {
 
   // ================================= Public APIs =============================================
   /**
@@ -162,11 +163,11 @@ public abstract class AbstractModule<A extends Activity> extends InferShape impl
    * @return
    */
   public AbstractModule clearState() {
-    if(output instanceof Tensor){
-      ((Tensor)output).set();
+    if (output instanceof Tensor) {
+      ((Tensor) output).set();
     }
-    if(gradInput instanceof Tensor){
-      ((Tensor)gradInput).set();
+    if (gradInput instanceof Tensor) {
+      ((Tensor) gradInput).set();
     }
     return this;
   }
@@ -635,7 +636,7 @@ public abstract class AbstractModule<A extends Activity> extends InferShape impl
    *
    * @return
    */
-  final boolean isTraining() {
+  public final boolean isTraining() {
     return this.train;
   }
 
@@ -835,8 +836,8 @@ public abstract class AbstractModule<A extends Activity> extends InferShape impl
   /**
    * module predict, return the predict label
    *
-   * @param dataset      dataset for prediction
-   * @param batchSize    total batchSize for all partitions.
+   * @param dataset   dataset for prediction
+   * @param batchSize total batchSize for all partitions.
    */
 
   public final int[] predictClass(SourceTSet<MiniBatch> dataset, int batchSize, int dataSize) {

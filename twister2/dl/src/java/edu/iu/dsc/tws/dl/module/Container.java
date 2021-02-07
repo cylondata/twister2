@@ -15,12 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
 @SuppressWarnings("NeedBraces")
-public abstract class Container<A extends Tensor> extends AbstractModule<A> {
+public abstract class Container<A extends Activity> extends AbstractModule<A> {
 
   /**
    * Module status. It is useful for modules like dropout/batch normalization

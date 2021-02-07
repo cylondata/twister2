@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.dl.optim;
 
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.dl.data.Activity;
+import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
-public class PredictClassMapFunction<T> extends BaseMapFunc<T, int[]> {
+public class PredictClassMapFunction<A extends Tensor, T> extends BaseMapFunc<T, int[]> {
 
-  private AbstractModule modal;
+  private AbstractModule<A> modal;
 
   public PredictClassMapFunction(AbstractModule predictionModal) {
     this.modal = predictionModal;
@@ -32,9 +32,9 @@ public class PredictClassMapFunction<T> extends BaseMapFunc<T, int[]> {
     ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) input;
     modal.evaluate();
     Activity data = miniBatch.getInput();
-    DenseTensor outputProbs = modal.forward((DenseTensor) data);
+    A outputProbs = modal.forward((A) data);
     TensorPair output = outputProbs.max(2);
-    DenseTensor classes = (DenseTensor) output.getValue1();
+    A classes = (A) output.getValue1();
     double[] tempres = classes.storage().toDoubleArray();
     int[] results = new int[classes.size(1)];
     for (int i = 0; i < results.length; i++) {

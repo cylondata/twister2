@@ -11,22 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
+import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.module.DynamicContainer;
 import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
 
 /**
  * Helper utilities when integrating containers with MKL-DNN
  */
-public class MklDnnContainer extends DynamicContainer implements MklDnnModule {
+public class MklDnnContainer extends DynamicContainer<Activity> implements MklDnnModule {
 
   @Override
-  public DenseTensor updateOutput(DenseTensor input) {
+  public Activity updateOutput(Activity input) {
     return null;
   }
 
   @Override
-  public DenseTensor updateGradInput(DenseTensor input, DenseTensor gradOutput) {
+  public Activity updateGradInput(Activity input, Activity gradOutput) {
     return null;
   }
 
