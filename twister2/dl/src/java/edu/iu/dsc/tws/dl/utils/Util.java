@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils;
 
+import java.util.Arrays;
+
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
 import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
@@ -172,9 +174,79 @@ public final class Util {
     return new int[]{padH, padH, padW, padW, oheight, owidth};
   }
 
-  public static void copyMaskAndScales(MemoryData[] value0, MemoryData[] value1) {
+  /**
+   * copyMaskAndScales.
+   * @param from
+   * @param to
+   */
+  public static void copyMaskAndScales(MemoryData[] from, MemoryData[] to) {
+    // here we check the from and to, they should not be null ideally
+    // but if the model is mixin with blas layer, it may be null
+    if (from == null || to == null) {
+      return;
+    }
+
+    boolean valid = (from.length == 1 || to.length == 1) || // the ConcatTable or JoinTable
+        (from.length == to.length); // the same length of from and to.
+
+    // if from has scales but to has no, copy them
+    boolean needCopy = from != to
+        && Arrays.stream(from).allMatch(memoryData -> memoryData.scales.length == 0)
+        && Arrays.stream(to).allMatch(memoryData -> memoryData.scales.length == 0);
+
+    if (valid && needCopy) {
+      if (from.length == to.length) {
+        for (int i = 0; i < from.length; i++) {
+          MemoryData x1 = from[i];
+          MemoryData x2 = to[i];
+          if (x1.scales != null && x1.scales.length == 0) {
+            x1.setScales(x2.scales);
+            x1.setMask(x2.mask());
+          }
+        }
+      } else if (to.length == 1) {
+        float[][] temp = new float[from.length][from[0].scales.length];
+        for (int i = 0; i < temp.length; i++) {
+          temp[i] = from[i].scales;
+        }
+
+        float[] result = temp[0];
+        for (int row = 1; row < temp.length; row++) {
+          for (int column = 0; column < temp[0].length; column++) {
+            if (temp[row][column] > result[column]) {
+              result[column] = temp[row][column];
+            }
+          }
+        }
+
+        to[0].setScales(result);
+
+        int maskTemp = from[0].mask();
+        for (int i = 1; i < from.length; i++) {
+          if (maskTemp != from[i].mask()) {
+            require(false, "only support the same mask");
+          }
+        }
+
+        to[0].setMask(maskTemp);
+      } else if (to.length > 1) {
+        Arrays.stream(to).forEach(memoryData -> memoryData.setScales(from[0].scales));
+        Arrays.stream(to).forEach(memoryData -> memoryData.setMask(from[0].mask()));
+      }
+    }
   }
 
-  public static void copyMaskAndScales(MemoryData lastOutputFormat, MemoryData memoryData) {
+  /**
+   * copyMaskAndScales.
+   * @param from
+   * @param to
+   */
+  public static void copyMaskAndScales(MemoryData from, MemoryData to) {
+    // here we check the from and to, they should not be null ideally
+    // but if the model is mixin with blas layer, it may be null
+    if (from != null && to != null && to.scales.length == 0) {
+      to.setScales(from.scales.clone());
+      to.setMask(from.mask());
+    }
   }
 }
