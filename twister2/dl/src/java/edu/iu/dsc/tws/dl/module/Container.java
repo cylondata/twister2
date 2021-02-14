@@ -228,7 +228,7 @@ public abstract class Container<A extends Activity> extends AbstractModule<A> {
 //  }
 //
   @Override
-  protected void asyncGradient() {
+  public void asyncGradient() {
   }
 
   @Override

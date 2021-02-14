@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.dl.utils;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
 import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
 import edu.iu.dsc.tws.dl.data.storage.ArrayStorage;
+import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
 
 public final class Util {
 
@@ -171,4 +172,9 @@ public final class Util {
     return new int[]{padH, padH, padW, padW, oheight, owidth};
   }
 
+  public static void copyMaskAndScales(MemoryData[] value0, MemoryData[] value1) {
+  }
+
+  public static void copyMaskAndScales(MemoryData lastOutputFormat, MemoryData memoryData) {
+  }
 }

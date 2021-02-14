@@ -351,7 +351,7 @@ public abstract class AbstractModule<A extends Activity> extends InferShape
     return gradInput;
   }
 
-  protected void asyncGradient() {
+  public void asyncGradient() {
 //    if (this.getParameterSynchronizer() != null) {
 //      if (this.parameters() != null) {
 //        //TODO: param Sync
