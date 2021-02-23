@@ -36,7 +36,7 @@ public class Node<K> implements Serializable {
     return element;
   }
 
-  Node<K> setElement(K e) {
+  public Node<K> setElement(K e) {
     element = e;
     return this;
   }
@@ -227,7 +227,7 @@ public class Node<K> implements Serializable {
    *
    * @return current node
    */
-  Node<K> removePrevEdges() {
+  public Node<K> removePrevEdges() {
     Node<K> curNode = this; // Because of the closure
     prevs.stream().map(pair -> pair.getValue0()).forEach(pn -> {
       pn.nexts.stream().filter(pnpair -> pnpair.getValue0() == curNode)

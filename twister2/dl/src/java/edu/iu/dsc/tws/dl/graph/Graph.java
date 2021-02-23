@@ -53,7 +53,7 @@ import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
  * allowed that some successors of the inputs node are not connect to outputs. If so, these nodes
  * will be excluded in the computation.
  */
-public abstract class Graph extends Container {
+public abstract class Graph extends Container<Activity> {
   protected Node<AbstractModule> dummyOutput;
   protected DirectedGraph<AbstractModule> forwardGraph;
   protected List<Node<AbstractModule>> forwardNodes;
@@ -61,7 +61,7 @@ public abstract class Graph extends Container {
   protected DirectedGraph<AbstractModule> backwardGraph;
   protected List<Node<AbstractModule>> backwardNodes;
   // For constructor
-  private List<Node<AbstractModule>> inputs;
+  protected List<Node<AbstractModule>> inputs;
   private List<Node<AbstractModule>> outputs;
   //an Array of tensor containing all the weights and biases of this graph,
   //used when different nodes of this graph may share the same weight or bias.
@@ -191,7 +191,7 @@ public abstract class Graph extends Container {
   protected abstract void populateModules();
 
   // Check if the graph is correct
-  private void checkRoots() {
+  public void checkRoots() {
 //      void duplicatedNames(names: Seq[String]): mutable.Set[String] = {
 //      names.sortWith(_ < _);
 //      Tensor buffer = new mutable.HashSet[String]()
@@ -227,7 +227,7 @@ public abstract class Graph extends Container {
   /**
    * Generate backward graph and apply the stopGrad
    */
-  private Graph buildBackwardGraph() {
+  public Graph buildBackwardGraph() {
     // Clone the forward graph and reverse the edge
     DirectedGraph<AbstractModule> gradGraph = forwardGraph.cloneGraph(true);
     dummyOutputGrad = gradGraph.getSource();
@@ -317,7 +317,7 @@ public abstract class Graph extends Container {
     return this;
   }
 
-  private void removeStopNodes(Node n) {
+  public void removeStopNodes(Node n) {
     List<Node> nodes = n.nextNodes();
     n.removeNextEdges();
     nodes.stream().filter(x -> x.prevNodes().size() == 0).forEach(y -> removeStopNodes(y));

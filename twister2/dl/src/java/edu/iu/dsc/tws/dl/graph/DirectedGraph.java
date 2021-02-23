@@ -72,7 +72,7 @@ public class DirectedGraph<K> implements Serializable {
    *
    * @return A sequence of sorted graph nodes
    */
-  List<Node<K>> topologySort() {
+  public List<Node<K>> topologySort() {
     // Build indegree list, LinkedHashMap can preserve the order of the keys, so it's good to
     // write unittest.
     LinkedHashMap<Node<K>, Integer> inDegrees = new LinkedHashMap<Node<K>, Integer>();
@@ -146,7 +146,7 @@ public class DirectedGraph<K> implements Serializable {
    * @param reverseEdge if reverse the edge in the nodes
    * @return
    */
-  DirectedGraph<K> cloneGraph(boolean reverseEdge) {
+  public DirectedGraph<K> cloneGraph(boolean reverseEdge) {
     HashMap<Node<K>, Node<K>> oldToNew = new HashMap<>();
     List<Node<K>> bfs = new ArrayList<Node<K>>();
     BFS().forEachRemaining(bfs::add);

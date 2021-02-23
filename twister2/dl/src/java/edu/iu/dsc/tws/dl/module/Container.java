@@ -30,7 +30,7 @@ public abstract class Container<A extends Activity> extends AbstractModule<A> {
 
 
   protected String line = "\n";
-  protected List<AbstractModule> modules = new ArrayList<AbstractModule>();
+  public List<AbstractModule> modules = new ArrayList<AbstractModule>();
 
   @Override
   public final AbstractModule training() {

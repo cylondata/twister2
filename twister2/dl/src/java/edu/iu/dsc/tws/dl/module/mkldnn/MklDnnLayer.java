@@ -23,7 +23,8 @@ import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ArrayPair;
 
 @SuppressWarnings("MemberName")
-public abstract class MklDnnLayer extends AbstractModule<Activity> implements MklDnnModule {
+public abstract class MklDnnLayer extends AbstractModule<Activity> implements MklDnnModule,
+    IMklDnnLayer {
   /**
    * MKL-DNN primitives of the module. Note you should only initialize this field by calling
    * initPrimitives method. This field will be erased when sending model to remote worker. So you
@@ -52,6 +53,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
     return grad;
   }
 
+  @Override
   public long[] getUpdateOutputMemoryPrimitives() {
     long[] result = new long[inputFormats().length + outputFormats().length];
     int index = 0;
@@ -66,6 +68,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
     return result;
   }
 
+  @Override
   public long[] getUpdateGradInputMemoryPrimitives() {
     long[] result = new long[inputFormats().length + outputFormats().length];
     int index = 0;
@@ -206,6 +209,7 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
     return this;
   }
 
+  @Override
   public ArrayPair<TensorMMap> paramsMMap() {
     // return null for weight and gradWeight by default
     return new ArrayPair<TensorMMap>(new TensorMMap[0], new TensorMMap[0]);
