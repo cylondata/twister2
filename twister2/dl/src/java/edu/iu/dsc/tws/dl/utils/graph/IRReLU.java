@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
-public class IRReLU extends IROperator{
+public class IRReLU extends IROperator {
   private boolean inPlace = false;
 
   public IRReLU(boolean inPlace) {

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.dl.module.mkldnn;
 import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-public class BlasWrapper extends MklDnnLayer{
+public class BlasWrapper extends MklDnnLayer {
 
 
   public boolean isNeedOutputFormats() {

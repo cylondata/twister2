@@ -11,15 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
 
-import java.io.Serializable;
-
 public class IRElement implements Serializable {
 
-  String name;
-  IROperator op;
+  protected String name;
+  private IROperator op;
   private Tensor weights = null;
   private Tensor gradWeights = null;
 
@@ -45,16 +45,16 @@ public class IRElement implements Serializable {
   /**
    * set gradWeight and gradbias
    */
-  public void  setGradWeights(Tensor gradWeightsAndGradBias) {
+  public void setGradWeights(Tensor gradWeightsAndGradBias) {
     gradWeights = gradWeightsAndGradBias;
   }
 
   public TensorPair getParameters() {
-   return new TensorPair(weights, gradWeights);
+    return new TensorPair(weights, gradWeights);
   }
 
   public String getName() {
-   return this.name;
+    return this.name;
   }
 
   public IROperator getOp() {

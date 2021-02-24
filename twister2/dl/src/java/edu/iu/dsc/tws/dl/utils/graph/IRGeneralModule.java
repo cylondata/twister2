@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.dl.utils.graph;
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 
-public class IRGeneralModule extends IROperator{
+public class IRGeneralModule extends IROperator {
   private AbstractModule<Activity> model;
 
   public IRGeneralModule(AbstractModule<Activity> model) {

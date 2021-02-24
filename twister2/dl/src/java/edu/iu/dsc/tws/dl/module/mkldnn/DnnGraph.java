@@ -11,6 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.intel.analytics.bigdl.mkl.Memory;
+
 import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
@@ -18,7 +29,6 @@ import edu.iu.dsc.tws.dl.data.format.DataFormat;
 import edu.iu.dsc.tws.dl.data.format.NHWC;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.graph.Graph;
-import edu.iu.dsc.tws.dl.graph.ModuleNode;
 import edu.iu.dsc.tws.dl.graph.Node;
 import edu.iu.dsc.tws.dl.graph.WithoutInput;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
@@ -28,15 +38,12 @@ import edu.iu.dsc.tws.dl.utils.pair.MemoryDataArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.NodeEdgePair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorArrayPair;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import static edu.iu.dsc.tws.dl.utils.Util.require;
 
+@SuppressWarnings({"MemberName", "SimplifyBooleanExpression"})
 public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
-  private ArrayList<ModuleNode> _inputs;
-  private ArrayList<ModuleNode> _outputs;
+  private List<Node<AbstractModule>> _inputs;
+  private List<Node<AbstractModule>> _outputs;
   private TensorArrayPair _variables = null;
   private boolean enableExcludeChecking = true;
 
@@ -67,7 +74,7 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
 
   protected transient ReorderManager reorderManager;
 
-  public DnnGraph(ArrayList<ModuleNode> inputs, ArrayList<ModuleNode> outputs,
+  public DnnGraph(List<Node<AbstractModule>> inputs, List<Node<AbstractModule>> outputs,
                   TensorArrayPair vars, boolean excludeChecking) {
     this._inputs = inputs;
     this._outputs = outputs;
@@ -217,12 +224,14 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
       int j = 0;
       boolean find = false;
       while (j < forwardExecution.size()) {
-        if (forwardExecution.get(j).getElement().getName() == backwardExecution[i].getElement().getName()) {
+        if (forwardExecution.get(j).getElement().getName() == backwardExecution[i]
+            .getElement().getName()) {
           AbstractModule e = forwardExecution.get(j).getElement();
           // when creating graph, there may add nn.Identity node,
           // here we have to change it to mkldnn node
           if (e instanceof edu.iu.dsc.tws.dl.module.Identity) {
-            forwardExecution.get(j).setElement(toDnnIdentity((edu.iu.dsc.tws.dl.module.Identity) e));
+            forwardExecution.get(j)
+                .setElement(toDnnIdentity((edu.iu.dsc.tws.dl.module.Identity) e));
             backwardExecution[i].setElement(forwardExecution.get(j).getElement());
           } else {
             require(e instanceof MklDnnModule, "DnnGraph should only contain dnn layers,"
@@ -355,7 +364,8 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
     }
   }
 
-  private Activity findDnnGradOutput(Node<AbstractModule> curNode, Activity gradOutput, boolean isAcc) {
+  private Activity findDnnGradOutput(Node<AbstractModule> curNode,
+                                     Activity gradOutput, boolean isAcc) {
     Activity curGradOutput;
     if (curNode == dummyOutputGrad) {
       curGradOutput = gradOutput;
@@ -512,8 +522,8 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
       NodeEdgePair<AbstractModule> n = node.prevNodesAndEdges().get(0);
 
       // gradInput is tensor or nextEdges number is 1
-      if (((MklDnnModule) n.getValue0().getElement()).gradInputFormats().length == 1 ||
-          n.getValue0().nextEdges().size() == 1) {
+      if (((MklDnnModule) n.getValue0().getElement()).gradInputFormats().length == 1
+          || n.getValue0().nextEdges().size() == 1) {
         return ((MklDnnModule) n.getValue0().getElement()).gradInputFormats();
       } else {
         int index = n.getValue0().nextEdges().indexOf(n.getValue1());
@@ -665,7 +675,8 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
           ((MklDnnModule) m.getElement()).initBwdPrimitives(lastGradInputFormats, phase);
 
       for (int j = 0; j < lastGradInputFormats.length; j++) {
-        reorderManager.register(lastGradInputFormats[j], realGradOutputAndInputFomrats.getValue0()[j]);
+        reorderManager.register(lastGradInputFormats[j],
+            realGradOutputAndInputFomrats.getValue0()[j]);
       }
 
       if (i == 0) {

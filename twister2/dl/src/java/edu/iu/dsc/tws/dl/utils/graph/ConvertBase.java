@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
-import edu.iu.dsc.tws.dl.graph.Node;
-import edu.iu.dsc.tws.dl.utils.pair.NodeEdgePair;
-
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ConvertBase<T, D>{
+import edu.iu.dsc.tws.dl.graph.Node;
+import edu.iu.dsc.tws.dl.utils.pair.NodeEdgePair;
+
+public abstract class ConvertBase<T, D> {
   /**
    * clone node relations
+   *
    * @param nodeMap node element maps from T to D
    */
   public void cloneNode(Node<T>[] allNodes, Map<Node<T>, Node<D>> nodeMap) {

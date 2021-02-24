@@ -23,6 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Graph;
 import edu.iu.dsc.tws.dl.graph.Node;
@@ -31,21 +36,23 @@ import edu.iu.dsc.tws.dl.module.mkldnn.BlasWrapper;
 import edu.iu.dsc.tws.dl.module.mkldnn.DnnGraph;
 import edu.iu.dsc.tws.dl.module.mkldnn.InputWrapper;
 import edu.iu.dsc.tws.dl.module.mkldnn.Output;
-import edu.iu.dsc.tws.dl.utils.Util;
-
-import java.util.*;
 
 public class IRConverter {
 
   private ArrayList<Node<IRElement>> allNodes = new ArrayList<>();
   private Node<IRElement>[] irInputs; // IRgraph.inputs.toArray
   private Node<IRElement>[] irOutputs; // = IRgraph.outputs.toArray
-  IRGraph iRgraph;
+  private IRGraph iRgraph;
+
+  public IRConverter(IRGraph iRgraph) {
+    this.iRgraph = iRgraph;
+    init();
+  }
 
   private void init() {
     irInputs = iRgraph.inputs.toArray(new Node[0]);
     irOutputs = iRgraph.outputs.toArray(new Node[0]);
-    getNodes(irInputs, allNodes);
+    getNodes(Arrays.asList(irInputs), allNodes);
     // reminder: some output nodes may not be searched from inputs
     for (Node<IRElement> irOutput : irOutputs) {
       if (!allNodes.contains(irOutput)) {
@@ -69,11 +76,12 @@ public class IRConverter {
 
   /**
    * convert IRgraph to blas or dnn graph according to engine type
+   *
    * @return dnn graph or blas graph converted from ir graph
    */
   public Graph toGraph() {
 
-      return toDnnGraph();
+    return toDnnGraph();
 //    if (utils.Engine.getEngineType() == MklBlas) {
 //      Util.require(IRToBlas[T].convertingCheck(allNodes.toArray),
 //          "IR graph can not be converted to Blas layer")
@@ -122,12 +130,14 @@ public class IRConverter {
       if (model.getElement() instanceof BlasWrapper) {
         node = model;
       } else {
-        node = model.add(new Node<AbstractModule>(new Output(iRgraph.outputFormats.get(i))), new Edge());
+        node = model.add(new Node<AbstractModule>(new Output(iRgraph.outputFormats.get(i))),
+            new Edge());
       }
       realOutputs[i] = node;
     }
 
-    return new DnnGraph(Arrays.asList(realInputs), realOutputs,iRgraph.variables, iRgraph.generateBackward);
+    return new DnnGraph(Arrays.asList(realInputs), Arrays.asList(realOutputs), iRgraph.variables,
+        iRgraph.generateBackward);
   }
 
 //  private Graph toBlasGraph() {

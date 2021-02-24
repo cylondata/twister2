@@ -11,5 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
-public class IRIdentity extends IROperator{
+public class IRIdentity extends IROperator {
 }

@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.View;
 
+@SuppressWarnings("MemberName")
 public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 
   private String prefix = "com.intel.analytics.bigdl.nn.new edu.iu.dsc.tws.dl.module.mkldnn.";
@@ -72,7 +73,9 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
     String name = layer.getOp().name();
     if (IR2DnnMap.contains(name)) {
       AbstractModule dnn = getModule(name, layer);
-      if (layer.getName() != "") dnn.setName(layer.name);
+      if (!layer.getName().equals("")) {
+        dnn.setName(layer.name);
+      }
       return dnn;
     } else {
       // ReflectionUtils.reflectFromIR(layer, Class.forName(prefix + name.substring(2)));
@@ -112,8 +115,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
         if (m instanceof Reshape && node.nextNodes().size() == 1
             && node.nextNodes().get(0).getElement().getOp() instanceof IRLinear) {
           dnn = new Node(new edu.iu.dsc.tws.dl.module.mkldnn.Identity());
-        } else if (m instanceof View && node.nextNodes().size() == 1 &&
-            node.nextNodes().get(0).getElement().getOp() instanceof IRLinear) {
+        } else if (m instanceof View && node.nextNodes().size() == 1
+            && node.nextNodes().get(0).getElement().getOp() instanceof IRLinear) {
           dnn = new Node(new edu.iu.dsc.tws.dl.module.mkldnn.Identity());
         }
       }
@@ -147,7 +150,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //    } else {
 //      // special process for NHWC
 //      require(t.nGroup == 1, "Only support nGroup is 1 for NHWC")
-//      AbstractModule layer = ReflectionUtils.reflectFromIR(node, Class.forName(prefix + "SpatialConvolution"))
+//      AbstractModule layer = ReflectionUtils.reflectFromIR(node,
+//      Class.forName(prefix + "SpatialConvolution"))
 //      val p = layer.parameters()
 //      val weight = p._1(0)
 //      val gradWeight = p._2(0)
@@ -171,7 +175,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //    } else {
 //      // special process for NHWC
 //      require(t.nGroup == 1, "Only support nGroup is 1 for NHWC")
-//      AbstractModule layer = ReflectionUtils.reflectFromIR(node, Class.forName(prefix + "SpatialConvolution"))
+//      AbstractModule layer = ReflectionUtils.reflectFromIR(node,
+//      Class.forName(prefix + "SpatialConvolution"))
 //      val p = layer.parameters()
 //      val weight = p._1(0)
 //      val gradWeight = p._2(0)
@@ -226,7 +231,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //      val initGradWeight = t.initGradWeight
 //      val initGradBias = t.initGradBias
 //
-//      AbstractModule layer = new edu.iu.dsc.tws.dl.module.mkldnn.SpatialBatchNormalization(nOutput, eps, momentum,
+//      AbstractModule layer = new edu.iu.dsc.tws.dl.module.mkldnn
+//      .SpatialBatchNormalization(nOutput, eps, momentum,
 //      true, initWeight, initBias, initGradWeight, initGradBias)
 //
 //      val params = node.getParameters()
@@ -278,7 +284,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //        val direction = Direction.UnidirectionalLeft2Right
 //        val inputSize = lstm.inputSize
 //        val hiddenSize = lstm.hiddenSize
-//        val lstmDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaLstm, inputSize, hiddenSize,
+//        val lstmDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaLstm,
+//        inputSize, hiddenSize,
 //            f, direction, layers = 1)
 //
 //        // copy weight from blas lstm to dnn lstm
@@ -350,7 +357,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //        val direction = Direction.UnidirectionalLeft2Right
 //        val inputSize = gru.inputSize
 //        val hiddenSize = gru.outputSize
-//        val gruDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaGru, inputSize, hiddenSize,
+//        val gruDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaGru,
+//        inputSize, hiddenSize,
 //            f, direction, layers = 1)
 //
 //        // copy weight from blas gru to dnn gru
@@ -433,7 +441,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //      } else Direction.BidirectionalConcat
 //      val inputSize = lstm.inputSize
 //      val hiddenSize = lstm.hiddenSize
-//      val lstmDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaLstm, inputSize, hiddenSize,
+//      val lstmDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaLstm,
+//      inputSize, hiddenSize,
 //          f, direction, layers = 1)
 //
 //      // copy weight from blas lstm to dnn lstm
@@ -511,7 +520,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 //      } else Direction.BidirectionalConcat
 //      val inputSize = gru.inputSize
 //      val hiddenSize = gru.outputSize
-//      val gruDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaGru, inputSize, hiddenSize,
+//      val gruDnn = nn.new edu.iu.dsc.tws.dl.module.mkldnn.RNN(AlgKind.VanillaGru,
+//      inputSize, hiddenSize,
 //          f, direction, layers = 1)
 //
 //      // copy weight from blas gru to dnn gru

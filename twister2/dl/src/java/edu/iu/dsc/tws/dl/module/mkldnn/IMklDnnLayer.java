@@ -21,4 +21,4 @@ public interface IMklDnnLayer {
 
   ArrayPair<TensorMMap> paramsMMap();
 
-  }
+}

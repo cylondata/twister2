@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.dl.utils.graph;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.optim.Regularizer;
 
-public class IRLinear extends IROperator{
+public class IRLinear extends IROperator {
   //the size the each input sample
   private int inputSize;
   //the size of the module ((DenseTensor output) of each sample
