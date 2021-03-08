@@ -23,11 +23,6 @@ public class IRElement implements Serializable {
   private Tensor weights = null;
   private Tensor gradWeights = null;
 
-  public IRElement(String name, IROperator op) {
-    this.name = name;
-    this.op = op;
-  }
-
   public IRElement(String name, IROperator op, Tensor weights, Tensor gradWeights) {
     this.name = name;
     this.op = op;

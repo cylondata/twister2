@@ -27,6 +27,10 @@ public class ReLU extends MklDnnLayer {
   private long UNDEFINED = 0L;
   private transient long fwdPrimDesc = UNDEFINED;
 
+  public ReLU(float valueInternal) {
+    this.valueInternal = valueInternal;
+  }
+
   @Override
   public TensorArrayPair parameters() {
     return null;

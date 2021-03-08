@@ -17,7 +17,6 @@ public abstract class MklDnnNativeMemory implements Releasable {
   protected MemoryOwner owner;
   private long UNDEFINED = -1L;
   private long ERROR = 0L;
-  protected long ptr = __ptr;
   private boolean isUndefOrError = __ptr == UNDEFINED || __ptr == ERROR;
 
   public MklDnnNativeMemory(long __ptr, MemoryOwner owner) {
@@ -41,6 +40,6 @@ public abstract class MklDnnNativeMemory implements Releasable {
   }
 
   public long getPtr() {
-    return ptr;
+    return __ptr;
   }
 }

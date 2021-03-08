@@ -23,12 +23,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.graph.ModuleNode;
 
 /**
  * Holds a pair of Tensors
  */
-public class ModuleNodeIntPair {
+public class ModuleNodeIntPair implements Serializable {
 
   private ModuleNode t0;
   private int t1;

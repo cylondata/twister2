@@ -184,6 +184,9 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
 
   @Override
   public MemoryDataArrayPair initFwdPrimitives(MemoryData[] inputs, Phase phase) {
+    if (memoryOwner == null) {
+      memoryOwner = this;
+    }
     if (inputFormat == null) {
       _inputFormats = inputs;
     } else {
@@ -250,7 +253,9 @@ public class ReorderMemory extends MklDnnLayer implements Releasable {
 
   @Override
   public MemoryDataArrayPair initBwdPrimitives(MemoryData[] grad, Phase phase) {
-
+    if (memoryOwner == null) {
+      memoryOwner = this;
+    }
     if (gradInputFormat == null && inputFormat == null) {
       _gradInputFormats = inputFormats();
     } else if (gradInputFormat == null && inputFormat != null) {

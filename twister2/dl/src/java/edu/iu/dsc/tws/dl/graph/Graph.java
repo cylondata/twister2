@@ -62,17 +62,21 @@ public abstract class Graph extends Container<Activity> {
   protected List<Node<AbstractModule>> backwardNodes;
   // For constructor
   protected List<Node<AbstractModule>> inputs;
-  private List<Node<AbstractModule>> outputs;
+  protected List<Node<AbstractModule>> outputs;
   //an Array of tensor containing all the weights and biases of this graph,
   //used when different nodes of this graph may share the same weight or bias.
-  private TensorArrayPair variables;
+  protected TensorArrayPair variables;
   // If the graph will generate gradInput for the input
   private Boolean[] isGradInputAvailable;
 
 
   private HashSet<String> stopGradientLayers;
 
-  public Graph() {
+  public Graph(List<Node<AbstractModule>> inputs, List<Node<AbstractModule>> outputs,
+               TensorArrayPair vars) {
+    this.inputs = inputs;
+    this.outputs = outputs;
+    this.variables = vars;
     init();
   }
 
@@ -188,7 +192,7 @@ public abstract class Graph extends Container<Activity> {
     }
   }
 
-  protected abstract void populateModules();
+  public abstract void populateModules();
 
   // Check if the graph is correct
   public void checkRoots() {

@@ -98,7 +98,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
           data[j] = Float.parseFloat(dataString.get(j));
         }
 
-        int[] sizes = new int[]{i, rowSize};
+        int[] sizes = new int[]{i, 1, rowSize};
         batch = new DenseTensor(true);
         batch.set(new ArrayFloatStorage(data), 1, sizes, null);
         return new ArrayTensorMiniBatch(batch, batch);
@@ -108,7 +108,7 @@ public class DLMiniBatchSourceFunction extends BaseSourceFunc<MiniBatch> {
           data[j] = Double.parseDouble(dataString.get(j));
         }
 
-        int[] sizes = new int[]{i, rowSize};
+        int[] sizes = new int[]{i, 1, rowSize};
         batch = new DenseTensor(false);
         batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
         return new ArrayTensorMiniBatch(batch, batch);

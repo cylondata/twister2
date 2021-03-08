@@ -23,12 +23,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.data.Tensor;
 
 /**
  * Holds a pair of Tensors
  */
-public class DoubleTensorPair {
+public class DoubleTensorPair implements Serializable {
 
   private double t0;
   private Tensor t1;

@@ -97,7 +97,9 @@ public class DirectedGraph<K> implements Serializable {
       result.addAll(startNodes);
       startNodes.forEach(n -> {
         List<Node<K>> nextNodes = (!reverse) ? n.nextNodes() : n.prevNodes();
-        nextNodes.forEach(nextNode -> inDegrees.put(nextNode, inDegrees.get(nextNode) - 1));
+        for (Node<K> nextNode : nextNodes) {
+          inDegrees.put(nextNode, inDegrees.get(nextNode) - 1);
+        }
         inDegrees.remove(n);
       });
     }

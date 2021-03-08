@@ -95,7 +95,7 @@ public abstract class MklDnnContainer extends DynamicContainer<Activity> impleme
     reorderManager.setRuntime(runtime);
     for (AbstractModule module : modules) {
       if (module instanceof MklDnnModule) {
-        ((MklDnnContainer) module).setRuntime(runtime);
+        ((MklDnnModule) module).setRuntime(runtime);
       }
     }
   }

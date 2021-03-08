@@ -28,7 +28,7 @@ public abstract class MemoryData implements Serializable {
   private int heapFormat = -1;
 
   private int _mask = -1;
-  private float[] _scales;
+  private float[] _scales = new float[0];
 
 
   private long UNDEFINED = -1;
@@ -170,7 +170,9 @@ public abstract class MemoryData implements Serializable {
         switchCheck = layout == Memory.Format.nc || layout == Memory.Format.io
             || layout == Memory.Format.oi;
         break;
-      case 3 | 4 | 5:
+      case 3:
+      case 4:
+      case 5:
         switchCheck = layout != Memory.Format.nc || layout != Memory.Format.x;
         break;
       default:

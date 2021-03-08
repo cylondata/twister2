@@ -25,6 +25,6 @@ public class MklMemoryPrimitive extends MklDnnNativeMemory {
 
   @Override
   public void doRelease() {
-    MklDnn.PrimitiveDestroy(ptr);
+    MklDnn.PrimitiveDestroy(getPtr());
   }
 }

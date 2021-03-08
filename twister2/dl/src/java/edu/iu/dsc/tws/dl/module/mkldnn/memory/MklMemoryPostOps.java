@@ -25,6 +25,6 @@ public class MklMemoryPostOps extends MklDnnNativeMemory {
 
   @Override
   public void doRelease() {
-    MklDnn.DestroyPostOps(ptr);
+    MklDnn.DestroyPostOps(getPtr());
   }
 }

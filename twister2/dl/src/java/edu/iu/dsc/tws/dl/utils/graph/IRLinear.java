@@ -31,11 +31,6 @@ public class IRLinear extends IROperator {
   private Tensor initGradWeight;
   private Tensor initGradBias;
 
-  public IRLinear(int inputSize, int outputSize) {
-    this.inputSize = inputSize;
-    this.outputSize = outputSize;
-  }
-
   public IRLinear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer,
                   boolean withBias, Tensor initWeight, Tensor initBias, Tensor initGradWeight,
                   Tensor initGradBias) {

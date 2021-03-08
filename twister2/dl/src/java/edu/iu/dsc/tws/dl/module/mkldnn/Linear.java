@@ -49,11 +49,12 @@ public class Linear extends MklDnnLayer implements Initializable {
   private Tensor initBias;
   private Tensor initGradWeight;
   private Tensor initGradBias;
+  private boolean withBias = true;
 
-  private TensorMMap weight = new TensorMMap(new int[]{outputSize, inputSize}, this);
-  private TensorMMap bias = new TensorMMap(new int[]{outputSize}, this);
-  private TensorMMap gradWeight = new TensorMMap(new int[]{outputSize, inputSize}, this);
-  private TensorMMap gradBias = new TensorMMap(new int[]{outputSize}, this);
+  private TensorMMap weight;
+  private TensorMMap bias;
+  private TensorMMap gradWeight;
+  private TensorMMap gradBias;
 
   private transient long forwardPrimDesc = 0L;
   private transient int[] weightShape = null;
@@ -66,7 +67,27 @@ public class Linear extends MklDnnLayer implements Initializable {
   private transient long[] updateGradWMemoryPrimitives;
   private transient Tensor[] updateGradWTensors;
 
+  public Linear(int inputSize, int outputSize, Regularizer wRegularizer, Regularizer bRegularizer,
+                Tensor initWeight, Tensor initBias, Tensor initGradWeight, Tensor initGradBias,
+                boolean withBias) {
+    this.inputSize = inputSize;
+    this.outputSize = outputSize;
+    this.wRegularizer = wRegularizer;
+    this.bRegularizer = bRegularizer;
+    this.initWeight = initWeight;
+    this.initBias = initBias;
+    this.initGradWeight = initGradWeight;
+    this.initGradBias = initGradBias;
+    this.withBias = withBias;
+    init();
+  }
+
   private void init() {
+    weight = new TensorMMap(new int[]{outputSize, inputSize}, this);
+    bias = new TensorMMap(new int[]{outputSize}, this);
+    gradWeight = new TensorMMap(new int[]{outputSize, inputSize}, this);
+    gradBias = new TensorMMap(new int[]{outputSize}, this);
+
     double stdv = 1.0 / Math.sqrt(weight.size(2));
     weightInitMethod = new RandomUniform(-stdv, stdv);
     biasInitMethod = new RandomUniform(-stdv, stdv);
@@ -96,13 +117,13 @@ public class Linear extends MklDnnLayer implements Initializable {
       case 4:
         if (inputs[0].getHeapFormat() == Memory.Format.nhwc) {
           weightParams2 = Memory.Format.nhwc;
-          weightParams1 = new int[weight.size(1) + 3];
+          weightParams1 = new int[4];
           weightParams1[0] = weight.size(1);
           System.arraycopy(inputs[0].shape(), 1, weightParams1, 1, 3);
           // ohwi
         } else {
           weightParams2 = Memory.Format.nchw;
-          weightParams1 = new int[weight.size(1) + 3];
+          weightParams1 = new int[4];
           weightParams1[0] = weight.size(1);
           System.arraycopy(inputs[0].shape(), 1, weightParams1, 1, 3);
           // oihw
@@ -187,7 +208,8 @@ public class Linear extends MklDnnLayer implements Initializable {
       buffer.add(weight.nativeDnn());
       buffer.add(bias.nativeDnn());
       buffer.add((Tensor) output);
-      updateOutputTensors = (Tensor[]) buffer.toArray();
+      updateOutputTensors = new Tensor[buffer.size()];
+      buffer.toArray(updateOutputTensors);
     }
 
     updateWithNewTensor(updateOutputTensors, 0, input);
@@ -301,7 +323,8 @@ public class Linear extends MklDnnLayer implements Initializable {
       buffer.add((Tensor) gradOutput);
       buffer.add(weight.nativeDnn());
       buffer.add((Tensor) gradInput);
-      updateGradInputTensors = (Tensor[]) buffer.toArray();
+      updateGradInputTensors = new Tensor[buffer.size()];
+      buffer.toArray(updateGradInputTensors);
     }
 
     updateWithNewTensor(updateGradInputTensors, 0, gradOutput);
@@ -320,7 +343,8 @@ public class Linear extends MklDnnLayer implements Initializable {
       buffer.add((Tensor) gradOutput);
       buffer.add(gradWeight.nativeDnn());
       buffer.add(gradBias.nativeDnn());
-      updateGradWTensors = (Tensor[]) buffer.toArray();
+      updateGradWTensors = new Tensor[buffer.size()];
+      buffer.toArray(updateGradWTensors);
     }
 
     // do not use the updateGradInputTensors for acc

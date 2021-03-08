@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.module.mkldnn;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,9 +43,6 @@ import static edu.iu.dsc.tws.dl.utils.Util.require;
 
 @SuppressWarnings({"MemberName", "SimplifyBooleanExpression"})
 public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
-  private List<Node<AbstractModule>> _inputs;
-  private List<Node<AbstractModule>> _outputs;
-  private TensorArrayPair _variables = null;
   private boolean enableExcludeChecking = true;
 
   //reserse is done in init
@@ -76,9 +74,7 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
 
   public DnnGraph(List<Node<AbstractModule>> inputs, List<Node<AbstractModule>> outputs,
                   TensorArrayPair vars, boolean excludeChecking) {
-    this._inputs = inputs;
-    this._outputs = outputs;
-    this._variables = vars;
+    super(inputs, outputs, vars);
     this.enableExcludeChecking = excludeChecking;
     init();
   }
@@ -125,7 +121,7 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
 
 
   @Override
-  protected void populateModules() {
+  public void populateModules() {
     List<AbstractModule> temp = forwardGraph.topologySort().stream().filter(n -> n != dummyOutput)
         .map(am -> am.getElement()).collect(Collectors.toList());
     Collections.reverse(temp);
@@ -224,8 +220,8 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
       int j = 0;
       boolean find = false;
       while (j < forwardExecution.size()) {
-        if (forwardExecution.get(j).getElement().getName() == backwardExecution[i]
-            .getElement().getName()) {
+        if (forwardExecution.get(j).getElement().getName().equals(backwardExecution[i]
+            .getElement().getName())) {
           AbstractModule e = forwardExecution.get(j).getElement();
           // when creating graph, there may add nn.Identity node,
           // here we have to change it to mkldnn node
@@ -442,10 +438,13 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
 
   @Override
   public void setRuntime(MklDnnRuntime runtime) {
-    // TODO need to check how this is used and address this
-//    this.runtime = runtime;
-//    reorderManager.setRuntime(runtime)
-//    forwardExecution.foreach(m => m.getElement().asInstanceOf[MklDnnModule].setRuntime(runtime))
+    MklDnnModule.super.setRuntime(runtime);
+    reorderManager.setRuntime(runtime);
+    for (AbstractModule module : modules) {
+      if (module instanceof MklDnnModule) {
+        ((MklDnnModule) module).setRuntime(runtime);
+      }
+    }
   }
 
   @Override
@@ -643,7 +642,6 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
         }
 
         for (int j = 0; j < lastOutputFormats.length; j++) {
-          MemoryData firstRealInputFormat = firstRealInputFormats[j];
           Util.copyMaskAndScales(lastOutputFormats[j], realInputOutputFormats.getValue0()[j]);
           reorderManager.register(lastOutputFormats[j], realInputOutputFormats.getValue0()[j]);
         }
@@ -668,7 +666,7 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
     MemoryData[] lastGradInputFormats = grad;
     MemoryData[] firstRealGradOutputFormats = null;
 
-    for (int i = 0; i < backwardExecution.length; i++) {
+    for (int i = 0; i < backwardExecution.length - 1; i++) {
       Node<AbstractModule> m = backwardExecution[i];
       lastGradInputFormats = findGradOutputFormats(m, grad);
       MemoryDataArrayPair realGradOutputAndInputFomrats =
@@ -693,7 +691,7 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
     MemoryData[] lastGradInputFormats = grad;
     MemoryData[] firstRealGradOutputFormats = null;
 
-    for (int i = 0; i < backwardExecution.length; i++) {
+    for (int i = 0; i < backwardExecution.length - 1; i++) {
       Node<AbstractModule> m = backwardExecution[i];
       lastGradInputFormats = findGradOutputFormats(m, grad);
       MemoryData[] realGradOutput =
@@ -757,5 +755,11 @@ public class DnnGraph extends Graph implements IMklDnnLayer, MklDnnModule {
   @Override
   public MemoryData[] gradOutputWeightFormats() {
     return _gradOutputFormatsForWeight;
+  }
+
+  private void readObject(java.io.ObjectInputStream in)
+      throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    reorderManager = new ReorderManager(this);
   }
 }

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.dl.utils.graph;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.intel.analytics.bigdl.mkl.Memory;
 
@@ -34,15 +35,26 @@ public class IRGraph extends AbstractModule implements Serializable {
 
   protected ArrayList<Node<IRElement>> inputs;
   protected ArrayList<Node<IRElement>> outputs;
-  protected TensorArrayPair variables = null;
-  protected boolean generateBackward = true;
-  protected ArrayList<Integer> inputFormats = new ArrayList<>(); //Seq(Memory.Format.nchw),
-  protected ArrayList<Integer> outputFormats = new ArrayList<>(); //Seq(Memory.Format.nc))
+  protected TensorArrayPair variables;
+  protected boolean generateBackward;
+  protected List<Integer> inputFormats; //Seq(Memory.Format.nchw),
+  protected List<Integer> outputFormats; //Seq(Memory.Format.nc))
   private transient boolean initPrim = false;
 
   private Graph graph = null;
 
-  private boolean isBuild() {
+  public IRGraph(ArrayList<Node<IRElement>> inputsIR, ArrayList<Node<IRElement>> outputsIR,
+                 TensorArrayPair vars, boolean genBackward, List<Integer> inFormats,
+                 List<Integer> outFormats) {
+    this.inputs = inputsIR;
+    this.outputs = outputsIR;
+    this.variables = vars;
+    this.generateBackward = genBackward;
+    this.inputFormats = inFormats;
+    this.outputFormats = outFormats;
+  }
+
+  public boolean isBuild() {
     return graph != null;
   }
 
@@ -82,7 +94,7 @@ public class IRGraph extends AbstractModule implements Serializable {
     graph.accGradParameters(input, gradOutput);
   }
 
-  IRGraph build() {
+  public IRGraph build() {
     graph = new IRConverter(this).toGraph();
     return this;
   }

@@ -37,6 +37,7 @@ public abstract class Optimizer<T> {
   protected Table state;
   private Map<String, OptimMethod> optimMethods;
   private Trigger endWhen;
+  private boolean isMklDnn = false;
 
   public Optimizer(BatchEnvironment environment, AbstractModule dlmodel, BatchTSet<T> batchTSet,
                    AbstractCriterion errorCriterion) {
@@ -48,6 +49,15 @@ public abstract class Optimizer<T> {
     this.optimMethods.put(model.getName(), null); //TODO new SGD();
     this.endWhen = Triggers.maxEpoch(10);
     this.env = environment;
+  }
+
+  public boolean isMklDnn() {
+    return isMklDnn;
+  }
+
+  public void setMklDnn(boolean mklDnn) {
+    isMklDnn = mklDnn;
+    model.setMklDnn(mklDnn);
   }
 
   public AbstractModule getModel() {

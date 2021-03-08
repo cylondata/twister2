@@ -23,12 +23,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Node;
 
-public class NodeEdgePair<K> {
+public class NodeEdgePair<K> implements Serializable {
   private Node<K> t0;
   private Edge t1;
 

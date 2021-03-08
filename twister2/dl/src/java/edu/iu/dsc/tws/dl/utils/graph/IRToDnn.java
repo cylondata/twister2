@@ -11,20 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.graph;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import edu.iu.dsc.tws.dl.graph.Node;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.View;
+import edu.iu.dsc.tws.dl.module.mkldnn.BlasWrapper;
+import edu.iu.dsc.tws.dl.utils.ReflectionUtils;
 
 @SuppressWarnings("MemberName")
 public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
 
-  private String prefix = "com.intel.analytics.bigdl.nn.new edu.iu.dsc.tws.dl.module.mkldnn.";
+  private String prefix = "edu.iu.dsc.tws.dl.module.mkldnn.";
   // converter function mappings
   private Set<String> IR2DnnMap = new HashSet<>(); //[String, (IRElement) => AbstractModule]
 
@@ -53,8 +52,7 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
     if (IR2DnnMap.contains(name) && checkRequirement(layer)) {
       return true;
     }
-    // ReflectionUtils.findClass(prefix + name.substring(2)) != null;
-    return false;
+    return ReflectionUtils.findClass(prefix + name.substring(2)) != null;
   }
 
   private AbstractModule getModule(String name, IRElement layer) {
@@ -63,6 +61,8 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
         return fromReLU(layer);
       case "IRInput":
         return fromInput(layer);
+      case "IRGeneralModule":
+        return new BlasWrapper(((IRGeneralModule) layer.getOp()).getModel());
       default:
         throw new UnsupportedOperationException("Operation not supported");
     }
@@ -78,13 +78,17 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
       }
       return dnn;
     } else {
-      // ReflectionUtils.reflectFromIR(layer, Class.forName(prefix + name.substring(2)));
-      throw new UnsupportedOperationException("Operation not supported");
+      try {
+        return ReflectionUtils.reflectFromIR(layer, Class.forName(prefix + name.substring(2)));
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
     }
+    return null;
   }
 
   @Override
-  public boolean convertingCheck(Node<IRElement>[] allNodes) {
+  public boolean convertingCheck(List<Node<IRElement>> allNodes) {
     boolean convert = true;
     for (Node<IRElement> node : allNodes) {
       IROperator op = node.getElement().getOp();
@@ -98,7 +102,7 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
   }
 
   @Override
-  public Map<Node<IRElement>, Node<AbstractModule>> convert(Node<IRElement>[] allNodes) {
+  public Map<Node<IRElement>, Node<AbstractModule>> convert(List<Node<IRElement>> allNodes) {
     Map<Node<IRElement>, Node<AbstractModule>> nodeMap = new HashMap<>();
 
     for (Node<IRElement> node : allNodes) {
@@ -107,7 +111,7 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
       if (convertLayerCheck(node.getElement())) {
         dnn = new Node(convertLayer(node.getElement()));
       } else {
-        throw new UnsupportedOperationException("can not find ${node.getElement().getOp()} ");
+        throw new UnsupportedOperationException("can not find" + node.getElement().getOp());
       }
       // special treat for reshape -> linear and view -> linear
       if (op instanceof IRGeneralModule) {
@@ -128,7 +132,7 @@ public class IRToDnn extends ConvertBase<IRElement, AbstractModule> {
   }
 
   public AbstractModule fromReLU(IRElement node) {
-    AbstractModule layer = new edu.iu.dsc.tws.dl.module.mkldnn.ReLU();
+    AbstractModule layer = new edu.iu.dsc.tws.dl.module.mkldnn.ReLU(0.0f);
     //setScales(node, layer);
     return layer;
   }

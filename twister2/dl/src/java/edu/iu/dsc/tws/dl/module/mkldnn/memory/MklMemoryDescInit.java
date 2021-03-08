@@ -26,6 +26,6 @@ public class MklMemoryDescInit extends MklDnnNativeMemory {
 
   @Override
   public void doRelease() {
-    MklDnn.FreeMemoryDescInit(ptr);
+    MklDnn.FreeMemoryDescInit(getPtr());
   }
 }

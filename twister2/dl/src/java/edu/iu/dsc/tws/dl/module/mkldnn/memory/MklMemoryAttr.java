@@ -25,6 +25,6 @@ public class MklMemoryAttr extends MklDnnNativeMemory {
 
   @Override
   public void doRelease() {
-    MklDnn.DestroyAttr(ptr);
+    MklDnn.DestroyAttr(getPtr());
   }
 }

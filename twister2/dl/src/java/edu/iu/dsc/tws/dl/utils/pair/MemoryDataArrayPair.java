@@ -23,12 +23,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
 
 /**
  * Holds a pair of Tensors
  */
-public class MemoryDataArrayPair {
+public class MemoryDataArrayPair implements Serializable {
 
   private MemoryData[] t0;
   private MemoryData[] t1;

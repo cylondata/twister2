@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
-public interface PrimitiveArrayPair {
+import java.io.Serializable;
+
+public interface PrimitiveArrayPair extends Serializable {
 
 }

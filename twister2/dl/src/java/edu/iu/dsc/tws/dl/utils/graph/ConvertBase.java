@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.dl.utils.graph;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.dl.graph.Node;
@@ -23,7 +24,7 @@ public abstract class ConvertBase<T, D> {
    *
    * @param nodeMap node element maps from T to D
    */
-  public void cloneNode(Node<T>[] allNodes, Map<Node<T>, Node<D>> nodeMap) {
+  public void cloneNode(List<Node<T>> allNodes, Map<Node<T>, Node<D>> nodeMap) {
 
     for (Node<T> node : allNodes) {
 
@@ -54,7 +55,7 @@ public abstract class ConvertBase<T, D> {
 
   public abstract D convertLayer(T layer);
 
-  public boolean convertingCheck(Node<T>[] allNodes) {
+  public boolean convertingCheck(List<Node<T>> allNodes) {
     boolean convert = true;
     for (Node<T> node : allNodes) {
       if (!convertLayerCheck(node.getElement())) {
@@ -65,7 +66,7 @@ public abstract class ConvertBase<T, D> {
     return convert;
   }
 
-  public Map<Node<T>, Node<D>> convert(Node<T>[] allNodes) {
+  public Map<Node<T>, Node<D>> convert(List<Node<T>> allNodes) {
     Map<Node<T>, Node<D>> nodeMap = new HashMap<>();
     for (Node<T> node : allNodes) {
       nodeMap.put(node, new Node(convertLayer(node.getElement())));

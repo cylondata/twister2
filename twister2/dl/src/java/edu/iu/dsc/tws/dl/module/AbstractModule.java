@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.graph.Edge;
 import edu.iu.dsc.tws.dl.graph.Graph;
 import edu.iu.dsc.tws.dl.graph.Node;
+import edu.iu.dsc.tws.dl.graph.StaticGraph;
 import edu.iu.dsc.tws.dl.optim.OptimMethod;
 import edu.iu.dsc.tws.dl.optim.PredictAccuracyMapFunction;
 import edu.iu.dsc.tws.dl.optim.PredictClassMapFunction;
@@ -78,6 +79,8 @@ public abstract class AbstractModule<A extends Activity> extends InferShape
   private double scaleBCache = scaleB;
   private OptimMethod _optimMethod = null;
 
+  private boolean isMklDnn = false;
+
   /**
    * Convert the modules to float. If there are any specific changes needed to support float
    * at the module level this method needs to be overridden.
@@ -93,6 +96,14 @@ public abstract class AbstractModule<A extends Activity> extends InferShape
    */
   public boolean isFloat() {
     return isFloat;
+  }
+
+  public boolean isMklDnn() {
+    return isMklDnn;
+  }
+
+  public void setMklDnn(boolean mklDnn) {
+    isMklDnn = mklDnn;
   }
 
   /**
@@ -1045,21 +1056,20 @@ public abstract class AbstractModule<A extends Activity> extends InferShape
     } else {
       starts = startNodes;
     }
-    throw new UnsupportedOperationException("Opretion not supported for Tset Yet");
 
-//    Node<AbstractModule>[] endNodes = this.getEndNodes(starts);
-//    int graph = new Graph(starts, endNodes);
-//    if (graph.isInstanceOf[StaticGraph[T]]) {
-//      // Merge nested graphs inside to make the whole graph non-nested
-//      graph = graph.asInstanceOf[StaticGraph[T]].toSingleGraph()
-//    }
-//    if (inputsFormats != null) {
-//      graph.setInputFormats(inputsFormats)
-//    }
-//    if (outputsFormats != null) {
-//      graph.setOutputFormats(outputsFormats)
-//    }
-//    graph
+    Node<AbstractModule>[] endNodes = this.getEndNodes(starts);
+    Graph graph = new StaticGraph(Arrays.asList(starts), Arrays.asList(endNodes));
+    if (graph instanceof StaticGraph) {
+      // Merge nested graphs inside to make the whole graph non-nested
+      graph = ((StaticGraph) graph).toSingleGraph();
+    }
+    if (inputsFormats != null) {
+      graph.setInputFormats(inputsFormats);
+    }
+    if (outputsFormats != null) {
+      graph.setOutputFormats(outputsFormats);
+    }
+    return graph;
   }
 
   /**

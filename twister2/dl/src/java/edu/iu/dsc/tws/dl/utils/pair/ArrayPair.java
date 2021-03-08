@@ -23,10 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
+
 /**
  * Holds a pair of Tensors
  */
-public class ArrayPair<T> {
+public class ArrayPair<T> implements Serializable {
 
   private T[] t0;
   private T[] t1;

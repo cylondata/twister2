@@ -98,12 +98,13 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new DistributedOptimizerCustomPacker<>(env,
         model, source, criterion);
+    optimizer.setMklDnn(true);
     optimizer.setOptimMethod(new Adam());
     optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
     long endTime = System.nanoTime();
     if (env.getWorkerID() == 0) {
-      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+      System.out.println("Total Time x : " + (endTime - startTime) / 1e-6 + "ms");
     }
   }
 

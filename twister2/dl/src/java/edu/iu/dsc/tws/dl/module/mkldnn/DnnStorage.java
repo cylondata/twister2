@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.dl.utils.Util;
 public class DnnStorage implements Storage {
 
   private int sizeInternal;
-  private int bytes;
+  private int bytes = 4;
   private boolean _isReleased = false;
   // Hold the address of the native array
   private transient Pointer ptrInternal;
@@ -50,8 +50,8 @@ public class DnnStorage implements Storage {
 
   public DnnStorage(int size) {
     this.sizeInternal = size;
-    this.ptrInternal = new Pointer(allocate(size));
     this.bytes = DnnStorage.FLOAT_BYTES;
+    this.ptrInternal = new Pointer(allocate(size));
   }
 
   public static boolean checkAndSet(long pointer) {

@@ -98,9 +98,8 @@ public class IRConverter {
 //    }
   }
 
-  private Graph toDnnGraph() {
-    Node<IRElement>[] nodes = allNodes.toArray(new Node[0]);
-    Map<Node<IRElement>, Node<AbstractModule>> nodeMap = new IRToDnn().convert(nodes);
+  private Graph   toDnnGraph() {
+    Map<Node<IRElement>, Node<AbstractModule>> nodeMap = new IRToDnn().convert(allNodes);
     Node<AbstractModule>[] inputs = new Node[irInputs.length];
     Node<AbstractModule>[] outputs = new Node[irOutputs.length];
     Node<AbstractModule>[] realInputs = new Node[irOutputs.length];
@@ -113,7 +112,7 @@ public class IRConverter {
 
     for (int i = 0; i < irOutputs.length; i++) {
       Node<IRElement> irOutput = irOutputs[i];
-      inputs[i] = nodeMap.get(irOutput);
+      outputs[i] = nodeMap.get(irOutput);
     }
     // add input node for dnn graph
     for (int i = 0; i < inputs.length; i++) {

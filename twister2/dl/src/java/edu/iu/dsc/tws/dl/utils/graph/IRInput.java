@@ -9,19 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dl.module.mkldnn;
+package edu.iu.dsc.tws.dl.utils.graph;
 
-import com.intel.analytics.bigdl.mkl.Engine;
-import com.intel.analytics.bigdl.mkl.MklDnn;
-import com.intel.analytics.bigdl.mkl.Stream;
-
-public class MklDnnRuntime {
-  public transient long engine;
-  public transient long stream;
-
-  public MklDnnRuntime() {
-    MklDnn.isLoaded();
-    engine = Engine.Create(Engine.Kind.Cpu, 0);
-    stream = Stream.Create(Stream.Kind.Eager);
-  }
+public class IRInput extends  IROperator {
 }

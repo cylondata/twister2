@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.dl.data.Activity;
 import edu.iu.dsc.tws.dl.data.Table;
 import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.TensorType;
-import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.dl.utils.Util;
 import edu.iu.dsc.tws.dl.utils.pair.ArrayPair;
@@ -41,9 +40,9 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
   protected MemoryData[] _gradOutputFormatsForWeight;
 
   private transient long[] updateOutputMemoryPrimitives;
-  private transient DenseTensor[] updateOutputTensors;
+  private transient Tensor[] updateOutputTensors;
   private transient long[] updateGradInputMemoryPrimitives;
-  private transient DenseTensor[] updateGradInputTensors;
+  private transient Tensor[] updateGradInputTensors;
   private transient Activity cachedInput;
   private transient Activity cachedGradOutput;
 
@@ -110,7 +109,8 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
           i += 1;
         }
       }
-      updateOutputTensors = (DenseTensor[]) buffer.toArray();
+      updateOutputTensors = new Tensor[buffer.size()];
+      buffer.toArray(updateOutputTensors);
       cachedInput = input;
     }
     MklDnnOps.streamSubmit(
@@ -149,7 +149,9 @@ public abstract class MklDnnLayer extends AbstractModule<Activity> implements Mk
           i += 1;
         }
       }
-      updateGradInputTensors = (DenseTensor[]) buffer.toArray();
+
+      updateGradInputTensors = new Tensor[buffer.size()];
+      buffer.toArray(updateGradInputTensors);
       cachedInput = input;
       cachedGradOutput = gradOutput;
     }

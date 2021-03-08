@@ -17,7 +17,4 @@ public class IRReLU extends IROperator {
   public IRReLU(boolean inPlace) {
     this.inPlace = inPlace;
   }
-
-  public IRReLU() {
-  }
 }

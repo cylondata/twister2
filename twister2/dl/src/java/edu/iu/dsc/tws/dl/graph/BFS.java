@@ -33,7 +33,7 @@ public class BFS<K> implements Iterator<Node<K>> {
 
   @Override
   public boolean hasNext() {
-    return queue.isEmpty();
+    return !queue.isEmpty();
   }
 
   @Override

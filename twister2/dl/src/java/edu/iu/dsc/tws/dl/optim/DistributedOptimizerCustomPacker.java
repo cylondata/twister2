@@ -23,6 +23,9 @@ import edu.iu.dsc.tws.dl.data.Tensor;
 import edu.iu.dsc.tws.dl.data.dataset.DataSetFactory;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
+import edu.iu.dsc.tws.dl.module.mkldnn.MklDnnModule;
+import edu.iu.dsc.tws.dl.utils.ConversionUtils;
+import edu.iu.dsc.tws.dl.utils.graph.IRGraph;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleDoubleArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
@@ -48,6 +51,15 @@ public class DistributedOptimizerCustomPacker<A extends Tensor, T> extends Optim
 
     double[] loss = new double[1];
     AbstractModule<A> modal = this.getModel();
+
+    if (this.isMklDnn() && !(modal instanceof MklDnnModule)
+        && !(modal instanceof IRGraph)) {
+      modal = modal.toGraph().setName(modal.getName());
+      modal.toFloat();
+      modal.setMklDnn(true);
+    }
+
+    modal = ConversionUtils.convert(modal);
     AbstractCriterion criterion = this.getCriterion();
     TensorPair parameters = this.getModel().getParameters();
     Tensor weight = parameters.getValue0();

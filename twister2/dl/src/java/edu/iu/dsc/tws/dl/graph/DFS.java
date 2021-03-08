@@ -33,7 +33,7 @@ public class DFS<K> implements Iterator<Node<K>> {
 
   @Override
   public boolean hasNext() {
-    return stack.isEmpty();
+    return !stack.isEmpty();
   }
 
   @Override

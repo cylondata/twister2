@@ -34,9 +34,8 @@ import edu.iu.dsc.tws.dl.graph.Sequential;
 import edu.iu.dsc.tws.dl.module.Linear;
 import edu.iu.dsc.tws.dl.module.ReLU;
 import edu.iu.dsc.tws.dl.module.Reshape;
-import edu.iu.dsc.tws.dl.module.Sigmoid;
 import edu.iu.dsc.tws.dl.optim.Adam;
-import edu.iu.dsc.tws.dl.optim.DistributedOptimizer;
+import edu.iu.dsc.tws.dl.optim.DistributedOptimizerCustomPacker;
 import edu.iu.dsc.tws.dl.optim.Optimizer;
 import edu.iu.dsc.tws.dl.optim.trigger.Triggers;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -64,6 +63,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int batchSize = config.getIntegerValue("batchSize");
     String dataFile = config.getStringValue("data");
     int epoch = config.getIntegerValue("epoch");
+    boolean isMklDnn = config.getBooleanValue("mklDnn");
 
     if (batchSize % parallelism != 0) {
       throw new IllegalStateException("batch size should be a multiple of parallelism");
@@ -74,10 +74,10 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
         .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, true);
 
     //Define model
-    int l1 = 1024;
+    int l1 = 28 * 28;
     int l2 = 512;
-    int l3 = 128;
-    int l4 = 8;
+    int l3 = 256;
+    int l4 = 64;
     Sequential model = new Sequential();
     model.toFloat();
     model.add(new Reshape(new int[]{l1}));
@@ -92,13 +92,15 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     model.add(new Linear(l3, l2, true));
     model.add(new ReLU(false));
     model.add(new Linear(l2, l1, true));
-    model.add(new Sigmoid());
+    model.add(new ReLU(false));
     //criterion
     AbstractCriterion criterion = new MSECriterion();
     criterion.toFloat();
 
     //Define Oprimizer
-    Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
+    Optimizer<MiniBatch> optimizer = new DistributedOptimizerCustomPacker(env,
+        model, source, criterion);
+    optimizer.setMklDnn(isMklDnn);
     optimizer.setOptimMethod(new Adam());
     optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
@@ -118,6 +120,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     options.addOption("ram", true, "RAM");
     options.addOption("data", true, "Data");
     options.addOption("e", true, "Epcoh");
+    options.addOption("mkl", true, "MKLDNN");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -127,6 +130,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
     int epoch = Integer.parseInt(cmd.getOptionValue("e"));
+    boolean mklDnn = false;
 
     String data = cmd.getOptionValue("data");
 
@@ -136,6 +140,10 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
 
     if (cmd.hasOption("ram")) {
       mem = Integer.parseInt(cmd.getOptionValue("ram"));
+    }
+
+    if (cmd.hasOption("mkl")) {
+      mklDnn = Boolean.parseBoolean(cmd.getOptionValue("mkl"));
     }
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -148,6 +156,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     jobConfig.put("dataSize", dataSize);
     jobConfig.put("epoch", epoch);
     jobConfig.put("data", data);
+    jobConfig.put("mklDnn", mklDnn);
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("AutoEncoder-job")

@@ -11,11 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dl.utils.pair;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import edu.iu.dsc.tws.dl.module.mkldnn.MemoryData;
 
-public class ReorderManagerKey {
+public class ReorderManagerKey implements Serializable {
   private int index;
   private MemoryData data;
 
