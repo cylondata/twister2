@@ -31,6 +31,9 @@ public final class ConversionUtils {
   public static AbstractModule convert(AbstractModule model) {
     if (model instanceof IRGraph) {
       IRGraph g = (IRGraph) model;
+      if (model.isFloat()) {
+        g.toFloat();
+      }
       if (g.isBuild()) {
         return g;
       } else {
@@ -51,6 +54,9 @@ public final class ConversionUtils {
         ir.training();
       } else {
         ir.evaluate();
+      }
+      if (model.isFloat()) {
+        ir.toFloat();
       }
       return ir;
     } else {

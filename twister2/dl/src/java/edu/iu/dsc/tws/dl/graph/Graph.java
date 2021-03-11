@@ -256,7 +256,7 @@ public abstract class Graph extends Container<Activity> {
     isGradInputAvailable = inputs.stream().map(x -> false).toArray(Boolean[]::new);
     backwardGraph.DFSList().forEach(curNode -> {
       for (int i = 0; i < inputs.size(); i++) {
-        if (curNode.getElement().getName() == inputs.get(i).getElement().getName()
+        if (curNode.getElement().getName().equals(inputs.get(i).getElement().getName())
             && !isStopGradient(inputs.get(i).getElement())) {
           isGradInputAvailable[i] = true;
         }

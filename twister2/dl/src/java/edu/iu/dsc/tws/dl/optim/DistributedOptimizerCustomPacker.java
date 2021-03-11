@@ -60,6 +60,7 @@ public class DistributedOptimizerCustomPacker<A extends Tensor, T> extends Optim
     }
 
     modal = ConversionUtils.convert(modal);
+
     AbstractCriterion criterion = this.getCriterion();
     TensorPair parameters = this.getModel().getParameters();
     Tensor weight = parameters.getValue0();
