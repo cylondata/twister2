@@ -51,7 +51,8 @@ public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, Primit
       result = new FloatFloatArrayPair(loss,
           modal.getParameters().getValue1().storage().toFloatArray());
       if (this.getTSetContext().getIndex() == 0) {
-        System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+        System.out.println("Iteration for " + ((Tensor) input).size()[0]
+            + "records time : " + (System.nanoTime() - startTime) / 1e6);
       }
     } else {
       double loss = criterion.forward(output, target);

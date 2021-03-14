@@ -74,10 +74,11 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
         .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, true);
 
     //Define model
-    int l1 = 28 * 28;
-    int l2 = 512;
-    int l3 = 256;
-    int l4 = 64;
+    int l1 = 1024;
+    int l2 = 756;
+    int l3 = 512;
+    int l4 = 256;
+
     Sequential model = new Sequential();
     model.toFloat();
     model.add(new Reshape(new int[]{l1}));
