@@ -32,7 +32,7 @@ public class TrainReduceFunction implements ReduceFunc<PrimitiveArrayPair> {
   @Override
   public PrimitiveArrayPair reduce(PrimitiveArrayPair t1, PrimitiveArrayPair t2) {
     long startTime = System.nanoTime();
-    if (this.isFloat) {
+    if (!this.isFloat) {
       DoubleDoubleArrayPair tempdata = (DoubleDoubleArrayPair) this.data;
       DoubleDoubleArrayPair temp1 = (DoubleDoubleArrayPair) t1;
       DoubleDoubleArrayPair temp2 = (DoubleDoubleArrayPair) t2;

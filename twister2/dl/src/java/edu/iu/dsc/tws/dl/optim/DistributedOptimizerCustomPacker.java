@@ -107,10 +107,16 @@ public class DistributedOptimizerCustomPacker<A extends Tensor, T> extends Optim
 
     //input the model
     trainMap.addInput("modal", modalTSet);
-    trainResult = trainMap.withSchema(new DLSchema())
-        .allReduce(new TrainReduceFunction(result, env.getWorkerID(),
-            modal.isFloat())).map(new AverageParameters())
-        .withSchema(new DLSchema()).lazyCache();
+    if (modal.isFloat()) {
+      trainResult = trainMap
+          .allReduce(new TrainReduceFunction(result, env.getWorkerID(),
+              modal.isFloat())).map(new AverageParameters()).lazyCache();
+    } else {
+      trainResult = trainMap.withSchema(new DLSchema())
+          .allReduce(new TrainReduceFunction(result, env.getWorkerID(),
+              modal.isFloat())).map(new AverageParameters())
+          .withSchema(new DLSchema()).lazyCache();
+    }
 
     while (!this.getEndWhen().apply(this.state)) {
       env.eval(trainResult);
