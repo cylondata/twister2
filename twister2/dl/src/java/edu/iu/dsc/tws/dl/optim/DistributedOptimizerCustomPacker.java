@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.dl.utils.pair.DoubleTensorPair;
 import edu.iu.dsc.tws.dl.utils.pair.FloatFloatArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.PrimitiveArrayPair;
 import edu.iu.dsc.tws.dl.utils.pair.TensorPair;
-import edu.iu.dsc.tws.dl.utils.schema.DLFSchema;
 import edu.iu.dsc.tws.dl.utils.schema.DLSchema;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -161,7 +160,7 @@ public class DistributedOptimizerCustomPacker<A extends Tensor, T> extends Optim
       env.updateTSet(iterationModal, modalTSet);
     }
     long endTime = System.nanoTime();
-    System.out.println("Rank" + env.getWorkerID() + " Data Load Time : " + dataLoatTime / 1e6 + "ms");
+    System.out.println("Rank" + env.getWorkerID() + " Data Time : " + dataLoatTime / 1e6 + "ms");
     if (env.getWorkerID() == 0) {
       System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e6 + "ms");
       System.out.println("Data Load Time : " + dataLoatTime / 1e6 + "ms");

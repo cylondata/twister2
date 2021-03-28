@@ -31,7 +31,7 @@ public class DLMiniBatchTestSourceFunction extends BaseSourceFunc<MiniBatch> {
                                        boolean isFloat, int inSize) {
     this.batchSize = batchsize;
     this.isFloatType = isFloat;
-    this.numSplits = datasize/(parallelism * batchsize);
+    this.numSplits = datasize / (parallelism * batchsize);
     this.currentSplit = 1;
     this.inputSize = inSize;
   }
@@ -48,28 +48,28 @@ public class DLMiniBatchTestSourceFunction extends BaseSourceFunc<MiniBatch> {
 
   @Override
   public MiniBatch next() {
-      DenseTensor batch = new DenseTensor(false);
-      this.currentSplit++;
-      if (this.isFloatType) {
-        float[] data = new float[this.batchSize * this.inputSize];
-        for (int j = 0; j < data.length; j++) {
-          data[j] = (float) Math.random();
-        }
-
-        int[] sizes = new int[]{this.batchSize, 1, inputSize};
-        batch = new DenseTensor(true);
-        batch.set(new ArrayFloatStorage(data), 1, sizes, null);
-        return new ArrayTensorMiniBatch(batch, batch);
-      } else {
-        double[] data = new double[this.batchSize * this.inputSize];
-        for (int j = 0; j < data.length; j++) {
-          data[j] = Math.random();
-        }
-
-        int[] sizes = new int[]{this.batchSize, 1, inputSize};
-        batch = new DenseTensor(false);
-        batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
-        return new ArrayTensorMiniBatch(batch, batch);
+    DenseTensor batch = new DenseTensor(false);
+    this.currentSplit++;
+    if (this.isFloatType) {
+      float[] data = new float[this.batchSize * this.inputSize];
+      for (int j = 0; j < data.length; j++) {
+        data[j] = (float) Math.random();
       }
+
+      int[] sizes = new int[]{this.batchSize, 1, inputSize};
+      batch = new DenseTensor(true);
+      batch.set(new ArrayFloatStorage(data), 1, sizes, null);
+      return new ArrayTensorMiniBatch(batch, batch);
+    } else {
+      double[] data = new double[this.batchSize * this.inputSize];
+      for (int j = 0; j < data.length; j++) {
+        data[j] = Math.random();
+      }
+
+      int[] sizes = new int[]{this.batchSize, 1, inputSize};
+      batch = new DenseTensor(false);
+      batch.set(new ArrayDoubleStorage(data), 1, sizes, null);
+      return new ArrayTensorMiniBatch(batch, batch);
+    }
   }
 }
