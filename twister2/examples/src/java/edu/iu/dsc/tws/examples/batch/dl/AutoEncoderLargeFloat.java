@@ -45,7 +45,6 @@ import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
-
 /**
  * Simple AutoEncoder example
  */
@@ -64,6 +63,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     String dataFile = config.getStringValue("data");
     int epoch = config.getIntegerValue("epoch");
     int inputSize = config.getIntegerValue("inputSize");
+    int numLayers = config.getIntegerValue("numLayers");
     boolean isMklDnn = config.getBooleanValue("mklDnn");
 
     if (batchSize % parallelism != 0) {
@@ -75,26 +75,26 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
         .createMiniBatchTestDataSet(env, miniBatchSize, dataSize, parallelism, true, inputSize);
 
     //Define model
-    int l1 = inputSize;
-    int l2 = 756;
-    int l3 = 512;
-    int l4 = 256;
-
+    int[] layers = new int[numLayers + 1];
+    layers[0] = inputSize;
+    for (int i = 1; i < layers.length; i++) {
+      layers[i] = (int) (layers[i - 1] * 0.75);
+    }
     Sequential model = new Sequential();
     model.toFloat();
-    model.add(new Reshape(new int[]{l1}));
-    model.add(new Linear(l1, l2, true));
-    model.add(new ReLU(false));
-    model.add(new Linear(l2, l3, true));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l4, true));
-    model.add(new ReLU(false));
-    model.add(new Linear(l4, l3, true));
-    model.add(new ReLU(false));
-    model.add(new Linear(l3, l2, true));
-    model.add(new ReLU(false));
-    model.add(new Linear(l2, l1, true));
-    model.add(new ReLU(false));
+    model.add(new Reshape(new int[]{layers[0]}));
+
+    for (int i = 1; i < layers.length; i++) {
+      model.add(new Linear(layers[i - 1], layers[i], true));
+      model.add(new ReLU(false));
+    }
+
+    for (int i = layers.length - 1; i >= 1; i--) {
+      model.add(new Linear(layers[i], layers[i - 1], true));
+      model.add(new ReLU(false));
+    }
+
+    System.out.println("####### " + model.toString());
     //criterion
     AbstractCriterion criterion = new MSECriterion();
     criterion.toFloat();
@@ -123,6 +123,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     options.addOption("data", true, "Data");
     options.addOption("e", true, "Epcoh");
     options.addOption("i", true, "inputSize");
+    options.addOption("l", true, "numLayers");
     options.addOption("mkl", true, "MKLDNN");
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -134,6 +135,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
     int epoch = Integer.parseInt(cmd.getOptionValue("e"));
     int inputSize = Integer.parseInt(cmd.getOptionValue("i"));
+    int numLayers = Integer.parseInt(cmd.getOptionValue("l"));
     boolean mklDnn = false;
 
     String data = cmd.getOptionValue("data");
@@ -160,6 +162,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     jobConfig.put("dataSize", dataSize);
     jobConfig.put("epoch", epoch);
     jobConfig.put("inputSize", inputSize);
+    jobConfig.put("numLayers", numLayers);
     jobConfig.put("data", data);
     jobConfig.put("mklDnn", mklDnn);
 
