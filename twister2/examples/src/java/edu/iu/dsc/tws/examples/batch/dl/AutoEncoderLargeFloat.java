@@ -95,7 +95,9 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
       model.add(new ReLU(false));
     }
 
-    System.out.println("#######  :  " + Arrays.toString(layers));
+    if (env.getWorkerID() == 0) {
+      System.out.println("#######  :  " + Arrays.toString(layers));
+    }
     //criterion
     AbstractCriterion criterion = new MSECriterion();
     criterion.toFloat();
