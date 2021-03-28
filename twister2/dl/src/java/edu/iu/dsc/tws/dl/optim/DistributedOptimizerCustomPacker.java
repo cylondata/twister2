@@ -160,7 +160,6 @@ public class DistributedOptimizerCustomPacker<A extends Tensor, T> extends Optim
       env.updateTSet(iterationModal, modalTSet);
     }
     long endTime = System.nanoTime();
-    System.out.println("Rank" + env.getWorkerID() + " Data Time : " + dataLoatTime / 1e6 + "ms");
     if (env.getWorkerID() == 0) {
       System.out.println("Total Optimizer Time : " + (endTime - startTime) / 1e6 + "ms");
       System.out.println("Data Load Time : " + dataLoatTime / 1e6 + "ms");
