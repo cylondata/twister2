@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.dl;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -94,7 +95,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
       model.add(new ReLU(false));
     }
 
-    System.out.println("####### " + model.toString());
+    System.out.println("#######  :  " + Arrays.toString(layers));
     //criterion
     AbstractCriterion criterion = new MSECriterion();
     criterion.toFloat();
