@@ -17,11 +17,7 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
-import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
-import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchImageSourceFunction;
-import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchSourceFunction;
-import edu.iu.dsc.tws.dl.data.tset.ModalSource;
-import edu.iu.dsc.tws.dl.data.tset.SingleDataSource;
+import edu.iu.dsc.tws.dl.data.tset.*;
 import edu.iu.dsc.tws.dl.module.AbstractModule;
 import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
@@ -45,6 +41,14 @@ public final class DataSetFactory {
                                                              int parallelism, boolean isFloat) {
     return env.createSource(new DLMiniBatchSourceFunction(filePath,
         batchSize, dataSize, parallelism, isFloat), parallelism);
+  }
+
+  public static SourceTSet<MiniBatch> createMiniBatchTestDataSet(BatchEnvironment env,
+                                                                 int batchSize, int dataSize,
+                                                                 int parallelism, boolean isFloat,
+                                                                 int inputSize) {
+    return env.createSource(new DLMiniBatchTestSourceFunction(batchSize, dataSize, parallelism,
+        isFloat, inputSize), parallelism);
   }
 
   public static SourceTSet<Sample> createSampleDataSet(BatchEnvironment env, String filePath,

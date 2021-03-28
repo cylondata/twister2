@@ -63,6 +63,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int batchSize = config.getIntegerValue("batchSize");
     String dataFile = config.getStringValue("data");
     int epoch = config.getIntegerValue("epoch");
+    int inputSize = config.getIntegerValue("inputSize");
     boolean isMklDnn = config.getBooleanValue("mklDnn");
 
     if (batchSize % parallelism != 0) {
@@ -71,10 +72,10 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int miniBatchSize = batchSize / parallelism;
 
     SourceTSet<MiniBatch> source = DataSetFactory
-        .createMiniBatchDataSet(env, dataFile, miniBatchSize, dataSize, parallelism, true);
+        .createMiniBatchTestDataSet(env, miniBatchSize, dataSize, parallelism, true, inputSize);
 
     //Define model
-    int l1 = 1024;
+    int l1 = inputSize;
     int l2 = 756;
     int l3 = 512;
     int l4 = 256;
@@ -121,6 +122,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     options.addOption("ram", true, "RAM");
     options.addOption("data", true, "Data");
     options.addOption("e", true, "Epcoh");
+    options.addOption("i", true, "inputSize");
     options.addOption("mkl", true, "MKLDNN");
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -131,6 +133,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));
     int epoch = Integer.parseInt(cmd.getOptionValue("e"));
+    int inputSize = Integer.parseInt(cmd.getOptionValue("i"));
     boolean mklDnn = false;
 
     String data = cmd.getOptionValue("data");
@@ -156,6 +159,7 @@ public class AutoEncoderLargeFloat implements Twister2Worker, Serializable {
     jobConfig.put("batchSize", batchSize);
     jobConfig.put("dataSize", dataSize);
     jobConfig.put("epoch", epoch);
+    jobConfig.put("inputSize", inputSize);
     jobConfig.put("data", data);
     jobConfig.put("mklDnn", mklDnn);
 
