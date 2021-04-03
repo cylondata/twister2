@@ -426,6 +426,22 @@ public abstract class AbstractModule<A extends Activity> extends InferShape
   public abstract TensorArrayPair parameters();
 
   /**
+   * get the modules of the model.
+   * @return
+   */
+  public List<AbstractModule> getModules() {
+    throw new UnsupportedOperationException("not supported");
+  }
+
+  /**
+   * set the modules during iterations.
+   * @param modules
+   */
+  public void setModules(List<AbstractModule> modules) {
+    throw new UnsupportedOperationException("not supported");
+  }
+
+  /**
    * Get extra parameter in this module.
    * Extra parameter means the trainable parameters beside weight and bias. Such as runningMean
    * and runningVar in BatchNormalization.

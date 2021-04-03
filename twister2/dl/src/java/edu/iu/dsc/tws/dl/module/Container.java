@@ -33,6 +33,16 @@ public abstract class Container<A extends Activity> extends AbstractModule<A> {
   public List<AbstractModule> modules = new ArrayList<AbstractModule>();
 
   @Override
+  public List<AbstractModule> getModules() {
+    return modules;
+  }
+
+  @Override
+  public void setModules(List<AbstractModule> modules) {
+    this.modules = modules;
+  }
+
+  @Override
   public final AbstractModule training() {
     train = true;
     modules.forEach(abstractModule -> abstractModule.training());

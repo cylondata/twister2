@@ -133,34 +133,37 @@ public abstract class Optimizer<T> {
    * @param subModuleNames
    */
   private void checkSubModules(AbstractModule dlmodel, List<String> subModuleNames) {
-//    TensorPair modelParameters = model.getParameters();
-//    subModuleNames.stream().map(subModuleName -> {
-//      AbstractModule subModule = model.apply(subModuleName);
-//      Util.require(subModule != null, "Optimizer: couldn't find $subModuleName in $model");
-//      Tensor subModuleWeights = subModule.getParameters().getValue0();
-//      Util.require(subModuleWeights.nElement() > 0, "Optimizer: $subModuleName doesn't have" +
-//          " any trainable parameters, please check your model and optimMethods.");
-//      // If the storage subModule's parameter is the same with the storage of the submodule,
-//      // then subModule's parameter is contiguous.
-// Util.require(modelParameters.getValue0().storage() == subModuleWeights.storage(), "Optimizer:" +
-//          " $subModuleName's parameter is not contiguous.");
-//      (subModuleName, subModuleWeights);
-//    });
+    model.getParameters();
 
-    //TODO complete
+    /*Map<String, Tensor> p = new HashMap<>();
+    for (int i = 0; i < subModuleNames.size(); i++) {
+      String subModuleName = subModuleNames.get(i);
+      AbstractModule subModule = dlmodel.apply(subModuleName);
+      Util.require(subModule != null, "Optimizer: couldn't find $subModuleName in $model");
+      Tensor subModuleWeights = subModule.getParameters().getValue0();
+      Util.require(subModuleWeights.nElement() > 0, "Optimizer: $subModuleName doesn't have"
+          + " any trainable parameters, please check your model and optimMethods.");
+      // If the storage subModule's parameter is the same with the storage of the submodule,
+      // then subModule's parameter is contiguous.
+      Util.require(modelParameters.getValue0().storage() == subModuleWeights.storage(), "Optimizer:"
+          + " $subModuleName's parameter is not contiguous.");
+      p.put(subModuleName, subModuleWeights);
+    }*/
+
     // make sure if parameters in submodules aren't duplicated.
-//    if (p.length != 1) {
-//      int sortedWeights = p.sortWith((a, b) => a._2.storageOffset() < b._2.storageOffset())
-//      var i = 0
-//      while (i < sortedWeights.length - 1) {
-//        int current = sortedWeights(i)
-//        int next = sortedWeights(i + 1)
-//    Util.require(current._2.storageOffset() + current._2.nElement() <= next._2.storageOffset(),
-//            s"Optimizer: ${current._1} and ${next._1}'s parameters are duplicated." +
-//                s" Please check your model and optimMethods.")
-//        i += 1
-//      }
-//    }
+   /* if (p.size() != 1) {
+
+      val sortedWeights = p.sortWith((a, b) => a._2.storageOffset() < b._2.storageOffset())
+      var i = 0
+      while (i < sortedWeights.length - 1) {
+        val current = sortedWeights(i)
+        val next = sortedWeights(i + 1)
+        require(current._2.storageOffset() + current._2.nElement() <= next._2.storageOffset(),
+            s"Optimizer: ${current._1} and ${next._1}'s parameters are duplicated." +
+                s" Please check your model and optimMethods.")
+        i += 1
+      }
+    }*/
   }
 
   public void setEndWhen(Trigger trigger) {

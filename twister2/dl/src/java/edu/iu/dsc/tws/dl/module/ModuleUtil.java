@@ -104,6 +104,6 @@ public final class ModuleUtil {
     }
 
 
-    return new DenseTensor(storage, offset, new int[length]);
+    return new DenseTensor(storage, offset, new int[]{length});
   }
 }

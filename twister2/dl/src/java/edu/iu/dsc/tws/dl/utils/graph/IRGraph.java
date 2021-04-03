@@ -39,7 +39,7 @@ public class IRGraph extends AbstractModule implements Serializable {
   protected boolean generateBackward;
   protected List<Integer> inputFormats; //Seq(Memory.Format.nchw),
   protected List<Integer> outputFormats; //Seq(Memory.Format.nc))
-  private transient boolean initPrim = false;
+  private boolean initPrim = false;
 
   private Graph graph = null;
 
@@ -102,6 +102,16 @@ public class IRGraph extends AbstractModule implements Serializable {
   @Override
   public TensorArrayPair parameters() {
     return graph.parameters();
+  }
+
+  @Override
+  public List<AbstractModule> getModules() {
+    return graph.modules;
+  }
+
+  @Override
+  public void setModules(List list) {
+    this.graph.modules = list;
   }
 
   @Override

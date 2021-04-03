@@ -122,7 +122,7 @@ public class AutoEncoderLargeCustom implements Twister2Worker, Serializable {
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
     double cpu = 2.0;
-    int mem = 2048;
+    int mem = 6048;
     int numberOfWorkers = Integer.parseInt(cmd.getOptionValue("p"));
     int batchSize = Integer.parseInt(cmd.getOptionValue("b"));
     int dataSize = Integer.parseInt(cmd.getOptionValue("d"));

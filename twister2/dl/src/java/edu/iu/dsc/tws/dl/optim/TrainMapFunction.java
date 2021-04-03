@@ -34,8 +34,14 @@ public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, Primit
   public PrimitiveArrayPair map(T data) {
     long startTime = System.nanoTime();
 
-    modal = (AbstractModule) getTSetContext()
-        .getInput("modal").getConsumer().next();
+    if (modal == null) {
+      modal = (AbstractModule) getTSetContext()
+          .getInput("modal").getConsumer().next();
+    } else {
+      AbstractModule temp = (AbstractModule) getTSetContext()
+          .getInput("modal").getConsumer().next();
+      modal.setModules(temp.getModules());
+    }
 
     ArrayTensorMiniBatch miniBatch = (ArrayTensorMiniBatch) data;
     modal.zeroGradParameters();
