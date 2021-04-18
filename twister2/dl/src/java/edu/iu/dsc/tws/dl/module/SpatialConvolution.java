@@ -84,11 +84,11 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
   public SpatialConvolution(int nInputPlane, int nOutputPlane, int kernelW, int kernelH,
                             int strideW, int strideH, int padW, int padH, int nGroup,
                             boolean propagateBack, Regularizer wRegularizer,
-                            Regularizer bRegularizer) {
+                            Regularizer bRegularizer, boolean isF) {
     this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH,
         strideW, strideH, padW, padH,
         nGroup, propagateBack, wRegularizer, bRegularizer, null, null, null,
-        null, true, new NCHW());
+        null, true, new NCHW(), isF);
   }
 
   public SpatialConvolution(int nInputPlane, int nOutputPlane, int kernelW, int kernelH,
@@ -96,11 +96,11 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
                             boolean propagateBack, Regularizer wRegularizer,
                             Regularizer bRegularizer, Tensor initWeight,
                             Tensor initBias, Tensor initGradWeight, Tensor initGradBias,
-                            boolean withBias, DataFormat format) {
+                            boolean withBias, DataFormat format, boolean isF) {
     this(null, null, nInputPlane, nOutputPlane, kernelW, kernelH,
         strideW, strideH, padW, padH,
         nGroup, propagateBack, wRegularizer, bRegularizer, initWeight, initBias, initGradWeight,
-        initGradBias, withBias, format);
+        initGradBias, withBias, format, isF);
   }
 
   @Override
@@ -144,7 +144,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
                             int nGroup, boolean propagateBack, Regularizer wRegularizer,
                             Regularizer bRegularizer, Tensor initWeight, Tensor initBias,
                             Tensor initGradWeight, Tensor initGradBias, boolean withBias,
-                            DataFormat format) {
+                            DataFormat format, boolean isF) {
 
     this.weightInitMethod = weightInitMethod;
     this.biasInitMethod = biasInitMethod;
@@ -166,6 +166,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
     this.initGradBias = initGradBias;
     this.withBias = withBias;
     this.format = format;
+    this.isFloat = isF;
 
     Util.require(nOutputPlane % nGroup == 0, "Number of input channels "
         + "should be multiples of group "

@@ -58,7 +58,7 @@ public class CrossEntropyCriterion extends TensorCriterion {
   @Override
   public float updateOutputf(Tensor input, Tensor target) {
     lsm.updateOutput((DenseTensor) input);
-    nll.updateOutput((Tensor) lsm.output, target);
+    nll.updateOutputf((Tensor) lsm.output, target);
     outputf = nll.outputf;
     return outputf;
   }

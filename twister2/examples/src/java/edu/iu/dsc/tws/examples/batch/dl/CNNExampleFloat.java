@@ -49,7 +49,7 @@ import edu.iu.dsc.tws.tset.env.BatchEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-public class CNNExample implements Twister2Worker, Serializable {
+public class CNNExampleFloat implements Twister2Worker, Serializable {
 
   @Override
   public void execute(WorkerEnvironment workerEnv) {
@@ -70,31 +70,33 @@ public class CNNExample implements Twister2Worker, Serializable {
     int miniBatchSize = batchSize / parallelism;
     int imageSize = 0;
     SourceTSet<MiniBatch> source = DataSetFactory.createImageMiniBatchDataSet(env, trainData,
-        1, 28, 28, miniBatchSize, dataSize, parallelism, false);
+        1, 28, 28, miniBatchSize, dataSize, parallelism, true);
     SourceTSet<MiniBatch> testSrc = DataSetFactory.createImageMiniBatchDataSet(env, testData,
-        1, 28, 28, miniBatchSize, testDataSize, parallelism, false);
+        1, 28, 28, miniBatchSize, testDataSize, parallelism, true);
     int featureSize = 3 * 3 * 64;
 
     Sequential model = new Sequential();
+    model.toFloat();
     model.add(convolutionMN(1, 32, 5, 5));
     model.add(new ReLU());
     model.add(convolutionMN(32, 32, 5, 5));
     model.add(new SpatialMaxPooling(2, 2, 2, 2));
     model.add(new ReLU());
-    model.add(new Dropout(0.5, false));
+    model.add(new Dropout(0.5, true));
     model.add(convolutionMN(32, 64, 5, 5));
     model.add(new SpatialMaxPooling(2, 2, 2, 2));
     model.add(new ReLU());
-    model.add(new Dropout(0.5, false));
+    model.add(new Dropout(0.5, true));
     model.add(new Reshape(new int[]{featureSize}));
-    model.add(new Linear(featureSize, 256));
+    model.add(new Linear(featureSize, 256, true));
     model.add(new ReLU());
-    model.add(new Dropout(0.5, false));
-    model.add(new Linear(256, 10));
+    model.add(new Dropout(0.5, true));
+    model.add(new Linear(256, 10, true));
     model.add(new LogSoftMax());
 
 
     AbstractCriterion criterion = new CrossEntropyCriterion();
+    criterion.toFloat();
 
     //Define Oprimizer
     Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
@@ -115,7 +117,7 @@ public class CNNExample implements Twister2Worker, Serializable {
     Regularizer wReg = new L2Regularizer(weightDecay);
     Regularizer bReg = new L2Regularizer(weightDecay);
     return new SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, 1, 1,
-        0, 0, 1, true, wReg, bReg, false);
+        0, 0, 1, true, wReg, bReg, true);
   }
 
   public static void main(String[] args) throws ParseException {
@@ -163,7 +165,7 @@ public class CNNExample implements Twister2Worker, Serializable {
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("CNN-job")
-        .setWorkerClass(CNNExample.class)
+        .setWorkerClass(CNNExampleFloat.class)
         .addComputeResource(cpu, mem, numberOfWorkers)
         .setConfig(jobConfig)
         .build();

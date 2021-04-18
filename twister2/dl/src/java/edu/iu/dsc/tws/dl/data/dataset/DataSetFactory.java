@@ -36,9 +36,10 @@ public final class DataSetFactory {
                                                                   String filePath, int nPlanes,
                                                                   int width, int height,
                                                                   int batchSize, int dataSize,
-                                                                  int parallelism) {
+                                                                  int parallelism,
+                                                                  boolean isFloat) {
     return env.createSource(new DLMiniBatchImageSourceFunction(filePath,
-        batchSize, dataSize, parallelism, nPlanes, width, height), parallelism);
+        batchSize, dataSize, parallelism, nPlanes, width, height, isFloat), parallelism);
   }
 
   public static SourceTSet<MiniBatch> createMiniBatchDataSet(BatchEnvironment env, String filePath,

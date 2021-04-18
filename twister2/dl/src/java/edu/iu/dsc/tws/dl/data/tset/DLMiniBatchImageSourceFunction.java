@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.minibatch.ArrayTensorMiniBatch;
 import edu.iu.dsc.tws.dl.data.storage.ArrayDoubleStorage;
+import edu.iu.dsc.tws.dl.data.storage.ArrayFloatStorage;
 import edu.iu.dsc.tws.dl.data.tensor.DenseTensor;
 
 public class DLMiniBatchImageSourceFunction extends BaseSourceFunc<MiniBatch> {
@@ -46,10 +47,12 @@ public class DLMiniBatchImageSourceFunction extends BaseSourceFunc<MiniBatch> {
   private int nPlanes = 1;
   private int w = 1;
   private int h = 1;
+  private boolean isFloatType;
 
 
   public DLMiniBatchImageSourceFunction(String filePath, int batchsize, int datasize,
-                                        int parallelism, int planes, int width, int height) {
+                                        int parallelism, int planes, int width, int height,
+                                        boolean isFloat) {
     this.dataFilePath = filePath;
     this.batchSize = batchsize;
     this.dataSize = datasize;
@@ -58,6 +61,7 @@ public class DLMiniBatchImageSourceFunction extends BaseSourceFunc<MiniBatch> {
     this.nPlanes = planes;
     this.w = width;
     this.h = height;
+    this.isFloatType = isFloat;
   }
 
   @Override
@@ -86,36 +90,69 @@ public class DLMiniBatchImageSourceFunction extends BaseSourceFunc<MiniBatch> {
   @Override
   public MiniBatch next() {
     try {
-      DenseTensor features;
-      DenseTensor lables;
-      int realBatchSize = 0;
-      int rowSize = 0;
-      List<String> dataString = new ArrayList<String>();
-      while (realBatchSize < batchSize && !dataSplit.reachedEnd()) {
-        String[] entries = pattern.split(dataSplit.nextRecord(null));
-        dataString.addAll(Arrays.asList(entries));
-        rowSize = entries.length;
-        realBatchSize++;
-      }
-      double[] data = new double[(rowSize - 1) * realBatchSize];
-      double[] label = new double[realBatchSize];
-      int currBatch = 0;
-      for (int j = 0; j < dataString.size(); j++) {
-        if (j % rowSize == 0) {
-          label[currBatch] = Double.parseDouble(dataString.get(j)) + 1;
-          currBatch++;
-        } else {
-          data[j - currBatch] = Double.parseDouble(dataString.get(j));
+      if (this.isFloatType) {
+        DenseTensor features;
+        DenseTensor lables;
+        int realBatchSize = 0;
+        int rowSize = 0;
+        List<String> dataString = new ArrayList<String>();
+        while (realBatchSize < batchSize && !dataSplit.reachedEnd()) {
+          String[] entries = pattern.split(dataSplit.nextRecord(null));
+          dataString.addAll(Arrays.asList(entries));
+          rowSize = entries.length;
+          realBatchSize++;
         }
-      }
+        float[] data = new float[(rowSize - 1) * realBatchSize];
+        float[] label = new float[realBatchSize];
+        int currBatch = 0;
+        for (int j = 0; j < dataString.size(); j++) {
+          if (j % rowSize == 0) {
+            label[currBatch] = Float.parseFloat(dataString.get(j)) + 1;
+            currBatch++;
+          } else {
+            data[j - currBatch] = Float.parseFloat(dataString.get(j));
+          }
+        }
 
-      int[] sizesD = new int[]{realBatchSize, nPlanes, w, h};
-      int[] sizesL = new int[]{realBatchSize, 1};
-      features = new DenseTensor(false);
-      lables = new DenseTensor(false);
-      features.set(new ArrayDoubleStorage(data), 1, sizesD, null);
-      lables.set(new ArrayDoubleStorage(label), 1, sizesL, null);
-      return new ArrayTensorMiniBatch(features, lables);
+        int[] sizesD = new int[]{realBatchSize, nPlanes, w, h};
+        int[] sizesL = new int[]{realBatchSize, 1};
+        features = new DenseTensor(true);
+        lables = new DenseTensor(true);
+        features.set(new ArrayFloatStorage(data), 1, sizesD, null);
+        lables.set(new ArrayFloatStorage(label), 1, sizesL, null);
+        return new ArrayTensorMiniBatch(features, lables);
+      } else {
+        DenseTensor features;
+        DenseTensor lables;
+        int realBatchSize = 0;
+        int rowSize = 0;
+        List<String> dataString = new ArrayList<String>();
+        while (realBatchSize < batchSize && !dataSplit.reachedEnd()) {
+          String[] entries = pattern.split(dataSplit.nextRecord(null));
+          dataString.addAll(Arrays.asList(entries));
+          rowSize = entries.length;
+          realBatchSize++;
+        }
+        double[] data = new double[(rowSize - 1) * realBatchSize];
+        double[] label = new double[realBatchSize];
+        int currBatch = 0;
+        for (int j = 0; j < dataString.size(); j++) {
+          if (j % rowSize == 0) {
+            label[currBatch] = Double.parseDouble(dataString.get(j)) + 1;
+            currBatch++;
+          } else {
+            data[j - currBatch] = Double.parseDouble(dataString.get(j));
+          }
+        }
+
+        int[] sizesD = new int[]{realBatchSize, nPlanes, w, h};
+        int[] sizesL = new int[]{realBatchSize, 1};
+        features = new DenseTensor(false);
+        lables = new DenseTensor(false);
+        features.set(new ArrayDoubleStorage(data), 1, sizesD, null);
+        lables.set(new ArrayDoubleStorage(label), 1, sizesL, null);
+        return new ArrayTensorMiniBatch(features, lables);
+      }
     } catch (IOException e) {
       throw new RuntimeException("Unable read data split", e);
     }
