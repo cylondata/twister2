@@ -782,6 +782,7 @@ public final class DenseTensorMath {
     Util.require(t.size(1) == m1.size(1) && t.size(2) == m2.size(2),
         "size mismatch. t:${t.size().mkString()}, "
             + "m1:${m1.size().mkString()} + m2:${m2.size().mkString()}");
+    long startTime2d = System.nanoTime();
 
     if (r != t) {
       r.resizeAs(t);
@@ -837,6 +838,7 @@ public final class DenseTensorMath {
     }
     int temp1 = (transpose_m1 == 'n') ? __m1.stride(index2) : __m1.stride(index1);
     int temp2 = (transpose_m2 == 'n') ? __m2.stride(index2) : __m2.stride(index1);
+
     DenseTensorBLAS.gemm(transpose_m1, transpose_m2, _r.size(index1), _r.size(index2),
         __m1.size(index2), alpha, __m1.storage().toFloatArray(), __m1.storageOffset() - 1,
         temp1,
@@ -848,6 +850,7 @@ public final class DenseTensorMath {
     if (_r != r) {
       r.copy(_r);
     }
+   // System.out.println("Update Frame addmm: " + (System.nanoTime() - startTime2d) / 1e6);
     return r;
   }
 

@@ -146,8 +146,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
                             Tensor initGradWeight, Tensor initGradBias, boolean withBias,
                             DataFormat format, boolean isF) {
 
-    this.weightInitMethod = weightInitMethod;
-    this.biasInitMethod = biasInitMethod;
+    //this.weightInitMethod = weightInitMethod;
+    //this.biasInitMethod = biasInitMethod;
     this.nInputPlane = nInputPlane;
     this.nOutputPlane = nOutputPlane;
     this.kernelW = kernelW;
@@ -261,6 +261,9 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
     if (biasInitMethod != null) {
       bInit = biasInitMethod;
     }
+    //TODO remove
+    wInit = new Zeros();
+    bInit = new Zeros();
     setInitMethod(wInit, bInit);
   }
 
@@ -369,6 +372,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
     Util.require(input.dim() == 3 || input.dim() == 4,
         "SpatialConvolution: " + ErrorConstants.constrainInputAs3DOrBatch);
     Util.require(input.isContiguous());
+    long startTimef = System.nanoTime();
 
     if (weightMM == null || weightMM.storage().isEmpty()) {
       weightMM = (DenseTensor) weight.view(weightMMShape);
@@ -408,6 +412,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         onesBias.resize(new int[]{outputHeight * outputWidth}).fill(1.0);
       }
     }
+  //  System.out.println("SpatialConv Time 1 : " + (System.nanoTime() - startTimef) / 1e6);
 
     if (input.dim() == 3) {
       Util.require(input.isContiguous());
@@ -418,6 +423,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
       } else {
         fInput.resize(getFInputShape(outputHeight, outputWidth, -1));
       }
+     // System.out.println("SpatialConv3 Time 2 : " + (System.nanoTime() - startTimef) / 1e6);
+
       int g = 0;
       while (g < nGroup) {
         DenseTensor biasUse = null;
@@ -439,6 +446,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
             nOutputPlane / nGroup, outputWidth, outputHeight);
         g += 1;
       }
+      //System.out.println("SpatialConv3 Time 3 : " + (System.nanoTime() - startTimef) / 1e6);
+
     } else {
       int batchSize = input.size(1);
       ((DenseTensor) output).resize(getOutputShape(outputHeight, outputWidth, batchSize));
@@ -448,6 +457,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
       } else {
         fInput.resize(getFInputShape(outputHeight, outputWidth, batchSize));
       }
+      //System.out.println("SpatialConv Time 2 : " + (System.nanoTime() - startTimef) / 1e6);
 
       //TODO parallelize
       for (int i = 0; i < batchSize; i++) {
@@ -457,6 +467,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         DenseTensor outputT = (DenseTensor) ((DenseTensor) output).select(1, _i);
         DenseTensor fInputT = (DenseTensor) fInput.select(1, _i);
         int g = 0;
+
         while (g < nGroup) {
           DenseTensor biasUse = null;
           if (withBias) {
@@ -479,7 +490,10 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         }
 
       }
+      //System.out.println("SpatialConv Time 4 : " + (System.nanoTime() - startTimef) / 1e6);
+
     }
+   // System.out.println("SpatialConv Time : " + (System.nanoTime() - startTimef) / 1e6);
     return (DenseTensor) output;
   }
 
@@ -754,8 +768,8 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
 
   @Override
   public String toString() {
-    return "${getPrintName}($nInputPlane -> $nOutputPlane, $kernelW x"
-        + " $kernelH, $strideW, $strideH, $padW, $padH)";
+    return String.format("%s (%d -> %d, %d x %d, %d, %d, %d, %d)", getPrintName(),
+        nInputPlane, nOutputPlane, kernelW, kernelH, strideW, strideH, padW, padH);
   }
 
   protected void updateOutputFrame(DenseTensor input, DenseTensor output, DenseTensor weight,
@@ -763,11 +777,14 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
                                    int dH, int padLeft, int padTop, int padRight, int padBottom,
                                    int nInputPlane, int inputWidth, int inputHeight,
                                    int nOutputPlane, int outputWidth, int outputHeight) {
-
+    long startTimef = System.nanoTime();
     if (this.isFloat) {
       if (format instanceof NCHW) {
+        long startTime2d = System.nanoTime();
+
         DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
             outputHeight * outputWidth});
+       // System.out.println("Update Frame output2d: " + (System.nanoTime() - startTime2d) / 1e6);
         if (!_1x1) {
           long before = System.nanoTime();
           NNPrimitive.im2colFloat(fInput,
@@ -779,6 +796,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         output2d.addmm(0.0f, output2d, 1.0f, weight, fInput);
         if (withBias) output2d.addr(1.0f, bias, onesBias);
       } else if (format instanceof NHWC) {
+        //System.out.println(" ##################### NHWC ############Update Frame : ");
         DenseTensor output2d = (DenseTensor) output
             .view(new int[]{outputHeight * outputWidth, nOutputPlane});
         if (!_1x1) {
@@ -793,6 +811,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         if (withBias) output2d.addr(1.0f, onesBias, bias);
       }
     } else {
+      //System.out.println(" ##################### Double ############Update Frame : ");
       if (format instanceof NCHW) {
         DenseTensor output2d = (DenseTensor) output.view(new int[]{nOutputPlane,
             outputHeight * outputWidth});
@@ -821,6 +840,7 @@ public class SpatialConvolution extends TensorModule<DenseTensor> implements Ini
         if (withBias) output2d.addr(1.0, onesBias, bias);
       }
     }
+  //  System.out.println("Update Frame : " + (System.nanoTime() - startTimef) / 1e6);
 
   }
 

@@ -19,9 +19,9 @@ public class Zeros implements InitializationMethod {
   @Override
   public void init(Tensor variable, VariableFormat dataFormat) {
     if (variable.isFloat()) {
-      variable.fill(0.1f);
+      variable.fill(0.2f);
     } else {
-      variable.fill(0.1);
+      variable.fill(0.2);
     }
   }
 }

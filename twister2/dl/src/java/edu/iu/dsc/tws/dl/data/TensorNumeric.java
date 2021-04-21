@@ -492,8 +492,22 @@ public final class TensorNumeric implements Serializable {
                           int aOffset, int lda, float[] b, int bOffset, int ldb,
                           float beta, float[] c, int cOffset, int ldc) {
     checkMKL();
+    //System.out.println("###### gemm: " + transa + " : " + transb + " : " + m + " : " + n
+     //   + k + " : " + alpha + " : " + a.length + " : " + aOffset + " : " + lda + " : " + b.length
+      // + bOffset + " : " + ldb + " : " + beta + " : " + c.length + " : " + cOffset + " : " + ldc);
+    //System.out.println("a : " + sum(a) + " b : " + sum(b) + " c : " + sum(c));
+    //long time = System.nanoTime();
     MKL.vsgemm(transa, transb, m, n, k, alpha, a, aOffset, lda, b,
         bOffset, ldb, beta, c, cOffset, ldc);
+    //System.out.println("vsgemm Time : " + (System.nanoTime() - time) / 1e6);
+  }
+
+  public static float sum(float[] data) {
+    float result = 0L;
+    for (float datum : data) {
+      result += datum;
+    }
+    return result;
   }
 
   public static void gemv(char trans, int m, int n, float alpha, float[] a, int aoffset, int lda,

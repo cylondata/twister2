@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.dl.module.Reshape;
 import edu.iu.dsc.tws.dl.module.SpatialConvolution;
 import edu.iu.dsc.tws.dl.module.SpatialMaxPooling;
 import edu.iu.dsc.tws.dl.optim.Adam;
-import edu.iu.dsc.tws.dl.optim.DistributedOptimizer;
+import edu.iu.dsc.tws.dl.optim.DistributedOptimizerCustomPacker;
 import edu.iu.dsc.tws.dl.optim.Optimizer;
 import edu.iu.dsc.tws.dl.optim.Regularizer;
 import edu.iu.dsc.tws.dl.optim.regularizer.L2Regularizer;
@@ -99,16 +99,17 @@ public class CNNExampleFloat implements Twister2Worker, Serializable {
     criterion.toFloat();
 
     //Define Oprimizer
-    Optimizer<MiniBatch> optimizer = new DistributedOptimizer(env, model, source, criterion);
+    Optimizer<MiniBatch> optimizer =
+        new DistributedOptimizerCustomPacker(env, model, source, criterion);
     optimizer.setOptimMethod(new Adam());
     optimizer.setEndWhen(Triggers.maxEpoch(epoch));
     optimizer.optimize();
-    double accuracy = model.predictAccuracy(testSrc, batchSize, testDataSize);
-    long endTime = System.nanoTime();
-    if (env.getWorkerID() == 0) {
-      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
-      System.out.println("Accuracy : " + accuracy * 100 + "%");
-    }
+//    double accuracy = model.predictAccuracy(testSrc, batchSize, testDataSize);
+//    long endTime = System.nanoTime();
+//    if (env.getWorkerID() == 0) {
+//      System.out.println("Total Time : " + (endTime - startTime) / 1e-6 + "ms");
+//      System.out.println("Accuracy : " + accuracy * 100 + "%");
+//    }
   }
 
   private SpatialConvolution convolutionMN(int nInputPlane, int nOutputPlane, int kW, int kH) {

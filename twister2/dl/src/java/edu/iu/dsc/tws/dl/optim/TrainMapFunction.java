@@ -48,14 +48,18 @@ public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, Primit
     modal.training();
     Activity input = miniBatch.getInput();
     Activity target = miniBatch.getTarget();
+    long startTimef = System.nanoTime();
     A output = modal.forward((A) input);
     PrimitiveArrayPair result;
     if (modal.isFloat()) {
       float loss = criterion.forwardf(output, target);
+     // System.out.println("Forward Time : " + (System.nanoTime() - startTimef) / 1e6);
+      startTimef = System.nanoTime();
       Activity errors = criterion.backward(output, target);
       modal.backward((A) input, (A) errors);
       result = new FloatFloatArrayPair(loss,
           modal.getParameters().getValue1().storage().toFloatArray());
+     // System.out.println("Backward Time : " + (System.nanoTime() - startTimef) / 1e6);
       if (this.getTSetContext().getIndex() == 0) {
         System.out.println("Iteration for " + ((Tensor) input).size()[0]
             + "records time : " + (System.nanoTime() - startTime) / 1e6);
