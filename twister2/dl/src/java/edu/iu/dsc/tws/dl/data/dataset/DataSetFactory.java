@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.dl.data.MiniBatch;
 import edu.iu.dsc.tws.dl.data.Sample;
 import edu.iu.dsc.tws.dl.data.tset.DLBasicSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchImageSourceFunction;
+import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchImageTestSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.DLMiniBatchTestSourceFunction;
 import edu.iu.dsc.tws.dl.data.tset.ModalSource;
@@ -40,6 +41,16 @@ public final class DataSetFactory {
                                                                   boolean isFloat) {
     return env.createSource(new DLMiniBatchImageSourceFunction(filePath,
         batchSize, dataSize, parallelism, nPlanes, width, height, isFloat), parallelism);
+  }
+
+  public static SourceTSet<MiniBatch> createImageMiniBatchTestDataSet(BatchEnvironment env,
+                                                                  int nPlanes,
+                                                                  int width, int height,
+                                                                  int batchSize, int dataSize,
+                                                                  int parallelism,
+                                                                  boolean isFloat, int inSize) {
+    return env.createSource(new DLMiniBatchImageTestSourceFunction(
+        batchSize, dataSize, parallelism, nPlanes, width, height, isFloat, inSize), parallelism);
   }
 
   public static SourceTSet<MiniBatch> createMiniBatchDataSet(BatchEnvironment env, String filePath,
