@@ -36,9 +36,9 @@ public class AverageParameters extends BaseMapFunc<PrimitiveArrayPair, Primitive
       float[] data = tempInput.getValue1();
       TensorNumeric.scal(data.length, 1.0f / parallelism, data, 0, 1);
     }
-//    if (this.getTSetContext().getIndex() == 0) {
-//      System.out.println("Iteration Average time : " + (System.nanoTime() - startTime) / 1e6);
-//    }
+    if (this.getTSetContext().getIndex() == 0) {
+      System.out.println("" + (System.nanoTime() - startTime) / 1e6);
+    }
     return input;
   }
 }

@@ -61,8 +61,9 @@ public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, Primit
           modal.getParameters().getValue1().storage().toFloatArray());
      // System.out.println("Backward Time : " + (System.nanoTime() - startTimef) / 1e6);
       if (this.getTSetContext().getIndex() == 0) {
-        System.out.println("Iteration for " + ((Tensor) input).size()[0]
-            + "records time : " + (System.nanoTime() - startTime) / 1e6);
+//        System.out.println("Iteration for " + ((Tensor) input).size()[0]
+//            + "records time : " + (System.nanoTime() - startTime) / 1e6);
+        System.out.println("" + (System.nanoTime() - startTime) / 1e6);
       }
     } else {
       double loss = criterion.forward(output, target);
@@ -71,7 +72,8 @@ public class TrainMapFunction<A extends Tensor, T> extends BaseMapFunc<T, Primit
       result = new DoubleDoubleArrayPair(loss,
           modal.getParameters().getValue1().storage().toDoubleArray());
       if (this.getTSetContext().getIndex() == 0) {
-        System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+//        System.out.println("Iteration time : " + (System.nanoTime() - startTime) / 1e6);
+        System.out.println("" + (System.nanoTime() - startTime) / 1e6);
       }
     }
 

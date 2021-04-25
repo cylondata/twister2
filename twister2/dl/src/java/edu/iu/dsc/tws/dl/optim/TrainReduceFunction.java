@@ -49,7 +49,7 @@ public class TrainReduceFunction implements ReduceFunc<PrimitiveArrayPair> {
     }
 
     if (this.index == 0) {
-      System.out.println("Iteration Reduce time : " + (System.nanoTime() - startTime) / 1e6);
+      System.out.println("" + (System.nanoTime() - startTime) / 1e6);
     }
     return this.data;
   }
