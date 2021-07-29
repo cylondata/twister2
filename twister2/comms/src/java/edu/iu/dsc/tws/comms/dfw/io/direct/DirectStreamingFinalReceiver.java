@@ -67,11 +67,14 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
   protected void merge(int dest, List<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
       readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
+      dests.clear();
     } else {
       Queue<Object> ready = readyToSend.get(dest);
-      ready.addAll(dests);
+      if (ready.size() < lowWaterMark) {
+        ready.addAll(dests);
+        dests.clear();
+      }
     }
-    dests.clear();
   }
 
   @Override

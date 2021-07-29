@@ -65,7 +65,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * Low water mark
    */
-  private int lowWaterMark = 8;
+  protected int lowWaterMark = 8;
 
   /**
    * High water mark to keep track of objects
@@ -126,6 +126,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if (lock.tryLock()) {
       try {
+        boolean ret = true;
         if (!representSourceSet) {
           this.representSource = source;
           representSourceSet = true;
@@ -150,7 +151,11 @@ public abstract class TargetReceiver implements MessageReceiver {
         }
 
         List<Object> msgQueue = messages.get(target);
-        addMessage(target, msgQueue, object);
+        if (msgQueue.size() < lowWaterMark) {
+          addMessage(target, msgQueue, object);
+        } else {
+          ret = false;
+        }
 
         if (msgQueue.size() > lowWaterMark) {
           merge(target, msgQueue);
@@ -160,7 +165,7 @@ public abstract class TargetReceiver implements MessageReceiver {
           addSyncMessage(source, target);
         }
 
-        return true;
+        return ret;
       } finally {
         lock.unlock();
       }
