@@ -12,7 +12,7 @@
     "react-chartjs-2": "^2.7.4",
     "react-dom": "^16.6.0",
     "react-router-dom": "^4.3.1",
-    "react-scripts": "2.0.5",
+    "react-scripts": "2.1.8",
     "react-scroll": "^1.7.10"
   },
   "scripts": {
